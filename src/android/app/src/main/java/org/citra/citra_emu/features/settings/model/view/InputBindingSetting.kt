@@ -341,5 +341,22 @@ class InputBindingSetting(
                 event.keyCode
             }
         }
+
+        fun getInputObject(key: String, preferences: SharedPreferences): AbstractStringSetting {
+            return object : AbstractStringSetting {
+                override var string: String
+                    get() = preferences.getString(key, "")!!
+                    set(value) {
+                        preferences.edit()
+                            .putString(key, value)
+                            .apply()
+                    }
+                override val key = key
+                override val section = Settings.SECTION_CONTROLS
+                override val isRuntimeEditable = true
+                override val valueAsString = preferences.getString(key, "")!!
+                override val defaultValue = ""
+            }
+        }
     }
 }
