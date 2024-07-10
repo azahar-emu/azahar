@@ -11,12 +11,12 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import org.citra.citra_emu.R
-import org.citra.citra_emu.databinding.DialogControllerautomappingBinding
+import org.citra.citra_emu.databinding.DialogControllerQuickConfigBinding
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import kotlin.math.abs
 
 
-class ControllerAutomappingDialog(
+class ControllerQuickConfigDialog(
     private var context: Context,
     buttons: ArrayList<List<String>>,
     titles: ArrayList<List<Int>>,
@@ -25,7 +25,7 @@ class ControllerAutomappingDialog(
 
     private var index = 0
     val inflater = LayoutInflater.from(context)
-    val automappingBinding = DialogControllerautomappingBinding.inflate(inflater)
+    val automappingBinding = DialogControllerQuickConfigBinding.inflate(inflater)
     var dialog: AlertDialog? = null
 
     var allButtons = arrayListOf<String>()
@@ -149,10 +149,7 @@ class ControllerAutomappingDialog(
     private var prevDeviceId = 0
     private var waitingForEvent = true
     private var setting: InputBindingSetting? = null
-
-
     private var debounceTimestamp = System.currentTimeMillis()
-
 
     private fun onKeyEvent(event: KeyEvent): Boolean {
         return when (event.action) {
@@ -179,7 +176,6 @@ class ControllerAutomappingDialog(
         if (event.action != MotionEvent.ACTION_MOVE) return false
 
         val input = event.device
-
         val motionRanges = input.motionRanges
 
         if (input.id != prevDeviceId) {
