@@ -175,6 +175,7 @@
     <string name="home_menu">HOME Menu</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="auto_configure">Auto Configuration</string>
     <string name="generic_buttons">Buttons</string>
     <string name="button">Button</string>
 
@@ -385,6 +386,8 @@
     <string name="dont_show_again">Don\'t show again</string>
     <string name="visibility">Visibility</string>
     <string name="information">Information</string>
+    <string name="finish">Finish</string>
+    <string name="unassigned">Unassigned</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>
