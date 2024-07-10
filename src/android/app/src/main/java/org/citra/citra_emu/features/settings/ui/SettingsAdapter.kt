@@ -65,7 +65,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHolder
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
-import org.citra.citra_emu.utils.PermissionsHandler.preferences
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.SystemSaveGame
 import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
@@ -597,7 +597,7 @@ class SettingsAdapter(
             .show()
     }
 
-    fun onClickAutoconfigureControls() {
+    fun onClickControllerQuickConfig() {
 
         val buttons = arrayListOf(
             Settings.buttonKeys,
@@ -617,10 +617,7 @@ class SettingsAdapter(
             Settings.triggerTitles
         )
 
-        Settings.buttonTitles
-        ControllerAutomappingDialog(context, buttons, titles, preferences).show()
-
-
+        ControllerQuickConfigDialog(context, buttons, titles, PermissionsHandler.preferences).show()
     }
 
     fun closeDialog() {
