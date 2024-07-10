@@ -16,6 +16,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.Settings
 
 class InputBindingSetting(
@@ -327,6 +328,23 @@ class InputBindingSetting(
                 event.scanCode
             } else {
                 event.keyCode
+            }
+        }
+
+        fun getInputObject(key: String, preferences: SharedPreferences): AbstractStringSetting {
+            return object : AbstractStringSetting {
+                override var string: String
+                    get() = preferences.getString(key, "")!!
+                    set(value) {
+                        preferences.edit()
+                            .putString(key, value)
+                            .apply()
+                    }
+                override val key = key
+                override val section = Settings.SECTION_CONTROLS
+                override val isRuntimeEditable = true
+                override val valueAsString = preferences.getString(key, "")!!
+                override val defaultValue = ""
             }
         }
     }
