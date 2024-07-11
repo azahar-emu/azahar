@@ -47,9 +47,9 @@ class ControllerQuickConfigDialog(
         val builder: AlertDialog.Builder = AlertDialog.Builder(context)
         builder
             .setView(quickConfigBinding.root)
-            .setTitle("Quick Configure")
-            .setPositiveButton("Next") {_,_ -> }
-            .setNegativeButton("Close") { dialog, which ->
+            .setTitle(context.getString(R.string.controller_quick_config))
+            .setPositiveButton(context.getString(R.string.next)) {_,_ -> }
+            .setNegativeButton(context.getString(R.string.close)) { dialog, which ->
                 dialog.dismiss()
             }
 
