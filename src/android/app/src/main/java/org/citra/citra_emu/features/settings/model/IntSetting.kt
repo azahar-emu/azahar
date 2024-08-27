@@ -17,7 +17,7 @@ enum class IntSetting(
     CAMERA_OUTER_RIGHT_FLIP("camera_outer_right_flip", Settings.SECTION_CAMERA, 0),
     GRAPHICS_API("graphics_api", Settings.SECTION_RENDERER, 1),
     RESOLUTION_FACTOR("resolution_factor", Settings.SECTION_RENDERER, 1),
-    STEREOSCOPIC_3D_MODE("render_3d", Settings.SECTION_RENDERER, 0),
+    STEREOSCOPIC_3D_MODE("render_3d", Settings.SECTION_RENDERER, 2),
     STEREOSCOPIC_3D_DEPTH("factor_3d", Settings.SECTION_RENDERER, 0),
     STEPS_PER_HOUR("steps_per_hour", Settings.SECTION_SYSTEM, 0),
     CARDBOARD_SCREEN_SIZE("cardboard_screen_size", Settings.SECTION_LAYOUT, 85),
@@ -53,6 +53,7 @@ enum class IntSetting(
     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
     TURBO_LIMIT("turbo_limit", Settings.SECTION_CORE, 200),
     PERFORMANCE_OVERLAY_POSITION("performance_overlay_position", Settings.SECTION_LAYOUT, 0),
+    RENDER_3D_WHICH_DISPLAY("render_3d_which_display",Settings.SECTION_RENDERER,0),
     ASPECT_RATIO("aspect_ratio", Settings.SECTION_LAYOUT, 0);
 
     override var int: Int = defaultValue

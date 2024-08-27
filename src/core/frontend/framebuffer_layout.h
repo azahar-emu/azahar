@@ -48,6 +48,8 @@ struct FramebufferLayout {
     u32 GetScalingRatio() const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
+
+    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 };
 
 /**
