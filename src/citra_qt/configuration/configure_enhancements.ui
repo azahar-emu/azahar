@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>440</width>
-    <height>950</height>
+    <height>891</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -236,7 +236,7 @@
           </item>
           <item>
            <property name="text">
-            <string>Reverse Side by Side</string>
+            <string>Side by Side Full Width</string>
            </property>
           </item>
           <item>
@@ -311,14 +311,19 @@
        </layout>
       </item>
       <item>
-        <widget class="QCheckBox" name="disable_right_eye_render">
-          <property name="text">
-            <string>Disable Right Eye Rendering</string>
-          </property>
-          <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-        </widget>
+       <widget class="QCheckBox" name="disable_right_eye_render">
+        <property name="text">
+         <string>Disable Right Eye Rendering</string>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="swap_eyes_3d">
+        <property name="text">
+         <string>Swap Eyes</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
