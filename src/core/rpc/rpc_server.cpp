@@ -7,8 +7,11 @@
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
+
+#ifndef ANDROID
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
+#endif
 
 namespace Core::RPC {
 
@@ -47,6 +50,7 @@ void RPCServer::HandleWriteMemory(Packet& packet, u32 address, std::span<const u
     packet.SendReply();
 }
 
+#ifndef ANDROID
 void RPCServer::HandleSendKey(Packet& packet, u32 key_code, u8 state) {
     if (state == 0) {
         InputCommon::GetKeyboard()->ReleaseKey(key_code);
@@ -63,6 +67,7 @@ void RPCServer::HandleSendSignal(Packet& packet, u32 signal_code, u32 signal_par
     packet.SetPacketDataSize(0);
     packet.SendReply();
 }
+#endif
 
 bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
     if (packet_header.version <= CURRENT_VERSION) {
@@ -73,6 +78,8 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
                 return true;
             }
             break;
+
+#ifndef ANDROID
         case PacketType::SendKey:
             if (packet_header.packet_size >= (sizeof(u32) + sizeof(u8))) {
                 return true;
@@ -83,6 +90,8 @@ bool RPCServer::ValidatePacket(const PacketHeader& packet_header) {
                 return true;
             }
             break;
+#endif
+
         default:
             break;
         }
@@ -97,10 +106,14 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
     if (ValidatePacket(request_packet->GetHeader())) {
         u32 address = 0;
         u32 data_size = 0;
+
+#ifndef ANDROID
         u32 key_code = 0;
         u8 key_state = 0;
         u32 signal_code = 0;
         u32 signal_parameter = 0;
+#endif
+
         switch (request_packet->GetPacketType()) {
         case PacketType::ReadMemory:
             std::memcpy(&address, packet_data.data(), sizeof(address));
@@ -118,6 +131,8 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
                 success = true;
             }
             break;
+
+#ifndef ANDROID
         case PacketType::SendKey:
             std::memcpy(&key_code, packet_data.data(), sizeof(key_code));
             std::memcpy(&key_state, packet_data.data() + sizeof(key_code), sizeof(key_state));
@@ -130,6 +145,8 @@ void RPCServer::HandleSingleRequest(std::unique_ptr<Packet> request_packet) {
                         sizeof(signal_parameter));
             HandleSendSignal(*request_packet, signal_code, signal_parameter);
             break;
+#endif
+
         default:
             break;
         }

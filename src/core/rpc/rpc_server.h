@@ -29,8 +29,12 @@ public:
 private:
     void HandleReadMemory(Packet& packet, u32 address, u32 data_size);
     void HandleWriteMemory(Packet& packet, u32 address, std::span<const u8> data);
+
+#ifndef ANDROID
     void HandleSendKey(Packet& packet, u32 key_code, u8 state);
     void HandleSendSignal(Packet& packet, u32 signal_code, u32 signal_parameter);
+#endif
+
     bool ValidatePacket(const PacketHeader& packet_header);
     void HandleSingleRequest(std::unique_ptr<Packet> request);
     void HandleRequestsLoop(std::stop_token stop_token);
