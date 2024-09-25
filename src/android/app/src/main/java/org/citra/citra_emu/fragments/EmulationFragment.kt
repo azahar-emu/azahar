@@ -549,7 +549,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 val slot = i
                 var enableClick = isSaving
                 val text = if (slot == NativeLibrary.QUICKSAVE_SLOT) {
-                    enableClick = false
                     getString(R.string.emulation_quicksave_slot)
                 } else {
                     getString(R.string.emulation_empty_state_slot, slot)
@@ -573,8 +572,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         savestates?.forEach {
             var enableClick = true
             val text = if(it.slot == NativeLibrary.QUICKSAVE_SLOT) {
-                // do not allow saving in quicksave slot
-                enableClick = !isSaving
                 getString(R.string.emulation_occupied_quicksave_slot, it.time)
             } else{
                 getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
