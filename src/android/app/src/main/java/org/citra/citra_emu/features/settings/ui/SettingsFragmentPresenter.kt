@@ -951,6 +951,19 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
+            add(HeaderSetting(R.string.advanced))
+            add(
+                SingleChoiceSetting(
+                    IntSetting.TEXTURE_SAMPLING,
+                    R.string.texture_sampling_name,
+                    R.string.texture_sampling_description,
+                    R.array.textureSamplingNames,
+                    R.array.textureSamplingValues,
+                    IntSetting.TEXTURE_SAMPLING.key,
+                    IntSetting.TEXTURE_SAMPLING.defaultValue
+                )
+            )
+
             // Disabled until custom texture implementation gets rewrite, current one overloads RAM
             // and crashes Citra.
             // add(
