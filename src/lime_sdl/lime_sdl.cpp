@@ -226,11 +226,12 @@ void LaunchSdlFrontend(int argc, char** argv) {
         {"fullscreen", no_argument, 0, 'f'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
+        {"windowed", no_argument, 0, 'w'},
         {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "g:i:m:nr:p:fhv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "g:i:m:nr:p:fhvw", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
             case 'g':
