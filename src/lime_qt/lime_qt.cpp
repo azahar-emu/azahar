@@ -229,7 +229,8 @@ GMainWindow::GMainWindow(Core::System& system_)
                     "-i, --install [path]        Install a CIA file at the given path\n"
                     "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
                     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
-                    "-v, --version               Output version information and exit";
+                    "-v, --version               Output version information and exit"
+                    "-w, --windowed              Start in windowed mode";
 
             ShowCommandOutput("Help", help_string);
             exit(0);
