@@ -19,3 +19,7 @@ if (ENABLE_QT AND MSVC)
     include(BundleTarget)
     bundle_target_in_place(lime)
 endif()
+
+if (ENABLE_QT AND USE_DISCORD_PRESENCE)
+    target_link_libraries(lime PRIVATE discord-rpc)
+endif()
