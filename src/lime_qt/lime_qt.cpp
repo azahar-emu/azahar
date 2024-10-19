@@ -269,6 +269,16 @@ GMainWindow::GMainWindow(Core::System& system_)
             exit(0);
         }
 
+        if (args[i] == QStringLiteral("--multiplayer") || args[i] == QStringLiteral("-m")) {
+            std::cout << "Warning: The --multiplayer option is not yet implemented for the Qt "
+                         "frontend; Ignoring."
+                      << std::endl;
+            if (i < args.size() - 1 && !args[i + 1].startsWith(QChar::fromLatin1('-'))) {
+                i++;
+            }
+            continue;
+        }
+
         if (args[i] == QStringLiteral("--movie-play") || args[i] == QStringLiteral("-p")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
