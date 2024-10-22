@@ -231,7 +231,7 @@ GMainWindow::GMainWindow(Core::System& system_)
                     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
                     "-a, --movie-record-author [author]   Set the author for the recorded TAS "
                     "movie (to be used alongside --movie-record)\n"
-                    "-v, --version               Output version information and exit"
+                    "-v, --version               Output version information and exit\n"
                     "-w, --windowed              Start in windowed mode";
 
             ShowCommandOutput("Help", help_string);
