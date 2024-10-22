@@ -44,6 +44,7 @@
 #include "common/memory_detect.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
+#include "lime/common_strings.h"
 #include "lime_qt/aboutdialog.h"
 #include "lime_qt/applets/mii_selector.h"
 #include "lime_qt/applets/swkbd.h"
@@ -218,23 +219,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         if (args[i] == QStringLiteral("--help") || args[i] == QStringLiteral("-h")) {
-            const std::string help_string =
-                std::string("Usage: ") + args[0].toStdString() +
-                " [options] <file path>\n"
-                    "-d, --dump-video [path]     Dump video recording of emulator playback to the "
-                    "given file path\n"
-                    "-f, --fullscreen            Start in fullscreen mode\n"
-                    "-g, --gdbport [port]        Enable gdb stub on the given port\n"
-                    "-h, --help                  Display this help and exit\n"
-                    "-i, --install [path]        Install a CIA file at the given path\n"
-                    "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
-                    "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
-                    "-a, --movie-record-author [author]   Set the author for the recorded TAS "
-                    "movie (to be used alongside --movie-record)\n"
-                    "-v, --version               Output version information and exit\n"
-                    "-w, --windowed              Start in windowed mode";
-
-            ShowCommandOutput("Help", help_string);
+            ShowCommandOutput("Help", fmt::format(Common::help_string, args[0].toStdString()));
             exit(0);
         }
 

@@ -1,0 +1,19 @@
+#include <string>
+
+namespace Common {
+
+constexpr char help_string[] =
+    "Usage: {} [options] <file path>\n"
+    "-d, --dump-video [path]     Dump video recording of emulator playback to the given file path\n"
+    "-f, --fullscreen            Start in fullscreen mode\n"
+    "-g, --gdbport [port]        Enable gdb stub on the given port\n"
+    "-h, --help                  Display this help and exit\n"
+    "-i, --install [path]        Install a CIA file at the given path\n"
+    "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
+    "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
+    "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used alongside --movie-record)\n"
+    "-n                          Load the lightweight SDL frontend instead of the usual Qt frontend\n"
+    "-m, --multiplayer [nick:password@address:port]   Nickname, password, address and port for multiplayer\n"
+    "-v, --version               Output version information and exit\n"
+    "-w, --windowed              Start in windowed mode";
+}
