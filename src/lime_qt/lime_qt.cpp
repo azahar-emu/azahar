@@ -229,6 +229,8 @@ GMainWindow::GMainWindow(Core::System& system_)
                     "-i, --install [path]        Install a CIA file at the given path\n"
                     "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
                     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
+                    "-a, --movie-record-author [author]   Set the author for the recorded TAS "
+                    "movie (to be used alongside --movie-record)\n"
                     "-v, --version               Output version information and exit"
                     "-w, --windowed              Start in windowed mode";
 
@@ -294,6 +296,14 @@ GMainWindow::GMainWindow(Core::System& system_)
             }
             movie_record_path = args[++i];
             movie_record_on_start = true;
+            continue;
+        }
+
+        if (args[i] == QStringLiteral("--movie-record-author") || args[i] == QStringLiteral("-a")) {
+            if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
+                continue;
+            }
+            movie_record_author = args[++i];
             continue;
         }
 
