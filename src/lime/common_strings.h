@@ -11,9 +11,12 @@ constexpr char help_string[] =
     "-i, --install [path]        Install a CIA file at the given path\n"
     "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
-    "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used alongside --movie-record)\n"
-    "-n, --no-gui                Use the lightweight SDL frontend instead of the usual Qt frontend\n"
-    "-m, --multiplayer [nick:password@address:port]   Nickname, password, address and port for multiplayer\n"
+    "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used "
+    "alongside --movie-record)\n"
+    "-n, --no-gui                Use the lightweight SDL frontend instead of the usual Qt "
+    "frontend\n"
+    "-m, --multiplayer [nick:password@address:port]   Nickname, password, address and port for "
+    "multiplayer\n"
     "-v, --version               Output version information and exit\n"
     "-w, --windowed              Start in windowed mode";
 }
