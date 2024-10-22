@@ -11,10 +11,7 @@ int main(int argc, char* argv[]) {
 #if ENABLE_QT
     bool no_gui = false;
     for (int i = 1; i < argc; i++) {
-        if (argv[i][0] != '-')
-            continue;
-
-        if (argv[i][1] == 'n') {
+        if (strcmp(argv[i], "--no-gui") == 0 || strcmp(argv[i], "-n") == 0) {
             no_gui = true;
         }
     }
