@@ -216,24 +216,31 @@ void LaunchSdlFrontend(int argc, char** argv) {
     u16 port = Network::DefaultRoomPort;
 
     static struct option long_options[] = {
-        {"gdbport", required_argument, 0, 'g'},
-        {"install", required_argument, 0, 'i'},
-        {"multiplayer", required_argument, 0, 'm'},
-        {"movie-record", required_argument, 0, 'r'},
-        {"movie-record-author", required_argument, 0, 'a'},
-        {"movie-play", required_argument, 0, 'p'},
         {"dump-video", required_argument, 0, 'd'},
         {"fullscreen", no_argument, 0, 'f'},
+        {"gdbport", required_argument, 0, 'g'},
         {"help", no_argument, 0, 'h'},
+        {"install", required_argument, 0, 'i'},
+        {"movie-play", required_argument, 0, 'p'},
+        {"movie-record", required_argument, 0, 'r'},
+        {"movie-record-author", required_argument, 0, 'a'},
+        {"multiplayer", required_argument, 0, 'm'},
         {"version", no_argument, 0, 'v'},
         {"windowed", no_argument, 0, 'w'},
         {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "ag:i:m:nr:p:fhvw", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "fg:hi:p:r:a:m:vw", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
+            case 'd':
+                dump_video = optarg;
+                break;
+            case 'f':
+                fullscreen = true;
+                LOG_INFO(Frontend, "Starting in fullscreen mode...");
+                break;
             case 'g':
                 errno = 0;
                 gdb_port = strtoul(optarg, &endarg, 0);
@@ -245,6 +252,9 @@ void LaunchSdlFrontend(int argc, char** argv) {
                     exit(1);
                 }
                 break;
+            case 'h':
+                PrintHelp(argv[0]);
+                exit(0);
             case 'i': {
                 const auto cia_progress = [](std::size_t written, std::size_t total) {
                     LOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
@@ -256,6 +266,15 @@ void LaunchSdlFrontend(int argc, char** argv) {
                     exit(1);
                 break;
             }
+            case 'p':
+                movie_play = optarg;
+                break;
+            case 'r':
+                movie_record = optarg;
+                break;
+            case 'a':
+                movie_record_author = optarg;
+                break;
             case 'm': {
                 use_multiplayer = true;
                 const std::string str_arg(optarg);
@@ -288,25 +307,6 @@ void LaunchSdlFrontend(int argc, char** argv) {
                 }
                 break;
             }
-            case 'r':
-                movie_record = optarg;
-                break;
-            case 'a':
-                movie_record_author = optarg;
-                break;
-            case 'p':
-                movie_play = optarg;
-                break;
-            case 'd':
-                dump_video = optarg;
-                break;
-            case 'f':
-                fullscreen = true;
-                LOG_INFO(Frontend, "Starting in fullscreen mode...");
-                break;
-            case 'h':
-                PrintHelp(argv[0]);
-                exit(0);
             case 'v':
                 PrintVersion();
                 exit(0);
