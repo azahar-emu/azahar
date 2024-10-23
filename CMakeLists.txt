@@ -88,9 +88,12 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(LIME3DS_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(LIME3DS_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
-# Pass ENABLE_QT and ENABLE_SDL2_FRONTEND to C++ land
+# Pass the following values to C++ land
 if (ENABLE_QT)
     add_definitions(-DENABLE_QT)
+endif()
+if (ENABLE_QT_TRANSLATION)
+    add_definitions(-DENABLE_QT_TRANSLATION)
 endif()
 if (ENABLE_SDL2_FRONTEND)
     add_definitions(-DENABLE_SDL2_FRONTEND)

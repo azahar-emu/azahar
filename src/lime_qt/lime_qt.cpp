@@ -3755,6 +3755,19 @@ void LaunchQtFrontend(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
 
+    // Required when using .qrc resources from within a static library.
+    // See https://doc.qt.io/qt-5/resources.html#using-resources-in-a-library
+    Q_INIT_RESOURCE(compatibility_list);
+    Q_INIT_RESOURCE(theme_colorful);
+    Q_INIT_RESOURCE(theme_colorful_dark);
+    Q_INIT_RESOURCE(theme_colorful_midnight_blue);
+    Q_INIT_RESOURCE(theme_default);
+    Q_INIT_RESOURCE(theme_qdarkstyle);
+    Q_INIT_RESOURCE(theme_qdarkstyle_midnight_blue);
+#ifdef ENABLE_QT_TRANSLATION
+    Q_INIT_RESOURCE(languages);
+#endif
+
     // Qt changes the locale and causes issues in float conversion using std::to_string() when
     // generating shaders
     setlocale(LC_ALL, "C");
