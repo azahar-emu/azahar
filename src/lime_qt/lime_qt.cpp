@@ -188,7 +188,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         // Dump video
-        if (args[i] == QStringLiteral("-d")) {
+        if (args[i] == QStringLiteral("--dump-video") || args[i] == QStringLiteral("-d")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
@@ -202,13 +202,13 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         // Launch game in fullscreen mode
-        if (args[i] == QStringLiteral("-f")) {
+        if (args[i] == QStringLiteral("--fullscreen") || args[i] == QStringLiteral("-f")) {
             fullscreen_override = true;
             continue;
         }
 
         // Enable GDB stub
-        if (args[i] == QStringLiteral("-g")) {
+        if (args[i] == QStringLiteral("--gdbport") || args[i] == QStringLiteral("-g")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
@@ -217,24 +217,25 @@ GMainWindow::GMainWindow(Core::System& system_)
             continue;
         }
 
-        if (args[i] == QStringLiteral("-h")) {
+        if (args[i] == QStringLiteral("--help") || args[i] == QStringLiteral("-h")) {
             const std::string help_string =
                 std::string("Usage: ") + args[0].toStdString() +
                 " [options] <file path>\n"
-                "-d [path]    Dump video recording of emulator playback to the given file path\n"
-                "-g [port]    Enable gdb stub on the given port\n"
-                "-f           Start in fullscreen mode\n"
-                "-h           Display this help and exit\n"
-                "-i [path]    Install a CIA file at the given path\n"
-                "-p [path]    Play a TAS movie located at the given path\n"
-                "-r [path]    Record a TAS movie to the given file path\n"
-                "-v           Output version information and exit";
+                    "-d, --dump-video [path]     Dump video recording of emulator playback to the "
+                    "given file path\n"
+                    "-f, --fullscreen            Start in fullscreen mode\n"
+                    "-g, --gdbport [port]        Enable gdb stub on the given port\n"
+                    "-h, --help                  Display this help and exit\n"
+                    "-i, --install [path]        Install a CIA file at the given path\n"
+                    "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
+                    "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
+                    "-v, --version               Output version information and exit";
 
             ShowCommandOutput("Help", help_string);
             exit(0);
         }
 
-        if (args[i] == QStringLiteral("-i")) {
+        if (args[i] == QStringLiteral("--install") || args[i] == QStringLiteral("-i")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
@@ -267,7 +268,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             exit(0);
         }
 
-        if (args[i] == QStringLiteral("-p")) {
+        if (args[i] == QStringLiteral("--movie-play") || args[i] == QStringLiteral("-p")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
@@ -276,7 +277,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             continue;
         }
 
-        if (args[i] == QStringLiteral("-r")) {
+        if (args[i] == QStringLiteral("--movie-record") || args[i] == QStringLiteral("-r")) {
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
@@ -285,7 +286,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             continue;
         }
 
-        if (args[i] == QStringLiteral("-v")) {
+        if (args[i] == QStringLiteral("--version") || args[i] == QStringLiteral("-v")) {
             const std::string version_string =
                 std::string("Lime3DS ") + Common::g_scm_branch + " " + Common::g_scm_desc;
             ShowCommandOutput("Version", version_string);
@@ -293,7 +294,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         // Launch game in windowed mode
-        if (args[i] == QStringLiteral("-w")) {
+        if (args[i] == QStringLiteral("--windowed") || args[i] == QStringLiteral("-w")) {
             fullscreen_override = false;
             continue;
         }
