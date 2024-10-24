@@ -7,6 +7,13 @@
 #include "lime_sdl/lime_sdl.h"
 #endif
 
+#ifdef _WIN32
+extern "C" {
+// tells Nvidia drivers to use the dedicated GPU by default on laptops with switchable graphics
+__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
+#endif
+
 int main(int argc, char* argv[]) {
 #if ENABLE_QT
     bool no_gui = false;

@@ -60,11 +60,6 @@
 #include <windows.h>
 
 #include <shellapi.h>
-
-extern "C" {
-// tells Nvidia drivers to use the dedicated GPU by default on laptops with switchable graphics
-__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
-}
 #endif
 
 static void PrintHelp(const char* argv0) {
