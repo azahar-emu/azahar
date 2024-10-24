@@ -272,14 +272,8 @@ if (APPLE)
         MACOSX_BUNDLE_ICON_FILE "lime.icns"
         RESOURCE "${APPLE_RESOURCES}"
     )
-elseif(WIN32)
-    # compile as a win32 gui application instead of a console application
+elseif (WIN32)
     target_link_libraries(lime_qt PRIVATE Qt6::EntryPointImplementation)
-    if(MSVC)
-        set_target_properties(lime_qt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-    elseif(MINGW)
-        set_target_properties(lime_qt PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
-    endif()
 endif()
 
 if(ENABLE_SDL2)

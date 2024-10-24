@@ -27,3 +27,12 @@ endif()
 if (ENABLE_QT AND USE_DISCORD_PRESENCE)
     target_link_libraries(lime PRIVATE discord-rpc)
 endif()
+
+if(WIN32)
+    # compile as a win32 gui application instead of a console application
+    if(MSVC)
+        set_target_properties(lime PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    elseif(MINGW)
+        set_target_properties(lime PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
+    endif()
+endif()
