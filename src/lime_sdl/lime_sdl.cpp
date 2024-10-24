@@ -22,6 +22,7 @@
 #ifdef ENABLE_VULKAN
 #include "lime_sdl/emu_window/emu_window_sdl2_vk.h"
 #endif
+#include "SDL_messagebox.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
 #include "common/file_util.h"
@@ -62,12 +63,16 @@
 #include <shellapi.h>
 #endif
 
-static void PrintHelp(const char* argv0) {
-    std::cout << fmt::format(Common::help_string, argv0);
+static void ShowCommandOutput(std::string title, std::string message) {
+#ifdef _WIN32
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, title.c_str(), message.c_str(), NULL);
+#else
+    std::cout << message << std::endl;
+#endif
 }
 
-static void PrintVersion() {
-    std::cout << "Lime3DS " << Common::g_scm_branch << " " << Common::g_scm_desc << std::endl;
+static void PrintHelp(const char* argv0) {
+    ShowCommandOutput("Help", fmt::format(Common::help_string, argv0));
 }
 
 static void OnStateChanged(const Network::RoomMember::State& state) {
@@ -292,7 +297,9 @@ void LaunchSdlFrontend(int argc, char** argv) {
                 break;
             }
             case 'v':
-                PrintVersion();
+                const std::string version_string =
+                    std::string("Lime3DS ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+                ShowCommandOutput("Version", version_string);
                 exit(0);
             }
         } else {
