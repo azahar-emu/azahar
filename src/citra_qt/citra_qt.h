@@ -327,6 +327,9 @@ private:
     GameListPlaceholder* game_list_placeholder;
     LoadingScreen* loading_screen;
 
+    // General
+    QString current_language;
+
     // Status bar elements
     QProgressBar* progress_bar = nullptr;
     QLabel* message_label = nullptr;
