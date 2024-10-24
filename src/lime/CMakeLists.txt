@@ -11,7 +11,11 @@ endif()
 
 if (ENABLE_QT)
     target_link_libraries(lime PRIVATE lime_qt)
-    target_link_libraries(lime PRIVATE Qt6::Widgets Qt6::DBus)
+    target_link_libraries(lime PRIVATE Boost::boost fmt Qt6::Widgets)
+endif()
+
+if (ENABLE_QT AND UNIX AND NOT APPLE)
+    target_link_libraries(lime PRIVATE Qt6::DBus gamemode)
 endif()
 
 # Bundle in-place on MSVC so dependencies can be resolved by builds.
