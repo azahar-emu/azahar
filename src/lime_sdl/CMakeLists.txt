@@ -50,9 +50,3 @@ endif()
 if (LIME3DS_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(lime_sdl PRIVATE precompiled_headers.h)
 endif()
-
-# Bundle in-place on MSVC so dependencies can be resolved by builds.
-if (MSVC)
-    include(BundleTarget)
-    bundle_target_in_place(lime_sdl)
-endif()

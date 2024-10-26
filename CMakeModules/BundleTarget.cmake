@@ -308,21 +308,16 @@ else()
 
     # Adds a target to the bundle target, packing in required libraries.
     # If in_place is true, the bundling will be done in-place as part of the specified target.
-    function(bundle_target_internal target_name in_place)
+    function(bundle_target_internal target_name in_place bundle_qt)
         # Create base bundle target if it does not exist.
         if (NOT in_place AND NOT TARGET bundle)
             create_base_bundle_target()
         endif()
 
         set(bundle_executable_path "$<TARGET_FILE:${target_name}>")
-        if (target_name MATCHES ".*qt")
-            set(bundle_qt ON)
-            if (APPLE)
-                # For Qt targets on Apple, expect an app bundle.
-                set(bundle_executable_path "$<TARGET_BUNDLE_DIR:${target_name}>")
-            endif()
-        else()
-            set(bundle_qt OFF)
+        if (bundle_qt AND APPLE)
+            # For Qt targets on Apple, expect an app bundle.
+            set(bundle_executable_path "$<TARGET_BUNDLE_DIR:${target_name}>")
         endif()
 
         # Build a list of library search paths from prefix paths.
@@ -364,11 +359,21 @@ else()
 
     # Adds a target to the bundle target, packing in required libraries.
     function(bundle_target target_name)
-        bundle_target_internal("${target_name}" OFF)
+        bundle_target_internal("${target_name}" OFF OFF)
+    endfunction()
+
+    # Same as bundle_target, but also bundles Qt libraries
+    function(qt_bundle_target target_name)
+        bundle_target_internal("${target_name}" OFF ON)
     endfunction()
 
     # Bundles the target in-place, packing in required libraries.
     function(bundle_target_in_place target_name)
-        bundle_target_internal("${target_name}" ON)
+        bundle_target_internal("${target_name}" ON OFF)
+    endfunction()
+
+    # Same as bundle_target_in_place, but also bundles Qt libraries
+    function(qt_bundle_target_in_place target_name)
+        bundle_target_internal("${target_name}" ON ON)
     endfunction()
 endif()

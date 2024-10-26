@@ -21,7 +21,7 @@ endif()
 # Bundle in-place on MSVC so dependencies can be resolved by builds.
 if (ENABLE_QT AND MSVC)
     include(BundleTarget)
-    bundle_target_in_place(lime)
+    qt_bundle_target_in_place(lime)
 endif()
 
 if (ENABLE_QT AND USE_DISCORD_PRESENCE)

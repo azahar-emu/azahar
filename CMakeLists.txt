@@ -438,9 +438,12 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT l
 # Not supported for mobile platforms as distributables are built differently.
 if (NOT ANDROID)
     include(BundleTarget)
-    if (ENABLE_SDL2_FRONTEND OR ENABLE_QT)
+    if (ENABLE_QT)
+        qt_bundle_target(lime)
+    elseif (ENABLE_SDL2_FRONTEND)
         bundle_target(lime)
     endif()
+
     if (ENABLE_DEDICATED_ROOM)
         bundle_target(lime-room)
     endif()
