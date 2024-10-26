@@ -250,29 +250,7 @@ target_sources(lime_qt
         ${THEMES}
 )
 
-if (APPLE)
-    set(DIST_DIR "../../dist/apple")
-    set(APPLE_RESOURCES
-        "${DIST_DIR}/lime.icns"
-        "${DIST_DIR}/LaunchScreen.storyboard"
-        "${DIST_DIR}/launch_logo.png"
-    )
-    target_sources(lime_qt PRIVATE ${APPLE_RESOURCES})
-
-    # Define app bundle metadata.
-    include(GenerateBuildInfo)
-    set_target_properties(lime_qt PROPERTIES
-        MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_INFO_PLIST "${DIST_DIR}/Info.plist.in"
-        MACOSX_BUNDLE_BUNDLE_NAME "Lime3DS"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.lime3ds.Lime3DS"
-        MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
-        MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
-        MACOSX_BUNDLE_LONG_VERSION_STRING "${BUILD_FULLNAME}"
-        MACOSX_BUNDLE_ICON_FILE "lime.icns"
-        RESOURCE "${APPLE_RESOURCES}"
-    )
-elseif (WIN32)
+if (WIN32)
     target_link_libraries(lime_qt PRIVATE Qt6::EntryPointImplementation)
 endif()
 

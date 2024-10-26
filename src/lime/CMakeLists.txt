@@ -5,6 +5,30 @@ add_executable(lime
 
 set_target_properties(lime PROPERTIES OUTPUT_NAME "lime3ds")
 
+if (APPLE)
+    set(DIST_DIR "../../dist/apple")
+    set(APPLE_RESOURCES
+        "${DIST_DIR}/lime.icns"
+        "${DIST_DIR}/LaunchScreen.storyboard"
+        "${DIST_DIR}/launch_logo.png"
+    )
+    target_sources(lime PRIVATE ${APPLE_RESOURCES})
+
+    # Define app bundle metadata.
+    include(GenerateBuildInfo)
+    set_target_properties(lime PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${DIST_DIR}/Info.plist.in"
+        MACOSX_BUNDLE_BUNDLE_NAME "Lime3DS"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.lime3ds.Lime3DS"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
+        MACOSX_BUNDLE_LONG_VERSION_STRING "${BUILD_FULLNAME}"
+        MACOSX_BUNDLE_ICON_FILE "lime.icns"
+        RESOURCE "${APPLE_RESOURCES}"
+    )
+endif()
+
 if (ENABLE_SDL2_FRONTEND)
     target_link_libraries(lime PRIVATE lime_sdl)
 endif()
