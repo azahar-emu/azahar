@@ -29,13 +29,15 @@ if (APPLE)
     )
 endif()
 
+target_link_libraries(lime PRIVATE fmt)
+
 if (ENABLE_SDL2_FRONTEND)
     target_link_libraries(lime PRIVATE lime_sdl)
 endif()
 
 if (ENABLE_QT)
     target_link_libraries(lime PRIVATE lime_qt)
-    target_link_libraries(lime PRIVATE Boost::boost fmt Qt6::Widgets)
+    target_link_libraries(lime PRIVATE Boost::boost Qt6::Widgets)
 endif()
 
 if (ENABLE_QT AND UNIX AND NOT APPLE)
