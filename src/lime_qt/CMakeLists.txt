@@ -313,10 +313,6 @@ if (ENABLE_WEB_SERVICE)
     target_link_libraries(lime_qt PRIVATE web_service)
 endif()
 
-if(UNIX AND NOT APPLE)
-    install(TARGETS lime_qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-endif()
-
 if (LIME3DS_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(lime_qt PRIVATE precompiled_headers.h)
 endif()

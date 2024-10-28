@@ -62,3 +62,7 @@ if (ENABLE_QT AND MSVC)
     include(BundleTarget)
     qt_bundle_target_in_place(lime)
 endif()
+
+if(UNIX AND NOT APPLE)
+    install(TARGETS lime RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+endif()

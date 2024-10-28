@@ -43,10 +43,6 @@ if (ENABLE_OPENGL)
     target_link_libraries(lime_sdl PRIVATE glad)
 endif()
 
-if(UNIX AND NOT APPLE)
-    install(TARGETS lime_sdl RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
-endif()
-
 if (LIME3DS_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(lime_sdl PRIVATE precompiled_headers.h)
 endif()
