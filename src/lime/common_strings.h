@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 namespace Common {
@@ -19,4 +21,5 @@ constexpr char help_string[] =
     "multiplayer\n"
     "-v, --version               Output version information and exit\n"
     "-w, --windowed              Start in windowed mode";
+
 }
