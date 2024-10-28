@@ -220,7 +220,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "d:fg:hi:p:r:a:m:vw", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "d:fg:hi:p:r:a:m:nvw", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
             case 'd':
