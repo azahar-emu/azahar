@@ -1,6 +1,6 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-add_library(lime_sdl
+add_library(lime_sdl STATIC EXCLUDE_FROM_ALL
     config.cpp
     config.h
     default_ini.h

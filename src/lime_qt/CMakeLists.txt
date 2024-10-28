@@ -7,7 +7,7 @@ if (POLICY CMP0071)
     cmake_policy(SET CMP0071 NEW)
 endif()
 
-add_library(lime_qt
+add_library(lime_qt STATIC EXCLUDE_FROM_ALL
     aboutdialog.cpp
     aboutdialog.h
     aboutdialog.ui
