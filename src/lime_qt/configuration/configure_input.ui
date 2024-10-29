@@ -68,14 +68,6 @@
       <bool>true</bool>
      </property>
      <widget class="QWidget" name="scrollAreaContents">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>404</width>
-        <height>731</height>
-       </rect>
-      </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
         <layout class="QGridLayout" name="gridLayout_7">
