@@ -3684,11 +3684,8 @@ void GMainWindow::SyncMenuUISettings() {
     ui->action_Screen_Layout_Upright_Screens->setChecked(
         Settings::values.upright_screen.GetValue());
 
-    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::LargeScreen) {
-        ui->menu_Small_Screen_Position->setEnabled(true);
-    } else {
-        ui->menu_Small_Screen_Position->setEnabled(false);
-    }
+    ui->menu_Small_Screen_Position->setEnabled(Settings::values.layout_option.GetValue() ==
+                                               Settings::LayoutOption::LargeScreen);
 
     ui->action_Small_Screen_TopRight->setChecked(
         Settings::values.small_screen_position.GetValue() ==
