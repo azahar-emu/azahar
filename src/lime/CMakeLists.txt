@@ -1,6 +1,7 @@
 add_executable(lime
     lime.rc
     main.cpp
+    precompiled_headers.h
 )
 
 set_target_properties(lime PROPERTIES OUTPUT_NAME "lime3ds")
@@ -55,6 +56,10 @@ if(WIN32)
     elseif(MINGW)
         set_target_properties(lime PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
     endif()
+endif()
+
+if (LIME3DS_USE_PRECOMPILED_HEADERS)
+    target_precompile_headers(lime PRIVATE precompiled_headers.h)
 endif()
 
 # Bundle in-place on MSVC so dependencies can be resolved by builds.
