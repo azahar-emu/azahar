@@ -157,7 +157,6 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
         large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
     }
 
-
     switch (small_screen_position) {
     case Settings::SmallScreenPosition::TopRight:
         // Shift the small screen to the top right corner
