@@ -384,12 +384,12 @@ class SettingsAdapter(
             is SingleChoiceSetting -> {
                 val scSetting = clickedItem as? SingleChoiceSetting
                 scSetting?.let {
-                        val setting = when (it.setting) {
+                    val setting = when (it.setting) {
                         is AbstractIntSetting -> {
-                        val value = getValueForSingleChoiceSelection(it, which)
-                        if (it.selectedValue != value) {
-                            fragmentView?.onSettingChanged()
-                        }
+                            val value = getValueForSingleChoiceSelection(it, which)
+                            if (it.selectedValue != value) {
+                                fragmentView?.onSettingChanged()
+                            }
                             it.setSelectedValue(value)
                         }
                         is AbstractShortSetting -> {
