@@ -19,11 +19,14 @@ constexpr char help_string[] =
     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
     "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used "
     "alongside --movie-record)\n"
+#ifdef ENABLE_SDL2_FRONTEND
     "-n, --no-gui                Use the lightweight SDL frontend instead of the usual Qt "
     "frontend\n"
+    // TODO: Move -m outside of this check when it is implemented in Qt frontend
     "-m, --multiplayer [nick:password@address:port]   Nickname, password, address and port for "
-    "multiplayer\n"
+    "multiplayer (currently only usable with SDL frontend)\n"
+#endif
     "-v, --version               Output version information and exit\n"
     "-w, --windowed              Start in windowed mode";
 
-}
+} // namespace Common
