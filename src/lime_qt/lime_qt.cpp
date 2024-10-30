@@ -16,6 +16,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
+#include <boost/algorithm/string/replace.hpp>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #ifdef __APPLE__
@@ -155,6 +156,8 @@ static QString PrettyProductName() {
 
 void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 #ifdef _WIN32
+    boost::replace_all(message, " ", "\u00a0"); // Non-breaking space
+    boost::replace_all(message, "-", "\u2011"); // Non-breaking hyphen
     QMessageBox::information(this, QString::fromStdString(title), QString::fromStdString(message));
 #else
     std::cout << message << std::endl;
