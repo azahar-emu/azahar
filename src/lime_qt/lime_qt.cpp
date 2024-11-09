@@ -2121,7 +2121,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     }
 #endif // __linux__
     // Create shortcut
-    std::string arguments = fmt::format("-g \"{:s}\"", game_path);
+    std::string arguments = fmt::format("\"{:s}\"", game_path);
     if (CreateShortcutMessagesGUI(this, CREATE_SHORTCUT_MSGBOX_FULLSCREEN_PROMPT, qt_game_title)) {
         arguments = "-f " + arguments;
     }
