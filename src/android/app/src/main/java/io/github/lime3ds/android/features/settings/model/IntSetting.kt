@@ -60,7 +60,8 @@ enum class IntSetting(
     TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
     DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
-    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0);
+    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
+    TURBO_SPEED("turbo_speed", Settings.SECTION_CORE, 200);
 
     override var int: Int = defaultValue
 
@@ -89,7 +90,8 @@ enum class IntSetting(
             CPU_JIT,
             ASYNC_CUSTOM_LOADING,
             AUDIO_INPUT_TYPE,
-            USE_ARTIC_BASE_CONTROLLER
+            USE_ARTIC_BASE_CONTROLLER,
+            FRAME_LIMIT
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

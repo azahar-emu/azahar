@@ -182,6 +182,17 @@ object NativeLibrary {
 
     external fun downloadTitleFromNus(title: Long): InstallStatus
 
+
+    /**
+     * Turbo speed.
+     */
+    external fun toggleTurboSpeed(enabled: Boolean)
+
+    external fun getTurboSpeedSlider(): Int
+
+    external fun setTurboSpeedSlider(value: Int)
+
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
