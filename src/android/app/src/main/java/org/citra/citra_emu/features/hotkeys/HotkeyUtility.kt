@@ -22,6 +22,7 @@ class HotkeyUtility(private val screenAdjustmentUtil: ScreenAdjustmentUtil, priv
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
                 Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
                 Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
+                Hotkey.TURBO_SPEED.button -> hotkeyFunctions.setTurboSpeed(!hotkeyFunctions.isTurboSpeedEnabled)
                 Hotkey.QUICKSAVE.button -> {
                     NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                     Toast.makeText(context,

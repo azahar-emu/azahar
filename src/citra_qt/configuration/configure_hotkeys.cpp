@@ -102,12 +102,11 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     // to the same action. Which cuases problems resetting the frame limit.to the inititla value.
     const QString current_action =
         model->data(model->index(index.row(), 0, index.parent())).toString();
-    const bool is_turbo = current_action == tr("Toggle Custom Emulation Speed");
+    const bool is_turbo = current_action == tr("Toggle Turbo Mode");
     const bool is_per_game = current_action == tr("Toggle Per-Game Speed");
 
     if (is_turbo || is_per_game) {
-        QString other_action =
-            is_turbo ? tr("Toggle Per-Game Speed") : tr("Toggle Custom Emulation Speed");
+        QString other_action = is_turbo ? tr("Toggle Per-Game Speed") : tr("Toggle Turbo Mode");
         QKeySequence other_sequence;
 
         for (int r = 0; r < model->rowCount(); ++r) {

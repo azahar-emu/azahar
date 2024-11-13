@@ -11,4 +11,5 @@ enum class Hotkey(val button: Int) {
     PAUSE_OR_RESUME(10004),
     QUICKSAVE(10005),
     QUICKLOAD(10006);
+    TURBO_SPEED(10007);
 }
