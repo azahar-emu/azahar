@@ -2335,6 +2335,7 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
+    GetInitialFrameLimit();
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2394,6 +2395,12 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
+    if (turbo_mode_active) {
+        turbo_mode_active = false;
+        Settings::values.frame_limit.SetValue(initial_frame_limit);
+        UpdateStatusBar();
+    }
+
     play_time_manager->Stop();
     // Update game list to show new play time
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -2549,9 +2556,13 @@ void GMainWindow::ChangeSmallScreenPosition() {
     UpdateSecondaryWindowVisibility();
 }
 
+void GMainWindow::GetInitialFrameLimit() {
+    initial_frame_limit = Settings::values.frame_limit.GetValue();
+    turbo_mode_active = false;
+}
+
 void GMainWindow::ToggleEmulationSpeed() {
     static bool key_pressed = false; // Prevent spam on hold
-    static int initial_frame_limit = Settings::values.frame_limit.GetValue(); // Store original frame limit
 
     if (!key_pressed) {
         key_pressed = true;
