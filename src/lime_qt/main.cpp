@@ -663,8 +663,9 @@ void GMainWindow::InitializeHotkeys() {
         }
     });
     connect_shortcut(QStringLiteral("Toggle Per-Game Speed"), [&] {
-        if (!hotkey_registry.GetKeySequence(QStringLiteral("Main Window"),
-                                              QStringLiteral("Toggle Custom Emulation Speed")).isEmpty()) {
+        if (!hotkey_registry
+                 .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
+                 .isEmpty()) {
             return;
         }
         Settings::values.frame_limit.SetGlobal(!Settings::values.frame_limit.UsingGlobal());
@@ -675,16 +676,11 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Custom Textures"),
                      [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
 
-    connect_shortcut(QStringLiteral("Toggle Custom Emulation Speed"), &GMainWindow::ToggleEmulationSpeed);
+    connect_shortcut(QStringLiteral("Toggle Turbo Mode"), &GMainWindow::ToggleEmulationSpeed);
 
-    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] {
-        AdjustSpeedLimit(true);
-    });
+    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
 
-    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] {
-        AdjustSpeedLimit(false);
-    });
-
+    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
     connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
     connect_shortcut(QStringLiteral("Audio Volume Down"), &GMainWindow::OnDecreaseVolume);
