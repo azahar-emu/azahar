@@ -2580,20 +2580,28 @@ void GMainWindow::ToggleEmulationSpeed() {
 }
 
 void GMainWindow::AdjustSpeedLimit(bool increase) {
-    const int SPEED_LIMIT_STEP = 5;
+    if (!turbo_mode_active) {
+        return;
+    }
 
+    const int SPEED_LIMIT_STEP = 5;
     int turbo_speed = UISettings::values.turbo_speed_slider.GetValue();
+
     if (increase) {
         if (turbo_speed < 995) {
             UISettings::values.turbo_speed_slider.SetValue(turbo_speed + SPEED_LIMIT_STEP);
+            Settings::values.frame_limit.SetValue(turbo_speed + SPEED_LIMIT_STEP);
         }
     } else {
         if (turbo_speed > SPEED_LIMIT_STEP) {
             UISettings::values.turbo_speed_slider.SetValue(turbo_speed - SPEED_LIMIT_STEP);
+            Settings::values.frame_limit.SetValue(turbo_speed - SPEED_LIMIT_STEP);
         }
     }
 
-    UpdateStatusBar();
+    if (turbo_mode_active) {
+        UpdateStatusBar();
+    }
 }
 
 void GMainWindow::ToggleScreenLayout() {
