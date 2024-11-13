@@ -779,6 +779,12 @@ void GMainWindow::InitializeHotkeys() {
         }
     });
     connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
+        if (!hotkey_registry
+                 .GetKeySequence(QStringLiteral("Main Window"),
+                                 QStringLiteral("Toggle Custom Emulation Speed"))
+                 .isEmpty()) {
+            return;
+        }
         Settings::values.frame_limit.SetGlobal(!Settings::values.frame_limit.UsingGlobal());
         UpdateStatusBar();
     });
