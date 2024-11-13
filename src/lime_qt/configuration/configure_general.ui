@@ -255,7 +255,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QSlider" name="turbo_speed_slider">
+            <widget class="QSlider" name="turbo_speed">
              <property name="minimum">
               <number>0</number>
              </property>

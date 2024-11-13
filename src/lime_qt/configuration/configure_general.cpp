@@ -28,10 +28,10 @@ ConfigureGeneral::ConfigureGeneral(bool is_powered_on, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureGeneral>()), is_powered_on{is_powered_on} {
     ui->setupUi(this);
 
-    connect(ui->turbo_speed_slider, &QSlider::valueChanged, this, [&](int value) {
-        UISettings::values.turbo_speed_slider.SetValue(SliderToSettings(value));
+    connect(ui->turbo_speed, &QSlider::valueChanged, this, [&](int value) {
+        Settings::values.turbo_speed.SetValue(SliderToSettings(value));
         ui->turbo_speed_display_label->setText(
-            QStringLiteral("%1%").arg(UISettings::values.turbo_speed_slider.GetValue()));
+            QStringLiteral("%1%").arg(Settings::values.turbo_speed.GetValue()));
     });
 
     // Set a minimum width for the label to prevent the slider from changing size.
@@ -76,10 +76,10 @@ ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::SetConfiguration() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->turbo_speed_slider->setValue(
-            SettingsToSlider(UISettings::values.turbo_speed_slider.GetValue()));
+        ui->turbo_speed->setValue(
+            SettingsToSlider(Settings::values.turbo_speed.GetValue()));
         ui->turbo_speed_display_label->setText(
-            QStringLiteral("%1%").arg(UISettings::values.turbo_speed_slider.GetValue()));
+            QStringLiteral("%1%").arg(Settings::values.turbo_speed.GetValue()));
 
         ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing.GetValue());
         ui->toggle_background_pause->setChecked(
@@ -227,7 +227,7 @@ void ConfigureGeneral::SetupPerGameUI() {
         ConfigurationShared::SetHighlight(ui->widget_screenshot, index == 1);
     });
 
-    ui->turbo_speed_slider->setVisible(false);
+    ui->turbo_speed->setVisible(false);
     ui->general_group->setVisible(false);
     ui->updateBox->setVisible(false);
     ui->button_reset_defaults->setVisible(false);
