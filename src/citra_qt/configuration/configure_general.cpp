@@ -30,7 +30,8 @@ ConfigureGeneral::ConfigureGeneral(bool is_powered_on, QWidget* parent)
 
     connect(ui->turbo_speed_slider, &QSlider::valueChanged, this, [&](int value) {
         UISettings::values.turbo_speed_slider.SetValue(SliderToSettings(value));
-        ui->turbo_speed_display_label->setText(QStringLiteral("%1%").arg(UISettings::values.turbo_speed_slider.GetValue()));
+        ui->turbo_speed_display_label->setText(
+            QStringLiteral("%1%").arg(UISettings::values.turbo_speed_slider.GetValue()));
     });
 
     // Set a minimum width for the label to prevent the slider from changing size.
@@ -75,7 +76,10 @@ ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::SetConfiguration() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->turbo_speed_slider->setValue(SettingsToSlider(UISettings::values.turbo_speed_slider.GetValue()));
+        ui->turbo_speed_slider->setValue(
+            SettingsToSlider(UISettings::values.turbo_speed_slider.GetValue()));
+        ui->turbo_speed_display_label->setText(
+            QStringLiteral("%1%").arg(UISettings::values.turbo_speed_slider.GetValue()));
 
         ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing.GetValue());
         ui->toggle_background_pause->setChecked(
@@ -203,7 +207,7 @@ void ConfigureGeneral::RetranslateUI() {
 void ConfigureGeneral::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
-         if (is_powered_on) {
+        if (is_powered_on) {
             ui->frame_limit->setEnabled(false);
         } else {
             ui->frame_limit->setEnabled(Settings::values.frame_limit.UsingGlobal());
