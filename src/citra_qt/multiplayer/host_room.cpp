@@ -3,12 +3,16 @@
 // Refer to the license.txt file included.
 
 #include <future>
+#include <QApplication>
+#include <QClipboard>
 #include <QColor>
+#include <QHostInfo>
 #include <QImage>
 #include <QList>
 #include <QLocale>
 #include <QMessageBox>
 #include <QMetaType>
+#include <QNetworkInterface>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/game_list_p.h"
@@ -49,6 +53,7 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
 
     // Connect all the widgets to the appropriate events
     connect(ui->host, &QPushButton::clicked, this, &HostRoomWindow::Host);
+    connect(ui->copy_ip_button, &QPushButton::clicked, this, &HostRoomWindow::CopyIPToClipboard);
 
     // Restore the settings:
     ui->username->setText(UISettings::values.room_nickname);
@@ -68,6 +73,8 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
         ui->game_list->setCurrentIndex(index);
     }
     ui->room_description->setText(UISettings::values.room_description);
+
+    SetLocalIPAddress();
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -130,6 +137,7 @@ void HostRoomWindow::Host() {
             }
         }
         ui->host->setDisabled(true);
+        std::string ip_address = ui->server_address_box->text().toStdString();
 
         auto game_name = ui->game_list->currentData(Qt::DisplayRole).toString();
         auto game_id = ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();
@@ -141,11 +149,12 @@ void HostRoomWindow::Host() {
             ban_list = UISettings::values.ban_list;
         }
         if (auto room = Network::GetRoom().lock()) {
-            bool created = room->Create(ui->room_name->text().toStdString(),
-                                        ui->room_description->toPlainText().toStdString(), "",
-                                        static_cast<u16>(port), password, ui->max_player->value(),
-                                        NetSettings::values.citra_username, game_name.toStdString(),
-                                        game_id, CreateVerifyBackend(is_public), ban_list);
+            bool created =
+                room->Create(ui->room_name->text().toStdString(),
+                             ui->room_description->toPlainText().toStdString(), ip_address,
+                             static_cast<u16>(port), password, ui->max_player->value(),
+                             NetSettings::values.citra_username, game_name.toStdString(), game_id,
+                             CreateVerifyBackend(is_public), ban_list);
             if (!created) {
                 NetworkMessage::ErrorManager::ShowError(
                     NetworkMessage::ErrorManager::COULD_NOT_CREATE_ROOM);
@@ -193,8 +202,8 @@ void HostRoomWindow::Host() {
         }
 #endif
         member->Join(ui->username->text().toStdString(), Service::CFG::GetConsoleIdHash(system),
-                     "127.0.0.1", static_cast<u16>(port), 0, Network::NoPreferredMac, password,
-                     token);
+                     ip_address.c_str(), static_cast<u16>(port), 0, Network::NoPreferredMac,
+                     password, token);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();
@@ -233,4 +242,27 @@ bool ComboBoxProxyModel::lessThan(const QModelIndex& left, const QModelIndex& ri
     auto leftData = left.data(GameListItemPath::TitleRole).toString();
     auto rightData = right.data(GameListItemPath::TitleRole).toString();
     return leftData.compare(rightData) < 0;
+}
+
+void HostRoomWindow::SetLocalIPAddress() {
+    QString local_ip;
+
+    foreach (const QHostAddress& address, QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol &&
+            address != QHostAddress(QHostAddress::LocalHost)) {
+            local_ip = address.toString();
+            break;
+        }
+    }
+
+    if (!local_ip.isEmpty()) {
+        ui->server_address_box->setText(local_ip);
+    } else {
+        ui->server_address_box->setPlaceholderText(tr("Enter Server Address"));
+    }
+}
+
+void HostRoomWindow::CopyIPToClipboard() {
+    QClipboard* clipboard = QApplication::clipboard();
+    clipboard->setText(ui->server_address_box->text());
 }
