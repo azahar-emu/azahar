@@ -373,6 +373,13 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     }
     member.user_data = verify_backend->LoadUserData(uid, token);
 
+
+    if (nickname == room_information.host_username) {
+        member.user_data.moderator = true;
+        LOG_INFO(Network, "User {} is a moderator", std::string(room_information.host_username));
+    }
+
+
     std::string ip;
     {
         std::lock_guard lock(ban_list_mutex);
