@@ -371,7 +371,9 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         std::lock_guard lock(verify_UID_mutex);
         uid = verify_UID;
     }
-    member.user_data = verify_backend->LoadUserData(uid, token);
+
+    if (verify_backend != nullptr)
+        member.user_data = verify_backend->LoadUserData(uid, token);
 
     std::string ip;
     {
