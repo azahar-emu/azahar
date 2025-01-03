@@ -47,8 +47,6 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
         ModerationDialog dialog(this);
         dialog.exec();
     });
-    ui->moderation->setDefault(false);
-    ui->moderation->setAutoDefault(false);
     connect(ui->chat, &ChatRoom::UserPinged, this, &ClientRoomWindow::ShowNotification);
     UpdateView();
 }
@@ -57,9 +55,7 @@ ClientRoomWindow::~ClientRoomWindow() = default;
 
 void ClientRoomWindow::SetModPerms(bool is_mod) {
     ui->chat->SetModPerms(is_mod);
-    ui->moderation->setVisible(is_mod);
-    ui->moderation->setDefault(false);
-    ui->moderation->setAutoDefault(false);
+    ui->moderation->setEnabled(is_mod);
 }
 
 void ClientRoomWindow::RetranslateUi() {
