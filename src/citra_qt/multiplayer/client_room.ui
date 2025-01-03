@@ -47,7 +47,7 @@
           <string>Moderation...</string>
          </property>
          <property name="visible">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
