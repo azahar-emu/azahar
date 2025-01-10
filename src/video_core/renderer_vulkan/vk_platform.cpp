@@ -29,8 +29,8 @@ namespace Vulkan {
 
 namespace {
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type,
-    const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
+    vk::DebugUtilsMessageSeverityFlagBitsEXT severity, vk::DebugUtilsMessageTypeFlagsEXT type,
+    const vk::DebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data) {
 
     switch (static_cast<u32>(callback_data->messageIdNumber)) {
     case 0x609a13b: // Vertex attribute at location not consumed by shader
@@ -42,14 +42,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
 
     Common::Log::Level level{};
     switch (severity) {
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eError:
         level = Common::Log::Level::Error;
         break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning:
         level = Common::Log::Level::Info;
         break;
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo:
+    case vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose:
         level = Common::Log::Level::Debug;
         break;
     default:
@@ -63,35 +63,34 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsCallback(
     return VK_FALSE;
 }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags,
-                                                          VkDebugReportObjectTypeEXT objectType,
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(vk::DebugReportFlagsEXT flags,
+                                                          vk::DebugReportObjectTypeEXT objectType,
                                                           uint64_t object, std::size_t location,
                                                           int32_t messageCode,
                                                           const char* pLayerPrefix,
                                                           const char* pMessage, void* pUserData) {
 
-    const VkDebugReportFlagBitsEXT severity = static_cast<VkDebugReportFlagBitsEXT>(flags);
+    const auto severity = static_cast<vk::DebugReportFlagBitsEXT>(flags.operator VkFlags());
     Common::Log::Level level{};
     switch (severity) {
-    case VK_DEBUG_REPORT_ERROR_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eError:
         level = Common::Log::Level::Error;
         break;
-    case VK_DEBUG_REPORT_INFORMATION_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eInformation:
         level = Common::Log::Level::Warning;
         break;
-    case VK_DEBUG_REPORT_DEBUG_BIT_EXT:
-    case VK_DEBUG_REPORT_WARNING_BIT_EXT:
-    case VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT:
+    case vk::DebugReportFlagBitsEXT::eDebug:
+    case vk::DebugReportFlagBitsEXT::eWarning:
+    case vk::DebugReportFlagBitsEXT::ePerformanceWarning:
         level = Common::Log::Level::Debug;
         break;
     default:
         level = Common::Log::Level::Info;
     }
 
-    const vk::DebugReportObjectTypeEXT type = static_cast<vk::DebugReportObjectTypeEXT>(objectType);
     LOG_GENERIC(Common::Log::Class::Render_Vulkan, level,
                 "type = {}, object = {} | MessageCode = {:#x}, LayerPrefix = {} | {}",
-                vk::to_string(type), object, messageCode, pLayerPrefix, pMessage);
+                vk::to_string(objectType), object, messageCode, pLayerPrefix, pMessage);
 
     return VK_FALSE;
 }
