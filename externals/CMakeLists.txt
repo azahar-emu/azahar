@@ -181,6 +181,7 @@ if(NOT USE_SYSTEM_SOUNDTOUCH)
 endif()
 
 # Teakra
+set(BUILD_TESTING OFF CACHE BOOL "")
 add_subdirectory(teakra EXCLUDE_FROM_ALL)
 
 # SDL2
