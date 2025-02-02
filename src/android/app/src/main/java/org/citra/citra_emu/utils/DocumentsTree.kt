@@ -107,6 +107,40 @@ class DocumentsTree {
     }
 
     @Synchronized
+    fun folderUriHelper(path: String, createIfNotExists: Boolean = false): Uri? {
+        root ?: return null
+        val components = path.split(DELIMITER).filter { it.isNotEmpty() }
+        var current = root
+
+        for (component in components) {
+            if (!current!!.loaded) {
+                structTree(current)
+            }
+
+            var child = current.findChild(component)
+
+            // Create directory if it doesn't exist and creation is enabled
+            if (child == null && createIfNotExists) {
+                try {
+                    val createdDir = FileUtil.createDir(current.uri.toString(), component) ?: return null
+                    child = DocumentsNode(createdDir, true).apply {
+                        parent = current
+                    }
+                    current.addChild(child)
+                } catch (e: Exception) {
+                    error("[DocumentsTree]: Cannot create directory, error: " + e.message)
+                    return null
+                }
+            } else if (child == null) {
+                return null
+            }
+
+            current = child
+        }
+        return current?.uri
+    }
+
+    @Synchronized
     fun isDirectory(filepath: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         return node.isDirectory

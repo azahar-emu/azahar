@@ -148,6 +148,25 @@
                 android:contentDescription="@string/cheats"
                 android:text="@string/cheats" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/menu_button_open"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="62dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:icon="@drawable/ic_open"
+                app:iconGravity="textStart" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/menu_button_uninstall"
+                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
+                android:layout_width="62dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:icon="@drawable/ic_uninstall"
+                app:iconGravity="textStart" />
+
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
