@@ -238,20 +238,28 @@ class EmulationActivity : AppCompatActivity() {
             preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
+                hotkeyUtility.handleHotkey(button)
+
                 // On some devices, the back gesture / button press is not intercepted by androidx
                 // and fails to open the emulation menu. So we're stuck running deprecated code to
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                    onBackPressed()
+                    // If the hotkey is pressed, we don't want to open the drawer
+                    if (hotkeyUtility.HotkeyIsPressed) {
+                        return true
+                    } else {
+                        onBackPressed()
+                    }
                 }
-
-                hotkeyUtility.handleHotkey(button)
 
                 // Normal key events.
                 NativeLibrary.ButtonState.PRESSED
             }
 
-            KeyEvent.ACTION_UP -> NativeLibrary.ButtonState.RELEASED
+            KeyEvent.ACTION_UP -> {
+                hotkeyUtility.HotkeyIsPressed = false
+                NativeLibrary.ButtonState.RELEASED
+            }
             else -> return false
         }
         val input = event.device

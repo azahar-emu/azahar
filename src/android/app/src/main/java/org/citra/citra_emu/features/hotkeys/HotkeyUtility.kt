@@ -17,6 +17,7 @@ class HotkeyUtility(
     private val context: Context) {
 
     private val hotkeyButtons = Hotkey.entries.map { it.button }
+    var HotkeyIsPressed = false
 
     fun handleHotkey(bindedButton: Int): Boolean {
         if(hotkeyButtons.contains(bindedButton)) {
@@ -45,6 +46,7 @@ class HotkeyUtility(
                 }
                 else -> {}
             }
+            HotkeyIsPressed = true
             return true
         }
         return false
