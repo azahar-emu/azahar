@@ -322,8 +322,8 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                 if (is_encrypted) {
                     std::vector<u8> temp(to_write);
 
-                    std::array<u8, 16>* key;
-                    std::array<u8, 16>* ctr;
+                    std::array<u8, 16>* key = nullptr;
+                    std::array<u8, 16>* ctr = nullptr;
 
                     if (reg->type == CryptoRegion::EXHEADER) {
                         key = &primary_key;
@@ -2313,6 +2313,8 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(ResultSuccess);
 
+    // TODO: Make this actually do something:
+    /*
     u32 count = 0;
     for (auto it = am->import_title_contexts.begin(); it != am->import_title_contexts.end(); it++) {
         if ((include_installing &&
@@ -2323,6 +2325,7 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
             count++;
         }
     }
+    */
 
     rb.Push<u32>(static_cast<u32>(am->import_title_contexts.size()));
 }

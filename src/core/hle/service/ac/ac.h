@@ -187,6 +187,7 @@ protected:
     std::shared_ptr<Kernel::Event> disconnect_event;
 
 private:
+    [[maybe_unused]]
     Core::System& system;
 
     template <class Archive>
