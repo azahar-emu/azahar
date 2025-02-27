@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -449,12 +449,8 @@ jlongArray Java_org_citra_citra_1emu_NativeLibrary_getSystemTitleIds(JNIEnv* env
 jobject Java_org_citra_citra_1emu_NativeLibrary_downloadTitleFromNus([[maybe_unused]] JNIEnv* env,
                                                                      [[maybe_unused]] jobject obj,
                                                                      jlong title) {
-    const auto title_id = static_cast<u64>(title);
-    Service::AM::InstallStatus status = Service::AM::InstallFromNus(title_id);
-    if (status != Service::AM::InstallStatus::Success) {
-        return IDCache::GetJavaCiaInstallStatus(status);
-    }
-    return IDCache::GetJavaCiaInstallStatus(Service::AM::InstallStatus::Success);
+    [[maybe_unused]] const auto title_id = static_cast<u64>(title);
+    return IDCache::GetJavaCiaInstallStatus(Service::AM::InstallStatus::ErrorAborted);
 }
 
 [[maybe_unused]] static bool CheckKgslPresent() {
