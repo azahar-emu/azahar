@@ -7,6 +7,7 @@
 #include <boost/iostreams/stream.hpp>
 #include "common/common_paths.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hw/aes/key.h"
 #include "core/hw/ecc.h"

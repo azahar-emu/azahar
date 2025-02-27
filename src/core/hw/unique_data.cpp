@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/common_paths.h"
+#include "common/logging/log.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/otp.h"
 #include "core/hw/aes/key.h"
