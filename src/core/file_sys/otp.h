@@ -84,6 +84,6 @@ public:
     }
 
 private:
-    OTPBin otp = {0};
+    OTPBin otp = {{0}};
 };
 } // namespace FileSys
