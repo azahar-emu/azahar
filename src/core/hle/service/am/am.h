@@ -319,11 +319,6 @@ private:
     u64 written = 0;
     std::shared_ptr<CurrentImportingTitle> importing_title;
     u16 index;
-
-    [[maybe_unused]]
-    NCCH_Header ncch_header;
-    [[maybe_unused]]
-    size_t ncch_copied = 0;
 };
 
 /**

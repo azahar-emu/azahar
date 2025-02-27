@@ -93,8 +93,9 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
         return Loader::ResultStatus::Error;
 
     // Read content index size from the second u32 into it. Actual format is undocumented.
-    const size_t content_index_size = *reinterpret_cast<const u32_be*>(
-        &file_data[offset + content_index_start + 1 * sizeof(u32)]);
+    const size_t content_index_size =
+        static_cast<size_t>(static_cast<u32>(*reinterpret_cast<const u32_be*>(
+            &file_data[offset + content_index_start + 1 * sizeof(u32)])));
     const size_t content_index_end = content_index_start + content_index_size;
 
     if (total_size < content_index_end)
