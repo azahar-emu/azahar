@@ -49,8 +49,8 @@ static void PrintHelp(const char* argv0) {
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of players for this room\n"
                  "--password          The password for the room\n"
-                 "--preferred-game    The preferred game for this room\n"
-                 "--preferred-game-id The preferred game-id for this room\n"
+                 "--preferred-app     The preferred application for this room\n"
+                 "--preferred-app-id  The preferred application ID for this room\n"
                  "--username          The username used for announce\n"
                  "--token             The token used for announce\n"
                  "--web-api-url       Citra Web API url\n"
@@ -64,6 +64,11 @@ static void PrintHelp(const char* argv0) {
 static void PrintVersion() {
     std::cout << "Azahar dedicated room " << Common::g_scm_branch << " " << Common::g_scm_desc
               << " Libnetwork: " << Network::network_version << std::endl;
+}
+
+static void PrintRemovedOptionWarning(const char* argv0, const char* option) {
+    std::cout << "The " << option << " option has been renamed or removed.\n"
+              << "Please run " << argv0 << " -h for a list of valid options.\n";
 }
 
 /// The magic text at the beginning of a citra-room ban list file.
@@ -181,8 +186,8 @@ int main(int argc, char** argv) {
         {"port", required_argument, 0, 'p'},
         {"max_members", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'w'},
-        {"preferred-game", required_argument, 0, 'g'},
-        {"preferred-game-id", required_argument, 0, 'i'},
+        {"preferred-app", required_argument, 0, 's'},
+        {"preferred-app-id", required_argument, 0, 'i'},
         {"username", optional_argument, 0, 'u'},
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
@@ -191,11 +196,15 @@ int main(int argc, char** argv) {
         {"enable-citra-mods", no_argument, 0, 'e'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
+        // Removed options
+        {"preferred-game", optional_argument, 0, 'g'},
+        {"preferred-game-id", optional_argument, 0, 0},
+
         {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:l:hv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "n:d:p:m:w:s:u:t:a:i:l:hvg", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
             case 'n':
@@ -213,7 +222,7 @@ int main(int argc, char** argv) {
             case 'w':
                 password.assign(optarg);
                 break;
-            case 'g':
+            case 's':
                 preferred_game.assign(optarg);
                 break;
             case 'i':
@@ -243,6 +252,14 @@ int main(int argc, char** argv) {
             case 'v':
                 PrintVersion();
                 return 0;
+            case 'g':
+                PrintRemovedOptionWarning(argv[0], "--preferred-game/-g");
+                return 255;
+            case 0:
+                if (strcmp(long_options[option_index].name, "preferred-game-id") == 0) {
+                    PrintRemovedOptionWarning(argv[0], "--preferred-game-id");
+                    return 255;
+                }
             }
         }
     }
@@ -253,13 +270,14 @@ int main(int argc, char** argv) {
         return -1;
     }
     if (preferred_game.empty()) {
-        std::cout << "preferred game is empty!\n\n";
+        std::cout << "preferred application is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
     if (preferred_game_id == 0) {
-        std::cout << "preferred-game-id not set!\nThis should get set to allow users to find your "
-                     "room.\nSet with --preferred-game-id id\n\n";
+        std::cout
+            << "preferred application id not set!\nThis should get set to allow users to find your "
+               "room.\nSet with --preferred-app-id id\n\n";
     }
     if (max_members > Network::MaxConcurrentConnections || max_members < 2) {
         std::cout << "max_members needs to be in the range 2 - "
