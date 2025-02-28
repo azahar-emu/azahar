@@ -4,7 +4,7 @@
 ![GitHub Downloads](https://img.shields.io/github/downloads/azahar-emu/azahar/total?logo=github&label=GitHub%20Downloads) <!-- ![Flathub Downloads](https://img.shields.io/flathub/downloads/org.azahar-emu.azahar?logo=Flathub&label=Flathub%20Downloads) -->
 ![CI Build Status](https://github.com/azahar-emu/azahar/actions/workflows/build.yml/badge.svg)
 
-<b>Azahar</b> is an open-source 3DS emulator project based Citra.
+<b>Azahar</b> is an open-source 3DS emulator project based on Citra.
 
 It was created from the merging of PabloMK7's Citra fork and the Lime3DS project, both of which emerged shortly after Citra was taken down.
 
