@@ -1,9 +1,9 @@
 [Desktop Entry]
-Version=1.0
+Version=1.5
 Type=Application
 Name=Azahar Room
 Comment=Multiplayer room host for Azahar
-Icon=citra
+Icon=org.azahar_emu.azahar
 TryExec=azahar-room
 Exec=azahar-room %f
 Categories=Game;Emulator;
