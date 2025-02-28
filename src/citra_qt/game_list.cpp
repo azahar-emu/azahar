@@ -1009,7 +1009,7 @@ const QStringList GameList::supported_file_extensions = {
 
 void GameList::RefreshGameDirectory() {
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
-        LOG_INFO(Frontend, "Change detected in the applications directory. Reloading game list.");
+        LOG_INFO(Frontend, "Change detected in the applications directory. Reloading app list.");
         PopulateAsync(UISettings::values.game_dirs);
     }
 }
