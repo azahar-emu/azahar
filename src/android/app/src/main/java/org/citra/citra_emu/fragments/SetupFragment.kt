@@ -235,9 +235,9 @@ class SetupFragment : Fragment() {
                     R.drawable.ic_controller,
                     R.string.games,
                     R.string.games_description,
-                    R.drawable.ic_add,
+                    0,
                     true,
-                    R.string.add_games,
+                    R.string.select,
                     {
                         gamesDirCallback = it
                         getGamesDirectory.launch(

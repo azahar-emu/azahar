@@ -70,7 +70,6 @@
     <string name="done">Done</string>
     <string name="done_description">You\'re all set.\nEnjoy using the emulator!</string>
     <string name="text_continue">Continue</string>
-    <string name="add_games">Add Applications</string>
     <string name="notifications">Notifications</string>
     <string name="notifications_description">Grant the notification permission with the button below.</string>
     <string name="give_permission">Grant permission</string>
