@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -174,7 +174,7 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
         u32 tmp = (first ? cheat_lines[state.current_line_nr].first
                          : cheat_lines[state.current_line_nr].value) >>
                   bit_offset;
-        system.Memory().Write8(addr, tmp);
+        system.Memory().Write8(addr, static_cast<u8>(tmp));
         addr += 1;
         num_bytes -= 1;
         bit_offset += 8;

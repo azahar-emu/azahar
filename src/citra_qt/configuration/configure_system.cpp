@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -412,7 +412,7 @@ void ConfigureSystem::ApplyConfiguration() {
         s32 new_birthmonth = ui->combo_birthmonth->currentIndex() + 1;
         s32 new_birthday = ui->combo_birthday->currentIndex() + 1;
         if (birthmonth != new_birthmonth || birthday != new_birthday) {
-            cfg->SetBirthday(new_birthmonth, new_birthday);
+            cfg->SetBirthday(static_cast<u8>(new_birthmonth), static_cast<u8>(new_birthday));
             modified = true;
         }
 

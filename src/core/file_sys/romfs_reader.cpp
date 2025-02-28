@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include <algorithm>
 #include <vector>
 #include <cryptopp/aes.h>
@@ -24,7 +28,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
 
     // Skip cache if the read is too big
     if (segments.size() == 1 && segments[0].second > cache_line_size) {
-        length = file.ReadAtBytes(buffer, length, file_offset + offset);
+        length = file->ReadAtBytes(buffer, length, file_offset + offset);
         LOG_TRACE(Service_FS, "RomFS Cache SKIP: offset={}, length={}", offset, length);
         return length;
     }
@@ -38,7 +42,7 @@ std::size_t DirectRomFSReader::ReadFile(std::size_t offset, std::size_t length, 
         auto cache_entry = cache.request(page);
         if (!cache_entry.first) {
             // If not found, read from disk and cache the data
-            read_size = file.ReadAtBytes(cache_entry.second.data(), read_size, file_offset + page);
+            read_size = file->ReadAtBytes(cache_entry.second.data(), read_size, file_offset + page);
             LOG_TRACE(Service_FS, "RomFS Cache MISS: page={}, length={}, into={}", page, seg.second,
                       (seg.first - page));
         } else {

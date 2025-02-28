@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,6 +22,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hw/unique_data.h"
 #include "core/loader/ncch.h"
 #include "core/loader/smdh.h"
 #include "core/memory.h"
@@ -37,6 +38,19 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     u32 magic;
     file.Seek(0x100, SEEK_SET);
     if (1 != file.ReadArray<u32>(&magic, 1))
+        return FileType::Error;
+
+    if (MakeMagic('N', 'C', 'S', 'D') == magic)
+        return FileType::CCI;
+
+    if (MakeMagic('N', 'C', 'C', 'H') == magic)
+        return FileType::CXI;
+
+    std::unique_ptr<FileUtil::IOFile> file_crypto = HW::UniqueData::OpenUniqueCryptoFile(
+        file.Filename(), "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+
+    file_crypto->Seek(0x100, SEEK_SET);
+    if (1 != file_crypto->ReadArray<u32>(&magic, 1))
         return FileType::Error;
 
     if (MakeMagic('N', 'C', 'S', 'D') == magic)

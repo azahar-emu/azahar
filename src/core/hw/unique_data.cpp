@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cryptopp/sha.h>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "core/file_sys/certificate.h"
@@ -105,6 +106,7 @@ SecureDataLoadStatus LoadOTP() {
 
     const std::string filepath = GetOTPPath();
 
+    HW::AES::InitKeys();
     auto otp_keyiv = HW::AES::GetOTPKeyIV();
 
     auto loader_status = otp.Load(filepath, otp_keyiv.first, otp_keyiv.second);
@@ -224,6 +226,36 @@ void InvalidateSecureData() {
     otp.Invalidate();
     ct_cert.Invalidate();
     movable.Invalidate();
+}
+
+std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
+                                                       const char openmode[], UniqueCryptoFileID id,
+                                                       int flags) {
+    LoadOTP();
+
+    if (!ct_cert.IsValid() || !otp.Valid()) {
+        return std::make_unique<FileUtil::IOFile>();
+    }
+
+    struct {
+        ECC::PublicKey pkey;
+        u32 device_id;
+        u32 id;
+    } hash_data;
+    hash_data.pkey = ct_cert.GetPublicKeyECC();
+    hash_data.device_id = otp.GetDeviceID();
+    hash_data.id = static_cast<u32>(id);
+
+    CryptoPP::SHA256 hash;
+    u8 digest[CryptoPP::SHA256::DIGESTSIZE];
+    hash.CalculateDigest(digest, reinterpret_cast<CryptoPP::byte*>(&hash_data), sizeof(hash_data));
+
+    std::vector<u8> key(0x10);
+    std::vector<u8> ctr(0x10);
+    memcpy(key.data(), digest, 0x10);
+    memcpy(ctr.data(), digest + 0x10, 12);
+
+    return std::make_unique<FileUtil::CryptoIOFile>(filename, openmode, key, ctr, flags);
 }
 
 } // namespace HW::UniqueData

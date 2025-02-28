@@ -121,8 +121,9 @@ public:
 
 private:
     friend class CIAFile;
-    FileUtil::IOFile file;
+    std::unique_ptr<FileUtil::IOFile> file;
     bool is_error = false;
+    bool is_not_ncch = false;
     bool decryption_authorized = false;
 
     std::size_t written = 0;

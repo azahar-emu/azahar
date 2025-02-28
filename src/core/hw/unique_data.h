@@ -1,4 +1,4 @@
-// Copyright 2024 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <vector>
 #include "common/common_types.h"
+#include "common/file_util.h"
 
 namespace FileSys {
 class Certificate;
@@ -129,5 +130,13 @@ FileSys::Certificate& GetCTCert();
 FileSys::OTP& GetOTP();
 MovableSedFull& GetMovableSed();
 
+enum class UniqueCryptoFileID {
+    NCCH = 0,
+};
+
 void InvalidateSecureData();
+
+std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
+                                                       const char openmode[], UniqueCryptoFileID id,
+                                                       int flags = 0);
 } // namespace HW::UniqueData

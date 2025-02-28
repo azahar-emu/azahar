@@ -95,12 +95,23 @@ public:
 };
 
 NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file) {
-    file = FileUtil::IOFile(out_file, "wb");
+    // A console unique crypto file is used to store the decrypted NCCH file. This is done
+    // to prevent Azahar being used as a tool to download easy shareable decrypted contents
+    // from the eshop.
+    file = HW::UniqueData::OpenUniqueCryptoFile(out_file, "wb",
+                                                HW::UniqueData::UniqueCryptoFileID::NCCH);
+    if (!file->IsOpen()) {
+        is_error = true;
+    }
 }
 
 void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
     if (is_error)
         return;
+
+    if (is_not_ncch) {
+        file->WriteBytes(buffer, length);
+    }
 
     const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
 
@@ -114,7 +125,10 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
 
     if (!header_parsed && header_size == sizeof(NCCH_Header)) {
         if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
-            is_error = true;
+            // Most likely DS contents, store without additional operations
+            is_not_ncch = true;
+            file->WriteBytes(&ncch_header, sizeof(ncch_header));
+            file->WriteBytes(buffer, length);
             return;
         }
 
@@ -278,7 +292,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
 
         u8 prev_crypto = ncch_header.no_crypto;
         ncch_header.no_crypto.Assign(1);
-        file.WriteBytes(&ncch_header, sizeof(ncch_header));
+        file->WriteBytes(&ncch_header, sizeof(ncch_header));
         written += sizeof(ncch_header);
         ncch_header.no_crypto.Assign(prev_crypto);
     }
@@ -305,7 +319,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
         if (reg == nullptr) {
             // This file has no encryption
             size_t to_write = length;
-            file.WriteBytes(buffer, to_write);
+            file->WriteBytes(buffer, to_write);
             written += to_write;
             buffer += to_write;
             length -= to_write;
@@ -313,7 +327,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
             if (written < reg->offset) {
                 // Not inside a crypto region
                 size_t to_write = std::min(length, reg->offset - written);
-                file.WriteBytes(buffer, to_write);
+                file->WriteBytes(buffer, to_write);
                 written += to_write;
                 buffer += to_write;
                 length -= to_write;
@@ -347,7 +361,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                         d.Seek(offset);
                     }
                     d.ProcessData(temp.data(), buffer, to_write);
-                    file.WriteBytes(temp.data(), to_write);
+                    file->WriteBytes(temp.data(), to_write);
 
                     if (reg->type == CryptoRegion::EXEFS_HDR) {
                         if (exefs_header_written != sizeof(ExeFs_Header)) {
@@ -376,7 +390,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                         }
                     }
                 } else {
-                    file.WriteBytes(buffer, to_write);
+                    file->WriteBytes(buffer, to_write);
                 }
                 written += to_write;
                 buffer += to_write;
@@ -538,7 +552,6 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
     const u64 offset_max = offset + length;
-    bool success = true;
     for (std::size_t i = 0; i < content_written.size(); i++) {
         if (content_written[i] < container.GetContentSize(i)) {
             // The size, minimum unwritten offset, and maximum unwritten offset of this content
@@ -573,8 +586,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             }
 
             file.Write(temp.data(), temp.size());
-            if (file.IsError())
-                success = false;
+            if (file.IsError()) {
+                // This can never happen in real HW
+                return Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
 
             // Keep tabs on how much of this content ID has been written so new range_min
             // values can be calculated.
@@ -584,7 +600,7 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
         }
     }
 
-    return success ? length : 0;
+    return length;
 }
 
 ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush,
@@ -705,13 +721,17 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
     }
 
     file.Write(temp.data(), temp.size());
-    bool success = !file.IsError();
+    if (file.IsError()) {
+        // This can never happen in real HW
+        return Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                      ErrorLevel::Permanent);
+    }
 
     content_written[content_index] += temp.size();
     LOG_DEBUG(Service_AM, "Wrote {} to content {}, total {}", temp.size(), content_index,
               content_written[content_index]);
 
-    return success ? temp.size() : 0;
+    return temp.size();
 }
 
 u64 CIAFile::GetSize() const {
@@ -2313,8 +2333,6 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(ResultSuccess);
 
-    // TODO: Make this actually do something:
-    /*
     u32 count = 0;
     for (auto it = am->import_title_contexts.begin(); it != am->import_title_contexts.end(); it++) {
         if ((include_installing &&
@@ -2325,9 +2343,8 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
             count++;
         }
     }
-    */
 
-    rb.Push<u32>(static_cast<u32>(am->import_title_contexts.size()));
+    rb.Push<u32>(count);
 }
 
 void Module::Interface::GetImportTitleContextListImpl(IPC::RequestParser& rp,
@@ -3672,6 +3689,8 @@ void Module::Interface::Sign(Kernel::HLERequestContext& ctx) {
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
     ar & cia_installing;
+    ar & force_old_device_id;
+    ar & force_new_device_id;
     ar & am_title_list;
     ar & system_updater_mutex;
 }

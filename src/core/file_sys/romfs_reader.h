@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #pragma once
 
 #include <array>
@@ -41,7 +45,8 @@ private:
  */
 class DirectRomFSReader : public RomFSReader {
 public:
-    DirectRomFSReader(FileUtil::IOFile&& file, std::size_t file_offset, std::size_t data_size)
+    DirectRomFSReader(std::unique_ptr<FileUtil::IOFile>&& file, std::size_t file_offset,
+                      std::size_t data_size)
         : file(std::move(file)), file_offset(file_offset), data_size(data_size) {}
 
     ~DirectRomFSReader() override = default;
@@ -57,7 +62,7 @@ public:
     bool CacheReady(std::size_t file_offset, std::size_t length) override;
 
 private:
-    FileUtil::IOFile file;
+    std::unique_ptr<FileUtil::IOFile> file;
     u64 file_offset;
     u64 data_size;
 

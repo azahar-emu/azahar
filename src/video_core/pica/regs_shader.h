@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,7 +23,8 @@ struct ShaderRegs {
 
     Common::Vec4<u8> GetIntUniform(u32 index) const {
         const auto& values = int_uniforms[index];
-        return Common::MakeVec<u8>(values.x, values.y, values.z, values.w);
+        return Common::MakeVec<u8>(static_cast<u8>(values.x), static_cast<u8>(values.y),
+                                   static_cast<u8>(values.z), static_cast<u8>(values.w));
     }
 
     INSERT_PADDING_WORDS(0x4);

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -126,7 +126,7 @@ void ConfigureDebug::SetConfiguration() {
 
 void ConfigureDebug::ApplyConfiguration() {
     Settings::values.use_gdbstub = ui->toggle_gdbstub->isChecked();
-    Settings::values.gdbstub_port = ui->gdbport_spinbox->value();
+    Settings::values.gdbstub_port = static_cast<u16>(ui->gdbport_spinbox->value());
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
     Settings::values.log_regex_filter = ui->log_regex_filter_edit->text().toStdString();
