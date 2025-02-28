@@ -64,7 +64,7 @@ static_assert(sizeof(SharedMemoryHeader) == 16, "SharedMemoryHeader has wrong si
  * A buffer consists of three parts:
  *     - BufferInfo: stores available count of packets, and their position in the PacketInfo
  *         circular queue.
- *     - PacketInfo circular queue: stores the position of each avaiable packets in the Packet data
+ *     - PacketInfo circular queue: stores the position of each available packets in the Packet data
  *         buffer. Each entry is a pair of {offset, size}.
  *     - Packet data circular buffer: stores the actual data of packets.
  *
