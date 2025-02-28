@@ -26,7 +26,7 @@ val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
 
 @Suppress("UnstableApiUsage")
 android {
-    namespace = "org.citra.citra_emu"
+    namespace = "io.github.lime3ds.android"
 
     compileSdkVersion = "android-35"
     ndkVersion = "27.1.12297006"
