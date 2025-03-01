@@ -76,8 +76,7 @@ ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::SetConfiguration() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->turbo_speed->setValue(
-            SettingsToSlider(Settings::values.turbo_speed.GetValue()));
+        ui->turbo_speed->setValue(SettingsToSlider(Settings::values.turbo_speed.GetValue()));
         ui->turbo_speed_display_label->setText(
             QStringLiteral("%1%").arg(Settings::values.turbo_speed.GetValue()));
 
