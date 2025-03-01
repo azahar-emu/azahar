@@ -184,7 +184,7 @@ delay_game_render_thread_us =
 
 # Disables rendering the right eye image.
 # Greatly improves performance in some games, but can cause flickering in others.
-# 0: Enable right eye rendering, 1 (default): Disable right eye rendering
+# 0 (default): Enable right eye rendering, 1: Disable right eye rendering
 disable_right_eye_render =
 
 [Layout]
