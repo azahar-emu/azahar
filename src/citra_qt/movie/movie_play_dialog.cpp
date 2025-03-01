@@ -29,7 +29,7 @@ MoviePlayDialog::MoviePlayDialog(QWidget* parent, GameList* game_list_, const Co
 
     if (system.IsPoweredOn()) {
         QString note_text;
-        note_text = tr("Current running game will be stopped.");
+        note_text = tr("Current running application will be stopped.");
         if (system.Movie().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
@@ -103,7 +103,7 @@ void MoviePlayDialog::UpdateUIDisplay() {
         game_list->FindGameByProgramID(metadata.program_id, GameListItemPath::TitleRole);
     if (title.isEmpty()) {
         ui->gameLineEdit->setText(tr("(unknown)"));
-        ui->note1Label->setText(tr("Game used in this movie is not in game list."));
+        ui->note1Label->setText(tr("Application used in this movie is not in Applications list."));
         ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     } else {
         ui->gameLineEdit->setText(title);

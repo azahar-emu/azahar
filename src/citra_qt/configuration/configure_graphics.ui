@@ -188,7 +188,7 @@
             <item>
              <widget class="QCheckBox" name="toggle_accurate_mul">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some games requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some applications requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>Accurate Multiplication</string>
@@ -224,7 +224,7 @@
       <item>
        <widget class="QCheckBox" name="toggle_async_present">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Perform presentation on separate threads. Improves performance when using Vulkan in most games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Perform presentation on separate threads. Improves performance when using Vulkan in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Enable Async Presentation</string>
@@ -258,7 +258,7 @@
          <item>
           <widget class="QLabel" name="texture_sampling_label">
            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by games. This can be useful in certain cases with poorly behaved games when upscaling. If unsure set this to Game Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
             <string>Texture Sampling</string>
@@ -269,7 +269,7 @@
           <widget class="QComboBox" name="texture_sampling_combobox">
            <item>
             <property name="text">
-             <string>Game Controlled</string>
+             <string>Application Controlled</string>
             </property>
            </item>
            <item>
@@ -331,7 +331,7 @@
                 </item>
                 <item>
                   <property name="text">
-                    <string>Use per-game</string>
+                    <string>Use per-application</string>
                   </property>
                 </item>
               </widget>
@@ -339,10 +339,10 @@
             <item>
               <widget class="QLabel" name="label_delay_render">
                 <property name="text">
-                  <string>Delay game render thread:</string>
+                  <string>Delay application render thread:</string>
                 </property>
                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated game render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic-fps games to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated application render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic framerate applications to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
               </widget>
             </item>

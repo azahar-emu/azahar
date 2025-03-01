@@ -550,8 +550,8 @@ void ConfigureSystem::RefreshConsoleID() {
     QMessageBox::StandardButton reply;
     QString warning_text = tr("This will replace your current virtual 3DS with a new one. "
                               "Your current virtual 3DS will not be recoverable. "
-                              "This might have unexpected effects in games. This might fail, "
-                              "if you use an outdated config savegame. Continue?");
+                              "This might have unexpected effects in applications. This might fail "
+                              "if you use an outdated config save. Continue?");
     reply = QMessageBox::critical(this, tr("Warning"), warning_text,
                                   QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {

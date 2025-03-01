@@ -3,21 +3,21 @@
 
     <!-- General application strings -->
     <string name="app_name" translatable="false">Azahar</string>
-    <string name="app_disclaimer">This software will run games for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you can begin with emulating, please select a folder to store Azahar\'s user data in.\n\nWhat\'s this:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android user data and storage</a></string>
+    <string name="app_disclaimer">This software will run applications for the Nintendo 3DS handheld game console. No game titles are included.\n\nBefore you can begin with emulating, please select a folder to store Azahar\'s user data in.\n\nWhat\'s this:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android user data and storage</a></string>
     <string name="app_notification_channel_name" translatable="false">Azahar</string>
     <string name="app_notification_channel_id" translatable="false">Azahar</string>
     <string name="app_notification_channel_description">Azahar 3DS emulator notifications</string>
     <string name="app_notification_running">Azahar is Running</string>
-    <string name="app_game_install_description">Next, you will need to select a Game Folder. Azahar will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
+    <string name="app_game_install_description">Next, you will need to select an Applications Folder. Azahar will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Settings</string>
     <string name="home_options">Options</string>
     <string name="home_search">Search</string>
-    <string name="home_games">Games</string>
+    <string name="home_games">Applications</string>
     <string name="settings_description">Configure emulator settings</string>
     <string name="install_game_content">Install CIA file</string>
-    <string name="install_game_content_description">Install games, updates or DLC</string>
+    <string name="install_game_content_description">Install applications, updates or DLC</string>
     <string name="share_log">Share Log</string>
     <string name="share_log_description">Share Azahar\'s log file to debug issues</string>
     <string name="gpu_driver_manager">GPU Driver Manager</string>
@@ -27,13 +27,13 @@
     <string name="custom_driver_not_supported">Custom drivers not supported</string>
     <string name="custom_driver_not_supported_description">Custom driver loading isn\'t currently supported for this device.\nCheck this option again in the future to see if support was added!</string>
     <string name="share_log_not_found">No log file found</string>
-    <string name="select_games_folder">Select Games Folder</string>
-    <string name="select_games_folder_description">Allows Azahar to populate the games list</string>
+    <string name="select_games_folder">Select Applications Folder</string>
+    <string name="select_games_folder_description">Allows Azahar to populate the application list</string>
     <string name="about">About</string>
     <string name="citra_description">An open-source 3DS emulator</string>
     <string name="about_description">Build version, credits, and more</string>
-    <string name="games_dir_selected">Games directory selected</string>
-    <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load games</string>
+    <string name="games_dir_selected">Application directory selected</string>
+    <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load applications</string>
     <string name="theme_and_color_description">Modify the look of the app</string>
     <string name="install_cia_title">Install CIA</string>
 
@@ -65,12 +65,12 @@
     <string name="welcome_description">Learn how to set up &lt;b>Azahar&lt;/b> and jump into emulation.</string>
     <string name="get_started">Get started</string>
     <string name="step_complete">Complete!</string>
-    <string name="games">Games</string>
-    <string name="games_description">Select your &lt;b>Games&lt;/b> folder with the button below.</string>
+    <string name="games">Applications</string>
+    <string name="games_description">Select your &lt;b>Applications&lt;/b> folder with the button below.</string>
     <string name="done">Done</string>
-    <string name="done_description">You\'re all set.\nEnjoy your games!</string>
+    <string name="done_description">You\'re all set.\nEnjoy using the emulator!</string>
     <string name="text_continue">Continue</string>
-    <string name="add_games">Add Games</string>
+    <string name="add_games">Add Applications</string>
     <string name="notifications">Notifications</string>
     <string name="notifications_description">Grant the notification permission with the button below.</string>
     <string name="give_permission">Grant permission</string>
@@ -81,8 +81,8 @@
     <string name="microphone_permission">Microphone</string>
     <string name="microphone_permission_description">Grant the microphone permission below to emulate the 3DS microphone.</string>
     <string name="permission_denied">Permission denied</string>
-    <string name="add_games_warning">Skip selecting games folder?</string>
-    <string name="add_games_warning_description">Games won\'t be displayed in the Games list if a folder isn\'t selected.</string>
+    <string name="add_games_warning">Skip selecting applications folder?</string>
+    <string name="add_games_warning_description">Software won\'t be displayed in the Applications list if a folder isn\'t selected.</string>
     <string name="add_games_warning_help" translatable="false">https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/</string>
     <string name="warning_help">Help</string>
     <string name="warning_skip">Skip</string>
@@ -98,8 +98,8 @@
     <string name="setup_set_theme">Set Theme</string>
 
     <!-- Search Strings -->
-    <string name="search_and_filter_games">Search and Filter Games</string>
-    <string name="home_search_games">Search Games</string>
+    <string name="search_and_filter_games">Search and Filter Applications</string>
+    <string name="home_search_games">Search Applications</string>
     <string name="search_recently_played">Recently Played</string>
     <string name="search_recently_added">Recently Added</string>
     <string name="search_installed">Installed</string>
@@ -152,7 +152,7 @@
     <string name="start">Start</string>
     <string name="keys_missing">Azahar is missing keys to download system files.</string>
     <string name="how_to_get_keys"><![CDATA[<a href="https://web.archive.org/web/20240304203412/https://citra-emu.org/wiki/aes-keys/">How to get keys?</a>]]></string>
-    <string name="show_home_apps">Show HOME menu apps in games list</string>
+    <string name="show_home_apps">Show HOME menu apps in Applications list</string>
     <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
     <string name="system_type_minimal">Minimal</string>
     <string name="system_type_old_3ds">Old 3DS</string>
@@ -167,7 +167,7 @@
     <string name="cancelling">Cancelling…</string>
     <string name="home_menu">HOME Menu</string>
     <string name="home_menu_warning">System Files Warning</string>
-    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing Azahar\'s files, downloading multiple versions of system files can dramatically slow down loading for games, save states, and the games list. Only download the files that you require to avoid any issues with loading speeds.</string>
+    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing Azahar\'s files, downloading multiple versions of system files can dramatically slow down loading for applications, save states, and the Applications list. Only download the files that you require to avoid any issues with loading speeds.</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
@@ -198,10 +198,10 @@
     <string name="steps_per_hour_description">Number of steps per hour reported by the pedometer. Range from 0 to 65,535.</string>
     <string name="console_id">Console ID</string>
     <string name="regenerate_console_id">Regenerate Console ID</string>
-    <string name="regenerate_console_id_description">This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects in games. This might fail if you use an outdated config savegame. Continue?</string>
+    <string name="regenerate_console_id_description">This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects inside applications. This might fail if you use an outdated config save. Continue?</string>
     <string name="plugin_loader">3GX Plugin Loader</string>
     <string name="plugin_loader_description">Loads 3GX plugins from the emulated SD card if they are available.</string>
-    <string name="allow_plugin_loader">Allow Games to Change Plugin Loader State</string>
+    <string name="allow_plugin_loader">Allow Applications to Change Plugin Loader State</string>
     <string name="allow_plugin_loader_description">Allows homebrew apps to enable the plugin loader even when it is disabled.</string>
 
     <!-- Camera settings strings -->
@@ -231,7 +231,7 @@
     <string name="linear_filtering">Linear Filtering</string>
     <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
     <string name="texture_filter_name">Texture Filter</string>
-    <string name="texture_filter_description">Enhances the visuals of games by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
+    <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
     <string name="hw_shaders">Enable Hardware Shader</string>
     <string name="hw_shaders_description">Uses hardware to emulate 3DS shaders. When enabled, game performance will be significantly improved.</string>
     <string name="shaders_accurate_mul">Accurate Multiplication</string>
@@ -243,7 +243,7 @@
     <string name="frame_limit_slider">Limit Speed Percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
     <string name="internal_resolution">Internal Resolution</string>
-    <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain games.</string>
+    <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain applications.</string>
     <string name="internal_resolution_setting_1x">Native (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Native (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Native (1200x720)</string>
@@ -767,7 +767,7 @@
     <string name="artic_base_connect">Connect to Artic Base</string>
     <string name="artic_base_enter_address">Enter Artic Base server address</string>
     <string name="delay_render_thread">Delay game render thread</string>
-    <string name="delay_render_thread_description">Delay the game render thread when it submits data to the GPU. Helps with performance issues in the (very few) dynamic-fps games.</string>
+    <string name="delay_render_thread_description">Delay the game render thread when it submits data to the GPU. Helps with performance issues in the (very few) applications with dynamic framerates.</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Quicksave</string>
@@ -783,6 +783,6 @@
     <string name="instant_debug_log">Flush log output on every message</string>
     <string name="instant_debug_log_desc">Immediately commits the debug log to file. Use this if citra crashes and the log output is being cut.</string>
     <string name="disable_right_eye_render">Disable Right Eye Render</string>
-    <string name="disable_right_eye_render_desc">Greatly improves performance in some games, but can cause flickering in others.</string>
+    <string name="disable_right_eye_render_desc">Greatly improves performance in some applications, but can cause flickering in others.</string>
 
 </resources>

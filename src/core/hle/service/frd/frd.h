@@ -59,7 +59,7 @@ struct Game {
     u16 version;
     INSERT_PADDING_BYTES(0x6);
 };
-static_assert(sizeof(Game) == 0x10, "Game has inccorect size");
+static_assert(sizeof(Game) == 0x10, "Application has inccorect size");
 
 struct ScreenName {
     // 20 bytes according to 3dbrew

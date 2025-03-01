@@ -68,7 +68,7 @@
    <item>
     <widget class="QGroupBox" name="game_list_groupBox">
      <property name="title">
-      <string>Game List</string>
+      <string>Application List</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>

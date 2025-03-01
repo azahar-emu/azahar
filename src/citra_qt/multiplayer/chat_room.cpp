@@ -131,7 +131,7 @@ public:
         setData(QString::fromStdString(username), UsernameRole);
         setData(QString::fromStdString(avatar_url), AvatarUrlRole);
         if (game_name.empty()) {
-            setData(QObject::tr("Not playing a game"), GameNameRole);
+            setData(QObject::tr("Not running an application"), GameNameRole);
         } else {
             setData(QString::fromStdString(game_name), GameNameRole);
         }

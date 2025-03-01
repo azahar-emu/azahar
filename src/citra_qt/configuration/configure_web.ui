@@ -23,7 +23,7 @@
       <item>
        <widget class="QCheckBox" name="toggle_discordrpc">
         <property name="text">
-         <string>Show Current Game in your Discord Status</string>
+         <string>Show current application in your Discord status</string>
         </property>
        </widget>
       </item>

@@ -197,7 +197,8 @@ void Lobby::ResetModel() {
     model->insertColumns(0, Column::TOTAL);
     model->setHeaderData(Column::EXPAND, Qt::Horizontal, QString(), Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, tr("Room Name"), Qt::DisplayRole);
-    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Game"), Qt::DisplayRole);
+    model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Application"),
+                         Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, tr("Host"), Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, tr("Players"), Qt::DisplayRole);
 }

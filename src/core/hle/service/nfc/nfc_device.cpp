@@ -61,7 +61,8 @@ bool NfcDevice::LoadAmiibo(std::string filename) {
     }
 
     if (device_state != DeviceState::SearchingForTag) {
-        LOG_ERROR(Service_NFC, "Game is not looking for amiibos, current state {}", device_state);
+        LOG_ERROR(Service_NFC, "Application is not looking for amiibos, current state {}",
+                  device_state);
         return false;
     }
 

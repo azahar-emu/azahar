@@ -180,7 +180,7 @@
         <item>
          <widget class="QPushButton" name="button_reset_per_game">
           <property name="text">
-           <string>Reset Game Settings</string>
+           <string>Reset Per-Application Settings</string>
           </property>
          </widget>
         </item>

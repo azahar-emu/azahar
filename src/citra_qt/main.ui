@@ -446,7 +446,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Browse Public Application Lobby</string>
+    <string>Browse Public Rooms</string>
    </property>
   </action>
   <action name="action_Start_Room">

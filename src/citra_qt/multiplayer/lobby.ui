@@ -73,7 +73,7 @@
          <item>
           <widget class="QCheckBox" name="games_owned">
            <property name="text">
-            <string>Games I Own</string>
+            <string>Applications I Own</string>
            </property>
           </widget>
          </item>

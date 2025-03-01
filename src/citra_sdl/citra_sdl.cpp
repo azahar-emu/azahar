@@ -406,11 +406,12 @@ void LaunchSdlFrontend(int argc, char** argv) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
         exit(-1);
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
-        LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
-                               "being used with Azahar. \n\n For more information on dumping and "
-                               "decrypting games, please refer to: "
-                               "https://web.archive.org/web/20240304210021/https://citra-emu.org/"
-                               "wiki/dumping-game-cartridges/");
+        LOG_CRITICAL(Frontend,
+                     "The application that you are trying to load must be decrypted before "
+                     "being used with Azahar. \n\n For more information on dumping and "
+                     "decrypting applications, please refer to: "
+                     "https://web.archive.org/web/20240304210021/https://citra-emu.org/"
+                     "wiki/dumping-game-cartridges/");
         exit(-1);
     case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
         LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");

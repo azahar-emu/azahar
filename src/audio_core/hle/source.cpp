@@ -246,10 +246,11 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         // fix that, but as a stop gap, we can just prevent these underflowed values from playing in
         // the mean time
         if (static_cast<s32>(config.length) < 0) {
-            LOG_ERROR(Audio_DSP,
-                      "Skipping embedded buffer sample! Game passed in improper value for length. "
-                      "addr {:X} length {:X}",
-                      static_cast<u32>(config.physical_address), static_cast<u32>(config.length));
+            LOG_ERROR(
+                Audio_DSP,
+                "Skipping embedded buffer sample! Application passed in improper value for length. "
+                "addr {:X} length {:X}",
+                static_cast<u32>(config.physical_address), static_cast<u32>(config.length));
         } else {
             state.input_queue.emplace(Buffer{
                 config.physical_address,

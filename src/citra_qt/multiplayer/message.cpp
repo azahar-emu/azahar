@@ -19,8 +19,9 @@ const ConnectionError ErrorManager::IP_ADDRESS_NOT_VALID(
 const ConnectionError ErrorManager::PORT_NOT_VALID(
     QT_TR_NOOP("Port must be a number between 0 to 65535."));
 const ConnectionError ErrorManager::GAME_NOT_SELECTED(QT_TR_NOOP(
-    "You must choose a Preferred Game to host a room. If you do not have any games in your game "
-    "list yet, add a game folder by clicking on the plus icon in the game list."));
+    "You must choose a Preferred Application to host a room. If you do not have any applications "
+    "in your Applications list yet, add an applications folder by clicking on the plus icon "
+    "in the Applications list."));
 const ConnectionError ErrorManager::NO_INTERNET(
     QT_TR_NOOP("Unable to find an internet connection. Check your internet settings."));
 const ConnectionError ErrorManager::UNABLE_TO_CONNECT(

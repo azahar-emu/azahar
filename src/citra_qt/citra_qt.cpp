@@ -755,8 +755,7 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Advance_Frame, QStringLiteral("Advance Frame"));
     link_action_shortcut(ui->action_Load_from_Newest_Slot, QStringLiteral("Load from Newest Slot"));
     link_action_shortcut(ui->action_Save_to_Oldest_Slot, QStringLiteral("Save to Oldest Slot"));
-    link_action_shortcut(ui->action_View_Lobby,
-                         QStringLiteral("Multiplayer Browse Public Application Lobby"));
+    link_action_shortcut(ui->action_View_Lobby, QStringLiteral("Multiplayer Browse Public Rooms"));
     link_action_shortcut(ui->action_Start_Room, QStringLiteral("Multiplayer Create Room"));
     link_action_shortcut(ui->action_Connect_To_Room,
                          QStringLiteral("Multiplayer Direct Connect to Room"));

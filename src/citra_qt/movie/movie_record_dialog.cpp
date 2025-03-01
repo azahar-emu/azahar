@@ -24,12 +24,12 @@ MovieRecordDialog::MovieRecordDialog(QWidget* parent, const Core::System& system
 
     QString note_text;
     if (system.IsPoweredOn()) {
-        note_text = tr("Current running game will be restarted.");
+        note_text = tr("Current running application will be restarted.");
         if (system.Movie().GetPlayMode() == Core::Movie::PlayMode::Recording) {
             note_text.append(tr("<br>Current recording will be discarded."));
         }
     } else {
-        note_text = tr("Recording will start once you boot a game.");
+        note_text = tr("Recording will start once you boot an application.");
     }
     ui->noteLabel->setText(note_text);
 }

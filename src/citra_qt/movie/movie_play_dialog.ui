@@ -54,7 +54,7 @@
       <item row="0" column="0">
        <widget class="QLabel">
         <property name="text">
-         <string>Game:</string>
+         <string>Application:</string>
         </property>
        </widget>
       </item>
