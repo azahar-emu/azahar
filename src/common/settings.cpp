@@ -105,7 +105,7 @@ void LogSettings() {
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
-    log_setting("Stereoscopy_Swap_Eyes",values.swap_eyes_3d.GetValue());
+    log_setting("Stereoscopy_Swap_Eyes", values.swap_eyes_3d.GetValue());
     log_setting("Stereoscopy_MonoRenderOption", values.mono_render_option.GetValue());
     if (values.render_3d.GetValue() == StereoRenderOption::Anaglyph) {
         log_setting("Renderer_AnaglyphShader", values.anaglyph_shader_name.GetValue());
