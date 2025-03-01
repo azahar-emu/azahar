@@ -1,4 +1,8 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +11,7 @@
 // Directory separators, do we need this?
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'
+#define DIR_SEP_CHR_WIN '\\'
 
 #ifndef MAX_PATH
 #define MAX_PATH 260
