@@ -13,7 +13,8 @@ class SwitchSetting(
     titleId: Int,
     descriptionId: Int,
     val key: String? = null,
-    val defaultValue: Any? = null
+    val defaultValue: Any? = null,
+    override var isEnabled: Boolean = true
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SWITCH
 
