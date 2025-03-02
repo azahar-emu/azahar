@@ -305,9 +305,9 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
     const auto extensions = GetInstanceExtensions(window_type, enable_validation);
 
     const vk::ApplicationInfo application_info = {
-        .pApplicationName = "Citra",
+        .pApplicationName = "Azahar",
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-        .pEngineName = "Citra Vulkan",
+        .pEngineName = "Azahar Vulkan",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
         .apiVersion = TargetVulkanApiVersion,
     };
