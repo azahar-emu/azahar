@@ -1455,7 +1455,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         private fun runWithValidSurface() {
-            NativeLibrary.surfaceChanged(surface!!, surface2!!)
+            NativeLibrary.surfaceChanged(surface!!)
             when (state) {
                 State.STOPPED -> {
                     Thread({

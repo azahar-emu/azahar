@@ -125,6 +125,9 @@ object NativeLibrary {
     external fun surfaceDestroyed()
     external fun doFrame()
 
+    //Second window
+    external fun enableSecondWindow(secondary_surface: Surface)
+    external fun disableSecondWindow()
     /**
      * Unpauses emulation from a paused state.
      */
