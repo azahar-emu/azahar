@@ -382,7 +382,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString get() = short.toString()
-                override val defaultValue: Short = 3
+                override val defaultValue: Short = 11
             }
             add(
                 SingleChoiceSetting(
@@ -411,7 +411,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString get() = short.toString()
-                override val defaultValue: Short = 25
+                override val defaultValue: Short = 7
             }
             val birthdayMonth = SystemSaveGame.getBirthday()[0]
             val daysInMonth = BirthdayMonth.getMonthFromCode(birthdayMonth)?.days ?: 31

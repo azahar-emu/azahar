@@ -222,7 +222,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         // Set default values for system config file
         SystemSaveGame.apply {
             setUsername("AZAHAR")
-            setBirthday(3, 25)
+            setBirthday(11, 7)
             setSystemLanguage(1)
             setSoundOutputMode(1)
             setCountryCode(49)
