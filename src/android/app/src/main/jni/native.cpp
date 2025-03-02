@@ -65,9 +65,12 @@
 namespace {
 
 ANativeWindow* s_surf;
+ANativeWindow* s_secondary_surface;
+bool secondary_enabled = false;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
+std::unique_ptr<EmuWindow_Android> second_window;
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
@@ -118,8 +121,10 @@ static void TryShutdown() {
     }
 
     window->DoneCurrent();
+    if (second_window) second_window->DoneCurrent();
     Core::System::GetInstance().Shutdown();
     window.reset();
+    if (second_window) second_window.reset();
     InputManager::Shutdown();
     MicroProfileShutdown();
 }
@@ -148,12 +153,17 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
-        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf,false);
+        if (secondary_enabled) {
+            EGLContext* c = window->GetEGLContext();
+            second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,s_secondary_surface, true, c);
+        }
         break;
 #endif
 #ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
-        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library,false);
+        if (secondary_enabled) second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
         break;
 #endif
     default:
@@ -161,9 +171,14 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                      "Unknown or unsupported graphics API {}, falling back to available default",
                      graphics_api);
 #ifdef ENABLE_OPENGL
-        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf, false);
+        if (secondary_enabled) {
+            EGLContext *c = window->GetEGLContext();
+            second_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,true, c);
+        }
 #elif ENABLE_VULKAN
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
+        if (secondary_enabled) second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
 #else
 // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
@@ -202,7 +217,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     InputManager::Init();
 
     window->MakeCurrent();
-    const Core::System::ResultStatus load_result{system.Load(*window, filepath)};
+    //if (second_window) second_window->MakeCurrent();
+    const Core::System::ResultStatus load_result{system.Load(*window, filepath,second_window.get())};
     if (load_result != Core::System::ResultStatus::Success) {
         return load_result;
     }
@@ -249,6 +265,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
             std::unique_lock pause_lock{paused_mutex};
             running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
             window->PollEvents();
+            //if (second_window) second_window->PollEvents();
         }
     }
 
@@ -312,6 +329,23 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
     LOG_INFO(Frontend, "Surface changed");
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_enableSecondWindow(JNIEnv* env,
+                                                            [[maybe_unused]] jobject obj,jobject surf) {
+   s_secondary_surface = ANativeWindow_fromSurface(env, surf);
+   secondary_enabled = true;
+
+    LOG_INFO(Frontend, "Secondary Surface Enabled");
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_disableSecondWindow(JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj) {
+
+    secondary_enabled = false;
+    // how do I delete the window? TODO
+
+    LOG_INFO(Frontend, "Secondary Surface Disabled");
+}
+
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
     if (s_surf != nullptr) {
@@ -330,6 +364,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* en
     }
     if (window) {
         window->TryPresenting();
+    }
+    if (second_window) {
+        second_window->TryPresenting();
     }
 }
 
@@ -492,6 +529,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIE
     stop_run = true;
     pause_emulation = false;
     window->StopPresenting();
+    if (second_window) second_window->StopPresenting();
     running_cv.notify_all();
 }
 
@@ -756,4 +794,4 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
 }
 
-} // extern "C"
+}
