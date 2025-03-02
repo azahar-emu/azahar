@@ -1,11 +1,10 @@
 import android.app.Presentation
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
 import android.view.Display
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import org.citra.citra_emu.NativeLibrary
 
 class SecondScreenPresentation(
     context: Context,
@@ -20,7 +19,7 @@ class SecondScreenPresentation(
         surfaceView = SurfaceView(context)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-
+                NativeLibrary.enableSecondWindow(holder.surface)
             }
 
             override fun surfaceChanged(
@@ -29,9 +28,12 @@ class SecondScreenPresentation(
                 width: Int,
                 height: Int
             ) {
+                NativeLibrary.enableSecondWindow(holder.surface)
             }
 
-            override fun surfaceDestroyed(holder: SurfaceHolder) {}
+            override fun surfaceDestroyed(holder: SurfaceHolder) {
+                NativeLibrary.disableSecondWindow();
+            }
         })
 
         setContentView(surfaceView) // Set SurfaceView as content

@@ -49,16 +49,17 @@ void EmuWindow_Android::OnFramebufferSizeChanged() {
 
     const int bigger{window_width > window_height ? window_width : window_height};
     const int smaller{window_width < window_height ? window_width : window_height};
-    if (is_portrait_mode) {
+    if (is_portrait_mode && !is_secondary) {
         UpdateCurrentFramebufferLayout(smaller, bigger, is_portrait_mode);
     } else {
         UpdateCurrentFramebufferLayout(bigger, smaller, is_portrait_mode);
     }
 }
 
-EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface) : host_window{surface} {
+EmuWindow_Android::EmuWindow_Android(ANativeWindow *surface, bool is_secondary) : EmuWindow{
+        is_secondary}, host_window(surface) {
     LOG_DEBUG(Frontend, "Initializing EmuWindow_Android");
-
+    if (is_secondary) LOG_DEBUG(Frontend, "Initializing secondary window Android");
     if (!surface) {
         LOG_CRITICAL(Frontend, "surface is nullptr");
         return;
