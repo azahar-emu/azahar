@@ -1094,6 +1094,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SliderSetting(
+                    IntSetting.SCREEN_GAP,
+                    R.string.screen_gap,
+                    R.string.screen_gap_description,
+                    0,
+                    480,
+                    "px",
+                    IntSetting.SCREEN_GAP.key,
+                    IntSetting.SCREEN_GAP.defaultValue.toFloat()
+                )
+            )
+            add(
+                SliderSetting(
                     FloatSetting.LARGE_SCREEN_PROPORTION,
                     R.string.large_screen_proportion,
                     R.string.large_screen_proportion_description,

@@ -408,6 +408,8 @@
     <string name="small_screen_position_bottom_left">Bottom Left</string>
     <string name="small_screen_position_above">Above</string>
     <string name="small_screen_position_below">Below</string>
+    <string name="screen_gap">Screen Gap</string>
+    <string name="screen_gap_description">Gap between screens in all two-screen modes. Measured in px relative to the 240px height of the larger screen.</string>
     <string name="large_screen_proportion">Large Screen Proportion</string>
     <string name="large_screen_proportion_description">How many times larger is the large screen than the small screen in Large Screen layout?</string>
     <string name="emulation_adjust_custom_layout">Adjust Custom Layout in Settings</string>
