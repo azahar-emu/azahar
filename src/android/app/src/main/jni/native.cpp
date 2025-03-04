@@ -336,9 +336,19 @@ void Java_org_citra_citra_1emu_NativeLibrary_enableSecondWindow(JNIEnv* env,
                                                             [[maybe_unused]] jobject obj,jobject surf) {
    s_secondary_surface = ANativeWindow_fromSurface(env, surf);
    secondary_enabled = true;
+   bool notify = false;
+   if (second_window) {
+       notify = second_window->OnSurfaceChanged(s_secondary_surface);
+   }
+   auto& system = Core::System::GetInstance();
+   if (notify && system.IsPoweredOn()) {
+        system.GPU().Renderer().NotifySurfaceChanged();
+   }
 
-    LOG_INFO(Frontend, "Secondary Surface Enabled");
+    LOG_INFO(Frontend, "Secondary Surface changed");
 }
+
+
 
 void Java_org_citra_citra_1emu_NativeLibrary_disableSecondWindow(JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
