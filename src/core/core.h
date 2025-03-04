@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -420,18 +420,18 @@ private:
     /// Image interface
     std::shared_ptr<Frontend::ImageInterface> registered_image_interface;
 
-#ifdef ENABLE_SCRIPTING
-    /// RPC Server for scripting support
-    std::unique_ptr<RPC::Server> rpc_server;
-#endif
-
-    std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
-
     std::unique_ptr<Memory::MemorySystem> memory;
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;
 
     std::unique_ptr<Core::ExclusiveMonitor> exclusive_monitor;
+
+    std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
+
+#ifdef ENABLE_SCRIPTING
+    /// RPC Server for scripting support
+    std::unique_ptr<RPC::Server> rpc_server;
+#endif
 
 private:
     static System s_instance;
