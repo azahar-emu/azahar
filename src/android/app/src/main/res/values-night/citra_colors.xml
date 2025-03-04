@@ -227,6 +227,7 @@
     <color name="citra_surfaceTint_gray">#B7B7B7</color>
 
     <!-- Common Colors Across All Themes -->
+    <color name="citra_transparent_black">#80000000</color>
     <color name="citra_outlineVariant">#C6C5D0</color>
     <color name="citra_error">#FFB4AB</color>
     <color name="citra_errorContainer">#93000A</color>
