@@ -7,8 +7,8 @@
 namespace UISettings {
 
 const Themes themes{{
-    {"Light", "default"},
-    {"Light Colorful", "colorful"},
+    {"System", "default"},
+    {"System With Colorful Icons", "colorful"},
     {"Dark", "qdarkstyle"},
     {"Dark Colorful", "colorful_dark"},
     {"Midnight Blue", "qdarkstyle_midnight_blue"},
