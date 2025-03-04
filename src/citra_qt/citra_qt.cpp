@@ -3488,9 +3488,20 @@ void GMainWindow::filterBarSetChecked(bool state) {
     emit(OnToggleFilterBar());
 }
 
+inline bool isDarkMode() {
+    const auto scheme = QGuiApplication::styleHints()->colorScheme();
+    return scheme == Qt::ColorScheme::Dark;
+}
+
 void GMainWindow::UpdateUITheme() {
     const QString icons_base_path = QStringLiteral(":/icons/");
-    const QString default_theme = QStringLiteral("default");
+    QString default_theme;
+    if (!isDarkMode()) {
+        default_theme = QStringLiteral("default");
+    } else {
+        default_theme = QStringLiteral("default_with_light_icons");
+    }
+
     const QString default_theme_path = icons_base_path + default_theme;
 
     const QString& current_theme = UISettings::values.theme;
