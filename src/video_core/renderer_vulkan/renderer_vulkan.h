@@ -76,6 +76,7 @@ public:
 
     void NotifySurfaceChanged() override {
         main_window.NotifySurfaceChanged();
+        if (second_window) second_window->NotifySurfaceChanged();
     }
 
     void SwapBuffers() override;
