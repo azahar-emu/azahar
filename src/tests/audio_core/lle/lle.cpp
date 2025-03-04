@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,30 +19,33 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
     Memory::MemorySystem memory{system};
     Core::Timing core_timing(1, 100);
 
-    AudioCore::DspLle lle(system, memory, core_timing, true);
-    {
-        FileUtil::SetUserPath();
-        // dspaudio.cdc can be dumped from Pokemon X & Y, It can be found in the romfs at
-        // "rom:/sound/dspaudio.cdc".
-        // One could also extract the firmware from the 3DS sound app using a modified version of
-        // https://github.com/zoogie/DSP1.
-        std::string firm_filepath =
-            FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) + "3ds" DIR_SEP "dspaudio.cdc";
+    FileUtil::SetUserPath();
+    // dspaudio.cdc can be dumped from Pokemon X & Y, It can be found in the romfs at
+    // "rom:/sound/dspaudio.cdc".
+    // One could also extract the firmware from the 3DS sound app using a modified version of
+    // https://github.com/zoogie/DSP1.
+    std::string firm_filepath =
+        FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) + "3ds" DIR_SEP "dspaudio.cdc";
 
-        if (!FileUtil::Exists(firm_filepath)) {
-            SKIP("Test requires dspaudio.cdc");
-        }
-
-        FileUtil::IOFile firm_file(firm_filepath, "rb");
-
-        std::vector<u8> firm_file_buf(firm_file.GetSize());
-        firm_file.ReadArray(firm_file_buf.data(), firm_file_buf.size());
-        lle.LoadComponent(firm_file_buf);
-
-        lle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
-            fmt::print("SetInterruptHandler type={} pipe={}\n", type, pipe);
-        });
+    // Check for firmware first and skip if missing
+    if (!FileUtil::Exists(firm_filepath)) {
+        SKIP("Test requires dspaudio.cdc");
+        return; // Explicitly exit to ensure no further execution
     }
+
+    // Load the firmware before creating the DspLle object
+    FileUtil::IOFile firm_file(firm_filepath, "rb");
+    std::vector<u8> firm_file_buf(firm_file.GetSize());
+    firm_file.ReadArray(firm_file_buf.data(), firm_file_buf.size());
+
+    // Only now create the DspLle object
+    AudioCore::DspLle lle(system, memory, core_timing, true);
+    lle.LoadComponent(firm_file_buf);
+
+    lle.SetInterruptHandler([](Service::DSP::InterruptType type, AudioCore::DspPipe pipe) {
+        fmt::print("SetInterruptHandler type={} pipe={}\n", type, pipe);
+    });
+
     SECTION("Initialise Audio Pipe") {
         std::vector<u8> buffer(4, 0);
         buffer[0] = 0;
@@ -65,6 +68,7 @@ TEST_CASE("DSP LLE Sanity", "[audio_core][lle]") {
         // see AudioCore::DspHle::Impl::AudioPipeWriteStructAddresses()
         REQUIRE(size * 2 == 30);
     }
+
     SECTION("Initialise EncodeAAC - Binary Pipe") {
         std::vector<u8> buffer(32, 0);
         AudioCore::HLE::BinaryMessage& request =
