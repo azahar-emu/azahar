@@ -359,7 +359,7 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
 
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary,
                                                  bool is_portrait) {
-    int width, height;
+    u32 width, height;
     if (is_portrait) {
         auto layout_option = Settings::values.portrait_layout_option.GetValue();
         switch (layout_option) {
@@ -376,7 +376,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 Settings::values.swap_screen.GetValue(), is_portrait);
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
             width = Core::kScreenTopWidth * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) * res_scale;
+            height = static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) * res_scale;
             return PortraitTopFullFrameLayout(width, height,
                                               Settings::values.swap_screen.GetValue());
         case Settings::PortraitLayoutOption::PortraitOriginal:
