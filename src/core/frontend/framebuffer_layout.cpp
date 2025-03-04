@@ -156,7 +156,7 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
         // shift the large screen so it is at the top position of the bounding rectangle
         large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
     }
-    gap *= scale_amount;
+    gap = static_cast<u32>(static_cast<float>(gap) * scale_amount);
 
     switch (small_screen_position) {
     case Settings::SmallScreenPosition::TopRight:
