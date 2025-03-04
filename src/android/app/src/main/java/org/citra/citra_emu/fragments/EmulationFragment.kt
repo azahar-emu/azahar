@@ -1253,6 +1253,22 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.showStatsOverlayText.layoutParams = params
     }
 
+    private fun getBatteryTemperature(): Float {
+        try {
+            val batteryIntent = requireContext().registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            // Temperature in tenths of a degree Celsius
+            val temperature = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+            // Convert to degrees Celsius
+            return temperature / 10.0f
+        } catch (e: Exception) {
+            return 0.0f
+        }
+    }
+    private fun celsiusToFahrenheit(celsius: Float): Float {
+        return (celsius * 9 / 5) + 32
+    }
+
+
     override fun surfaceCreated(holder: SurfaceHolder) {
         // We purposely don't do anything here.
         // All work is done in surfaceChanged, which we are guaranteed to get even for surface creation.
