@@ -45,6 +45,9 @@ import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import androidx.core.os.BundleCompat
+import org.citra.citra_emu.utils.PlayTimeTracker
+import org.citra.citra_emu.model.Game
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -65,6 +68,8 @@ class EmulationActivity : AppCompatActivity() {
         }
 
     private var isEmulationRunning: Boolean = false
+
+    private var emulationStartTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeUtil.setTheme(this)
@@ -107,6 +112,8 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = true
         instance = this
 
+        emulationStartTime = System.currentTimeMillis()
+
         applyOrientationSettings() // Check for orientation settings at startup
     }
 
@@ -142,6 +149,17 @@ class EmulationActivity : AppCompatActivity() {
     override fun onDestroy() {
         NativeLibrary.enableAdrenoTurboMode(false)
         EmulationLifecycleUtil.clear()
+        val sessionTime = System.currentTimeMillis() - emulationStartTime
+
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: throw IllegalStateException("Missing game data in intent extras")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to retrieve game data: ${e.message}", e)
+        }
+
+        PlayTimeTracker.addPlayTime(game, sessionTime)
         isEmulationRunning = false
         instance = null
         super.onDestroy()
