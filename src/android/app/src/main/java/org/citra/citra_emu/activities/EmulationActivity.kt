@@ -167,9 +167,12 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         NativeLibrary.enableAdrenoTurboMode(false)
+
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null
+        secondScreenPresentation?.dismiss();
+        secondScreenPresentation = null;
         super.onDestroy()
     }
 
