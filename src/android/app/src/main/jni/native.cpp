@@ -326,7 +326,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
 
     auto& system = Core::System::GetInstance();
     if (notify && system.IsPoweredOn()) {
-        system.GPU().Renderer().NotifySurfaceChanged();
+        system.GPU().Renderer().NotifySurfaceChanged(false);
     }
 
     LOG_INFO(Frontend, "Surface changed");
@@ -334,16 +334,16 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_enableSecondWindow(JNIEnv* env,
                                                             [[maybe_unused]] jobject obj,jobject surf) {
-   s_secondary_surface = ANativeWindow_fromSurface(env, surf);
-   secondary_enabled = true;
-   bool notify = false;
-   if (second_window) {
-       notify = second_window->OnSurfaceChanged(s_secondary_surface);
-   }
-   auto& system = Core::System::GetInstance();
-   if (notify && system.IsPoweredOn()) {
-        system.GPU().Renderer().NotifySurfaceChanged();
-   }
+    s_secondary_surface = ANativeWindow_fromSurface(env, surf);
+    secondary_enabled = true;
+    bool notify = false;
+    if (second_window) {
+        notify = second_window->OnSurfaceChanged(s_secondary_surface);
+    }
+    auto& system = Core::System::GetInstance();
+    if (notify && system.IsPoweredOn()) {
+        system.GPU().Renderer().NotifySurfaceChanged(true);
+    }
 
     LOG_INFO(Frontend, "Secondary Surface changed");
 }
@@ -354,7 +354,13 @@ void Java_org_citra_citra_1emu_NativeLibrary_disableSecondWindow(JNIEnv* env,
                                                                 [[maybe_unused]] jobject obj) {
 
     secondary_enabled = false;
-    // how do I delete the window? TODO
+    if (s_secondary_surface != nullptr) {
+        ANativeWindow_release(s_secondary_surface);
+        s_secondary_surface = nullptr;
+        if (second_window) {
+            second_window->OnSurfaceChanged(s_secondary_surface);
+        }
+    }
 
     LOG_INFO(Frontend, "Secondary Surface Disabled");
 }
