@@ -1161,6 +1161,16 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         sb.append(String.format("FPS: %d", (perfStats[FPS] + 0.5).toInt()))
                     }
 
+                    if (BooleanSetting.SHOW_FRAMETIME.boolean) {
+                        if (sb.isNotEmpty()) sb.append(" | ")
+                        sb.append(
+                            String.format(
+                                "FT: %.1fms",
+                                (perfStats[FRAMETIME] * 1000.0f).toFloat()
+                            )
+                        )
+                    }
+
                     if (BooleanSetting.SHOW_SPEED.boolean) {
                         if (sb.isNotEmpty()) sb.append(" | ")
                         sb.append(

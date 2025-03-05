@@ -1074,6 +1074,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
+                    BooleanSetting.SHOW_FRAMETIME,
+                    R.string.show_frametime,
+                    R.string.show_frametime_description,
+                    "show_frame_time",
+                    true
+                )
+            )
+
+            add(
+                SwitchSetting(
                     BooleanSetting.SHOW_SPEED,
                     R.string.show_speed,
                     R.string.show_speed_description,
