@@ -487,6 +487,8 @@
     <string name="stats_overlay_options_description">Configure what information is shown in the performance stats overlay</string>
     <string name="show_fps">Show FPS</string>
     <string name="show_fps_description">Display current frames per second</string>
+    <string name="show_frametime">Show Frametime</string>
+    <string name="show_frametime_description">Display current frametime</string>
     <string name="show_speed">Show Speed</string>
     <string name="show_speed_description">Display current emulation speed percentage</string>
     <string name="show_app_ram_usage">Show App Memory Usage</string>

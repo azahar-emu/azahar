@@ -17,7 +17,7 @@ enum class BooleanSetting(
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
     SHOW_FPS("show_fps", Settings.SECTION_LAYOUT, true),
-        SHOW_FRAMETIME("show_frame_time", Settings.SECTION_LAYOUT, false),
+    SHOW_FRAMETIME("show_frame_time", Settings.SECTION_LAYOUT, false),
     SHOW_SPEED("show_speed", Settings.SECTION_LAYOUT, false),
     SHOW_APP_RAM_USAGE("show_app_ram_usage", Settings.SECTION_LAYOUT, false),
     SHOW_SYSTEM_RAM_USAGE("show_system_ram_usage", Settings.SECTION_LAYOUT, false),
