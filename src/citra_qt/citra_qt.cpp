@@ -3526,16 +3526,31 @@ void GMainWindow::LoadTranslation() {
         return;
     }
 
-    bool loaded;
+    QString language = UISettings::values.language;
 
-    if (UISettings::values.language.isEmpty()) {
-        // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
-    } else {
-        // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, QStringLiteral(":/languages/"));
+    if (language.isEmpty()) {
+#ifdef _WIN32
+        LANGID lang_id = GetUserDefaultUILanguage();
+        wchar_t locale_name[LOCALE_NAME_MAX_LENGTH];
+
+        if (LCIDToLocaleName(MAKELCID(lang_id, SORT_DEFAULT), locale_name, LOCALE_NAME_MAX_LENGTH,
+                             0)) {
+            char locale_name_str[LOCALE_NAME_MAX_LENGTH];
+            WideCharToMultiByte(CP_UTF8, 0, locale_name, -1, locale_name_str,
+                                LOCALE_NAME_MAX_LENGTH, nullptr, nullptr);
+            language = QString::fromUtf8(locale_name_str);
+        } else {
+            language = QLocale::system().name();
+        }
+#else
+        language = QLocale::system().name();
+#endif
     }
 
+    // For compatibility with translation files
+    language.replace(QLatin1Char('-'), QLatin1Char('_'));
+
+    bool loaded = translator.load(language, QStringLiteral(":/languages/"));
     if (loaded) {
         qApp->installTranslator(&translator);
     } else {
