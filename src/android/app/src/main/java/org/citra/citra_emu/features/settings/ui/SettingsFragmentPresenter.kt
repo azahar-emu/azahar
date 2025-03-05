@@ -237,6 +237,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.FRAME_LIMIT.defaultValue.toFloat()
                 )
             )
+            add(
+                SliderSetting(
+                    IntSetting.TURBO_SPEED,
+                    R.string.turbo_speed,
+                    R.string.turbo_speed_description,
+                    100,
+                    400,
+                    "%",
+                    IntSetting.TURBO_SPEED.key,
+                    IntSetting.TURBO_SPEED.defaultValue.toFloat()
+                )
+            )
         }
     }
 

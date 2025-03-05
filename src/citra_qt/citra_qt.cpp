@@ -779,6 +779,11 @@ void GMainWindow::InitializeHotkeys() {
         }
     });
     connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
+        if (!hotkey_registry
+                 .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
+                 .isEmpty()) {
+            return;
+        }
         Settings::values.frame_limit.SetGlobal(!Settings::values.frame_limit.UsingGlobal());
         UpdateStatusBar();
     });
@@ -786,31 +791,12 @@ void GMainWindow::InitializeHotkeys() {
                      [&] { Settings::values.dump_textures = !Settings::values.dump_textures; });
     connect_shortcut(QStringLiteral("Toggle Custom Textures"),
                      [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
-    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes
-    // the variable hold a garbage value after this function exits
-    static constexpr u16 SPEED_LIMIT_STEP = 5;
-    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] {
-        if (Settings::values.frame_limit.GetValue() == 0) {
-            return;
-        }
-        if (Settings::values.frame_limit.GetValue() < 995 - SPEED_LIMIT_STEP) {
-            Settings::values.frame_limit.SetValue(Settings::values.frame_limit.GetValue() +
-                                                  SPEED_LIMIT_STEP);
-        } else {
-            Settings::values.frame_limit = 0;
-        }
-        UpdateStatusBar();
-    });
-    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] {
-        if (Settings::values.frame_limit.GetValue() == 0) {
-            Settings::values.frame_limit = 995;
-        } else if (Settings::values.frame_limit.GetValue() > SPEED_LIMIT_STEP) {
-            Settings::values.frame_limit.SetValue(Settings::values.frame_limit.GetValue() -
-                                                  SPEED_LIMIT_STEP);
-            UpdateStatusBar();
-        }
-        UpdateStatusBar();
-    });
+
+    connect_shortcut(QStringLiteral("Toggle Turbo Mode"), &GMainWindow::ToggleEmulationSpeed);
+
+    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
+
+    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
     connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
     connect_shortcut(QStringLiteral("Audio Volume Down"), &GMainWindow::OnDecreaseVolume);
@@ -2343,6 +2329,7 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
+    GetInitialFrameLimit();
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2402,6 +2389,12 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
+    if (turbo_mode_active) {
+        turbo_mode_active = false;
+        Settings::values.frame_limit.SetValue(initial_frame_limit);
+        UpdateStatusBar();
+    }
+
     play_time_manager->Stop();
     // Update game list to show new play time
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -2555,6 +2548,54 @@ void GMainWindow::ChangeSmallScreenPosition() {
     SyncMenuUISettings();
     system.ApplySettings();
     UpdateSecondaryWindowVisibility();
+}
+
+void GMainWindow::GetInitialFrameLimit() {
+    initial_frame_limit = Settings::values.frame_limit.GetValue();
+    turbo_mode_active = false;
+}
+
+void GMainWindow::ToggleEmulationSpeed() {
+    static bool key_pressed = false; // Prevent spam on hold
+
+    if (!key_pressed) {
+        key_pressed = true;
+        turbo_mode_active = !turbo_mode_active;
+
+        if (turbo_mode_active) {
+            Settings::values.frame_limit.SetValue(Settings::values.turbo_speed.GetValue());
+        } else {
+            Settings::values.frame_limit.SetValue(initial_frame_limit);
+        }
+
+        UpdateStatusBar();
+        QTimer::singleShot(200, [] { key_pressed = false; });
+    }
+}
+
+void GMainWindow::AdjustSpeedLimit(bool increase) {
+    if (!turbo_mode_active) {
+        return;
+    }
+
+    const int SPEED_LIMIT_STEP = 5;
+    int turbo_speed = Settings::values.turbo_speed.GetValue();
+
+    if (increase) {
+        if (turbo_speed < 995) {
+            Settings::values.turbo_speed.SetValue(turbo_speed + SPEED_LIMIT_STEP);
+            Settings::values.frame_limit.SetValue(turbo_speed + SPEED_LIMIT_STEP);
+        }
+    } else {
+        if (turbo_speed > SPEED_LIMIT_STEP) {
+            Settings::values.turbo_speed.SetValue(turbo_speed - SPEED_LIMIT_STEP);
+            Settings::values.frame_limit.SetValue(turbo_speed - SPEED_LIMIT_STEP);
+        }
+    }
+
+    if (turbo_mode_active) {
+        UpdateStatusBar();
+    }
 }
 
 void GMainWindow::ToggleScreenLayout() {

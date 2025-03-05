@@ -226,6 +226,7 @@ private:
 
 private slots:
     void OnStartGame();
+    void GetInitialFrameLimit();
     void OnRestartGame();
     void OnPauseGame();
     void OnPauseContinueGame();
@@ -264,6 +265,8 @@ private slots:
     void ToggleSecondaryFullscreen();
     void ChangeScreenLayout();
     void ChangeSmallScreenPosition();
+    void ToggleEmulationSpeed();
+    void AdjustSpeedLimit(bool increase);
     void UpdateSecondaryWindowVisibility();
     void ToggleScreenLayout();
     void OnSwapScreens();
@@ -351,6 +354,9 @@ private:
     MultiplayerState* multiplayer_state = nullptr;
     std::unique_ptr<QtConfig> config;
 
+    // Hotkeys
+    bool turbo_mode_active = false;
+
     // Whether emulation is currently running in Citra.
     bool emulation_running = false;
     std::unique_ptr<EmuThread> emu_thread;
@@ -411,6 +417,8 @@ private:
     u64 oldest_slot_time;
     u32 newest_slot;
     u64 newest_slot_time;
+
+    int initial_frame_limit;
 
     // Secondary window actions
     QAction* action_secondary_fullscreen;

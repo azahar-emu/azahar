@@ -756,4 +756,19 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
 }
 
+void JNICALL Java_io_github_lime3ds_android_NativeLibrary_toggleTurboSpeed(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jboolean enabled) {
+    Settings::values.turbo_speed = enabled ? true : false;
+}
+
+jint JNICALL Java_io_github_lime3ds_android_NativeLibrary_getTurboSpeedSlider(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return static_cast<jint>(Settings::values.turbo_speed);
+}
+
+void JNICALL Java_io_github_lime3ds_android_NativeLibrary_setTurboSpeedSlider(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jint value) {
+    Settings::values.turbo_speed = value;
+}
+
 } // extern "C"

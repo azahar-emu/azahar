@@ -238,9 +238,12 @@
     <string name="asynchronous_gpu">Enable asynchronous GPU emulation</string>
     <string name="asynchronous_gpu_description">Uses a separate thread to emulate the GPU asynchronously. When enabled, performance will be improved.</string>
     <string name="frame_limit_enable">Limit Speed</string>
-    <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed.</string>
+    <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed. If disabled, emulation speed will be uncapped and the turbo speed hotkey will not work.</string>
     <string name="frame_limit_slider">Limit Speed Percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
+    <string name="emulation_toggle_turbo_speed">Turbo Speed</string>
+    <string name="turbo_speed">Turbo Speed</string>
+    <string name="turbo_speed_description">Value used for the turbo hotkey</string>
     <string name="internal_resolution">Internal Resolution</string>
     <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain applications.</string>
     <string name="internal_resolution_setting_1x">Native (400x240)</string>
