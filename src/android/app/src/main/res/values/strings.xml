@@ -324,6 +324,8 @@
     <string name="select_rtc_time">Select RTC time</string>
     <string name="reset_setting_confirmation">Do you want to reset this setting back to its default value?</string>
     <string name="setting_not_editable">You can\'t edit this now</string>
+    <string name="setting_disabled">Setting disabled</string>
+    <string name="setting_disabled_description">This setting is currently disabled due to another setting not being the appropriate value.</string>
     <string name="setting_not_editable_description">This option can\'t be changed while a game is running.</string>
     <string name="auto_select">Auto-Select</string>
 

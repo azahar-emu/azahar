@@ -25,21 +25,31 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         }
         binding.textSettingValue.visibility = View.VISIBLE
         binding.textSettingValue.text = setting.setting?.valueAsString
+
+        if (setting.isEditable && setting.isEnabled) {
+            binding.textSettingName.alpha = 1f
+            binding.textSettingDescription.alpha = 1f
+            binding.textSettingValue.alpha = 1f
+        } else {
+            binding.textSettingName.alpha = 0.5f
+            binding.textSettingDescription.alpha = 0.5f
+            binding.textSettingValue.alpha = 0.5f
+        }
     }
 
     override fun onClick(clicked: View) {
-        if (!setting.isEditable) {
-            adapter.onClickDisabledSetting()
+        if (!setting.isEditable || !setting.isEnabled) {
+            adapter.onClickDisabledSetting(!setting.isEditable)
             return
         }
         adapter.onStringInputClick((setting as StringInputSetting), bindingAdapterPosition)
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
         return false
     }
