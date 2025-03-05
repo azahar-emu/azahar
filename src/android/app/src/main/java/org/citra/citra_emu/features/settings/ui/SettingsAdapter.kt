@@ -44,6 +44,7 @@ import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
@@ -65,6 +66,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHolder
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.SystemSaveGame
 import java.lang.IllegalStateException
 import java.lang.NumberFormatException
@@ -512,6 +514,28 @@ class SettingsAdapter(
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+    }
+
+    fun onClickControllerQuickConfig() {
+        val buttons = arrayListOf(
+            Settings.buttonKeys,
+            Settings.circlePadKeys,
+            Settings.cStickKeys,
+            Settings.dPadAxisKeys,
+            Settings.dPadButtonKeys,
+            Settings.triggerKeys
+        )
+
+        val titles = arrayListOf(
+            Settings.buttonTitles,
+            Settings.axisTitles,
+            Settings.axisTitles,
+            Settings.axisTitles,
+            Settings.dPadTitles,
+            Settings.triggerTitles
+        )
+
+        ControllerQuickConfigDialog(context, buttons, titles, PermissionsHandler.preferences).show()
     }
 
     fun closeDialog() {
