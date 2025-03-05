@@ -4,14 +4,18 @@
 
 package org.citra.citra_emu.activities
 
+import SecondScreenPresentation
 import android.Manifest.permission
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.app.Presentation
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.Display
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -56,6 +60,24 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
+    private var secondScreenPresentation: Presentation? = null
+    private lateinit var displayManager: DisplayManager
+
+    private fun updatePresentation(display: Display?) {
+            if (secondScreenPresentation == null || secondScreenPresentation?.display != display) {
+                secondScreenPresentation?.dismiss()
+                // this should only happen if the second screen is enabled in a setting
+                // eventually. Otherwise it should continue to mirror.
+                if (display != null)
+                    secondScreenPresentation = SecondScreenPresentation(this, display)
+                secondScreenPresentation?.show();
+            }
+
+    }
+
+    private fun getCustomerDisplay(): Display? {
+        return displayManager?.displays?.firstOrNull { it.isValid && it.displayId != Display.DEFAULT_DISPLAY }
+    }
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -69,6 +91,10 @@ class EmulationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeUtil.setTheme(this)
 
+        /* Find a second display if it's connected and create a basic presentationon it */
+        displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val display = getCustomerDisplay();
+        updatePresentation(display);
         settingsViewModel.settings.loadSettings()
 
         super.onCreate(savedInstanceState)
