@@ -251,6 +251,15 @@ custom_portrait_bottom_height =
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
 swap_screen =
 
+# Secondary Screen Layout
+# What the game should do if a secondary screen is connected physically or using
+# Miracast / Chromecast screen mirroring
+# 0 (default) - Use System Default (mirror)
+# 1 - Show Top Screen Only
+# 2 - Show Bottom Screen Only
+# 3 - Show both screens side by side
+secondary_screen_layout =
+
 # Screen placement settings when using Cardboard VR (render3d = 4)
 # 30 - 100: Screen size as a percentage of the viewport. 85 (default)
 cardboard_screen_size =
