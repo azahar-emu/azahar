@@ -7,8 +7,8 @@
         android:checkable="true" />
 
     <item
-        android:id="@+id/menu_show_fps"
-        android:title="@string/emulation_show_fps"
+        android:id="@+id/menu_show_stats_overlay"
+        android:title="@string/show_stats_overlay"
         android:checkable="true" />
 
     <item

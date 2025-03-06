@@ -478,6 +478,36 @@
     <string name="play">Play</string>
     <string name="shortcut">Shortcut</string>
 
+    <!-- Stats Overlay settings -->
+    <string name="show_stats_overlay">ShoW Performance Stats Overlay</string>
+    <string name="stats_overlay_customization">Customization</string>
+    <string name="stats_overlay_items">Visibility</string>
+    <string name="stats_overlay_options">Performance Stats Overlay</string>
+    <string name="enable_stats_overlay_">Enable Performance Stats Overlay</string>
+    <string name="stats_overlay_options_description">Configure what information is shown in the performance stats overlay</string>
+    <string name="show_fps">Show FPS</string>
+    <string name="show_fps_description">Display current frames per second</string>
+    <string name="show_frametime">Show Frametime</string>
+    <string name="show_frametime_description">Display current frametime</string>
+    <string name="show_speed">Show Speed</string>
+    <string name="show_speed_description">Display current emulation speed percentage</string>
+    <string name="show_app_ram_usage">Show App Memory Usage</string>
+    <string name="show_app_ram_usage_description">Display the amount of RAM getting used by the emulator</string>
+    <string name="show_system_ram_usage">Show System Memory Usage</string>
+    <string name="show_system_ram_usage_description">Display the amount of RAM getting used by the system</string>
+    <string name="show_bat_temperature">Show Battery Temperature</string>
+    <string name="show_bat_temperature_description">Display current Battery temperature in Celsius and Fahrenheit</string>
+    <string name="overlay_position">Overlay Position</string>
+    <string name="overlay_position_description">Choose where the performance stats overlay is displayed on the screen</string>
+    <string name="overlay_position_top_left">Top Left</string>
+    <string name="overlay_position_top_right">Top Right</string>
+    <string name="overlay_position_bottom_left">Bottom Left</string>
+    <string name="overlay_position_bottom_right">Bottom Right</string>
+    <string name="overlay_position_center_top">Center Top</string>
+    <string name="overlay_position_center_bottom">Center Bottom</string>
+    <string name="overlay_background">Overlay Background</string>
+    <string name="overlay_background_description">Adds a background behind the overlay for easier reading</string>
+
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Add Cheat</string>
