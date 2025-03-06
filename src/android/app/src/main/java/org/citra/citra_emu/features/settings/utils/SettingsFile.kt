@@ -272,6 +272,9 @@ object SettingsFile {
         val settings = section.settings
         val keySet: Set<String> = settings.keys
         for (key in keySet) {
+            if (key.equals("secondary_screen_layout")) {
+                println("hi");
+            }
             val setting = settings[key]
             parser.put(header, setting!!.key, setting.valueAsString)
         }
