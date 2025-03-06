@@ -16,6 +16,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.Settings
 
 class InputBindingSetting(
@@ -33,6 +34,8 @@ class InputBindingSetting(
                 .putString(abstractSetting.key, string)
                 .apply()
         }
+
+    private var key: String = ""
 
     /**
      * Returns true if this key is for the 3DS Circle Pad
@@ -230,6 +233,29 @@ class InputBindingSetting(
     }
 
     /**
+     * Stores the provided key input setting as an Android preference.
+     * Only gets applied when apply(); is called.
+     *
+     * @param keyEvent KeyEvent of this key press.
+     */
+    fun onKeyInputDeferred(keyEvent: KeyEvent) {
+        if (!isButtonMappingSupported()) {
+            Toast.makeText(context, R.string.input_message_analog_only, Toast.LENGTH_LONG).show()
+            return
+        }
+        key = getInputButtonKey(keyEvent.keyCode)
+        val uiString = "${keyEvent.device.name}: Button ${keyEvent.keyCode}"
+        value = uiString
+    }
+
+    /**
+     * Stores the provided key input setting as an Android preference.
+     */
+    fun applyMapping() {
+        writeButtonMapping(key)
+    }
+
+    /**
      * Saves the provided motion input setting as an Android preference.
      *
      * @param device      InputDevice from which the input event originated.
@@ -327,6 +353,23 @@ class InputBindingSetting(
                 event.scanCode
             } else {
                 event.keyCode
+            }
+        }
+
+        fun getInputObject(key: String, preferences: SharedPreferences): AbstractStringSetting {
+            return object : AbstractStringSetting {
+                override var string: String
+                    get() = preferences.getString(key, "")!!
+                    set(value) {
+                        preferences.edit()
+                            .putString(key, value)
+                            .apply()
+                    }
+                override val key = key
+                override val section = Settings.SECTION_CONTROLS
+                override val isRuntimeEditable = true
+                override val valueAsString = preferences.getString(key, "")!!
+                override val defaultValue = ""
             }
         }
     }
