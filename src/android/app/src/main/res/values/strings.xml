@@ -477,6 +477,12 @@
     <!-- About Game Dialog -->
     <string name="play">Play</string>
     <string name="shortcut">Shortcut</string>
+    <string name="shortcut_name">Shortcut Name</string>
+    <string name="edit_icon">Edit icon</string>
+    <string name="create_shortcut">Create Shortcut</string>
+    <string name="shortcut_name_empty">Shortcut name cannot be empty</string>
+    <string name="shortcut_image_stretch_toggle">Stretch to fit image</string>
+
 
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
