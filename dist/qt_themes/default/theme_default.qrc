@@ -17,7 +17,28 @@
         <file alias="48x48/star.png">icons/48x48/star.png</file>
         <file alias="256x256/plus_folder.png">icons/256x256/plus_folder.png</file>
     </qresource>
+    <qresource prefix="icons/default_with_light_icons">
+        <file alias="index.theme">icons_light/index.theme</file>
+        <file alias="16x16/checked.png">icons_light/16x16/checked.png</file>
+        <file alias="16x16/failed.png">icons_light/16x16/failed.png</file>
+        <file alias="16x16/connected.png">icons_light/16x16/connected.png</file>
+        <file alias="16x16/disconnected.png">icons_light/16x16/disconnected.png</file>
+        <file alias="16x16/connected_notification.png">icons_light/16x16/connected_notification.png</file>
+        <file alias="16x16/lock.png">icons_light/16x16/lock.png</file>
+        <file alias="48x48/bad_folder.png">icons_light/48x48/bad_folder.png</file>
+        <file alias="48x48/chip.png">icons_light/48x48/chip.png</file>
+        <file alias="48x48/folder.png">icons_light/48x48/folder.png</file>
+        <file alias="48x48/no_avatar.png">icons_light/48x48/no_avatar.png</file>
+        <file alias="48x48/plus.png">icons_light/48x48/plus.png</file>
+        <file alias="48x48/sd_card.png">icons_light/48x48/sd_card.png</file>
+        <file alias="256x256/citra.png">icons_light/256x256/citra.png</file>
+        <file alias="48x48/star.png">icons_light/48x48/star.png</file>
+        <file alias="256x256/plus_folder.png">icons_light/256x256/plus_folder.png</file>
+    </qresource>
     <qresource prefix="default">
+        <file>style.qss</file>
+    </qresource>
+    <qresource prefix="default_with_light_icons">
         <file>style.qss</file>
     </qresource>
 </RCC>
