@@ -73,8 +73,6 @@ class EmulationActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        NativeLibrary.enableAdrenoTurboMode(BooleanSetting.ADRENO_GPU_BOOST.boolean)
-
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
@@ -140,7 +138,6 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        NativeLibrary.enableAdrenoTurboMode(false)
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null

@@ -192,7 +192,7 @@ if (ENABLE_QT OR ENABLE_SDL2_FRONTEND)
     add_subdirectory(citra_meta)
 endif()
 
-if (ENABLE_DEDICATED_ROOM)
+if (ENABLE_ROOM)
     add_subdirectory(citra_room)
 endif()
 
