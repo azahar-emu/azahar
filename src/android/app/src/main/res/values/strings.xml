@@ -541,7 +541,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Play</string>
-    <string name="shortcut">Shortcut</string>
     <string name="uninstall_cia">Uninstall Application</string>
     <string name="uninstalling">Uninstalling...</string>
     <string name="game_context_open_save_dir">Open Save Data Folder</string>
@@ -553,6 +552,12 @@
     <string name="game_context_open_extra">Open Extra Folder</string>
     <string name="game_context_uninstall_dlc">Uninstall DLC</string>
     <string name="game_context_uninstall_updates">Uninstall Updates</string>
+    <string name="shortcut">Shortcut</string>
+    <string name="shortcut_name">Shortcut Name</string>
+    <string name="edit_icon">Edit icon</string>
+    <string name="create_shortcut">Create Shortcut</string>
+    <string name="shortcut_name_empty">Shortcut name cannot be empty</string>
+    <string name="shortcut_image_stretch_toggle">Stretch to fit image</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Show Performance Overlay</string>
