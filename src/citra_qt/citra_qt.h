@@ -178,7 +178,7 @@ private:
         Lime3DS,
     };
     void ShowMigrationCancelledMessage();
-    void CheckForMigration();
+    void ShowMigrationPrompt();
     void MigrateUserData(const LegacyEmu selected_legacy_emu);
 
     /**
@@ -357,6 +357,10 @@ private:
     bool message_label_used_for_movie = false;
 
     MultiplayerState* multiplayer_state = nullptr;
+
+    // Created before `config` to ensure that emu data directory
+    // isn't created before the check is performed
+    bool emu_dir_exists;
     std::unique_ptr<QtConfig> config;
 
     // Whether emulation is currently running in Citra.

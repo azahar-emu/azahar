@@ -167,6 +167,8 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{system.Movie()},
+      emu_dir_exists{
+          std::filesystem::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))},
       config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
     Common::Log::Initialize();
     Common::Log::Start();
@@ -308,7 +310,9 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 
     // Check if data migration from Citra/Lime3DS needs to be performed
-    CheckForMigration();
+    if (!emu_dir_exists) {
+        ShowMigrationPrompt();
+    }
 
 #ifdef __unix__
     SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
@@ -1218,12 +1222,8 @@ void GMainWindow::ShowMigrationCancelledMessage() {
         QMessageBox::Ok);
 }
 
-void GMainWindow::CheckForMigration() {
+void GMainWindow::ShowMigrationPrompt() {
     namespace fs = std::filesystem;
-
-    if (fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))) {
-        return;
-    }
 
     const QString migration_prompt_message =
         tr("Would you like to migrate your data for use in Azahar?\n"
