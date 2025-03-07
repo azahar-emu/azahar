@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -172,6 +172,14 @@ private:
     void ShowNoUpdatePrompt();
     void CheckForUpdates();
 #endif
+
+    enum LegacyEmu {
+        Citra,
+        Lime3DS,
+    };
+    void ShowMigrationCancelledMessage();
+    void ShowMigrationPrompt();
+    void MigrateUserData(const LegacyEmu selected_legacy_emu);
 
     /**
      * Stores the filename in the recently loaded files list.
@@ -349,6 +357,10 @@ private:
     bool message_label_used_for_movie = false;
 
     MultiplayerState* multiplayer_state = nullptr;
+
+    // Created before `config` to ensure that emu data directory
+    // isn't created before the check is performed
+    bool emu_dir_exists;
     std::unique_ptr<QtConfig> config;
 
     // Whether emulation is currently running in Citra.

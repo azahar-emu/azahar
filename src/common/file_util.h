@@ -39,17 +39,23 @@ enum class UserPath {
     ConfigDir,
     DLLDir,
     DumpDir,
+    IconsDir,
+    LegacyCitraCacheDir,  // LegacyXXXCacheDir and LegacyXXXConfigDir are only defined if migrating
+    LegacyCitraConfigDir, // these directories is necessary (aka not a child of LegacyXXXUserDir)
+    LegacyCitraUserDir,
+    LegacyLime3DSCacheDir,
+    LegacyLime3DSConfigDir,
+    LegacyLime3DSUserDir,
     LoadDir,
     LogDir,
     NANDDir,
+    PlayTimeDir,
     RootDir,
     SDMCDir,
     ShaderDir,
     StatesDir,
     SysDataDir,
     UserDir,
-    IconsDir,
-    PlayTimeDir,
 };
 
 // Replaces install-specific paths with standard placeholders, and back again
