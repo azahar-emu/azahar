@@ -83,6 +83,10 @@
     <string name="add_games_warning">Skip selecting applications folder?</string>
     <string name="add_games_warning_description">Software won\'t be displayed in the Applications list if a folder isn\'t selected.</string>
     <string name="add_games_warning_help" translatable="false">https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/</string>
+    <string name="permissions">Permissions</string>
+    <string name="select_emulalator_data_folder">Data Folders</string>
+    <string name="select_emulalator_data_folder_description">Select data folders (User folder is required)</string>
+    <string name="permissions_description">Grant optional permissions to use specific features of the emulator</string>
     <string name="warning_help">Help</string>
     <string name="warning_skip">Skip</string>
     <string name="warning_cancel">Cancel</string>
