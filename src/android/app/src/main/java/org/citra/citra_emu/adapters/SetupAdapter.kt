@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.adapters
 
+import android.content.res.ColorStateList
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
@@ -14,10 +15,12 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import org.citra.citra_emu.databinding.PageSetupBinding
+import org.citra.citra_emu.model.PageState
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
-import org.citra.citra_emu.model.StepState
 import org.citra.citra_emu.utils.ViewUtils
+import org.citra.citra_emu.R
+import org.citra.citra_emu.model.ButtonState
 
 class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) :
     RecyclerView.Adapter<SetupAdapter.SetupPageViewHolder>() {
@@ -42,8 +45,40 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
         fun bind(page: SetupPage) {
             this.page = page
 
-            if (page.stepCompleted.invoke() == StepState.STEP_COMPLETE) {
-                onStepCompleted()
+            if (page.pageSteps.invoke() == PageState.PAGE_STEPS_COMPLETE) {
+                onStepCompleted(0, pageFullyCompleted = true)
+            }
+
+            if (page.pageButton != null && page.pageSteps.invoke() != PageState.PAGE_STEPS_COMPLETE) {
+                for (pageButton in page.pageButton) {
+                    val pageButtonView = LayoutInflater.from(activity)
+                        .inflate(
+                            R.layout.page_button,
+                            binding.pegeButtonContainer,
+                            false
+                        ) as MaterialButton
+
+                    pageButtonView.apply {
+                        id = pageButton.titleId
+                        icon = ResourcesCompat.getDrawable(
+                            activity.resources,
+                            pageButton.iconId,
+                            activity.theme
+                        )
+                        text = activity.resources.getString(pageButton.titleId)
+                    }
+
+                    pageButtonView.setOnClickListener {
+                        pageButton.buttonAction.invoke(this@SetupPageViewHolder)
+                    }
+
+                    binding.pegeButtonContainer.addView(pageButtonView)
+
+                    // Disable buton add if its already completed
+                    if (pageButton.buttonState.invoke() == ButtonState.BUTTON_ACTION_COMPLETE) {
+                        onStepCompleted(pageButton.titleId, pageFullyCompleted = false)
+                    }
+                }
             }
 
             binding.icon.setImageDrawable(
@@ -57,31 +92,26 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
             binding.textDescription.text =
                 Html.fromHtml(activity.resources.getString(page.descriptionId), 0)
             binding.textDescription.movementMethod = LinkMovementMethod.getInstance()
-
-            binding.buttonAction.apply {
-                text = activity.resources.getString(page.buttonTextId)
-                if (page.buttonIconId != 0) {
-                    icon = ResourcesCompat.getDrawable(
-                        activity.resources,
-                        page.buttonIconId,
-                        activity.theme
-                    )
-                }
-                iconGravity =
-                    if (page.leftAlignedIcon) {
-                        MaterialButton.ICON_GRAVITY_START
-                    } else {
-                        MaterialButton.ICON_GRAVITY_END
-                    }
-                setOnClickListener {
-                    page.buttonAction.invoke(this@SetupPageViewHolder)
-                }
-            }
         }
 
-        override fun onStepCompleted() {
-            ViewUtils.hideView(binding.buttonAction, 200)
+    override fun onStepCompleted(pageButtonId: Int, pageFullyCompleted: Boolean) {
+        val button = binding.pegeButtonContainer.findViewById<MaterialButton>(pageButtonId)
+
+        if (pageFullyCompleted) {
+            ViewUtils.hideView(binding.pegeButtonContainer, 200)
             ViewUtils.showView(binding.textConfirmation, 200)
+        }
+
+        if (button != null) {
+            button.isEnabled = false
+            button.animate()
+                .alpha(0.38f)
+                .setDuration(200)
+                .start()
+            button.setTextColor(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+            button.iconTint =
+                ColorStateList.valueOf(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+            }
         }
     }
 }
