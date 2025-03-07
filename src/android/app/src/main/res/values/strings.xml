@@ -97,7 +97,7 @@
     <string name="keep_current_azahar_directory">Keep Current Azahar Directory</string>
     <string name="use_prior_lime3ds_directory">Use Prior Lime3DS Directory</string>
     <string name="select">Select</string>
-    <string name="cannot_skip">You can\'t skip this step</string>
+    <string name="cannot_skip">You can\'t skip setting the user folder</string>
     <string name="cannot_skip_directory_description">This step is required to allow Azahar to work. Please select a directory and then you can continue.</string>
     <string name="selecting_user_directory_without_write_permissions">You have lost write permissions on your <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">user data</a> directory, where saves and other information are stored. This can happen after some app or Android updates. Please re-select the directory to regain permissions so you can continue.</string>
     <string name="cannot_skip_directory_help" translatable="false">https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage</string>
