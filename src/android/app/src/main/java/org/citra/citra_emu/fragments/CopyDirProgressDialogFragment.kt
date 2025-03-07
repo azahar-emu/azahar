@@ -141,7 +141,7 @@ class CopyDirProgressDialog : DialogFragment() {
 
                             override fun onComplete() {
                                 CitraDirectoryHelper.initializeCitraDirectory(path)
-                                callback?.onStepCompleted()
+                                callback?.onStepCompleted(0, false)
                                 viewModel.setCopyComplete(true)
                             }
                         })
