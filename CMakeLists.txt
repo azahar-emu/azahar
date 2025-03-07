@@ -71,7 +71,7 @@ option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
 CMAKE_DEPENDENT_OPTION(ENABLE_QT_UPDATER "Enable built-in updater for the Qt frontend" ON "NOT IOS" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_DEDICATED_ROOM "Enable generating dedicated room executable" ON "NOT ANDROID AND NOT IOS" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_ROOM "Enable generating dedicated room executable" ON "NOT ANDROID AND NOT IOS" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
@@ -90,6 +90,7 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
+option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
@@ -144,6 +145,22 @@ if (ENABLE_LTO)
     endif()
 else()
     message(STATUS "LTO disabled")
+endif()
+
+# Check for march=native support
+# =======================================================================
+if (ENABLE_NATIVE_OPTIMIZATION)
+    include(CheckCCompilerFlag)
+    include(CheckCXXCompilerFlag)
+    CHECK_C_COMPILER_FLAG("-march=native" C_COMPILER_SUPPORTS_MARCH_NATIVE)
+    CHECK_CXX_COMPILER_FLAG("-march=native" CXX_COMPILER_SUPPORTS_MARCH_NATIVE)
+
+    if (C_COMPILER_SUPPORTS_MARCH_NATIVE)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    endif()
+    if (CXX_COMPILER_SUPPORTS_MARCH_NATIVE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+    endif()
 endif()
 
 # Sanity check : Check that all submodules are present
@@ -451,7 +468,7 @@ if (NOT ANDROID AND NOT IOS)
         bundle_target(citra_meta)
     endif()
 
-    if (ENABLE_DEDICATED_ROOM)
+    if (ENABLE_ROOM)
         bundle_target(citra_room)
     endif()
 endif()
@@ -470,16 +487,4 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
-endif()
-
-if(UNIX)
-    if(ENABLE_SDL2)
-        install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.6"
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man6")
-    endif()
-
-    if (ENABLE_QT)
-        install(FILES "${PROJECT_SOURCE_DIR}/dist/citra-qt.6"
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man6")
-    endif()
 endif()

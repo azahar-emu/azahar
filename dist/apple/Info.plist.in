@@ -31,7 +31,6 @@
         <dict>
             <key>CFBundleTypeExtensions</key>
             <array>
-                <string>3ds</string>
                 <string>3dsx</string>
                 <string>cci</string>
                 <string>cxi</string>

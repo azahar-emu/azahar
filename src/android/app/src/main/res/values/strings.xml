@@ -93,7 +93,7 @@
     <string name="cannot_skip_directory_description">This step is required to allow Azahar to work. Please select a directory and then you can continue.</string>
     <string name="cannot_skip_directory_help" translatable="false">https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage</string>
     <string name="set_up_theme_settings">Theme Settings</string>
-    <string name="setup_theme_settings_description">Configure your theme preferences for Lime3DS.</string>
+    <string name="setup_theme_settings_description">Configure your theme preferences for Azahar.</string>
     <string name="setup_set_theme">Set Theme</string>
 
     <!-- Search Strings -->
@@ -269,8 +269,6 @@
     <string name="use_shader_jit">Shader JIT</string>
     <string name="use_disk_shader_cache">Disk Shader Cache</string>
     <string name="use_disk_shader_cache_description">Reduce stuttering by storing and loading generated shaders to disk. It cannot be used without Enabling Hardware Shader.</string>
-    <string name="adreno_gpu_boost">Adreno GPU Boost (Experimental)</string>
-    <string name="adreno_gpu_boost_description">Increases graphics throughput on supported devices, improving performance. Use of this setting can increase power usage and temperature. May cause stability issues on certain devices.</string>
     <string name="utility">Utility</string>
     <string name="dump_textures">Dump Textures</string>
     <string name="dump_textures_description">Textures are dumped to dump/textures/[Title ID]/.</string>
@@ -782,7 +780,7 @@
     <string name="use_artic_base_controller">Use Artic Controller when connected to Artic Base Server</string>
     <string name="use_artic_base_controller_desc">Use the controls provided by Artic Base Server when connected to it instead of the configured input device.</string>
     <string name="instant_debug_log">Flush log output on every message</string>
-    <string name="instant_debug_log_desc">Immediately commits the debug log to file. Use this if citra crashes and the log output is being cut.</string>
+    <string name="instant_debug_log_desc">Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.</string>
     <string name="disable_right_eye_render">Disable Right Eye Render</string>
     <string name="disable_right_eye_render_description">Greatly improves performance in some applications, but can cause flickering in others.</string>
 

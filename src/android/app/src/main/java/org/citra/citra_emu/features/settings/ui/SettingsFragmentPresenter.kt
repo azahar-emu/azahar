@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,7 +43,6 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
-import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
@@ -252,14 +251,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString get() = string
-                override val defaultValue = "CITRA"
+                override val defaultValue = "AZAHAR"
             }
             add(
                 StringInputSetting(
                     usernameSetting,
                     R.string.username,
                     0,
-                    "CITRA",
+                    "AZAHAR",
                     10
                 )
             )
@@ -382,7 +381,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString get() = short.toString()
-                override val defaultValue: Short = 3
+                override val defaultValue: Short = 11
             }
             add(
                 SingleChoiceSetting(
@@ -411,7 +410,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString get() = short.toString()
-                override val defaultValue: Short = 25
+                override val defaultValue: Short = 7
             }
             val birthdayMonth = SystemSaveGame.getBirthday()[0]
             val daysInMonth = BirthdayMonth.getMonthFromCode(birthdayMonth)?.days ?: 31
@@ -779,17 +778,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.SHADERS_ACCURATE_MUL.defaultValue
                 )
             )
-            if (GpuDriverHelper.supportsCustomDriverLoading()) {
-                add(
-                    SwitchSetting(
-                        BooleanSetting.ADRENO_GPU_BOOST,
-                        R.string.adreno_gpu_boost,
-                        R.string.adreno_gpu_boost_description,
-                        BooleanSetting.ADRENO_GPU_BOOST.key,
-                        BooleanSetting.ADRENO_GPU_BOOST.defaultValue
-                    )
-                )
-            }
             add(
                 SwitchSetting(
                     IntSetting.DISK_SHADER_CACHE,

@@ -419,7 +419,7 @@ use_gdbstub=false
 gdbstub_port=24689
 
 # Flush log output on every message
-# Immediately commits the debug log to file. Use this if citra crashes and the log output is being cut.
+# Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =
 
 # To LLE a service module add "LLE\<module name>=true"

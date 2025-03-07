@@ -478,7 +478,7 @@
             <item row="18" column="0">
              <widget class="QLabel" name="label_nus_download">
               <property name="text">
-               <string>Download System Files from Nitendo servers</string>
+               <string>Download System Files from Nintendo servers</string>
               </property>
              </widget>
             </item>
