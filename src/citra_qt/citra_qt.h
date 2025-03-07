@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -172,6 +172,14 @@ private:
     void ShowNoUpdatePrompt();
     void CheckForUpdates();
 #endif
+
+    enum LegacyEmu {
+        Citra,
+        Lime3DS,
+    };
+    void ShowMigrationCancelledMessage();
+    void CheckForMigration();
+    void MigrateUserData(const LegacyEmu selected_legacy_emu);
 
     /**
      * Stores the filename in the recently loaded files list.
