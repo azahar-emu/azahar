@@ -79,6 +79,8 @@
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="action_Connect_Artic"/>
+    <addaction name="separator"/>
+    <addaction name="action_Setup_System_Files"/>
     <addaction name="menu_Boot_Home_Menu"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
@@ -236,6 +238,11 @@
   <action name="action_Connect_Artic">
     <property name="text">
       <string>Connect to Artic Base...</string>
+    </property>
+  </action>
+  <action name="action_Setup_System_Files">
+    <property name="text">
+      <string>Set Up System Files...</string>
     </property>
   </action>
   <action name="action_Boot_Home_Menu_JPN">

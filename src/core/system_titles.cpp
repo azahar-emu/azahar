@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -1206,6 +1206,84 @@ std::optional<u32> GetSystemTitleRegion(u64 title_id) {
     }
 
     return std::nullopt;
+}
+
+std::pair<bool, bool> AreSystemTitlesInstalled() {
+    std::array<u32, NUM_SYSTEM_TITLE_REGIONS> o_installed_titles{};
+    std::array<u32, NUM_SYSTEM_TITLE_REGIONS> o_total_titles{};
+
+    std::array<u32, NUM_SYSTEM_TITLE_REGIONS> n_installed_titles{};
+    std::array<u32, NUM_SYSTEM_TITLE_REGIONS> n_total_titles{};
+
+    for (auto categ = system_titles.begin(); categ != system_titles.end(); categ++) {
+        for (auto title = categ->titles.begin(); title != categ->titles.end(); title++) {
+
+            for (u32 i = 0; i < NUM_SYSTEM_TITLE_REGIONS; i++) {
+                if (title->title_id_lows[i] == 0) {
+                    continue;
+                }
+                u64 program_id =
+                    static_cast<u64>(categ->title_id_high) << 32 | title->title_id_lows[i];
+                if (title->sets & SystemTitleSet::Old3ds) {
+                    o_total_titles[i]++;
+                }
+                if (title->sets & SystemTitleSet::New3ds) {
+                    n_total_titles[i]++;
+                }
+
+                // TODO(PabloMK7) Switch to a better solution once available, so it's not as slow as
+                // checking everything
+                if (FileUtil::Exists(Service::AM::GetTitleMetadataPath(Service::FS::MediaType::NAND,
+                                                                       program_id, false))) {
+                    if (title->sets & SystemTitleSet::Old3ds) {
+                        o_installed_titles[i]++;
+                    }
+                    if (title->sets & SystemTitleSet::New3ds) {
+                        n_installed_titles[i]++;
+                    }
+                }
+            }
+        }
+    }
+
+    bool o_all = false;
+    bool n_all = false;
+
+    for (size_t i = 0; i < o_installed_titles.size(); i++) {
+        if (o_installed_titles[i] == o_total_titles[i]) {
+            o_all = true;
+            break;
+        }
+    }
+    for (size_t i = 0; i < n_installed_titles.size(); i++) {
+        if (n_installed_titles[i] == n_total_titles[i]) {
+            n_all = true;
+            break;
+        }
+    }
+
+    return std::make_pair(o_all, n_all);
+}
+
+void UninstallSystemFiles(SystemTitleSet set) {
+    for (auto categ = system_titles.begin(); categ != system_titles.end(); categ++) {
+        for (auto title = categ->titles.begin(); title != categ->titles.end(); title++) {
+            if (((set & SystemTitleSet::Old3ds) != 0 &&
+                 (title->sets & SystemTitleSet::Old3ds) != 0) ||
+                ((set & SystemTitleSet::New3ds) != 0 &&
+                 (title->sets & (SystemTitleSet::Old3ds | SystemTitleSet::New3ds)) ==
+                     SystemTitleSet::New3ds)) {
+                for (u32 i = 0; i < NUM_SYSTEM_TITLE_REGIONS; i++) {
+                    if (title->title_id_lows[i] == 0) {
+                        continue;
+                    }
+                    u64 program_id =
+                        static_cast<u64>(categ->title_id_high) << 32 | title->title_id_lows[i];
+                    Service::AM::UninstallProgram(Service::FS::MediaType::NAND, program_id);
+                }
+            }
+        }
+    }
 }
 
 } // namespace Core

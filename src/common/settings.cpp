@@ -1,9 +1,10 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <string_view>
 #include <utility>
+#include <cryptopp/osrng.h>
 #include "audio_core/dsp_interface.h"
 #include "common/file_util.h"
 #include "common/settings.h"
@@ -74,6 +75,8 @@ std::string_view GetTextureSamplingName(TextureSampling sampling) {
 
 Values values = {};
 static bool configuring_global = true;
+bool is_temporary_frame_limit;
+double temporary_frame_limit;
 
 void LogSettings() {
     const auto log_setting = [](std::string_view name, const auto& value) {
@@ -247,5 +250,4 @@ void DeleteProfile(int index) {
 void RenameCurrentProfile(std::string new_name) {
     Settings::values.current_input_profile.name = std::move(new_name);
 }
-
 } // namespace Settings

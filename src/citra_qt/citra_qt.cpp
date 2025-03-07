@@ -489,7 +489,7 @@ void GMainWindow::InitializeWidgets() {
 
     artic_traffic_label = new QLabel();
     artic_traffic_label->setToolTip(
-        tr("Current Artic Base traffic speed. Higher values indicate bigger transfer loads."));
+        tr("Current Artic traffic speed. Higher values indicate bigger transfer loads."));
 
     emu_speed_label = new QLabel();
     emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
@@ -982,6 +982,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Load_File, &GMainWindow::OnMenuLoadFile);
     connect_menu(ui->action_Install_CIA, &GMainWindow::OnMenuInstallCIA);
     connect_menu(ui->action_Connect_Artic, &GMainWindow::OnMenuConnectArticBase);
+    connect_menu(ui->action_Setup_System_Files, &GMainWindow::OnMenuSetUpSystemFiles);
     for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
         connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
                      [this, region] { OnMenuBootHomeMenu(region); });
@@ -1367,9 +1368,9 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
         case Core::System::ResultStatus::ErrorArticDisconnected:
             QMessageBox::critical(
-                this, tr("Artic Base Server"),
+                this, tr("Artic Server"),
                 tr(fmt::format(
-                       "An error has occurred whilst communicating with the Artic Base Server.\n{}",
+                       "An error has occurred whilst communicating with the Artic Server.\n{}",
                        system.GetStatusDetails())
                        .c_str()));
             break;
@@ -1401,7 +1402,9 @@ void GMainWindow::BootGame(const QString& filename) {
         ShutdownGame();
     }
 
-    const bool is_artic = filename.startsWith(QString::fromStdString("articbase://"));
+    const bool is_artic = filename.startsWith(QString::fromStdString("articbase:/")) ||
+                          filename.startsWith(QString::fromStdString("articinio:/")) ||
+                          filename.startsWith(QString::fromStdString("articinin:/"));
 
     if (!is_artic && filename.endsWith(QStringLiteral(".cia"))) {
         const auto answer = QMessageBox::question(
@@ -1444,7 +1447,7 @@ void GMainWindow::BootGame(const QString& filename) {
         QtConfig per_game_config(config_file_name, QtConfig::ConfigType::PerGameConfig);
     }
 
-    // Artic Base Server cannot accept a client multiple times, so multiple loaders are not
+    // Artic Server cannot accept a client multiple times, so multiple loaders are not
     // possible. Instead register the app loader early and do not create it again on system load.
     if (!loader->SupportsMultipleInstancesForSameFile()) {
         system.RegisterAppLoaderEarly(loader);
@@ -2190,6 +2193,91 @@ void GMainWindow::OnMenuLoadFile() {
 
     UISettings::values.roms_path = QFileInfo(filename).path();
     BootGame(filename);
+}
+
+void GMainWindow::OnMenuSetUpSystemFiles() {
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Set Up System Files"));
+
+    QVBoxLayout layout(&dialog);
+
+    QLabel label_description(
+        tr("<p>Azahar needs files from a real console to be able to use some of its features.<br>"
+           "You can get such files with the <a "
+           "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
+           "Artic Setup Tool</a><br> Notes:<ul><li><b>This operation will install console unique "
+           "files "
+           "to Azahar, do not share your user or nand folders<br>after performing the setup "
+           "process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to "
+           "work.</li><li>Both setup modes will work regardless of the model of the console "
+           "running the setup tool.</li></ul><hr></p>"),
+        &dialog);
+    layout.addWidget(&label_description);
+
+    QHBoxLayout layout_h(&dialog);
+    layout.addLayout(&layout_h);
+
+    QLabel label_enter(tr("Enter Azahar Artic Setup Tool address:"), &dialog);
+
+    layout_h.addWidget(&label_enter);
+
+    QLineEdit textInput(UISettings::values.last_artic_base_addr, &dialog);
+    layout_h.addWidget(&textInput);
+
+    QLabel label_select(tr("<br>Choose setup mode:"), &dialog);
+    layout.addWidget(&label_select);
+
+    std::pair<bool, bool> install_state = Core::AreSystemTitlesInstalled();
+
+    QRadioButton radio1(&dialog);
+    QRadioButton radio2(&dialog);
+    if (!install_state.first) {
+        radio1.setText(tr("(\u2139\uFE0F) Old 3DS setup"));
+        radio1.setToolTip(tr("Setup is possible."));
+
+        radio2.setText(tr("(\u26A0) New 3DS setup"));
+        radio2.setToolTip(tr("Old 3DS setup is required first."));
+        radio2.setEnabled(false);
+    } else {
+        radio1.setText(tr("(\u2705) Old 3DS setup"));
+        radio1.setToolTip(tr("Setup completed."));
+
+        if (!install_state.second) {
+            radio2.setText(tr("(\u2139\uFE0F) New 3DS setup"));
+            radio2.setToolTip(tr("Setup is possible."));
+        } else {
+            radio2.setText(tr("(\u2705) New 3DS setup"));
+            radio2.setToolTip(tr("Setup completed."));
+        }
+    }
+    radio1.setChecked(true);
+    layout.addWidget(&radio1);
+    layout.addWidget(&radio2);
+
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    connect(&buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(&buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout.addWidget(&buttonBox);
+
+    int res = dialog.exec();
+    if (res == QDialog::Accepted) {
+        bool is_o3ds = radio1.isChecked();
+        if ((is_o3ds && install_state.first) || (!is_o3ds && install_state.second)) {
+            QMessageBox::StandardButton answer =
+                QMessageBox::question(this, tr("Set Up System Files"),
+                                      tr("The system files for the selected mode are already set "
+                                         "up.\nReinstall the files anyway?"),
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+            if (answer != QMessageBox::Yes) {
+                return;
+            }
+        }
+        Core::UninstallSystemFiles(is_o3ds ? Core::SystemTitleSet::Old3ds
+                                           : Core::SystemTitleSet::New3ds);
+        QString addr = textInput.text();
+        UISettings::values.last_artic_base_addr = addr;
+        BootGame(QString::fromStdString(is_o3ds ? "articinio://" : "articinin://").append(addr));
+    }
 }
 
 void GMainWindow::OnMenuInstallCIA() {
@@ -3131,16 +3219,16 @@ void GMainWindow::UpdateStatusBar() {
             QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
 
         artic_traffic_label->setText(
-            tr("Artic Base Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
+            tr("Artic Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
         artic_traffic_label->setStyleSheet(style_sheet);
     }
 
-    if (Settings::values.frame_limit.GetValue() == 0) {
+    if (Settings::GetFrameLimit() == 0) {
         emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
     } else {
         emu_speed_label->setText(tr("Speed: %1% / %2%")
                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                     .arg(Settings::values.frame_limit.GetValue()));
+                                     .arg(Settings::GetFrameLimit()));
     }
     game_fps_label->setText(tr("App: %1 FPS").arg(results.game_fps, 0, 'f', 0));
     emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
@@ -3321,7 +3409,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
         message = QString::fromStdString(details);
         error_severity_icon = QMessageBox::Icon::Warning;
     } else if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
-        title = tr("Artic Base Server");
+        title = tr("Artic Server");
         message =
             tr(fmt::format("A communication error has occurred. The game will quit.\n{}", details)
                    .c_str());

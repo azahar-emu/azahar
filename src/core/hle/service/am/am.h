@@ -414,6 +414,9 @@ public:
     protected:
         void GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool ignore_platform);
 
+        void CommitImportTitlesImpl(Kernel::HLERequestContext& ctx, bool is_update_firm_auto,
+                                    bool is_titles);
+
         /**
          * AM::GetNumPrograms service function
          * Gets the number of installed titles in the requested media type
@@ -873,6 +876,8 @@ public:
          */
         void GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx);
 
+        void CommitImportProgramsAndUpdateFirmwareAuto(Kernel::HLERequestContext& ctx);
+
         /**
          * AM::DeleteProgram service function
          * Deletes a program
@@ -949,6 +954,8 @@ public:
 
         void EndImportTitle(Kernel::HLERequestContext& ctx);
 
+        void CommitImportTitles(Kernel::HLERequestContext& ctx);
+
         void BeginImportTmd(Kernel::HLERequestContext& ctx);
 
         void EndImportTmd(Kernel::HLERequestContext& ctx);
@@ -983,6 +990,8 @@ public:
          */
         void GetDeviceCert(Kernel::HLERequestContext& ctx);
 
+        void CommitImportTitlesAndUpdateFirmwareAuto(Kernel::HLERequestContext& ctx);
+
         void DeleteTicketId(Kernel::HLERequestContext& ctx);
 
         void GetNumTicketIds(Kernel::HLERequestContext& ctx);
@@ -1001,6 +1010,14 @@ public:
         // Placed on the interface level so that only am:net and am:app have it.
         std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
     };
+
+    void ForceO3DSDeviceID() {
+        force_old_device_id = true;
+    }
+
+    void ForceN3DSDeviceID() {
+        force_new_device_id = true;
+    }
 
 private:
     void ScanForTickets();

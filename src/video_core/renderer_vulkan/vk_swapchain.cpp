@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -185,7 +185,7 @@ void Swapchain::SetPresentMode() {
     }
     // If vsync is enabled attempt to use mailbox mode in case the user wants to speedup/slowdown
     // the game. If mailbox is not available use immediate and warn about it.
-    if (use_vsync && Settings::values.frame_limit.GetValue() > 100) {
+    if (use_vsync && Settings::GetFrameLimit() > 100) {
         present_mode = has_mailbox ? vk::PresentModeKHR::eMailbox : vk::PresentModeKHR::eImmediate;
         if (!has_mailbox) {
             LOG_WARNING(

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -622,6 +622,16 @@ public:
      */
     void SaveMCUConfig();
 
+    /**
+     * Get a reference to the console's MAC address
+     */
+    std::string& GetMacAddress();
+
+    /**
+     *
+     */
+    void SaveMacAddress();
+
 private:
     void UpdatePreferredRegionCode();
     SystemLanguage GetRawSystemLanguage();
@@ -634,6 +644,7 @@ private:
     u32 preferred_region_code = 0;
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
+    std::string mac_address{};
 
     std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
 
@@ -648,6 +659,16 @@ void InstallInterfaces(Core::System& system);
 
 /// Convenience function for getting a SHA256 hash of the Console ID
 std::string GetConsoleIdHash(Core::System& system);
+
+std::array<u8, 6> MacToArray(const std::string& mac);
+
+std::string MacToString(u64 mac);
+
+std::string MacToString(const std::array<u8, 6>& mac);
+
+u64 MacToU64(const std::string& mac);
+
+std::string GenerateRandomMAC();
 
 } // namespace Service::CFG
 

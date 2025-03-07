@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -916,7 +916,7 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
 
     auto resource = archives.GetArchiveResource(MediaType::SDMC);
 
@@ -934,7 +934,7 @@ void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
 void FS_USER::GetNandArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
 
     auto resource = archives.GetArchiveResource(MediaType::NAND);
     if (resource.Failed()) {
@@ -1103,7 +1103,7 @@ void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto media_type = rp.PopEnum<MediaType>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x{:08X}", media_type);
+    LOG_DEBUG(Service_FS, "(STUBBED) called Media type=0x{:08X}", media_type);
 
     auto resource = archives.GetArchiveResource(media_type);
     if (resource.Failed()) {

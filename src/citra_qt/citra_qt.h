@@ -244,6 +244,7 @@ private slots:
     void OnGameListOpenPerGameProperties(const QString& file);
     void OnConfigurePerGame();
     void OnMenuLoadFile();
+    void OnMenuSetUpSystemFiles();
     void OnMenuInstallCIA();
     void OnMenuConnectArticBase();
     void OnMenuBootHomeMenu(u32 region);

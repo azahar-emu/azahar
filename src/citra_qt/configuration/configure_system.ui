@@ -455,111 +455,47 @@
              </widget>
             </item>
             <item row="16" column="0">
+              <widget class="QLabel" name="label_mac">
+                <property name="text">
+                  <string>MAC:</string>
+                </property>
+              </widget>
+            </item>
+            <item row="16" column="1">
+              <widget class="QPushButton" name="button_regenerate_mac">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                  </sizepolicy>
+                </property>
+                <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                </property>
+                <property name="text">
+                  <string>Regenerate</string>
+                </property>
+              </widget>
+            </item>
+            <item row="17" column="0">
              <widget class="QLabel" name="label_plugin_loader">
               <property name="text">
                <string>3GX Plugin Loader:</string>
               </property>
              </widget>
             </item>
-            <item row="16" column="1">
+            <item row="17" column="1">
              <widget class="QCheckBox" name="plugin_loader">
               <property name="text">
                <string>Enable 3GX plugin loader</string>
               </property>
              </widget>
             </item>
-            <item row="17" column="1">
+            <item row="18" column="1">
              <widget class="QCheckBox" name="allow_plugin_loader">
               <property name="text">
                <string>Allow applications to change plugin loader state</string>
               </property>
-             </widget>
-            </item>
-            <item row="18" column="0">
-             <widget class="QLabel" name="label_nus_download">
-              <property name="text">
-               <string>Download System Files from Nintendo servers</string>
-              </property>
-             </widget>
-            </item>
-            <item row="18" column="1">
-             <widget class="QWidget" name="body_nus_download">
-              <layout class="QHBoxLayout" name="horizontalLayout_nus_download">
-               <item>
-                <widget class="QComboBox" name="combo_download_set">
-                 <item>
-                  <property name="text">
-                   <string>Minimal</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Old 3DS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>New 3DS</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item>
-                <widget class="QComboBox" name="combo_download_region">
-                 <item>
-                  <property name="text">
-                   <string>JPN</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>USA</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>EUR</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>AUS</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>CHN</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>KOR</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>TWN</string>
-                  </property>
-                 </item>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="button_start_download">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="layoutDirection">
-                  <enum>Qt::RightToLeft</enum>
-                 </property>
-                 <property name="text">
-                  <string>Download</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </widget>
             </item>
            </layout>
@@ -762,6 +698,7 @@
   <tabstop>spinBox_play_coins</tabstop>
   <tabstop>spinBox_steps_per_hour</tabstop>
   <tabstop>button_regenerate_console_id</tabstop>
+  <tabstop>button_regenerate_mac</tabstop>
  </tabstops>
  <resources/>
  <connections/>
