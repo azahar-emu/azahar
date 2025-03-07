@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,8 +42,6 @@
 #define GET_ERRNO errno
 #define closesocket(x) close(x)
 #endif
-
-// #define DISABLE_PING_TIMEOUT
 
 namespace Network::ArticBase {
 
@@ -229,7 +227,7 @@ bool Client::Connect() {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_INET;
 
-    LOG_INFO(Network, "Starting Artic Base Client");
+    LOG_INFO(Network, "Starting Artic Client");
 
     if (getaddrinfo(address.data(), NULL, &hints, &addrinfo) != 0) {
         LOG_ERROR(Network, "Failed to get server address");
@@ -273,8 +271,8 @@ bool Client::Connect() {
             shutdown(main_socket, SHUT_RDWR);
             closesocket(main_socket);
             LOG_ERROR(Network, "Incompatible server version: {}", version_value);
-            SignalCommunicationError("\nIncompatible Artic Base Server version.\nCheck for updates "
-                                     "to Artic Base Server or Azahar.");
+            SignalCommunicationError("\nIncompatible Artic Server version.\nCheck for updates "
+                                     "to the Artic Server or Azahar.");
             return false;
         }
     } else {
@@ -485,15 +483,15 @@ void Client::PingFunction() {
     while (ping_run) {
         std::chrono::time_point<std::chrono::steady_clock> last = last_sent_request;
         if (std::chrono::steady_clock::now() - last > std::chrono::seconds(7)) {
-#ifdef DISABLE_PING_TIMEOUT
-            client->last_sent_request = std::chrono::steady_clock::now();
-#else
-            auto ping_reply = SendSimpleRequest("PING");
-            if (!ping_reply.has_value()) {
-                SignalCommunicationError();
-                break;
+            if (ping_enabled) {
+                auto ping_reply = SendSimpleRequest("PING");
+                if (!ping_reply.has_value()) {
+                    SignalCommunicationError();
+                    break;
+                }
+            } else {
+                last_sent_request = std::chrono::steady_clock::now();
             }
-#endif // DISABLE_PING_TIMEOUT
         }
 
         std::unique_lock lk(ping_cv_mutex);

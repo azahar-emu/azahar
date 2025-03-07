@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -246,6 +246,7 @@ private slots:
     void OnGameListOpenPerGameProperties(const QString& file);
     void OnConfigurePerGame();
     void OnMenuLoadFile();
+    void OnMenuSetUpSystemFiles();
     void OnMenuInstallCIA();
     void OnMenuConnectArticBase();
     void OnMenuBootHomeMenu(u32 region);

@@ -237,8 +237,7 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             &ConfigureSystem::UpdateInitTicks);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
-    connect(ui->button_start_download, &QPushButton::clicked, this,
-            &ConfigureSystem::DownloadFromNUS);
+    connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
 
     connect(ui->button_secure_info, &QPushButton::clicked, this, [this] {
         ui->button_secure_info->setEnabled(false);
@@ -281,34 +280,6 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
     }
 
     SetupPerGameUI();
-
-    ui->combo_download_set->setCurrentIndex(0);    // set to Minimal
-    ui->combo_download_region->setCurrentIndex(0); // set to the base region
-
-    HW::AES::InitKeys(true);
-    bool keys_available = HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure1) &&
-                          HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure2);
-    for (u8 i = 0; i < HW::AES::MaxCommonKeySlot && keys_available; i++) {
-        HW::AES::SelectCommonKeyIndex(i);
-        if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::TicketCommonKey)) {
-            keys_available = false;
-            break;
-        }
-    }
-    if (keys_available) {
-        ui->button_start_download->setEnabled(true);
-        ui->combo_download_set->setEnabled(true);
-        ui->combo_download_region->setEnabled(true);
-        ui->label_nus_download->setText(tr("Download System Files from Nintendo servers"));
-    } else {
-        ui->button_start_download->setEnabled(false);
-        ui->combo_download_set->setEnabled(false);
-        ui->combo_download_region->setEnabled(false);
-        ui->label_nus_download->setTextInteractionFlags(Qt::TextBrowserInteraction);
-        ui->label_nus_download->setOpenExternalLinks(true);
-        ui->label_nus_download->setText(tr("Azahar is missing keys to download system files."));
-    }
-
     ConfigureTime();
 }
 
@@ -385,13 +356,12 @@ void ConfigureSystem::ReadSystemSettings() {
     u64 console_id = cfg->GetConsoleUniqueId();
     ui->label_console_id->setText(
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
+    mac_address = cfg->GetMacAddress();
+    ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
 
     // set play coin
     play_coin = Service::PTM::Module::GetPlayCoins();
     ui->spinBox_play_coins->setValue(play_coin);
-
-    // set firmware download region
-    ui->combo_download_region->setCurrentIndex(static_cast<int>(cfg->GetRegionValue()));
 
     // Refresh secure data status
     RefreshSecureDataStatus();
@@ -484,6 +454,9 @@ void ConfigureSystem::ApplyConfiguration() {
 
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
+
+        cfg->GetMacAddress() = mac_address;
+        cfg->SaveMacAddress();
     }
 }
 
@@ -548,10 +521,11 @@ void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
 
 void ConfigureSystem::RefreshConsoleID() {
     QMessageBox::StandardButton reply;
-    QString warning_text = tr("This will replace your current virtual 3DS with a new one. "
-                              "Your current virtual 3DS will not be recoverable. "
-                              "This might have unexpected effects in applications. This might fail "
-                              "if you use an outdated config save. Continue?");
+    QString warning_text =
+        tr("This will replace your current virtual 3DS console ID with a new one. "
+           "Your current virtual 3DS console ID will not be recoverable. "
+           "This might have unexpected effects in applications. This might fail "
+           "if you use an outdated config save. Continue?");
     reply = QMessageBox::critical(this, tr("Warning"), warning_text,
                                   QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {
@@ -563,6 +537,21 @@ void ConfigureSystem::RefreshConsoleID() {
     cfg->UpdateConfigNANDSavegame();
     ui->label_console_id->setText(
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
+}
+
+void ConfigureSystem::RefreshMAC() {
+    QMessageBox::StandardButton reply;
+    QString warning_text = tr("This will replace your current MAC with a new one. "
+                              "It is not recommended to do this if you got the MAC address from "
+                              "your real console using the setup tool. Continue?");
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    mac_address = Service::CFG::GenerateRandomMAC();
+    ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
 }
 
 void ConfigureSystem::InstallSecureData(const std::string& from_path, const std::string& to_path) {
@@ -655,20 +644,9 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_plugin_loader->setVisible(false);
     ui->plugin_loader->setVisible(false);
     ui->allow_plugin_loader->setVisible(false);
-    // Disable the system firmware downloader.
-    ui->label_nus_download->setVisible(false);
-    ui->body_nus_download->setVisible(false);
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);
     ConfigurationShared::SetColoredTristate(ui->toggle_lle_applets, Settings::values.lle_applets,
                                             lle_applets);
-}
-
-void ConfigureSystem::DownloadFromNUS() {
-    ui->button_start_download->setEnabled(false);
-
-    QMessageBox::critical(this, tr("Azahar"), tr("Downloading from NUS has been deprecated."));
-
-    ui->button_start_download->setEnabled(true);
 }

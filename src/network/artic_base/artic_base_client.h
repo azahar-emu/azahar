@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -161,6 +161,10 @@ public:
         return last_sockaddr_in;
     }
 
+    void SetPingEnabled(bool enable) {
+        ping_enabled = enable;
+    }
+
 private:
     static constexpr const int SERVER_VERSION = 2;
 
@@ -190,6 +194,7 @@ private:
     std::condition_variable ping_cv;
     std::mutex ping_cv_mutex;
     std::atomic<bool> ping_run = true;
+    bool ping_enabled = true;
 
     void StopImpl(bool from_error);
 

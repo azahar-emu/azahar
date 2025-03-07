@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,22 +18,13 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class Apploader_Artic final : public AppLoader {
 public:
-    Apploader_Artic(Core::System& system_, const std::string& server_addr, u16 server_port)
-        : AppLoader(system_, FileUtil::IOFile()) {
-        client = std::make_shared<Network::ArticBase::Client>(server_addr, server_port);
-        client->SetCommunicationErrorCallback([&system_](const std::string& msg) {
-            system_.SetStatus(Core::System::ResultStatus::ErrorArticDisconnected,
-                              msg.empty() ? nullptr : msg.c_str());
-        });
-        client->SetArticReportTrafficCallback(
-            [&system_](u32 bytes) { system_.ReportArticTraffic(bytes); });
-        client->SetReportArticEventCallback([&system_](u64 event) {
-            Core::PerfStats::PerfArticEventBits ev =
-                static_cast<Core::PerfStats::PerfArticEventBits>(event & 0xFFFFFFFF);
-            bool set = (event > 32) != 0;
-            system_.ReportPerfArticEvent(ev, set);
-        });
-    }
+    enum class ArticInitMode {
+        NONE,
+        O3DS,
+        N3DS,
+    };
+    Apploader_Artic(Core::System& system_, const std::string& server_addr, u16 server_port,
+                    ArticInitMode init_mode);
 
     ~Apploader_Artic() override;
 
@@ -97,13 +88,21 @@ public:
         return false;
     }
 
+    bool DoingInitialSetup() override {
+        return is_initial_setup;
+    }
+
 private:
+    static constexpr u32 INITIAL_SETUP_APP_VERSION = 0;
     /**
      * Loads .code section into memory for booting
      * @param process The newly created process
      * @return ResultStatus result of function
      */
     ResultStatus LoadExec(std::shared_ptr<Kernel::Process>& process);
+
+    ResultStatus LoadExecImpl(std::shared_ptr<Kernel::Process>& process, u64_le program_id,
+                              const ExHeader_Header& exheader, std::vector<u8>& code);
 
     /// Reads the region lockout info in the SMDH and send it to CFG service
     /// If an SMDH is not present, the program ID is compared against a list
@@ -114,8 +113,12 @@ private:
 
     ResultStatus LoadProductInfo(Service::FS::FS_USER::ProductInfo& out);
 
+    void EnsureClientConnected();
+
     ExHeader_Header program_exheader{};
     bool program_exheader_loaded = false;
+    bool is_initial_setup = false;
+    ArticInitMode artic_init_mode = ArticInitMode::NONE;
 
     std::optional<u64> cached_title_id = std::nullopt;
     std::optional<Service::FS::FS_USER::ProductInfo> cached_product_info = std::nullopt;
