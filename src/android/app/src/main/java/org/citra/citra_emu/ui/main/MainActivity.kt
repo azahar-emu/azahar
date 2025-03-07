@@ -314,7 +314,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return@registerForActivityResult
         }
 
-        CitraDirectoryHelper(this@MainActivity).showCitraDirectoryDialog(result)
+        CitraDirectoryHelper(this@MainActivity).showCitraDirectoryDialog(result, buttonState = {})
     }
 
     val ciaFileInstaller = registerForActivityResult(
