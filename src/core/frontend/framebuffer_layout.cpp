@@ -300,14 +300,16 @@ FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary
 FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryScreenLayout layout = Settings::values.secondary_screen_layout.GetValue();
     switch (layout) {
-        case Settings::SecondaryScreenLayout::None:
-            // this should never happen, but if it does, somehow, send the top screen
-        case Settings::SecondaryScreenLayout::TopScreenOnly:
-            return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
+
         case Settings::SecondaryScreenLayout::BottomScreenOnly:
             return SingleFrameLayout(width, height, true, Settings::values.upright_screen.GetValue());
         case Settings::SecondaryScreenLayout::SideBySide:
             return LargeFrameLayout(width,height,false,Settings::values.upright_screen.GetValue(),1.0f,Settings::SmallScreenPosition::MiddleRight);
+        case Settings::SecondaryScreenLayout::None:
+            // this should never happen, but if it does, somehow, send the top screen
+        case Settings::SecondaryScreenLayout::TopScreenOnly:
+        default:
+            return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
     }
 }
 
