@@ -964,6 +964,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SingleChoiceSetting(
+                    IntSetting.SECONDARY_SCREEN_LAYOUT,
+                    R.string.emulation_switch_secondary_layout,
+                    0,
+                    R.array.secondaryLayouts,
+                    R.array.secondaryLayoutValues,
+                    IntSetting.SECONDARY_SCREEN_LAYOUT.key,
+                    IntSetting.SECONDARY_SCREEN_LAYOUT.defaultValue
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.SMALL_SCREEN_POSITION,
                     R.string.emulation_small_screen_position,
                     R.string.small_screen_position_description,
