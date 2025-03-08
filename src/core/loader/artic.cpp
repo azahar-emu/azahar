@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,21 +13,26 @@
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
+#include "core/file_sys/certificate.h"
 #include "core/file_sys/ncch_container.h"
+#include "core/file_sys/otp.h"
 #include "core/file_sys/romfs_reader.h"
 #include "core/file_sys/secure_value_backend_artic.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/am/am_app.h"
 #include "core/hle/service/am/am_net.h"
+#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/hid/hid_user.h"
+#include "core/hw/unique_data.h"
 #include "core/loader/artic.h"
 #include "core/loader/smdh.h"
 #include "core/memory.h"
@@ -37,6 +42,26 @@
 namespace Loader {
 
 using namespace Common::Literals;
+
+Apploader_Artic::Apploader_Artic(Core::System& system_, const std::string& server_addr,
+                                 u16 server_port, ArticInitMode init_mode)
+    : AppLoader(system_, FileUtil::IOFile()) {
+    client = std::make_shared<Network::ArticBase::Client>(server_addr, server_port);
+    client->SetCommunicationErrorCallback([&system_](const std::string& msg) {
+        system_.SetStatus(Core::System::ResultStatus::ErrorArticDisconnected,
+                          msg.empty() ? nullptr : msg.c_str());
+    });
+    client->SetArticReportTrafficCallback(
+        [&system_](u32 bytes) { system_.ReportArticTraffic(bytes); });
+    client->SetReportArticEventCallback([&system_](u64 event) {
+        Core::PerfStats::PerfArticEventBits ev =
+            static_cast<Core::PerfStats::PerfArticEventBits>(event & 0xFFFFFFFF);
+        bool set = (event > 32) != 0;
+        system_.ReportPerfArticEvent(ev, set);
+    });
+    is_initial_setup = init_mode != ArticInitMode::NONE;
+    artic_init_mode = init_mode;
+}
 
 Apploader_Artic::~Apploader_Artic() {
     // TODO(PabloMK7) Find memory leak that prevents the romfs readers being destroyed
@@ -110,7 +135,6 @@ Apploader_Artic::LoadNew3dsHwCapabilities() {
 }
 
 ResultStatus Apploader_Artic::LoadExec(std::shared_ptr<Kernel::Process>& process) {
-    using Kernel::CodeSet;
 
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
@@ -119,106 +143,108 @@ ResultStatus Apploader_Artic::LoadExec(std::shared_ptr<Kernel::Process>& process
     u64_le program_id;
     if (ResultStatus::Success == ReadCode(code) &&
         ResultStatus::Success == ReadProgramId(program_id)) {
-
-        std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
-            (const char*)program_exheader.codeset_info.name, 8);
-
-        std::shared_ptr<CodeSet> codeset = system.Kernel().CreateCodeSet(process_name, program_id);
-
-        codeset->CodeSegment().offset = 0;
-        codeset->CodeSegment().addr = program_exheader.codeset_info.text.address;
-        codeset->CodeSegment().size =
-            program_exheader.codeset_info.text.num_max_pages * Memory::CITRA_PAGE_SIZE;
-
-        codeset->RODataSegment().offset =
-            codeset->CodeSegment().offset + codeset->CodeSegment().size;
-        codeset->RODataSegment().addr = program_exheader.codeset_info.ro.address;
-        codeset->RODataSegment().size =
-            program_exheader.codeset_info.ro.num_max_pages * Memory::CITRA_PAGE_SIZE;
-
-        // TODO(yuriks): Not sure if the bss size is added to the page-aligned .data size or just
-        //               to the regular size. Playing it safe for now.
-        u32 bss_page_size = (program_exheader.codeset_info.bss_size + 0xFFF) & ~0xFFF;
-        code.resize(code.size() + bss_page_size, 0);
-
-        codeset->DataSegment().offset =
-            codeset->RODataSegment().offset + codeset->RODataSegment().size;
-        codeset->DataSegment().addr = program_exheader.codeset_info.data.address;
-        codeset->DataSegment().size =
-            program_exheader.codeset_info.data.num_max_pages * Memory::CITRA_PAGE_SIZE +
-            bss_page_size;
-
-        // Apply patches now that the entire codeset (including .bss) has been allocated
-        // const ResultStatus patch_result = overlay_ncch->ApplyCodePatch(code);
-        // if (patch_result != ResultStatus::Success && patch_result != ResultStatus::ErrorNotUsed)
-        //    return patch_result;
-
-        codeset->entrypoint = codeset->CodeSegment().addr;
-        codeset->memory = std::move(code);
-
-        process = system.Kernel().CreateProcess(std::move(codeset));
-
-        // Attach a resource limit to the process based on the resource limit category
-        const auto category = static_cast<Kernel::ResourceLimitCategory>(
-            program_exheader.arm11_system_local_caps.resource_limit_category);
-        process->resource_limit = system.Kernel().ResourceLimit().GetForCategory(category);
-
-        // When running N3DS-unaware titles pm will lie about the amount of memory available.
-        // This means RESLIMIT_COMMIT = APPMEMALLOC doesn't correspond to the actual size of
-        // APPLICATION. See:
-        // https://github.com/LumaTeam/Luma3DS/blob/e2778a45/sysmodules/pm/source/launch.c#L237
-        auto& ncch_caps = program_exheader.arm11_system_local_caps;
-        const auto o3ds_mode = *LoadKernelMemoryMode().first;
-        const auto n3ds_mode = static_cast<Kernel::New3dsMemoryMode>(ncch_caps.n3ds_mode);
-        const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
-        if (is_new_3ds && n3ds_mode == Kernel::New3dsMemoryMode::Legacy &&
-            category == Kernel::ResourceLimitCategory::Application) {
-            u64 new_limit = 0;
-            switch (o3ds_mode) {
-            case Kernel::MemoryMode::Prod:
-                new_limit = 64_MiB;
-                break;
-            case Kernel::MemoryMode::Dev1:
-                new_limit = 96_MiB;
-                break;
-            case Kernel::MemoryMode::Dev2:
-                new_limit = 80_MiB;
-                break;
-            default:
-                break;
-            }
-            process->resource_limit->SetLimitValue(Kernel::ResourceLimitType::Commit,
-                                                   static_cast<s32>(new_limit));
-        }
-
-        // Set the default CPU core for this process
-        process->ideal_processor = program_exheader.arm11_system_local_caps.ideal_processor;
-
-        // Copy data while converting endianness
-        using KernelCaps = std::array<u32, ExHeader_ARM11_KernelCaps::NUM_DESCRIPTORS>;
-        KernelCaps kernel_caps;
-        std::copy_n(program_exheader.arm11_kernel_caps.descriptors, kernel_caps.size(),
-                    begin(kernel_caps));
-        process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
-
-        s32 priority = program_exheader.arm11_system_local_caps.priority;
-        u32 stack_size = program_exheader.codeset_info.stack_size;
-
-        // On real HW this is done with FS:Reg, but we can be lazy
-        auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
-        fs_user->RegisterProgramInfo(process->process_id, process->codeset->program_id,
-                                     "articbase://");
-
-        Service::FS::FS_USER::ProductInfo product_info{};
-        if (LoadProductInfo(product_info) != ResultStatus::Success) {
-            return ResultStatus::ErrorArtic;
-        }
-        fs_user->RegisterProductInfo(process->process_id, product_info);
-
-        process->Run(priority, stack_size);
-        return ResultStatus::Success;
+        return LoadExecImpl(process, program_id, program_exheader, code);
     }
     return ResultStatus::ErrorArtic;
+}
+
+ResultStatus Apploader_Artic::LoadExecImpl(std::shared_ptr<Kernel::Process>& process,
+                                           u64_le program_id, const ExHeader_Header& exheader,
+                                           std::vector<u8>& code) {
+    using Kernel::CodeSet;
+
+    std::string process_name =
+        Common::StringFromFixedZeroTerminatedBuffer((const char*)exheader.codeset_info.name, 8);
+
+    std::shared_ptr<CodeSet> codeset = system.Kernel().CreateCodeSet(process_name, program_id);
+
+    codeset->CodeSegment().offset = 0;
+    codeset->CodeSegment().addr = exheader.codeset_info.text.address;
+    codeset->CodeSegment().size =
+        exheader.codeset_info.text.num_max_pages * Memory::CITRA_PAGE_SIZE;
+
+    codeset->RODataSegment().offset = codeset->CodeSegment().offset + codeset->CodeSegment().size;
+    codeset->RODataSegment().addr = exheader.codeset_info.ro.address;
+    codeset->RODataSegment().size =
+        exheader.codeset_info.ro.num_max_pages * Memory::CITRA_PAGE_SIZE;
+
+    // TODO(yuriks): Not sure if the bss size is added to the page-aligned .data size or just
+    //               to the regular size. Playing it safe for now.
+    u32 bss_page_size = (exheader.codeset_info.bss_size + 0xFFF) & ~0xFFF;
+    code.resize(code.size() + bss_page_size, 0);
+
+    codeset->DataSegment().offset = codeset->RODataSegment().offset + codeset->RODataSegment().size;
+    codeset->DataSegment().addr = exheader.codeset_info.data.address;
+    codeset->DataSegment().size =
+        exheader.codeset_info.data.num_max_pages * Memory::CITRA_PAGE_SIZE + bss_page_size;
+
+    // Apply patches now that the entire codeset (including .bss) has been allocated
+    // const ResultStatus patch_result = overlay_ncch->ApplyCodePatch(code);
+    // if (patch_result != ResultStatus::Success && patch_result != ResultStatus::ErrorNotUsed)
+    //    return patch_result;
+
+    codeset->entrypoint = codeset->CodeSegment().addr;
+    codeset->memory = std::move(code);
+
+    process = system.Kernel().CreateProcess(std::move(codeset));
+
+    // Attach a resource limit to the process based on the resource limit category
+    const auto category = static_cast<Kernel::ResourceLimitCategory>(
+        exheader.arm11_system_local_caps.resource_limit_category);
+    process->resource_limit = system.Kernel().ResourceLimit().GetForCategory(category);
+
+    // When running N3DS-unaware titles pm will lie about the amount of memory available.
+    // This means RESLIMIT_COMMIT = APPMEMALLOC doesn't correspond to the actual size of
+    // APPLICATION. See:
+    // https://github.com/LumaTeam/Luma3DS/blob/e2778a45/sysmodules/pm/source/launch.c#L237
+    auto& ncch_caps = exheader.arm11_system_local_caps;
+    const auto o3ds_mode = *LoadKernelMemoryMode().first;
+    const auto n3ds_mode = static_cast<Kernel::New3dsMemoryMode>(ncch_caps.n3ds_mode);
+    const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
+    if (is_new_3ds && n3ds_mode == Kernel::New3dsMemoryMode::Legacy &&
+        category == Kernel::ResourceLimitCategory::Application) {
+        u64 new_limit = 0;
+        switch (o3ds_mode) {
+        case Kernel::MemoryMode::Prod:
+            new_limit = 64_MiB;
+            break;
+        case Kernel::MemoryMode::Dev1:
+            new_limit = 96_MiB;
+            break;
+        case Kernel::MemoryMode::Dev2:
+            new_limit = 80_MiB;
+            break;
+        default:
+            break;
+        }
+        process->resource_limit->SetLimitValue(Kernel::ResourceLimitType::Commit,
+                                               static_cast<s32>(new_limit));
+    }
+
+    // Set the default CPU core for this process
+    process->ideal_processor = exheader.arm11_system_local_caps.ideal_processor;
+
+    // Copy data while converting endianness
+    using KernelCaps = std::array<u32, ExHeader_ARM11_KernelCaps::NUM_DESCRIPTORS>;
+    KernelCaps kernel_caps;
+    std::copy_n(exheader.arm11_kernel_caps.descriptors, kernel_caps.size(), begin(kernel_caps));
+    process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
+
+    s32 priority = exheader.arm11_system_local_caps.priority;
+    u32 stack_size = exheader.codeset_info.stack_size;
+
+    // On real HW this is done with FS:Reg, but we can be lazy
+    auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+    fs_user->RegisterProgramInfo(process->process_id, process->codeset->program_id, "articbase://");
+
+    Service::FS::FS_USER::ProductInfo product_info{};
+    if (LoadProductInfo(product_info) != ResultStatus::Success) {
+        return ResultStatus::ErrorArtic;
+    }
+    fs_user->RegisterProductInfo(process->process_id, product_info);
+
+    process->Run(priority, stack_size);
+    return ResultStatus::Success;
 }
 
 void Apploader_Artic::ParseRegionLockoutInfo(u64 program_id) {
@@ -252,8 +278,7 @@ bool Apploader_Artic::LoadExheader() {
     if (program_exheader_loaded)
         return true;
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return false;
 
@@ -287,8 +312,7 @@ ResultStatus Apploader_Artic::LoadProductInfo(Service::FS::FS_USER::ProductInfo&
         return ResultStatus::Success;
     }
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 
@@ -305,6 +329,34 @@ ResultStatus Apploader_Artic::LoadProductInfo(Service::FS::FS_USER::ProductInfo&
     cached_product_info = out_product_info;
 
     return ResultStatus::Success;
+}
+
+void Apploader_Artic::EnsureClientConnected() {
+    if (client_connected) {
+        return;
+    }
+    client_connected = client->Connect();
+    if (!client_connected) {
+        return;
+    }
+
+    if (is_initial_setup) {
+        // Ensure we are running the initial setup app in the correct version
+        auto req = client->NewRequest("System_IsAzaharInitialSetup");
+        auto resp = client->Send(req);
+        if (!resp.has_value()) {
+            client_connected = false;
+            return;
+        }
+
+        auto ret_buf = resp->GetResponseBuffer(0);
+        if (!ret_buf.has_value() || ret_buf->second != sizeof(u32)) {
+            client_connected = false;
+            return;
+        }
+
+        client_connected = *reinterpret_cast<u32*>(ret_buf->first) == INITIAL_SETUP_APP_VERSION;
+    }
 }
 
 ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
@@ -331,41 +383,173 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
 
     is_loaded = true; // Set state to loaded
 
+    if (is_initial_setup) {
+
+        // Request console unique data
+        for (int i = 0; i < 6; i++) {
+            std::string path;
+            std::size_t expected_size;
+
+            switch (i) {
+            case 0:
+                path = HW::UniqueData::GetSecureInfoAPath();
+                expected_size = sizeof(HW::UniqueData::SecureInfoA);
+                break;
+            case 1:
+                path = HW::UniqueData::GetLocalFriendCodeSeedBPath();
+                expected_size = sizeof(HW::UniqueData::LocalFriendCodeSeedB);
+                break;
+            case 2:
+                path = HW::UniqueData::GetMovablePath();
+                expected_size = sizeof(HW::UniqueData::MovableSedFull);
+                break;
+            case 3:
+                path = HW::UniqueData::GetOTPPath();
+                expected_size = sizeof(FileSys::OTP::OTPBin);
+                break;
+            case 4:
+                expected_size = sizeof(u64) + sizeof(u32);
+                break;
+            case 5:
+                expected_size = sizeof(u8) * 6;
+                break;
+            }
+
+            auto req = client->NewRequest("System_GetSystemFile");
+            req.AddParameterU8(static_cast<u8>(i));
+            auto resp = client->Send(req);
+            if (!resp.has_value() || !resp->Succeeded())
+                return ResultStatus::ErrorArtic;
+
+            if (resp->GetMethodResult() != 0)
+                return ResultStatus::ErrorArtic;
+
+            auto resp_buff = resp->GetResponseBuffer(0);
+            if (!resp_buff.has_value() || resp_buff->second != expected_size)
+                return ResultStatus::ErrorArtic;
+
+            if (i < 4) {
+                FileUtil::CreateFullPath(path);
+                FileUtil::IOFile out_file(path, "wb");
+                if (!out_file.IsOpen()) {
+                    return ResultStatus::ErrorArtic;
+                }
+                out_file.WriteBytes(reinterpret_cast<u8*>(resp_buff->first), resp_buff->second);
+            } else if (i == 4) {
+                u64 console_id;
+                u32 random_id;
+                memcpy(&console_id, resp_buff->first, sizeof(u64));
+                memcpy(&random_id, reinterpret_cast<u8*>(resp_buff->first) + sizeof(u64),
+                       sizeof(u32));
+                auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
+                if (cfg.get()) {
+                    auto cfg_module = cfg->GetModule();
+                    cfg_module->SetConsoleUniqueId(random_id, console_id);
+                    cfg_module->UpdateConfigNANDSavegame();
+                }
+            } else if (i == 5) {
+                std::array<u8, 6> mac;
+                memcpy(mac.data(), resp_buff->first, mac.size());
+                auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
+                if (cfg.get()) {
+                    auto cfg_module = cfg->GetModule();
+                    cfg_module->GetMacAddress() = Service::CFG::MacToString(mac);
+                    cfg_module->SaveMacAddress();
+                }
+                system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
+            }
+        }
+
+        HW::UniqueData::InvalidateSecureData();
+        if (!HW::UniqueData::GetCTCert().IsValid() || !HW::UniqueData::GetMovableSed().IsValid() ||
+            !HW::UniqueData::GetSecureInfoA().IsValid() ||
+            !HW::UniqueData::GetLocalFriendCodeSeedB().IsValid()) {
+            LOG_CRITICAL(Loader, "Some console unique data is invalid, aborting...");
+            return ResultStatus::ErrorArtic;
+        }
+
+        // Set deliver arg so that System Settings goes to the update screen directly
+        auto apt = Service::APT::GetModule(system);
+        Service::APT::DeliverArg arg;
+        arg.param.push_back(0x7a);
+        apt->GetAppletManager()->SetDeliverArg(arg);
+
+        // Load NIM
+        auto req = client->NewRequest("System_GetNIM");
+        auto resp = client->Send(req);
+        if (!resp.has_value() || !resp->Succeeded())
+            return ResultStatus::ErrorArtic;
+
+        if (resp->GetMethodResult() != 0)
+            return ResultStatus::ErrorArtic;
+
+        auto resp_buff = resp->GetResponseBuffer(0);
+        if (!resp_buff.has_value() || resp_buff->second != sizeof(ExHeader_Header))
+            return ResultStatus::ErrorArtic;
+
+        ExHeader_Header nim_exheader;
+        memcpy(&nim_exheader, resp_buff->first, resp_buff->second);
+
+        resp_buff = resp->GetResponseBuffer(1);
+        if (!resp_buff.has_value())
+            return ResultStatus::ErrorArtic;
+
+        std::vector<u8> code(resp_buff->second);
+        memcpy(code.data(), resp_buff->first, resp_buff->second);
+
+        std::shared_ptr<Kernel::Process> nim_process;
+        result = LoadExecImpl(nim_process, 0x0004013000002C02, nim_exheader, code);
+        if (ResultStatus::Success != result)
+            return result;
+
+        // Force O3DS mode so that NIM fetches O3DS titles
+        auto am = Service::AM::GetModule(system);
+        if (am) {
+            if (artic_init_mode == ArticInitMode::O3DS) {
+                am->ForceO3DSDeviceID();
+            } else if (artic_init_mode == ArticInitMode::N3DS) {
+                am->ForceN3DSDeviceID();
+            }
+        }
+    }
+
     result = LoadExec(process); // Load the executable into memory for booting
     if (ResultStatus::Success != result)
         return result;
 
     system.ArchiveManager().RegisterSelfNCCH(*this);
-    system.ArchiveManager().RegisterArticSaveDataSource(client);
-    system.ArchiveManager().RegisterArticExtData(client);
-    system.ArchiveManager().RegisterArticNCCH(client);
-    system.ArchiveManager().RegisterArticSystemSaveData(client);
+    if (!is_initial_setup) {
+        system.ArchiveManager().RegisterArticSaveDataSource(client);
+        system.ArchiveManager().RegisterArticExtData(client);
+        system.ArchiveManager().RegisterArticNCCH(client);
+        system.ArchiveManager().RegisterArticSystemSaveData(client);
 
-    auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
-    if (fs_user.get()) {
-        fs_user->RegisterSecureValueBackend(
-            std::make_shared<FileSys::ArticSecureValueBackend>(client));
-    }
+        auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
+        if (fs_user.get()) {
+            fs_user->RegisterSecureValueBackend(
+                std::make_shared<FileSys::ArticSecureValueBackend>(client));
+        }
 
-    auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
-    if (cfg.get()) {
-        cfg->UseArticClient(client);
-    }
+        auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
+        if (cfg.get()) {
+            cfg->UseArticClient(client);
+        }
 
-    auto amnet = system.ServiceManager().GetService<Service::AM::AM_NET>("am:net");
-    if (amnet.get()) {
-        amnet->UseArticClient(client);
-    }
+        auto amnet = system.ServiceManager().GetService<Service::AM::AM_NET>("am:net");
+        if (amnet.get()) {
+            amnet->UseArticClient(client);
+        }
 
-    auto amapp = system.ServiceManager().GetService<Service::AM::AM_APP>("am:app");
-    if (amapp.get()) {
-        amapp->UseArticClient(client);
-    }
+        auto amapp = system.ServiceManager().GetService<Service::AM::AM_APP>("am:app");
+        if (amapp.get()) {
+            amapp->UseArticClient(client);
+        }
 
-    if (Settings::values.use_artic_base_controller.GetValue()) {
-        auto hid_user = system.ServiceManager().GetService<Service::HID::User>("hid:USER");
-        if (hid_user.get()) {
-            hid_user->GetModule()->UseArticClient(client);
+        if (Settings::values.use_artic_base_controller.GetValue()) {
+            auto hid_user = system.ServiceManager().GetService<Service::HID::User>("hid:USER");
+            if (hid_user.get()) {
+                hid_user->GetModule()->UseArticClient(client);
+            }
         }
     }
 
@@ -382,8 +566,7 @@ ResultStatus Apploader_Artic::IsExecutable(bool& out_executable) {
 ResultStatus Apploader_Artic::ReadCode(std::vector<u8>& buffer) {
     // Code is only read once, there is no need to cache it.
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 
@@ -423,8 +606,7 @@ ResultStatus Apploader_Artic::ReadIcon(std::vector<u8>& buffer) {
         return ResultStatus::Success;
     }
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 
@@ -450,8 +632,7 @@ ResultStatus Apploader_Artic::ReadBanner(std::vector<u8>& buffer) {
         return ResultStatus::Success;
     }
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 
@@ -477,8 +658,7 @@ ResultStatus Apploader_Artic::ReadLogo(std::vector<u8>& buffer) {
         return ResultStatus::Success;
     }
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 
@@ -504,8 +684,7 @@ ResultStatus Apploader_Artic::ReadProgramId(u64& out_program_id) {
         return ResultStatus::Success;
     }
 
-    if (!client_connected)
-        client_connected = client->Connect();
+    EnsureClientConnected();
     if (!client_connected)
         return ResultStatus::ErrorArtic;
 

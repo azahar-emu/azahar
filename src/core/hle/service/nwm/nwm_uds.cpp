@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,7 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
@@ -17,6 +18,8 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
+#include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/nwm/uds_connection.h"
@@ -1494,10 +1497,13 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
             BeaconBroadcastCallback(user_data, cycles_late);
         });
 
-    CryptoPP::AutoSeededRandomPool rng;
-    auto mac = SharedPage::DefaultMac;
-    // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
-    rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
+    MacAddress mac;
+
+    auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
+    if (cfg.get()) {
+        auto cfg_module = cfg->GetModule();
+        mac = Service::CFG::MacToArray(cfg_module->GetMacAddress());
+    }
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         if (room_member->IsConnected()) {

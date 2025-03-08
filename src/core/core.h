@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -362,6 +362,8 @@ public:
     void ApplySettings();
 
     void RegisterAppLoaderEarly(std::unique_ptr<Loader::AppLoader>& loader);
+
+    bool IsInitialSetup();
 
 private:
     /**

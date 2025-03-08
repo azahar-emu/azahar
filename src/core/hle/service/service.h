@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -183,7 +183,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system);
+void Init(Core::System& system, bool allow_lle);
 
 struct ServiceModuleInfo {
     std::string name;
