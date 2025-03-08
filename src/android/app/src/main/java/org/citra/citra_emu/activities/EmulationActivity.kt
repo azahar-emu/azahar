@@ -37,6 +37,7 @@ import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
+import org.citra.citra_emu.display.SecondaryScreenLayout
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -65,16 +66,20 @@ class EmulationActivity : AppCompatActivity() {
     private var secondScreenPresentation: Presentation? = null
     private lateinit var displayManager: DisplayManager
 
-    private fun updatePresentation(display: Display?) {
+    private fun updatePresentation() {
+        displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val display = getCustomerDisplay();
             if (secondScreenPresentation == null || secondScreenPresentation?.display != display) {
                 secondScreenPresentation?.dismiss()
-                // this should only happen if the second screen is enabled in a setting
-                // eventually. Otherwise it should continue to mirror.
-                if (display != null)
+                if (display != null && IntSetting.SECONDARY_SCREEN_LAYOUT.int != SecondaryScreenLayout.NONE.int) {
                     secondScreenPresentation = SecondScreenPresentation(this, display)
-                secondScreenPresentation?.show();
+                    secondScreenPresentation?.show();
+                }
             }
-
+    }
+    private fun releasePresentation() {
+        secondScreenPresentation?.dismiss();
+        secondScreenPresentation = null;
     }
 
     private fun getCustomerDisplay(): Display? {
@@ -94,14 +99,9 @@ class EmulationActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         ThemeUtil.setTheme(this)
-
-        /* Find a second display if it's connected and create a basic presentationon it */
-        displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val display = getCustomerDisplay();
-        updatePresentation(display);
         settingsViewModel.settings.loadSettings()
-
         super.onCreate(savedInstanceState)
+        updatePresentation();
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -147,6 +147,11 @@ class EmulationActivity : AppCompatActivity() {
         applyOrientationSettings() // Check for orientation settings changes on runtime
     }
 
+    override fun onStop() {
+        releasePresentation()
+        super.onStop()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         enableFullscreenImmersive()
@@ -154,6 +159,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
+        updatePresentation()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -171,8 +177,7 @@ class EmulationActivity : AppCompatActivity() {
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null
-        secondScreenPresentation?.dismiss();
-        secondScreenPresentation = null;
+        releasePresentation()
         super.onDestroy()
     }
 
