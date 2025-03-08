@@ -15,7 +15,25 @@ enum class BooleanSetting(
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
-    CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false);
+    CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
+    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, false),
+    NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, true),
+    LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, true),
+    SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, false),
+    DISK_SHADER_CACHE("use_disk_shader_cache", Settings.SECTION_RENDERER, true),
+    DUMP_TEXTURES("dump_textures", Settings.SECTION_UTILITY, false),
+    CUSTOM_TEXTURES("custom_textures", Settings.SECTION_UTILITY, false),
+    ASYNC_CUSTOM_LOADING("async_custom_loading", Settings.SECTION_UTILITY, true),
+    PRELOAD_TEXTURES("preload_textures", Settings.SECTION_UTILITY, false),
+    ENABLE_AUDIO_STRETCHING("enable_audio_stretching", Settings.SECTION_AUDIO, true),
+    ENABLE_REALTIME_AUDIO("enable_realtime_audio", Settings.SECTION_AUDIO, false),
+    CPU_JIT("use_cpu_jit", Settings.SECTION_CORE, true),
+    HW_SHADER("use_hw_shader", Settings.SECTION_RENDERER, true),
+    VSYNC("use_vsync_new", Settings.SECTION_RENDERER, true),
+    USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, true),
+    DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
+    DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
+    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false);
 
     override var boolean: Boolean = defaultValue
 
@@ -36,7 +54,15 @@ enum class BooleanSetting(
         private val NOT_RUNTIME_EDITABLE = listOf(
             PLUGIN_LOADER,
             ALLOW_PLUGIN_LOADER, 
-            ASYNC_SHADERS
+            ASYNC_SHADERS,
+            NEW_3DS,
+            LLE_APPLETS,
+            VSYNC,
+            DEBUG_RENDERER,
+            CPU_JIT,
+            ASYNC_CUSTOM_LOADING,
+            SHADERS_ACCURATE_MUL,
+            USE_ARTIC_BASE_CONTROLLER
         )
 
         fun from(key: String): BooleanSetting? =
