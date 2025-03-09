@@ -14,6 +14,7 @@
 #include <QTranslator>
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/hotkeys.h"
+#include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
 
@@ -164,14 +165,6 @@ private:
 
     void SetDiscordEnabled(bool state);
     void LoadAmiibo(const QString& filename);
-
-    enum LegacyEmu {
-        Citra,
-        Lime3DS,
-    };
-    void ShowMigrationCancelledMessage();
-    void ShowMigrationPrompt();
-    void MigrateUserData(const LegacyEmu selected_legacy_emu);
 
     /**
      * Stores the filename in the recently loaded files list.
@@ -347,7 +340,7 @@ private:
 
     // Created before `config` to ensure that emu data directory
     // isn't created before the check is performed
-    bool emu_user_dir_exists;
+    UserDataMigrator user_data_migrator;
     std::unique_ptr<QtConfig> config;
 
     // Whether emulation is currently running in Citra.

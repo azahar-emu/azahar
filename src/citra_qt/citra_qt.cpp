@@ -166,9 +166,7 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{system.Movie()},
-      emu_user_dir_exists{
-          std::filesystem::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))},
-      config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
+      user_data_migrator{this}, config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
     Common::Log::Initialize();
     Common::Log::Start();
 
@@ -306,11 +304,6 @@ GMainWindow::GMainWindow(Core::System& system_)
             game_path = args[i];
             continue;
         }
-    }
-
-    // Check if data migration from Citra/Lime3DS needs to be performed
-    if (!emu_user_dir_exists) {
-        ShowMigrationPrompt();
     }
 
 #ifdef __unix__
@@ -1117,115 +1110,6 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
             }
         }
     }
-}
-
-void GMainWindow::ShowMigrationCancelledMessage() {
-    QMessageBox::information(
-        this, tr("Migration"),
-        tr("You can manually re-trigger this prompt by deleting the "
-           "new user data directory:\n"
-           "%1")
-            .arg(QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))),
-        QMessageBox::Ok);
-}
-
-void GMainWindow::ShowMigrationPrompt() {
-    namespace fs = std::filesystem;
-
-    const QString migration_prompt_message =
-        tr("Would you like to migrate your data for use in Azahar?\n"
-           "(This may take a while; The old data will not be deleted)");
-    const bool citra_dir_found =
-        fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraUserDir));
-    const bool lime3ds_dir_found =
-        fs::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSUserDir));
-
-    if (citra_dir_found && lime3ds_dir_found) {
-        QMessageBox migration_prompt;
-        migration_prompt.setWindowTitle(tr("Migration"));
-        migration_prompt.setText(
-            tr("Azahar has detected emulator data for Citra and Lime3DS.\n\n") +
-            migration_prompt_message);
-        migration_prompt.setIcon(QMessageBox::Information);
-
-        const QAbstractButton* lime3dsButton =
-            migration_prompt.addButton(tr("Migrate from Lime3DS"), QMessageBox::YesRole);
-        const QAbstractButton* citraButton =
-            migration_prompt.addButton(tr("Migrate from Citra"), QMessageBox::YesRole);
-        migration_prompt.addButton(QMessageBox::No);
-
-        migration_prompt.exec();
-
-        if (citraButton == migration_prompt.clickedButton()) {
-            MigrateUserData(LegacyEmu::Citra);
-        }
-        if (lime3dsButton == migration_prompt.clickedButton()) {
-            MigrateUserData(LegacyEmu::Lime3DS);
-        }
-
-        return;
-    }
-
-    else if (citra_dir_found) {
-        if (QMessageBox::information(
-                this, tr("Migration"),
-                tr("Azahar has detected emulator data for Citra.\n\n") + migration_prompt_message,
-                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
-            MigrateUserData(LegacyEmu::Citra);
-            return;
-        }
-    }
-
-    else if (lime3ds_dir_found) {
-        if (QMessageBox::information(
-                this, tr("Migration"),
-                tr("Azahar has detected emulator data for Lime3DS.\n\n") + migration_prompt_message,
-                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
-            MigrateUserData(LegacyEmu::Lime3DS);
-            return;
-        }
-    }
-
-    // If we're here, the user chose not to migrate
-    ShowMigrationCancelledMessage();
-}
-
-void GMainWindow::MigrateUserData(const LegacyEmu selected_legacy_emu) {
-    namespace fs = std::filesystem;
-    const auto copy_options = fs::copy_options::update_existing | fs::copy_options::recursive;
-
-    std::string legacy_user_dir;
-    std::string legacy_config_dir;
-    std::string legacy_cache_dir;
-    if (LegacyEmu::Citra == selected_legacy_emu) {
-        legacy_user_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraUserDir);
-        legacy_config_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraConfigDir);
-        legacy_cache_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyCitraCacheDir);
-    } else if (LegacyEmu::Lime3DS == selected_legacy_emu) {
-        legacy_user_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSUserDir);
-        legacy_config_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSConfigDir);
-        legacy_cache_dir = FileUtil::GetUserPath(FileUtil::UserPath::LegacyLime3DSCacheDir);
-    }
-
-    fs::copy(legacy_user_dir, FileUtil::GetUserPath(FileUtil::UserPath::UserDir), copy_options);
-
-    if (fs::is_directory(legacy_config_dir)) {
-        fs::copy(legacy_config_dir, FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir),
-                 copy_options);
-    }
-    if (fs::is_directory(legacy_cache_dir)) {
-        fs::copy(legacy_cache_dir, FileUtil::GetUserPath(FileUtil::UserPath::CacheDir),
-                 copy_options);
-    }
-
-    QMessageBox::information(
-        this, tr("Migration"),
-        tr("Data was migrated successfully. Azahar will now restart.\n\n"
-           "If you wish to clean up the files which were left in the old "
-           "data location, you can do so by deleting the following directory:\n"
-           "%1")
-            .arg(QString::fromStdString(legacy_user_dir)),
-        QMessageBox::Ok);
 }
 
 #if defined(HAVE_SDL2) && defined(__unix__) && !defined(__APPLE__)

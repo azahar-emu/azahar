@@ -176,6 +176,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     uisettings.cpp
     uisettings.h
+    user_data_migration.cpp
+    user_data_migration.h
     qt_image_interface.cpp
     qt_image_interface.h
     util/clickable_label.cpp
