@@ -360,7 +360,7 @@ private:
 
     // Created before `config` to ensure that emu data directory
     // isn't created before the check is performed
-    bool emu_dir_exists;
+    bool emu_user_dir_exists;
     std::unique_ptr<QtConfig> config;
 
     // Whether emulation is currently running in Citra.

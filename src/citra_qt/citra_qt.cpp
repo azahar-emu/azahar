@@ -167,7 +167,7 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{system.Movie()},
-      emu_dir_exists{
+      emu_user_dir_exists{
           std::filesystem::is_directory(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))},
       config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
     Common::Log::Initialize();
@@ -310,7 +310,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 
     // Check if data migration from Citra/Lime3DS needs to be performed
-    if (!emu_dir_exists) {
+    if (!emu_user_dir_exists) {
         ShowMigrationPrompt();
     }
 
