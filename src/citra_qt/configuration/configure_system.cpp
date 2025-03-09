@@ -541,7 +541,7 @@ void ConfigureSystem::RefreshConsoleID() {
 
 void ConfigureSystem::RefreshMAC() {
     QMessageBox::StandardButton reply;
-    QString warning_text = tr("This will replace your current MAC with a new one. "
+    QString warning_text = tr("This will replace your current MAC address with a new one. "
                               "It is not recommended to do this if you got the MAC address from "
                               "your real console using the setup tool. Continue?");
     reply =

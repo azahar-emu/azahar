@@ -94,12 +94,17 @@ public:
     std::vector<CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption> content;
 };
 
-NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file) {
-    // A console unique crypto file is used to store the decrypted NCCH file. This is done
-    // to prevent Azahar being used as a tool to download easy shareable decrypted contents
-    // from the eshop.
-    file = HW::UniqueData::OpenUniqueCryptoFile(out_file, "wb",
-                                                HW::UniqueData::UniqueCryptoFileID::NCCH);
+NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file, bool encrypted_content) {
+    if (encrypted_content) {
+        // A console unique crypto file is used to store the decrypted NCCH file. This is done
+        // to prevent Azahar being used as a tool to download easy shareable decrypted contents
+        // from the eshop.
+        file = HW::UniqueData::OpenUniqueCryptoFile(out_file, "wb",
+                                                    HW::UniqueData::UniqueCryptoFileID::NCCH);
+    } else {
+        file = std::make_unique<FileUtil::IOFile>(out_file, "wb");
+    }
+
     if (!file->IsOpen()) {
         is_error = true;
     }
@@ -573,7 +578,8 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
             if (i != current_content_index) {
                 current_content_index = static_cast<u16>(i);
-                current_content_file = std::make_unique<NCCHCryptoFile>(content_file_paths[i]);
+                current_content_file =
+                    std::make_unique<NCCHCryptoFile>(content_file_paths[i], decryption_authorized);
                 current_content_file->decryption_authorized = decryption_authorized;
             }
             auto& file = *current_content_file;
@@ -709,7 +715,8 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
 
     if (content_index != current_content_index) {
         current_content_index = content_index;
-        current_content_file = std::make_unique<NCCHCryptoFile>(content_file_paths[content_index]);
+        current_content_file = std::make_unique<NCCHCryptoFile>(content_file_paths[content_index],
+                                                                decryption_authorized);
         current_content_file->decryption_authorized = decryption_authorized;
     }
     auto& file = *current_content_file;
@@ -1771,7 +1778,7 @@ void Module::Interface::GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool
         // found. However, since GetTitleInfoFromList does not care if the program was commited and
         // only checks for the tmd, it will detect the title and return information while it
         // shouldn't. To prevent this, we check if the importing context is present and not
-        // committed If that's the case return not found
+        // committed. If that's the case, return not found
         Result result = ResultSuccess;
         for (auto tid : title_id_list) {
             for (auto& import_ctx : am->import_title_contexts) {

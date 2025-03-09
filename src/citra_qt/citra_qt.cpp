@@ -2212,6 +2212,7 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
            "work.</li><li>Both setup modes will work regardless of the model of the console "
            "running the setup tool.</li></ul><hr></p>"),
         &dialog);
+    label_description.setOpenExternalLinks(true);
     layout.addWidget(&label_description);
 
     QHBoxLayout layout_h(&dialog);

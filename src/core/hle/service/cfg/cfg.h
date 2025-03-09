@@ -628,7 +628,7 @@ public:
     std::string& GetMacAddress();
 
     /**
-     *
+     * Saves the current MAC address to the filesystem
      */
     void SaveMacAddress();
 

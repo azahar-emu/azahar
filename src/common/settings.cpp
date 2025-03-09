@@ -4,7 +4,6 @@
 
 #include <string_view>
 #include <utility>
-#include <cryptopp/osrng.h>
 #include "audio_core/dsp_interface.h"
 #include "common/file_util.h"
 #include "common/settings.h"

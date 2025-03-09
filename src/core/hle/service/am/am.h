@@ -112,7 +112,7 @@ using ProgressCallback = void(std::size_t, std::size_t);
 
 class NCCHCryptoFile final {
 public:
-    NCCHCryptoFile(const std::string& out_file);
+    NCCHCryptoFile(const std::string& out_file, bool encrypted_content);
 
     void Write(const u8* buffer, std::size_t length);
     bool IsError() {
@@ -128,7 +128,7 @@ private:
 
     std::size_t written = 0;
 
-    NCCH_Header ncch_header;
+    NCCH_Header ncch_header{};
     std::size_t header_size = 0;
     bool header_parsed = false;
 
@@ -156,7 +156,7 @@ private:
 
     std::vector<CryptoRegion> regions;
 
-    ExeFs_Header exefs_header;
+    ExeFs_Header exefs_header{};
     std::size_t exefs_header_written = 0;
     bool exefs_header_processed = false;
 };
