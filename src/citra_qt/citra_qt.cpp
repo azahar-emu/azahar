@@ -1242,9 +1242,9 @@ void GMainWindow::ShowMigrationPrompt() {
         migration_prompt.setIcon(QMessageBox::Information);
 
         const QAbstractButton* lime3dsButton =
-            migration_prompt.addButton(tr("Migrate Lime3DS"), QMessageBox::YesRole);
+            migration_prompt.addButton(tr("Migrate from Lime3DS"), QMessageBox::YesRole);
         const QAbstractButton* citraButton =
-            migration_prompt.addButton(tr("Migrate Citra"), QMessageBox::YesRole);
+            migration_prompt.addButton(tr("Migrate from Citra"), QMessageBox::YesRole);
         migration_prompt.addButton(QMessageBox::No);
 
         migration_prompt.exec();
