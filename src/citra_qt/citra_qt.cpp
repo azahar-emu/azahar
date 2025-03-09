@@ -590,6 +590,11 @@ void GMainWindow::InitializeDebugWidgets() {
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();
     debug_menu->addAction(microProfileDialog->toggleViewAction());
+#else
+    auto micro_profile_stub = new QAction(tr("MicroProfile (unavailable)"), this);
+    micro_profile_stub->setEnabled(false);
+    micro_profile_stub->setChecked(false);
+    debug_menu->addAction(micro_profile_stub);
 #endif
 
     registersWidget = new RegistersWidget(system, this);
@@ -3851,8 +3856,11 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 
 void LaunchQtFrontend(int argc, char* argv[]) {
     Common::DetachedTasks detached_tasks;
+
+#if MICROPROFILE_ENABLED
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
+#endif
 
     // Init settings params
     QCoreApplication::setOrganizationName(QStringLiteral("Azahar Developers"));

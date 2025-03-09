@@ -42,7 +42,9 @@ class GRenderWindow;
 class IPCRecorderWidget;
 class LLEServiceModulesWidget;
 class LoadingScreen;
+#if MICROPROFILE_ENABLED
 class MicroProfileDialog;
+#endif
 class MultiplayerState;
 class ProfilerWidget;
 class QFileOpenEvent;
@@ -383,7 +385,9 @@ private:
 
     // Debugger panes
     ProfilerWidget* profilerWidget;
+#if MICROPROFILE_ENABLED
     MicroProfileDialog* microProfileDialog;
+#endif
     RegistersWidget* registersWidget;
     GPUCommandStreamWidget* graphicsWidget;
     GPUCommandListWidget* graphicsCommandsWidget;
