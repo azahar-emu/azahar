@@ -39,77 +39,41 @@
             android:paddingBottom="16dp">
 
             <com.google.android.material.textview.MaterialTextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/setup_system_files"
+                android:textAlignment="viewStart" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/setupSystemFilesDescription"
                 style="@style/TextAppearance.Material3.TitleSmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/download_system_files"
                 android:textAlignment="viewStart" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/system_type"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="@string/system_type"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                    android:id="@+id/dropdown_system_type"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="none" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/system_region"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="@string/emulated_region"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                    android:id="@+id/dropdown_system_region"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="none" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
             <Button
-                android:id="@+id/button_download_home_menu"
+                android:id="@+id/button_set_up_system_files"
                 style="@style/Widget.Material3.Button.UnelevatedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/download" />
+                android:text="@string/setup_tool_connect" />
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="?android:attr/listDivider"
+                android:padding="40px" />
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/text_keys_missing"
+                style="@style/TextAppearance.Material3.TitleMedium"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/keys_missing"
-                android:textAlignment="viewStart"
-                android:visibility="gone" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/text_keys_missing_help"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAlignment="viewStart"
-                android:visibility="gone"
-                tools:text="How to get keys?" />
-
-            <com.google.android.material.textview.MaterialTextView
-                style="@style/TextAppearance.Material3.TitleSmall"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
+                android:layout_marginTop="24dp"
                 android:text="@string/boot_home_menu"
                 android:textAlignment="viewStart" />
 

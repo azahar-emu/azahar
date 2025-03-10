@@ -2121,6 +2121,8 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QRadioButton radio1(&dialog);
     QRadioButton radio2(&dialog);
     if (!install_state.first) {
+        radio1.setChecked(true);
+
         radio1.setText(tr("(\u2139\uFE0F) Old 3DS setup"));
         radio1.setToolTip(tr("Setup is possible."));
 
@@ -2132,14 +2134,17 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
         radio1.setToolTip(tr("Setup completed."));
 
         if (!install_state.second) {
+            radio2.setChecked(true);
+
             radio2.setText(tr("(\u2139\uFE0F) New 3DS setup"));
             radio2.setToolTip(tr("Setup is possible."));
         } else {
+            radio1.setChecked(true);
+
             radio2.setText(tr("(\u2705) New 3DS setup"));
             radio2.setToolTip(tr("Setup completed."));
         }
     }
-    radio1.setChecked(true);
     layout.addWidget(&radio1);
     layout.addWidget(&radio2);
 
