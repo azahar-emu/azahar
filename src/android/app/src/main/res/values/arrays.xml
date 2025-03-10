@@ -34,9 +34,23 @@
         <item>@string/emulation_screen_layout_custom</item>
     </string-array>
 
+    <string-array name="secondaryLayouts">
+        <item>@string/emulation_secondary_screen_default</item>
+        <item>@string/emulation_top_screen</item>
+        <item>@string/emulation_bottom_screen</item>
+        <item>@string/emulation_screen_layout_sidebyside</item>
+    </string-array>
+
     <integer-array name="portraitLayoutValues">
         <item>0</item>
         <item>1</item>
+    </integer-array>
+
+    <integer-array name="secondaryLayoutValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </integer-array>
 
     <string-array name="smallScreenPositions">

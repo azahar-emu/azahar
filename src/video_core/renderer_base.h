@@ -64,7 +64,8 @@ public:
     virtual void Sync() {}
 
     /// This is called to notify the rendering backend of a surface change
-    virtual void NotifySurfaceChanged() {}
+    // if second == true then it is the second screen
+    virtual void NotifySurfaceChanged(bool second) {}
 
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
