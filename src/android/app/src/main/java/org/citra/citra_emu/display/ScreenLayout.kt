@@ -41,7 +41,8 @@ enum class SmallScreenPosition(val int: Int) {
 enum class PortraitScreenLayout(val int: Int) {
     // These must match what is defined in src/common/settings.h
     TOP_FULL_WIDTH(0),
-    CUSTOM_PORTRAIT_LAYOUT(1);
+    CUSTOM_PORTRAIT_LAYOUT(1),
+    ORIGINAL(2);
 
     companion object {
         fun from(int: Int): PortraitScreenLayout {
