@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -740,8 +740,8 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
 
     // Copy the buffer into a string without the \0 at the end of the buffer
-    std::string url(url_size, '\0');
-    buffer.Read(&url[0], 0, url_size - 1);
+    std::string url(url_size - 1, '\0');
+    buffer.Read(url.data(), 0, url_size - 1);
 
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url, method);
 

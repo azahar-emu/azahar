@@ -785,5 +785,16 @@
     <string name="delay_start_lle_modules_description">Delays the start of the app when LLE modules are enabled.</string>
     <string name="deterministic_async_operations">Deterministic Async Operations</string>
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
+    <string name="setup_system_files">Set Up System Files</string>
+    <string name="setup_tool_connect">Connect to Artic Setup Tool</string>
+    <string name="setup_system_files_description"><![CDATA[Azahar needs files from a real console to be able to use some of its features. You can get such files with the <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes:<ul><li><b>This operation will install console unique files to Azahar, do not share your user or nand folders<br>after performing the setup process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to work.</li><li>Both setup modes will work regardless of the model of the console running the setup tool.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Fetching current system files status, please wait...</string>
+    <string name="setup_system_files_o3ds">Old 3DS Setup</string>
+    <string name="setup_system_files_n3ds">New 3DS Setup</string>
+    <string name="setup_system_files_possible">Setup is possible.</string>
+    <string name="setup_system_files_o3ds_needed">Old 3DS setup is required first.</string>
+    <string name="setup_system_files_completed">Setup already completed.</string>
+    <string name="setup_system_files_enter_address">Enter Artic Setup Tool address</string>
+    <string name="setup_system_files_preparing">Preparing setup, please wait...</string>
 
 </resources>

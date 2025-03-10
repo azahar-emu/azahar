@@ -1184,6 +1184,8 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
 void Module::ScanForTickets() {
     am_ticket_list.clear();
 
+    LOG_DEBUG(Service_AM, "Starting ticket scan");
+
     std::string ticket_path = GetTicketDirectory();
 
     FileUtil::FSTEntry entries;
@@ -1204,10 +1206,13 @@ void Module::ScanForTickets() {
             }
         }
     }
+    LOG_DEBUG(Service_AM, "Finished ticket scan");
 }
 
 void Module::ScanForTitles(Service::FS::MediaType media_type) {
     am_title_list[static_cast<u32>(media_type)].clear();
+
+    LOG_DEBUG(Service_AM, "Starting title scan for media_type={}", static_cast<int>(media_type));
 
     std::string title_path = GetMediaTitlePath(media_type);
 
@@ -1236,6 +1241,7 @@ void Module::ScanForTitles(Service::FS::MediaType media_type) {
             }
         }
     }
+    LOG_DEBUG(Service_AM, "Finished title scan for media_type={}", static_cast<int>(media_type));
 }
 
 void Module::ScanForAllTitles() {
@@ -2272,7 +2278,7 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
         FileUtil::Delete(path);
     }
 
-    am->ScanForTickets();
+    am->am_ticket_list.erase(range.first, range.second);
 
     rb.Push(ResultSuccess);
 }
@@ -3279,7 +3285,8 @@ void Module::Interface::EndImportTicket(Kernel::HLERequestContext& ctx) {
     auto ticket_file = GetFileBackendFromSession<TicketFile>(ticket);
     if (ticket_file.Succeeded()) {
         rb.Push(ticket_file.Unwrap()->Commit());
-        am->ScanForTickets();
+        am->am_ticket_list.insert(std::make_pair(ticket_file.Unwrap()->GetTitleID(),
+                                                 ticket_file.Unwrap()->GetTicketID()));
     } else {
         rb.Push(ticket_file.Code());
     }
@@ -3416,7 +3423,6 @@ void Module::Interface::EndImportTitle(Kernel::HLERequestContext& ctx) {
     }
 
     am->importing_title->cia_file.SetDone();
-    am->ScanForTitles(am->importing_title->media_type);
     am->importing_title.reset();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -3825,7 +3831,7 @@ void Module::Interface::DeleteTicketId(Kernel::HLERequestContext& ctx) {
     auto path = GetTicketPath(title_id, ticket_id);
     FileUtil::Delete(path);
 
-    am->ScanForTickets();
+    am->am_ticket_list.erase(it);
 
     rb.Push(ResultSuccess);
 }
