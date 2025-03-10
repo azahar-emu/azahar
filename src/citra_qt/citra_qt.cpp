@@ -69,6 +69,9 @@
 #include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
+#ifdef ENABLE_QT_UPDATE_CHECKER
+#include "citra_qt/update_checker.h"
+#endif
 #include "citra_qt/util/clickable_label.h"
 #include "citra_qt/util/graphics_device_info.h"
 #include "citra_qt/util/util.h"
@@ -304,6 +307,21 @@ GMainWindow::GMainWindow(Core::System& system_)
             continue;
         }
     }
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
+    if (latest_release && latest_release.value() != Common::g_build_fullname) {
+        if (QMessageBox::information(
+                this, tr("Update Available"),
+                tr("Update %1 for Azahar is available.\nWould you like to download it?")
+                    .arg(QString::fromStdString(latest_release.value())),
+                QMessageBox::Yes | QMessageBox::Ignore) == QMessageBox::Yes) {
+            QDesktopServices::openUrl(QUrl(QString::fromStdString(
+                "https://github.com/azahar-emu/azahar/releases/tag/" + latest_release.value())));
+            exit(0);
+        }
+    }
+#endif
 
 #ifdef __unix__
     SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
