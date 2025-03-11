@@ -108,7 +108,14 @@ protected:
     Core::System& system;
     RendererSettings settings;
     Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
-    Frontend::EmuWindow* secondary_window; ///< Reference to the secondary render window handle.
+    Frontend::EmuWindow* secondary_window;
+public:
+    Frontend::EmuWindow *getSecondaryWindow() const;
+
+    virtual void setSecondaryWindow(Frontend::EmuWindow *secondaryWindow);
+
+protected:
+    ///< Reference to the secondary render window handle.
     f32 current_fps = 0.0f;                ///< Current framerate, should be set by the renderer
     s32 current_frame = 0;                 ///< Current frame, should be set by the renderer
 };

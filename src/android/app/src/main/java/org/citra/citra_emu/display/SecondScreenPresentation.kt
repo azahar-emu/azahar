@@ -6,6 +6,8 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import org.citra.citra_emu.NativeLibrary
 
+
+
 class SecondScreenPresentation(
     context: Context,
     display: Display,
@@ -19,7 +21,7 @@ class SecondScreenPresentation(
         surfaceView = SurfaceView(context)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                NativeLibrary.enableSecondWindow(holder.surface)
+
             }
 
             override fun surfaceChanged(
@@ -28,11 +30,11 @@ class SecondScreenPresentation(
                 width: Int,
                 height: Int
             ) {
-                NativeLibrary.enableSecondWindow(holder.surface)
+                NativeLibrary.secondarySurfaceChanged(holder.surface)
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                NativeLibrary.disableSecondWindow();
+                NativeLibrary.secondarySurfaceDestroyed()
             }
         })
 

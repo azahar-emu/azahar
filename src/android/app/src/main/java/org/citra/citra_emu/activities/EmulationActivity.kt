@@ -69,17 +69,23 @@ class EmulationActivity : AppCompatActivity() {
     private fun updatePresentation() {
         displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         val display = getCustomerDisplay();
-            if (secondScreenPresentation == null || secondScreenPresentation?.display != display) {
-                secondScreenPresentation?.dismiss()
-                if (display != null && IntSetting.SECONDARY_SCREEN_LAYOUT.int != SecondaryScreenLayout.NONE.int) {
-                    secondScreenPresentation = SecondScreenPresentation(this, display)
-                    secondScreenPresentation?.show();
-                }
+        if (secondScreenPresentation != null && (IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int || display == null)) {
+            releasePresentation();
+        }
+        if (secondScreenPresentation == null || secondScreenPresentation?.display != display) {
+            secondScreenPresentation?.dismiss()
+            if (display != null && IntSetting.SECONDARY_SCREEN_LAYOUT.int != SecondaryScreenLayout.NONE.int) {
+                secondScreenPresentation = SecondScreenPresentation(this, display)
+                secondScreenPresentation?.show();
             }
+        }
     }
     private fun releasePresentation() {
-        secondScreenPresentation?.dismiss();
-        secondScreenPresentation = null;
+        if (secondScreenPresentation != null) {
+            NativeLibrary.disableSecondaryScreen()
+            secondScreenPresentation?.dismiss();
+            secondScreenPresentation = null;
+        }
     }
 
     private fun getCustomerDisplay(): Display? {
