@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -559,6 +559,7 @@ void QtConfig::ReadMiscellaneousValues() {
     ReadBasicSetting(Settings::values.log_filter);
     ReadBasicSetting(Settings::values.log_regex_filter);
     ReadBasicSetting(Settings::values.enable_gamemode);
+    ReadBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -795,7 +796,6 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.enable_discord_presence);
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        ReadUpdaterValues();
         ReadUILayoutValues();
         ReadUIGameListValues();
         ReadShortcutValues();
@@ -857,15 +857,6 @@ void QtConfig::ReadUILayoutValues() {
     UISettings::values.microprofile_geometry =
         ReadSetting(QStringLiteral("microProfileDialogGeometry")).toByteArray();
     ReadBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::ReadUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    ReadBasicSetting(UISettings::values.check_for_update_on_start);
-    ReadBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }
@@ -1123,6 +1114,7 @@ void QtConfig::SaveMiscellaneousValues() {
     WriteBasicSetting(Settings::values.log_filter);
     WriteBasicSetting(Settings::values.log_regex_filter);
     WriteBasicSetting(Settings::values.enable_gamemode);
+    WriteBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -1310,7 +1302,6 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.enable_discord_presence);
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        SaveUpdaterValues();
         SaveUILayoutValues();
         SaveUIGameListValues();
         SaveShortcutValues();
@@ -1370,15 +1361,6 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(QStringLiteral("microProfileDialogGeometry"),
                  UISettings::values.microprofile_geometry);
     WriteBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::SaveUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    WriteBasicSetting(UISettings::values.check_for_update_on_start);
-    WriteBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }

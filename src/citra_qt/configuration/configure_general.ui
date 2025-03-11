@@ -57,26 +57,10 @@
           </property>
          </widget>
         </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="updateBox">
-       <property name="title">
-        <string>Updates</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QCheckBox" name="toggle_update_check">
+         <widget class="QCheckBox" name="toggle_update_checker">
           <property name="text">
-           <string>Check for updates on start</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="toggle_auto_update">
-          <property name="text">
-           <string>Silently auto update after closing</string>
+           <string>Check for updates</string>
           </property>
          </widget>
         </item>
@@ -324,8 +308,7 @@
   <tabstop>toggle_check_exit</tabstop>
   <tabstop>toggle_background_pause</tabstop>
   <tabstop>toggle_hide_mouse</tabstop>
-  <tabstop>toggle_update_check</tabstop>
-  <tabstop>toggle_auto_update</tabstop>
+  <tabstop>toggle_update_checker</tabstop>
   <tabstop>button_reset_defaults</tabstop>
  </tabstops>
  <resources/>

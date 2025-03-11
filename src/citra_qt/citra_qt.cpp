@@ -309,16 +309,19 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
-    const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
-    if (latest_release && latest_release.value() != Common::g_build_fullname) {
-        if (QMessageBox::information(
-                this, tr("Update Available"),
-                tr("Update %1 for Azahar is available.\nWould you like to download it?")
-                    .arg(QString::fromStdString(latest_release.value())),
-                QMessageBox::Yes | QMessageBox::Ignore) == QMessageBox::Yes) {
-            QDesktopServices::openUrl(QUrl(QString::fromStdString(
-                "https://github.com/azahar-emu/azahar/releases/tag/" + latest_release.value())));
-            exit(0);
+    if (UISettings::values.check_for_update_on_start) {
+        const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
+        if (latest_release && latest_release.value() != Common::g_build_fullname) {
+            if (QMessageBox::information(
+                    this, tr("Update Available"),
+                    tr("Update %1 for Azahar is available.\nWould you like to download it?")
+                        .arg(QString::fromStdString(latest_release.value())),
+                    QMessageBox::Yes | QMessageBox::Ignore) == QMessageBox::Yes) {
+                QDesktopServices::openUrl(QUrl(
+                    QString::fromStdString("https://github.com/azahar-emu/azahar/releases/tag/" +
+                                           latest_release.value())));
+                exit(0);
+            }
         }
     }
 #endif
