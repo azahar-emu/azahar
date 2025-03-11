@@ -54,6 +54,7 @@ public:
     void PrepareVideoDumping() override;
     void CleanupVideoDumping() override;
     void Sync() override;
+    void setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) override;
 
 private:
     void InitOpenGLObjects();
