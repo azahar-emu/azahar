@@ -202,6 +202,7 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.cardboard_screen_size);
     ReadSetting("Layout", Settings::values.cardboard_x_shift);
     ReadSetting("Layout", Settings::values.cardboard_y_shift);
+    ReadSetting("Layout", Settings::values.upright_screen);
 
     Settings::values.portrait_layout_option =
         static_cast<Settings::PortraitLayoutOption>(sdl2_config->GetInteger(

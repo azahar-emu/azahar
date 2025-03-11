@@ -306,6 +306,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_rotate_upright -> {
+                    screenAdjustmentUtil.toggleScreenUpright()
+                    true
+                }
+
                 R.id.menu_lock_drawer -> {
                     when (EmulationMenuSettings.drawerLockMode) {
                         DrawerLayout.LOCK_MODE_UNLOCKED -> {

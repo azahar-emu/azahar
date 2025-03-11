@@ -45,7 +45,8 @@ enum class BooleanSetting(
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, true),
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
-    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false);
+    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
+    UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false);
 
     override var boolean: Boolean = defaultValue
 

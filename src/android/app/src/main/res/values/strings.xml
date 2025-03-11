@@ -459,6 +459,7 @@
     <string name="emulation_custom_layout_height">Height</string>
     <string name="emulation_cycle_landscape_layouts">Cycle Layouts</string>
     <string name="emulation_swap_screens">Swap Screens</string>
+    <string name="emulation_rotate_upright">Rotate Screen Upright</string>
     <string name="emulation_touch_overlay_reset">Reset Overlay</string>
     <string name="emulation_show_controller_overlay">Show Controller Overlay</string>
     <string name="emulation_close_game">Close Game</string>

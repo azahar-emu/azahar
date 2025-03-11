@@ -68,4 +68,13 @@ class ScreenAdjustmentUtil(
         settings.saveSetting(IntSetting.ORIENTATION_OPTION, SettingsFile.FILE_NAME_CONFIG)
         activity.requestedOrientation = orientationOption
     }
+
+    fun toggleScreenUpright() {
+        val uprightBoolean = BooleanSetting.UPRIGHT_SCREEN.boolean
+        BooleanSetting.UPRIGHT_SCREEN.boolean = !uprightBoolean
+        settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        NativeLibrary.reloadSettings()
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+
+    }
 }
