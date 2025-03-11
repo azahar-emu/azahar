@@ -12,8 +12,13 @@
 std::optional<std::string> UpdateChecker::CheckForUpdate() {
     constexpr auto UPDATE_CHECK_URL = "http://api.github.com";
     constexpr auto UPDATE_CHECK_PATH = "/repos/azahar-emu/azahar/releases/latest";
+    constexpr std::size_t UPDATE_CHECK_TIMEOUT_SECONDS = 15;
 
     std::unique_ptr<httplib::Client> client = std::make_unique<httplib::Client>(UPDATE_CHECK_URL);
+    client->set_connection_timeout(UPDATE_CHECK_TIMEOUT_SECONDS);
+    client->set_read_timeout(UPDATE_CHECK_TIMEOUT_SECONDS);
+    client->set_write_timeout(UPDATE_CHECK_TIMEOUT_SECONDS);
+
     if (client == nullptr) {
         LOG_ERROR(Frontend, "Invalid URL {}{}", UPDATE_CHECK_URL, UPDATE_CHECK_PATH);
         return {};

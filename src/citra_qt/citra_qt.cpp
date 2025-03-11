@@ -308,24 +308,6 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
     }
 
-#ifdef ENABLE_QT_UPDATE_CHECKER
-    if (UISettings::values.check_for_update_on_start) {
-        const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
-        if (latest_release && latest_release.value() != Common::g_build_fullname) {
-            if (QMessageBox::information(
-                    this, tr("Update Available"),
-                    tr("Update %1 for Azahar is available.\nWould you like to download it?")
-                        .arg(QString::fromStdString(latest_release.value())),
-                    QMessageBox::Yes | QMessageBox::Ignore) == QMessageBox::Yes) {
-                QDesktopServices::openUrl(QUrl(
-                    QString::fromStdString("https://github.com/azahar-emu/azahar/releases/tag/" +
-                                           latest_release.value())));
-                exit(0);
-            }
-        }
-    }
-#endif
-
 #ifdef __unix__
     SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
 #endif
@@ -405,6 +387,21 @@ GMainWindow::GMainWindow(Core::System& system_)
     UpdateWindowTitle();
 
     show();
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    if (UISettings::values.check_for_update_on_start) {
+        update_future = QtConcurrent::run([]() -> QString {
+            const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
+            if (latest_release && latest_release.value() != Common::g_build_fullname) {
+                return QString::fromStdString(latest_release.value());
+            }
+            return QString{};
+        });
+        QObject::connect(&update_watcher, &QFutureWatcher<QString>::finished, this,
+                         &GMainWindow::OnEmulatorUpdateAvailable);
+        update_watcher.setFuture(update_future);
+    }
+#endif
 
     game_list->LoadCompatibilityList();
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -3597,6 +3594,28 @@ void GMainWindow::OnMoviePlaybackCompleted() {
     OnPauseGame();
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
 }
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+void GMainWindow::OnEmulatorUpdateAvailable() {
+    QString version_string = update_future.result();
+    if (version_string.isEmpty())
+        return;
+
+    QMessageBox update_prompt(this);
+    update_prompt.setWindowTitle(tr("Update Available"));
+    update_prompt.setIcon(QMessageBox::Information);
+    update_prompt.addButton(QMessageBox::Yes);
+    update_prompt.addButton(QMessageBox::Ignore);
+    update_prompt.setText(tr("Update %1 for Azahar is available.\nWould you like to download it?")
+                              .arg(version_string));
+    update_prompt.exec();
+    if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
+        QDesktopServices::openUrl(
+            QUrl(QString::fromStdString("https://github.com/azahar-emu/azahar/releases/tag/") +
+                 version_string));
+    }
+}
+#endif
 
 void GMainWindow::UpdateWindowTitle() {
     const QString full_name = QString::fromUtf8(Common::g_build_fullname);
