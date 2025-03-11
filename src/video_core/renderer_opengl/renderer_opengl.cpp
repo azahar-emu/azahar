@@ -87,6 +87,15 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
+void RendererOpenGL::setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) {
+    if (secondaryWindow) {
+        secondary_window = secondaryWindow;
+        secondary_window->mailbox = std::make_unique<OGLTextureMailbox>(driver.HasDebugTool());
+    }else {
+        secondary_window = nullptr;
+        // should I release something here? The mailbox??
+    }
+}
 
 void RendererOpenGL::SwapBuffers() {
     // Maintain the rasterizer's state as a priority
