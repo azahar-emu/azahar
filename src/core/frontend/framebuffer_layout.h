@@ -71,7 +71,8 @@ FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped, boo
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
  */
-FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swapped);
+FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swapped,
+                                             bool upright = false);
 
 /**
  * Factory method for constructing the mobile Original layout
@@ -81,7 +82,8 @@ FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swap
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
  */
-FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped);
+FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped,
+                                         bool upright = false);
 
 /**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen

@@ -215,7 +215,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
         switch (portrait_layout_option) {
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
             layout = Layout::PortraitTopFullFrameLayout(width, height,
-                                                        Settings::values.swap_screen.GetValue());
+                                                        Settings::values.swap_screen.GetValue(),
+                                                        Settings::values.upright_screen.GetValue());
             break;
         case Settings::PortraitLayoutOption::PortraitCustomLayout:
             layout = Layout::CustomFrameLayout(
@@ -223,7 +224,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
             break;
         case Settings::PortraitLayoutOption::PortraitOriginal:
             layout = Layout::PortraitOriginalLayout(width, height,
-                                                    Settings::values.swap_screen.GetValue());
+                                                    Settings::values.swap_screen.GetValue(),
+                                                    Settings::values.upright_screen.GetValue());
             break;
         }
     } else {
