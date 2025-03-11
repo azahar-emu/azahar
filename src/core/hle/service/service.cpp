@@ -220,13 +220,27 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 }
 
 /// Initialize ServiceManager
-void Init(Core::System& core, bool allow_lle) {
+void Init(Core::System& core, std::vector<u64>& lle_modules, bool allow_lle) {
     SM::ServiceManager::InstallInterfaces(core);
     core.Kernel().SetAppMainThreadExtendedSleep(false);
     bool lle_module_present = false;
 
     for (const auto& service_module : service_module_map) {
-        const bool has_lle = allow_lle && AttemptLLE(service_module);
+        if (core.GetSaveStateStatus() == Core::System::SaveStateStatus::LOADING &&
+            std::find(lle_modules.begin(), lle_modules.end(), service_module.title_id) !=
+                lle_modules.end()) {
+            // The system module has already been loaded before, do not attempt to load again as the
+            // process, threads, etc are already serialized in the kernel structures.
+            lle_module_present |= true;
+            continue;
+        }
+
+        const bool has_lle = allow_lle &&
+                             core.GetSaveStateStatus() != Core::System::SaveStateStatus::LOADING &&
+                             AttemptLLE(service_module);
+        if (has_lle) {
+            lle_modules.push_back(service_module.title_id);
+        }
         if (!has_lle && service_module.init_function != nullptr) {
             service_module.init_function(core);
         }

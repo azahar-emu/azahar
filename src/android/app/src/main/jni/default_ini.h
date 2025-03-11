@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -412,6 +412,15 @@ gdbstub_port=24689
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =
+
+# Delay the start of apps when LLE modules are enabled
+# 0: Off, 1 (default): On
+delay_start_for_lle_modules =
+
+# Force deterministic async operations
+# Only needed for debugging, makes performance worse if enabled
+# 0: Off (default), 1: On
+deterministic_async_operations =
 
 # To LLE a service module add "LLE\<module name>=true"
 

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -904,6 +904,7 @@ private:
         // NOTE: Serialization of the HTTP service is on a 'best effort' basis.
         // There is a very good chance that saving/loading during a network connection will break,
         // regardless!
+        DEBUG_SERIALIZATION_POINT;
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar & ClCertA.certificate;
         ar & ClCertA.private_key;

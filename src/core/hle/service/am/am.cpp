@@ -3764,6 +3764,7 @@ void Module::Interface::Sign(Kernel::HLERequestContext& ctx) {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar & cia_installing;
     ar & force_old_device_id;
     ar & force_new_device_id;

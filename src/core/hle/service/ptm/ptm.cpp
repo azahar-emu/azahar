@@ -225,6 +225,7 @@ Module::Module(Core::System& system_) : system(system_) {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar & shell_open;
     ar & battery_is_charging;
     ar & pedometer_is_counting;

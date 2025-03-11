@@ -781,5 +781,9 @@
     <string name="instant_debug_log_desc">Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.</string>
     <string name="disable_right_eye_render">Disable Right Eye Render</string>
     <string name="disable_right_eye_render_description">Greatly improves performance in some applications, but can cause flickering in others.</string>
+    <string name="delay_start_lle_modules">Delay start with LLE modules</string>
+    <string name="delay_start_lle_modules_desc">Delays the start of the app when LLE modules are enabled</string>
+    <string name="deterministic_async_operations">Deterministic Async Operations</string>
+    <string name="deterministic_async_operations_desc">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
 
 </resources>

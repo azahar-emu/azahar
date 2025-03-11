@@ -1360,6 +1360,25 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DELAY_START_LLE_MODULES,
+                    R.string.delay_start_lle_modules,
+                    R.string.delay_start_lle_modules_desc,
+                    BooleanSetting.DELAY_START_LLE_MODULES.key,
+                    BooleanSetting.DELAY_START_LLE_MODULES.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS,
+                    R.string.deterministic_async_operations,
+                    R.string.deterministic_async_operations_desc,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.key,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
+                )
+            )
+
         }
     }
 

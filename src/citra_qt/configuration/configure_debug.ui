@@ -259,6 +259,16 @@
               </property>
             </widget>
           </item>
+          <item row="2" column="0">
+            <widget class="QCheckBox" name="deterministic_async_operations">
+              <property name="text">
+                <string>Force deterministic async operations</string>
+              </property>
+              <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+            </widget>
+          </item>
         </layout>
       </widget>
     </item>

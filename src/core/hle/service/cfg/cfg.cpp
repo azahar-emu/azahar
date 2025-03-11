@@ -38,6 +38,7 @@ namespace Service::CFG {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar & cfg_config_file_buffer;
     ar & cfg_system_save_data_archive;
     ar & mac_address;

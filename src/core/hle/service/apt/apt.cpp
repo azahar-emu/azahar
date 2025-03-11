@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,6 +41,7 @@ namespace Service::APT {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
+    DEBUG_SERIALIZATION_POINT;
     ar & shared_font_mem;
     ar & shared_font_loaded;
     ar & shared_font_relocated;

@@ -121,7 +121,35 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     case Signal::Shutdown:
         return ResultStatus::ShutdownRequested;
     case Signal::Load: {
-        const u32 slot = param;
+        if (save_state_request_status != SaveStateStatus::NONE) {
+            LOG_ERROR(Core, "A pending save state operation has not finished yet");
+            status_details = "A pending save state operation has not finished yet";
+            return ResultStatus::ErrorSavestate;
+        }
+        save_state_slot = param;
+        save_state_request_time = std::chrono::steady_clock::now();
+        save_state_request_status = SaveStateStatus::LOADING;
+        break;
+    }
+    case Signal::Save: {
+        if (save_state_request_status != SaveStateStatus::NONE) {
+            LOG_ERROR(Core, "A pending save state operation has not finished yet");
+            status_details = "A pending save state operation has not finished yet";
+            return ResultStatus::ErrorSavestate;
+        }
+        save_state_slot = param;
+        save_state_request_time = std::chrono::steady_clock::now();
+        save_state_request_status = SaveStateStatus::SAVING;
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (save_state_request_status == SaveStateStatus::LOADING && kernel.get() &&
+        !kernel->AreAsyncOperationsPending()) {
+        const u32 slot = save_state_slot;
+        save_state_request_status = SaveStateStatus::NONE;
         LOG_INFO(Core, "Begin load of slot {}", slot);
         try {
             System::LoadState(slot);
@@ -133,9 +161,10 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         }
         frame_limiter.WaitOnce();
         return ResultStatus::Success;
-    }
-    case Signal::Save: {
-        const u32 slot = param;
+    } else if (save_state_request_status == SaveStateStatus::SAVING && kernel.get() &&
+               !kernel->AreAsyncOperationsPending()) {
+        save_state_request_status = SaveStateStatus::NONE;
+        const u32 slot = save_state_slot;
         LOG_INFO(Core, "Begin save to slot {}", slot);
         try {
             System::SaveState(slot);
@@ -147,9 +176,13 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         }
         frame_limiter.WaitOnce();
         return ResultStatus::Success;
-    }
-    default:
-        break;
+    } else if (save_state_request_status != SaveStateStatus::NONE &&
+               (std::chrono::steady_clock::now() - save_state_request_time) >
+                   std::chrono::seconds(5)) {
+        save_state_request_status = SaveStateStatus::NONE;
+        LOG_ERROR(Core, "Cannot perform save state operation due to pending async operations");
+        status_details = "Cannot perform save state operation due to pending async operations";
+        return ResultStatus::ErrorSavestate;
     }
 
     // All cores should have executed the same amount of ticks. If this is not the case an event was
@@ -476,7 +509,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::AES::InitKeys();
-    Service::Init(*this, !app_loader->DoingInitialSetup());
+    Service::Init(*this, lle_modules, !app_loader->DoingInitialSetup());
     GDBStub::DeferStart();
 
     if (!registered_image_interface) {
@@ -598,6 +631,7 @@ void System::Shutdown(bool is_deserializing) {
 
     gpu.reset();
     if (!is_deserializing) {
+        lle_modules.clear();
         GDBStub::Shutdown();
         perf_stats.reset();
         app_loader.reset();
@@ -720,11 +754,24 @@ bool System::IsInitialSetup() {
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
 
+    if (Archive::is_loading::value) {
+        save_state_status = SaveStateStatus::LOADING;
+    } else {
+        save_state_status = SaveStateStatus::SAVING;
+    }
+
     u32 num_cores;
     if (Archive::is_saving::value) {
         num_cores = this->GetNumCores();
     }
     ar & num_cores;
+
+    // TODO(PabloMK7): Figure out why this is the case
+    if (!lle_modules.empty()) {
+        throw std::runtime_error("Savestates are not supported with LLE modules enabled");
+    }
+
+    ar & lle_modules;
 
     if (Archive::is_loading::value) {
         // When loading, we want to make sure any lingering state gets cleared out before we begin.
@@ -775,6 +822,8 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         gpu->SetInterruptHandler(
             [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
     }
+
+    save_state_status = SaveStateStatus::NONE;
 }
 
 SERIALIZE_IMPL(System)

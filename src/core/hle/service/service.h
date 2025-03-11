@@ -12,6 +12,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -183,7 +184,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system, bool allow_lle);
+void Init(Core::System& system, std::vector<u64>& lle_modules, bool allow_lle);
 
 struct ServiceModuleInfo {
     std::string name;
@@ -218,6 +219,7 @@ extern const std::array<ServiceModuleInfo, 41> service_module_map;
 #define SERVICE_SERIALIZATION_SIMPLE                                                               \
     template <class Archive>                                                                       \
     void serialize(Archive& ar, const unsigned int) {                                              \
+        DEBUG_SERIALIZATION_POINT;                                                                 \
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
     }                                                                                              \
     friend class boost::serialization::access;

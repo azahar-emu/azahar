@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -39,6 +39,7 @@ enum class Class : u8 {
     Core_Timing,       ///< CoreTiming functions
     Core_Cheats,       ///< Cheat functions
     Config,            ///< Emulator configuration
+    Savestate,         ///< Savestates
     Debug,             ///< Debugging tools
     Debug_Emulated,    ///< Debug messages from the emulated programs
     Debug_GPU,         ///< GPU debugging tools
