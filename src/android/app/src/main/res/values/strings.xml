@@ -9,6 +9,8 @@
     <string name="app_notification_channel_description">Azahar 3DS emulator notifications</string>
     <string name="app_notification_running">Azahar is Running</string>
     <string name="app_game_install_description">Next, you will need to select an Applications Folder. Azahar will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
+    <string name="start">Start</string>
+    <string name="cancelling">Cancelling…</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Settings</string>
@@ -142,28 +144,21 @@
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
 
     <!-- System files strings -->
-    <string name="system_files">System Files</string>
-    <string name="system_files_description">Download system files to get Mii files, boot the HOME menu, and more</string>
-    <string name="download_system_files">Download System Files</string>
+    <string name="setup_system_files">Set Up System Files</string>
+    <string name="setup_system_files_description">Install 3DS system files using the Artic Setup Tool</string>
+    <string name="setup_tool_connect">Connect to Artic Setup Tool</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar needs files from a real console to be able to use some of its features. You can get such files with the <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes:<ul><li><b>This operation will install console unique files to Azahar, do not share your user or nand folders<br>after performing the setup process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to work.</li><li>Both setup modes will work regardless of the model of the console running the setup tool.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Fetching current system files status, please wait...</string>
+    <string name="setup_system_files_o3ds">Old 3DS Setup</string>
+    <string name="setup_system_files_n3ds">New 3DS Setup</string>
+    <string name="setup_system_files_possible">Setup is possible.</string>
+    <string name="setup_system_files_o3ds_needed">Old 3DS setup is required first.</string>
+    <string name="setup_system_files_completed">Setup already completed.</string>
+    <string name="setup_system_files_enter_address">Enter Artic Setup Tool address</string>
+    <string name="setup_system_files_preparing">Preparing setup, please wait...</string>
     <string name="boot_home_menu">Boot the HOME Menu</string>
-    <string name="system_type">System Type</string>
-    <string name="download">Download</string>
-    <string name="start">Start</string>
-    <string name="keys_missing">Azahar is missing keys to download system files.</string>
-    <string name="how_to_get_keys"><![CDATA[<a href="https://web.archive.org/web/20240304203412/https://citra-emu.org/wiki/aes-keys/">How to get keys?</a>]]></string>
     <string name="show_home_apps">Show HOME menu apps in Applications list</string>
     <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
-    <string name="system_type_minimal">Minimal</string>
-    <string name="system_type_old_3ds">Old 3DS</string>
-    <string name="system_type_new_3ds">New 3DS</string>
-    <string name="downloading_files">Downloading Files…</string>
-    <string name="downloading_files_description">Please do not close the app.</string>
-    <string name="download_failed">Download Failed</string>
-    <string name="download_failed_description">Please make sure you are connected to the internet and try again.</string>
-    <string name="download_success">Download Complete!</string>
-    <string name="download_cancelled">Download Cancelled</string>
-    <string name="download_cancelled_description">Please restart the download to prevent issues with having incomplete system files.</string>
-    <string name="cancelling">Cancelling…</string>
     <string name="home_menu">HOME Menu</string>
     <string name="home_menu_warning">System Files Warning</string>
     <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing Azahar\'s files, downloading multiple versions of system files can dramatically slow down loading for applications, save states, and the Applications list. Only download the files that you require to avoid any issues with loading speeds.</string>
@@ -785,16 +780,5 @@
     <string name="delay_start_lle_modules_description">Delays the start of the app when LLE modules are enabled.</string>
     <string name="deterministic_async_operations">Deterministic Async Operations</string>
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
-    <string name="setup_system_files">Set Up System Files</string>
-    <string name="setup_tool_connect">Connect to Artic Setup Tool</string>
-    <string name="setup_system_files_description"><![CDATA[Azahar needs files from a real console to be able to use some of its features. You can get such files with the <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes:<ul><li><b>This operation will install console unique files to Azahar, do not share your user or nand folders<br>after performing the setup process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to work.</li><li>Both setup modes will work regardless of the model of the console running the setup tool.</li></ul>]]></string>
-    <string name="setup_system_files_detect">Fetching current system files status, please wait...</string>
-    <string name="setup_system_files_o3ds">Old 3DS Setup</string>
-    <string name="setup_system_files_n3ds">New 3DS Setup</string>
-    <string name="setup_system_files_possible">Setup is possible.</string>
-    <string name="setup_system_files_o3ds_needed">Old 3DS setup is required first.</string>
-    <string name="setup_system_files_completed">Setup already completed.</string>
-    <string name="setup_system_files_enter_address">Enter Artic Setup Tool address</string>
-    <string name="setup_system_files_preparing">Preparing setup, please wait...</string>
 
 </resources>

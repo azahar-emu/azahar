@@ -286,17 +286,6 @@
         <item>6</item>
     </integer-array>
 
-    <string-array name="systemFileTypes">
-        <item>@string/system_type_minimal</item>
-        <item>@string/system_type_old_3ds</item>
-        <item>@string/system_type_new_3ds</item>
-    </string-array>
-    <integer-array name="systemFileTypeValues">
-        <item>1</item>
-        <item>2</item>
-        <item>4</item>
-    </integer-array>
-
     <string-array name="soundOutputModes">
         <item>@string/mono</item>
         <item>@string/stereo</item>

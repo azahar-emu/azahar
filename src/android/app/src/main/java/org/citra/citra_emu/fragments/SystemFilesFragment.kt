@@ -60,32 +60,12 @@ class SystemFilesFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val gamesViewModel: GamesViewModel by activityViewModels()
 
-    private lateinit var regionValues: IntArray
-
-    private val systemTypeDropdown = DropdownItem(R.array.systemFileTypeValues)
-    private val systemRegionDropdown = DropdownItem(R.array.systemFileRegionValues)
-
-    private val SYS_TYPE = "SysType"
-    private val REGION = "Region"
     private val REGION_START = "RegionStart"
-
-    private val homeMenuMap: MutableMap<String, String> = mutableMapOf()
-
     private val WARNING_SHOWN = "SystemFilesWarningShown"
 
+    private val homeMenuMap: MutableMap<String, String> = mutableMapOf()
     private var setupStateCached: BooleanArray? = null
-
-    private class DropdownItem(val valuesId: Int) : AdapterView.OnItemClickListener {
-        var position = 0
-
-        fun getValue(resources: Resources): Int {
-            return resources.getIntArray(valuesId)[position]
-        }
-
-        override fun onItemClick(p0: AdapterView<*>?, view: View?, position: Int, id: Long) {
-            this.position = position
-        }
-    }
+    private lateinit var regionValues: IntArray
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -118,10 +98,6 @@ class SystemFilesFragment : Fragment() {
                 .apply()
         }
 
-        binding.toolbarSystemFiles.setNavigationOnClickListener {
-            binding.root.findNavController().popBackStack()
-        }
-
         // TODO: Remove workaround for text filtering issue in material components when fixed
         // https://github.com/material-components/material-components-android/issues/1464
         binding.dropdownSystemRegionStart.isSaveEnabled = false
@@ -131,14 +107,6 @@ class SystemFilesFragment : Fragment() {
             binding.dropdownSystemRegionStart
                 .setText(savedInstanceState.getString(REGION_START), false)
         }
-
-        setInsets()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(SYS_TYPE, systemTypeDropdown.position)
-        outState.putInt(REGION, systemRegionDropdown.position)
-        outState.putString(REGION_START, binding.dropdownSystemRegionStart.text.toString())
     }
 
     override fun onPause() {
@@ -200,7 +168,7 @@ class SystemFilesFragment : Fragment() {
 
         binding.setupSystemFilesDescription?.apply {
             text = HtmlCompat.fromHtml(
-                context.getString(R.string.setup_system_files_description),
+                context.getString(R.string.setup_system_files_preamble),
                 HtmlCompat.FROM_HTML_MODE_COMPACT
             )
             movementMethod = LinkMovementMethod.getInstance()
@@ -382,31 +350,6 @@ class SystemFilesFragment : Fragment() {
         }
     }
 
-    private fun populateDropdown(
-        dropdown: MaterialAutoCompleteTextView,
-        valuesId: Int,
-        dropdownItem: DropdownItem
-    ) {
-        val valuesAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            valuesId,
-            R.layout.support_simple_spinner_dropdown_item
-        )
-        dropdown.setAdapter(valuesAdapter)
-        dropdown.onItemClickListener = dropdownItem
-    }
-
-    private fun setDropdownSelection(
-        dropdown: MaterialAutoCompleteTextView,
-        dropdownItem: DropdownItem,
-        selection: Int
-    ) {
-        if (dropdown.adapter != null) {
-            dropdown.setText(dropdown.adapter.getItem(selection).toString(), false)
-        }
-        dropdownItem.position = selection
-    }
-
     private fun populateHomeMenuOptions() {
         regionValues = resources.getIntArray(R.array.systemFileRegionValues)
         val regionEntries = resources.getStringArray(R.array.systemFileRegions)
@@ -431,30 +374,4 @@ class SystemFilesFragment : Fragment() {
             binding.dropdownSystemRegionStart.setText(availableMenus.keys.first(), false)
         }
     }
-
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
-
-            val mlpAppBar = binding.toolbarSystemFiles.layoutParams as ViewGroup.MarginLayoutParams
-            mlpAppBar.leftMargin = leftInsets
-            mlpAppBar.rightMargin = rightInsets
-            binding.toolbarSystemFiles.layoutParams = mlpAppBar
-
-            val mlpScrollSystemFiles =
-                binding.scrollSystemFiles.layoutParams as ViewGroup.MarginLayoutParams
-            mlpScrollSystemFiles.leftMargin = leftInsets
-            mlpScrollSystemFiles.rightMargin = rightInsets
-            binding.scrollSystemFiles.layoutParams = mlpScrollSystemFiles
-
-            binding.scrollSystemFiles.updatePadding(bottom = barInsets.bottom)
-
-            windowInsets
-        }
 }
