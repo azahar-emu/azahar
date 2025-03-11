@@ -67,4 +67,13 @@ void RendererBase::RequestScreenshot(void* data, std::function<void(bool)> callb
     settings.screenshot_requested = true;
 }
 
+    Frontend::EmuWindow *RendererBase::getSecondaryWindow() const {
+        return secondary_window;
+    }
+
+    void RendererBase::setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) {
+        secondary_window = secondaryWindow;
+        if (secondary_window) secondary_window->PollEvents();
+    }
+
 } // namespace VideoCore
