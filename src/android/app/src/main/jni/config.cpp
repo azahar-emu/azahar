@@ -173,6 +173,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_blue);
     ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);
     ReadSetting("Renderer", Settings::values.disable_right_eye_render);
+    ReadSetting("Renderer", Settings::values.swap_eyes_3d);
 
     // Layout
     // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read
