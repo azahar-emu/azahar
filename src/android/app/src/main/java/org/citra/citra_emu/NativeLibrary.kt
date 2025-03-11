@@ -125,6 +125,10 @@ object NativeLibrary {
     external fun surfaceDestroyed()
     external fun doFrame()
 
+    //Second window
+    external fun secondarySurfaceChanged(secondary_surface: Surface)
+    external fun secondarySurfaceDestroyed()
+    external fun disableSecondaryScreen()
     /**
      * Unpauses emulation from a paused state.
      */

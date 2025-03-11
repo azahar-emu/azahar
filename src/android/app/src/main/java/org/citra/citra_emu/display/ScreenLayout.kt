@@ -49,3 +49,17 @@ enum class PortraitScreenLayout(val int: Int) {
         }
     }
 }
+
+enum class SecondaryScreenLayout(val int: Int) {
+    // These must match what is defined in src/common/settings.h
+    NONE(0),
+    TOP_SCREEN(1),
+    BOTTOM_SCREEN(2),
+    SIDE_BY_SIDE(3);
+
+    companion object {
+        fun from(int: Int): SecondaryScreenLayout {
+            return entries.firstOrNull { it.int == int } ?: NONE
+        }
+    }
+}

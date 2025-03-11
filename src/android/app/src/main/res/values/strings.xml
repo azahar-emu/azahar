@@ -373,6 +373,7 @@
     <string name="emulation_open_cheats">Open Cheats</string>
     <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
     <string name="emulation_switch_portrait_layout">Portrait Screen Layout</string>
+    <string name="emulation_switch_secondary_layout">Secondary Screen Layout</string>
     <string name="emulation_screen_layout_largescreen">Large Screen</string>
     <string name="emulation_screen_layout_portrait">Portrait</string>
     <string name="emulation_screen_layout_single">Single Screen</string>
@@ -380,6 +381,7 @@
     <string name="emulation_screen_layout_hybrid">Hybrid Screens</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Default</string>
+    <string name="emulation_secondary_screen_default">System Default (mirror)</string>
     <string name="emulation_screen_layout_custom">Custom Layout</string>
     <string name="emulation_small_screen_position">Small Screen Position</string>
     <string name="small_screen_position_description">Where should the small screen appear relative to the large one in Large Screen Layout?</string>

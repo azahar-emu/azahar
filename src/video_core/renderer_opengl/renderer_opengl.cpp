@@ -87,6 +87,15 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 }
 
 RendererOpenGL::~RendererOpenGL() = default;
+void RendererOpenGL::setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) {
+    if (secondaryWindow) {
+        secondary_window = secondaryWindow;
+        secondary_window->mailbox = std::make_unique<OGLTextureMailbox>(driver.HasDebugTool());
+    }else {
+        secondary_window = nullptr;
+        // should I release something here? The mailbox??
+    }
+}
 
 void RendererOpenGL::SwapBuffers() {
     // Maintain the rasterizer's state as a priority
@@ -96,13 +105,22 @@ void RendererOpenGL::SwapBuffers() {
     PrepareRendertarget();
     RenderScreenshot();
 
-    const auto& main_layout = render_window.GetFramebufferLayout();
+    const auto &main_layout = render_window.GetFramebufferLayout();
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        secondary_window->PollEvents();
+    }
+#endif
+#ifdef ANDROID
+    // on android, if secondary_window is defined at all
+    // it means we have a second display
+    if (secondary_window) {
+        const auto &secondary_layout = secondary_window->GetFramebufferLayout();
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -553,7 +571,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
     state.texture_units[0].texture_2d = 0;
     state.texture_units[0].sampler = 0;
     state.Apply();
-}
+ }
 
 /**
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
