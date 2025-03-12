@@ -217,6 +217,16 @@
        </widget>
       </item>
       <item row="2" column="0">
+       <widget class="QLabel" name="label_cpu_clock_info">
+        <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
+      <item row="3" column="0">
        <widget class="QCheckBox" name="toggle_cpu_jit">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don't disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -226,14 +236,14 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QCheckBox" name="toggle_renderer_debug">
         <property name="text">
          <string>Enable debug renderer</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QCheckBox" name="toggle_dump_command_buffers">
         <property name="text">
          <string>Dump command buffers</string>
@@ -243,43 +253,33 @@
      </layout>
     </widget>
    </item>
-    <item>
-      <widget class="QGroupBox" name="groupBox_5">
-        <property name="title">
-          <string>Miscellaneous</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-          <item row="1" column="0">
-            <widget class="QCheckBox" name="delay_start_for_lle_modules">
-              <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-                <string>Delay app start for LLE module initialization</string>
-              </property>
-            </widget>
-          </item>
-          <item row="2" column="0">
-            <widget class="QCheckBox" name="deterministic_async_operations">
-              <property name="text">
-                <string>Force deterministic async operations</string>
-              </property>
-              <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-            </widget>
-          </item>
-        </layout>
-      </widget>
-    </item>
    <item>
-    <widget class="QLabel" name="label_cpu_clock_info">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;CPU Clock Speed Information&lt;br/&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="title">
+      <string>Miscellaneous</string>
      </property>
-     <property name="textFormat">
-      <enum>Qt::RichText</enum>
-     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="delay_start_for_lle_modules">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Delay app start for LLE module initialization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="deterministic_async_operations">
+        <property name="text">
+         <string>Force deterministic async operations</string>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>
