@@ -144,8 +144,8 @@
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
 
     <!-- System files strings -->
-    <string name="setup_system_files">Set Up System Files</string>
-    <string name="setup_system_files_description">Install 3DS system files using the Artic Setup Tool</string>
+    <string name="setup_system_files">System Files</string>
+    <string name="setup_system_files_description">Perform system file operations such as installing system files or booting the Home Menu</string>
     <string name="setup_tool_connect">Connect to Artic Setup Tool</string>
     <string name="setup_system_files_preamble"><![CDATA[Azahar needs files from a real console to be able to use some of its features. You can get such files with the <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes:<ul><li><b>This operation will install console unique files to Azahar, do not share your user or nand folders<br>after performing the setup process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to work.</li><li>Both setup modes will work regardless of the model of the console running the setup tool.</li></ul>]]></string>
     <string name="setup_system_files_detect">Fetching current system files status, please wait...</string>
