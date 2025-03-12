@@ -51,7 +51,6 @@ class SystemFilesFragment : Fragment() {
     private val gamesViewModel: GamesViewModel by activityViewModels()
 
     private val REGION_START = "RegionStart"
-    private val WARNING_SHOWN = "SystemFilesWarningShown"
 
     private val homeMenuMap: MutableMap<String, String> = mutableMapOf()
     private var setupStateCached: BooleanArray? = null
@@ -76,17 +75,6 @@ class SystemFilesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         homeViewModel.setNavigationVisibility(visible = false, animated = true)
         homeViewModel.setStatusBarShadeVisibility(visible = false)
-
-        val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        if (!preferences.getBoolean(WARNING_SHOWN, false)) {
-            MessageDialogFragment.newInstance(
-                R.string.home_menu_warning,
-                R.string.home_menu_warning_description
-            ).show(childFragmentManager, MessageDialogFragment.TAG)
-            preferences.edit()
-                .putBoolean(WARNING_SHOWN, true)
-                .apply()
-        }
 
         // TODO: Remove workaround for text filtering issue in material components when fixed
         // https://github.com/material-components/material-components-android/issues/1464

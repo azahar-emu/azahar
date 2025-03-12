@@ -160,8 +160,6 @@
     <string name="show_home_apps">Show HOME menu apps in Applications list</string>
     <string name="run_system_setup">Run System Setup when the HOME Menu is launched</string>
     <string name="home_menu">HOME Menu</string>
-    <string name="home_menu_warning">System Files Warning</string>
-    <string name="home_menu_warning_description">Due to how slow Android\'s storage access framework is for accessing Azahar\'s files, downloading multiple versions of system files can dramatically slow down loading for applications, save states, and the Applications list. Only download the files that you require to avoid any issues with loading speeds.</string>
 
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Buttons</string>
