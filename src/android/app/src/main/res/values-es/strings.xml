@@ -670,7 +670,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="delay_render_thread_description">Retrasa el hilo de dibujado del juego cuando envía datos a la GPU. Ayuda con problemas de rendimiento en los (muy pocos) juegos de fps dinámicos.</string>
     <string name="miscellaneous">Misceláneo</string>
     <string name="use_artic_base_controller">Usar Artic Controller cuando se está conectado a Artic Base Server</string>
-    <string name="use_artic_base_controller_desc">Usa los controles proporcionados por Artic Base Server cuando esté conectado a él en lugar del dispositivo de entrada configurado.</string>
+    <string name="use_artic_base_controller_description">Usa los controles proporcionados por Artic Base Server cuando esté conectado a él en lugar del dispositivo de entrada configurado.</string>
     <string name="disable_right_eye_render">Desactivar dibujado de ojo derecho</string>
     <string name="disable_right_eye_render_desc">Mejora considerablemente el rendimiento en algunos juegos, pero puede producir parpadeos en otros.</string>
 

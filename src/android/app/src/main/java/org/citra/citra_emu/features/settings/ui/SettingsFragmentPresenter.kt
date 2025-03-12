@@ -691,7 +691,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     IntSetting.USE_ARTIC_BASE_CONTROLLER,
                     R.string.use_artic_base_controller,
-                    R.string.use_artic_base_controller_desc,
+                    R.string.use_artic_base_controller_description,
                     IntSetting.USE_ARTIC_BASE_CONTROLLER.key,
                     IntSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
@@ -1355,7 +1355,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.INSTANT_DEBUG_LOG,
                     R.string.instant_debug_log,
-                    R.string.instant_debug_log_desc,
+                    R.string.instant_debug_log_description,
                     BooleanSetting.INSTANT_DEBUG_LOG.key,
                     BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
@@ -1364,7 +1364,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.DELAY_START_LLE_MODULES,
                     R.string.delay_start_lle_modules,
-                    R.string.delay_start_lle_modules_desc,
+                    R.string.delay_start_lle_modules_description,
                     BooleanSetting.DELAY_START_LLE_MODULES.key,
                     BooleanSetting.DELAY_START_LLE_MODULES.defaultValue
                 )
@@ -1373,7 +1373,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS,
                     R.string.deterministic_async_operations,
-                    R.string.deterministic_async_operations_desc,
+                    R.string.deterministic_async_operations_description,
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.key,
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
                 )

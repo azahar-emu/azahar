@@ -724,6 +724,6 @@
     <string name="artic_base_enter_address">Wprowadź adres serwera Artic Base</string>
     <string name="miscellaneous">Różne</string>
     <string name="use_artic_base_controller">Użyj kontrolera Artic po podłączeniu do serwera Artic Base</string>
-    <string name="use_artic_base_controller_desc">W przypadku połączenia z serwerem Artic Base zamiast skonfigurowanego urządzenia wejściowego należy używać elementów sterujących udostępnianych przez ten serwer.</string>
+    <string name="use_artic_base_controller_description">W przypadku połączenia z serwerem Artic Base zamiast skonfigurowanego urządzenia wejściowego należy używać elementów sterujących udostępnianych przez ten serwer.</string>
 
 </resources>
