@@ -33,6 +33,7 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.RemovableStorageHelper
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 
@@ -696,6 +697,24 @@ object NativeLibrary {
         )
 
     external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    @Keep
+    @JvmStatic
+    fun addNetPlayMessage(type: Int, message: String) {
+        val emulationActivity = sEmulationActivity.get()
+        if (emulationActivity != null) {
+            emulationActivity.addNetPlayMessages(type, message)
+        }
+        else {
+            NetPlayManager.addNetPlayMessage(type, message)
+        }
+    }
+
+    @Keep
+    @JvmStatic
+    fun clearChat() {
+        NetPlayManager.clearChat()
+    }
 
     @Keep
     @JvmStatic

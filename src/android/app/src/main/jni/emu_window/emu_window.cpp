@@ -61,8 +61,6 @@ EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
 
     window_width = ANativeWindow_getWidth(surface);
     window_height = ANativeWindow_getHeight(surface);
-
-    Network::Init();
 }
 
 EmuWindow_Android::~EmuWindow_Android() {

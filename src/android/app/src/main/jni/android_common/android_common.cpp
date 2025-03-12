@@ -30,3 +30,12 @@ jstring ToJString(JNIEnv* env, std::string_view str) {
     return env->NewString(reinterpret_cast<const jchar*>(converted_string.data()),
                           static_cast<jint>(converted_string.size()));
 }
+
+jobjectArray ToJStringArray(JNIEnv* env, const std::vector<std::string>& strs) {
+    jobjectArray array =
+        env->NewObjectArray(strs.size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
+    for (int i = 0; i < strs.size(); ++i) {
+        env->SetObjectArrayElement(array, i, ToJString(env, strs[i]));
+    }
+    return array;
+}
