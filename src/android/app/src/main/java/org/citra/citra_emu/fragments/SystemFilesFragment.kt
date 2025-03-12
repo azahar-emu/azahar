@@ -4,36 +4,27 @@
 
 package org.citra.citra_emu.fragments
 
-import android.content.res.Resources
 import android.os.Bundle
-import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textview.MaterialTextView
 import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.CoroutineScope
@@ -44,7 +35,6 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
 import org.citra.citra_emu.features.settings.model.Settings
@@ -197,49 +187,21 @@ class SystemFilesFragment : Fragment() {
                         textInputValue = text.toString()
                     }
 
-                    val switchOption1 = context?.let { it1 ->
-                        SwitchMaterial(it1).apply {
+                    val buttonGroup = context?.let { it1 -> RadioGroup(it1) }!!
+
+                    val buttonO3ds = context?.let { it1 ->
+                        RadioButton(it1).apply {
                             text = context.getString(R.string.setup_system_files_o3ds)
                             isChecked = false
                         }
-                    }
+                    }!!
 
-                    val switchOption2 = context?.let { it1 ->
-                        SwitchMaterial(it1).apply {
+                    val buttonN3ds = context?.let { it1 ->
+                        RadioButton(it1).apply {
                             text = context.getString(R.string.setup_system_files_n3ds)
                             isChecked = false
                         }
-                    }
-
-                    if (setupStateCached!![0] && !setupStateCached!![1]) {
-                        switchOption2?.isChecked = true
-                    } else {
-                        switchOption1?.isChecked = true
-                    }
-
-                    switchOption1?.setOnCheckedChangeListener { _, isChecked ->
-                        if (isChecked) {
-                            switchOption2!!.isChecked = false
-                        }
-                    }
-
-                    switchOption2?.setOnCheckedChangeListener { _, isChecked ->
-                        if (isChecked) {
-                            switchOption1!!.isChecked = false
-                        }
-                    }
-
-                    switchOption1?.setOnClickListener {
-                        if (!switchOption1.isChecked && !switchOption2!!.isChecked) {
-                            switchOption1.isChecked = true
-                        }
-                    }
-
-                    switchOption2?.setOnClickListener {
-                        if (!switchOption2.isChecked && !switchOption1!!.isChecked) {
-                            switchOption2.isChecked = true
-                        }
-                    }
+                    }!!
 
                     val textO3ds: String
                     val textN3ds: String
@@ -254,7 +216,7 @@ class SystemFilesFragment : Fragment() {
                         textN3ds = getString(R.string.setup_system_files_o3ds_needed)
                         colorN3ds = R.color.citra_primary_yellow
 
-                        switchOption2?.isEnabled = false
+                        buttonN3ds.isEnabled = false
                     } else {
                         textO3ds = getString(R.string.setup_system_files_completed)
                         colorO3ds = R.color.citra_primary_green
@@ -268,7 +230,7 @@ class SystemFilesFragment : Fragment() {
                         }
                     }
 
-                    val tooltipOption1 = context?.let { it1 ->
+                    val tooltipO3ds = context?.let { it1 ->
                         MaterialTextView(it1).apply {
                             text = textO3ds
                             textSize = 12f
@@ -276,7 +238,7 @@ class SystemFilesFragment : Fragment() {
                         }
                     }
 
-                    val tooltipOption2 = context?.let { it1 ->
+                    val tooltipN3ds = context?.let { it1 ->
                         MaterialTextView(it1).apply {
                             text = textN3ds
                             textSize = 12f
@@ -284,11 +246,15 @@ class SystemFilesFragment : Fragment() {
                         }
                     }
 
+                    buttonGroup.apply {
+                        addView(buttonO3ds)
+                        addView(tooltipO3ds)
+                        addView(buttonN3ds)
+                        addView(tooltipN3ds)
+                    }
+
                     inputBinding.root.apply {
-                        addView(switchOption1)
-                        addView(tooltipOption1)
-                        addView(switchOption2)
-                        addView(tooltipOption2)
+                        addView(buttonGroup)
                     }
 
                     val dialog = context?.let {
@@ -296,13 +262,13 @@ class SystemFilesFragment : Fragment() {
                             .setView(inputBinding.root)
                             .setTitle(getString(R.string.setup_system_files_enter_address))
                             .setPositiveButton(android.R.string.ok) { diag, _ ->
-                                if (textInputValue.isNotEmpty()) {
+                                if (textInputValue.isNotEmpty() && !(!buttonO3ds.isChecked && !buttonN3ds.isChecked)) {
                                     preferences.edit()
                                         .putString("last_artic_base_addr", textInputValue)
                                         .apply()
                                     val menu = Game(
                                         title = getString(R.string.artic_base),
-                                        path = if (switchOption1!!.isChecked) {
+                                        path = if (buttonO3ds.isChecked) {
                                             "articinio://$textInputValue"
                                         } else {
                                             "articinin://$textInputValue"
@@ -317,7 +283,7 @@ class SystemFilesFragment : Fragment() {
                                     )
 
                                     CoroutineScope(Dispatchers.IO).launch {
-                                        NativeLibrary.uninstallSystemFiles(switchOption1.isChecked)
+                                        NativeLibrary.uninstallSystemFiles(buttonO3ds.isChecked)
                                         withContext(Dispatchers.Main) {
                                             setupStateCached = null
                                             progressDialog2?.dismiss()
