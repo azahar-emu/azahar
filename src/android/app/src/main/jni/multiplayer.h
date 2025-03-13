@@ -3,11 +3,18 @@
 // Refer to the license.txt file included.
 
 #pragma once
-
+#include <common/common_types.h>
 #include <string>
 #include <vector>
+#include <network/network.h>
 
-#include <common/common_types.h>
+namespace Core {
+    class System;
+}
+
+namespace Network {
+    class AnnounceMultiplayerSession;
+}
 
 enum class NetPlayStatus : s32 {
     NO_ERROR,
@@ -44,21 +51,52 @@ enum class NetPlayStatus : s32 {
     CHAT_MESSAGE,
 };
 
-bool NetworkInit();
-NetPlayStatus NetPlayCreateRoom(const std::string& ipaddress, int port,
-                                const std::string& username, const std::string& password,
-                                const std::string& room_name, int max_players);
-NetPlayStatus NetPlayJoinRoom(const std::string& ipaddress, int port,
-                              const std::string& username, const std::string& password);
-std::vector<std::string> NetPlayRoomInfo();
-bool NetPlayIsJoined();
-bool NetPlayIsHostedRoom();
-bool NetPlayIsModerator();
-void NetPlaySendMessage(const std::string& msg);
-void NetPlayKickUser(const std::string& username);
-void NetPlayBanUser(const std::string& username);
-void NetPlayLeaveRoom();
-std::string NetPlayGetConsoleId();
-void NetworkShutdown();
-std::vector<std::string> NetPlayGetBanList();
-void NetPlayUnbanUser(const std::string& username);
+class AndroidMultiplayer {
+public:
+    explicit AndroidMultiplayer(Core::System& system,
+                                std::shared_ptr<Network::AnnounceMultiplayerSession> session);
+    ~AndroidMultiplayer();
+
+    bool NetworkInit();
+
+    void AddNetPlayMessage(int status, const std::string& msg);
+    void AddNetPlayMessage(jint type, jstring msg);
+
+    void ClearChat();
+
+    NetPlayStatus NetPlayCreateRoom(const std::string &ipaddress, int port,
+                                    const std::string &username, const std::string &password,
+                                    const std::string &room_name, int max_players);
+
+    NetPlayStatus NetPlayJoinRoom(const std::string &ipaddress, int port,
+                                  const std::string &username, const std::string &password);
+
+    std::vector<std::string> NetPlayRoomInfo();
+
+    bool NetPlayIsJoined();
+
+    bool NetPlayIsHostedRoom();
+
+    bool NetPlayIsModerator();
+
+    void NetPlaySendMessage(const std::string &msg);
+
+    void NetPlayKickUser(const std::string &username);
+
+    void NetPlayBanUser(const std::string &username);
+
+    void NetPlayLeaveRoom();
+
+    static void NetworkShutdown();
+
+    std::vector<std::string> NetPlayGetBanList();
+
+    void NetPlayUnbanUser(const std::string &username);
+
+private:
+    Core::System& system;
+    static std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) ;
+    std::weak_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
+
+
+};
