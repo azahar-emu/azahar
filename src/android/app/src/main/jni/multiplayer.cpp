@@ -4,41 +4,40 @@
 
 #include "id_cache.h"
 #include "multiplayer.h"
-
 #include "jni/android_common/android_common.h"
-
 #include "core/core.h"
-#include "core/hle/service/cfg/cfg.h"
-#include "network/network.h"
-#include "android/log.h"
-
-
+#include "common/logging/log.h"
 #include <thread>
 #include <chrono>
+#include <network/network_settings.h>
+#include "network/announce_multiplayer_session.h"
+#include "core/hle/service/cfg/cfg.h"
 
-void AddNetPlayMessage(jint type, jstring msg) {
+
+AndroidMultiplayer::AndroidMultiplayer(Core::System& system_,
+                                       std::shared_ptr<Network::AnnounceMultiplayerSession> session)
+    : system{system_}, announce_multiplayer_session(session) {}
+
+AndroidMultiplayer::~AndroidMultiplayer() = default;
+
+
+void AndroidMultiplayer::AddNetPlayMessage(jint type, jstring msg) {
     IDCache::GetEnvForThread()->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
                                                      IDCache::GetAddNetPlayMessage(), type, msg);
 }
 
-void AddNetPlayMessage(int type, const std::string& msg) {
+void AndroidMultiplayer::AddNetPlayMessage(int type, const std::string& msg) {
     JNIEnv* env = IDCache::GetEnvForThread();
     AddNetPlayMessage(type, ToJString(env, msg));
 }
 
-void ClearChat() {
+void AndroidMultiplayer::ClearChat() {
     IDCache::GetEnvForThread()->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
                                                      IDCache::ClearChat());
 }
 
-void NetPlayGenerateConsoleId() {
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    auto [random_number, console_id] = cfg->GenerateConsoleUniqueId();
-    cfg->SetConsoleUniqueId(random_number, console_id);
-    cfg->UpdateConfigNANDSavegame();
-}
 
-bool NetworkInit() {
+bool AndroidMultiplayer::NetworkInit() {
     bool result = Network::Init();
 
     if (!result) {
@@ -47,7 +46,7 @@ bool NetworkInit() {
 
     if (auto member = Network::GetRoomMember().lock()) {
         // register the network structs to use in slots and signals
-        member->BindOnStateChanged([](const Network::RoomMember::State& state) {
+        member->BindOnStateChanged([this](const Network::RoomMember::State& state) {
             if (state == Network::RoomMember::State::Joined ||
                 state == Network::RoomMember::State::Moderator) {
                 NetPlayStatus status;
@@ -65,7 +64,7 @@ bool NetworkInit() {
                 AddNetPlayMessage(static_cast<int>(status), msg);
             }
         });
-        member->BindOnError([](const Network::RoomMember::Error& error) {
+        member->BindOnError([this](const Network::RoomMember::Error& error) {
             NetPlayStatus status;
             std::string msg;
             switch (error) {
@@ -83,10 +82,6 @@ bool NetworkInit() {
                     break;
                 case Network::RoomMember::Error::MacCollision:
                     status = NetPlayStatus::MAC_COLLISION;
-                    break;
-                case Network::RoomMember::Error::ConsoleIdCollision:
-                    status = NetPlayStatus::CONSOLE_ID_COLLISION;
-                    NetPlayGenerateConsoleId();
                     break;
                 case Network::RoomMember::Error::WrongVersion:
                     status = NetPlayStatus::WRONG_VERSION;
@@ -109,10 +104,13 @@ bool NetworkInit() {
                 case Network::RoomMember::Error::NoSuchUser:
                     status = NetPlayStatus::NO_SUCH_USER;
                     break;
+                case Network::RoomMember::Error::ConsoleIdCollision:
+                    status = NetPlayStatus::CONSOLE_ID_COLLISION;
+                    break;
             }
             AddNetPlayMessage(static_cast<int>(status), msg);
         });
-        member->BindOnStatusMessageReceived([](const Network::StatusMessageEntry& status_message) {
+        member->BindOnStatusMessageReceived([this](const Network::StatusMessageEntry& status_message) {
             NetPlayStatus status = NetPlayStatus::NO_ERROR;
             std::string msg(status_message.nickname);
             switch (status_message.type) {
@@ -134,7 +132,7 @@ bool NetworkInit() {
             }
             AddNetPlayMessage(static_cast<int>(status), msg);
         });
-        member->BindOnChatMessageRecieved([](const Network::ChatEntry& chat) {
+        member->BindOnChatMessageRecieved([this](const Network::ChatEntry& chat) {
             NetPlayStatus status = NetPlayStatus::CHAT_MESSAGE;
             std::string msg(chat.nickname);
             msg += ": ";
@@ -146,11 +144,10 @@ bool NetworkInit() {
     return true;
 }
 
-NetPlayStatus NetPlayCreateRoom(const std::string& ipaddress, int port,
+NetPlayStatus AndroidMultiplayer::NetPlayCreateRoom(const std::string& ipaddress, int port,
                               const std::string& username, const std::string& password,
                               const std::string& room_name, int max_players) {
 
-    __android_log_print(ANDROID_LOG_INFO, "NetPlay", "NetPlayCreateRoom called with ipaddress: %s, port: %d, username: %s, room_name: %s, max_players: %d", ipaddress.c_str(), port, username.c_str(), room_name.c_str(), max_players);
 
     auto member = Network::GetRoomMember().lock();
     if (!member) {
@@ -170,16 +167,15 @@ NetPlayStatus NetPlayCreateRoom(const std::string& ipaddress, int port,
         return NetPlayStatus::CREATE_ROOM_ERROR;
     }
 
-    if (!room->Create(room_name, "", ipaddress, port, password,
-                     std::min(max_players, 16), username, "", 0, nullptr, {})) {
+    if (!room->Create(room_name, "", "", port, password,
+                     std::min(max_players, 16), NetSettings::values.citra_username, "", 0, std::make_unique<Network::VerifyUser::NullBackend>(), {})) {
         return NetPlayStatus::CREATE_ROOM_ERROR;
     }
 
     // Failsafe timer to avoid joining before creation
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    std::string console = Service::CFG::GetConsoleIdHash(Core::System::GetInstance());
-    member->Join(username, console, ipaddress.c_str(), port, 0, Network::NoPreferredMac, password);
+    member->Join(username, Service::CFG::GetConsoleIdHash(system), "127.0.0.1", port, 0, Network::NoPreferredMac, password);
 
     // Failsafe timer to avoid joining before creation
     for (int i = 0; i < 5; i++) {
@@ -195,7 +191,7 @@ NetPlayStatus NetPlayCreateRoom(const std::string& ipaddress, int port,
     return NetPlayStatus::CREATE_ROOM_ERROR;
 }
 
-NetPlayStatus NetPlayJoinRoom(const std::string& ipaddress, int port,
+NetPlayStatus AndroidMultiplayer::NetPlayJoinRoom(const std::string& ipaddress, int port,
                             const std::string& username, const std::string& password) {
     auto member = Network::GetRoomMember().lock();
     if (!member) {
@@ -206,8 +202,7 @@ NetPlayStatus NetPlayJoinRoom(const std::string& ipaddress, int port,
         return NetPlayStatus::ALREADY_IN_ROOM;
     }
 
-    std::string console = Service::CFG::GetConsoleIdHash(Core::System::GetInstance());
-    member->Join(username, console, ipaddress.c_str(), port, 0, Network::NoPreferredMac, password);
+    member->Join(username, Service::CFG::GetConsoleIdHash(system), ipaddress.c_str(), port, 0, Network::NoPreferredMac, password);
 
     // Wait a bit for the connection and join process to complete
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -224,7 +219,7 @@ NetPlayStatus NetPlayJoinRoom(const std::string& ipaddress, int port,
     return NetPlayStatus::WRONG_PASSWORD;
 }
 
-void NetPlaySendMessage(const std::string& msg) {
+void AndroidMultiplayer::NetPlaySendMessage(const std::string& msg) {
     if (auto room = Network::GetRoomMember().lock()) {
         if (room->GetState() != Network::RoomMember::State::Joined &&
             room->GetState() != Network::RoomMember::State::Moderator) {
@@ -235,7 +230,7 @@ void NetPlaySendMessage(const std::string& msg) {
     }
 }
 
-void NetPlayKickUser(const std::string& username) {
+void AndroidMultiplayer::NetPlayKickUser(const std::string& username) {
     if (auto room = Network::GetRoomMember().lock()) {
         auto members = room->GetMemberInformation();
         auto it = std::find_if(members.begin(), members.end(),
@@ -248,7 +243,7 @@ void NetPlayKickUser(const std::string& username) {
     }
 }
 
-void NetPlayBanUser(const std::string& username) {
+void AndroidMultiplayer::NetPlayBanUser(const std::string& username) {
     if (auto room = Network::GetRoomMember().lock()) {
         auto members = room->GetMemberInformation();
         auto it = std::find_if(members.begin(), members.end(),
@@ -261,13 +256,13 @@ void NetPlayBanUser(const std::string& username) {
     }
 }
 
-void NetPlayUnbanUser(const std::string& username) {
+void AndroidMultiplayer::NetPlayUnbanUser(const std::string& username) {
     if (auto room = Network::GetRoomMember().lock()) {
         room->SendModerationRequest(Network::RoomMessageTypes::IdModUnban, username);
     }
 }
 
-std::vector<std::string> NetPlayRoomInfo() {
+std::vector<std::string> AndroidMultiplayer::NetPlayRoomInfo() {
     std::vector<std::string> info_list;
     if (auto room = Network::GetRoomMember().lock()) {
         auto members = room->GetMemberInformation();
@@ -284,7 +279,7 @@ std::vector<std::string> NetPlayRoomInfo() {
     return info_list;
 }
 
-bool NetPlayIsJoined() {
+bool AndroidMultiplayer::NetPlayIsJoined() {
     auto member = Network::GetRoomMember().lock();
     if (!member) {
         return false;
@@ -294,14 +289,14 @@ bool NetPlayIsJoined() {
             member->GetState() == Network::RoomMember::State::Moderator);
 }
 
-bool NetPlayIsHostedRoom() {
+bool AndroidMultiplayer::NetPlayIsHostedRoom() {
     if (auto room = Network::GetRoom().lock()) {
         return room->GetState() == Network::Room::State::Open;
     }
     return false;
 }
 
-void NetPlayLeaveRoom() {
+void AndroidMultiplayer::NetPlayLeaveRoom() {
     if (auto room = Network::GetRoom().lock()) {
         // if you are in a room, leave it
         if (auto member = Network::GetRoomMember().lock()) {
@@ -317,17 +312,11 @@ void NetPlayLeaveRoom() {
     }
 }
 
-std::string NetPlayGetConsoleId() {
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
-    u64 console_id = cfg->GetConsoleUniqueId();
-    return fmt::format("{:016X}", console_id);
-}
-
-void NetworkShutdown() {
+void AndroidMultiplayer::NetworkShutdown() {
     Network::Shutdown();
 }
 
-bool NetPlayIsModerator() {
+bool AndroidMultiplayer::NetPlayIsModerator() {
     auto member = Network::GetRoomMember().lock();
     if (!member) {
         return false;
@@ -335,7 +324,7 @@ bool NetPlayIsModerator() {
     return member->GetState() == Network::RoomMember::State::Moderator;
 }
 
-std::vector<std::string> NetPlayGetBanList() {
+std::vector<std::string> AndroidMultiplayer::NetPlayGetBanList() {
     std::vector<std::string> ban_list;
     if (auto room = Network::GetRoom().lock()) {
         auto [username_bans, ip_bans] = room->GetBanList();
