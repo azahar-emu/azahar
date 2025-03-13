@@ -391,6 +391,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     { "0x${SystemSaveGame.getConsoleId().toHexString().uppercase()}" }
                 )
             )
+            add(
+                RunnableSetting(
+                    R.string.mac_address,
+                    0,
+                    false,
+                    0,
+                    { settingsAdapter.onClickRegenerateMAC() },
+                    { SystemSaveGame.getMac() }
+                )
+            )
 
             add(HeaderSetting(R.string.birthday))
             val systemBirthdayMonthSetting = object : AbstractShortSetting {

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -508,6 +508,18 @@ class SettingsAdapter(
             .setMessage(R.string.regenerate_console_id_description)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 SystemSaveGame.regenerateConsoleId()
+                notifyDataSetChanged()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    fun onClickRegenerateMAC() {
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.regenerate_mac_address)
+            .setMessage(R.string.regenerate_mac_address_description)
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
+                SystemSaveGame.regenerateMac()
                 notifyDataSetChanged()
             }
             .setNegativeButton(android.R.string.cancel, null)

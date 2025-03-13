@@ -782,4 +782,7 @@
     <string name="enable_required_online_lle_modules_desc">Enables the LLE modules required for online multiplayer, eShop access, etc.</string>
     <string name="emulation_settings">Emulation Settings</string>
     <string name="profile_settings">Profile Settings</string>
+    <string name="mac_address">MAC Address</string>
+    <string name="regenerate_mac_address">Regenerate MAC Address</string>
+    <string name="regenerate_mac_address_description">This will replace your current MAC address with a new one. It is not recommended to do this if you got the MAC address from your real console using the setup tool. Continue?</string>
 </resources>

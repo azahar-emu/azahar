@@ -127,4 +127,15 @@ void Java_org_citra_citra_1emu_utils_SystemSaveGame_regenerateConsoleId(
     changes_pending = true;
 }
 
+jstring Java_org_citra_citra_1emu_utils_SystemSaveGame_getMac(JNIEnv* env,
+                                                              [[maybe_unused]] jobject obj) {
+    return ToJString(env, cfg->GetMacAddress());
+}
+
+void Java_org_citra_citra_1emu_utils_SystemSaveGame_regenerateMac(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj) {
+    cfg->GetMacAddress() = Service::CFG::GenerateRandomMAC();
+    cfg->SaveMacAddress();
+}
+
 } // extern "C"

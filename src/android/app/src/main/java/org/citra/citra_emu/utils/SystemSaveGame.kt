@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -44,6 +44,10 @@ object SystemSaveGame {
     external fun getConsoleId(): Long
 
     external fun regenerateConsoleId()
+
+    external fun getMac(): String
+
+    external fun regenerateMac()
 }
 
 enum class BirthdayMonth(val code: Int, val days: Int) {

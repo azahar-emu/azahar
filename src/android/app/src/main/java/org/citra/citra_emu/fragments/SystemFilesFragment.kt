@@ -209,6 +209,7 @@ class SystemFilesFragment : Fragment() {
                         textN3ds = getString(R.string.setup_system_files_o3ds_needed)
                         colorN3ds = R.color.citra_primary_yellow
 
+                        buttonO3ds.isChecked = true
                         buttonN3ds.isEnabled = false
                     } else {
                         textO3ds = getString(R.string.setup_system_files_completed)
@@ -217,9 +218,11 @@ class SystemFilesFragment : Fragment() {
                         if (!setupStateCached!![1]) {
                             textN3ds = getString(R.string.setup_system_files_possible)
                             colorN3ds = R.color.citra_primary_blue
+                            buttonN3ds.isChecked = true
                         } else {
                             textN3ds = getString(R.string.setup_system_files_completed)
                             colorN3ds = R.color.citra_primary_green
+                            buttonO3ds.isChecked = true
                         }
                     }
 
