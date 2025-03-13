@@ -67,6 +67,9 @@ HackManager hack_manager = {
                      0x0004013000002C02, // Normal
                      0x0004013000002C03, // Safe mode
                      0x0004013020002C03, // New 3DS safe mode
+
+                     // DLP
+                     0x0004013000002802,
                  },
          }},
 
