@@ -716,6 +716,8 @@ object NativeLibrary {
         NetPlayManager.clearChat()
     }
 
+    external fun initMultiplayer()
+
     @Keep
     @JvmStatic
     fun onCompressProgress(total: Long, current: Long) {

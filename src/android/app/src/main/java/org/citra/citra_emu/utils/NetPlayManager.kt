@@ -25,7 +25,6 @@ object NetPlayManager {
     external fun netPlaySendMessage(msg: String)
     external fun netPlayKickUser(username: String)
     external fun netPlayLeaveRoom()
-    external fun netPlayGetConsoleId(): String
     external fun netPlayIsModerator(): Boolean
     external fun netPlayGetBanList(): Array<String>
     external fun netPlayBanUser(username: String)
