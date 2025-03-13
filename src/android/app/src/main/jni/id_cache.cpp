@@ -13,7 +13,6 @@
 #include "jni/applets/swkbd.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/id_cache.h"
-
 #include "multiplayer.h"
 
 #include <jni.h>
@@ -273,7 +272,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     SoftwareKeyboard::InitJNI(env);
     Camera::StillImage::InitJNI(env);
     AndroidStorage::InitJNI(env, s_native_library_class);
-    NetworkInit();
 
     return JNI_VERSION;
 }
@@ -299,11 +297,11 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
         env->DeleteGlobalRef(object);
     }
 
+    AndroidMultiplayer::NetworkShutdown();
     MiiSelector::CleanupJNI(env);
     SoftwareKeyboard::CleanupJNI(env);
     Camera::StillImage::CleanupJNI(env);
     AndroidStorage::CleanupJNI();
-    NetworkShutdown();
 }
 
 #ifdef __cplusplus
