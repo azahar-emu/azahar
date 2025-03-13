@@ -8,6 +8,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstdio>
 #include <functional>
 #include <ios>
@@ -170,10 +171,11 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
  * @param directory the parent directory to start scanning from
  * @param parent_entry FSTEntry where the filesystem tree results will be stored.
  * @param recursion Number of children directories to read before giving up.
+ * @param stop_flag Optional stop flag, the scan will stop if it becomes true
  * @return the total number of files/directories found
  */
 u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
-                      unsigned int recursion = 0);
+                      unsigned int recursion = 0, std::atomic<bool>* stop_flag = nullptr);
 
 /**
  * Recursively searches through a FSTEntry for files, and stores them.

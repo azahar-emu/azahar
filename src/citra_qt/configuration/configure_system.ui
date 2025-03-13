@@ -78,7 +78,17 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
+            <item row="3" column="0">
+              <widget class="QCheckBox" name="enable_required_online_lle_modules">
+                <property name="text">
+                  <string>Enable required LLE modules for online features (if installed)</string>
+                </property>
+                <property name="toolTip">
+                  <string>Enables the LLE modules needed for online multiplayer, eShop access, etc.</string>
+                </property>
+              </widget>
+            </item>
+            <item row="4" column="1">
              <widget class="QLineEdit" name="edit_username">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -91,21 +101,21 @@
               </property>
              </widget>
             </item>
-            <item row="3" column="0">
+            <item row="4" column="0">
              <widget class="QLabel" name="label_username">
               <property name="text">
                <string>Username</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
+            <item row="5" column="0">
              <widget class="QLabel" name="label_birthday">
               <property name="text">
                <string>Birthday</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
+            <item row="5" column="1">
              <layout class="QHBoxLayout" name="horizontalLayout_birthday2">
               <item>
                <widget class="QComboBox" name="combo_birthmonth">
@@ -176,14 +186,14 @@
               </item>
              </layout>
             </item>
-            <item row="5" column="0">
+            <item row="6" column="0">
              <widget class="QLabel" name="label_language">
               <property name="text">
                <string>Language</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1">
+            <item row="6" column="1">
              <widget class="QComboBox" name="combo_language">
               <property name="toolTip">
                <string>Note: this can be overridden when region setting is auto-select</string>
@@ -250,14 +260,14 @@
               </item>
              </widget>
             </item>
-            <item row="6" column="0">
+            <item row="7" column="0">
              <widget class="QLabel" name="label_sound">
               <property name="text">
                <string>Sound output mode</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="1">
+            <item row="7" column="1">
              <widget class="QComboBox" name="combo_sound">
               <item>
                <property name="text">
@@ -276,24 +286,24 @@
               </item>
              </widget>
             </item>
-            <item row="7" column="0">
+            <item row="8" column="0">
              <widget class="QLabel" name="label_country">
               <property name="text">
                <string>Country</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="1">
+            <item row="8" column="1">
              <widget class="QComboBox" name="combo_country"/>
             </item>
-            <item row="8" column="0">
+            <item row="9" column="0">
              <widget class="QLabel" name="label_init_clock">
               <property name="text">
                <string>Clock</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
+            <item row="9" column="1">
              <widget class="QComboBox" name="combo_init_clock">
               <item>
                <property name="text">
@@ -307,28 +317,28 @@
               </item>
              </widget>
             </item>
-            <item row="9" column="0">
+            <item row="10" column="0">
              <widget class="QLabel" name="label_init_time">
               <property name="text">
                <string>Startup time</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="1">
+            <item row="10" column="1">
              <widget class="QDateTimeEdit" name="edit_init_time">
               <property name="displayFormat">
                <string>yyyy-MM-ddTHH:mm:ss</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="0">
+            <item row="11" column="0">
              <widget class="QLabel" name="label_init_time_offset">
               <property name="text">
                <string>Offset time</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="1">
+            <item row="11" column="1">
              <layout class="QGridLayout" name="edit_init_time_offset_grid">
               <item row="0" column="0">
                <widget class="QSpinBox" name="edit_init_time_offset_days">
@@ -352,14 +362,14 @@
               </item>
              </layout>
             </item>
-            <item row="10" column="0">
+            <item row="12" column="0">
              <widget class="QLabel" name="label_init_ticks_type">
               <property name="text">
                <string>Initial System Ticks</string>
               </property>
              </widget>
             </item>
-            <item row="10" column="1">
+            <item row="12" column="1">
              <widget class="QComboBox" name="combo_init_ticks_type">
               <item>
                <property name="text">
@@ -373,14 +383,14 @@
               </item>
              </widget>
             </item>
-            <item row="11" column="0">
+            <item row="13" column="0">
              <widget class="QLabel" name="label_init_ticks_value">
               <property name="text">
                <string>Initial System Ticks Override</string>
               </property>
              </widget>
             </item>
-            <item row="11" column="1">
+            <item row="13" column="1">
              <widget class="QLineEdit" name="edit_init_ticks_value">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -393,21 +403,21 @@
               </property>
              </widget>
             </item>
-            <item row="12" column="0">
+            <item row="14" column="0">
              <widget class="QLabel" name="label_play_coins">
               <property name="text">
                <string>Play Coins</string>
               </property>
              </widget>
             </item>
-            <item row="12" column="1">
+            <item row="14" column="1">
              <widget class="QSpinBox" name="spinBox_play_coins">
               <property name="maximum">
                <number>300</number>
               </property>
              </widget>
             </item>
-            <item row="13" column="0">
+            <item row="15" column="0">
               <widget class="QLabel" name="label_steps_per_hour">
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps per hour reported by the pedometer. Range from 0 to 65,535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -417,28 +427,28 @@
                 </property>
               </widget>
             </item>
-            <item row="13" column="1">
+            <item row="15" column="1">
               <widget class="QSpinBox" name="spinBox_steps_per_hour">
                 <property name="maximum">
                   <number>9999</number>
                 </property>
               </widget>
             </item>
-            <item row="14" column="1">
+            <item row="16" column="1">
              <widget class="QCheckBox" name="toggle_system_setup">
               <property name="text">
                <string>Run System Setup when Home Menu is launched</string>
               </property>
              </widget>
             </item>
-            <item row="15" column="0">
+            <item row="17" column="0">
              <widget class="QLabel" name="label_console_id">
               <property name="text">
                <string>Console ID:</string>
               </property>
              </widget>
             </item>
-            <item row="15" column="1">
+            <item row="17" column="1">
              <widget class="QPushButton" name="button_regenerate_console_id">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -454,14 +464,14 @@
               </property>
              </widget>
             </item>
-            <item row="16" column="0">
+            <item row="18" column="0">
               <widget class="QLabel" name="label_mac">
                 <property name="text">
                   <string>MAC:</string>
                 </property>
               </widget>
             </item>
-            <item row="16" column="1">
+            <item row="18" column="1">
               <widget class="QPushButton" name="button_regenerate_mac">
                 <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -477,21 +487,21 @@
                 </property>
               </widget>
             </item>
-            <item row="17" column="0">
+            <item row="19" column="0">
              <widget class="QLabel" name="label_plugin_loader">
               <property name="text">
                <string>3GX Plugin Loader:</string>
               </property>
              </widget>
             </item>
-            <item row="17" column="1">
+            <item row="19" column="1">
              <widget class="QCheckBox" name="plugin_loader">
               <property name="text">
                <string>Enable 3GX plugin loader</string>
               </property>
              </widget>
             </item>
-            <item row="18" column="1">
+            <item row="20" column="1">
              <widget class="QCheckBox" name="allow_plugin_loader">
               <property name="text">
                <string>Allow applications to change plugin loader state</string>

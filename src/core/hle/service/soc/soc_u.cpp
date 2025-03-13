@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -1097,6 +1097,8 @@ void SOC_U::Close(Kernel::HLERequestContext& ctx) {
 
     if (ret != 0) {
         ret = TranslateError(GET_ERRNO);
+    } else {
+        created_sockets.erase(socket_handle);
     }
 
     LOG_DEBUG(Service_SOC, "pid={}, fd={}, ret={}", pid, socket_handle, static_cast<s32>(ret));

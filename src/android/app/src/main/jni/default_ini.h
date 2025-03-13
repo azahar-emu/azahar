@@ -326,8 +326,12 @@ use_virtual_sd =
 is_new_3ds =
 
 # Whether to use LLE system applets, if installed
-# 0 (default): No, 1: Yes
+# 0: No, 1 (default): Yes
 lle_applets =
+
+# Whether to enable LLE modules for online play
+# 0 (default): No, 1: Yes
+enable_required_online_lle_modules =
 
 # The system region that Citra will use during emulation
 # -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan

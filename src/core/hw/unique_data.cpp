@@ -59,6 +59,7 @@ SecureDataLoadStatus LoadSecureInfoA() {
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
     secure_info_a_signature_valid = secure_info_a.VerifySignature();
     if (!secure_info_a_signature_valid) {
         LOG_WARNING(HW, "SecureInfo_A signature check failed");
@@ -90,6 +91,7 @@ SecureDataLoadStatus LoadLocalFriendCodeSeedB() {
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
     local_friend_code_seed_b_signature_valid = local_friend_code_seed_b.VerifySignature();
     if (!local_friend_code_seed_b_signature_valid) {
         LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");
@@ -167,6 +169,7 @@ SecureDataLoadStatus LoadMovable() {
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
     movable_signature_valid = movable.VerifySignature();
     if (!movable_signature_valid) {
         LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");

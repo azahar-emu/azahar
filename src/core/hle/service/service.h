@@ -184,12 +184,13 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system, std::vector<u64>& lle_modules, bool allow_lle);
+void Init(Core::System& system, u64 loading_titleid, std::vector<u64>& lle_modules, bool allow_lle);
 
 struct ServiceModuleInfo {
     std::string name;
     u64 title_id;
     std::function<void(Core::System&)> init_function;
+    bool is_online_recommended;
 };
 
 extern const std::array<ServiceModuleInfo, 41> service_module_map;

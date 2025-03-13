@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fmt/format.h>
 #include "common/assert.h"
+#include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
@@ -59,53 +60,54 @@
 namespace Service {
 
 const std::array<ServiceModuleInfo, 41> service_module_map{
-    {{"FS", 0x00040130'00001102, FS::InstallInterfaces},
-     {"PM", 0x00040130'00001202, PM::InstallInterfaces},
-     {"LDR", 0x00040130'00003702, LDR::InstallInterfaces},
-     {"PXI", 0x00040130'00001402, PXI::InstallInterfaces},
+    {{"FS", 0x00040130'00001102, FS::InstallInterfaces, false},
+     {"PM", 0x00040130'00001202, PM::InstallInterfaces, false},
+     {"LDR", 0x00040130'00003702, LDR::InstallInterfaces, false},
+     {"PXI", 0x00040130'00001402, PXI::InstallInterfaces, false},
 
-     {"ERR", 0x00040030'00008A02, ERR::InstallInterfaces},
-     {"AC", 0x00040130'00002402, AC::InstallInterfaces},
-     {"ACT", 0x00040130'00003802, ACT::InstallInterfaces},
-     {"AM", 0x00040130'00001502, AM::InstallInterfaces},
-     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces},
+     {"ERR", 0x00040030'00008A02, ERR::InstallInterfaces, false},
+     {"AC", 0x00040130'00002402, AC::InstallInterfaces, false},
+     {"ACT", 0x00040130'00003802, ACT::InstallInterfaces, true},
+     {"AM", 0x00040130'00001502, AM::InstallInterfaces, false},
+     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces, false},
      {"CAM", 0x00040130'00001602,
       [](Core::System& system) {
           CAM::InstallInterfaces(system);
           Y2R::InstallInterfaces(system);
-      }},
-     {"CECD", 0x00040130'00002602, CECD::InstallInterfaces},
-     {"CFG", 0x00040130'00001702, CFG::InstallInterfaces},
-     {"DLP", 0x00040130'00002802, DLP::InstallInterfaces},
-     {"DSP", 0x00040130'00001A02, DSP::InstallInterfaces},
-     {"FRD", 0x00040130'00003202, FRD::InstallInterfaces},
-     {"GSP", 0x00040130'00001C02, GSP::InstallInterfaces},
-     {"HID", 0x00040130'00001D02, HID::InstallInterfaces},
-     {"IR", 0x00040130'00003302, IR::InstallInterfaces},
-     {"MIC", 0x00040130'00002002, MIC::InstallInterfaces},
-     {"MVD", 0x00040130'20004102, MVD::InstallInterfaces},
-     {"NDM", 0x00040130'00002B02, NDM::InstallInterfaces},
-     {"NEWS", 0x00040130'00003502, NEWS::InstallInterfaces},
-     {"NFC", 0x00040130'00004002, NFC::InstallInterfaces},
-     {"NIM", 0x00040130'00002C02, NIM::InstallInterfaces},
-     {"NS", 0x00040130'00008002, APT::InstallInterfaces},
-     {"NWM", 0x00040130'00002D02, NWM::InstallInterfaces},
-     {"PTM", 0x00040130'00002202, PTM::InstallInterfaces},
-     {"QTM", 0x00040130'00004202, QTM::InstallInterfaces},
-     {"CSND", 0x00040130'00002702, CSND::InstallInterfaces},
-     {"HTTP", 0x00040130'00002902, HTTP::InstallInterfaces},
-     {"SOC", 0x00040130'00002E02, SOC::InstallInterfaces},
-     {"SSL", 0x00040130'00002F02, SSL::InstallInterfaces},
-     {"PS", 0x00040130'00003102, PS::InstallInterfaces},
-     {"PLGLDR", 0x00040130'00006902, PLGLDR::InstallInterfaces},
+      },
+      false},
+     {"CECD", 0x00040130'00002602, CECD::InstallInterfaces, false},
+     {"CFG", 0x00040130'00001702, CFG::InstallInterfaces, false},
+     {"DLP", 0x00040130'00002802, DLP::InstallInterfaces, false},
+     {"DSP", 0x00040130'00001A02, DSP::InstallInterfaces, false},
+     {"FRD", 0x00040130'00003202, FRD::InstallInterfaces, true},
+     {"GSP", 0x00040130'00001C02, GSP::InstallInterfaces, false},
+     {"HID", 0x00040130'00001D02, HID::InstallInterfaces, false},
+     {"IR", 0x00040130'00003302, IR::InstallInterfaces, false},
+     {"MIC", 0x00040130'00002002, MIC::InstallInterfaces, false},
+     {"MVD", 0x00040130'20004102, MVD::InstallInterfaces, false},
+     {"NDM", 0x00040130'00002B02, NDM::InstallInterfaces, false},
+     {"NEWS", 0x00040130'00003502, NEWS::InstallInterfaces, false},
+     {"NFC", 0x00040130'00004002, NFC::InstallInterfaces, false},
+     {"NIM", 0x00040130'00002C02, NIM::InstallInterfaces, true},
+     {"NS", 0x00040130'00008002, APT::InstallInterfaces, false},
+     {"NWM", 0x00040130'00002D02, NWM::InstallInterfaces, false},
+     {"PTM", 0x00040130'00002202, PTM::InstallInterfaces, false},
+     {"QTM", 0x00040130'00004202, QTM::InstallInterfaces, false},
+     {"CSND", 0x00040130'00002702, CSND::InstallInterfaces, false},
+     {"HTTP", 0x00040130'00002902, HTTP::InstallInterfaces, false},
+     {"SOC", 0x00040130'00002E02, SOC::InstallInterfaces, false},
+     {"SSL", 0x00040130'00002F02, SSL::InstallInterfaces, false},
+     {"PS", 0x00040130'00003102, PS::InstallInterfaces, false},
+     {"PLGLDR", 0x00040130'00006902, PLGLDR::InstallInterfaces, false},
+     {"MCU", 0x00040130'00001F02, MCU::InstallInterfaces, false},
      // no HLE implementation
-     {"CDC", 0x00040130'00001802, nullptr},
-     {"GPIO", 0x00040130'00001B02, nullptr},
-     {"I2C", 0x00040130'00001E02, nullptr},
-     {"MCU", 0x00040130'00001F02, MCU::InstallInterfaces},
-     {"MP", 0x00040130'00002A02, nullptr},
-     {"PDN", 0x00040130'00002102, nullptr},
-     {"SPI", 0x00040130'00002302, nullptr}}};
+     {"CDC", 0x00040130'00001802, nullptr, false},
+     {"GPIO", 0x00040130'00001B02, nullptr, false},
+     {"I2C", 0x00040130'00001E02, nullptr, false},
+     {"MP", 0x00040130'00002A02, nullptr, false},
+     {"PDN", 0x00040130'00002102, nullptr, false},
+     {"SPI", 0x00040130'00002302, nullptr, false}}};
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -195,8 +197,13 @@ std::string ServiceFrameworkBase::GetFunctionName(IPC::Header header) const {
     return itr->second.name;
 }
 
-static bool AttemptLLE(const ServiceModuleInfo& service_module) {
-    if (!Settings::values.lle_modules.at(service_module.name))
+static bool AttemptLLE(const ServiceModuleInfo& service_module, u64 loading_titleid) {
+    const bool enable_recommended_lle_modules = Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::ONLINE_LLE_REQUIRED, loading_titleid,
+        Settings::values.enable_required_online_lle_modules.GetValue());
+
+    if (!Settings::values.lle_modules.at(service_module.name) &&
+        (!enable_recommended_lle_modules || !service_module.is_online_recommended))
         return false;
     std::unique_ptr<Loader::AppLoader> loader =
         Loader::GetLoader(AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id));
@@ -220,7 +227,7 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 }
 
 /// Initialize ServiceManager
-void Init(Core::System& core, std::vector<u64>& lle_modules, bool allow_lle) {
+void Init(Core::System& core, u64 loading_titleid, std::vector<u64>& lle_modules, bool allow_lle) {
     SM::ServiceManager::InstallInterfaces(core);
     core.Kernel().SetAppMainThreadExtendedSleep(false);
     bool lle_module_present = false;
@@ -237,7 +244,7 @@ void Init(Core::System& core, std::vector<u64>& lle_modules, bool allow_lle) {
 
         const bool has_lle = allow_lle &&
                              core.GetSaveStateStatus() != Core::System::SaveStateStatus::LOADING &&
-                             AttemptLLE(service_module);
+                             AttemptLLE(service_module, loading_titleid);
         if (has_lle) {
             lle_modules.push_back(service_module.title_id);
         }

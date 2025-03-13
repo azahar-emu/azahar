@@ -87,6 +87,11 @@ class SystemFilesFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        SystemSaveGame.load()
+    }
+
     override fun onPause() {
         super.onPause()
         SystemSaveGame.save()

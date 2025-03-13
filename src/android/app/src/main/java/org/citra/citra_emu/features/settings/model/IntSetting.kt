@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -44,7 +44,7 @@ enum class IntSetting(
     PORTRAIT_BOTTOM_HEIGHT("custom_portrait_bottom_height",Settings.SECTION_LAYOUT,480),
     AUDIO_INPUT_TYPE("output_type", Settings.SECTION_AUDIO, 0),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, 1),
-    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 0),
+    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 1),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),
     LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, 1),
     SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, 0),

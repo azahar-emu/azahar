@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -161,8 +161,8 @@ class DocumentsTree {
         val node = resolvePath(filepath) ?: return false
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
-            DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
-            node.rename(filename)
+            val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
+            node.rename(filename, newUri)
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
@@ -255,10 +255,11 @@ class DocumentsTree {
         }
 
         @Synchronized
-        fun rename(name: String) {
+        fun rename(name: String, uri: Uri?) {
             parent ?: return
             parent!!.removeChild(this)
             this.name = name
+            this.uri = uri
             parent!!.addChild(this)
         }
 

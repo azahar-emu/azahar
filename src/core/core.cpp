@@ -508,8 +508,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
+    u64 loading_title_id = 0;
+    app_loader->ReadProgramId(loading_title_id);
     HW::AES::InitKeys();
-    Service::Init(*this, lle_modules, !app_loader->DoingInitialSetup());
+    Service::Init(*this, loading_title_id, lle_modules, !app_loader->DoingInitialSetup());
     GDBStub::DeferStart();
 
     if (!registered_image_interface) {

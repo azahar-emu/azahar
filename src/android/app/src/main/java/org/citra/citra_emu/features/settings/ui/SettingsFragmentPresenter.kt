@@ -253,6 +253,35 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val valueAsString get() = string
                 override val defaultValue = "AZAHAR"
             }
+            add(HeaderSetting(R.string.emulation_settings))
+            add(
+                SwitchSetting(
+                    IntSetting.NEW_3DS,
+                    R.string.new_3ds,
+                    0,
+                    IntSetting.NEW_3DS.key,
+                    IntSetting.NEW_3DS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    IntSetting.LLE_APPLETS,
+                    R.string.lle_applets,
+                    0,
+                    IntSetting.LLE_APPLETS.key,
+                    IntSetting.LLE_APPLETS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES,
+                    R.string.enable_required_online_lle_modules,
+                    R.string.enable_required_online_lle_modules_desc,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.key,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.defaultValue
+                )
+            )
+            add(HeaderSetting(R.string.profile_settings))
             add(
                 StringInputSetting(
                     usernameSetting,
@@ -1285,24 +1314,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_debug))
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
-            add(
-                SwitchSetting(
-                    IntSetting.NEW_3DS,
-                    R.string.new_3ds,
-                    0,
-                    IntSetting.NEW_3DS.key,
-                    IntSetting.NEW_3DS.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    IntSetting.LLE_APPLETS,
-                    R.string.lle_applets,
-                    0,
-                    IntSetting.LLE_APPLETS.key,
-                    IntSetting.LLE_APPLETS.defaultValue
-                )
-            )
             add(
                 SliderSetting(
                     IntSetting.CPU_CLOCK_SPEED,

@@ -609,6 +609,8 @@ Result Module::DeleteConfigNANDSaveFile() {
 }
 
 Result Module::UpdateConfigNANDSavegame() {
+    LOG_DEBUG(Service_CFG, "Saving config file to NAND");
+
     FileSys::Mode mode = {};
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
@@ -661,6 +663,8 @@ Result Module::FormatConfig() {
 }
 
 Result Module::LoadConfigNANDSaveFile() {
+    LOG_DEBUG(Service_CFG, "Loading config file from NAND");
+
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
 

@@ -319,6 +319,8 @@ void ConfigureSystem::SetConfiguration() {
 
     ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds.GetValue());
     ui->toggle_lle_applets->setChecked(Settings::values.lle_applets.GetValue());
+    ui->enable_required_online_lle_modules->setChecked(
+        Settings::values.enable_required_online_lle_modules.GetValue());
     ui->plugin_loader->setChecked(Settings::values.plugin_loader_enabled.GetValue());
     ui->allow_plugin_loader->setChecked(Settings::values.allow_plugin_loader.GetValue());
 }
@@ -429,6 +431,9 @@ void ConfigureSystem::ApplyConfiguration() {
                                                  is_new_3ds);
         ConfigurationShared::ApplyPerGameSetting(&Settings::values.lle_applets,
                                                  ui->toggle_lle_applets, lle_applets);
+        ConfigurationShared::ApplyPerGameSetting(
+            &Settings::values.enable_required_online_lle_modules,
+            ui->enable_required_online_lle_modules, required_online_lle_modules);
 
         Settings::values.init_clock =
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
@@ -451,6 +456,8 @@ void ConfigureSystem::ApplyConfiguration() {
         Settings::values.init_time_offset = time_offset_days + time_offset_time;
         Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
         Settings::values.lle_applets = ui->toggle_lle_applets->isChecked();
+        Settings::values.enable_required_online_lle_modules =
+            ui->enable_required_online_lle_modules->isChecked();
 
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
@@ -605,6 +612,8 @@ void ConfigureSystem::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_new_3ds->setEnabled(Settings::values.is_new_3ds.UsingGlobal());
         ui->toggle_lle_applets->setEnabled(Settings::values.lle_applets.UsingGlobal());
+        ui->enable_required_online_lle_modules->setEnabled(
+            Settings::values.enable_required_online_lle_modules.UsingGlobal());
         return;
     }
 
@@ -649,4 +658,7 @@ void ConfigureSystem::SetupPerGameUI() {
                                             is_new_3ds);
     ConfigurationShared::SetColoredTristate(ui->toggle_lle_applets, Settings::values.lle_applets,
                                             lle_applets);
+    ConfigurationShared::SetColoredTristate(ui->enable_required_online_lle_modules,
+                                            Settings::values.enable_required_online_lle_modules,
+                                            required_online_lle_modules);
 }

@@ -567,7 +567,11 @@ object NativeLibrary {
     @JvmStatic
     fun createDir(directory: String, directoryName: String): Boolean =
         if (FileUtil.isNativePath(directory)) {
-            CitraApplication.documentsTree.createDir(directory, directoryName)
+            try {
+                CitraApplication.documentsTree.createDir(directory, directoryName)
+            } catch (e: Exception) {
+                false
+            }
         } else {
             FileUtil.createDir(directory, directoryName) != null
         }
@@ -641,7 +645,11 @@ object NativeLibrary {
     @JvmStatic
     fun renameFile(path: String, destinationFilename: String): Boolean =
         if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.renameFile(path, destinationFilename)
+            try {
+                CitraApplication.documentsTree.renameFile(path, destinationFilename)
+            } catch (e: Exception) {
+                false
+            }
         } else {
             FileUtil.renameFile(path, destinationFilename)
         }

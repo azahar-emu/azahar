@@ -190,7 +190,7 @@
     <string name="steps_per_hour_description">Number of steps per hour reported by the pedometer. Range from 0 to 65,535.</string>
     <string name="console_id">Console ID</string>
     <string name="regenerate_console_id">Regenerate Console ID</string>
-    <string name="regenerate_console_id_description">This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects inside applications. This might fail if you use an outdated config save. Continue?</string>
+    <string name="regenerate_console_id_description">This will replace your current virtual 3DS console ID with a new one. Your current virtual 3DS console ID will not be recoverable. This might have unexpected effects inside applications. This might fail if you use an outdated config save. Continue?</string>
     <string name="plugin_loader">3GX Plugin Loader</string>
     <string name="plugin_loader_description">Loads 3GX plugins from the emulated SD card if they are available.</string>
     <string name="allow_plugin_loader">Allow Applications to Change Plugin Loader State</string>
@@ -778,5 +778,8 @@
     <string name="delay_start_lle_modules_description">Delays the start of the app when LLE modules are enabled.</string>
     <string name="deterministic_async_operations">Deterministic Async Operations</string>
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
-
+    <string name="enable_required_online_lle_modules">Enable required LLE modules for online features (if installed)</string>
+    <string name="enable_required_online_lle_modules_desc">Enables the LLE modules required for online multiplayer, eShop access, etc.</string>
+    <string name="emulation_settings">Emulation Settings</string>
+    <string name="profile_settings">Profile Settings</string>
 </resources>

@@ -725,6 +725,7 @@ void QtConfig::ReadSystemValues() {
 
     ReadGlobalSetting(Settings::values.is_new_3ds);
     ReadGlobalSetting(Settings::values.lle_applets);
+    ReadGlobalSetting(Settings::values.enable_required_online_lle_modules);
     ReadGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -1248,6 +1249,7 @@ void QtConfig::SaveSystemValues() {
 
     WriteGlobalSetting(Settings::values.is_new_3ds);
     WriteGlobalSetting(Settings::values.lle_applets);
+    WriteGlobalSetting(Settings::values.enable_required_online_lle_modules);
     WriteGlobalSetting(Settings::values.region_value);
 
     if (global) {
