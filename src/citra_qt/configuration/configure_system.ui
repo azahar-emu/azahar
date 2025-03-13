@@ -79,14 +79,14 @@
              </widget>
             </item>
             <item row="3" column="0">
-              <widget class="QCheckBox" name="enable_required_online_lle_modules">
-                <property name="text">
-                  <string>Enable required LLE modules for online features (if installed)</string>
-                </property>
-                <property name="toolTip">
-                  <string>Enables the LLE modules needed for online multiplayer, eShop access, etc.</string>
-                </property>
-              </widget>
+             <widget class="QCheckBox" name="enable_required_online_lle_modules">
+              <property name="text">
+               <string>Enable required LLE modules for online features (if installed)</string>
+              </property>
+              <property name="toolTip">
+               <string>Enables the LLE modules needed for online multiplayer, eShop access, etc.</string>
+              </property>
+             </widget>
             </item>
             <item row="4" column="1">
              <widget class="QLineEdit" name="edit_username">
