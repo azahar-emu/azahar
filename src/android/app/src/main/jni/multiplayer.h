@@ -93,6 +93,8 @@ public:
 
     void NetPlayUnbanUser(const std::string &username);
 
+    std::vector<std::string> NetPlayGetPublicRooms();
+
 private:
     Core::System& system;
     static std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) ;

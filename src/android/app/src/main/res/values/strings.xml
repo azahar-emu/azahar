@@ -317,6 +317,8 @@
     <string name="setting_not_editable">You can\'t edit this now</string>
     <string name="setting_not_editable_description">This option can\'t be changed while a game is running.</string>
     <string name="auto_select">Auto-Select</string>
+    <string name="refresh">Refresh</string>
+
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>
@@ -793,6 +795,7 @@
     <string name="multiplayer_console_id">Console ID：%1$s</string>
     <string name="multiplayer_create_room">Create</string>
     <string name="multiplayer_join_room">Join</string>
+    <string name="multiplayer_public_room">Browse Public Rooms</string>
     <string name="multiplayer_username">Username</string>
     <string name="multiplayer_ip_address">IP Address</string>
     <string name="multiplayer_ip_port">Port</string>
@@ -853,5 +856,16 @@
     <string name="multiplayer_unban">Unban</string>
     <string name="multiplayer_unban_message">Are you sure you want to unban %1$s?</string>
     <string name="multiplayer_ban">Ban User</string>
+    <string name="multiplayer_room_browser">Public Rooms</string>
+    <string name="multiplayer_no_rooms_found">No public rooms found</string>
+    <string name="multiplayer_password_required">Password Required</string>
+    <string name="multiplayer_player_count">: %1$d/%2$d</string>
+    <string name="multiplayer_game">Game</string>
+    <string name="multiplayer_no_game_info">Any Game</string>
+    <string name="multiplayer_password_protected">Password protected room</string>
+    <string name="multiplayer_hide_full_rooms">Hide Full Rooms</string>
+    <string name="multiplayer_hide_empty_rooms">Hide Empty Rooms</string>
+    <string name="multiplayer_tap_refresh_to_check_again">Tap refresh to check again</string>
+    <string name="multiplayer_search_public_lobbies">Search Public Lobbies...</string>
 
 </resources>

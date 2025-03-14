@@ -324,6 +324,38 @@ bool AndroidMultiplayer::NetPlayIsModerator() {
     return member->GetState() == Network::RoomMember::State::Moderator;
 }
 
+std::vector<std::string> AndroidMultiplayer::NetPlayGetPublicRooms() {
+    std::vector<std::string> room_list;
+
+    if (auto session = announce_multiplayer_session.lock()) {
+        auto rooms = session->GetRoomList();
+        for (const auto &room: rooms) {
+            room_list.push_back(room.name + "|" +
+                                (room.has_password ? "1" : "0") + "|" +
+                                std::to_string(room.max_player) + "|" +
+                                room.ip + "|" +
+                                std::to_string(room.port) + "|" +
+                                room.description + "|" +
+                                room.owner + "|" +
+                                std::to_string(room.preferred_game_id) + "|" +
+                                room.preferred_game);
+
+
+            for (const auto &member: room.members) {
+                room_list.push_back("MEMBER|" + room.name + "|" +
+                                    member.username + "|" +
+                                    member.nickname + "|" +
+                                    std::to_string(member.game_id) + "|" +
+                                    member.game_name);
+            }
+        }
+
+    }
+    return room_list;
+
+}
+
+
 std::vector<std::string> AndroidMultiplayer::NetPlayGetBanList() {
     std::vector<std::string> ban_list;
     if (auto room = Network::GetRoom().lock()) {
