@@ -29,12 +29,78 @@ object NetPlayManager {
     external fun netPlayGetBanList(): Array<String>
     external fun netPlayBanUser(username: String)
     external fun netPlayUnbanUser(username: String)
+    external fun netPlayGetPublicRooms(): Array<String>
+
+    data class RoomInfo(
+        val name: String,
+        val hasPassword: Boolean,
+        val maxPlayers: Int,
+        val ip: String,
+        val port: Int,
+        val description: String,
+        val owner: String,
+        val preferredGameId: Long,
+        val preferredGameName: String,
+        val members: MutableList<RoomMember> = mutableListOf()
+    )
+
+    data class RoomMember(
+        val username: String,
+        val nickname: String,
+        val gameId: Long,
+        val gameName: String
+    )
 
     private var messageListener: ((Int, String) -> Unit)? = null
     private var adapterRefreshListener: ((Int, String) -> Unit)? = null
 
     fun setOnMessageReceivedListener(listener: (Int, String) -> Unit) {
         messageListener = listener
+    }
+
+    fun getPublicRooms(): List<RoomInfo> {
+        val roomData = netPlayGetPublicRooms()
+        val rooms = mutableMapOf<String, RoomInfo>()
+
+        for (data in roomData) {
+            val parts = data.split("|")
+
+            if (parts[0] == "MEMBER" && parts.size >= 6) {
+                val roomName = parts[1]
+                val member = RoomMember(
+                    username = parts[2],
+                    nickname = parts[3],
+                    gameId = parts[4].toLongOrNull() ?: 0L,
+                    gameName = parts[5]
+                )
+                rooms[roomName]?.members?.add(member)
+            } else if (parts.size >= 9) {
+                val roomInfo = RoomInfo(
+                    name = parts[0],
+                    hasPassword = parts[1] == "1",
+                    maxPlayers = parts[2].toIntOrNull() ?: 0,
+                    ip = parts[3],
+                    port = parts[4].toIntOrNull() ?: 0,
+                    description = parts[5],
+                    owner = parts[6],
+                    preferredGameId = parts[7].toLongOrNull() ?: 0L,
+                    preferredGameName = parts[8]
+                )
+                rooms[roomInfo.name] = roomInfo
+            }
+        }
+
+        return rooms.values.toList()
+    }
+
+    fun refreshRoomListAsync(callback: (List<RoomInfo>) -> Unit) {
+        Thread {
+            val rooms =  getPublicRooms()
+
+            Handler(Looper.getMainLooper()).post {
+                callback(rooms)
+            }
+        }.start()
     }
 
     fun setOnAdapterRefreshListener(listener: (Int, String) -> Unit) {
