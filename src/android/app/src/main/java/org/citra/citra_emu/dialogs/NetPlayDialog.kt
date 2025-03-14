@@ -77,6 +77,10 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                         showNetPlayInputDialog(false)
                         dismiss()
                     }
+                    btnLobbyBrowser.setOnClickListener {
+                        LobbyBrowser(context).show()
+                        dismiss()
+                    }
                 }
             }
         }
