@@ -6,7 +6,10 @@ package org.citra.citra_emu.utils
 
 import android.app.Activity
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.format.Formatter
@@ -15,6 +18,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.dialogs.ChatMessage
+import java.net.Inet4Address
 
 object NetPlayManager {
     external fun netPlayCreateRoom(ipAddress: String, port: Int, username: String, password: String, roomName: String, maxPlayers: Int): Int
@@ -188,7 +192,6 @@ object NetPlayManager {
             }
         }
 
-
             Handler(Looper.getMainLooper()).post {
                 if (!isChatOpen) {
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -233,26 +236,43 @@ object NetPlayManager {
         }
     }
 
-    fun getIpAddressByWifi(activity: Activity): String {
-        var ipAddress = 0
-        val wifiManager = activity.getSystemService(WifiManager::class.java)
-        val wifiInfo = wifiManager.connectionInfo
-        if (wifiInfo != null) {
-            ipAddress = wifiInfo.ipAddress
-        }
+    fun isConnectedToWifi(activity: Activity): Boolean {
+        val connectivityManager = activity.getSystemService(ConnectivityManager::class.java)
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+    }
 
-        if (ipAddress == 0) {
-            val dhcpInfo = wifiManager.dhcpInfo
-            if (dhcpInfo != null) {
-                ipAddress = dhcpInfo.ipAddress
+    fun getIpAddressByWifi(activity: Activity): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // For Android 12 (API 31) and above
+            val connectivityManager = activity.getSystemService(ConnectivityManager::class.java)
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+
+            if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+                val linkProperties = connectivityManager.getLinkProperties(network)
+                linkProperties?.linkAddresses?.firstOrNull { it.address is Inet4Address }?.let {
+                    return it.address.hostAddress ?: "192.168.0.1"
+                }
+            }
+        } else {
+            // For Android 11 (API 30) and below
+            try {
+                val connectivityManager = activity.getSystemService(ConnectivityManager::class.java)
+                val network = connectivityManager.activeNetwork
+                if (network != null) {
+                    val linkProperties = connectivityManager.getLinkProperties(network)
+                    linkProperties?.linkAddresses?.firstOrNull { it.address is Inet4Address }?.let {
+                        return it.address.hostAddress ?: "192.168.0.1"
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
 
-        return if (ipAddress == 0) {
-            "192.168.0.1"
-        } else {
-            Formatter.formatIpAddress(ipAddress)
-        }
+        return "192.168.0.1"
     }
 
     fun getBanList(): List<String> {
