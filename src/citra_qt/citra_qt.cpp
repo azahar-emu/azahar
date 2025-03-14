@@ -11,6 +11,7 @@
 #include <QFutureWatcher>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPalette>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
@@ -3489,8 +3490,15 @@ void GMainWindow::filterBarSetChecked(bool state) {
 }
 
 inline bool isDarkMode() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    // Use colorScheme for Qt 6.5 and later
     const auto scheme = QGuiApplication::styleHints()->colorScheme();
     return scheme == Qt::ColorScheme::Dark;
+#else
+    // Fallback for Qt 6.4: Check the window palette
+    QPalette palette = QGuiApplication::palette();
+    return palette.color(QPalette::Window).lightness() < 128; // Rough check for dark mode
+#endif
 }
 
 void GMainWindow::UpdateUITheme() {
