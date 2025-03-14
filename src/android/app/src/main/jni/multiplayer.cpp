@@ -167,7 +167,7 @@ NetPlayStatus AndroidMultiplayer::NetPlayCreateRoom(const std::string& ipaddress
         return NetPlayStatus::CREATE_ROOM_ERROR;
     }
 
-    if (!room->Create(room_name, "", "", port, password,
+    if (!room->Create(room_name, "", ipaddress, port, password,
                      std::min(max_players, 16), NetSettings::values.citra_username, "", 0, std::make_unique<Network::VerifyUser::NullBackend>(), {})) {
         return NetPlayStatus::CREATE_ROOM_ERROR;
     }
@@ -175,7 +175,7 @@ NetPlayStatus AndroidMultiplayer::NetPlayCreateRoom(const std::string& ipaddress
     // Failsafe timer to avoid joining before creation
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    member->Join(username, Service::CFG::GetConsoleIdHash(system), "127.0.0.1", port, 0, Network::NoPreferredMac, password);
+    member->Join(username, Service::CFG::GetConsoleIdHash(system), ipaddress.c_str(), port, 0, Network::NoPreferredMac, password);
 
     // Failsafe timer to avoid joining before creation
     for (int i = 0; i < 5; i++) {
