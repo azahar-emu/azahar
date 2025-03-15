@@ -2481,7 +2481,7 @@ void Module::Interface::GetDeviceID(Kernel::HLERequestContext& ctx) {
 
     u32 deviceID = otp.GetDeviceID();
     if (am->force_new_device_id) {
-        deviceID |= 0x800000000;
+        deviceID |= 0x80000000;
     }
     if (am->force_old_device_id) {
         deviceID &= ~0x80000000;
