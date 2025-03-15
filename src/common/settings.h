@@ -586,8 +586,11 @@ struct Values {
     Setting<bool> instant_debug_log{false, "instant_debug_log"};
 
     // WebService
-    Setting<std::string> web_api_url{"https://api.citra-emu.org", "web_api_url"};
-    Setting<std::string> citra_username{"", "citra_username",};
+    Setting<std::string> web_api_url{"", "web_api_url"};
+    Setting<std::string> citra_username{
+        "Azahar",
+        "citra_username",
+    };
     Setting<std::string> citra_token{"", "citra_token"};
 
     // Miscellaneous
