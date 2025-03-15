@@ -23,11 +23,26 @@ ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
 
-    ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
+    ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue()),
+
+        ui->username_lineedit->setText(
+            QString::fromStdString(Settings::values.citra_username.GetValue()));
+
+    ui->web_api_url_lineedit->setText(
+        QString::fromStdString(Settings::values.web_api_url.GetValue()));
+
+    ui->token_lineedit->setEnabled(ENABLE_WEB_SERVICE);
+    ui->token_lineedit->setText(QString::fromStdString(Settings::values.citra_token.GetValue()));
 }
 
 void ConfigureWeb::ApplyConfiguration() {
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
+
+    Settings::values.citra_username = ui->username_lineedit->text().toStdString();
+
+    Settings::values.web_api_url = ui->web_api_url_lineedit->text().toStdString();
+
+    Settings::values.citra_token = ui->token_lineedit->text().toStdString();
 }
 
 void ConfigureWeb::RetranslateUI() {
