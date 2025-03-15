@@ -16,7 +16,6 @@
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 
 QtConfig::QtConfig(const std::string& config_name, ConfigType config_type) : type{config_type} {
     global = config_type == ConfigType::GlobalConfig;
@@ -920,14 +919,9 @@ void QtConfig::ReadUILayoutValues() {
 void QtConfig::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    NetSettings::values.web_api_url =
-        ReadSetting(Settings::QKeys::web_api_url, QStringLiteral("https://api.citra-emu.org"))
-            .toString()
-            .toStdString();
-    NetSettings::values.citra_username =
-        ReadSetting(Settings::QKeys::citra_username).toString().toStdString();
-    NetSettings::values.citra_token =
-        ReadSetting(Settings::QKeys::citra_token).toString().toStdString();
+    ReadBasicSetting(Settings::values.web_api_url);
+    ReadBasicSetting(Settings::values.citra_username);
+    ReadBasicSetting(Settings::values.citra_token);
 
     qt_config->endGroup();
 }
@@ -1459,13 +1453,9 @@ void QtConfig::SaveUILayoutValues() {
 void QtConfig::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(Settings::QKeys::web_api_url,
-                 QString::fromStdString(NetSettings::values.web_api_url),
-                 QStringLiteral("https://api.citra-emu.org"));
-    WriteSetting(Settings::QKeys::citra_username,
-                 QString::fromStdString(NetSettings::values.citra_username));
-    WriteSetting(Settings::QKeys::citra_token,
-                 QString::fromStdString(NetSettings::values.citra_token));
+    WriteBasicSetting(Settings::values.web_api_url);
+    WriteBasicSetting(Settings::values.citra_username);
+    WriteBasicSetting(Settings::values.citra_token);
 
     qt_config->endGroup();
 }
