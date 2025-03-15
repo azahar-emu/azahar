@@ -56,7 +56,7 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
     ui->tabWidget->addTab(camera_tab.get(), tr("Camera"));
     ui->tabWidget->addTab(debug_tab.get(), tr("Debug"));
     ui->tabWidget->addTab(storage_tab.get(), tr("Storage"));
-    ui->tabWidget->addTab(web_tab.get(), tr("Web"));
+    ui->tabWidget->addTab(web_tab.get(), tr("Network"));
     ui->tabWidget->addTab(ui_tab.get(), tr("UI"));
 
     hotkeys_tab->Populate(registry);
@@ -185,7 +185,7 @@ void ConfigureDialog::UpdateVisibleTabs() {
                                                  {camera_tab.get(), tr("Camera")},
                                                  {debug_tab.get(), tr("Debug")},
                                                  {storage_tab.get(), tr("Storage")},
-                                                 {web_tab.get(), tr("Web")},
+                                                 {web_tab.get(), tr("Network")},
                                                  {ui_tab.get(), tr("UI")}};
 
     ui->tabWidget->clear();
