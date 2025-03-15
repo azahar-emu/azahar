@@ -6,8 +6,6 @@ add_library(network STATIC
     artic_base/artic_base_common.h
     network.cpp
     network.h
-    network_settings.cpp
-    network_settings.h
     packet.cpp
     packet.h
     precompiled_headers.h

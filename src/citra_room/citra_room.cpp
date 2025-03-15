@@ -27,7 +27,6 @@
 #include "common/string_util.h"
 #include "network/announce_multiplayer_session.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 #include "network/room.h"
 #include "network/verify_user.h"
 
@@ -306,15 +305,15 @@ int main(int argc, char** argv) {
     if (announce) {
         if (username.empty()) {
             std::cout << "Hosting a public room\n\n";
-            NetSettings::values.web_api_url = web_api_url;
-            NetSettings::values.citra_username = UsernameFromDisplayToken(token);
-            username = NetSettings::values.citra_username;
-            NetSettings::values.citra_token = TokenFromDisplayToken(token);
+            Settings::values.web_api_url = web_api_url;
+            Settings::values.citra_username = UsernameFromDisplayToken(token);
+            username = Settings::values.citra_username.GetValue();
+            Settings::values.citra_token = TokenFromDisplayToken(token);
         } else {
             std::cout << "Hosting a public room\n\n";
-            NetSettings::values.web_api_url = web_api_url;
-            NetSettings::values.citra_username = username;
-            NetSettings::values.citra_token = token;
+            Settings::values.web_api_url = web_api_url;
+            Settings::values.citra_username = username;
+            Settings::values.citra_token = token;
         }
     }
     if (!announce && enable_citra_mods) {
@@ -334,7 +333,7 @@ int main(int argc, char** argv) {
     if (announce) {
 #ifdef ENABLE_WEB_SERVICE
         verify_backend =
-            std::make_unique<WebService::VerifyUserJWT>(NetSettings::values.web_api_url);
+            std::make_unique<WebService::VerifyUserJWT>(Settings::values.web_api_url.GetValue());
 #else
         std::cout
             << "Citra Web Services is not available with this build: validation is disabled.\n\n";
