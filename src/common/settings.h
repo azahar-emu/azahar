@@ -600,8 +600,11 @@ struct Values {
     Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
 
     // WebService
-    Setting<std::string> web_api_url{"https://api.citra-emu.org", "web_api_url"};
-    Setting<std::string> citra_username{"", "citra_username",};
+    Setting<std::string> web_api_url{"", "web_api_url"};
+    Setting<std::string> citra_username{
+        "Azahar",
+        "citra_username",
+    };
     Setting<std::string> citra_token{"", "citra_token"};
 
     // Miscellaneous
