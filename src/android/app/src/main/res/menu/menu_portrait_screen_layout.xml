@@ -11,6 +11,10 @@
             android:id="@+id/menu_portrait_layout_custom"
             android:title="@string/emulation_screen_layout_custom" />
 
+        <item
+            android:id="@+id/menu_portrait_layout_original"
+            android:title="@string/emulation_screen_layout_original" />
+
     </group>
 
 </menu>
