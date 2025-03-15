@@ -599,6 +599,11 @@ struct Values {
     Setting<bool> instant_debug_log{false, "instant_debug_log"};
     Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
 
+    // WebService
+    Setting<std::string> web_api_url{"https://api.citra-emu.org", "web_api_url"};
+    Setting<std::string> citra_username{"", "citra_username",};
+    Setting<std::string> citra_token{"", "citra_token"};
+
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", "log_filter"};
     Setting<std::string> log_regex_filter{"", "log_regex_filter"};

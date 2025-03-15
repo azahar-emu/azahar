@@ -9,7 +9,6 @@
 #include "common/announce_multiplayer_room.h"
 #include "common/assert.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/announce_room_json.h"
@@ -22,9 +21,9 @@ static constexpr std::chrono::seconds announce_time_interval(15);
 
 AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(NetSettings::values.web_api_url,
-                                                     NetSettings::values.citra_username,
-                                                     NetSettings::values.citra_token);
+    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(),
+                                                     Settings::values.citra_username.GetValue(),
+                                                     Settings::values.citra_token.GetValue());
 #else
     backend = std::make_unique<AnnounceMultiplayerRoom::NullBackend>();
 #endif
@@ -155,9 +154,9 @@ void AnnounceMultiplayerSession::UpdateCredentials() {
     ASSERT_MSG(!IsRunning(), "Credentials can only be updated when session is not running");
 
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(NetSettings::values.web_api_url,
-                                                     NetSettings::values.citra_username,
-                                                     NetSettings::values.citra_token);
+    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(),
+                                                     Settings::values.citra_username.GetValue(),
+                                                     Settings::values.citra_token.GetValue());
 #endif
 }
 

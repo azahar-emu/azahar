@@ -105,7 +105,6 @@
 #include "core/savestate.h"
 #include "core/system_titles.h"
 #include "input_common/main.h"
-#include "network/network_settings.h"
 #include "ui_main.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"

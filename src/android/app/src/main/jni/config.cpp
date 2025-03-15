@@ -21,7 +21,6 @@
 #include "jni/config.h"
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
-#include "network/network_settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -303,10 +302,9 @@ void Config::ReadValues() {
     }
 
     // Web Service
-    NetSettings::values.web_api_url =
-        sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+    ReadSetting("WebService", Settings::values.web_api_url);
+    ReadSetting("WebService", Settings::values.citra_username);
+    ReadSetting("WebService", Settings::values.citra_token);
 }
 
 void Config::Reload() {
