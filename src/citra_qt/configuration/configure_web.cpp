@@ -7,7 +7,6 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/configuration/configure_web.h"
 #include "citra_qt/uisettings.h"
-#include "network/network_settings.h"
 #include "ui_configure_web.h"
 
 ConfigureWeb::ConfigureWeb(QWidget* parent)
