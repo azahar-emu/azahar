@@ -106,7 +106,7 @@
   <customwidget>
    <class>ConfigureWeb</class>
    <extends>QWidget</extends>
-   <header>configuration/configure_web.h</header>
+   <header>configuration/configure_network.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

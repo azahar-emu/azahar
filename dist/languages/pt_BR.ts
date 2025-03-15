@@ -3748,17 +3748,17 @@ Arraste os pontos para alterar a posição ou clique duas vezes nas células da 
 <context>
     <name>ConfigureWeb</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="14"/>
         <source>Form</source>
         <translation>Formulário</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="20"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="20"/>
         <source>Discord Presence</source>
         <translation>Presença no Discord</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="26"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="26"/>
         <source>Show current application in your Discord status</source>
         <translation>Mostrar o aplicativo atual no seu perfil do Discord</translation>
     </message>
@@ -4472,9 +4472,9 @@ Use por sua conta e risco!</translation>
 To install FFmpeg to Lime, press Open and select your FFmpeg directory.
 
 To view a guide on how to install FFmpeg, press Help.</source>
-        <translation>Não foi possível carregar o FFmpeg. Certifique-se de ter uma versão compatível instalada. 
+        <translation>Não foi possível carregar o FFmpeg. Certifique-se de ter uma versão compatível instalada.
 
-Para instalar o FFmpeg no Lime3DS, pressione Abrir e selecione seu diretório FFmpeg. 
+Para instalar o FFmpeg no Lime3DS, pressione Abrir e selecione seu diretório FFmpeg.
 
 Para ver um guia sobre como instalar o FFmpeg, pressione Ajuda.</translation>
     </message>

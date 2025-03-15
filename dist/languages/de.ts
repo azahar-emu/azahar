@@ -3748,17 +3748,17 @@ Ziehe Punkte, um ihre Position zu verändern, oder doppelklicke auf Zellen in de
 <context>
     <name>ConfigureWeb</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="14"/>
         <source>Form</source>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="20"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="20"/>
         <source>Discord Presence</source>
         <translation>Discordstatus</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="26"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="26"/>
         <source>Show current application in your Discord status</source>
         <translation>Zeige die derzeitige Anwendung in deinem Discord Status</translation>
     </message>
@@ -4264,7 +4264,7 @@ Schau im Protokoll für weitere Informationen nach.</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2181"/>
         <source>The system files for the selected mode are already set up.
 Reinstall the files anyway?</source>
-        <translation>Die Systemdateien für den ausgewählten Modus sind bereits eingerichtet.  
+        <translation>Die Systemdateien für den ausgewählten Modus sind bereits eingerichtet.
 Die Dateien trotzdem neu installieren?</translation>
     </message>
     <message>
@@ -5027,7 +5027,7 @@ Dadurch werden die Anwendung, sofern installiert ,sowie alle installierten Updat
         <location filename="../../src/citra_qt/game_list_p.h" line="268"/>
         <source>App functions flawless with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
-        <translation>Die App funktioniert einwandfrei, ohne Audio- oder Grafikfehler, alle getesteten Funktionen funktionieren wie vorgesehen, ohne 
+        <translation>Die App funktioniert einwandfrei, ohne Audio- oder Grafikfehler, alle getesteten Funktionen funktionieren wie vorgesehen, ohne
 eine erforderlichen Problemumgehung.</translation>
     </message>
     <message>
@@ -5061,7 +5061,7 @@ workarounds.</source>
         <location filename="../../src/citra_qt/game_list_p.h" line="271"/>
         <source>App functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches
 even with workarounds.</source>
-        <translation>Die App funktioniert, weist jedoch erhebliche Grafik- oder Audiofehler auf. Aufgrund von Störungen ist es nicht möglich, in bestimmten Bereichen Fortschritte zu machen 
+        <translation>Die App funktioniert, weist jedoch erhebliche Grafik- oder Audiofehler auf. Aufgrund von Störungen ist es nicht möglich, in bestimmten Bereichen Fortschritte zu machen
 auch mit Workarounds.</translation>
     </message>
     <message>
@@ -7087,7 +7087,7 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="30"/>
         <source>Would you like to migrate your data for use in Azahar?
 (This may take a while; The old data will not be deleted)</source>
-        <translation>Möchten Sie Ihre Daten zur Verwendung in Azahar migrieren?  
+        <translation>Möchten Sie Ihre Daten zur Verwendung in Azahar migrieren?
  (Dies kann eine Weile dauern; die alten Daten werden nicht gelöscht)</translation>
     </message>
     <message>
@@ -7104,7 +7104,7 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
         <source>Azahar has detected user data for Citra and Lime3DS.
 
 </source>
-        <translation>Azahar hat Benutzerdaten für Citra und Lime3DS erkannt.  
+        <translation>Azahar hat Benutzerdaten für Citra und Lime3DS erkannt.
 
 </translation>
     </message>
@@ -7123,7 +7123,7 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
         <source>Azahar has detected user data for Citra.
 
 </source>
-        <translation>Azahar hat Benutzerdaten für Citra erkannt.  
+        <translation>Azahar hat Benutzerdaten für Citra erkannt.
 
 </translation>
     </message>
@@ -7132,7 +7132,7 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
         <source>Azahar has detected user data for Lime3DS.
 
 </source>
-        <translation>Azahar hat Benutzerdaten für Lime3DS erkannt. 
+        <translation>Azahar hat Benutzerdaten für Lime3DS erkannt.
 
  </translation>
     </message>
@@ -7140,7 +7140,7 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="97"/>
         <source>You can manually re-trigger this prompt by deleting the new user data directory:
 %1</source>
-        <translation>Sie können diese Eingabeaufforderung durch das löschen des neuen Benutzerdatenverzeichnis erneut auslösen:  
+        <translation>Sie können diese Eingabeaufforderung durch das löschen des neuen Benutzerdatenverzeichnis erneut auslösen:
 %1</translation>
     </message>
     <message>
@@ -7149,9 +7149,9 @@ Vielleicht hat dieser Nutzer bereits den Raum verlassen.</translation>
 
 If you wish to clean up the files which were left in the old data location, you can do so by deleting the following directory:
 %1</source>
-        <translation>Daten wurden erfolgreich migriert.  
+        <translation>Daten wurden erfolgreich migriert.
 
-Wenn Sie die Dateien bereinigen möchten, die am alten Datenspeicherort verblieben sind, können Sie dies tun, indem Sie das folgende Verzeichnis löschen:  
+Wenn Sie die Dateien bereinigen möchten, die am alten Datenspeicherort verblieben sind, können Sie dies tun, indem Sie das folgende Verzeichnis löschen:
 %1</translation>
     </message>
 </context>
