@@ -5,9 +5,9 @@
 #include <QIcon>
 #include <QMessageBox>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra_qt/configuration/configure_web.h"
+#include "citra_qt/configuration/configure_network.h"
 #include "citra_qt/uisettings.h"
-#include "ui_configure_web.h"
+#include "ui_configure_network.h"
 
 ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureWeb>()) {
