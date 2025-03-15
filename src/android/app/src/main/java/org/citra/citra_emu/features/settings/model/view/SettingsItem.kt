@@ -28,6 +28,8 @@ abstract class SettingsItem(
             return setting?.isRuntimeEditable ?: false
         }
 
+    open var isEnabled: Boolean = true
+
     companion object {
         const val TYPE_HEADER = 0
         const val TYPE_SWITCH = 1
