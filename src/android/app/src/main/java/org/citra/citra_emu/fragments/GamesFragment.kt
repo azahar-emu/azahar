@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -33,6 +34,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
+import android.net.Uri
 
 class GamesFragment : Fragment() {
     private var _binding: FragmentGamesBinding? = null
@@ -40,6 +42,13 @@ class GamesFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
+    private lateinit var gameAdapter: GameAdapter
+
+    private val openImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        gameAdapter.handleShortcutImageResult(uri)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +72,18 @@ class GamesFragment : Fragment() {
 
         val inflater = LayoutInflater.from(requireContext())
 
+        gameAdapter = GameAdapter(
+            requireActivity() as AppCompatActivity,
+            inflater,
+            openImageLauncher
+        )
+
         binding.gridGames.apply {
             layoutManager = GridLayoutManager(
                 requireContext(),
                 resources.getInteger(R.integer.game_grid_columns)
             )
-            adapter = GameAdapter(requireActivity() as AppCompatActivity, inflater)
+            adapter = this@GamesFragment.gameAdapter
         }
 
         binding.swipeRefresh.apply {
