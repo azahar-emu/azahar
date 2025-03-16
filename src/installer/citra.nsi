@@ -160,20 +160,13 @@ Section "Base"
   !insertmacro UPDATE_DISPLAYNAME
 
   ; Create start menu and desktop shortcuts
-  ; This needs to be done after azahar.exe is copied
-  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk" "$INSTDIR\azahar.exe"
+  CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
     CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
 
   ; ??
   SetOutPath "$TEMP"
-SectionEnd
-
-Section -AdditionalIcons
-  ; Create start menu shortcut for the uninstaller
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk" "$INSTDIR\uninst.exe" "/$MultiUser.InstallMode"
 SectionEnd
 
 !include "FileFunc.nsh"
@@ -200,11 +193,8 @@ SectionEnd
 Section Uninstall
   !insertmacro UPDATE_DISPLAYNAME
 
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-
   Delete "$DESKTOP\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
-  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
+  Delete "$SMPROGRAMS\$DisplayName.lnk"
 
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
