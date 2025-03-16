@@ -104,6 +104,7 @@ class Settings {
         const val SECTION_RENDERER = "Renderer"
         const val SECTION_LAYOUT = "Layout"
         const val SECTION_UTILITY = "Utility"
+        const val SECTION_NETWORK = "WebService"
         const val SECTION_AUDIO = "Audio"
         const val SECTION_DEBUG = "Debugging"
         const val SECTION_THEME = "Theme"
@@ -244,6 +245,7 @@ class Settings {
                     SECTION_CONTROLS,
                     SECTION_RENDERER,
                     SECTION_LAYOUT,
+                    SECTION_NETWORK,
                     SECTION_STORAGE,
                     SECTION_UTILITY,
                     SECTION_AUDIO,

@@ -26,6 +26,9 @@ enum class StringSetting(
         Settings.SECTION_CAMERA,
         "_back"
     );
+    WEB_API_URL("web_api_url", Settings.SECTION_NETWORK, ""),
+    NETWORK_USERNAME("citra_username", Settings.SECTION_NETWORK, "Azahar"),
+    NETWORK_TOKEN("citra_token", Settings.SECTION_NETWORK, "");
 
     override var string: String = defaultValue
 
