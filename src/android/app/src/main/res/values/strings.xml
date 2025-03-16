@@ -38,6 +38,15 @@
     <string name="install_cia_title">Install CIA</string>
     <string name="warning_3ds_files"><![CDATA[Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. <a href="https://azahar-emu.org/blog/game-loading-changes/">Learn more.</a>]]></string>
 
+    <!-- Network Settings-->
+    <string name="network_username">Network Username</string>
+    <string name="preferences_network">Network</string>
+    <string name="web_api_url">Web API URL</string>
+    <string name="web_api_url_description">URL which will be used for public room lobby creation and for the public room lobby browser</string>
+    <string name="network_token">Network Token</string>
+    <string name="network_token_description">Token which is required for public room creation</string>
+    <string name="network_username_description">Default username which will be sued for private/public lobby creation</string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Select GPU driver</string>
     <string name="select_gpu_driver_title">Would you like to replace your current GPU driver?</string>
