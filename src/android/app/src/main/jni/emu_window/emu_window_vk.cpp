@@ -47,6 +47,11 @@ bool EmuWindow_Android_Vulkan::CreateWindowSurface() {
     return true;
 }
 
+void EmuWindow_Android_Vulkan::DestroyWindowSurface() {
+    ANativeWindow_release(host_window);
+    window_info.render_surface = nullptr;
+}
+
 std::unique_ptr<Frontend::GraphicsContext> EmuWindow_Android_Vulkan::CreateSharedContext() const {
     return std::make_unique<GraphicsContext_Android>(driver_library);
 }
