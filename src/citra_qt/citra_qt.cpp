@@ -3115,7 +3115,7 @@ void GMainWindow::UpdateStatusBar() {
             }
         }
 
-        static const std::array label_color = {QStringLiteral("#ffffff"), QStringLiteral("#eed202"),
+        static const std::array label_color = {QStringLiteral(""), QStringLiteral("#eed202"),
                                                QStringLiteral("#ff3333")};
 
         int style_index;
@@ -3127,8 +3127,11 @@ void GMainWindow::UpdateStatusBar() {
         } else {
             style_index = 0;
         }
-        const QString style_sheet =
-            QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+
+        QString style_sheet;
+        if (!label_color[style_index].isEmpty()) {
+            style_sheet = QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+        }
 
         artic_traffic_label->setText(
             tr("Artic Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
