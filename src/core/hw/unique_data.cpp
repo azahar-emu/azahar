@@ -158,13 +158,14 @@ SecureDataLoadStatus LoadMovable() {
     if (!file.IsOpen()) {
         return SecureDataLoadStatus::IOError;
     }
-    if (file.GetSize() != sizeof(MovableSedFull)) {
-        if (file.GetSize() == sizeof(MovableSed)) {
-            LOG_WARNING(HW, "Uninitialized movable.sed files are not supported");
-        }
+
+    std::size_t size = file.GetSize();
+    if (size != sizeof(MovableSedFull) && size != sizeof(MovableSed)) {
         return SecureDataLoadStatus::Invalid;
     }
-    if (file.ReadBytes(&movable, sizeof(MovableSedFull)) != sizeof(MovableSedFull)) {
+
+    std::memset(&movable, 0, sizeof(movable));
+    if (file.ReadBytes(&movable, size) != size) {
         movable.Invalidate();
         return SecureDataLoadStatus::IOError;
     }
@@ -172,7 +173,7 @@ SecureDataLoadStatus LoadMovable() {
     HW::AES::InitKeys();
     movable_signature_valid = movable.VerifySignature();
     if (!movable_signature_valid) {
-        LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");
+        LOG_WARNING(HW, "movable.sed signature check failed");
     }
 
     return movable_signature_valid ? SecureDataLoadStatus::Loaded
