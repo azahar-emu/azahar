@@ -354,6 +354,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
                                                                 [[maybe_unused]] jobject obj,
                                                                 jobject surf) {
     auto &system = Core::System::GetInstance();
+    if (s_secondary_surface) {
+        ANativeWindow_release(s_secondary_surface);
+        s_secondary_surface = nullptr;
+    }
     s_secondary_surface = ANativeWindow_fromSurface(env, surf);
     secondary_enabled = true;
     bool notify = false;
@@ -369,8 +373,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
         //second window already created, so update it
         notify = second_window->OnSurfaceChanged(s_secondary_surface);
     } else if (system.IsPoweredOn() && window) {
-        // emulation running, window is new
+        // emulation running, window exists, secondary window is new
         // create a new window and set it
+
         const auto graphics_api = Settings::values.graphics_api.GetValue();
         if (graphics_api == Settings::GraphicsAPI::OpenGL) {
             EGLContext *c = window->GetEGLContext();
@@ -393,7 +398,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
 
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(JNIEnv *env,
                                                                  [[maybe_unused]] jobject obj) {
-    //auto &system = Core::System::GetInstance();
+    //destroying happens often, don't remove the window unless necessary
     secondary_enabled = false;
     if (s_secondary_surface != nullptr) {
         ANativeWindow_release(s_secondary_surface);

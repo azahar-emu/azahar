@@ -63,6 +63,8 @@ public:
         return swapchain.GetImageCount();
     }
 
+    bool isBroken() {return is_broken;}
+
 private:
     void PresentThread(std::stop_token token);
 
@@ -71,6 +73,7 @@ private:
     vk::RenderPass CreateRenderpass();
 
 private:
+    bool is_broken = false;
     Frontend::EmuWindow& emu_window;
     const Instance& instance;
     Scheduler& scheduler;

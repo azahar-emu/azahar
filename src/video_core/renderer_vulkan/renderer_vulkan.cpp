@@ -70,6 +70,23 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     }
 }
 
+void RendererVulkan::setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) {
+    secondary_window = secondaryWindow;
+    if (second_window) {
+        second_window.release();
+        second_window = nullptr;
+    }
+
+    if (secondary_window) {
+        second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler);
+        if (second_window->isBroken()) {
+            second_window.release();
+            second_window = nullptr;
+            secondary_window = nullptr;
+        }
+    }
+}
+
 RendererVulkan::~RendererVulkan() {
     vk::Device device = instance.GetDevice();
     scheduler.Finish();

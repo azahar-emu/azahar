@@ -109,7 +109,10 @@ PresentWindow::PresentWindow(Frontend::EmuWindow& emu_window_, const Instance& i
           CanBlitToSwapchain(instance.GetPhysicalDevice(), swapchain.GetSurfaceFormat().format)},
       use_present_thread{Settings::values.async_presentation.GetValue()},
       last_render_surface{emu_window.GetWindowInfo().render_surface} {
-
+    if (surface == nullptr) {
+        is_broken = true;
+        return;
+    }
     const u32 num_images = swapchain.GetImageCount();
     const vk::Device device = instance.GetDevice();
 
