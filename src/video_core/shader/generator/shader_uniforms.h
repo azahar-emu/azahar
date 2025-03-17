@@ -86,8 +86,8 @@ struct PicaUniformsData {
 };
 
 struct VSUniformData {
-    alignas(4) bool enable_clip1;
-    alignas(4) bool flip_viewport;
+    u32 enable_clip1;
+    u32 flip_viewport;
     alignas(16) Common::Vec4f clip_coef;
 };
 static_assert(sizeof(VSUniformData) == 32,

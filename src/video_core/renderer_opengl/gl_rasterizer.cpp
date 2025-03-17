@@ -411,7 +411,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // If the framebuffer is flipped, request vertex shader to flip vertex y
     const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
-    vs_uniform_block_data.dirty |= vs_uniform_block_data.data.flip_viewport != is_flipped;
+    vs_uniform_block_data.dirty |= (vs_uniform_block_data.data.flip_viewport != 0) != is_flipped;
     vs_uniform_block_data.data.flip_viewport = is_flipped;
     state.cull.mode = is_flipped && state.cull.enabled ? GL_FRONT : GL_BACK;
 

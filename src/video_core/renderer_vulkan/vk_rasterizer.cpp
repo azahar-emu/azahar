@@ -511,7 +511,7 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // If the framebuffer is flipped, request to also flip vulkan viewport
     const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
-    vs_uniform_block_data.dirty |= vs_uniform_block_data.data.flip_viewport != is_flipped;
+    vs_uniform_block_data.dirty |= (vs_uniform_block_data.data.flip_viewport != 0) != is_flipped;
     vs_uniform_block_data.data.flip_viewport = is_flipped;
     pipeline_info.rasterization.flip_viewport.Assign(is_flipped);
 
