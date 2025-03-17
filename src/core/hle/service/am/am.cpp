@@ -303,11 +303,11 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
     }
 
     while (length) {
-        auto find_closest_region = [this](size_t offset) -> CryptoRegion* {
+        auto find_closest_region = [this](size_t offset) -> std::optional<CryptoRegion> {
             CryptoRegion* closest = nullptr;
             for (auto& reg : regions) {
                 if (offset >= reg.offset && offset < reg.offset + reg.size) {
-                    return &reg;
+                    return reg;
                 }
                 if (offset < reg.offset) {
                     size_t dist = reg.offset - offset;
@@ -317,11 +317,15 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                 }
             }
             // Return the closest one
-            return closest;
+            if (closest) {
+                return *closest;
+            } else {
+                return std::nullopt;
+            }
         };
 
-        CryptoRegion* reg = find_closest_region(written);
-        if (reg == nullptr) {
+        const auto reg = find_closest_region(written);
+        if (!reg.has_value()) {
             // This file has no encryption
             size_t to_write = length;
             file->WriteBytes(buffer, to_write);
@@ -379,8 +383,8 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
                             for (int i = 0; i < 8; i++) {
                                 if (exefs_header.section[i].size != 0) {
                                     bool is_primary =
-                                        strcmp(exefs_header.section[i].name, "icon") == 0 ||
-                                        strcmp(exefs_header.section[i].name, "banner") == 0;
+                                        memcmp(exefs_header.section[i].name, "icon", 4) == 0 ||
+                                        memcmp(exefs_header.section[i].name, "banner", 6) == 0;
                                     regions.push_back(CryptoRegion{
                                         .type = is_primary ? CryptoRegion::EXEFS_PRI
                                                            : CryptoRegion::EXEFS_SEC,
