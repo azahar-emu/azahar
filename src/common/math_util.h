@@ -65,7 +65,7 @@ struct Rectangle {
         return Rectangle{left, top, static_cast<T>(left + GetWidth() * s),
                          static_cast<T>(top + GetHeight() * s)};
     }
-    [[nodiscard]] Rectangle<T> VerticalMirror(T ref_height) {
+    [[nodiscard]] Rectangle<T> VerticalMirror(T ref_height) const {
         return Rectangle{left, ref_height - bottom, right, ref_height - top};
     }
 };
