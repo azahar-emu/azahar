@@ -34,7 +34,7 @@ public:
     // EGL Context must be shared
     // could probably use the existing
     // SharedContext for this instead, this is maybe temporary
-    virtual EGLContext* GetEGLContext() {return NULL;}
+    virtual EGLContext* GetEGLContext() {return nullptr;}
     virtual void StopPresenting() {}
 
 protected:

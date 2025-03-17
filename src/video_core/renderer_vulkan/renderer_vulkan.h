@@ -78,6 +78,7 @@ public:
 
     void SwapBuffers() override;
     void TryPresent(int timeout_ms, bool is_secondary) override {}
+    void setSecondaryWindow(Frontend::EmuWindow *secondaryWindow) override;
 
 private:
     void ReloadPipeline();
