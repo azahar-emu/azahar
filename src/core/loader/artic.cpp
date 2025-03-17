@@ -425,8 +425,15 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
                 return ResultStatus::ErrorArtic;
 
             auto resp_buff = resp->GetResponseBuffer(0);
-            if (!resp_buff.has_value() || resp_buff->second != expected_size)
-                return ResultStatus::ErrorArtic;
+            if (!resp_buff.has_value() || resp_buff->second != expected_size) {
+                if (resp_buff.has_value() && i == 2 &&
+                    resp_buff->second == sizeof(HW::UniqueData::MovableSed)) {
+                    // Account for uninitialized movable files
+                    expected_size = sizeof(HW::UniqueData::MovableSed);
+                } else {
+                    return ResultStatus::ErrorArtic;
+                }
+            }
 
             if (i < 4) {
                 FileUtil::CreateFullPath(path);
