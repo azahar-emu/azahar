@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -408,6 +408,12 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     state.viewport.y = static_cast<GLint>(viewport.y);
     state.viewport.width = static_cast<GLsizei>(viewport.width);
     state.viewport.height = static_cast<GLsizei>(viewport.height);
+
+    // If the framebuffer is flipped, request vertex shader to flip vertex y
+    const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
+    vs_uniform_block_data.dirty |= vs_uniform_block_data.data.flip_viewport != is_flipped;
+    vs_uniform_block_data.data.flip_viewport = is_flipped;
+    state.cull.mode = is_flipped && state.cull.enabled ? GL_FRONT : GL_BACK;
 
     // Viewport can have negative offsets or larger dimensions than our framebuffer sub-rect.
     // Enable scissor test to prevent drawing outside of the framebuffer region
