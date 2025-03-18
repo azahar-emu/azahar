@@ -80,7 +80,6 @@ namespace {
 
     ANativeWindow *s_surf;
     ANativeWindow *s_secondary_surface;
-    bool secondary_enabled = false;
 
     std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
     std::unique_ptr<EmuWindow_Android> window;
@@ -164,23 +163,21 @@ static Core::System::ResultStatus RunCitra(const std::string &filepath) {
     Core::System &system{Core::System::GetInstance()};
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
+    EGLContext *c;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
         case Settings::GraphicsAPI::OpenGL:
             window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf, false);
-            if (secondary_enabled) {
-                EGLContext *c = window->GetEGLContext();
-                second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
+            c = window->GetEGLContext();
+            second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
                                                                            s_secondary_surface,
                                                                            true, c);
-            }
             break;
 #endif
 #ifdef ENABLE_VULKAN
         case Settings::GraphicsAPI::Vulkan:
             window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library, false);
-            if (secondary_enabled)
-                second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface,
+            second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface,
                                                                            vulkan_library, true);
             break;
 #endif
@@ -190,15 +187,14 @@ static Core::System::ResultStatus RunCitra(const std::string &filepath) {
                          graphics_api);
 #ifdef ENABLE_OPENGL
             window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf, false);
-            if (secondary_enabled) {
-                EGLContext *c = window->GetEGLContext();
-                second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
+            c = window->GetEGLContext();
+            second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
                                                                            s_secondary_surface,
                                                                            true, c);
-            }
+
 #elif ENABLE_VULKAN
             window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
-            if (secondary_enabled) second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
+            second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
 #else
     // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
@@ -359,30 +355,15 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
         s_secondary_surface = nullptr;
     }
     s_secondary_surface = ANativeWindow_fromSurface(env, surf);
-    secondary_enabled = true;
     bool notify = false;
     if (!s_secondary_surface) {
-        // did not create the surface, just exit and pray
-        secondary_enabled = false;
         return;
     }
     if (second_window) {
         //second window already created, so update it
         notify = second_window->OnSurfaceChanged(s_secondary_surface);
-    } else if (system.IsPoweredOn() && window) {
-        // emulation running, window exists, secondary window is new
-        // create a new window and set it
-        // HOPEFULLY THIS DOESN'T HAPPEN
-        const auto graphics_api = Settings::values.graphics_api.GetValue();
-        if (graphics_api == Settings::GraphicsAPI::OpenGL) {
-            EGLContext *c = window->GetEGLContext();
-            second_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
-                                                                       s_secondary_surface,true, c);
-        }else{
-            second_window = std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface,
-                                                                           vulkan_library, true);
-        }
-        system.GPU().Renderer().setSecondaryWindow(second_window.get());
+    } else {
+        LOG_WARNING(Frontend, "Second Window does not exist in native.cpp but surface changed. Ignoring.");
     }
 
     if (notify && system.IsPoweredOn()) {
@@ -395,8 +376,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
 
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(JNIEnv *env,
                                                                  [[maybe_unused]] jobject obj) {
-    //destroying happens often, don't remove the window unless necessary
-    secondary_enabled = false;
     if (s_secondary_surface != nullptr) {
         ANativeWindow_release(s_secondary_surface);
         s_secondary_surface = nullptr;

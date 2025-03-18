@@ -112,10 +112,6 @@ protected:
     RendererSettings settings;
     Frontend::EmuWindow& render_window;    ///< Reference to the render window handle.
     Frontend::EmuWindow* secondary_window;
-public:
-    Frontend::EmuWindow *getSecondaryWindow() const;
-
-    virtual void setSecondaryWindow(Frontend::EmuWindow *secondaryWindow);
 
 protected:
     ///< Reference to the secondary render window handle.
