@@ -12,6 +12,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,11 +30,13 @@ import org.citra.citra_emu.databinding.ItemButtonNetplayBinding
 import org.citra.citra_emu.databinding.ItemTextNetplayBinding
 import org.citra.citra_emu.dialogs.ChatDialog
 import org.citra.citra_emu.utils.CompatUtils
+import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.NetPlayManager
 
 class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
     private lateinit var adapter: NetPlayAdapter
-
+    private val gameNameList: MutableList<Array<String>> = mutableListOf()
+    private val gameIdList: MutableList<Array<Long>> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +72,19 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             else -> {
                 DialogMultiplayerConnectBinding.inflate(layoutInflater).apply {
                     setContentView(root)
+                    // Prepare the game list in case a user tries to create a room
+                    for (game in GameHelper.cachedGameList) {
+                        val gameName = game.title
+                        if (gameNameList.none { it[0] == gameName }) {
+                            gameNameList.add(arrayOf(gameName))
+                        }
+
+                        val gameId = game.titleId
+                        if (gameIdList.none { it[0] == gameId }) {
+                            gameIdList.add((arrayOf(gameId)))
+                        }
+                    }
+
                     btnCreate.setOnClickListener {
                         showNetPlayInputDialog(true)
                         dismiss()
@@ -245,6 +261,17 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         binding.ipPort.setText(NetPlayManager.getRoomPort(activity))
         binding.username.setText(NetPlayManager.getUsername(activity))
 
+        binding.dropdownPreferedGameName.apply {
+            setAdapter(
+                ArrayAdapter(
+                    activity,
+                    R.layout.dropdown_item,
+                    gameNameList.map { it[0] }
+                )
+            )
+        }
+
+        binding.preferedGameName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.roomName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.maxPlayersContainer.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.maxPlayersLabel.text = context.getString(R.string.multiplayer_max_players_value, binding.maxPlayers.value.toInt())
@@ -260,6 +287,8 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             val ipAddress = binding.ipAddress.text.toString()
             val username = binding.username.text.toString()
             val portStr = binding.ipPort.text.toString()
+            val preferedGameName = binding.dropdownPreferedGameName.text.toString()
+            val preferedGameId = gameIdList[gameNameList.indexOfFirst { it[0] == preferedGameName }][0]
             val password = binding.password.text.toString()
             val port = portStr.toIntOrNull() ?: run {
                 Toast.makeText(activity, R.string.multiplayer_port_invalid, Toast.LENGTH_LONG).show()
@@ -277,6 +306,13 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 return@setOnClickListener
             }
 
+            if (isCreateRoom && preferedGameName.isEmpty()) {
+                Toast.makeText(activity, R.string.multiplayer_prefered_game_name_invalid, Toast.LENGTH_LONG).show()
+                binding.btnConfirm.isEnabled = true
+                binding.btnConfirm.text = activity.getString(R.string.original_button_text)
+                return@setOnClickListener
+            }
+
             if (ipAddress.length < 7 || username.length < 5) {
                 Toast.makeText(activity, R.string.multiplayer_input_invalid, Toast.LENGTH_LONG).show()
                 binding.btnConfirm.isEnabled = true
@@ -284,7 +320,7 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             } else {
                 Handler(Looper.getMainLooper()).post {
                     val result = if (isCreateRoom) {
-                        NetPlayManager.netPlayCreateRoom(ipAddress, port, username, password, roomName, maxPlayers)
+                        NetPlayManager.netPlayCreateRoom(ipAddress, port, username, preferedGameName, preferedGameId, password, roomName, maxPlayers)
                     } else {
                         NetPlayManager.netPlayJoinRoom(ipAddress, port, username, password)
                     }
