@@ -362,11 +362,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
     secondary_enabled = true;
     bool notify = false;
     if (!s_secondary_surface) {
-        // did not create the surface, so disable second screen
+        // did not create the surface, just exit and pray
         secondary_enabled = false;
-        if (system.IsPoweredOn()) {
-            system.GPU().Renderer().setSecondaryWindow(nullptr);
-        }
         return;
     }
     if (second_window) {
@@ -375,7 +372,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv *env
     } else if (system.IsPoweredOn() && window) {
         // emulation running, window exists, secondary window is new
         // create a new window and set it
-
+        // HOPEFULLY THIS DOESN'T HAPPEN
         const auto graphics_api = Settings::values.graphics_api.GetValue();
         if (graphics_api == Settings::GraphicsAPI::OpenGL) {
             EGLContext *c = window->GetEGLContext();
@@ -408,24 +405,6 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(JNIEnv *e
     LOG_INFO(Frontend, "Secondary Surface Destroyed");
 }
 
-void Java_org_citra_citra_1emu_NativeLibrary_disableSecondaryScreen(JNIEnv *env,
-                                                                       [[maybe_unused]] jobject obj) {
-    auto &system = Core::System::GetInstance();
-    secondary_enabled = false;
-    if (s_secondary_surface != nullptr) {
-        ANativeWindow_release(s_secondary_surface);
-        s_secondary_surface = nullptr;
-    }
-    if (system.IsPoweredOn()) {
-        system.GPU().Renderer().setSecondaryWindow(nullptr);
-    }
-    if (second_window) {
-        second_window.release();
-        second_window = nullptr;
-    }
-    LOG_INFO(Frontend, "Secondary Window Disabled");
-
-}
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv *env,
                                                               [[maybe_unused]] jobject obj) {
     if (s_surf != nullptr) {
@@ -578,12 +557,8 @@ void Java_org_citra_citra_1emu_NativeLibrary_uninstallSystemFiles(JNIEnv* env,
                                                                   jboolean old3ds) {
     Core::UninstallSystemFiles(old3ds ? Core::SystemTitleSet::Old3ds
                                       : Core::SystemTitleSet::New3ds);
-jobject Java_org_citra_citra_1emu_NativeLibrary_downloadTitleFromNus([[maybe_unused]] JNIEnv *env,
-                                                                     [[maybe_unused]] jobject obj,
-                                                                     jlong title) {
-    [[maybe_unused]] const auto title_id = static_cast<u64>(title);
-    return IDCache::GetJavaCiaInstallStatus(Service::AM::InstallStatus::ErrorAborted);
 }
+
 
 [[maybe_unused]] static bool CheckKgslPresent() {
     constexpr auto KgslPath{"/dev/kgsl-3d0"};

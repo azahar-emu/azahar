@@ -4,18 +4,14 @@
 
 package org.citra.citra_emu.activities
 
-import SecondScreenPresentation
+import SecondScreen
 import android.Manifest.permission
 import android.annotation.SuppressLint
-import android.app.Presentation
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Bundle
-import android.view.Display
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -37,7 +33,6 @@ import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
-import org.citra.citra_emu.display.SecondaryScreenLayout
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -63,34 +58,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private var secondScreenPresentation: Presentation? = null
-    private lateinit var displayManager: DisplayManager
-
-    private fun updatePresentation() {
-        displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val display = getCustomerDisplay();
-        if (secondScreenPresentation != null && (IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int || display == null)) {
-            releasePresentation();
-        }
-        if (secondScreenPresentation == null || secondScreenPresentation?.display != display) {
-            secondScreenPresentation?.dismiss()
-            if (display != null && IntSetting.SECONDARY_SCREEN_LAYOUT.int != SecondaryScreenLayout.NONE.int) {
-                secondScreenPresentation = SecondScreenPresentation(this, display)
-                secondScreenPresentation?.show();
-            }
-        }
-    }
-    private fun releasePresentation() {
-        if (secondScreenPresentation != null) {
-            NativeLibrary.disableSecondaryScreen()
-            secondScreenPresentation?.dismiss();
-            secondScreenPresentation = null;
-        }
-    }
-
-    private fun getCustomerDisplay(): Display? {
-        return displayManager?.displays?.firstOrNull { it.isValid && it.displayId != Display.DEFAULT_DISPLAY }
-    }
+    private lateinit var secondScreen: SecondScreen;
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -107,7 +75,8 @@ class EmulationActivity : AppCompatActivity() {
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
         super.onCreate(savedInstanceState)
-        updatePresentation();
+        secondScreen = SecondScreen(this);
+        secondScreen.updateDisplay();
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -154,7 +123,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        releasePresentation()
+        secondScreen.releasePresentation()
         super.onStop()
     }
 
@@ -165,7 +134,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
-        updatePresentation()
+        secondScreen.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -183,7 +152,9 @@ class EmulationActivity : AppCompatActivity() {
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null
-        releasePresentation()
+        secondScreen.releasePresentation()
+        secondScreen.releaseVD();
+
         super.onDestroy()
     }
 
