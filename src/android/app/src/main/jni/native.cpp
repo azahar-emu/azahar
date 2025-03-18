@@ -737,10 +737,11 @@ Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayGetPublicRooms(
 
 JNIEXPORT jint JNICALL Java_org_citra_citra_1emu_utils_NetPlayManager_netPlayCreateRoom(
     JNIEnv* env, [[maybe_unused]] jobject obj, jstring ipaddress, jint port,
-    jstring username, jstring password, jstring room_name, jint max_players) {
+    jstring username, jstring preferedGameName, jlong preferedGameId, jstring password, jstring room_name, jint max_players) {
     return static_cast<jint>(
             multiplayer->NetPlayCreateRoom(GetJString(env, ipaddress), port,
-                         GetJString(env, username), GetJString(env, password),
+                         GetJString(env, username), GetJString(env, preferedGameName), preferedGameId,
+                         GetJString(env, password),
                          GetJString(env, room_name), max_players));
 }
 
