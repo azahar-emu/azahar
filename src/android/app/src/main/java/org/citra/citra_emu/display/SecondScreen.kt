@@ -3,12 +3,7 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
-import android.media.MediaCodec
-import android.media.MediaCodecInfo
-import android.media.MediaFormat
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.Display
 import android.view.Surface
 import android.view.SurfaceHolder
@@ -35,7 +30,6 @@ class SecondScreen(val context: Context) {
             vdSurface,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
         )
-
     }
 
     fun updateSurface() {
@@ -47,24 +41,20 @@ class SecondScreen(val context: Context) {
     }
 
     fun updateDisplay() {
-        val display = getCustomerDisplay()
-        // release the presentation if appropriate
-        if (pres != null && (IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int || display == null)) {
-            releasePresentation()
-        }
-        if (pres == null || pres?.display != display) {
-            // clearly changing
-            pres?.dismiss()
-            if (display != null && IntSetting.SECONDARY_SCREEN_LAYOUT.int != SecondaryScreenLayout.NONE.int) {
-                pres = SecondScreenPresentation(context, display, this)
-                pres?.show()
-                // when the pres is created it will call updateSurface itself
-            } else {
-                pres = SecondScreenPresentation(context, vd.display, this)
-                pres?.show()
-            }
+        // decide if we are going to the external display or the internal one
+        var display = getCustomerDisplay()
+        if (display == null ||
+            IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int) {
+            display = vd.display
         }
 
+        // if our presentation is already on the right display, ignore
+        if (pres?.display == display) return;
+
+        // otherwise, make a new presentation
+        releasePresentation()
+        pres = SecondScreenPresentation(context, display!!, this)
+        pres?.show()
     }
 
     private fun getCustomerDisplay(): Display? {
@@ -80,7 +70,6 @@ class SecondScreen(val context: Context) {
     fun releaseVD() {
         vd.release()
     }
-
 }
 
 class SecondScreenPresentation(
