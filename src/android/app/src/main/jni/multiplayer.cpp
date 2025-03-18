@@ -145,7 +145,7 @@ bool AndroidMultiplayer::NetworkInit() {
 }
 
 NetPlayStatus AndroidMultiplayer::NetPlayCreateRoom(const std::string& ipaddress, int port,
-                              const std::string& username, const std::string& password,
+                              const std::string& username, const std::string& preferedGameName, const u64 &preferedGameId, const std::string& password,
                               const std::string& room_name, int max_players) {
 
 
@@ -168,7 +168,7 @@ NetPlayStatus AndroidMultiplayer::NetPlayCreateRoom(const std::string& ipaddress
     }
 
     if (!room->Create(room_name, "", ipaddress, port, password,
-                     std::min(max_players, 16), NetSettings::values.citra_username, "", 0, std::make_unique<Network::VerifyUser::NullBackend>(), {})) {
+                     std::min(max_players, 16), NetSettings::values.citra_username, preferedGameName, preferedGameId, std::make_unique<Network::VerifyUser::NullBackend>(), {})) {
         return NetPlayStatus::CREATE_ROOM_ERROR;
     }
 

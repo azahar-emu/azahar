@@ -960,5 +960,9 @@
     <string name="multiplayer_hide_empty_rooms">Hide Empty Rooms</string>
     <string name="multiplayer_tap_refresh_to_check_again">Tap refresh to check again</string>
     <string name="multiplayer_search_public_lobbies">Search Public Lobbies...</string>
+    <string name="multiplayer_game_name">Preferred Games</string>
+    <string name="prefered_game_name">Preferred Game</string>
+    <string name="multiplayer_no_game">No Games Found</string>
+    <string name="multiplayer_prefered_game_name_invalid">You must choose a Preferred Application to host a room.</string>
 
 </resources>

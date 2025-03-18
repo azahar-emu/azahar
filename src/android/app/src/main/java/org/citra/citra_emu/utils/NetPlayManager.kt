@@ -21,7 +21,7 @@ import org.citra.citra_emu.dialogs.ChatMessage
 import java.net.Inet4Address
 
 object NetPlayManager {
-    external fun netPlayCreateRoom(ipAddress: String, port: Int, username: String, password: String, roomName: String, maxPlayers: Int): Int
+    external fun netPlayCreateRoom(ipAddress: String, port: Int, username: String, preferedGameName:String, preferredGameId: Long, password: String, roomName: String, maxPlayers: Int): Int
     external fun netPlayJoinRoom(ipAddress: String, port: Int, username: String, password: String): Int
     external fun netPlayRoomInfo(): Array<String>
     external fun netPlayIsJoined(): Boolean
