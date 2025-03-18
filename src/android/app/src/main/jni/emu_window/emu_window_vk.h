@@ -15,7 +15,7 @@ public:
     ~EmuWindow_Android_Vulkan() override = default;
 
     void PollEvents() override {}
-    void DestroyWindowSurface() override;
+
     std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
 
     std::shared_ptr<Common::DynamicLibrary> GetDriverLibrary() override;
