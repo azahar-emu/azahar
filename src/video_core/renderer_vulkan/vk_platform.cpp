@@ -189,19 +189,11 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
         };
 
         vk::Result result = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface);
-        if (result !=
+        if ((res = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
-           // if secondary, just ignore
-           if (emu_window.isSecondary()) {
-               return nullptr;
-           }else {
-                if ((res = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface)) !=
-                    vk::Result::eSuccess) {
-                    LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface: {}",
-                                 vk::to_string(res));
-                    UNREACHABLE();
-                }
-           }
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface: {}",
+                         vk::to_string(res));
+            UNREACHABLE();
         }
     }
 #endif
