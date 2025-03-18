@@ -19,16 +19,25 @@ import org.citra.citra_emu.features.settings.model.IntSetting
 
 
 class SecondScreen(val context: Context) {
-    private var pres:SecondScreenPresentation? = null
+    private var pres: SecondScreenPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-    private val vd:VirtualDisplay;
+    private val vd: VirtualDisplay
+
     init {
-        val st= SurfaceTexture(0);
-        st.setDefaultBufferSize(1920,1080);
-        val vdSurface = Surface(st);
-        vd = displayManager.createVirtualDisplay("HiddenDisplay",1920,1080,320,vdSurface,DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION)
+        val st = SurfaceTexture(0)
+        st.setDefaultBufferSize(1920, 1080)
+        val vdSurface = Surface(st)
+        vd = displayManager.createVirtualDisplay(
+            "HiddenDisplay",
+            1920,
+            1080,
+            320,
+            vdSurface,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
+        )
 
     }
+
     fun updateSurface() {
         NativeLibrary.secondarySurfaceChanged(pres!!.getSurfaceHolder().surface)
     }
@@ -38,10 +47,10 @@ class SecondScreen(val context: Context) {
     }
 
     fun updateDisplay() {
-        val display = getCustomerDisplay();
+        val display = getCustomerDisplay()
         // release the presentation if appropriate
         if (pres != null && (IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int || display == null)) {
-            releasePresentation();
+            releasePresentation()
         }
         if (pres == null || pres?.display != display) {
             // clearly changing
@@ -50,7 +59,7 @@ class SecondScreen(val context: Context) {
                 pres = SecondScreenPresentation(context, display, this)
                 pres?.show()
                 // when the pres is created it will call updateSurface itself
-            }else {
+            } else {
                 pres = SecondScreenPresentation(context, vd.display, this)
                 pres?.show()
             }
@@ -59,8 +68,8 @@ class SecondScreen(val context: Context) {
     }
 
     private fun getCustomerDisplay(): Display? {
-        val displays = displayManager?.displays;
-        return displayManager?.displays?.firstOrNull { it.isValid && it.displayId != Display.DEFAULT_DISPLAY && it.name!="HiddenDisplay"}
+        val displays = displayManager.displays
+        return displayManager.displays?.firstOrNull { it.isValid && it.displayId != Display.DEFAULT_DISPLAY && it.name != "HiddenDisplay" }
     }
 
     fun releasePresentation() {
@@ -73,10 +82,9 @@ class SecondScreen(val context: Context) {
     }
 
 }
+
 class SecondScreenPresentation(
-    context: Context,
-    display: Display,
-    val parent: SecondScreen
+    context: Context, display: Display, val parent: SecondScreen
 ) : Presentation(context, display) {
     private lateinit var surfaceView: SurfaceView
 
@@ -91,15 +99,9 @@ class SecondScreenPresentation(
             }
 
             override fun surfaceChanged(
-                holder: SurfaceHolder,
-                format: Int,
-                width: Int,
-                height: Int
+                holder: SurfaceHolder, format: Int, width: Int, height: Int
             ) {
-            //    Handler(Looper.getMainLooper()).postDelayed({
-                    // Now call Vulkan surface creation
-                    parent.updateSurface()
-          //      }, 200)
+                parent.updateSurface()
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
