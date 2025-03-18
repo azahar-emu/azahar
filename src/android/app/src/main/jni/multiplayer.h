@@ -65,7 +65,7 @@ public:
     void ClearChat();
 
     NetPlayStatus NetPlayCreateRoom(const std::string &ipaddress, int port,
-                                    const std::string &username, const std::string &password,
+                                    const std::string &username, const std::string &preferedGameName,const u64 &preferedGameId , const std::string &password,
                                     const std::string &room_name, int max_players);
 
     NetPlayStatus NetPlayJoinRoom(const std::string &ipaddress, int port,
