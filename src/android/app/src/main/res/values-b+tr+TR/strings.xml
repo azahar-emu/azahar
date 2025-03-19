@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="cancelling">İptal ediliyor...</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Ayarlar</string>
+    <string name="home_options">Seçenekler</string>
+    <string name="about">Hakkında</string>
+    <string name="select_gpu_driver_default">Varsayılan</string>
+    <string name="contributors">Katkıda Bulunanlar</string>
+    <string name="contributors_description">Azahar\'ı mümkün kılan kişiler</string>
+    <string name="give_permission">İzin ver</string>
+    <string name="camera_permission">Kamera</string>
+    <string name="microphone_permission">Mikrofon</string>
+    <string name="warning_help">Yardım</string>
+    <string name="select">Seç</string>
+    <string name="set_up_theme_settings">Tema Ayarları</string>
+    <string name="setup_set_theme">Tema Ayarla</string>
+
+    <string name="controller_axis_vertical">Yukarı/Aşağı Eksen</string>
+    <string name="controller_axis_horizontal">Sol/Sağ Eksen</string>
+    <string name="direction_up">Yukarı</string>
+    <string name="direction_down">Aşağı</string>
+    <string name="direction_left">Sol</string>
+    <string name="direction_right">Sağ</string>
+    <!-- Core settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="new_3ds">Yeni 3DS Modu</string>
+    <string name="emulated_region">Bölge</string>
+    <string name="emulated_language">Dil</string>
+    <string name="birthday_month">Ay</string>
+    <string name="birthday_day">Gün</string>
+    <string name="country">Ülke</string>
+    <!-- Camera settings strings -->
+    <string name="inner_camera"> 
+İç Kamera</string>
+    <string name="camera_device">Kamera</string>
+    <string name="camera_facing_front">Ön</string>
+    <string name="vsync">V-Sync\'i Etkinleştir</string>
+    <string name="internal_resolution_setting_1x">Doğal (400x240)</string>
+    <string name="internal_resolution_setting_2x">2x Doğal (800x480)</string>
+    <string name="internal_resolution_setting_3x">3x Doğal (1200x720)</string>
+    <string name="internal_resolution_setting_4x">4x Doğal (1600x960)</string>
+    <string name="internal_resolution_setting_5x">5x Doğal (2000x1200)</string>
+    <string name="internal_resolution_setting_6x">6x Doğal (2400x1440)</string>
+    <string name="internal_resolution_setting_7x">7x Doğal (2800x1680)</string>
+    <string name="internal_resolution_setting_8x">8x Doğal (3200x1920)</string>
+    <string name="internal_resolution_setting_9x">9x Doğal (3600x2160)</string>
+    <string name="internal_resolution_setting_10x">10x Doğal (4000x2400)</string>
+    <string name="render3d">Stereoskopik 3B Modu</string>
+    <string name="factor3d">Derinlik</string>
+    <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
+    <string name="slider_default">Varsayılan</string>
+    <string name="loading">Yükleniyor...</string>
+    <string name="back">Geri</string>
+    <string name="option_default">Varsayılan</string>
+    <string name="delete">Sil</string>
+    <string name="auto_select">Otomatik Seç</string>
+
+    <!-- Game Properties -->
+    <string name="properties">Özellikler</string>
+    <string name="properties_not_loaded">Oyun özellikleri yüklenemedi.</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Ayarlar</string>
+    <string name="preferences_general">Genel</string>
+    <string name="preferences_system">Sistem</string>
+    <string name="preferences_camera">Kamera</string>
+    <string name="preferences_audio">Ses</string>
+    <string name="preferences_theme">Tema ve Renk</string>
+    <string name="emulation_control_scale_reset_all">Tümünü Sıfırla</string>
+    <string name="emulation_control_opacity">Görünürlüğü Ayarla</string>
+    <string name="emulation_open_settings">Ayarları Aç</string>
+    <string name="emulation_open_cheats">Hileleri Aç</string>
+    <string name="emulation_screen_layout_portrait">Portre</string>
+    <string name="emulation_screen_layout_single">Tek Ekran</string>
+    <string name="emulation_screen_layout_original">Orijinal</string>
+    <string name="emulation_portrait_layout_top_full">Varsayılan</string>
+    <string name="small_screen_position_top_right">Sağ Üst</string>
+    <string name="small_screen_position_top_left">Sol Üst</string>
+    <string name="small_screen_position_bottom_left">Sol Alt</string>
+    <string name="emulation_custom_layout_width">Genişlik</string>
+    <string name="emulation_custom_layout_height">Yükseklik</string>
+    <string name="menu_emulation_amiibo_load">Yükle</string>
+    <string name="menu_emulation_amiibo_remove">Kaldır</string>
+    <string name="select_amiibo">Amiibo Dosyası Seç</string>
+    <string name="pause_emulation">Emülasyonu Duraklat</string>
+    <string name="resume_emulation">Emülasyonu Devam Ettir</string>
+    <string name="select_dir">Bu Dizini Seç</string>
+    <string name="searching_directory">Dizin aranıyor: %s</string>
+    <string name="i_forgot">Unuttum</string>
+    <!-- Mii Selector -->
+    <string name="mii_selector">Mii Seçici</string>
+    <string name="standard_mii">Standart Mii</string>
+
+    <string name="camera">Kamera</string>
+    <!-- Microphone -->
+    <string name="microphone">Mikrofon</string>
+    <string name="system_archive_not_found">Sistem Arşivi Bulunamadı</string>
+    <string name="system_archive_general">Bir sistem arşivi</string>
+    <!-- Cheats -->
+    <string name="cheats">Hileler</string>
+    <string name="cheats_add">Hile Ekle</string>
+    <string name="cheats_notes">Notlar</string>
+    <string name="cheats_edit">Düzenle</string>
+    <string name="cheats_delete">Sil</string>
+    <string name="cheats_error_no_code_lines">Kod boş olamaz</string>
+    <string name="cia_install_success">\"%s\" başarıyla yüklendi</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- System theme -->
+    <string name="change_theme_mode">Tema Modu</string>
+    <string name="theme_mode_light">Açık</string>
+    <string name="theme_mode_dark">Koyu</string>
+
+    <!-- Static theme color -->
+    <string name="static_theme_color">Tema Rengi</string>
+    <!-- Clock types -->
+    <string name="device_clock">Cihaz Saati</string>
+    <string name="language_english">İngilizce</string>
+    <string name="language_german">Almanca (Deutsch)</string>
+    <string name="language_italian">İtalyanca (Italiano)</string>
+    <string name="language_spanish">İspanyolca (Español)</string>
+    <!-- Camera image sources -->
+    <string name="blank">Boş</string>
+    <string name="device_camera">Cihaz Kamerası</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">Yatay</string>
+    <string name="vertical">Dikey</string>
+    <string name="reverse">Ters</string>
+
+    <string name="vulkan">Vulkan</string>
+
+    <string name="bicubic">Bikübik</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Countries -->
+    <string name="japan">Japonya</string>
+    <string name="anguilla">Anguilla</string>
+    <string name="argentina">Arjantin</string>
+    <string name="bahamas">Bahamalar</string>
+    <string name="bolivia">Bolivya</string>
+    <string name="brazil">Brezilya</string>
+    <string name="canada">Kanada</string>
+    <string name="chile">Şili</string>
+    <string name="colombia">Kolombiya</string>
+    <string name="costa_rica">Kosta Rika</string>
+    <string name="ecuador">Ekvador</string>
+    <string name="el_salvador">El Salvador</string>
+    <string name="french_guiana">Fransız Guyanası</string>
+    <string name="haiti">Haiti</string>
+    <string name="honduras">Honduras</string>
+    <string name="jamaica">Jamaika</string>
+    <string name="matinique">Martinik</string>
+    <string name="mexico">Meksika</string>
+    <string name="monsterrat">Montserrat</string>
+    <string name="nicaragua">Nikaragua</string>
+    <string name="panama">Panama</string>
+    <string name="paraguay">Paraguay</string>
+    <string name="peru">Peru</string>
+    <string name="saint_kittis_and_nevis">Saint Kitts ve Nevis</string>
+    <string name="suriname">Surinam</string>
+    <string name="turks_and_caicos_islands">Turks ve Caicos Adaları</string>
+    <string name="united_states">Amerika Birleşik Devletleri</string>
+    <string name="uruguay">Uruguay</string>
+    <string name="venezuela">Venezuela</string>
+    <string name="albania">Arnavutluk</string>
+    <string name="australia">Avustralya</string>
+    <string name="austria">Avusturya</string>
+    <string name="belgium">Belçika</string>
+    <string name="bosnia_and_herzegovnia">Bosna Hersek</string>
+    <string name="botswana">Botsvana</string>
+    <string name="bulgaria">Bulgaristan</string>
+    <string name="croatia">Hırvatistan</string>
+    <string name="cyprus">Kıbrıs</string>
+    <string name="czech_republic">Çekya</string>
+    <string name="denmark">Danimarka</string>
+    <string name="estonia">Estonya</string>
+    <string name="finland">Finlandiya</string>
+    <string name="france">Fransa</string>
+    <string name="germany">Almanya</string>
+    <string name="greece">Yunanistan</string>
+    <string name="hungary">Macaristan</string>
+    <string name="iceland">İzlanda</string>
+    <string name="ireland">İrlanda</string>
+    <string name="italy">İtalya</string>
+    <string name="latvia">Letonya</string>
+    <string name="liechtenstein">Lihtenştayn</string>
+    <string name="lithuania">Litvanya</string>
+    <string name="luxembourg">Lüksemburg</string>
+    <string name="macedonia">Makedonya</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Karadağ</string>
+    <string name="mozambique">Mozambik</string>
+    <string name="namibia">Namibya</string>
+    <string name="netherlands">Hollanda</string>
+    <string name="new_zealand">Yeni Zelanda</string>
+    <string name="norway">Norveç</string>
+    <string name="poland">Polonya</string>
+    <string name="portugal">Portekiz</string>
+    <string name="romania">Romanya</string>
+    <string name="russia">Rusya</string>
+    <string name="serbia">Sırbistan</string>
+    <string name="slovakia">Slovakya</string>
+    <string name="slovenia">Slovenya</string>
+    <string name="south_africa">Güney Afrika</string>
+    <string name="spain">İspanya</string>
+    <string name="swaziland">Esvatini</string>
+    <string name="sweden">İsveç</string>
+    <string name="switzerland">İsviçre</string>
+    <string name="turkey">Türkiye</string>
+    <string name="united_kingdom">Birleşik Krallık</string>
+    <string name="zambia">Zambiya</string>
+    <string name="zimbabwe">Zimbabve</string>
+    <string name="azerbaijan">Azerbaycan</string>
+    <string name="mauritania">Moritanya</string>
+    <string name="mali">Mali</string>
+    <string name="sudan">Sudan</string>
+    <string name="eritrea">Eritre</string>
+    <string name="djibouti">Cibuti</string>
+    <string name="andorra">Andorra</string>
+    <string name="gibraltar">Cebelitarık</string>
+    <string name="isle_of_man">Man Adası</string>
+    <string name="monaco">Monako</string>
+    <string name="taiwan">Tayvan</string>
+    <string name="south_korea">Güney Kore</string>
+    <string name="hong_kong">Hong Kong</string>
+    <string name="macau">Makao</string>
+    <string name="indonesia">Endonezya</string>
+    <string name="singapore">Singapur</string>
+    <string name="thailand">Tayland</string>
+    <string name="philippines">Filipinler</string>
+    <string name="malaysia">Malezya</string>
+    <string name="china">Çin</string>
+    <string name="united_arab_emirates">Birleşik Arap Emirlikleri</string>
+    <string name="india">Hindistan</string>
+    <string name="egypt">Mısır</string>
+    <string name="oman">Umman</string>
+    <string name="qatar">Katar</string>
+    <string name="kuwait">Kuveyt</string>
+    <string name="saudi_arabia">Suudi Arabistan</string>
+    <string name="syria">Suriye</string>
+    <string name="bahrain">Bahreyn</string>
+    <string name="jordan">Ürdün</string>
+    <string name="san_marino">San Marino</string>
+    <string name="bermuda">Bermuda</string>
+
+    <!-- Months -->
+    <string name="january">Ocak</string>
+    <string name="february">Şubat</string>
+    <string name="march">Mart</string>
+    <string name="april">Nisan</string>
+    <string name="may">Mayıs</string>
+    <string name="june">Haziran</string>
+    <string name="july">Temmuz</string>
+    <string name="august">Ağustos</string>
+    <string name="september">Eylül</string>
+    <string name="october">Ekim</string>
+    <string name="november">Kasım</string>
+    <string name="december">Aralık</string>
+
+    <string name="quicksave_saving">Kaydediliyor...</string>
+    <string name="quickload_loading">Yükleniyor...</string>
+    </resources>

@@ -471,7 +471,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">CIA 安装期间的 Azahar 通知</string>
     <string name="cia_install_notification_title">正在安装 CIA 文件</string>
-    <string name="cia_install_notification_installing">正在安装 %s（%d/%d）</string>
+    <string name="cia_install_notification_installing">正在安装 %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">CIA 文件安装成功</string>
     <string name="cia_install_notification_error_title">CIA 文件安装失败</string>
     <string name="cia_install_success">“%s”已安装成功</string>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_notification_channel_description">Azahar 3DS emulator notificaties</string>
+    <string name="app_notification_running">Azahar is Actief</string>
+    <string name="start">Start</string>
+    <string name="cancelling">Annuleren…</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Instellingen</string>
+    <string name="home_options">Opties</string>
+    <string name="home_search">Zoeken</string>
+    <string name="settings_description">Configureer emulator instellingen</string>
+    <string name="install_game_content">Installeer een CIA bestand</string>
+    <string name="share_log">Deel log</string>
+    <string name="share_log_description">Deel het logbestand van Azahar om problemen op te lossen</string>
+    <string name="gpu_driver_manager">GPU-stuurprogrammabeheer</string>
+    <string name="install_gpu_driver">Installeer het GPU-stuurprogramma</string>
+    <string name="install_gpu_driver_description">Installeer alternatieve stuurprogramma\'s voor mogelijk betere prestaties of nauwkeurigheid</string>
+    <string name="driver_already_installed">Stuurprogramma al geïnstalleerd</string>
+    <string name="custom_driver_not_supported">Aangepaste stuurprogramma\'s worden niet ondersteund</string>
+    <string name="custom_driver_not_supported_description">Het laden van aangepaste stuurprogramma\'s wordt momenteel niet ondersteund voor dit apparaat.
+Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is toegevoegd!</string>
+    <string name="share_log_not_found">Geen logbestand gevonden</string>
+    <string name="about">Over</string>
+    <string name="citra_description">Een open-source 3DS-emulator</string>
+    <string name="about_description">Bouwversie, credits en meer</string>
+    <string name="theme_and_color_description">Wijzig het uiterlijk van de app</string>
+    <string name="install_cia_title">Installeer CIA</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">Selecteer GPU-stuurprogramma</string>
+    <string name="select_gpu_driver_title">Wilt u uw huidige GPU-driver vervangen?</string>
+    <string name="select_gpu_driver_install">Installeer</string>
+    <string name="select_gpu_driver_default">Standaard</string>
+    <string name="select_gpu_driver_install_success">Geïnstalleerd%s</string>
+    <string name="select_gpu_driver_use_default">standaard GPU-drivers worden gebruikt</string>
+    <string name="select_gpu_driver_error">Ongeldige driver geselecteerd, de systeemstandaard wordt gebruikt!</string>
+    <string name="system_gpu_driver">Systeem GPU stuurprogramma</string>
+    <string name="installing_driver">Stuurprogramma installeren…</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Gekopieerd naar klembord</string>
+    <string name="contributors">Bijdragers</string>
+    <string name="contributors_description">Bijdragers die Azahar mogelijk hebben gemaakt</string>
+    <string name="licenses_description">Projecten gebruikt door Azahar voor Android</string>
+    <string name="build">Bouw versie</string>
+    <string name="licenses">Licenties</string>
+    <!-- Setup strings -->
+    <string name="welcome">Welkom!</string>
+    <string name="welcome_description">Leer hoe u dit kunt instellen &lt;b>Azahar&lt;/b> en begin met emuleren</string>
+    <string name="get_started">Begin met instellen</string>
+    <string name="step_complete">Voltooid!</string>
+    <string name="done">Klaar!</string>
+    <string name="text_continue">Doorgaan</string>
+    <string name="notifications">notificaties</string>
+    <string name="notifications_description">Verleen de meldingsrechten met de onderstaande knop.</string>
+    <string name="give_permission">Toestemming geven</string>
+    <string name="notification_warning">Het verlenen van toestemming voor meldingen overslaan?</string>
+    <string name="notification_warning_description">Azahar kan je niet op de hoogte stellen van belangrijke informatie.</string>
+    <string name="camera_permission">Camera</string>
+    <string name="camera_permission_description">Geef de onderstaande camera toestemming om de 3DS-camera te emuleren.</string>
+    <string name="microphone_permission">Microfoon</string>
+    <string name="microphone_permission_description">Geef de microfoon hieronder toestemming om de 3DS-microfoon te emuleren.</string>
+    <string name="permission_denied">Toestemming geweigerd</string>
+    <string name="warning_help">Help</string>
+    <string name="warning_skip">Overslaan</string>
+    <string name="warning_cancel">Annuleren</string>
+    <string name="select_citra_user_folder">Selecteer Gebruiker map</string>
+    <string name="select">Selecteer</string>
+    <string name="cannot_skip">Je kunt deze stap niet overslaan</string>
+    <string name="cannot_skip_directory_description">Deze stap is vereist om Azahar te laten werken. Selecteer een map en u kunt doorgaan</string>
+    <string name="set_up_theme_settings">Thema instellingen</string>
+    <string name="setup_set_theme">Thema instellen</string>
+
+    <string name="search_recently_played">Recent Gespeeld</string>
+    <string name="search_recently_added">Recent Toegevoegd</string>
+    <string name="search_installed">Geïnstalleerd</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Circle Pad</string>
+    <string name="controller_c">C-Stick</string>
+    <string name="controller_hotkeys">Sneltoetsen</string>
+    <string name="controller_triggers">Triggers</string>
+    <string name="controller_trigger">Trigger</string>
+    <string name="controller_dpad">D-Pad</string>
+    <string name="controller_dpad_axis">D-pad (as)</string>
+    <string name="controller_dpad_axis_description">Sommige controllers kunnen hun D-pad mogelijk niet als as in kaart brengen. Als dat het geval is, gebruik dan de D-Pad (knoppen) sectie.</string>
+    <string name="controller_dpad_button">D-Pad (Knop)</string>
+    <string name="controller_dpad_button_description">Wijs het D-pad hier alleen aan toe als je problemen ondervindt met de toewijzing van de D-Pad (as)-knoppen.</string>
+    <string name="controller_axis_vertical">Op/neer-as</string>
+    <string name="controller_axis_horizontal">Links/rechts as</string>
+    <string name="direction_up">Op</string>
+    <string name="direction_down">Neer</string>
+    <string name="direction_left">Links</string>
+    <string name="direction_right">Rechts</string>
+    <string name="input_dialog_title">Bind%1$s%2$s</string>
+    <string name="input_dialog_description">Druk op of verplaats een invoer.</string>
+    <string name="input_binding">Invoerbinding</string>
+    <string name="input_binding_description">Druk op of verplaats een invoer waaraan u deze wilt koppelen %1$s</string>
+    <string name="input_binding_description_vertical_axis">Beweeg je joystick naar boven of beneden.</string>
+    <string name="input_binding_description_horizontal_axis">Beweeg je joystick naar links of rechts.</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">Verwissel Schermen</string>
+    <string name="input_message_analog_only">Deze besturing moet worden gekoppeld aan een analoge gamepad-stick of D-pad-as!</string>
+    <string name="input_message_button_only">Deze besturing moet aan een gamepadknop zijn gekoppeld!</string>
+
+    <string name="boot_home_menu">Start het HOME Menu</string>
+    <string name="run_system_setup">Start Systeem-Instellingen wanneer het HOME menu wordt opgestart</string>
+    <string name="home_menu">HOME Menu</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Knoppen</string>
+    <string name="button">Knop</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">CPU-JIT</string>
+    <string name="cpu_jit_description">Maakt gebruik van de Just-in-Time (JIT)-compiler voor CPU-emulatie. Indien ingeschakeld, worden de spelprestaties aanzienlijk verbeterd.</string>
+    <string name="init_clock">Klok</string>
+    <string name="init_clock_description">Stel de geëmuleerde 3DS-klok zo in dat deze de klok van je apparaat weerspiegelt of start op een gesimuleerde datum en tijd.</string>
+    <string name="cpu_clock_speed">CPU Klok Snelheid</string>
+
+    <!-- System settings strings -->
+    <string name="username">Gebruikersnaam</string>
+    <string name="new_3ds">New 3DS Modus</string>
+    <string name="lle_applets">Gebruik LLE-applets (indien geïnstalleerd)</string>
+    <string name="clock">Klok</string>
+    <string name="init_time">Offset-tijd</string>
+    <string name="init_time_description">Als de klok is ingesteld op \"Gesimuleerde klok\", verandert dit de vaste datum en tijd waarop moet worden gestart.</string>
+    <string name="emulated_region">Regio</string>
+    <string name="emulated_language">Taal</string>
+    <string name="birthday">Geboortedatum</string>
+    <string name="birthday_month">Maand</string>
+    <string name="birthday_day">Dag</string>
+    <string name="country">Land</string>
+    <string name="play_coins">Speel Munten</string>
+    <string name="steps_per_hour">Stappenteller Stappen per uur</string>
+    <string name="steps_per_hour_description">Aantal stappen per uur gerapporteerd door de stappenteller. Bereikt van 0 tot 65.535.</string>
+    <string name="console_id">Console ID</string>
+    <string name="regenerate_console_id">Console-ID opnieuw genereren</string>
+    <string name="plugin_loader">3GX-pluginlader</string>
+    <string name="plugin_loader_description">Laadt 3GX-plug-ins van de geëmuleerde SD-kaart als deze beschikbaar zijn.</string>
+    </resources>

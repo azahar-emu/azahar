@@ -1,0 +1,765 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_disclaimer">Den här programvaran kommer att köra applikationer för den handhållna spelkonsolen Nintendo 3DS. Inga speltitlar ingår.\n\nFör att du ska kunna börja emulera måste du välja en mapp att lagra Azahars användardata i.\n\nVad är det här:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android användardata och lagring</a></string>
+    <string name="app_notification_channel_description">Aviseringar för Azahar 3DS-emulator</string>
+    <string name="app_notification_running">Azahar är igång</string>
+    <string name="app_game_install_description">Näst måste du välja en applikationsmapp. Azahar kommer att visa alla 3DS ROM i den valda mappen i appen.\n\nCIA ROM, uppdateringar och DLC måste installeras separat genom att klicka på mappikonen och välja Installera CIA.</string>
+    <string name="start">Starta</string>
+    <string name="cancelling">Avbryter...</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Inställningar</string>
+    <string name="home_options">Alternativ</string>
+    <string name="home_search">Sök</string>
+    <string name="home_games">Applikationer</string>
+    <string name="settings_description">Konfigurera inställningar för emulatorn</string>
+    <string name="install_game_content">Installera CIA-fil</string>
+    <string name="install_game_content_description">Installera program, uppdateringar eller DLC</string>
+    <string name="share_log">Dela logg</string>
+    <string name="share_log_description">Dela Azahars loggfil för att felsöka problem</string>
+    <string name="gpu_driver_manager">GPU-drivrutinshanterare</string>
+    <string name="install_gpu_driver">Installera GPU-drivrutin</string>
+    <string name="install_gpu_driver_description">Installera alternativa drivrutiner för potentiellt bättre prestanda eller noggrannhet</string>
+    <string name="driver_already_installed">Drivrutin redan installerad</string>
+    <string name="custom_driver_not_supported">Anpassade drivrutiner stöds inte</string>
+    <string name="custom_driver_not_supported_description">Inläsning av anpassade drivrutiner stöds för närvarande inte för den här enheten.\nKontrollera det här alternativet igen i framtiden för att se om stöd har lagts till!</string>
+    <string name="share_log_not_found">Ingen loggfil hittad</string>
+    <string name="select_games_folder">Välj applikationsmapp</string>
+    <string name="select_games_folder_description">Låter Azahar fylla i programlistan</string>
+    <string name="about">Om</string>
+    <string name="citra_description">En 3DS-emulator med öppen källkod</string>
+    <string name="about_description">Byggversion, krediter och mer</string>
+    <string name="games_dir_selected">Applikationskatalog vald</string>
+    <string name="select_citra_user_folder_home_description">Ändrar de filer som Azahar använder för att ladda applikationer</string>
+    <string name="theme_and_color_description">Modifiera utseendet på appen</string>
+    <string name="install_cia_title">Installera CIA</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">Välj GPU-drivrutin</string>
+    <string name="select_gpu_driver_title">Vill du ersätta din nuvarande GPU-drivrutin?</string>
+    <string name="select_gpu_driver_install">Installera</string>
+    <string name="select_gpu_driver_default">Standard</string>
+    <string name="select_gpu_driver_install_success">Installerade %s</string>
+    <string name="select_gpu_driver_use_default">Använder standard GPU-drivrutin</string>
+    <string name="select_gpu_driver_error">Invalid drivrutin vald, använder systemstandard!</string>
+    <string name="system_gpu_driver">Systemets GPU-drivrutin</string>
+    <string name="installing_driver">Installerar drivrutin...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Kopierat till urklipp</string>
+    <string name="contributors">Bidragsgivare</string>
+    <string name="contributors_description">Bidragsgivare som gjorde Azahar möjligt</string>
+    <string name="licenses_description">Projekt som används av Azahar för Android</string>
+    <string name="build">Byggd</string>
+    <string name="licenses">Licenser</string>
+    <!-- Setup strings -->
+    <string name="welcome">Välkommen!</string>
+    <string name="welcome_description">Lär dig hur du ställer in &lt;b>Azahar&lt;/b> och börjar med emulering.</string>
+    <string name="get_started">Gå igång</string>
+    <string name="step_complete">Färdigt! </string>
+    <string name="games">Applikationer</string>
+    <string name="games_description">Välj din &lt;b>Applikationer&lt;/b>-mapp med knappen nedan.</string>
+    <string name="done">Klar</string>
+    <string name="done_description">Du är klar.\nNNjut av att använda emulatorn!</string>
+    <string name="text_continue">Fortsätt</string>
+    <string name="notifications">Aviseringar</string>
+    <string name="notifications_description">Ge tillstånd för aviseringar med knappen nedan.</string>
+    <string name="give_permission">Ge tillstånd</string>
+    <string name="notification_warning">Hoppa över att ge tillstånd för avisering? </string>
+    <string name="notification_warning_description">Azahar kommer inte att kunna meddela dig viktig information.</string>
+    <string name="camera_permission">Kamera</string>
+    <string name="camera_permission_description">Ge kameratillståndet nedan för att emulera 3DS-kameran.</string>
+    <string name="microphone_permission">Mikrofon</string>
+    <string name="microphone_permission_description">Ge mikrofonbehörighet nedan för att emulera 3DS-mikrofonen.</string>
+    <string name="permission_denied">Tillstånd nekat</string>
+    <string name="add_games_warning">Hoppa över att välja applikationsmapp?</string>
+    <string name="add_games_warning_description">Programvara visas inte i listan Program om en mapp inte är markerad.</string>
+    <string name="warning_help">Hjälp</string>
+    <string name="warning_skip">Hoppa över</string>
+    <string name="warning_cancel">Avbryt</string>
+    <string name="select_citra_user_folder">Välj användarmapp</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Välj din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">användardatakatalog</a> med knappen nedan.]]></string>
+    <string name="select">Välj</string>
+    <string name="cannot_skip">Du kan inte hoppa över det här steget</string>
+    <string name="cannot_skip_directory_description">Detta steg krävs för att Azahar ska fungera. Välj en katalog och sedan kan du fortsätta.</string>
+    <string name="set_up_theme_settings">Temainställningar</string>
+    <string name="setup_theme_settings_description">Konfigurera dina temapreferenser för Azahar.</string>
+    <string name="setup_set_theme">Ställ in tema</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Sök- och filterapplikationer</string>
+    <string name="home_search_games">Sökapplikationer</string>
+    <string name="search_recently_played">Nyligen spelad</string>
+    <string name="search_recently_added">Nyligen tillagd</string>
+    <string name="search_installed">Installerad</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Circle Pad</string>
+    <string name="controller_c">C-spak</string>
+    <string name="controller_hotkeys">Snabbtangenter</string>
+    <string name="controller_triggers">Avtryckare</string>
+    <string name="controller_trigger">Avtryckare</string>
+    <string name="controller_dpad">Riktningsknappar</string>
+    <string name="controller_dpad_axis">Riktningsknappar (axel)</string>
+    <string name="controller_dpad_axis_description">Vissa styrenheter kanske inte kan mappa sina riktningsknappar som en axel. Om så är fallet, använd avsnittet Riktningsknappar (knappar).</string>
+    <string name="controller_dpad_button">Riktningsknappar (knapp)</string>
+    <string name="controller_dpad_button_description">Mappa endast D-pad till dessa om du har problem med knappmappningarna för D-pad (axel).</string>
+    <string name="controller_axis_vertical">Axel upp/ner</string>
+    <string name="controller_axis_horizontal">Vänster/höger-axel</string>
+    <string name="direction_up">Upp</string>
+    <string name="direction_down">Ner</string>
+    <string name="direction_left">Vänster</string>
+    <string name="direction_right">Höger</string>
+    <string name="input_dialog_title">Bind %1$s %2$s</string>
+    <string name="input_dialog_description">Tryck på eller flytta en inmatning.</string>
+    <string name="input_binding">Inmatningsbindning</string>
+    <string name="input_binding_description">Tryck eller flytta en inmatning för att binda den till %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Flytta joysticken uppåt eller nedåt.</string>
+    <string name="input_binding_description_horizontal_axis">Flytta joysticken åt vänster eller höger.</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">Byt skärm</string>
+    <string name="input_message_analog_only">Den här kontrollen måste vara bunden till en gamepad-analog spak eller D-pad-axel! </string>
+    <string name="input_message_button_only">Den här kontrollen måste vara bunden till en gamepad-knapp! </string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">Systemfiler</string>
+    <string name="setup_system_files_description">Utför systemfilsoperationer som att installera systemfiler eller starta upp startmenyn</string>
+    <string name="setup_tool_connect">Anslut till Artic Setup Tool</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar behöver filer från en riktig konsol för att kunna använda vissa av dess funktioner. Du kan hämta sådana filer med <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Observera:<ul><li><b> Den här åtgärden installerar konsolunika filer till Azahar, dela inte dina användar- eller nand-mappar<br> efter att du har utfört installationsprocessen!</b></li><li> Installation av gammal 3DS behövs för att installationen av ny 3DS ska fungera.</li><li> Båda installationslägena fungerar oavsett vilken modell konsolen som kör installationsverktyget har.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Hämtar aktuell status för systemfiler, vänta...</string>
+    <string name="setup_system_files_o3ds">Gammal 3DS-konfiguration</string>
+    <string name="setup_system_files_n3ds">Ny 3DS-konfiguration</string>
+    <string name="setup_system_files_possible">Konfiguration är möjlig.</string>
+    <string name="setup_system_files_o3ds_needed">Gammal 3DS-konfiguration krävs först.</string>
+    <string name="setup_system_files_completed">Konfigurationen är redan färdig.</string>
+    <string name="setup_system_files_enter_address">Ange adress till Arctic Setup Tool</string>
+    <string name="setup_system_files_preparing">Förbereder konfiguration, vänta...</string>
+    <string name="boot_home_menu">Starta HOME-menyn</string>
+    <string name="show_home_apps">Visa appar på hemmenyn i listan över program</string>
+    <string name="run_system_setup">Kör systemkonfiguration när HOME-menyn startas</string>
+    <string name="home_menu">HOME-menyn</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Knappar</string>
+    <string name="button">Knapp</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Använder JIT-kompilatorn (Just-in-Time) för CPU-emulering. När den är aktiverad kommer spelprestanda att förbättras avsevärt.</string>
+    <string name="init_clock">Klocka</string>
+    <string name="init_clock_description">Ställ in den emulerade 3DS-klockan så att den antingen återspeglar den på din enhet eller startar vid ett simulerat datum och klockslag.</string>
+    <string name="cpu_clock_speed">CPU-klockhastighet</string>
+
+    <!-- System settings strings -->
+    <string name="username">Användarnamn</string>
+    <string name="new_3ds">Nytt 3DS-läge</string>
+    <string name="lle_applets">Använd LLE Applets (om installerat)</string>
+    <string name="clock">Klocka</string>
+    <string name="init_time">Förskjut tid</string>
+    <string name="init_time_description">Om klockan är inställd på "Simulerad klocka" ändras det fasta datumet och tiden att starta vid.</string>
+    <string name="emulated_region">Region</string>
+    <string name="emulated_language">Språk</string>
+    <string name="birthday">Födelsedag</string>
+    <string name="birthday_month">Månad</string>
+    <string name="birthday_day">Dag</string>
+    <string name="country">Land</string>
+    <string name="play_coins">Spelmynt</string>
+    <string name="steps_per_hour">Stegräknarens steg per timme</string>
+    <string name="steps_per_hour_description">Antal steg per timme som rapporteras av stegräknaren. Intervall från 0 till 65 535.</string>
+    <string name="console_id">Konsol-id</string>
+    <string name="regenerate_console_id">Skapa nytt konsol-id</string>
+    <string name="regenerate_console_id_description">Detta kommer att ersätta ditt nuvarande virtuella 3DS-konsol-ID med ett nytt. Ditt nuvarande virtuella 3DS-konsol-ID kommer inte att kunna återställas. Detta kan få oväntade effekter i applikationer. Detta kan misslyckas om du använder en föråldrad konfigurationssparning. Fortsätta?</string>
+    <string name="plugin_loader">Inläsare för 3GX-insticksmoduler</string>
+    <string name="plugin_loader_description">Inlästa 3GX-insticksmoduler från det emulerade SD-kortet om de finns tillgängliga.</string>
+    <string name="allow_plugin_loader">Tillåt applikationer att ändra insticksinläsarens tillstånd</string>
+    <string name="allow_plugin_loader_description">Tillåter homebrew-appar att aktivera insticksinläsaren även när den är inaktiverad.</string>
+
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Innerkamera</string>
+    <string name="outer_left_camera">Yttre vänstra kameran</string>
+    <string name="outer_right_camera">Yttre högra kameran</string>
+    <string name="image_source">Kamerans bildkälla</string>
+    <string name="image_source_description">Ställer in bildkällan för den virtuella kameran. Du kan använda en bildfil eller en enhetskamera när sådan stöds.</string>
+    <string name="camera_device">Kamera</string>
+    <string name="camera_device_description">Om inställningen "Bildkälla" är inställd på "Enhetskamera" anger detta vilken fysisk kamera som ska användas.</string>
+    <string name="camera_facing_front">Fram</string>
+    <string name="camera_facing_back">Bak</string>
+    <string name="camera_facing_external">Extern</string>
+    <string name="image_flip">Vänd</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">Renderare</string>
+    <string name="graphics_api">Grafik-API</string>
+    <string name="spirv_shader_gen">Aktivera generering av SPIR-V shader</string>
+    <string name="spirv_shader_gen_description">Skickar ut den fragment shader som används för att emulera PICA med SPIR-V istället för GLSL</string>
+    <string name="async_shaders">Aktivera asynkron shader-kompilering</string>
+    <string name="async_shaders_description">Sammanställer shaders i bakgrunden för att minska stuttering under spelet. När det är aktiverat kan du förvänta dig tillfälliga grafiska glitches</string>
+    <string name="renderer_debug">Felsök renderingsprogrammet</string>
+    <string name="renderer_debug_description">Loggar ytterligare grafikrelaterad felsökningsinformation. När den är aktiverad kommer spelets prestanda att minska avsevärt.</string>
+    <string name="vsync">Aktivera V-Sync</string>
+    <string name="vsync_description">Synkroniserar spelets bildfrekvens till uppdateringsfrekvensen på din enhet.</string>
+    <string name="linear_filtering">Lineär filtrering</string>
+    <string name="linear_filtering_description"> Aktiverar linjär filtrering, vilket gör att spelets grafik ser jämnare ut.</string>
+    <string name="texture_filter_name">Texturfilter</string>
+    <string name="texture_filter_description">Förbättrar det visuella i applikationer genom att tillämpa ett filter på texturer. De filter som stöds är Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale och MMPX.</string>
+    <string name="hw_shaders">Aktivera hårdvaru-shader</string>
+    <string name="hw_shaders_description">Använder hårdvara för att emulera 3DS-shaders. När detta är aktiverat kommer spelprestanda att förbättras avsevärt.</string>
+    <string name="shaders_accurate_mul">Accurate Multiplication</string>
+    <string name="shaders_accurate_mul_description">Använder mer exakt multiplikation i hårdvaru-shaders, vilket kan åtgärda vissa grafiska buggar. När detta är aktiverat kommer prestandan att minska.</string>
+    <string name="asynchronous_gpu">Aktivera asynkron GPU-emulering</string>
+    <string name="asynchronous_gpu_description">Använder en separat tråd för att emulera GPU:n asynkront. När detta är aktiverat kommer prestandan att förbättras.</string>
+    <string name="frame_limit_enable">Begränsa hastighet</string>
+    <string name="frame_limit_enable_description">När den är aktiverad begränsas emuleringshastigheten till en angiven procentandel av normal hastighet.</string>
+    <string name="frame_limit_slider">Gränsa hastigheten i procent</string>
+    <string name="frame_limit_slider_description">Anger procentsatsen för att begränsa emuleringshastigheten. Med standardvärdet 100% kommer emuleringen att begränsas till normal hastighet. Värden som är högre eller lägre ökar eller minskar hastighetsgränsen.</string>
+    <string name="internal_resolution">Intern upplösning</string>
+    <string name="internal_resolution_description">Anger den upplösning som används för rendering. En hög upplösning förbättrar den visuella kvaliteten avsevärt men är också ganska prestandakrävande och kan orsaka problem i vissa applikationer.</string>
+    <string name="internal_resolution_setting_1x">Inbyggd (400x240)</string>
+    <string name="internal_resolution_setting_2x">2x inbyggd (800x480)</string>
+    <string name="internal_resolution_setting_3x">3x inbyggd (1200x720)</string>
+    <string name="internal_resolution_setting_4x">4x inbyggd (1600x960)</string>
+    <string name="internal_resolution_setting_5x">5x inbyggd (2000x1200)</string>
+    <string name="internal_resolution_setting_6x">6x inbyggd (2400x1440)</string>
+    <string name="internal_resolution_setting_7x">7x inbyggd (2800x1680)</string>
+    <string name="internal_resolution_setting_8x">8x inbyggd (3200x1920)</string>
+    <string name="internal_resolution_setting_9x">9x inbyggd (3600x2160)</string>
+    <string name="internal_resolution_setting_10x">10x inbyggd (4000x2400)</string>
+    <string name="performance_warning">Om du stänger av den här inställningen kommer emuleringsprestandan att minska avsevärt! För bästa upplevelse rekommenderar vi att du låter den här inställningen vara aktiverad.</string>
+    <string name="debug_warning">Varning: Om du ändrar dessa inställningar kommer emuleringen att bli långsammare</string>
+    <string name="stereoscopy">Stereoskop</string>
+    <string name="render3d">Stereoskopiskt 3D-läge</string>
+    <string name="factor3d">Djup</string>
+    <string name="factor3d_description">Anger värdet för 3D-reglaget. Detta bör sättas högre än 0% när stereoskopisk 3D är aktiverad.</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size">Storlek på kartongskärm</string>
+    <string name="cardboard_screen_size_description">Skalar skärmen till en procentandel av dess ursprungliga storlek.</string>
+    <string name="cardboard_x_shift">Horisontell förskjutning</string>
+    <string name="cardboard_x_shift_description">Anger procentandelen tomt utrymme för att flytta skärmarna horisontellt. Positiva värden flyttar de två ögonen närmare mitten, medan negativa värden flyttar dem bort.</string>
+    <string name="cardboard_y_shift">Vertikal skiftning</string>
+    <string name="cardboard_y_shift_description">Anger hur stor andel av det tomma utrymmet som ska användas för att flytta skärmarna vertikalt. Positiva värden flyttar de två ögonen mot botten, medan negativa värden flyttar dem mot toppen.</string>
+    <string name="use_shader_jit">Shader JIT</string>
+    <string name="use_disk_shader_cache">Disk Shader Cache</string>
+    <string name="use_disk_shader_cache_description">Reducerar hackningar genom att lagra och läsa in genererade shaders till disk. Det kan inte användas utan att aktivera hårdvaru-shader.</string>
+    <string name="utility">Verktyg</string>
+    <string name="dump_textures">Dumpning av texturer</string>
+    <string name="dump_textures_description">Texturer dumpas till dump/textures/[Titel-ID]/.</string>
+    <string name="custom_textures">Anpassade texturer</string>
+    <string name="custom_textures_description">Texturer läses in från load/textures/[Titel-ID]/.</string>
+    <string name="preload_textures">Läs in anpassade texturer</string>
+    <string name="preload_textures_description">Läste in alla anpassade texturer i minnet. Den här funktionen kan använda mycket minne.</string>
+    <string name="async_custom_loading">Asynkron inläsning av anpassad textur</string>
+    <string name="async_custom_loading_description">Läser in anpassade texturer asynkront med bakgrundstrådar för att minska inläsningsstopp.</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Volym</string>
+    <string name="audio_stretch">Ljudutsträckning</string>
+    <string name="audio_stretch_description">Sträcker ut ljudet för att minska hackande. När funktionen är aktiverad ökar ljudlatensen och prestandan försämras något.</string>
+    <string name="realtime_audio">Aktivera realtidsljud</string>
+    <string name="realtime_audio_description">Skalar uppspelningshastigheten för ljud för att kompensera för minskad bildfrekvensen i emuleringen. Detta innebär att ljudet spelas upp i full hastighet även om spelets bildfrekvens är låg. Kan orsaka problem med felsynkronisering av ljud.</string>
+    <string name="audio_input_type">Ljudinmatningsenhet</string>
+    <string name="sound_output_mode">Ljudutmatningsläge</string>
+
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">Skärmorientering</string>
+    <string name="layout_screen_orientation_auto_sensor">Automatisk</string>
+    <string name="layout_screen_orientation_landscape">Liggande</string>
+    <string name="layout_screen_orientation_landscape_reverse">Omvänd liggande</string>
+    <string name="layout_screen_orientation_portrait">Stående</string>
+    <string name="layout_screen_orientation_portrait_reverse">Omvänd stående</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Töm</string>
+    <string name="slider_default">Standard</string>
+    <string name="ini_saved">Sparade inställningar</string>
+    <string name="gameid_saved">Sparade inställningar för %1$s</string>
+    <string name="error_saving">Fel vid sparande av %1$s.ini: %2$s</string>
+    <string name="loading">Läser in...</string>
+    <string name="next">Nästa</string>
+    <string name="back">Bakåt</string>
+    <string name="learn_more">Lär dig mer</string>
+    <string name="close">Stäng</string>
+    <string name="reset_to_default">Återställ till standard</string>
+    <string name="redump_games"><![CDATA[Följ guiderna för att dumpa dina <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">spelkassetter</a> igen eller <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installerade titlar</a>.]]></string>
+    <string name="option_default">Standard</string>
+    <string name="none">Ingen</string>
+    <string name="auto">Auto</string>
+    <string name="off">Av</string>
+    <string name="install">Installera</string>
+    <string name="delete">Ta bort</string>
+    <string name="reset_all_settings">Återställ alla inställningar? </string>
+    <string name="reset_all_settings_description">Alla avancerade inställningar kommer att återställas till standardkonfigurationen. Detta kan inte ångras.</string>
+    <string name="settings_reset">Nollställning av inställningar</string>
+    <string name="select_rtc_date">Välj RTC-datum</string>
+    <string name="select_rtc_time">Välj RTC-tid</string>
+    <string name="reset_setting_confirmation">Vill du återställa inställningen till standardvärdet? </string>
+    <string name="setting_not_editable">Du kan inte redigera detta nu</string>
+    <string name="setting_not_editable_description">Det här alternativet kan inte ändras medan ett spel pågår.</string>
+    <string name="auto_select">Autovälj</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Välj spelmapp</string>
+
+    <!-- Game Properties -->
+    <string name="properties">Egenskaper</string>
+    <string name="properties_not_loaded">Spelegenskaperna kunde inte läsas in.</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Inställningar</string>
+    <string name="preferences_general">Allmänt</string>
+    <string name="preferences_system">System</string>
+    <string name="preferences_camera">Kamera</string>
+    <string name="preferences_controls">Gamepad</string>
+    <string name="preferences_graphics">Grafik</string>
+    <string name="preferences_audio">Ljud</string>
+    <string name="preferences_debug">Felsök</string>
+    <string name="preferences_theme">Tema och färg</string>
+    <string name="preferences_layout">Layout</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">Ditt ROM är krypterat</string>
+    <string name="loader_error_invalid_format"> Ogiltigt ROM-format</string>
+    <string name="loader_error_file_not_found">ROM-filen finns inte</string>
+    <string name="no_game_present">Inget startbart spel närvarande!</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Tryck på Tillbaka för att komma till menyn.</string>
+    <string name="emulation_save_state">Spartillstånd</string>
+    <string name="emulation_load_state">Inläsningsstatus</string>
+    <string name="emulation_empty_state_slot">Plats %1$d</string>
+    <string name="emulation_occupied_state_slot">Plats %1$d - %2$tF %2$tR</string>
+    <string name="emulation_show_fps">Visa bilder/s</string>
+    <string name="emulation_haptic_feedback">Haptisk återkoppling</string>
+    <string name="emulation_overlay_options">Överläggsalternativ</string>
+    <string name="emulation_configure_controls">Konfigurera kontroller</string>
+    <string name="emulation_edit_layout">Redigera layout</string>
+    <string name="emulation_done">Klar</string>
+    <string name="emulation_toggle_controls">Växla kontroller</string>
+    <string name="emulation_control_scale">Justera skala</string>
+    <string name="emulation_control_scale_global">Global skala</string>
+    <string name="emulation_control_scale_reset_all">Återställ alla</string>
+    <string name="emulation_control_opacity">Justera opacitet</string>
+    <string name="emulation_control_joystick_rel_center">Relativt spakcentrum</string>
+    <string name="emulation_control_dpad_slide_enable">Glidning för riktningsknappar</string>
+    <string name="emulation_open_settings">Öppna inställningar</string>
+    <string name="emulation_open_cheats">Öppna fusk</string>
+    <string name="emulation_switch_screen_layout">Liggande skärmlayout</string>
+    <string name="emulation_switch_portrait_layout">Stående skärmlayout</string>
+    <string name="emulation_screen_layout_largescreen">Stor skärm</string>
+    <string name="emulation_screen_layout_portrait">Stående</string>
+    <string name="emulation_screen_layout_single">Enkel skärm</string>
+    <string name="emulation_screen_layout_sidebyside">Sida vid sida-skärmar</string>
+    <string name="emulation_screen_layout_hybrid">Hybridskärmar</string>
+    <string name="emulation_screen_layout_original">Original</string>
+    <string name="emulation_portrait_layout_top_full">Standard</string>
+    <string name="emulation_screen_layout_custom">Anpassad layout</string>
+    <string name="emulation_small_screen_position">Position för liten skärm</string>
+    <string name="small_screen_position_description">Var ska den lilla skärmen visas i förhållande till den stora i storskärmslayout?</string>
+    <string name="small_screen_position_top_right">Uppe till höger</string>
+    <string name="small_screen_position_middle_right">Mitt till höger</string>
+    <string name="small_screen_position_bottom_right">Ner till höger (standard)</string>
+    <string name="small_screen_position_top_left">Övre vänster</string>
+    <string name="small_screen_position_middle_left">Mitten till vänster</string>
+    <string name="small_screen_position_bottom_left">Ner till vänster</string>
+    <string name="small_screen_position_above">Ovanför</string>
+    <string name="small_screen_position_below">Under</string>
+    <string name="large_screen_proportion">Storbildsproportion</string>
+    <string name="large_screen_proportion_description">Hur många gånger större är den stora skärmen än den lilla skärmen i storskärmslayout?</string>
+    <string name="emulation_adjust_custom_layout">Justera anpassad layout i inställningarna</string>
+    <string name="emulation_landscape_custom_layout">Anpassad liggande layout</string>
+    <string name="emulation_portrait_custom_layout">Anpassade stående layout</string>
+    <string name="emulation_top_screen">Toppskärm</string>
+    <string name="emulation_bottom_screen">Bottenskärm</string>
+    <string name="emulation_custom_layout_x">X-position</string>
+    <string name="emulation_custom_layout_y">Y-position</string>
+    <string name="emulation_custom_layout_width">Bredd</string>
+    <string name="emulation_custom_layout_height">Höjd</string>
+    <string name="emulation_cycle_landscape_layouts">Växla layouter</string>
+    <string name="emulation_swap_screens">Skärmbyte</string>
+    <string name="emulation_touch_overlay_reset">Återställ överlägg</string>
+    <string name="emulation_show_overlay">Visa överlägg</string>
+    <string name="emulation_close_game">Stäng spelet</string>
+    <string name="emulation_toggle_pause">Växla paus</string>
+    <string name="emulation_close_game_message">Är du säker på att du vill stänga det aktuella spelet?</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">Läs in</string>
+    <string name="menu_emulation_amiibo_remove">Ta bort</string>
+    <string name="select_amiibo">Välj Amiibo-fil</string>
+    <string name="amiibo_load_error">Fel vid inläsning av Amiibo</string>
+    <string name="amiibo_load_error_message">Under inläsningen av den angivna Amiibo-filen inträffade ett fel. Kontrollera att filen är korrekt.</string>
+    <string name="pause_emulation">Pausa emulering</string>
+    <string name="resume_emulation">Återuppta emulering</string>
+    <string name="lock_drawer">Lås låda</string>
+    <string name="unlock_drawer">Låsa upp låda</string>
+
+    <string name="write_permission_needed">Du måste tillåta skrivåtkomst till extern lagring för att emulatorn ska fungera</string>
+    <string name="load_settings">Läser in inställningar...</string>
+
+    <string name="external_storage_not_mounted">Den externa lagringen måste vara tillgänglig för att Azahar ska kunna användas</string>
+
+    <string name="select_dir">Välj den här katalogen</string>
+    <string name="empty_gamelist">Inga filer hittades eller ingen spelkatalog har valts ännu.</string>
+
+    <string name="do_not_show_this_again">Visa inte detta igen</string>
+    <string name="searching_directory">Söker katalog: %s</string>
+    <string name="move_data">Flytta data</string>
+    <string name="moving_data">Flyttar data...</string>
+    <string name="copy_file_name">Kopiera fil: %s</string>
+    <string name="copy_complete">Kopiering slutförd</string>
+    <string name="savestates">Sparade tillstånd</string>
+    <string name="savestate_warning_message">Varning: Sparade tillstånd är INTE en ersättning för spelsparingar och är inte avsedda att vara tillförlitliga.\n\nAnvänds på egen risk! </string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Programvarutangentbord</string>
+    <string name="i_forgot">Jag glömde</string>
+    <string name="fixed_length_required">Textlängden är inte korrekt (ska vara %d tecken)</string>
+    <string name="max_length_exceeded">Texten är för lång (bör inte vara mer än %d tecken)</string>
+    <string name="blank_input_not_allowed">Blank inmatning är inte tillåten</string>
+    <string name="empty_input_not_allowed">Tomma inmatningar är inte tillåtna</string>
+    <string name="invalid_input">Ogiltig inmatning</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Mii-väljare</string>
+    <string name="standard_mii">Standard Mii</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">Välj bild</string>
+    <string name="camera">Kamera</string>
+    <string name="camera_permission_needed">Azahar behöver tillgång till din kamera för att emulera 3DS:s kameror.\n\nAlternativt kan du också ställa in \"Bildkälla\" till \"Stillbild\" i kamerainställningarna.</string>
+
+    <!-- Microphone -->
+    <string name="microphone">Mikrofon</string>
+    <string name="microphone_permission_needed">Azahar behöver tillgång till din mikrofon för att emulera 3DS:ens mikrofon.\n\nAlternativt kan du också ändra "Ljudinmatningsenhet" i Ljudinställningar.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">Avbryt</string>
+    <string name="continue_button">Fortsätt</string>
+    <string name="system_archive_not_found">Systemarkiv hittades inte</string>
+    <string name="system_archive_not_found_message">%s saknas. Dumpa dina systemarkiv.\nFortsatt emulering kan resultera i krascher och buggar.</string>
+    <string name="cia_file_not_found">Installationen misslyckades. Filen CIA hittades inte.</string>
+    <string name="system_archive_general">Ett systemarkiv</string>
+    <string name="save_load_error">Spara/läs in-fel</string>
+    <string name="fatal_error">Allvarligt fel</string>
+    <string name="fatal_error_message">Ett allvarligt fel inträffade. Kontrollera loggen för detaljer.\nFortsatt emulering kan leda till krascher och buggar.</string>
+
+    <!-- Disk Shader Cache -->
+    <string name="preparing_shaders">Förbereder shaders</string>
+    <string name="building_shaders">Bygger shaders</string>
+
+    <!-- About Game Dialog -->
+    <string name="play">Spela</string>
+    <string name="shortcut">Genväg</string>
+
+    <!-- Cheats -->
+    <string name="cheats">Fusk</string>
+    <string name="cheats_add">Lägg till fusk</string>
+    <string name="cheats_name">Namn</string>
+    <string name="cheats_notes">Anteckningar</string>
+    <string name="cheats_code">Kod</string>
+    <string name="cheats_edit">Redigera</string>
+    <string name="cheats_delete">Ta bort</string>
+    <string name="cheats_delete_confirmation">Är du säker på att du vill ta bort "%1$s"?</string>
+    <string name="cheats_error_no_name">Namnet får inte vara tomt</string>
+    <string name="cheats_error_no_code_lines">Koden får inte vara tom</string>
+    <string name="cheats_error_on_line">Fel på rad %1$d</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="one">Installerar %d fil. Se meddelande för mer information.</item>
+        <item quantity="other">Installerar %d filer. Se meddelande för mer information.</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">Azahar-meddelanden under CIA-installation</string>
+    <string name="cia_install_notification_title">Installation av CIA</string>
+    <string name="cia_install_notification_installing">Installerar %s (%d/%d)</string>
+    <string name="cia_install_notification_success_title">Har installerat CIA</string>
+    <string name="cia_install_notification_error_title">Installation av CIA misslyckades</string>
+    <string name="cia_install_success">\"%s\" har installerats framgångsrikt</string>
+    <string name="cia_install_error_aborted">Installationen av \"%s\" avbröts.\n Se loggen för mer information</string>
+    <string name="cia_install_error_invalid">\"%s\" är inte en giltig CIA</string>
+    <string name="cia_install_error_encrypted">\"%s\" måste dekrypteras innan det kan användas med Azahar.\n En riktig 3DS krävs</string>
+    <string name="cia_install_error_unknown">Ett okänt fel inträffade under installationen av \"%s\".\n Se loggen för mer information</string>
+
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s %2$s</string>
+    <string name="memory_byte">Byte</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- System theme -->
+    <string name="change_theme_mode">Temaläge</string>
+    <string name="theme_mode_follow_system">Följ systemet</string>
+    <string name="theme_mode_light">Ljust</string>
+    <string name="theme_mode_dark">Mörkt</string>
+
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
+    <string name="material_you_description">Använd operativsystemets färgtema i hela appen (åsidosätter inställningen "Temafärg" när den är aktiverad)</string>
+
+    <!-- Static theme color -->
+    <string name="static_theme_color">Temafärg</string>
+    <string name="static_theme_color_description">Ändra färgtemat för appens menyer</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Svart bakgrund</string>
+    <string name="use_black_backgrounds_description">När du använder det mörka temat ska du använda svarta bakgrunder.</string>
+
+    <!-- Clock types -->
+    <string name="device_clock">Enhetsklocka</string>
+    <string name="simulated_clock">Simulerad klocka</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">USA</string>
+    <string name="system_region_eur">EUR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Japanska ()日本語</string>
+    <string name="language_english">Engelska</string>
+    <string name="language_french">Franska (Français)</string>
+    <string name="language_german">Tyska (Deutsch)</string>
+    <string name="language_italian">Italienska (Italiano)</string>
+    <string name="language_spanish">Spanska (Español)</string>
+    <string name="language_simplified_chinese">Förenklad kinesiska (简体中文)</string>
+    <string name="language_korean">Koreanska (한국어)</string>
+    <string name="language_dutch">Holländska (Nederlands)</string>
+    <string name="language_portuguese">Portugisiska (Português)</string>
+    <string name="language_russian">Ryska (Русский)</string>
+    <string name="language_traditional_chinese">Traditionell kinesiska (正體中文)</string>
+
+    <!-- Camera image sources -->
+    <string name="blank">Blank</string>
+    <string name="still_image">Stillbild</string>
+    <string name="device_camera">Enhetskamera</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">Alla främre kameror</string>
+    <string name="any_back_camera">Alla bakre kameror</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">Horisontell</string>
+    <string name="vertical">Vertikal</string>
+    <string name="reverse">Omvänd</string>
+
+    <!-- Audio input types -->
+    <string name="static_noise">Statiskt brus</string>
+    <string name="real_cubeb">Riktig enhet (cubeb)</string>
+    <string name="real_openal">Riktig enhet (OpenAL)</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">Sida vid sida</string>
+    <string name="reverse_side_by_side">Omvänd sida vid sida</string>
+    <string name="anaglyph">Anaglyf</string>
+    <string name="interlaced">Interlaced</string>
+    <string name="reverse_interlaced">Omvänd interlaced</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="bicubic">Bikubisk</string>
+    <string name="nearest_neighbor">Närmaste granne</string>
+    <string name="scaleforce">ScaleForce</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="surround">Surround</string>
+
+    <!-- Countries -->
+    <string name="japan">Japan</string>
+    <string name="anguilla">Anguilla</string>
+    <string name="antigua_and_barbuda">Antigua och Barbuda</string>
+    <string name="argentina">Argentina</string>
+    <string name="aruba">Aruba</string>
+    <string name="bahamas">Bahamas</string>
+    <string name="barbados">Barbados</string>
+    <string name="belize">Belize</string>
+    <string name="bolivia">Bolivia</string>
+    <string name="brazil">Brasilien</string>
+    <string name="british_virgin_islands">Brittiska Jungfruöarna</string>
+    <string name="canada">Kanada</string>
+    <string name="cayman_islands">Caymanöarna</string>
+    <string name="chile">Chile</string>
+    <string name="colombia">Colombia</string>
+    <string name="costa_rica">Costa Rica</string>
+    <string name="dominica">Dominica</string>
+    <string name="dominican_republic">Dominikanska republiken</string>
+    <string name="ecuador">Ecuador</string>
+    <string name="el_salvador">El Salvador</string>
+    <string name="french_guiana">Franska Guyana</string>
+    <string name="grenada">Grenada</string>
+    <string name="guadeloupe">Guadeloupe</string>
+    <string name="guatemala">Guatemala</string>
+    <string name="guyana">Guyana</string>
+    <string name="haiti">Haiti</string>
+    <string name="honduras">Honduras</string>
+    <string name="jamaica">Jamaica</string>
+    <string name="matinique">Martinique</string>
+    <string name="mexico">Mexiko</string>
+    <string name="monsterrat">Montserrat</string>
+    <string name="netherlands_antilles">Nederländska Antillerna</string>
+    <string name="nicaragua">Nicaragua</string>
+    <string name="panama">Panama</string>
+    <string name="paraguay">Paraguay</string>
+    <string name="peru">Peru</string>
+    <string name="saint_kittis_and_nevis">Saint Kitts och Nevis</string>
+    <string name="saint_lucia">Saint Lucia</string>
+    <string name="saint_vincent_and_the_grenadines">Saint Vincent och Grenadinerna</string>
+    <string name="suriname">Suriname</string>
+    <string name="trinidad_and_tobago">Trinidad och Tobago</string>
+    <string name="turks_and_caicos_islands">Turk- och Caicosöarna</string>
+    <string name="united_states">United States</string>
+    <string name="uruguay">Uruguay</string>
+    <string name="us_virgin_islands">USA Jungfruöarna</string>
+    <string name="venezuela">Venezuela</string>
+    <string name="albania">Albanien</string>
+    <string name="australia">Australien</string>
+    <string name="austria">Österrike</string>
+    <string name="belgium">Belgien</string>
+    <string name="bosnia_and_herzegovnia">Bosnien och Hercegovina</string>
+    <string name="botswana">Botswana</string>
+    <string name="bulgaria">Bulgarien</string>
+    <string name="croatia">Kroatien</string>
+    <string name="cyprus">Cypern</string>
+    <string name="czech_republic">Tjeckien</string>
+    <string name="denmark">Denmark</string>
+    <string name="estonia">Estland</string>
+    <string name="finland">Finland</string>
+    <string name="france">Frankrike</string>
+    <string name="germany">Tyskland</string>
+    <string name="greece">Grekland</string>
+    <string name="hungary">Ungern</string>
+    <string name="iceland">Island</string>
+    <string name="ireland">Irland</string>
+    <string name="italy">Italien</string>
+    <string name="latvia">Lettland</string>
+    <string name="lesotho">Lesotho</string>
+    <string name="liechtenstein">Liechtenstein</string>
+    <string name="lithuania">Litauen</string>
+    <string name="luxembourg">Luxemburg</string>
+    <string name="macedonia">Makedonien</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Montenegro</string>
+    <string name="mozambique">Mozambique</string>
+    <string name="namibia">Namibia</string>
+    <string name="netherlands">Nederländerna</string>
+    <string name="new_zealand">Nya Zeeland</string>
+    <string name="norway">Norge</string>
+    <string name="poland">Polen</string>
+    <string name="portugal">Portugal</string>
+    <string name="romania">Rumänien</string>
+    <string name="russia">Ryssland</string>
+    <string name="serbia">Serbien</string>
+    <string name="slovakia">Slovakien</string>
+    <string name="slovenia">Slovenien</string>
+    <string name="south_africa">Sydafrika</string>
+    <string name="spain">Spanien</string>
+    <string name="swaziland">Swaziland</string>
+    <string name="sweden">Sverige</string>
+    <string name="switzerland">Schweiz</string>
+    <string name="turkey">Turkiet</string>
+    <string name="united_kingdom">Förenade kungariket</string>
+    <string name="zambia">Zambia</string>
+    <string name="zimbabwe">Zimbabwe</string>
+    <string name="azerbaijan">Azerbaijan</string>
+    <string name="mauritania">Mauritania</string>
+    <string name="mali">Mali</string>
+    <string name="niger">Niger</string>
+    <string name="chad">Chad</string>
+    <string name="sudan">Sudan</string>
+    <string name="eritrea">Eritrea</string>
+    <string name="djibouti">Djibouti</string>
+    <string name="somalia">Somalia</string>
+    <string name="andorra">Andorra</string>
+    <string name="gibraltar">Gibraltar</string>
+    <string name="guernsey">Guernsey</string>
+    <string name="isle_of_man">Isle of Man</string>
+    <string name="jersey">Jersey</string>
+    <string name="monaco">Monaco</string>
+    <string name="taiwan">Taiwan</string>
+    <string name="south_korea">Sydkorea</string>
+    <string name="hong_kong">Hong Kong</string>
+    <string name="macau">Macau</string>
+    <string name="indonesia">Indonesien</string>
+    <string name="singapore">Singapore</string>
+    <string name="thailand">Thailand</string>
+    <string name="philippines">Philippinerna</string>
+    <string name="malaysia">Malaysia</string>
+    <string name="china">Kina</string>
+    <string name="united_arab_emirates">Förenta Arabemiraten</string>
+    <string name="india">Indien</string>
+    <string name="egypt">Egypten</string>
+    <string name="oman">Oman</string>
+    <string name="qatar">Qatar</string>
+    <string name="kuwait">Kuwait</string>
+    <string name="saudi_arabia">Saudiarabien</string>
+    <string name="syria">Syrien</string>
+    <string name="bahrain">Bahrain</string>
+    <string name="jordan">Jordan</string>
+    <string name="san_marino">San Marino</string>
+    <string name="vatican_city">Vaticanstaden</string>
+    <string name="bermuda">Bermuda</string>
+
+    <!-- Months -->
+    <string name="january">Januari</string>
+    <string name="february">Februari</string>
+    <string name="march">Mars</string>
+    <string name="april">April</string>
+    <string name="may">Maj</string>
+    <string name="june">Juni</string>
+    <string name="july">Juli</string>
+    <string name="august">Augusti</string>
+    <string name="september">September</string>
+    <string name="october">Oktober</string>
+    <string name="november">November</string>
+    <string name="december">December</string>
+
+    <!-- Artic base -->
+    <string name="artic_server_comm_error">Kommunikationen med Artic Base-servern misslyckades. Emuleringen kommer att stoppas.</string>
+    <string name="artic_base">Artic base</string>
+    <string name="artic_base_connect_description">Anslut till en riktig konsol som kör en Artic Base-server</string>
+    <string name="artic_base_connect">Anslut till Artic Base</string>
+    <string name="artic_base_enter_address">Ange Artic Base serveradress</string>
+    <string name="delay_render_thread">Fördröj spelets renderingstråd</string>
+    <string name="delay_render_thread_description">Fördröj spelets renderingstråd när den skickar data till GPU:n. Hjälper till med prestandaproblem i de (mycket få) applikationer med dynamiska bildfrekvenser.</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">Snabbspara</string>
+    <string name="emulation_quicksave">Snabbspara</string>
+    <string name="emulation_quickload">Snabbinläsning</string>
+    <string name="emulation_occupied_quicksave_slot">Snabbspara - %1$tF %1$tR</string>
+    <string name="quicksave_saving">Sparar...</string>
+    <string name="quickload_loading">Läser in...</string>
+    <string name="quickload_not_found">Ingen snabbsparning tillgänglig </string>
+    <string name="miscellaneous">Diverse</string>
+    <string name="use_artic_base_controller">Använd Artic Controller när du är ansluten till Artic Base-servern</string>
+    <string name="use_artic_base_controller_description">Använd de kontroller som tillhandahålls av Artic Base Server när du är ansluten till den istället för den konfigurerade inmatningsenheten.</string>
+    <string name="instant_debug_log">Töm loggen för varje meddelande</string>
+    <string name="instant_debug_log_description">Överför omedelbart felsökningsloggen till fil. Använd detta om Azahar kraschar och loggutmatningen skärs av.</string>
+    <string name="disable_right_eye_render">Inaktivera rendering av höger öga</string>
+    <string name="disable_right_eye_render_description">Förbättrar prestandan avsevärt i vissa applikationer, men kan orsaka flimmer i andra.</string>
+    <string name="delay_start_lle_modules">Försenad start med LLE-moduler</string>
+    <string name="delay_start_lle_modules_description">Fördröjer starten av appen när LLE-moduler är aktiverade.</string>
+    <string name="deterministic_async_operations">Deterministiska asynkrona operationer</string>
+    <string name="deterministic_async_operations_description">Gör asynkrona operationer deterministiska för felsökning. Om du aktiverar detta kan det orsaka frysningar.</string>
+    <string name="enable_required_online_lle_modules">Aktivera nödvändiga LLE-moduler för onlinefunktioner (om de är installerade)</string>
+    <string name="enable_required_online_lle_modules_desc">Aktiverar de LLE-moduler som krävs för multiplayer online, eShop-åtkomst etc.</string>
+    <string name="emulation_settings">Emuleringsinställningar</string>
+    <string name="profile_settings">Profilinställningar</string>
+    <string name="mac_address">MAC-adress</string>
+    <string name="regenerate_mac_address">Återgenerera MAC-adress</string>
+    <string name="regenerate_mac_address_description">Detta kommer att ersätta din nuvarande MAC-adress med en ny. Det är inte rekommenderat att göra detta om du fick MAC-adressen från din riktiga konsol med hjälp av installationsverktyget. Fortsätta?</string>
+</resources>

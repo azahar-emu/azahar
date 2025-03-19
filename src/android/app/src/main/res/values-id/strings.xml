@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Pengaturan</string>
+    <string name="home_options">Opsi</string>
+    <string name="home_search">Pencarian</string>
+    <string name="settings_description">Konfigurasi opsi emulator</string>
+    <string name="install_game_content">Install file CIA</string>
+    <string name="share_log">Bagikan Log</string>
+    <string name="gpu_driver_manager">Manajer Driver GPU</string>
+    <string name="install_gpu_driver">Install driver GPU</string>
+    <string name="install_gpu_driver_description">Install driver alternative, berpotensi untuk Performa yang lebih baik atau Akurasi</string>
+    <string name="driver_already_installed">Driver sudah terinstall</string>
+    <string name="custom_driver_not_supported">Driver Custom tidak didukung</string>
+    <string name="custom_driver_not_supported_description">Pemuatan Driver Custom sedang tidak didukung untuk perangkat ini.\nCeklist opsi ini untuk melihat apakah support driver ini ditambahkan pada masa depan!</string>
+    <string name="share_log_not_found">Tidak ada file log ditemukan</string>
+    <string name="about">Tentang</string>
+    <string name="about_description">Versi build, Kredit, dan lainnya</string>
+    <string name="theme_and_color_description">Ubah tampilan aplikasi</string>
+    <string name="install_cia_title">Install CIA</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">Pilih driver GPU</string>
+    <string name="select_gpu_driver_title">Apakah anda ingin untuk mengganti driver GPU mu saat ini?</string>
+    <string name="select_gpu_driver_install">Install</string>
+    <string name="select_gpu_driver_default">Bawaan</string>
+    <string name="select_gpu_driver_install_success">Terinstall %s</string>
+    <string name="select_gpu_driver_use_default">Memakai driver GPU bawaan</string>
+    <string name="select_gpu_driver_error">driver tidak valid di pilih, Menggunakan bawaan sistem!</string>
+    <string name="system_gpu_driver">Sistem GPU driver</string>
+    <string name="installing_driver">Menginstall driver...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Disalin ke papan klip</string>
+    <string name="build">Bangun</string>
+    <string name="licenses">Lisensi</string>
+    <!-- Setup strings -->
+    <string name="welcome">Selamat Datang!</string>
+    <string name="done">Selesai</string>
+    <string name="text_continue">Lanjutkan</string>
+    <string name="notifications">Notifikasi</string>
+    </resources>
