@@ -472,7 +472,7 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 #else
         for (u32 i = 0; i < num_cores; ++i) {
             cpu_cores.push_back(
-                std::make_shared<ARM_DynCom>(this, *memory, USER32MODE, i, timing->GetTimer(i)));
+                std::make_shared<ARM_DynCom>(*this, *memory, USER32MODE, i, timing->GetTimer(i)));
         }
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
