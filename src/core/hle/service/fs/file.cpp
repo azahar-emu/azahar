@@ -79,13 +79,13 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     if (!backend->AllowsCachedReads()) {
         auto& buffer = rp.PopMappedBuffer();
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-        std::unique_ptr<u8*> data = std::make_unique<u8*>(static_cast<u8*>(operator new(length)));
-        const auto read = backend->Read(offset, length, *data);
+        std::unique_ptr<u8[]> data = std::make_unique<u8[]>(length);
+        const auto read = backend->Read(offset, length, data.get());
         if (read.Failed()) {
             rb.Push(read.Code());
             rb.Push<u32>(0);
         } else {
-            buffer.Write(*data, 0, *read);
+            buffer.Write(data.get(), 0, *read);
             rb.Push(ResultSuccess);
             rb.Push<u32>(static_cast<u32>(*read));
         }
