@@ -79,7 +79,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     if (!backend->AllowsCachedReads()) {
         auto& buffer = rp.PopMappedBuffer();
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-        std::unique_ptr<u8[]> data = std::make_unique<u8[]>(length);
+        std::unique_ptr<u8[]> data = std::make_unique_for_overwrite<u8[]>(length);
         const auto read = backend->Read(offset, length, data.get());
         if (read.Failed()) {
             rb.Push(read.Code());
@@ -122,7 +122,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     // LOG_DEBUG(Service_FS, "cache={}, offset={}, length={}", cache_ready, offset, length);
     ctx.RunAsync(
         [this, async_data](Kernel::HLERequestContext& ctx) {
-            async_data->data = std::make_unique<u8[]>(async_data->length);
+            async_data->data = std::make_unique_for_overwrite<u8[]>(async_data->length);
             const auto read =
                 backend->Read(async_data->offset, async_data->length, async_data->data.get());
             if (read.Failed()) {
