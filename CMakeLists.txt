@@ -61,6 +61,14 @@ else()
     set(DEFAULT_ENABLE_LTO OFF)
 endif()
 
+# Disable OpenGL by default on Linux aarch64.
+# Some aarch64 devices running Linux don't support OpenGL, and users may encounter issues.
+if (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+    set(DEFAULT_ENABLE_OPENGL OFF)
+else()
+    set(DEFAULT_ENABLE_OPENGL ON)
+endif()
+
 option(ENABLE_SDL2 "Enable using SDL2" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" OFF "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
@@ -82,7 +90,7 @@ option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ON "NOT APPLE AND NOT (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL \"aarch64\")" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
 option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
