@@ -403,6 +403,10 @@ void QtConfig::ReadControlValues() {
             ReadSetting(QStringLiteral("touch_device"), QStringLiteral("engine:emu_window"))
                 .toString()
                 .toStdString();
+        profile.controller_touch_device =
+            ReadSetting(QStringLiteral("controller_touch_device"),QStringLiteral(""))
+                .toString()
+                .toStdString();
         profile.use_touch_from_button =
             ReadSetting(QStringLiteral("use_touch_from_button"), false).toBool();
         profile.touch_from_button_map_index =
