@@ -24,6 +24,7 @@ class SDLGameController;
 class SDLButtonFactory;
 class SDLAnalogFactory;
 class SDLMotionFactory;
+class SDLTouchFactory;
 
 class SDLState : public State {
 public:
@@ -62,6 +63,7 @@ private:
     std::unordered_map<std::string, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
     std::mutex joystick_map_mutex;
 
+    std::shared_ptr<SDLTouchFactory> touch_factory;
     std::shared_ptr<SDLButtonFactory> button_factory;
     std::shared_ptr<SDLAnalogFactory> analog_factory;
     std::shared_ptr<SDLMotionFactory> motion_factory;

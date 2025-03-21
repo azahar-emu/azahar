@@ -115,6 +115,7 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
 }
 
 void Module::LoadInputDevices() {
+    LOG_DEBUG(Frontend,"Loading input devices");
     std::transform(Settings::values.current_input_profile.buttons.begin() +
                        Settings::NativeButton::BUTTON_HID_BEGIN,
                    Settings::values.current_input_profile.buttons.begin() +
@@ -126,6 +127,11 @@ void Module::LoadInputDevices() {
         Settings::values.current_input_profile.motion_device);
     touch_device = Input::CreateDevice<Input::TouchDevice>(
         Settings::values.current_input_profile.touch_device);
+    if (Settings::values.current_input_profile.controller_touch_device != "") {
+        controller_touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.current_input_profile.controller_touch_device);
+    } else {
+        controller_touch_device.reset();
+    }
     if (Settings::values.current_input_profile.use_touch_from_button) {
         touch_btn_device = Input::CreateDevice<Input::TouchDevice>("engine:touch_from_button");
     } else {
@@ -277,6 +283,9 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         std::tie(x, y, pressed) = touch_device->GetStatus();
         if (!pressed && touch_btn_device) {
             std::tie(x, y, pressed) = touch_btn_device->GetStatus();
+        }
+        if (!pressed && controller_touch_device) {
+            std::tie(x,y,pressed) = controller_touch_device->GetStatus();
         }
         touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
         touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
