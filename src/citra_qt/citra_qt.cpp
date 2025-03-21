@@ -3637,8 +3637,7 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
     update_prompt.exec();
     if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
         QDesktopServices::openUrl(
-            QUrl(QString::fromStdString("https://github.com/azahar-emu/azahar/releases/tag/") +
-                 version_string));
+            QUrl(QString::fromStdString("https://azahar-emu.org/pages/download/")));
     }
 }
 #endif
