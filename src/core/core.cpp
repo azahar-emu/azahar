@@ -293,6 +293,7 @@ System::ResultStatus System::SingleStep() {
 
 System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath,
                                   Frontend::EmuWindow* secondary_window) {
+    Settings::ResetTemporaryFrameLimit();
     FileUtil::SetCurrentRomPath(filepath);
     if (early_app_loader) {
         app_loader = std::move(early_app_loader);

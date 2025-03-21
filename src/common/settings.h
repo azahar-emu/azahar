@@ -623,6 +623,10 @@ void RenameCurrentProfile(std::string new_name);
 
 extern bool is_temporary_frame_limit;
 extern double temporary_frame_limit;
+static inline void ResetTemporaryFrameLimit() {
+    is_temporary_frame_limit = false;
+    temporary_frame_limit = 0;
+}
 static inline double GetFrameLimit() {
     return is_temporary_frame_limit ? temporary_frame_limit : values.frame_limit.GetValue();
 }
