@@ -2777,37 +2777,61 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
 
 void Module::Interface::GetPersonalizedTicketInfoList(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 ticket_count = rp.Pop<u32>();
-    auto& out_buffer = rp.PopMappedBuffer();
 
-    LOG_DEBUG(Service_AM, "(STUBBED) called, ticket_count={}", ticket_count);
+    struct AsyncData {
+        u32 ticket_count;
 
-    u32 written = 0;
-    std::scoped_lock lock(am->am_lists_mutex);
-    for (auto it = am->am_ticket_list.begin();
-         it != am->am_ticket_list.end() && written < ticket_count; it++) {
-        u64 title_id = it->first;
-        u32 tid_high = static_cast<u32>(title_id << 32);
-        if ((tid_high & 0x00048010) == 0x00040010 || (tid_high & 0x00048001) == 0x00048001)
-            continue;
+        std::vector<TicketInfo> out;
+        Kernel::MappedBuffer* out_buffer;
+    };
+    std::shared_ptr<AsyncData> async_data = std::make_shared<AsyncData>();
+    async_data->ticket_count = rp.Pop<u32>();
+    async_data->out_buffer = &rp.PopMappedBuffer();
 
-        FileSys::Ticket ticket;
-        if (ticket.Load(title_id, it->second) != Loader::ResultStatus::Success)
-            continue;
+    LOG_DEBUG(Service_AM, "called, ticket_count={}", async_data->ticket_count);
 
-        TicketInfo info = {};
-        info.title_id = ticket.GetTitleID();
-        info.ticket_id = ticket.GetTicketID();
-        info.version = ticket.GetVersion();
-        info.size = static_cast<u32>(ticket.GetSerializedSize());
+    // TODO(PabloMK7): Properly figure out how to detect personalized tickets.
 
-        out_buffer.Write(&info, written * sizeof(TicketInfo), sizeof(TicketInfo));
-        written++;
-    }
+    ctx.RunAsync(
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            u32 written = 0;
+            std::scoped_lock lock(am->am_lists_mutex);
+            for (auto it = am->am_ticket_list.begin();
+                 it != am->am_ticket_list.end() && written < async_data->ticket_count; it++) {
+                u64 title_id = it->first;
+                u32 tid_high = static_cast<u32>(title_id << 32);
+                if ((tid_high & 0x00048010) == 0x00040010 || (tid_high & 0x00048001) == 0x00048001)
+                    continue;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(ResultSuccess); // No error
-    rb.Push(written);
+                FileSys::Ticket ticket;
+                if (ticket.Load(title_id, it->second) != Loader::ResultStatus::Success ||
+                    !ticket.IsPersonal())
+                    continue;
+
+                TicketInfo info = {};
+                info.title_id = ticket.GetTitleID();
+                info.ticket_id = ticket.GetTicketID();
+                info.version = ticket.GetVersion();
+                info.size = static_cast<u32>(ticket.GetSerializedSize());
+
+                async_data->out.push_back(info);
+                written++;
+            }
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            u32 written = 0;
+            for (auto& info : async_data->out) {
+                async_data->out_buffer->Write(&info, written * sizeof(TicketInfo),
+                                              sizeof(TicketInfo));
+                written++;
+            }
+
+            IPC::RequestBuilder rb(ctx, 2, 0);
+            rb.Push(ResultSuccess); // No error
+            rb.Push(written);
+        },
+        true);
 }
 
 void Module::Interface::GetNumImportTitleContextsFiltered(Kernel::HLERequestContext& ctx) {

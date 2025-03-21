@@ -167,4 +167,19 @@ std::optional<std::array<u8, 16>> Ticket::GetTitleKey() const {
     return title_key;
 }
 
+bool Ticket::IsPersonal() {
+    if (ticket_body.console_id == 0u) {
+        // Common ticket
+        return false;
+    }
+
+    auto& otp = HW::UniqueData::GetOTP();
+    if (!otp.Valid()) {
+        LOG_ERROR(HW_AES, "Invalid OTP");
+        return false;
+    }
+
+    return ticket_body.console_id == otp.GetDeviceID();
+}
+
 } // namespace FileSys
