@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -307,7 +307,7 @@ void RendererOpenGL::FillScreen(Common::Vec3<u8> color, TextureInfo& texture) {
  */
 void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                 Settings::values.bg_blue.GetValue(), 0.0f);
+                 Settings::values.bg_blue.GetValue(), 1.0f);
 
     for (std::size_t i = 0; i < samplers.size(); i++) {
         samplers[i].Create();
@@ -637,7 +637,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                     Settings::values.bg_blue.GetValue(), 0.0f);
+                     Settings::values.bg_blue.GetValue(), 1.0f);
     }
 
     if (settings.shader_update_requested.exchange(false)) {
