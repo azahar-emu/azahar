@@ -1,4 +1,4 @@
-; Copyright Dolphin Emulator Project / Lime3DS Emulator Project
+; Copyright Dolphin Emulator Project / Azahar Emulator Project
 ; Licensed under GPLv2 or any later version
 ; Refer to the license.txt file included.
 
@@ -46,7 +46,7 @@ ShowUnInstDetails show
 !include "nsDialogs.nsh"
 
 ; MUI Settings
-!define MUI_ICON "../../dist/citra.ico"
+!define MUI_ICON "../../dist/azahar.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; License page
