@@ -1,10 +1,11 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <QMenu>
+#include <QPushButton>
 #include <QString>
 #include <QVector>
 #include <QWidget>
@@ -133,6 +134,10 @@ private:
     void changeEvent(QEvent*) override;
     void RetranslateUI();
 
+    QHBoxLayout* warning_layout = nullptr;
+    QWidget* warning_widget = nullptr;
+    QLabel* deprecated_3ds_warning = nullptr;
+    QPushButton* warning_hide = nullptr;
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;

@@ -11,6 +11,8 @@
     <string name="app_game_install_description">Next, you will need to select an Applications Folder. Azahar will display all of the 3DS ROMs inside of the selected folder in the app.\n\nCIA ROMs, updates and DLC will need to be installed separately by clicking on the folder icon and selecting Install CIA.</string>
     <string name="start">Start</string>
     <string name="cancelling">Cancelling…</string>
+    <string name="important">Important</string>
+    <string name="dont_show_again">Don\'t show again</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Settings</string>
@@ -38,6 +40,7 @@
     <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load applications</string>
     <string name="theme_and_color_description">Modify the look of the app</string>
     <string name="install_cia_title">Install CIA</string>
+    <string name="warning_3ds_files">Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Learn more.&lt;/a></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Select GPU driver</string>
