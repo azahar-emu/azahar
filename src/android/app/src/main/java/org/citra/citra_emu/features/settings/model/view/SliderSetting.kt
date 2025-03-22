@@ -20,7 +20,8 @@ class SliderSetting(
     val max: Int,
     val units: String,
     val key: String? = null,
-    val defaultValue: Float? = null
+    val defaultValue: Float? = null,
+    override var isEnabled: Boolean = true
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SLIDER
     val selectedFloat: Float
