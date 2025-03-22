@@ -10,13 +10,6 @@ It was created from the merging of PabloMK7's Citra fork and the Lime3DS project
 
 The goal of this project is to be the de-facto platform for future development.
 
-> [!NOTE]
-> Azahar has not fully released yet. For this reason, there are no compiled binaries available for download.
-> 
-> It is recommended that only developers and early adopters should use the emulator until our first stable release.
->
-> Here be dragons.
-
 <!--
 # Installation
 
