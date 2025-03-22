@@ -495,6 +495,8 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.png"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()
