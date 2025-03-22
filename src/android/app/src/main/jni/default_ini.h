@@ -72,8 +72,6 @@ motion_device=
 #      - "min_x", "min_y", "max_x", "max_y": defines the udp device's touch screen coordinate system
 touch_device= engine:emu_window
 
-controller_touch_device = engine:sdl,guid:0,port:0
-
 # Most desktop operating systems do not expose a way to poll the motion state of the controllers
 # so as a way around it, cemuhook created a udp client/server protocol to broadcast the data directly
 # from a controller device to the client program. Citra has a client that can connect and read
