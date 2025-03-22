@@ -127,7 +127,8 @@ void Module::LoadInputDevices() {
         Settings::values.current_input_profile.motion_device);
     touch_device = Input::CreateDevice<Input::TouchDevice>(
         Settings::values.current_input_profile.touch_device);
-    if (Settings::values.current_input_profile.controller_touch_device != "") {
+    if (Settings::values.current_input_profile.use_touchpad &&
+        Settings::values.current_input_profile.controller_touch_device != "") {
         controller_touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.current_input_profile.controller_touch_device);
     } else {
         controller_touch_device.reset();
