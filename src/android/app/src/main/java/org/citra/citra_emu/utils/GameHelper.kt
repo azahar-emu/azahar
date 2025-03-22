@@ -20,6 +20,8 @@ object GameHelper {
     const val KEY_GAME_PATH = "game_path"
     const val KEY_GAMES = "Games"
 
+    // Since the game val in GetGame is tied to the JNI we need to cache the game list in order to use it elsewhere
+    var cachedGameList = mutableListOf<Game>()
     private lateinit var preferences: SharedPreferences
 
     fun getGames(): List<Game> {
@@ -44,6 +46,7 @@ object GameHelper {
             .putStringSet(KEY_GAMES, serializedGames)
             .apply()
 
+        cachedGameList = games.toMutableList()
         return games.toList()
     }
 

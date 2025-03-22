@@ -34,12 +34,12 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
+import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         ThemeUtil.ThemeChangeListener(this)
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
+        NativeLibrary.initMultiplayer()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -169,6 +170,11 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override fun onDestroy() {
         super.onDestroy()
+    }
+
+    fun displayMultiplayerDialog() {
+        val dialog = NetPlayDialog(this)
+        dialog.show()
     }
 
     override fun setTheme(resId: Int) {
