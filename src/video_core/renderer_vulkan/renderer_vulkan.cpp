@@ -739,6 +739,12 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
 
+    bool separate_win = false;
+#ifndef ANDROID
+    separate_win =
+        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
+#endif
+
     switch (Settings::values.render_3d.GetValue()) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
@@ -747,12 +753,17 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
     case Settings::StereoRenderOption::ReverseSideBySide: {
-        DrawSingleScreen(2, bottom_screen_left / 2, bottom_screen_top, bottom_screen_width / 2,
-                         bottom_screen_height, orientation);
-        draw_info.layer = 1;
-        DrawSingleScreen(2, static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                         bottom_screen_top, bottom_screen_width / 2, bottom_screen_height,
-                         orientation);
+        if (separate_win) {
+            DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
+                             bottom_screen_height, orientation);
+        } else {
+            DrawSingleScreen(2, bottom_screen_left / 2, bottom_screen_top, bottom_screen_width / 2,
+                             bottom_screen_height, orientation);
+            draw_info.layer = 1;
+            DrawSingleScreen(2, static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
+                             bottom_screen_top, bottom_screen_width / 2, bottom_screen_height,
+                             orientation);
+        }
         break;
     }
     case Settings::StereoRenderOption::CardboardVR: {
@@ -767,8 +778,13 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
-                               bottom_screen_height, orientation);
+        if (separate_win) {
+            DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
+                             bottom_screen_height, orientation);
+        } else {
+            DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
+                                   bottom_screen_height, orientation);
+        }
         break;
     }
     }
