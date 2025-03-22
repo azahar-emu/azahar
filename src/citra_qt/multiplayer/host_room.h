@@ -49,6 +49,8 @@ public:
 
 private:
     void Host();
+    void SetLocalIPAddress();
+    void CopyIPToClipboard();
     std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) const;
 
     std::unique_ptr<Ui::HostRoom> ui;
