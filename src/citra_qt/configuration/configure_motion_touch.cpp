@@ -233,7 +233,7 @@ void ConfigureMotionTouch::ConnectEvents() {
             poll_timer->start(200);     // Check for new inputs every 200ms
         }
     });
-    connect(ui->touchpad_checkbox,&QCheckBox::stateChanged, this, [this]() {UpdateUiDisplay(); });
+    connect(ui->touchpad_checkbox,&QCheckBox::checkStateChanged, this, [this]() {UpdateUiDisplay(); });
     connect(ui->touchpad_config_btn, &QPushButton::clicked, this, [this]() {
         if (QMessageBox::information(this, tr("Information"),
                                      tr("After pressing OK, tap the trackpad on the controller"
