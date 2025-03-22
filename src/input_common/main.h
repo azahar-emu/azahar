@@ -45,7 +45,7 @@ void ReloadInputDevices();
 
 namespace Polling {
 
-enum class DeviceType { Button, Analog };
+enum class DeviceType { Button, Analog, Touchpad};
 
 /**
  * A class that can be used to get inputs from an input device like controllers without having to
