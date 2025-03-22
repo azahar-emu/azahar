@@ -15,7 +15,10 @@ enum class StringSetting(
     CAMERA_OUTER_LEFT_NAME("camera_outer_left_name", Settings.SECTION_CAMERA, "ndk"),
     CAMERA_OUTER_LEFT_CONFIG("camera_outer_left_config", Settings.SECTION_CAMERA, "_back"),
     CAMERA_OUTER_RIGHT_NAME("camera_outer_right_name", Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_OUTER_RIGHT_CONFIG("camera_outer_right_config", Settings.SECTION_CAMERA, "_back");
+    CAMERA_OUTER_RIGHT_CONFIG("camera_outer_right_config", Settings.SECTION_CAMERA, "_back"),
+    WEB_API_URL("web_api_url", Settings.SECTION_NETWORK, ""),
+    NETWORK_USERNAME("citra_username", Settings.SECTION_NETWORK, "Azahar"),
+    NETWORK_TOKEN("citra_token", Settings.SECTION_NETWORK, "");
 
     override var string: String = defaultValue
 
