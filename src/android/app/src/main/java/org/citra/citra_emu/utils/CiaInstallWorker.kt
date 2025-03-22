@@ -32,20 +32,20 @@ class CiaInstallWorker(
         context.getString(R.string.cia_install_notification_channel_id)
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
-        .setSmallIcon(R.drawable.ic_stat_notification_logo)
+        .setSmallIcon(R.drawable.ic_citra_monochrome)
     private val installStatusBuilder = NotificationCompat.Builder(
         context,
         context.getString(R.string.cia_install_notification_channel_id)
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
-        .setSmallIcon(R.drawable.ic_stat_notification_logo)
+        .setSmallIcon(R.drawable.ic_citra_monochrome)
         .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
     private val summaryNotification = NotificationCompat.Builder(
         context,
         context.getString(R.string.cia_install_notification_channel_id)
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
-        .setSmallIcon(R.drawable.ic_stat_notification_logo)
+        .setSmallIcon(R.drawable.ic_citra_monochrome)
         .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
         .setGroupSummary(true)
         .build()
