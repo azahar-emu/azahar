@@ -496,7 +496,7 @@
     <string name="cia_install_notification_channel_id" translatable="false">citra-cia</string>
     <string name="cia_install_notification_channel_description">Azahar notifications during CIA Install</string>
     <string name="cia_install_notification_title">Installing CIA</string>
-    <string name="cia_install_notification_installing">Installing %s (%1$d/%2$d)</string>
+    <string name="cia_install_notification_installing">Installing %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">Successfully installed CIA</string>
     <string name="cia_install_notification_error_title">Failed to install CIA</string>
     <string name="cia_install_success">\"%s\" has been installed successfully</string>
