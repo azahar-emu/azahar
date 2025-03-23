@@ -2,10 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <iomanip>
-#include <memory>
-#include <sstream>
-#include <unordered_map>
 #include <INIReader.h>
 #include "common/file_util.h"
 #include "common/logging/backend.h"
@@ -15,6 +11,7 @@
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/service.h"
+#include "core/rpc/udp_server.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "jni/camera/ndk_camera.h"
@@ -286,9 +283,14 @@ void Config::ReadValues() {
     // Debugging
     Settings::values.record_frame_times =
         sdl2_config->GetBoolean("Debugging", "record_frame_times", false);
+    Settings::values.use_rpc_server = sdl2_config->GetBoolean("Debugging", "use_rpc_server", true);
+    Settings::values.use_rpc_server =
+        sdl2_config->GetInteger("Debugging", "rpc_server_port", Core::RPC::DEFAULT_PORT);
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
+    ReadSetting("Debugging", Settings::values.use_rpc_server);
+    ReadSetting("Debugging", Settings::values.rpc_server_port);
     ReadSetting("Debugging", Settings::values.instant_debug_log);
 
     for (const auto& service_module : Service::service_module_map) {

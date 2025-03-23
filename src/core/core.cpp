@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <stdexcept>
-#include <utility>
 #include <boost/serialization/array.hpp>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
@@ -503,7 +501,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
 #ifdef ENABLE_SCRIPTING
-    rpc_server = std::make_unique<RPC::Server>(*this);
+    if (Settings::values.use_rpc_server.GetValue()) {
+        rpc_server = std::make_unique<RPC::Server>(*this);
+    }
 #endif
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);
@@ -641,7 +641,9 @@ void System::Shutdown(bool is_deserializing) {
     }
     custom_tex_manager.reset();
 #ifdef ENABLE_SCRIPTING
-    rpc_server.reset();
+    if (Settings::values.use_rpc_server.GetValue()) {
+        rpc_server.reset();
+    }
 #endif
     archive_manager.reset();
     service_manager.reset();
