@@ -1405,6 +1405,27 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
             add(
+                SwitchSetting(
+                    IntSetting.USE_RPC_SERVER,
+                    R.string.use_rpc_server,
+                    R.string.use_rpc_server_description,
+                    IntSetting.USE_RPC_SERVER.key,
+                    IntSetting.USE_RPC_SERVER.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    IntSetting.RPC_SERVER_PORT,
+                    R.string.rpc_server_port,
+                    R.string.rpc_server_port_description,
+                    1024,
+                    65535,
+                    "",
+                    IntSetting.RPC_SERVER_PORT.key,
+                    IntSetting.RPC_SERVER_PORT.defaultValue.toFloat()
+                )
+            )
+            add(
                 SliderSetting(
                     IntSetting.CPU_CLOCK_SPEED,
                     R.string.cpu_clock_speed,

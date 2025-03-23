@@ -422,6 +422,10 @@ renderer_debug =
 use_gdbstub=false
 gdbstub_port=24689
 
+# Port for the scripting RPC server.
+use_rpc_server =
+rpc_server_port =
+
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =

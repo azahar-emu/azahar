@@ -336,6 +336,10 @@
     <string name="setting_disabled_description">This setting is currently disabled due to another setting not being the appropriate value.</string>
     <string name="setting_not_editable_description">This option can\'t be changed while a game is running.</string>
     <string name="auto_select">Auto-Select</string>
+    <string name="use_rpc_server">Enable RPC Server</string>
+    <string name="use_rpc_server_description">Enables the RPC server for scripting. Safe to disable if scripting is not in use.</string>
+    <string name="rpc_server_port">RPC Server Port</string>
+    <string name="rpc_server_port_description">Port number for the scripting RPC server. Do not choose a custom port number lower than 49152 unless you know what you are doing.</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>

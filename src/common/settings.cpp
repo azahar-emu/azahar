@@ -153,6 +153,8 @@ void LogSettings() {
     log_setting("Debugging_DelayStartForLLEModules", values.delay_start_for_lle_modules.GetValue());
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
+    log_setting("Debugging_UseRpcServer", values.use_rpc_server.GetValue());
+    log_setting("Debugging_RpcServerPort", values.use_rpc_server.GetValue());
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
 }
 

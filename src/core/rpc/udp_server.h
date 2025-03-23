@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,8 +6,11 @@
 
 #include <functional>
 #include <memory>
+#include "common/common_types.h"
 
 namespace Core::RPC {
+
+constexpr u16 DEFAULT_PORT{45987};
 
 class Packet;
 

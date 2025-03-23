@@ -94,6 +94,13 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port.GetValue());
+#ifdef ENABLE_SCRIPTING
+    ui->toggle_rpc_server->setChecked(Settings::values.use_rpc_server.GetValue());
+    ui->rpc_server_port_spinbox->setEnabled(Settings::values.use_rpc_server.GetValue());
+    ui->rpc_server_port_spinbox->setValue(Settings::values.rpc_server_port.GetValue());
+#else
+    ui->groupBox_scripting->hide();
+#endif
     ui->toggle_console->setEnabled(!is_powered_on);
     ui->toggle_console->setChecked(UISettings::values.show_console.GetValue());
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter.GetValue()));
@@ -129,6 +136,10 @@ void ConfigureDebug::SetConfiguration() {
 void ConfigureDebug::ApplyConfiguration() {
     Settings::values.use_gdbstub = ui->toggle_gdbstub->isChecked();
     Settings::values.gdbstub_port = static_cast<u16>(ui->gdbport_spinbox->value());
+#ifdef ENABLE_SCRIPTING
+    Settings::values.use_rpc_server = ui->toggle_rpc_server->isChecked();
+    Settings::values.rpc_server_port = static_cast<u16>(ui->rpc_server_port_spinbox->value());
+#endif
     UISettings::values.show_console = ui->toggle_console->isChecked();
     Settings::values.log_filter = ui->log_filter_edit->text().toStdString();
     Settings::values.log_regex_filter = ui->log_regex_filter_edit->text().toStdString();
