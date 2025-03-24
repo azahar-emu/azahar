@@ -12,6 +12,7 @@
 #include <fmt/ranges.h>
 #include "common/archives.h"
 #include "common/file_util.h"
+#include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "common/string_util.h"
@@ -21,6 +22,7 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_defaults.h"
@@ -200,7 +202,14 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
     rb.Push<u16>(country_code_id);
 }
 
-u32 Module::GetRegionValue() {
+u32 Module::GetRegionValue(bool from_secure_info) {
+    if (from_secure_info) {
+        auto& sec_info = HW::UniqueData::GetSecureInfoA();
+        if (sec_info.IsValid()) {
+            return sec_info.body.region;
+        }
+    }
+
     if (Settings::values.region_value.GetValue() == Settings::REGION_VALUE_AUTO_SELECT) {
         UpdatePreferredRegionCode();
         return preferred_region_code;
@@ -212,9 +221,13 @@ u32 Module::GetRegionValue() {
 void Module::Interface::GetRegion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
+    u64 caller_tid = ctx.ClientThread()->owner_process.lock()->codeset->program_id;
+    bool from_secure_info = Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::REGION_FROM_SECURE, caller_tid, false);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue()));
+    rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue(from_secure_info)));
 }
 
 void Module::Interface::SecureInfoGetByte101(Kernel::HLERequestContext& ctx) {
@@ -319,8 +332,12 @@ void Module::Interface::IsCoppacsSupported(Kernel::HLERequestContext& ctx) {
 
     rb.Push(ResultSuccess);
 
+    u64 caller_tid = ctx.ClientThread()->owner_process.lock()->codeset->program_id;
+    bool from_secure_info = Common::Hacks::hack_manager.OverrideBooleanSetting(
+        Common::Hacks::HackType::REGION_FROM_SECURE, caller_tid, false);
+
     u8 canada_or_usa = 1;
-    if (canada_or_usa == cfg->GetRegionValue()) {
+    if (canada_or_usa == cfg->GetRegionValue(from_secure_info)) {
         rb.Push(true);
     } else {
         rb.Push(false);

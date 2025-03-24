@@ -13,6 +13,7 @@ enum class HackType : int {
     ACCURATE_MULTIPLICATION,
     DECRYPTION_AUTHORIZED,
     ONLINE_LLE_REQUIRED,
+    REGION_FROM_SECURE,
 };
 
 class UserHackData {};

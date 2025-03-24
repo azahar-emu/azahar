@@ -484,7 +484,7 @@ private:
     void LoadMCUConfig();
 
 public:
-    u32 GetRegionValue();
+    u32 GetRegionValue(bool from_secure_info);
 
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.
