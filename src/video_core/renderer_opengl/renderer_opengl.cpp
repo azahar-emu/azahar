@@ -836,8 +836,8 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
                                bottom_screen_top, bottom_screen_width, bottom_screen_height,
                                orientation);
-        }
         break;
+    }
     }
 }
 
