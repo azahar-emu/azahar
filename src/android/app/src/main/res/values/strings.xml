@@ -254,7 +254,7 @@
     <string name="stereoscopy">Stereoscopy</string>
     <string name="render3d">Stereoscopic 3D Mode</string>
     <string name="factor3d">Depth</string>
-    <string name="factor3d_description">Specifies the value of the 3D slider. This should be set to higher than 0% when Stereoscopic 3D is enabled.</string>
+    <string name="factor3d_description">Specifies the value of the 3D slider. This should be set to higher than 0% when Stereoscopic 3D is enabled.\nNote: Depth values over 100% are not possible on real hardware and may cause graphical issues</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard Screen Size</string>
     <string name="cardboard_screen_size_description">Scales the screen to a percentage of its original size.</string>
