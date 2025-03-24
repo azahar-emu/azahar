@@ -833,16 +833,11 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        if (separate_win) {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                             bottom_screen_width, bottom_screen_height, orientation);
-        } else {
-            DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
-                                   bottom_screen_top, bottom_screen_width, bottom_screen_height,
-                                   orientation);
+        DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
+                               bottom_screen_top, bottom_screen_width, bottom_screen_height,
+                               orientation);
         }
         break;
-    }
     }
 }
 
