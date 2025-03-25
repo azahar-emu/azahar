@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.fragments
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.Gravity
@@ -155,6 +156,22 @@ class SystemFilesFragment : Fragment() {
                 HtmlCompat.FROM_HTML_MODE_COMPACT
             )
             movementMethod = LinkMovementMethod.getInstance()
+        }
+
+        binding.buttonUnlinkConsoleData.isEnabled = NativeLibrary.isFullConsoleLinked()
+        binding.buttonUnlinkConsoleData.setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.delete_system_files)
+                .setMessage(HtmlCompat.fromHtml(
+                    requireContext().getString(R.string.delete_system_files_description),
+                    HtmlCompat.FROM_HTML_MODE_COMPACT
+                ))
+                .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
+                    NativeLibrary.unlinkConsole()
+                    binding.buttonUnlinkConsoleData.isEnabled = NativeLibrary.isFullConsoleLinked()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
         }
 
         binding.buttonSetUpSystemFiles.setOnClickListener {

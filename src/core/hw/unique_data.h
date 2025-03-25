@@ -154,4 +154,7 @@ void InvalidateSecureData();
 std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
                                                        const char openmode[], UniqueCryptoFileID id,
                                                        int flags = 0);
+
+bool IsFullConsoleLinked();
+void UnlinkConsole();
 } // namespace HW::UniqueData

@@ -238,6 +238,8 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
+    connect(ui->button_linked_console, &QPushButton::clicked, this,
+            &ConfigureSystem::UnlinkConsole);
 
     connect(ui->button_secure_info, &QPushButton::clicked, this, [this] {
         ui->button_secure_info->setEnabled(false);
@@ -561,6 +563,25 @@ void ConfigureSystem::RefreshMAC() {
     ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
 }
 
+void ConfigureSystem::UnlinkConsole() {
+    QMessageBox::StandardButton reply;
+    QString warning_text =
+        tr("This action will unlink your real console from Azahar, with the following "
+           "consequences:<br><ul><li>Your OTP, SecureInfo and LocalFriendCodeSeed will be removed "
+           "from Azahar.</li><li>Your friend list will reset and you will be logged out of your "
+           "NNID/PNID account.</li><li>System files and eshop titles obtained through Azahar will "
+           "become inaccessible until the same console is linked again (save data will not be "
+           "lost).</li></ul><br>Continue?");
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    HW::UniqueData::UnlinkConsole();
+    RefreshSecureDataStatus();
+}
+
 void ConfigureSystem::InstallSecureData(const std::string& from_path, const std::string& to_path) {
     std::string from =
         FileUtil::SanitizePath(from_path, FileUtil::DirectorySeparator::PlatformDefault);
@@ -601,6 +622,15 @@ void ConfigureSystem::RefreshSecureDataStatus() {
         tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadOTP())).c_str()));
     ui->label_movable_status->setText(
         tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadMovable())).c_str()));
+
+    if (HW::UniqueData::IsFullConsoleLinked()) {
+        ui->linked_console->setVisible(true);
+        ui->button_otp->setEnabled(false);
+        ui->button_secure_info->setEnabled(false);
+        ui->button_friend_code_seed->setEnabled(false);
+    } else {
+        ui->linked_console->setVisible(false);
+    }
 }
 
 void ConfigureSystem::RetranslateUI() {
@@ -625,6 +655,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_init_ticks_type->setVisible(false);
     ui->label_init_ticks_value->setVisible(false);
     ui->label_console_id->setVisible(false);
+    ui->label_mac->setVisible(false);
     ui->label_sound->setVisible(false);
     ui->label_language->setVisible(false);
     ui->label_country->setVisible(false);
@@ -646,6 +677,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->edit_init_ticks_value->setVisible(false);
     ui->toggle_system_setup->setVisible(false);
     ui->button_regenerate_console_id->setVisible(false);
+    ui->button_regenerate_mac->setVisible(false);
     // Apps can change the state of the plugin loader, so plugins load
     // to a chainloaded app with specific parameters. Don't allow
     // the plugin loader state to be configured per-game as it may
@@ -653,6 +685,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_plugin_loader->setVisible(false);
     ui->plugin_loader->setVisible(false);
     ui->allow_plugin_loader->setVisible(false);
+    ui->group_real_console_unique_data->setVisible(false);
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);

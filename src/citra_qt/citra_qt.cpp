@@ -2112,15 +2112,18 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QVBoxLayout layout(&dialog);
 
     QLabel label_description(
-        tr("<p>Azahar needs files from a real console to be able to use some of its features.<br>"
-           "You can get such files with the <a "
+        tr("<p>Azahar needs console unique data and firmware files from a real console to be "
+           "able to use some of its features.<br>Such files and data can be set up with the <a "
            "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
-           "Artic Setup Tool</a><br> Notes:<ul><li><b>This operation will install console unique "
-           "files "
-           "to Azahar, do not share your user or nand folders<br>after performing the setup "
-           "process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to "
-           "work.</li><li>Both setup modes will work regardless of the model of the console "
-           "running the setup tool.</li></ul><hr></p>"),
+           "Artic Setup Tool</a><br>Notes:<ul><li><b>This operation will install console unique "
+           "data to Azahar, do not share your user or nand folders<br>after performing the setup "
+           "process!</b></li><li>By doing the setup process, Azahar will link to the console "
+           "running the setup tool. You can unlink the<br>console later from the system tab in the "
+           "emulator configuration.</li><li>Do not go online at the same time with Azahar and your "
+           "console after doing the setup<br>as it could cause issues.</li><li>Old 3DS setup is "
+           "needed for the New 3DS setup to work (doing both setup modes is recommended)."
+           "</li><li>Both setup modes will work regardless of the model of the console running the "
+           "setup tool.</li></ul><hr></p>"),
         &dialog);
     label_description.setOpenExternalLinks(true);
     layout.addWidget(&label_description);

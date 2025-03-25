@@ -5,6 +5,7 @@
 #include <cryptopp/sha.h>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/otp.h"
 #include "core/hw/aes/key.h"
@@ -260,6 +261,32 @@ std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filena
     memcpy(ctr.data(), digest + 0x10, 12);
 
     return std::make_unique<FileUtil::CryptoIOFile>(filename, openmode, key, ctr, flags);
+}
+
+bool IsFullConsoleLinked() {
+    return GetOTP().Valid() && GetSecureInfoA().IsValid() && GetLocalFriendCodeSeedB().IsValid();
+}
+
+void UnlinkConsole() {
+    // Remove all console unique data, as well as the act, nim and frd savefiles
+    const std::string system_save_data_path =
+        FileSys::GetSystemSaveDataContainerPath(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
+    constexpr std::array<std::array<u8, 8>, 3> save_data_ids{{
+        {0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x01, 0x00},
+        {0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x01, 0x00},
+        {0x00, 0x00, 0x00, 0x00, 0x38, 0x00, 0x01, 0x00},
+    }};
+
+    for (auto& id : save_data_ids) {
+        const std::string final_path = FileSys::GetSystemSaveDataPath(system_save_data_path, id);
+        FileUtil::DeleteDirRecursively(final_path, 2);
+    }
+
+    FileUtil::Delete(GetOTPPath());
+    FileUtil::Delete(GetSecureInfoAPath());
+    FileUtil::Delete(GetLocalFriendCodeSeedBPath());
+
+    InvalidateSecureData();
 }
 
 } // namespace HW::UniqueData

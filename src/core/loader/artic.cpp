@@ -342,7 +342,8 @@ void Apploader_Artic::EnsureClientConnected() {
 
     if (is_initial_setup) {
         // Ensure we are running the initial setup app in the correct version
-        auto req = client->NewRequest("System_IsAzaharInitialSetup");
+        auto req = client->NewRequest("System_ArticSetupVersion");
+        req.AddParameterU32(SETUP_TOOL_VERSION);
         auto resp = client->Send(req);
         if (!resp.has_value()) {
             client_connected = false;
@@ -355,7 +356,15 @@ void Apploader_Artic::EnsureClientConnected() {
             return;
         }
 
-        client_connected = *reinterpret_cast<u32*>(ret_buf->first) == INITIAL_SETUP_APP_VERSION;
+        if (*reinterpret_cast<u32*>(ret_buf->first) != SETUP_TOOL_VERSION) {
+            system.SetStatus(Core::System::ResultStatus::ErrorArticDisconnected,
+                             "\nIncompatible Artic Setup Tool version.\nCheck for Artic Setup Tool "
+                             "or Azahar updates.");
+            client_connected = false;
+            client->Stop();
+        } else {
+            client_connected = true;
+        }
     }
 }
 
@@ -384,6 +393,20 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
     is_loaded = true; // Set state to loaded
 
     if (is_initial_setup) {
+
+        // If there is already a console linked, check it's the same device.
+        // Otherwise it could cause weird issues with account save data.
+        if (HW::UniqueData::IsFullConsoleLinked()) {
+            auto req = client->NewRequest("System_ReportDeviceID");
+            req.AddParameterU32(HW::UniqueData::GetOTP().GetDeviceID());
+
+            auto resp = client->Send(req);
+            if (!resp.has_value() || !resp->Succeeded())
+                return ResultStatus::ErrorArtic;
+
+            if (resp->GetMethodResult() != 0)
+                return ResultStatus::ErrorArtic;
+        }
 
         // Request console unique data
         for (int i = 0; i < 6; i++) {

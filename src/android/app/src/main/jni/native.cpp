@@ -36,6 +36,7 @@
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
+#include "core/hw/unique_data.h"
 #include "core/loader/loader.h"
 #include "core/savestate.h"
 #include "core/system_titles.h"
@@ -770,6 +771,14 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
     // There is no decent way to get the OS version, so we log the API level instead.
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
+}
+
+jboolean Java_org_citra_citra_1emu_NativeLibrary_isFullConsoleLinked(JNIEnv* env, jobject obj) {
+    return HW::UniqueData::IsFullConsoleLinked();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_unlinkConsole(JNIEnv* env, jobject obj) {
+    HW::UniqueData::UnlinkConsole();
 }
 
 } // extern "C"

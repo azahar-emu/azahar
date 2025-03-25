@@ -61,6 +61,13 @@
                 android:layout_height="wrap_content"
                 android:text="@string/setup_tool_connect" />
 
+            <Button
+                android:id="@+id/button_unlink_console_data"
+                style="@style/Widget.Material3.Button.UnelevatedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/delete_system_files" />
+
             <View
                 android:id="@+id/divider2"
                 android:layout_width="match_parent"
