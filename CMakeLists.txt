@@ -492,11 +492,14 @@ endif()
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
 if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.desktop"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
+            RENAME "org.azahar_emu.Azahar.desktop")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps"
+            RENAME "org.azahar_emu.Azahar.svg")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.png"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.xml"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps"
+            RENAME "org.azahar_emu.Azahar.png")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/org.azahar_emu.Azahar.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()
