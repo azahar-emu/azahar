@@ -3748,17 +3748,17 @@ Glissez les points pour modifier la position, ou double-cliquez les cellules pou
 <context>
     <name>ConfigureWeb</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="14"/>
         <source>Form</source>
         <translation>Forme</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="20"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="20"/>
         <source>Discord Presence</source>
         <translation>Activité Discord</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.ui" line="26"/>
+        <location filename="../../src/citra_qt/configuration/configure_network.ui" line="26"/>
         <source>Show current application in your Discord status</source>
         <translation>Afficher l&apos;application en cours dans votre statut Discord</translation>
     </message>
@@ -5535,7 +5535,7 @@ de démarrage.</translation>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="610"/>
         <source>Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4
 </source>
-        <translation>Paramètres de la boucle : %1 (répétitions), %2 (initialisation), %3 (incrémentation), %4  
+        <translation>Paramètres de la boucle : %1 (répétitions), %2 (initialisation), %3 (incrémentation), %4
 </translation>
     </message>
     <message>

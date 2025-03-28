@@ -11,8 +11,9 @@ class StringInputSetting(
     setting: AbstractSetting?,
     titleId: Int,
     descriptionId: Int,
+    val key: String? = null,
     val defaultValue: String,
-    val characterLimit: Int = 0
+    val characterLimit: Int = 0,
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_STRING_INPUT
 
