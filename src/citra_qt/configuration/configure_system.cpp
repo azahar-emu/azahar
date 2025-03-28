@@ -240,6 +240,14 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
     connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
     connect(ui->button_linked_console, &QPushButton::clicked, this,
             &ConfigureSystem::UnlinkConsole);
+    connect(ui->combo_country, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+                CheckCountryValid(static_cast<u8>(ui->combo_country->itemData(index).toInt()));
+            });
+    connect(ui->region_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this]([[maybe_unused]] int index) {
+                CheckCountryValid(static_cast<u8>(ui->combo_country->currentData().toInt()));
+            });
 
     connect(ui->button_secure_info, &QPushButton::clicked, this, [this] {
         ui->button_secure_info->setEnabled(false);
@@ -280,6 +288,8 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             ui->combo_country->addItem(tr(country_names.at(i)), i);
         }
     }
+    ui->label_country_invalid->setVisible(false);
+    ui->label_country_invalid->setStyleSheet(QStringLiteral("QLabel { color: #ff3333; }"));
 
     SetupPerGameUI();
     ConfigureTime();
@@ -289,6 +299,19 @@ ConfigureSystem::~ConfigureSystem() = default;
 
 void ConfigureSystem::SetConfiguration() {
     enabled = !system.IsPoweredOn();
+
+    if (!Settings::IsConfiguringGlobal()) {
+        ConfigurationShared::SetHighlight(ui->region_label,
+                                          !Settings::values.region_value.UsingGlobal());
+        const bool is_region_global = Settings::values.region_value.UsingGlobal();
+        ui->region_combobox->setCurrentIndex(
+            is_region_global ? ConfigurationShared::USE_GLOBAL_INDEX
+                             : static_cast<int>(Settings::values.region_value.GetValue()) +
+                                   ConfigurationShared::USE_GLOBAL_OFFSET + 1);
+    } else {
+        // The first item is "auto-select" with actual value -1, so plus one here will do the trick
+        ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
+    }
 
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock.GetValue()));
     QDateTime date_time;
@@ -351,6 +374,7 @@ void ConfigureSystem::ReadSystemSettings() {
     // set the country code
     country_code = cfg->GetCountryCode();
     ui->combo_country->setCurrentIndex(ui->combo_country->findData(country_code));
+    CheckCountryValid(country_code);
 
     // set whether system setup is needed
     system_setup = cfg->IsSystemSetupNeeded();
@@ -373,6 +397,10 @@ void ConfigureSystem::ReadSystemSettings() {
 
 void ConfigureSystem::ApplyConfiguration() {
     if (enabled) {
+        ConfigurationShared::ApplyPerGameSetting(&Settings::values.region_value,
+                                                 ui->region_combobox,
+                                                 [](s32 index) { return index - 1; });
+
         bool modified = false;
 
         // apply username
@@ -582,6 +610,32 @@ void ConfigureSystem::UnlinkConsole() {
     RefreshSecureDataStatus();
 }
 
+void ConfigureSystem::CheckCountryValid(u8 country) {
+    // TODO(PabloMK7): Make this per-game compatible
+    if (!Settings::IsConfiguringGlobal())
+        return;
+
+    s32 region = ui->region_combobox->currentIndex() - 1;
+    QString label_text;
+
+    if (region != Settings::REGION_VALUE_AUTO_SELECT &&
+        !cfg->IsValidRegionCountry(static_cast<u32>(region), country)) {
+        label_text = tr("Invalid country for configured region");
+    }
+    if (HW::UniqueData::GetSecureInfoA().IsValid()) {
+        region = static_cast<u32>(cfg->GetRegionValue(true));
+        if (!cfg->IsValidRegionCountry(static_cast<u32>(region), country)) {
+            if (!label_text.isEmpty()) {
+                label_text += QString::fromStdString("\n");
+            }
+            label_text += tr("Invalid country for console unique data");
+        }
+    }
+
+    ui->label_country_invalid->setText(label_text);
+    ui->label_country_invalid->setVisible(!label_text.isEmpty());
+}
+
 void ConfigureSystem::InstallSecureData(const std::string& from_path, const std::string& to_path) {
     std::string from =
         FileUtil::SanitizePath(from_path, FileUtil::DirectorySeparator::PlatformDefault);
@@ -644,6 +698,7 @@ void ConfigureSystem::SetupPerGameUI() {
         ui->toggle_lle_applets->setEnabled(Settings::values.lle_applets.UsingGlobal());
         ui->enable_required_online_lle_modules->setEnabled(
             Settings::values.enable_required_online_lle_modules.UsingGlobal());
+        ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
         return;
     }
 
@@ -694,4 +749,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->enable_required_online_lle_modules,
                                             Settings::values.enable_required_online_lle_modules,
                                             required_online_lle_modules);
+    ConfigurationShared::SetColoredComboBox(
+        ui->region_combobox, ui->region_label,
+        static_cast<u32>(Settings::values.region_value.GetValue(true) + 1));
 }

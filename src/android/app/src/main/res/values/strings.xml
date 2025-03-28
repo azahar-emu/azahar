@@ -200,6 +200,9 @@
     <string name="plugin_loader_description">Loads 3GX plugins from the emulated SD card if they are available.</string>
     <string name="allow_plugin_loader">Allow Applications to Change Plugin Loader State</string>
     <string name="allow_plugin_loader_description">Allows homebrew apps to enable the plugin loader even when it is disabled.</string>
+    <string name="region_mismatch">Region Mismatch Warning</string>
+    <string name="region_mismatch_emulated">The country setting is not valid for the selected emulated region.</string>
+    <string name="region_mismatch_console">The country setting is not valid for the current linked console.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>

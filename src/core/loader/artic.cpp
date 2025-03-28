@@ -408,6 +408,7 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
                 return ResultStatus::ErrorArtic;
         }
 
+        auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
         // Request console unique data
         for (int i = 0; i < 6; i++) {
             std::string path;
@@ -471,7 +472,6 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
                 memcpy(&console_id, resp_buff->first, sizeof(u64));
                 memcpy(&random_id, reinterpret_cast<u8*>(resp_buff->first) + sizeof(u64),
                        sizeof(u32));
-                auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
                 if (cfg.get()) {
                     auto cfg_module = cfg->GetModule();
                     cfg_module->SetConsoleUniqueId(random_id, console_id);
@@ -480,7 +480,6 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
             } else if (i == 5) {
                 std::array<u8, 6> mac;
                 memcpy(mac.data(), resp_buff->first, mac.size());
-                auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u");
                 if (cfg.get()) {
                     auto cfg_module = cfg->GetModule();
                     cfg_module->GetMacAddress() = Service::CFG::MacToString(mac);
@@ -494,8 +493,23 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
         if (!HW::UniqueData::GetCTCert().IsValid() || !HW::UniqueData::GetMovableSed().IsValid() ||
             !HW::UniqueData::GetSecureInfoA().IsValid() ||
             !HW::UniqueData::GetLocalFriendCodeSeedB().IsValid()) {
-            LOG_CRITICAL(Loader, "Some console unique data is invalid, aborting...");
+            client->LogOnServer(Network::ArticBaseCommon::LogOnServerType::LOG_ERROR,
+                                "Some console unique data is invalid.\n    Aborting...");
             return ResultStatus::ErrorArtic;
+        }
+
+        if (cfg.get()) {
+            auto cfg_module = cfg->GetModule();
+            if (!Service::CFG::Module::IsValidRegionCountry(cfg_module->GetRegionValue(true),
+                                                            cfg_module->GetCountryCode())) {
+                // Report mismatch to server.
+                client->LogOnServer(
+                    Network::ArticBaseCommon::LogOnServerType::LOG_ERROR,
+                    "The country configuration does not match\n    the console region. "
+                    "Please select a valid\n    country from the emulation settings.");
+                return ResultStatus::ErrorArtic;
+            }
+            cfg_module->SetSystemSetupNeeded(false);
         }
 
         // Set deliver arg so that System Settings goes to the update screen directly

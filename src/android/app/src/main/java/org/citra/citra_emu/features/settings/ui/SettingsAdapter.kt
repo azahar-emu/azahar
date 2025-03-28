@@ -73,7 +73,7 @@ import kotlin.math.roundToInt
 
 class SettingsAdapter(
     private val fragmentView: SettingsFragmentView,
-    private val context: Context
+    public val context: Context
 ) : RecyclerView.Adapter<SettingViewHolder?>(), DialogInterface.OnClickListener {
     private var settings: ArrayList<SettingsItem>? = null
     private var clickedItem: SettingsItem? = null
