@@ -202,6 +202,12 @@ disable_right_eye_render =
 # 5: Custom Layout
 layout_option =
 
+# Screen Gap - adds a gap between screens in all two-screen modes
+# Measured in pixels relative to the 240px default height of the screens
+# Scales with the larger screen (so 24 is 10% of the larger screen height)
+# Default value is 0.0
+screen_gap =
+
 # Large Screen Proportion - Relative size of large:small in large screen mode
 # Default value is 2.25
 large_screen_proportion =
