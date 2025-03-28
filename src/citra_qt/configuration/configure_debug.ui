@@ -54,7 +54,61 @@
           <item>
            <widget class="QSpinBox" name="gdbport_spinbox">
             <property name="maximum">
-             <number>65536</number>
+             <number>65535</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_scripting_1">
+     <item>
+      <widget class="QGroupBox" name="groupBox_scripting">
+       <property name="title">
+        <string>Scripting</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_scripting_2">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_scripting">
+          <item>
+           <widget class="QCheckBox" name="toggle_rpc_server">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server for scripting. Safe to disable if scripting is not in use.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Enable RPC Server</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_scripting">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_scripting">
+            <property name="text">
+             <string>Port:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="rpc_server_port_spinbox">
+            <property name="maximum">
+             <number>65535</number>
             </property>
            </widget>
           </item>
@@ -300,6 +354,8 @@
  <tabstops>
   <tabstop>toggle_gdbstub</tabstop>
   <tabstop>gdbport_spinbox</tabstop>
+  <tabstop>toggle_rpc_server</tabstop>
+  <tabstop>rpc_server_port_spinbox</tabstop>
   <tabstop>log_filter_edit</tabstop>
   <tabstop>toggle_console</tabstop>
   <tabstop>open_log_button</tabstop>
@@ -310,6 +366,22 @@
    <sender>toggle_gdbstub</sender>
    <signal>toggled(bool)</signal>
    <receiver>gdbport_spinbox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>84</x>
+     <y>157</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>342</x>
+     <y>158</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>toggle_rpc_server</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rpc_server_port_spinbox</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
