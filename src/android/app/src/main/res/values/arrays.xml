@@ -32,11 +32,13 @@
     <string-array name="portraitLayouts">
         <item>@string/emulation_portrait_layout_top_full</item>
         <item>@string/emulation_screen_layout_custom</item>
+        <item>@string/emulation_screen_layout_original</item>
     </string-array>
 
     <integer-array name="portraitLayoutValues">
         <item>0</item>
         <item>1</item>
+        <item>2</item>
     </integer-array>
 
     <string-array name="smallScreenPositions">
