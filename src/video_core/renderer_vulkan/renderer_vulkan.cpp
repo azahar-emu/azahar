@@ -846,6 +846,16 @@ void RendererVulkan::SwapBuffers() {
         secondary_window->PollEvents();
     }
 #endif
+#ifdef ANDROID
+    if (secondary_window) {
+        const auto &secondary_layout = secondary_window->GetFramebufferLayout();
+        if (!second_window) {
+            second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler);
+        }
+        RenderToWindow(*second_window, secondary_layout, false);
+        secondary_window->PollEvents();
+    }
+#endif
     rasterizer.TickFrame();
     EndFrame();
 }
@@ -1134,5 +1144,11 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
 
     return true;
 }
+
+    void RendererVulkan::NotifySurfaceChanged(bool second) {
+    if (second && second_window) second_window->NotifySurfaceChanged();
+    if (!second) main_window.NotifySurfaceChanged();
+
+    }
 
 } // namespace Vulkan

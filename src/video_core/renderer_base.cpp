@@ -35,7 +35,7 @@ void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
         window.UpdateCurrentFramebufferLayout(layout.width, layout.height, is_portrait_mode);
     };
     update_layout(render_window);
-    if (secondary_window) {
+    if (secondary_window != nullptr) {
         update_layout(*secondary_window);
     }
 }
@@ -66,5 +66,4 @@ void RendererBase::RequestScreenshot(void* data, std::function<void(bool)> callb
     settings.screenshot_framebuffer_layout = layout;
     settings.screenshot_requested = true;
 }
-
 } // namespace VideoCore
