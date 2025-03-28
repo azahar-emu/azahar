@@ -33,26 +33,26 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
             adapter.onBooleanClick(item, bindingAdapterPosition, binding.switchWidget.isChecked)
         }
 
-        binding.switchWidget.isEnabled = setting.isEditable
+        binding.switchWidget.isEnabled = setting.isEditable && setting.isEnabled
 
-        val textAlpha = if (setting.isEditable) 1f else 0.5f
+        val textAlpha = if (setting.isEditable && setting.isEnabled) 1f else 0.5f
         binding.textSettingName.alpha = textAlpha
         binding.textSettingDescription.alpha = textAlpha
     }
 
     override fun onClick(clicked: View) {
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             binding.switchWidget.toggle()
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
         return false
     }
