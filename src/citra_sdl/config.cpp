@@ -121,6 +121,8 @@ void SdlConfig::ReadValues() {
         "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
     Settings::values.current_input_profile.touch_device =
         sdl2_config->GetString("Controls", "touch_device", "engine:emu_window");
+    Settings::values.current_input_profile.controller_touch_device =
+        sdl2_config->GetString("Controls","controller_touch_device","");
     Settings::values.current_input_profile.udp_input_address = sdl2_config->GetString(
         "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
     Settings::values.current_input_profile.udp_input_port =
