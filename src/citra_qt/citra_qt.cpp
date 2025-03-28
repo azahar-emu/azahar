@@ -2117,13 +2117,13 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
            "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
            "Artic Setup Tool</a><br>Notes:<ul><li><b>This operation will install console unique "
            "data to Azahar, do not share your user or nand folders<br>after performing the setup "
-           "process!</b></li><li>By doing the setup process, Azahar will link to the console "
-           "running the setup tool. You can unlink the<br>console later from the system tab in the "
-           "emulator configuration.</li><li>Do not go online at the same time with Azahar and your "
-           "console after doing the setup<br>as it could cause issues.</li><li>Old 3DS setup is "
-           "needed for the New 3DS setup to work (doing both setup modes is recommended)."
-           "</li><li>Both setup modes will work regardless of the model of the console running the "
-           "setup tool.</li></ul><hr></p>"),
+           "process!</b></li><li>While doing the setup process, Azahar will link to the console "
+           "running the setup tool. You can unlink the<br>console later from the System tab in the "
+           "emulator configuration menu.</li><li>Do not go online with both Azahar and your 3DS "
+           "console at the same time after setting up system files,<br>as it could cause "
+           "issues.</li><li>Old 3DS setup is needed for the New 3DS setup to work (doing both "
+           "setup modes is recommended).</li><li>Both setup modes will work regardless of the "
+           "model of the console running the setup tool.</li></ul><hr></p>"),
         &dialog);
     label_description.setOpenExternalLinks(true);
     layout.addWidget(&label_description);

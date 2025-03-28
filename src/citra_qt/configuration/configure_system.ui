@@ -527,7 +527,7 @@ online features (if installed)</string>
                    <item>
                     <widget class="QLabel" name="label_linked_console">
                      <property name="text">
-                       <string>Your real console is fully linked to Azahar.</string>
+                       <string>Your real console is linked to Azahar.</string>
                      </property>
                     </widget>
                    </item>
