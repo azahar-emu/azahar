@@ -486,6 +486,8 @@ private:
 public:
     u32 GetRegionValue(bool from_secure_info);
 
+    static bool IsValidRegionCountry(u32 region, u8 country_code);
+
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.
 

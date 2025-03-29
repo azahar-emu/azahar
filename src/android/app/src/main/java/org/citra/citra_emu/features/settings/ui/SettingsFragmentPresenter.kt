@@ -13,6 +13,7 @@ import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
@@ -239,6 +240,30 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
     }
 
+    private var countryCompatibilityChanged = true
+
+    private fun checkCountryCompatibility() {
+        if (countryCompatibilityChanged) {
+            countryCompatibilityChanged = false
+            val compatFlags = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
+            if (compatFlags != 0) {
+                var message = ""
+                if (compatFlags and 1 != 0) {
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
+                }
+                if (compatFlags and 2 != 0) {
+                    if (message.isNotEmpty()) message += "\n\n"
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_console)
+                }
+                MaterialAlertDialogBuilder(settingsAdapter.context)
+                    .setTitle(R.string.region_mismatch)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
     private fun addSystemSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_system))
@@ -282,51 +307,45 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(HeaderSetting(R.string.profile_settings))
-            add(
-                StringInputSetting(
-                    usernameSetting,
-                    R.string.username,
-                    0,
-                    "AZAHAR",
-                    10
-                )
-            )
+            val regionSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() {
+                        val ret = IntSetting.EMULATED_REGION.int
+                        checkCountryCompatibility()
+                        return ret
+                    }
+                    set(value) {
+                        IntSetting.EMULATED_REGION.int = value
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
+                override val key = IntSetting.EMULATED_REGION.key
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = IntSetting.EMULATED_REGION.defaultValue
+            }
             add(
                 SingleChoiceSetting(
-                    IntSetting.EMULATED_REGION,
+                    regionSetting,
                     R.string.emulated_region,
                     0,
                     R.array.regionNames,
                     R.array.regionValues,
-                    IntSetting.EMULATED_REGION.key,
-                    IntSetting.EMULATED_REGION.defaultValue
                 )
             )
-
-            val systemLanguageSetting = object : AbstractIntSetting {
-                override var int: Int
-                    get() = SystemSaveGame.getSystemLanguage()
-                    set(value) = SystemSaveGame.setSystemLanguage(value)
-                override val key = null
-                override val section = null
-                override val isRuntimeEditable = false
-                override val valueAsString get() = int.toString()
-                override val defaultValue = 1
-            }
-            add(
-                SingleChoiceSetting(
-                    systemLanguageSetting,
-                    R.string.emulated_language,
-                    0,
-                    R.array.languageNames,
-                    R.array.languageValues
-                )
-            )
-
             val systemCountrySetting = object : AbstractShortSetting {
                 override var short: Short
-                    get() = SystemSaveGame.getCountryCode()
-                    set(value) = SystemSaveGame.setCountryCode(value)
+                    get() {
+                        val ret = SystemSaveGame.getCountryCode()
+                        checkCountryCompatibility()
+                        return ret;
+                    }
+                    set(value) {
+                        SystemSaveGame.setCountryCode(value)
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
                 override val key = null
                 override val section = null
                 override val isRuntimeEditable = false
@@ -348,7 +367,34 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     countries.map { it.second }.toTypedArray()
                 )
             )
-
+            val systemLanguageSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = SystemSaveGame.getSystemLanguage()
+                    set(value) = SystemSaveGame.setSystemLanguage(value)
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = 1
+            }
+            add(
+                SingleChoiceSetting(
+                    systemLanguageSetting,
+                    R.string.emulated_language,
+                    0,
+                    R.array.languageNames,
+                    R.array.languageValues
+                )
+            )
+            add(
+                StringInputSetting(
+                    usernameSetting,
+                    R.string.username,
+                    0,
+                    "AZAHAR",
+                    10
+                )
+            )
             val playCoinSettings = object : AbstractIntSetting {
                 override var int: Int
                     get() = SystemSaveGame.getPlayCoins()

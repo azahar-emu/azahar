@@ -121,16 +121,6 @@ void ConfigureGeneral::SetConfiguration() {
                                           !UISettings::values.screenshot_path.UsingGlobal());
         ConfigurationShared::SetHighlight(ui->emulation_speed_layout,
                                           !Settings::values.frame_limit.UsingGlobal());
-        ConfigurationShared::SetHighlight(ui->widget_region,
-                                          !Settings::values.region_value.UsingGlobal());
-        const bool is_region_global = Settings::values.region_value.UsingGlobal();
-        ui->region_combobox->setCurrentIndex(
-            is_region_global ? ConfigurationShared::USE_GLOBAL_INDEX
-                             : static_cast<int>(Settings::values.region_value.GetValue()) +
-                                   ConfigurationShared::USE_GLOBAL_OFFSET + 1);
-    } else {
-        // The first item is "auto-select" with actual value -1, so plus one here will do the trick
-        ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
     }
 
     UISettings::values.screenshot_path.SetGlobal(ui->screenshot_combo->currentIndex() ==
@@ -160,9 +150,6 @@ void ConfigureGeneral::ResetDefaults() {
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.region_value, ui->region_combobox,
-                                             [](s32 index) { return index - 1; });
-
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.frame_limit, ui->emulation_speed_combo, [this](s32) {
             const bool is_maximum = ui->frame_limit->value() == ui->frame_limit->maximum();
@@ -191,7 +178,6 @@ void ConfigureGeneral::RetranslateUI() {
 
 void ConfigureGeneral::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
         ui->frame_limit->setEnabled(Settings::values.frame_limit.UsingGlobal());
         return;
     }
@@ -212,8 +198,4 @@ void ConfigureGeneral::SetupPerGameUI() {
     ui->button_reset_defaults->setVisible(false);
     ui->toggle_gamemode->setVisible(false);
     ui->toggle_update_checker->setVisible(false);
-
-    ConfigurationShared::SetColoredComboBox(
-        ui->region_combobox, ui->widget_region,
-        static_cast<u32>(Settings::values.region_value.GetValue(true) + 1));
 }
