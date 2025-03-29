@@ -245,13 +245,13 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun checkCountryCompatibility() {
         if (countryCompatibilityChanged) {
             countryCompatibilityChanged = false
-            val compat = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
-            if (compat != 0) {
+            val compatFlags = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
+            if (compatFlags != 0) {
                 var message = ""
-                if (compat and 1 != 0) {
+                if (compatFlags and 1 != 0) {
                     message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
                 }
-                if (compat and 2 != 0) {
+                if (compatFlags and 2 != 0) {
                     if (message.isNotEmpty()) message += "\n\n"
                     message += settingsAdapter.context.getString(R.string.region_mismatch_console)
                 }
