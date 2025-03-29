@@ -49,7 +49,7 @@ object SystemSaveGame {
 
     external fun regenerateMac()
 
-    external fun checkCountryCompatibility(region: Int): Int
+    external fun getCountryCompatibility(region: Int): Int
 }
 
 enum class BirthdayMonth(val code: Int, val days: Int) {

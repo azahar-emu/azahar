@@ -139,7 +139,7 @@ void Java_org_citra_citra_1emu_utils_SystemSaveGame_regenerateMac(JNIEnv* env,
     cfg->SaveMacAddress();
 }
 
-jint Java_org_citra_citra_1emu_utils_SystemSaveGame_checkCountryCompatibility(
+jint Java_org_citra_citra_1emu_utils_SystemSaveGame_getCountryCompatibility(
     JNIEnv* env, [[maybe_unused]] jobject obj, jint region) {
     int res = 0;
     u8 country = cfg->GetCountryCode();

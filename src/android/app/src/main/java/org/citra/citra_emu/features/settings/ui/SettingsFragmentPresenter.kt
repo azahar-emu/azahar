@@ -249,7 +249,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             fun checkCountryCompatibility() {
                 if (countryCompatibilityChanged) {
                     countryCompatibilityChanged = false
-                    val compat = SystemSaveGame.checkCountryCompatibility(IntSetting.EMULATED_REGION.int)
+                    val compat = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
                     if (compat != 0) {
                         var message = ""
                         if (compat and 1 != 0) {
