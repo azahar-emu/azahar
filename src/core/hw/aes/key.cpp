@@ -7,20 +7,14 @@
 #include <sstream>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <cryptopp/aes.h>
-#include <cryptopp/modes.h>
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "core/file_sys/certificate.h"
-#include "core/file_sys/otp.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
-#include "core/hw/default_keys.h"
 #include "core/hw/rsa/rsa.h"
-#include "core/loader/loader.h"
 
 namespace HW::AES {
 
@@ -32,7 +26,8 @@ namespace {
 // On a real 3DS the generation for the normal key is hardware based, and thus the constant can't
 // get dumped. Generated normal keys are also not accessible on a 3DS. The used formula for
 // calculating the constant is a software implementation of what the hardware generator does.
-AESKey generator_constant;
+constexpr AESKey generator_constant = {{0x1F, 0xF9, 0xE9, 0xAA, 0xC5, 0xFE, 0x04, 0x08, 0x02, 0x45,
+                                        0x91, 0xDC, 0x5D, 0x52, 0x76, 0x8A}};
 
 AESKey HexToKey(const std::string& hex) {
     if (hex.size() < 32) {
@@ -130,12 +125,6 @@ std::array<std::optional<AESKey>, NumDlpNfcKeyYs> dlp_nfc_key_y_slots;
 std::array<NfcSecret, NumNfcSecrets> nfc_secrets;
 AESIV nfc_iv;
 
-AESKey otp_key;
-AESIV otp_iv;
-
-KeySlot movable_key;
-KeySlot movable_cmac;
-
 struct KeyDesc {
     char key_type;
     std::size_t slot_id;
@@ -143,26 +132,93 @@ struct KeyDesc {
     bool same_as_before;
 };
 
+void LoadBootromKeys() {
+    constexpr std::array<KeyDesc, 80> keys = {
+        {{'X', 0x2C, false}, {'X', 0x2D, true},  {'X', 0x2E, true},  {'X', 0x2F, true},
+         {'X', 0x30, false}, {'X', 0x31, true},  {'X', 0x32, true},  {'X', 0x33, true},
+         {'X', 0x34, false}, {'X', 0x35, true},  {'X', 0x36, true},  {'X', 0x37, true},
+         {'X', 0x38, false}, {'X', 0x39, true},  {'X', 0x3A, true},  {'X', 0x3B, true},
+         {'X', 0x3C, false}, {'X', 0x3D, false}, {'X', 0x3E, false}, {'X', 0x3F, false},
+         {'Y', 0x4, false},  {'Y', 0x5, false},  {'Y', 0x6, false},  {'Y', 0x7, false},
+         {'Y', 0x8, false},  {'Y', 0x9, false},  {'Y', 0xA, false},  {'Y', 0xB, false},
+         {'N', 0xC, false},  {'N', 0xD, true},   {'N', 0xE, true},   {'N', 0xF, true},
+         {'N', 0x10, false}, {'N', 0x11, true},  {'N', 0x12, true},  {'N', 0x13, true},
+         {'N', 0x14, false}, {'N', 0x15, false}, {'N', 0x16, false}, {'N', 0x17, false},
+         {'N', 0x18, false}, {'N', 0x19, true},  {'N', 0x1A, true},  {'N', 0x1B, true},
+         {'N', 0x1C, false}, {'N', 0x1D, true},  {'N', 0x1E, true},  {'N', 0x1F, true},
+         {'N', 0x20, false}, {'N', 0x21, true},  {'N', 0x22, true},  {'N', 0x23, true},
+         {'N', 0x24, false}, {'N', 0x25, true},  {'N', 0x26, true},  {'N', 0x27, true},
+         {'N', 0x28, true},  {'N', 0x29, false}, {'N', 0x2A, false}, {'N', 0x2B, false},
+         {'N', 0x2C, false}, {'N', 0x2D, true},  {'N', 0x2E, true},  {'N', 0x2F, true},
+         {'N', 0x30, false}, {'N', 0x31, true},  {'N', 0x32, true},  {'N', 0x33, true},
+         {'N', 0x34, false}, {'N', 0x35, true},  {'N', 0x36, true},  {'N', 0x37, true},
+         {'N', 0x38, false}, {'N', 0x39, true},  {'N', 0x3A, true},  {'N', 0x3B, true},
+         {'N', 0x3C, true},  {'N', 0x3D, false}, {'N', 0x3E, false}, {'N', 0x3F, false}}};
+
+    // Bootrom sets all these keys when executed, but later some of the normal keys get overwritten
+    // by other applications e.g. process9. These normal keys thus aren't used by any application
+    // and have no value for emulation
+
+    const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9;
+    auto file = FileUtil::IOFile(filepath, "rb");
+    if (!file) {
+        return;
+    }
+
+    const std::size_t length = file.GetSize();
+    if (length != 65536) {
+        LOG_ERROR(HW_AES, "Bootrom9 size is wrong: {}", length);
+        return;
+    }
+
+    constexpr std::size_t KEY_SECTION_START = 55760;
+    file.Seek(KEY_SECTION_START, SEEK_SET); // Jump to the key section
+
+    AESKey new_key;
+    for (const auto& key : keys) {
+        if (!key.same_as_before) {
+            file.ReadArray(new_key.data(), new_key.size());
+            if (!file) {
+                LOG_ERROR(HW_AES, "Reading from Bootrom9 failed");
+                return;
+            }
+        }
+
+        LOG_DEBUG(HW_AES, "Loaded Slot{:#02x} Key{} from Bootrom9.", key.slot_id, key.key_type);
+
+        switch (key.key_type) {
+        case 'X':
+            key_slots.at(key.slot_id).SetKeyX(new_key);
+            break;
+        case 'Y':
+            key_slots.at(key.slot_id).SetKeyY(new_key);
+            break;
+        case 'N':
+            key_slots.at(key.slot_id).SetNormalKey(new_key);
+            break;
+        default:
+            LOG_ERROR(HW_AES, "Invalid key type {}", key.key_type);
+            break;
+        }
+    }
+}
+
 void LoadPresetKeys() {
-    auto s = GetKeysStream();
+    const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + AES_KEYS;
+    FileUtil::CreateFullPath(filepath); // Create path if not already created
 
-    std::string mode = "";
+    boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
+    FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
+    if (!file.is_open()) {
+        return;
+    }
 
-    while (!s.eof()) {
+    while (!file.eof()) {
         std::string line;
-        std::getline(s, line);
+        std::getline(file, line);
 
         // Ignore empty or commented lines.
         if (line.empty() || line.starts_with("#")) {
-            continue;
-        }
-
-        if (line.starts_with(":")) {
-            mode = line.substr(1);
-            continue;
-        }
-
-        if (mode != "AES") {
             continue;
         }
 
@@ -206,31 +262,6 @@ void LoadPresetKeys() {
             } else {
                 common_key_y_slots[common_key.value()] = key;
             }
-            continue;
-        }
-
-        if (name == "generatorConstant") {
-            generator_constant = key;
-            continue;
-        }
-
-        if (name == "otpKey") {
-            otp_key = key;
-            continue;
-        }
-
-        if (name == "otpIV") {
-            otp_iv = key;
-            continue;
-        }
-
-        if (name == "movableKeyY") {
-            movable_key.SetKeyY(key);
-            continue;
-        }
-
-        if (name == "movableCmacY") {
-            movable_cmac.SetKeyY(key);
             continue;
         }
 
@@ -279,38 +310,15 @@ void LoadPresetKeys() {
 
 } // namespace
 
-std::istringstream GetKeysStream() {
-    const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + KEYS_FILE;
-    FileUtil::CreateFullPath(filepath); // Create path if not already created
-
-    boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
-    FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
-    std::istringstream ret;
-    if (file.is_open()) {
-        return std::istringstream(std::string(std::istreambuf_iterator<char>(file), {}));
-    } else {
-        // The key data is encrypted in the source to prevent easy access to it for unintended
-        // purposes.
-        std::vector<u8> kiv(16);
-        std::string s(default_keys_enc_size, ' ');
-        CryptoPP::CBC_Mode<CryptoPP::AES>::Decryption(kiv.data(), kiv.size(), kiv.data())
-            .ProcessData(reinterpret_cast<u8*>(s.data()), default_keys_enc, s.size());
-        return std::istringstream(s);
-    }
-}
-
 void InitKeys(bool force) {
     static bool initialized = false;
     if (initialized && !force) {
         return;
     }
     initialized = true;
-    LoadPresetKeys();
-    movable_key.SetKeyX(key_slots[0x35].x);
-    movable_cmac.SetKeyX(key_slots[0x35].x);
-
     HW::RSA::InitSlots();
-    HW::ECC::InitSlots();
+    LoadBootromKeys();
+    LoadPresetKeys();
 }
 
 void SetKeyX(std::size_t slot_id, const AESKey& key) {
@@ -361,14 +369,6 @@ const NfcSecret& GetNfcSecret(NfcSecretId secret_id) {
 
 const AESIV& GetNfcIv() {
     return nfc_iv;
-}
-
-std::pair<AESKey, AESIV> GetOTPKeyIV() {
-    return {otp_key, otp_iv};
-}
-
-const AESKey& GetMovableKey(bool cmac_key) {
-    return cmac_key ? movable_cmac.normal.value() : movable_key.normal.value();
 }
 
 } // namespace HW::AES
