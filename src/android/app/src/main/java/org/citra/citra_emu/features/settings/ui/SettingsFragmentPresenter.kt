@@ -242,32 +242,32 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private var countryCompatibilityChanged = true
 
+    private fun checkCountryCompatibility() {
+        if (countryCompatibilityChanged) {
+            countryCompatibilityChanged = false
+            val compat = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
+            if (compat != 0) {
+                var message = ""
+                if (compat and 1 != 0) {
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
+                }
+                if (compat and 2 != 0) {
+                    if (message.isNotEmpty()) message += "\n\n"
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_console)
+                }
+                MaterialAlertDialogBuilder(settingsAdapter.context)
+                    .setTitle(R.string.region_mismatch)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
     private fun addSystemSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_system))
         sl.apply {
-            fun checkCountryCompatibility() {
-                if (countryCompatibilityChanged) {
-                    countryCompatibilityChanged = false
-                    val compat = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
-                    if (compat != 0) {
-                        var message = ""
-                        if (compat and 1 != 0) {
-                            message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
-                        }
-                        if (compat and 2 != 0) {
-                            if (message.isNotEmpty()) message += "\n\n"
-                            message += settingsAdapter.context.getString(R.string.region_mismatch_console)
-                        }
-                        MaterialAlertDialogBuilder(settingsAdapter.context)
-                            .setTitle(R.string.region_mismatch)
-                            .setMessage(message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                    }
-                }
-            }
-
             val usernameSetting = object : AbstractStringSetting {
                 override var string: String
                     get() = SystemSaveGame.getUsername()
