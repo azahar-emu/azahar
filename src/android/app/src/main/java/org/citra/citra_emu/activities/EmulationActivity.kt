@@ -198,7 +198,6 @@ class EmulationActivity : AppCompatActivity() {
             if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             } else {
-                // TODO: Remove this once we properly account for display insets in the input overlay
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
             }
 
