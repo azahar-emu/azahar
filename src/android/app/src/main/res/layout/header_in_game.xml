@@ -21,6 +21,6 @@
         android:textAppearance="?attr/textAppearanceHeadlineMedium"
         android:textColor="?attr/colorOnSurface"
         android:textAlignment="viewStart"
-        tools:text="Super Mario 3D Land" />
+        tools:text="text_game_title" />
 
 </LinearLayout>
