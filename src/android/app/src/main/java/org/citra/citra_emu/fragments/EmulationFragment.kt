@@ -240,7 +240,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             titleView.text = game.title
 
             GameIconUtils.loadGameIcon(requireActivity(), game, iconView)
-}
+        }
+
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {
