@@ -52,6 +52,10 @@ if (ENABLE_QT)
     target_link_libraries(citra_meta PRIVATE Boost::boost Qt6::Widgets)
 endif()
 
+if (ENABLE_ROOM)
+    target_link_libraries(citra_meta PRIVATE citra_room)
+endif()
+
 if (ENABLE_QT AND UNIX AND NOT APPLE)
     target_link_libraries(citra_meta PRIVATE Qt6::DBus gamemode)
 endif()
