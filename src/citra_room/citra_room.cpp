@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -161,7 +161,7 @@ static void InitializeLogging(const std::string& log_file) {
 }
 
 /// Application entry point
-int main(int argc, char** argv) {
+void LaunchRoom(int argc, char** argv) {
     Common::DetachedTasks detached_tasks;
     int option_index = 0;
     char* endarg;
@@ -199,6 +199,8 @@ int main(int argc, char** argv) {
         // Removed options
         {"preferred-game", optional_argument, 0, 'g'},
         {"preferred-game-id", optional_argument, 0, 0},
+        // Entry option
+        {"room", 0, 0, 0},
 
         {0, 0, 0, 0},
     };
@@ -248,17 +250,17 @@ int main(int argc, char** argv) {
                 break;
             case 'h':
                 PrintHelp(argv[0]);
-                return 0;
+                exit(0);
             case 'v':
                 PrintVersion();
-                return 0;
+                exit(0);
             case 'g':
                 PrintRemovedOptionWarning(argv[0], "--preferred-game/-g");
-                return 255;
+                exit(255);
             case 0:
                 if (strcmp(long_options[option_index].name, "preferred-game-id") == 0) {
                     PrintRemovedOptionWarning(argv[0], "--preferred-game-id");
-                    return 255;
+                    exit(255);
                 }
             }
         }
@@ -267,12 +269,12 @@ int main(int argc, char** argv) {
     if (room_name.empty()) {
         std::cout << "room name is empty!\n\n";
         PrintHelp(argv[0]);
-        return -1;
+        exit(-1);
     }
     if (preferred_game.empty()) {
         std::cout << "preferred application is empty!\n\n";
         PrintHelp(argv[0]);
-        return -1;
+        exit(-1);
     }
     if (preferred_game_id == 0) {
         std::cout
@@ -283,12 +285,12 @@ int main(int argc, char** argv) {
         std::cout << "max_members needs to be in the range 2 - "
                   << Network::MaxConcurrentConnections << "!\n\n";
         PrintHelp(argv[0]);
-        return -1;
+        exit(-1);
     }
     if (port > 65535) {
         std::cout << "port needs to be in the range 0 - 65535!\n\n";
         PrintHelp(argv[0]);
-        return -1;
+        exit(-1);
     }
     if (ban_list_file.empty()) {
         std::cout << "Ban list file not set!\nThis should get set to load and save room ban "
@@ -350,7 +352,7 @@ int main(int argc, char** argv) {
                           preferred_game, preferred_game_id, std::move(verify_backend), ban_list,
                           enable_citra_mods)) {
             std::cout << "Failed to create room: \n\n";
-            return -1;
+            exit(-1);
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
         auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>();
@@ -377,5 +379,4 @@ int main(int argc, char** argv) {
     }
     Network::Shutdown();
     detached_tasks.WaitForAllTasks();
-    return 0;
 }
