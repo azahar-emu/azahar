@@ -60,15 +60,6 @@ if (ENABLE_QT AND USE_DISCORD_PRESENCE)
     target_link_libraries(citra_meta PRIVATE discord-rpc)
 endif()
 
-if(WIN32)
-    # compile as a win32 gui application instead of a console application
-    if(MSVC)
-        set_target_properties(citra_meta PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-    elseif(MINGW)
-        set_target_properties(citra_meta PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
-    endif()
-endif()
-
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_meta PRIVATE precompiled_headers.h)
 endif()
