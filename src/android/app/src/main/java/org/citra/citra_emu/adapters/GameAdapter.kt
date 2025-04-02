@@ -239,20 +239,14 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             listOf(
                 R.id.game_context_open_app to dirs.appDir,
                 R.id.game_context_open_save_dir to dirs.saveDir,
+                R.id.game_context_open_updates to dirs.updatesDir,
                 R.id.game_context_open_dlc to dirs.dlcDir,
-                R.id.game_context_open_updates to dirs.updatesDir
+                R.id.game_context_open_extra to dirs.extraDir
             ).forEach { (id, dir) ->
                 menu.findItem(id)?.isEnabled =
                     CitraApplication.documentsTree.folderUriHelper(dir)?.let {
                         DocumentFile.fromTreeUri(view.context, it)?.exists()
                     } ?: false
-            }
-            menu.findItem(R.id.game_context_open_extra)?.let { item ->
-                if (CitraApplication.documentsTree.folderUriHelper(dirs.extraDir)?.let {
-                        DocumentFile.fromTreeUri(view.context, it)?.exists()
-                    } != true) {
-                    menu.removeItem(item.itemId)
-                }
             }
         }
 
