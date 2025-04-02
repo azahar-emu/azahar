@@ -265,10 +265,11 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             val uri = when (menuItem.itemId) {
                 R.id.game_context_open_app -> CitraApplication.documentsTree.folderUriHelper(dirs.appDir)
                 R.id.game_context_open_save_dir -> CitraApplication.documentsTree.folderUriHelper(dirs.saveDir)
+                R.id.game_context_open_updates -> CitraApplication.documentsTree.folderUriHelper(dirs.updatesDir)
                 R.id.game_context_open_dlc -> CitraApplication.documentsTree.folderUriHelper(dirs.dlcDir)
+                R.id.game_context_open_extra -> CitraApplication.documentsTree.folderUriHelper(dirs.extraDir)
                 R.id.game_context_open_textures -> CitraApplication.documentsTree.folderUriHelper(dirs.texturesDir, true)
                 R.id.game_context_open_mods -> CitraApplication.documentsTree.folderUriHelper(dirs.modsDir, true)
-                R.id.game_context_open_extra -> CitraApplication.documentsTree.folderUriHelper(dirs.extraDir)
                 else -> null
             }
 
