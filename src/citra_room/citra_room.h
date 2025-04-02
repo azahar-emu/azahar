@@ -4,4 +4,4 @@
 
 #pragma once
 
-void LaunchRoom(int argc, char** argv);
+void LaunchRoom(int argc, char** argv, bool called_by_option);
