@@ -218,15 +218,16 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
         val extraDir: String
     )
     private fun getGameDirectories(game: Game): GameDirectories {
+        val basePath = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000"
         return GameDirectories(
             gameDir = game.path.substringBeforeLast("/"),
-            saveDir = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/${String.format("%016x", game.titleId).lowercase().substring(0, 8)}/${String.format("%016x", game.titleId).lowercase().substring(8)}/data/00000001",
+            saveDir = basePath + "/title/${String.format("%016x", game.titleId).lowercase().substring(0, 8)}/${String.format("%016x", game.titleId).lowercase().substring(8)}/data/00000001",
             modsDir = "load/mods/${String.format("%016X", game.titleId)}",
             texturesDir = "load/textures/${String.format("%016X", game.titleId)}",
             appDir = game.path.substringBeforeLast("/").split("/").filter { it.isNotEmpty() }.joinToString("/"),
-            dlcDir = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/0004008c/${String.format("%016x", game.titleId).lowercase().substring(8)}/content",
-            updatesDir = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/0004000e/${String.format("%016x", game.titleId).lowercase().substring(8)}/content",
-            extraDir = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000/extdata/00000000/${String.format("%016X", game.titleId).substring(8, 14).padStart(8, '0')}"
+            dlcDir = basePath + "/title/0004008c/${String.format("%016x", game.titleId).lowercase().substring(8)}/content",
+            updatesDir = basePath + "/title/0004000e/${String.format("%016x", game.titleId).lowercase().substring(8)}/content",
+            extraDir = basePath + "/extdata/00000000/${String.format("%016X", game.titleId).substring(8, 14).padStart(8, '0')}"
         )
     }
 
