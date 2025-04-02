@@ -5,5 +5,5 @@
 #include "citra_room/citra_room.h"
 
 int main(int argc, char* argv[]) {
-    LaunchRoom(argc, argv);
+    LaunchRoom(argc, argv, false);
 }

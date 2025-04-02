@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (launch_room) {
-        LaunchRoom(argc, argv);
+        LaunchRoom(argc, argv, true);
         return 0;
     }
 #endif

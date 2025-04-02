@@ -161,10 +161,15 @@ static void InitializeLogging(const std::string& log_file) {
 }
 
 /// Application entry point
-void LaunchRoom(int argc, char** argv) {
+void LaunchRoom(int argc, char** argv, bool called_by_option) {
     Common::DetachedTasks detached_tasks;
     int option_index = 0;
     char* endarg;
+
+    char* new_argv0 = argv[0];
+    if (called_by_option) {
+        strcat(new_argv0, " --room");
+    }
 
     std::string room_name;
     std::string room_description;
