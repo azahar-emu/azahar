@@ -60,12 +60,14 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     });
 
     connect(ui->change_screenshot_dir, &QToolButton::clicked, this, [this] {
+        ui->change_screenshot_dir->setEnabled(false);
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select Screenshot Directory"), ui->screenshot_dir_path->text(),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
             ui->screenshot_dir_path->setText(dir_path);
         }
+        ui->change_screenshot_dir->setEnabled(true);
     });
 }
 
@@ -135,12 +137,14 @@ void ConfigureGeneral::SetConfiguration() {
 }
 
 void ConfigureGeneral::ResetDefaults() {
+    ui->button_reset_defaults->setEnabled(false);
     QMessageBox::StandardButton answer = QMessageBox::question(
         this, tr("Azahar"),
         tr("Are you sure you want to <b>reset your settings</b> and close Azahar?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if (answer == QMessageBox::No) {
+        ui->button_reset_defaults->setEnabled(true);
         return;
     }
 

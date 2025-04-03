@@ -590,7 +590,7 @@ online features (if installed)</string>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="button_linked_console">
+                    <widget class="QPushButton" name="button_unlink_console">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                        <horstretch>0</horstretch>
