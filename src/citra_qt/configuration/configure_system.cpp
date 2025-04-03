@@ -238,7 +238,7 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
-    connect(ui->button_linked_console, &QPushButton::clicked, this,
+    connect(ui->button_unlink_console, &QPushButton::clicked, this,
             &ConfigureSystem::UnlinkConsole);
     connect(ui->combo_country, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int index) {
@@ -557,15 +557,17 @@ void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
 }
 
 void ConfigureSystem::RefreshConsoleID() {
+    ui->button_regenerate_console_id->setEnabled(false);
     QMessageBox::StandardButton reply;
     QString warning_text =
         tr("This will replace your current virtual 3DS console ID with a new one. "
            "Your current virtual 3DS console ID will not be recoverable. "
            "This might have unexpected effects in applications. This might fail "
            "if you use an outdated config save. Continue?");
-    reply = QMessageBox::critical(this, tr("Warning"), warning_text,
-                                  QMessageBox::No | QMessageBox::Yes);
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {
+        ui->button_regenerate_console_id->setEnabled(true);
         return;
     }
 
@@ -574,9 +576,11 @@ void ConfigureSystem::RefreshConsoleID() {
     cfg->UpdateConfigNANDSavegame();
     ui->label_console_id->setText(
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
+    ui->button_regenerate_console_id->setEnabled(true);
 }
 
 void ConfigureSystem::RefreshMAC() {
+    ui->button_regenerate_mac->setEnabled(false);
     QMessageBox::StandardButton reply;
     QString warning_text = tr("This will replace your current MAC address with a new one. "
                               "It is not recommended to do this if you got the MAC address from "
@@ -584,14 +588,17 @@ void ConfigureSystem::RefreshMAC() {
     reply =
         QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {
+        ui->button_regenerate_mac->setEnabled(true);
         return;
     }
 
     mac_address = Service::CFG::GenerateRandomMAC();
     ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
+    ui->button_regenerate_mac->setEnabled(true);
 }
 
 void ConfigureSystem::UnlinkConsole() {
+    ui->button_unlink_console->setEnabled(false);
     QMessageBox::StandardButton reply;
     QString warning_text =
         tr("This action will unlink your real console from Azahar, with the following "
@@ -603,11 +610,13 @@ void ConfigureSystem::UnlinkConsole() {
     reply =
         QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {
+        ui->button_unlink_console->setEnabled(true);
         return;
     }
 
     HW::UniqueData::UnlinkConsole();
     RefreshSecureDataStatus();
+    ui->button_unlink_console->setEnabled(true);
 }
 
 void ConfigureSystem::CheckCountryValid(u8 country) {
