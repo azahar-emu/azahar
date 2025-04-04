@@ -139,6 +139,8 @@ void ConfigureMotionTouch::SetConfiguration() {
         ui->touch_provider->findData(QString::fromStdString(touch_engine)));
     ui->touch_from_button_checkbox->setChecked(
         Settings::values.current_input_profile.use_touch_from_button);
+    ui->touchpad_checkbox->setChecked(
+        Settings::values.current_input_profile.use_touchpad);
     touch_from_button_maps = Settings::values.touch_from_button_maps;
     for (const auto& touch_map : touch_from_button_maps) {
         ui->touch_from_button_map->addItem(QString::fromStdString(touch_map.name));
@@ -164,7 +166,9 @@ void ConfigureMotionTouch::SetConfiguration() {
 void ConfigureMotionTouch::UpdateUiDisplay() {
     const std::string motion_engine = ui->motion_provider->currentData().toString().toStdString();
     const std::string touch_engine = ui->touch_provider->currentData().toString().toStdString();
-
+    ui->touchpad_config_btn->setEnabled(
+        ui->touchpad_checkbox->isChecked()
+    );
     if (motion_engine == "motion_emu") {
         ui->motion_sensitivity_label->setVisible(true);
         ui->motion_sensitivity->setVisible(true);
@@ -229,6 +233,32 @@ void ConfigureMotionTouch::ConnectEvents() {
             poll_timer->start(200);     // Check for new inputs every 200ms
         }
     });
+    connect(ui->touchpad_checkbox,&QCheckBox::checkStateChanged, this, [this]() {UpdateUiDisplay(); });
+    connect(ui->touchpad_config_btn, &QPushButton::clicked, this, [this]() {
+        if (QMessageBox::information(this, tr("Information"),
+                                     tr("After pressing OK, tap the trackpad on the controller"
+                                        "that you want to track."),
+                                     QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
+            ui->touchpad_config_btn->setText(tr("[press touchpad]"));
+            ui->touchpad_config_btn->setFocus();
+
+            input_setter = [this](const Common::ParamPackage& params) {
+                tpguid = params.Get("guid", "0");
+                tpport = params.Get("port", 0);
+                tp = params.Get("touchpad",0);
+            };
+
+            device_pollers =
+                InputCommon::Polling::GetPollers(InputCommon::Polling::DeviceType::Touchpad);
+
+            for (auto& poller : device_pollers) {
+                poller->Start();
+            }
+
+            timeout_timer->start(5000); // Cancel after 5 seconds
+            poll_timer->start(200);     // Check for new inputs every 200ms
+        }
+    });
     connect(ui->udp_test, &QPushButton::clicked, this, &ConfigureMotionTouch::OnCemuhookUDPTest);
     connect(ui->touch_calibration_config, &QPushButton::clicked, this,
             &ConfigureMotionTouch::OnConfigureTouchCalibration);
@@ -253,7 +283,7 @@ void ConfigureMotionTouch::SetPollingResult(const Common::ParamPackage& params, 
     if (!abort && input_setter) {
         (*input_setter)(params);
     }
-
+    ui->touchpad_config_btn->setText(tr("Configure"));
     ui->motion_controller_button->setText(tr("Configure"));
     input_setter.reset();
 }
@@ -291,7 +321,6 @@ void ConfigureMotionTouch::OnConfigureTouchCalibration() {
                  "UDP touchpad calibration config success: min_x={}, min_y={}, max_x={}, max_y={}",
                  min_x, min_y, max_x, max_y);
         UpdateUiDisplay();
-    } else {
         LOG_ERROR(Frontend, "UDP touchpad calibration config failed");
     }
     ui->touch_calibration_config->setEnabled(true);
@@ -374,12 +403,22 @@ void ConfigureMotionTouch::ApplyConfiguration() {
         touch_param.Set("max_y", max_y);
     }
 
+    Common::ParamPackage touchpad_param{};
+    if (ui->touchpad_checkbox->isChecked()) {
+        touchpad_param.Set("engine", "sdl");
+        touchpad_param.Set("guid", tpguid);
+        touchpad_param.Set("port", tpport);
+        touchpad_param.Set("touchpad",tp);
+    }
     Settings::values.current_input_profile.motion_device = motion_param.Serialize();
     Settings::values.current_input_profile.touch_device = touch_param.Serialize();
     Settings::values.current_input_profile.use_touch_from_button =
         ui->touch_from_button_checkbox->isChecked();
     Settings::values.current_input_profile.touch_from_button_map_index =
         ui->touch_from_button_map->currentIndex();
+    Settings::values.current_input_profile.use_touchpad =
+        ui->touchpad_checkbox->isChecked();
+    Settings::values.current_input_profile.controller_touch_device = touchpad_param.Serialize();
     Settings::values.touch_from_button_maps = touch_from_button_maps;
     Settings::values.current_input_profile.udp_input_address = ui->udp_server->text().toStdString();
     Settings::values.current_input_profile.udp_input_port =
