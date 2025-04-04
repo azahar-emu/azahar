@@ -13,6 +13,10 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
 
+enum class BUTTON_SLIDING_MODE {
+    NONE, ONE_BUTTON, TWO_BUTTON, COYOTE
+}
+
 /**
  * Custom [BitmapDrawable] that is capable
  * of storing it's own ID.
@@ -30,6 +34,7 @@ class InputOverlayDrawableButton(
     val opacity: Int
 ) {
     var trackId: Int
+    var buttonSlidingEnabled = BUTTON_SLIDING_MODE.ONE_BUTTON
     private var previousTouchX = 0
     private var previousTouchY = 0
     private var controlPositionX = 0
@@ -81,6 +86,32 @@ class InputOverlayDrawableButton(
             overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
             return true
         }
+
+        if (buttonSlidingEnabled != BUTTON_SLIDING_MODE.NONE && motionEvent == MotionEvent.ACTION_MOVE) {
+            val inside = bounds.contains(xPosition, yPosition)
+            if (pressedState) {
+                // button is already pressed
+                // check whether we moved out of the button area to update the state
+                if (inside || trackId != pointerId) {
+                    return false
+                }
+                pressedState = false
+                trackId = -1
+                overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
+                return true
+            } else {
+                // button was not yet pressed
+                // check whether we moved into the button area to update the state
+                if (!inside) {
+                    return false
+                }
+                pressedState = true
+                trackId = pointerId
+                overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                return true
+            }
+        }
+
         return false
     }
 
