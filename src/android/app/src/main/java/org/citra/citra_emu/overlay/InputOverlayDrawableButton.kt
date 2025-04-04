@@ -13,8 +13,17 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
 
-enum class BUTTON_SLIDING_MODE {
-    NONE, ONE_BUTTON, TWO_BUTTON, COYOTE
+enum class ButtonSlidingMode {
+    // Disabled, buttons can only be triggered by pressing them directly.
+    None,
+
+    // Additionally to pressing buttons directly, they can be activated and released by sliding into
+    // and out of their area.
+    Simple,
+
+    // A pressed button is kept activated until released. Further buttons can be triggered with the
+    // sliding method.
+    KeepFirst
 }
 
 /**
@@ -34,7 +43,10 @@ class InputOverlayDrawableButton(
     val opacity: Int
 ) {
     var trackId: Int
-    var buttonSlidingEnabled = BUTTON_SLIDING_MODE.ONE_BUTTON
+
+    var buttonSliding = ButtonSlidingMode.Simple
+    private var pressedDirectTouch = false // mark buttons that did not get activated by sliding
+
     private var previousTouchX = 0
     private var previousTouchY = 0
     private var controlPositionX = 0
@@ -73,6 +85,7 @@ class InputOverlayDrawableButton(
                 return false
             }
             pressedState = true
+            pressedDirectTouch = true
             trackId = pointerId
             overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             return true
@@ -82,12 +95,14 @@ class InputOverlayDrawableButton(
                 return false
             }
             pressedState = false
+            pressedDirectTouch = false
             trackId = -1
             overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
             return true
         }
 
-        if (buttonSlidingEnabled != BUTTON_SLIDING_MODE.NONE && motionEvent == MotionEvent.ACTION_MOVE) {
+        val isActionMoving = motionEvent == MotionEvent.ACTION_MOVE
+        if (buttonSliding != ButtonSlidingMode.None && isActionMoving) {
             val inside = bounds.contains(xPosition, yPosition)
             if (pressedState) {
                 // button is already pressed
@@ -95,6 +110,11 @@ class InputOverlayDrawableButton(
                 if (inside || trackId != pointerId) {
                     return false
                 }
+                // prevent the first (directly pressed) button to deactivate when sliding off
+                if (buttonSliding == ButtonSlidingMode.KeepFirst && pressedDirectTouch) {
+                    return false
+                }
+
                 pressedState = false
                 trackId = -1
                 overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
