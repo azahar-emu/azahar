@@ -51,6 +51,7 @@ import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
+import org.citra.citra_emu.utils.PlayTimeTracker
 
 class GameAdapter(private val activity: AppCompatActivity, private val inflater: LayoutInflater) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
@@ -335,6 +336,12 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             val action = HomeNavigationDirections.actionGlobalEmulationActivity(holder.game)
             view.findNavController().navigate(action)
         }
+
+        bottomSheetView.findViewById<TextView>(R.id.about_game_playtime).text =
+            buildString {
+                append("Playtime: ")
+                append(PlayTimeTracker.getPlayTime(game.titleId))
+            }
 
         bottomSheetView.findViewById<MaterialButton>(R.id.game_shortcut).setOnClickListener {
             val shortcutManager = activity.getSystemService(ShortcutManager::class.java)
