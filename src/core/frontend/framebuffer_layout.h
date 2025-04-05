@@ -62,14 +62,24 @@ FramebufferLayout reverseLayout(FramebufferLayout layout);
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
 
 /**
- * Factory method for constructing the mobile Full Width Top layout
- * Two screens at top, full width, no gap between them
+ * Factory method for constructing the mobile Full Width (Default) layout
+ * Two screens at top, full width (so different heights)
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
  */
 FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swapped);
+
+/**
+ * Factory method for constructing the mobile Original layout
+ * Two screens at top, equal heights
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be displayed above the top screen
+ * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
+ */
+FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped);
 
 /**
  * Factory method for constructing a FramebufferLayout with only the top or bottom screen
