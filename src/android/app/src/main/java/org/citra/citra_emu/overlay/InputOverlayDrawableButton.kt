@@ -12,18 +12,19 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.utils.EmulationMenuSettings
 
-enum class ButtonSlidingMode {
+enum class ButtonSlidingMode(val int: Int) {
     // Disabled, buttons can only be triggered by pressing them directly.
-    None,
+    None(0),
 
     // Additionally to pressing buttons directly, they can be activated and released by sliding into
     // and out of their area.
-    Simple,
+    Simple(1),
 
     // A pressed button is kept activated until released. Further buttons can be triggered with the
     // sliding method.
-    KeepFirst
+    KeepFirst(2)
 }
 
 /**
@@ -44,7 +45,6 @@ class InputOverlayDrawableButton(
 ) {
     var trackId: Int
 
-    var buttonSliding = ButtonSlidingMode.Simple
     private var pressedDirectTouch = false // mark buttons that did not get activated by sliding
 
     private var previousTouchX = 0
@@ -71,6 +71,7 @@ class InputOverlayDrawableButton(
      * @return true if value was changed
      */
     fun updateStatus(event: MotionEvent, overlay:InputOverlay): Boolean {
+        val buttonSliding = EmulationMenuSettings.buttonSlide
         val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
@@ -102,7 +103,7 @@ class InputOverlayDrawableButton(
         }
 
         val isActionMoving = motionEvent == MotionEvent.ACTION_MOVE
-        if (buttonSliding != ButtonSlidingMode.None && isActionMoving) {
+        if (buttonSliding != ButtonSlidingMode.None.int && isActionMoving) {
             val inside = bounds.contains(xPosition, yPosition)
             if (pressedState) {
                 // button is already pressed
@@ -111,7 +112,7 @@ class InputOverlayDrawableButton(
                     return false
                 }
                 // prevent the first (directly pressed) button to deactivate when sliding off
-                if (buttonSliding == ButtonSlidingMode.KeepFirst && pressedDirectTouch) {
+                if (buttonSliding == ButtonSlidingMode.KeepFirst.int && pressedDirectTouch) {
                     return false
                 }
 

@@ -7,6 +7,7 @@ package org.citra.citra_emu.utils
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.overlay.ButtonSlidingMode
 
 object EmulationMenuSettings {
     private val preferences =
@@ -24,6 +25,13 @@ object EmulationMenuSettings {
         set(value) {
             preferences.edit()
                 .putBoolean("EmulationMenuSettings_DpadSlideEnable", value)
+                .apply()
+        }
+    var buttonSlide: Int
+        get() = preferences.getInt("EmulationMenuSettings_ButtonSlideMode", ButtonSlidingMode.None.int)
+        set(value) {
+            preferences.edit()
+                .putInt("EmulationMenuSettings_ButtonSlideMode", value)
                 .apply()
         }
 
