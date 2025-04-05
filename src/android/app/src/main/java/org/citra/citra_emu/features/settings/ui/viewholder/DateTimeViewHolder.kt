@@ -47,7 +47,7 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
         val dateFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
         binding.textSettingValue.text = dateFormatter.format(zonedTime)
 
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f
             binding.textSettingValue.alpha = 1f
@@ -59,18 +59,18 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
     }
 
     override fun onClick(clicked: View) {
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             adapter.onDateTimeClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable) {
+        if (setting.isEditable && setting.isEnabled) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
         return false
     }
