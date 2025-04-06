@@ -4502,12 +4502,12 @@ Använd på egen risk!</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2912"/>
         <source>FFmpeg could not be loaded. Make sure you have a compatible version installed.
 
-To install FFmpeg to Lime, press Open and select your FFmpeg directory.
+To install FFmpeg to Azahar, press Open and select your FFmpeg directory.
 
 To view a guide on how to install FFmpeg, press Help.</source>
         <translation>FFmpeg kunde inte läsas in. Se till att du har en kompatibel version installerad.
 
-För att installera FFmpeg till Lime, tryck på Öppna och välj din FFmpeg-katalog.
+För att installera FFmpeg till Azahar, tryck på Öppna och välj din FFmpeg-katalog.
 
 Om du vill visa en guide om hur du installerar FFmpeg trycker du på Hjälp.</translation>
     </message>

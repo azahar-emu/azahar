@@ -4492,12 +4492,12 @@ Use at your own risk!</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2912"/>
         <source>FFmpeg could not be loaded. Make sure you have a compatible version installed.
 
-To install FFmpeg to Lime, press Open and select your FFmpeg directory.
+To install FFmpeg to Azahar, press Open and select your FFmpeg directory.
 
 To view a guide on how to install FFmpeg, press Help.</source>
         <translation>FFmpeg kon niet worden geladen. Bevestig dat uw versie compatibel is.
 
-Om FFmpeg naar Lime te installeren, klik op Open and selecteer uw FFmpeg map.
+Om FFmpeg naar Azahar te installeren, klik op Open and selecteer uw FFmpeg map.
 
 Om een handleiding voor installatie van FFmpeg te vinden, klik op Help.</translation>
     </message>

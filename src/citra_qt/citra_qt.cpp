@@ -2911,7 +2911,7 @@ void GMainWindow::ShowFFmpegErrorMessage() {
     message_box.setText(
         tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
 #ifdef _WIN32
-           "\n\nTo install FFmpeg to Lime, press Open and select your FFmpeg directory."
+           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
 #endif
            "\n\nTo view a guide on how to install FFmpeg, press Help."));
     message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
