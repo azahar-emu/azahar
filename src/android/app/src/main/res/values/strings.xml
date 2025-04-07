@@ -455,7 +455,7 @@
     <string name="bg_red">Red</string>
     <string name="bg_green">Green</string>
     <string name="bg_blue">Blue</string>
-    <string name="second_screen_opacity">Custom Layout Second Screen Opacity (OpenGL Only)</string>
+    <string name="second_screen_opacity">Custom Layout Second Screen Opacity</string>
     <string name="second_screen_opacity_description">The opacity of the second 3DS screen when using a custom screen layout. Useful if the second screen is to be positioned on top of the first screen.</string>
     <string name="emulation_small_screen_position">Small Screen Position</string>
     <string name="small_screen_position_description">Where should the small screen appear relative to the large one in Large Screen Layout?</string>

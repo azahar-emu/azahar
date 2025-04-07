@@ -170,7 +170,7 @@ bg_red =
 bg_blue =
 bg_green =
 
-# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer. OpenGL only.
+# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer.
 custom_second_layer_opacity =
 
 # Whether and how Stereoscopic 3D should be rendered

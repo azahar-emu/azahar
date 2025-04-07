@@ -376,7 +376,13 @@ void RendererVulkan::BuildPipelines() {
     };
 
     const vk::PipelineColorBlendAttachmentState colorblend_attachment = {
-        .blendEnable = false,
+        .blendEnable = true,
+        .srcColorBlendFactor = vk::BlendFactor::eConstantAlpha,
+        .dstColorBlendFactor = vk::BlendFactor::eOneMinusConstantAlpha,
+        .colorBlendOp = vk::BlendOp::eAdd,
+        .srcAlphaBlendFactor = vk::BlendFactor::eConstantAlpha,
+        .dstAlphaBlendFactor = vk::BlendFactor::eOneMinusConstantAlpha,
+        .alphaBlendOp = vk::BlendOp::eAdd,
         .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                           vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
     };
@@ -385,7 +391,6 @@ void RendererVulkan::BuildPipelines() {
         .logicOpEnable = false,
         .attachmentCount = 1,
         .pAttachments = &colorblend_attachment,
-        .blendConstants = std::array{1.0f, 1.0f, 1.0f, 1.0f},
     };
 
     const vk::Viewport placeholder_viewport = vk::Viewport{0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f};
@@ -398,6 +403,7 @@ void RendererVulkan::BuildPipelines() {
     };
 
     const std::array dynamic_states = {
+        vk::DynamicState::eBlendConstants,
         vk::DynamicState::eViewport,
         vk::DynamicState::eScissor,
     };
@@ -729,6 +735,13 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
     });
 }
 
+void RendererVulkan::ApplySecondLayerOpacity(float alpha) {
+    scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
+        const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
+        cmdbuf.setBlendConstants(blend_constants.data());
+    });
+}
+
 void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
                                    const Common::Rectangle<u32>& top_screen) {
     if (!layout.top_screen_enabled) {
@@ -867,13 +880,30 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     draw_info.modelview = MakeOrthographicMatrix(layout.width, layout.height);
 
     draw_info.layer = 0;
+
+    // Apply the initial default opacity value; Needed to avoid flickering
+    ApplySecondLayerOpacity(1.0f);
+
+    bool use_custom_opacity =
+        Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout &&
+        Settings::values.custom_second_layer_opacity.GetValue() < 100;
+    float second_alpha = use_custom_opacity
+                             ? Settings::values.custom_second_layer_opacity.GetValue() / 100.0f
+                             : 1.0f;
+
     if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen);
         draw_info.layer = 0;
+        if (use_custom_opacity) {
+            ApplySecondLayerOpacity(second_alpha);
+        }
         DrawBottomScreen(layout, bottom_screen);
     } else {
         DrawBottomScreen(layout, bottom_screen);
         draw_info.layer = 0;
+        if (use_custom_opacity) {
+            ApplySecondLayerOpacity(second_alpha);
+        }
         DrawTopScreen(layout, top_screen);
     }
 
