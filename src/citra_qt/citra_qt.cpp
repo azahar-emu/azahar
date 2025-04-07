@@ -329,6 +329,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     ui->setupUi(this);
     statusBar()->hide();
 
+    setWindowIcon(QIcon(QString::fromStdString(":/icons/azahar.png")));
+
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
