@@ -54,6 +54,13 @@ else()
     set(IS_RELEASE_BUILD ON)
 endif()
 
+if (MSVC)
+    add_compile_options(
+        /wd4711 # Suppresses `function 'xxxxx' selected for automatic inline expansion` messages
+        /wd5045 # Suppresses `Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified` messages
+    )
+endif()
+
 # LTO takes too much memory and time using MSVC.
 if (NOT MSVC AND IS_RELEASE_BUILD)
     set(DEFAULT_ENABLE_LTO ON)
