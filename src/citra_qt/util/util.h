@@ -41,3 +41,11 @@ QPixmap GetQPixmapFromSMDH(const std::vector<u8>& smdh_data);
  * @return The user’s applications directory
  */
 [[nodiscard]] const std::string GetApplicationsDirectory();
+
+/**
+ * Imitates the deprecated `QImage::mirrored` function in a forwards-compatible manner
+ * @param flip_horizontal Whether the image should be flipped horizontally
+ * @param flip_vertical Whether the image should be flipped vertically
+ * @return QImage The mirrored image
+ */
+QImage GetMirroredImage(QImage source_image, bool flip_horizontal, bool flip_vertical);

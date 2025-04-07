@@ -10,6 +10,7 @@
 #include <QWindow>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/citra_qt.h"
+#include "citra_qt/util/util.h"
 #include "common/color.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -714,7 +715,7 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
         screenshot_image.bits(),
         [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();
-            if (screenshot_image.mirrored(false, invert_y).save(screenshot_path)) {
+            if (GetMirroredImage(screenshot_image, false, invert_y).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
             } else {
                 LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);

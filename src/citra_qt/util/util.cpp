@@ -175,3 +175,19 @@ const std::string GetApplicationsDirectory() {
     return QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation).toStdString();
 #endif
 }
+
+QImage GetMirroredImage(QImage source_image, bool flip_horizontal, bool flip_vertical) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 9, 0) // Fallback, uses deprecated method
+    return source_image.mirrored(flip_horizontal, flip_vertical);
+#else // New method
+    auto orientation_horizontal = static_cast<Qt::Orientations>(0x0);
+    auto orientation_vertical = static_cast<Qt::Orientations>(0x0);
+
+    if (flip_horizontal)
+        orientation_horizontal = Qt::Horizontal;
+    if (flip_vertical)
+        orientation_vertical = Qt::Vertical;
+
+    return source_image.flipped(orientation_horizontal | orientation_vertical);
+#endif
+}
