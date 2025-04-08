@@ -31,7 +31,7 @@ The recommended method of downloading Azahar on Android is via the [Google Play 
 Alternatively, you can install the app using Obtainium:
 1. Download and install Obtainium from [here](https://github.com/ImranR98/Obtainium/releases) (use the file named `app-release.apk`)
 2. Open Obtainium and click 'Add App'
-3. Type `https://github.com/azahar/azahar-emu` into the 'App Source URL' section
+3. Type `https://github.com/azahar-emu/azahar` into the 'App Source URL' section
 4. Click 'Add'
 5. Click 'Install'
 
