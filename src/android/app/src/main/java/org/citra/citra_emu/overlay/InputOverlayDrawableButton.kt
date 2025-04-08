@@ -22,7 +22,7 @@ enum class ButtonSlidingMode(val int: Int) {
     // and out of their area.
     Simple(1),
 
-    // A pressed button is kept activated until released. Further buttons can be triggered with the
+    // The first button is kept activated until released, further buttons use the simple button
     // sliding method.
     KeepFirst(2)
 }
@@ -45,7 +45,7 @@ class InputOverlayDrawableButton(
 ) {
     var trackId: Int
 
-    private var pressedDirectTouch = false // mark buttons that did not get activated by sliding
+    private var isMotionFirstButton = false // mark buttons that did not get activated by sliding
 
     private var previousTouchX = 0
     private var previousTouchY = 0
@@ -70,7 +70,7 @@ class InputOverlayDrawableButton(
      *
      * @return true if value was changed
      */
-    fun updateStatus(event: MotionEvent, overlay:InputOverlay): Boolean {
+    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
         val buttonSliding = EmulationMenuSettings.buttonSlide
         val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
@@ -85,20 +85,14 @@ class InputOverlayDrawableButton(
             if (!bounds.contains(xPosition, yPosition)) {
                 return false
             }
-            pressedState = true
-            pressedDirectTouch = true
-            trackId = pointerId
-            overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            buttonDown(true, pointerId, overlay)
             return true
         }
         if (isActionUp) {
             if (trackId != pointerId) {
                 return false
             }
-            pressedState = false
-            pressedDirectTouch = false
-            trackId = -1
-            overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
+            buttonUp(overlay)
             return true
         }
 
@@ -112,13 +106,10 @@ class InputOverlayDrawableButton(
                     return false
                 }
                 // prevent the first (directly pressed) button to deactivate when sliding off
-                if (buttonSliding == ButtonSlidingMode.KeepFirst.int && pressedDirectTouch) {
+                if (buttonSliding == ButtonSlidingMode.KeepFirst.int && isMotionFirstButton) {
                     return false
                 }
-
-                pressedState = false
-                trackId = -1
-                overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
+                buttonUp(overlay)
                 return true
             } else {
                 // button was not yet pressed
@@ -126,14 +117,26 @@ class InputOverlayDrawableButton(
                 if (!inside) {
                     return false
                 }
-                pressedState = true
-                trackId = pointerId
-                overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                buttonDown(!hasActiveButtons, pointerId, overlay)
                 return true
             }
         }
 
         return false
+    }
+
+    private fun buttonDown(firstBtn: Boolean, pointerId: Int, overlay: InputOverlay) {
+        pressedState = true
+        isMotionFirstButton = firstBtn
+        trackId = pointerId
+        overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+    private fun buttonUp(overlay: InputOverlay) {
+        pressedState = false
+        isMotionFirstButton = false
+        trackId = -1
+        overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
     }
 
     fun onConfigureTouch(event: MotionEvent): Boolean {
