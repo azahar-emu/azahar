@@ -696,10 +696,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
 }
 
 void RendererOpenGL::ApplySecondLayerOpacity(bool isPortrait) {
-    // TODO: Allow for second layer opacity in portrait mode android
-
-    if (!isPortrait &&
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout) &&
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout &&
         Settings::values.custom_second_layer_opacity.GetValue() < 100) {
         state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
         state.blend.src_a_func = GL_CONSTANT_ALPHA;
@@ -710,8 +707,7 @@ void RendererOpenGL::ApplySecondLayerOpacity(bool isPortrait) {
 }
 
 void RendererOpenGL::ResetSecondLayerOpacity(bool isPortrait) {
-    if (!isPortrait &&
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout) &&
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout &&
         Settings::values.custom_second_layer_opacity.GetValue() < 100) {
         state.blend.src_rgb_func = GL_ONE;
         state.blend.dst_rgb_func = GL_ZERO;
