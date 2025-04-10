@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>dist/citra.png</normaloff>dist/citra.png</iconset>
+    <normaloff>dist/azahar.png</normaloff>dist/azahar.png</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -636,14 +636,8 @@
    </property>
   </action>
   <action name="action_Report_Compatibility">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Report Compatibility</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="action_Restart">

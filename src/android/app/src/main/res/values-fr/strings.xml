@@ -7,6 +7,8 @@
     <string name="app_game_install_description">Ensuite, vous devrez sélectionner un dossier d\'applications. Azahar affichera toutes les ROMs 3DS à l\'intérieur du dossier sélectionné dans l\'application. Les ROMs CIA, les mises à jour et les DLCs devront être installés séparément en cliquant sur l\'icône du dossier et en sélectionnant Installer CIA.</string>
     <string name="start">Démarrer</string>
     <string name="cancelling">Annulation...</string>
+    <string name="important">Important</string>
+    <string name="dont_show_again">Ne pas montrer à nouveau</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Paramètres</string>
@@ -34,6 +36,7 @@
     <string name="select_citra_user_folder_home_description">Modifie les fichiers utilisés par Azahar pour charger les applications</string>
     <string name="theme_and_color_description">Modifier l\'apparence de l\'application</string>
     <string name="install_cia_title">Installer un CIA</string>
+    <string name="warning_3ds_files"><![CDATA[Les fichiers cryptés et les fichiers .3ds ne sont plus pris en charge. Il peut être nécessaire de les décrypter et/ou de les renommer en .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">En savoir plus.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Sélectionner le pilote du GPU</string>
@@ -126,7 +129,6 @@
     <string name="setup_system_files">Fichiers système</string>
     <string name="setup_system_files_description">Effectuer des opérations sur les fichiers système, telles que l\'installation de fichiers système ou le démarrage du menu Home.</string>
     <string name="setup_tool_connect">Connexion à Artic Setup Tool</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar a besoin de fichiers provenant d\'une console réelle pour pouvoir utiliser certaines de ses fonctionnalités. Vous pouvez obtenir ces fichiers avec l\'outil <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Notes :<ul><li><b> Cette opération va installer des fichiers uniques à la console dans Azahar, ne partagez pas vos dossiers utilisateur ou nand après avoir effectué le processus d\'installation !</b></li><li> La configuration de la Old 3DS est nécessaire pour que la configuration de la New 3DS fonctionne.</li><li> Les deux modes d\'installation fonctionneront quel que soit le modèle de la console qui exécute l\'outil d\'installation.</li></ul>]]></string>
     <string name="setup_system_files_detect">Récupération de l\'état actuel des fichiers du système, veuillez patienter...</string>
     <string name="setup_system_files_o3ds">Configuration Old 3DS</string>
     <string name="setup_system_files_n3ds">Configuration New 3DS</string>
@@ -174,7 +176,6 @@
     <string name="plugin_loader_description">Charge les plugins 3GX à partir de la carte SD émulée s\'ils sont disponibles.</string>
     <string name="allow_plugin_loader">Autoriser les applications à modifier l\'état du Plugin Loader</string>
     <string name="allow_plugin_loader_description">Autoriser les applications homebrew à activer le Plugin Loader même lorsqu\'il est désactivé.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Caméra intérieure</string>
     <string name="outer_left_camera">Caméra extérieure de gauche</string>
@@ -230,7 +231,6 @@
     <string name="stereoscopy">Stéréoscopie</string>
     <string name="render3d">Mode 3D stéréoscopique</string>
     <string name="factor3d">Profondeur</string>
-    <string name="factor3d_description">Spécifie la valeur du curseur 3D. Cette valeur doit être supérieure à 0% lorsque la 3D stéréoscopique est activée.</string>
     <string name="cardboard_vr">Réalité virtuelle Cardboard</string>
     <string name="cardboard_screen_size">Taille de l\'écran Cardboard</string>
     <string name="cardboard_screen_size_description">Redimensionne l\'écran à un pourcentage de sa taille d\'origine.</string>
@@ -441,6 +441,8 @@
     <string name="save_load_error">Erreur de sauvegarde/chargement</string>
     <string name="fatal_error">Erreur fatale</string>
     <string name="fatal_error_message">Une erreur fatale s\'est produite. Veuillez consulter les logs pour plus de détails.\nPoursuivre l\'émulation peut entraîner des plantages et des bugs.</string>
+    <string name="invalid_region">Région invalide</string>
+    <string name="unsupported_encrypted">Application encryptée non supportée</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Préparation des shaders</string>
@@ -471,7 +473,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Notifications de Azahar pendant l\'installation du CIA</string>
     <string name="cia_install_notification_title">Installation du CIA </string>
-    <string name="cia_install_notification_installing">Installation de %s (%d/%d)</string>
+    <string name="cia_install_notification_installing">Installation de %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">Installation réussie du CIA</string>
     <string name="cia_install_notification_error_title">Échec de l\'installation du CIA</string>
     <string name="cia_install_success">\"%s\" a été installé avec succès</string>
@@ -569,11 +571,11 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubique</string>
-    <string name="nearest_neighbor">Plus proche voisin</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <string name="nearest_neighbor">Plus proche voisin</string>
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stéreo</string>

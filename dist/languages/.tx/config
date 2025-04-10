@@ -6,9 +6,10 @@ file_filter = <lang>.ts
 source_file = en.ts
 source_lang = en
 type        = QT
+lang_map    = ca@valencia:ca_ES_valencia
 
 [o:azahar:p:azahar:r:android]
 file_filter = ../../src/android/app/src/main/res/values-<lang>/strings.xml
 source_file = ../../src/android/app/src/main/res/values/strings.xml
 type = ANDROID
-lang_map = es_ES:es, hu_HU:hu, ru_RU:ru, pt_BR:pt, zh_CN:zh, pl_PL:pl
+lang_map = es_ES:b+es+ES, hu_HU:b+hu+HU, ru_RU:b+ru+RU, pt_BR:b+pt+BR, zh_CN:b+zh+CN, pl_PL:b+pl+PL, ca@valencia:b+ca+ES+valencia, ko_KR:b+ko+KR, da_DK:b+da+DK, ja_JP:b+ja+JP, lt_LT:b+lt+LT, ro_RO:b+ro+RO, tr_TR:b+tr+TR, vi_VN:b+vi+VN, zh_TW:b+zh+TW

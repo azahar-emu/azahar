@@ -60,12 +60,14 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     });
 
     connect(ui->change_screenshot_dir, &QToolButton::clicked, this, [this] {
+        ui->change_screenshot_dir->setEnabled(false);
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select Screenshot Directory"), ui->screenshot_dir_path->text(),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
             ui->screenshot_dir_path->setText(dir_path);
         }
+        ui->change_screenshot_dir->setEnabled(true);
     });
 }
 
@@ -121,16 +123,6 @@ void ConfigureGeneral::SetConfiguration() {
                                           !UISettings::values.screenshot_path.UsingGlobal());
         ConfigurationShared::SetHighlight(ui->emulation_speed_layout,
                                           !Settings::values.frame_limit.UsingGlobal());
-        ConfigurationShared::SetHighlight(ui->widget_region,
-                                          !Settings::values.region_value.UsingGlobal());
-        const bool is_region_global = Settings::values.region_value.UsingGlobal();
-        ui->region_combobox->setCurrentIndex(
-            is_region_global ? ConfigurationShared::USE_GLOBAL_INDEX
-                             : static_cast<int>(Settings::values.region_value.GetValue()) +
-                                   ConfigurationShared::USE_GLOBAL_OFFSET + 1);
-    } else {
-        // The first item is "auto-select" with actual value -1, so plus one here will do the trick
-        ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
     }
 
     UISettings::values.screenshot_path.SetGlobal(ui->screenshot_combo->currentIndex() ==
@@ -145,12 +137,14 @@ void ConfigureGeneral::SetConfiguration() {
 }
 
 void ConfigureGeneral::ResetDefaults() {
+    ui->button_reset_defaults->setEnabled(false);
     QMessageBox::StandardButton answer = QMessageBox::question(
         this, tr("Azahar"),
         tr("Are you sure you want to <b>reset your settings</b> and close Azahar?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if (answer == QMessageBox::No) {
+        ui->button_reset_defaults->setEnabled(true);
         return;
     }
 
@@ -160,9 +154,6 @@ void ConfigureGeneral::ResetDefaults() {
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.region_value, ui->region_combobox,
-                                             [](s32 index) { return index - 1; });
-
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.frame_limit, ui->emulation_speed_combo, [this](s32) {
             const bool is_maximum = ui->frame_limit->value() == ui->frame_limit->maximum();
@@ -191,7 +182,6 @@ void ConfigureGeneral::RetranslateUI() {
 
 void ConfigureGeneral::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
         ui->frame_limit->setEnabled(Settings::values.frame_limit.UsingGlobal());
         return;
     }
@@ -212,8 +202,4 @@ void ConfigureGeneral::SetupPerGameUI() {
     ui->button_reset_defaults->setVisible(false);
     ui->toggle_gamemode->setVisible(false);
     ui->toggle_update_checker->setVisible(false);
-
-    ConfigurationShared::SetColoredComboBox(
-        ui->region_combobox, ui->widget_region,
-        static_cast<u32>(Settings::values.region_value.GetValue(true) + 1));
 }

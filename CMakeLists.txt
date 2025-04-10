@@ -41,8 +41,8 @@ if (APPLE)
         set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
         set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
     else()
-        # Minimum macOS 11
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+        # Minimum macOS 13
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
     endif()
 endif()
 
@@ -54,11 +54,26 @@ else()
     set(IS_RELEASE_BUILD ON)
 endif()
 
+if (MSVC)
+    add_compile_options(
+        /wd4711 # Suppresses `function 'xxxxx' selected for automatic inline expansion` messages
+        /wd5045 # Suppresses `Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified` messages
+    )
+endif()
+
 # LTO takes too much memory and time using MSVC.
 if (NOT MSVC AND IS_RELEASE_BUILD)
     set(DEFAULT_ENABLE_LTO ON)
 else()
     set(DEFAULT_ENABLE_LTO OFF)
+endif()
+
+# Disable OpenGL by default on Linux aarch64.
+# Some aarch64 devices running Linux don't support OpenGL, and users may encounter issues.
+if (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+    set(DEFAULT_ENABLE_OPENGL OFF)
+else()
+    set(DEFAULT_ENABLE_OPENGL ON)
 endif()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
@@ -82,7 +97,7 @@ option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ON "NOT APPLE AND NOT (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL \"aarch64\")" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
 option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
@@ -484,9 +499,14 @@ endif()
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
 if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.desktop"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.svg"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.xml"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
+            RENAME "org.azahar_emu.Azahar.desktop")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps"
+            RENAME "org.azahar_emu.Azahar.svg")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.png"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps"
+            RENAME "org.azahar_emu.Azahar.png")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/org.azahar_emu.Azahar.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()

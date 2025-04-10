@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -271,8 +271,12 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
         }
 
         if (instance.IsExtendedDynamicStateSupported()) {
-            if (rasterization.cull_mode != current_rasterization.cull_mode || is_dirty) {
-                cmdbuf.setCullModeEXT(PicaToVK::CullMode(rasterization.cull_mode));
+            const bool needs_flip =
+                rasterization.flip_viewport != current_rasterization.flip_viewport;
+            if (rasterization.cull_mode != current_rasterization.cull_mode || needs_flip ||
+                is_dirty) {
+                cmdbuf.setCullModeEXT(
+                    PicaToVK::CullMode(rasterization.cull_mode, rasterization.flip_viewport));
                 cmdbuf.setFrontFaceEXT(PicaToVK::FrontFace(rasterization.cull_mode));
             }
 

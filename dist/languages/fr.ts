@@ -26,8 +26,8 @@
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/citra.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/citra.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="60"/>
@@ -1105,72 +1105,77 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="293"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="291"/>
+        <source>Note: Depth values over 100% are not possible on real hardware and may cause graphical issues</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="300"/>
         <source>Eye to Render in Monoscopic Mode</source>
         <translation>Œil pour le rendu en mode monoscopique</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="301"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="308"/>
         <source>Left Eye (default)</source>
         <translation>Œil gauche (par défaut)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="306"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="313"/>
         <source>Right Eye</source>
         <translation>Œil droit</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="316"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="323"/>
         <source>Disable Right Eye Rendering</source>
         <translation>Désactiver le rendu de l&apos;œil droit</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="319"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="326"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Désactiver le rendu de l&apos;œil droit&lt;/p&gt;&lt;p&gt;Désactive le rendu de l&apos;œil droit lorsque le mode stéréoscopique n&apos;est pas utilisé. Améliore considérablement les performances dans certaines applications, mais peut provoquer un scintillement dans d&apos;autres.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="329"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="336"/>
         <source>Utility</source>
         <translation>Utilitaires</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="335"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="342"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace textures with PNG files.&lt;/p&gt;&lt;p&gt;Textures are loaded from load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remplace les textures par des fichiers PNG.&lt;/p&gt;&lt;p&gt;Les textures sont chargées depuis load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="338"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="345"/>
         <source>Use Custom Textures</source>
         <translation>Utiliser des textures personnalisées</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="345"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="352"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dump textures to PNG files.&lt;/p&gt;&lt;p&gt;Textures are dumped to dump/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Extrait les textures en fichiers PNG.&lt;/p&gt;&lt;p&gt;Les textures sont extraites vers dump/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="348"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="355"/>
         <source>Dump Textures</source>
         <translation>Exporter les textures</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="355"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="362"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load all custom textures into memory on boot, instead of loading them when the application requires them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Charge toutes les textures personnalisées en mémoire au démarrage, au lieu de les charger lorsque l&apos;application en a besoin.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="358"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="365"/>
         <source>Preload Custom Textures</source>
         <translation>Précharger des textures personnalisées</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="365"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="372"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load custom textures asynchronously with background threads to reduce loading stutter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head&gt;&lt;body&gt;&lt;p&gt;Chargez les textures personnalisées de manière asynchrone avec des threads d’arrière-plan pour réduire le retard de chargement &lt;/p&gt;&lt;/body&gt;&lt;/head&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="368"/>
+        <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="375"/>
         <source>Async Custom Texture Loading</source>
         <translation>Chargement asynchrone des textures personnalisées</translation>
     </message>
@@ -1223,57 +1228,47 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <translation>Émulation</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="94"/>
-        <source>Region:</source>
-        <translation>Région :</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="102"/>
-        <source>Auto-select</source>
-        <translation>Sélection Automatique</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="164"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="95"/>
         <source>Use global emulation speed</source>
         <translation>Utiliser la vitesse d&apos;émulation globale</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="169"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="100"/>
         <source>Set emulation speed:</source>
         <translation>Définir la vitesse d&apos;émulation :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="177"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="108"/>
         <source>Emulation Speed:</source>
         <translation>Vitesse d&apos;émulation :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="225"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="156"/>
         <source>Screenshots</source>
         <translation>Captures d&apos;écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="250"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="181"/>
         <source>Use global screenshot path</source>
         <translation>Utiliser le répertoire des captures d&apos;écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="255"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="186"/>
         <source>Set screenshot path:</source>
         <translation>Définir le répertoire des captures d&apos;écran :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="263"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="194"/>
         <source>Save Screenshots To</source>
         <translation>Enregistrer les captures d&apos;écran sous</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="273"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="204"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="286"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.ui" line="217"/>
         <source>Reset All Settings</source>
         <translation>Tout réinitialiser</translation>
     </message>
@@ -1292,12 +1287,12 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <translation>Choix du répertoire des captures d&apos;écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="149"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="139"/>
         <source>Azahar</source>
         <translation>Azahar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="150"/>
+        <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="140"/>
         <source>Are you sure you want to &lt;b&gt;reset your settings&lt;/b&gt; and close Azahar?</source>
         <translation>Voulez-vous vraiment &lt;b&gt;réinitialiser vos paramètres&lt;/b&gt; et fermer Azahar ?</translation>
     </message>
@@ -1416,8 +1411,8 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="261"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remplace le filtre d’échantillonnage utilisé par les applications. Cela peut être utile dans certains cas avec des applications mal optimisées lors de l&apos;upscaling. Si vous n&apos;êtes pas sûr, réglez cette option sur Contrôlé par l’application.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure, set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="264"/>
@@ -2483,325 +2478,346 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="84"/>
-        <source>Enable required LLE modules for online features (if installed)</source>
-        <translation>Activer les modules LLE requis pour les fonctionnalités en ligne (si installés)</translation>
+        <source>Enable required LLE modules for
+online features (if installed)</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="87"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="88"/>
         <source>Enables the LLE modules needed for online multiplayer, eShop access, etc.</source>
         <translation>Active les modules LLE nécessaires pour le multijoueur en ligne, l&apos;accès à l&apos;eShop, etc.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="107"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="95"/>
+        <source>Region:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="103"/>
+        <source>Auto-select</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="159"/>
         <source>Username</source>
         <translation>Nom d&apos;utilisateur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="114"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="166"/>
         <source>Birthday</source>
         <translation>Date de naissance</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="124"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="176"/>
         <source>January</source>
         <translation>Janvier</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="129"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="181"/>
         <source>February</source>
         <translation>Février </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="134"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="186"/>
         <source>March</source>
         <translation>Mars</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="139"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="191"/>
         <source>April</source>
         <translation>Avril</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="144"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="196"/>
         <source>May</source>
         <translation>Mai</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="149"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="201"/>
         <source>June</source>
         <translation>Juin</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="154"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="206"/>
         <source>July</source>
         <translation>Juillet</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="159"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="211"/>
         <source>August</source>
         <translation>Août </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="164"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="216"/>
         <source>September</source>
         <translation>Septembre</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="169"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="221"/>
         <source>October</source>
         <translation>Octobre</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="174"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="226"/>
         <source>November</source>
         <translation>Novembre</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="179"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="231"/>
         <source>December</source>
         <translation>Décembre</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="192"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="244"/>
         <source>Language</source>
         <translation>Langue</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="199"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="251"/>
         <source>Note: this can be overridden when region setting is auto-select</source>
         <translation>Note : ceci peut être remplacé quand le paramètre de région est défini sur Automatique</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="203"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="255"/>
         <source>Japanese (日本語)</source>
         <translation>Japonais (日本語)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="208"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="260"/>
         <source>English</source>
         <translation>Anglais (English)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="213"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="265"/>
         <source>French (français)</source>
         <translation>Français</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="218"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="270"/>
         <source>German (Deutsch)</source>
         <translation>Allemand (Deutsch)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="223"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="275"/>
         <source>Italian (italiano)</source>
         <translation>Italien (italiano)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="228"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="280"/>
         <source>Spanish (español)</source>
         <translation>Espagnol (español)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="233"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="285"/>
         <source>Simplified Chinese (简体中文)</source>
         <translation>Chinois simplifié (简体中文)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="238"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="290"/>
         <source>Korean (한국어)</source>
         <translation>Coréen (한국어)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="243"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="295"/>
         <source>Dutch (Nederlands)</source>
         <translation>Néerlandais (Nederlands)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="248"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="300"/>
         <source>Portuguese (português)</source>
         <translation>Portugais (português)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="253"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="305"/>
         <source>Russian (Русский)</source>
         <translation>Russe (Русский)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="258"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="310"/>
         <source>Traditional Chinese (正體中文)</source>
         <translation>Chinois traditionnel (正體中文)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="266"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="318"/>
         <source>Sound output mode</source>
         <translation>Mode de sortie audio</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="274"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="326"/>
         <source>Mono</source>
         <translation>Mono</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="279"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="331"/>
         <source>Stereo</source>
         <translation>Stéréo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="284"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="336"/>
         <source>Surround</source>
         <translation>Surround </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="292"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="344"/>
         <source>Country</source>
         <translation>Pays</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="302"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="361"/>
         <source>Clock</source>
         <translation>Horloge</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="310"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="369"/>
         <source>System Clock</source>
         <translation>Horloge système</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="315"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="374"/>
         <source>Fixed Time</source>
         <translation>Temps fixe</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="323"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="382"/>
         <source>Startup time</source>
         <translation>Heure au démarrage</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="330"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="389"/>
         <source>yyyy-MM-ddTHH:mm:ss</source>
         <translation>yyyy-MM-ddTHH:mm:ss</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="337"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="396"/>
         <source>Offset time</source>
         <translation>Décalage horaire</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="346"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="405"/>
         <source>days</source>
         <translation>jours</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="359"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="418"/>
         <source>HH:mm:ss</source>
         <translation>HH:mm:ss</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="368"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="427"/>
         <source>Initial System Ticks</source>
         <translation>Ticks systèmes initiaux</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="376"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="435"/>
         <source>Random</source>
         <translation>Aléatoire</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="381"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="440"/>
         <source>Fixed</source>
         <translation>Fixe</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="389"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="448"/>
         <source>Initial System Ticks Override</source>
         <translation>Remplacement des ticks systèmes initiaux</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="409"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="468"/>
         <source>Play Coins</source>
         <translation>Pièces de jeu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="423"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="482"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps per hour reported by the pedometer. Range from 0 to 65,535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;/p&gt;Nombre de pas par heure reporté par le podomètre. Sur une échelle de 0 à 65 535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="426"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="485"/>
         <source>Pedometer Steps per Hour</source>
         <translation>Pas de podomètre par heure</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="440"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="499"/>
         <source>Run System Setup when Home Menu is launched</source>
         <translation>Exécuter la configuration du système lorsque le menu home est lancé</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="447"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="506"/>
         <source>Console ID:</source>
         <translation>ID de la console :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="463"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="486"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="522"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="545"/>
         <source>Regenerate</source>
         <translation>Regénérer </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="470"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="529"/>
         <source>MAC:</source>
         <translation>MAC :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="493"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="552"/>
         <source>3GX Plugin Loader:</source>
         <translation>3GX Plugin Loader :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="500"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="559"/>
         <source>Enable 3GX plugin loader</source>
         <translation>Activer le 3GX Plugin Loader</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="507"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="566"/>
         <source>Allow applications to change plugin loader state</source>
         <translation>Permettre aux applications de modifier l&apos;état du Plugin Loader</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="517"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="576"/>
         <source>Real Console Unique Data</source>
         <translation>Données uniques d&apos;une vraie console</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="523"/>
-        <source>SecureInfo_A/B</source>
-        <translation>SecureInfo_A/B</translation>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="588"/>
+        <source>Your real console is linked to Azahar.</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="549"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="585"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="621"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="657"/>
-        <source>Choose</source>
-        <translation>Choisir</translation>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="604"/>
+        <source>Unlink</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="559"/>
-        <source>LocalFriendCodeSeed_A/B</source>
-        <translation>LocalFriendCodeSeed_A/B</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="595"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="614"/>
         <source>OTP</source>
         <translation>OTP</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="631"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="640"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="676"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="712"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="751"/>
+        <source>Choose</source>
+        <translation>Choisir</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="650"/>
+        <source>SecureInfo_A/B</source>
+        <translation>SecureInfo_A/B</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="686"/>
+        <source>LocalFriendCodeSeed_A/B</source>
+        <translation>LocalFriendCodeSeed_A/B</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="725"/>
         <source>movable.sed</source>
         <translation>movable.sed</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="670"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.ui" line="764"/>
         <source>System settings are available only when applications is not running.</source>
         <translation>Les paramètres du système ne sont disponibles que lorsque les applications ne sont pas en cours d&apos;exécution.</translation>
     </message>
@@ -3471,72 +3487,88 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <translation>Bermudes</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="245"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="255"/>
         <source>Select SecureInfo_A/B</source>
         <translation>Sélectionne SecureInfo_A/B</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="246"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="256"/>
         <source>SecureInfo_A/B (SecureInfo_A SecureInfo_B);;All Files (*.*)</source>
         <translation>SecureInfo_A/B (SecureInfo_A SecureInfo_B);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="253"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="263"/>
         <source>Select LocalFriendCodeSeed_A/B</source>
         <translation>Sélectionne LocalFriendCodeSeed_A/B</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="254"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="264"/>
         <source>LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A LocalFriendCodeSeed_B);;All Files (*.*)</source>
         <translation>LocalFriendCodeSeed_A/B (LocalFriendCodeSeed_A LocalFriendCodeSeed_B);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="263"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="273"/>
         <source>Select encrypted OTP file</source>
         <translation>Sélectionner le fichier OTP encrypté</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="264"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="274"/>
         <source>Binary file (*.bin);;All Files (*.*)</source>
         <translation>Fichier binaire (*.bin);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="271"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="281"/>
         <source>Select movable.sed</source>
         <translation>Sélectionner movable.sed</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="271"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="281"/>
         <source>Sed file (*.sed);;All Files (*.*)</source>
         <translation>Fichier Sed (*.sed);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="360"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="546"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="386"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="576"/>
         <source>Console ID: 0x%1</source>
         <translation>Console ID : 0x%1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="362"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="561"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="388"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="591"/>
         <source>MAC: %1</source>
         <translation>MAC : %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="532"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="562"/>
         <source>This will replace your current virtual 3DS console ID with a new one. Your current virtual 3DS console ID will not be recoverable. This might have unexpected effects in applications. This might fail if you use an outdated config save. Continue?</source>
         <translation>Cela remplacera l&apos;ID actuel de votre console virtuelle 3DS par un nouveau. L&apos;ID actuel de votre console virtuelle 3DS ne pourra pas être récupéré. Cela pourrait avoir des effets inattendus sur certaines applications. L&apos;opération peut échouer si vous utilisez une sauvegarde de configuration obsolète. Continuer ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="536"/>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="555"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="566"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="585"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="604"/>
         <source>Warning</source>
         <translation>Avertissement</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="551"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="581"/>
         <source>This will replace your current MAC address with a new one. It is not recommended to do this if you got the MAC address from your real console using the setup tool. Continue?</source>
         <translation>Cela remplacera votre adresse MAC actuelle par une nouvelle. Il n&apos;est pas recommandé de faire cela si vous avez récupéré l&apos;adresse MAC depuis votre console réelle à l&apos;aide de l&apos;outil de configuration. Continuer ?</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="597"/>
+        <source>This action will unlink your real console from Azahar, with the following consequences:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Your OTP, SecureInfo and LocalFriendCodeSeed will be removed from Azahar.&lt;/li&gt;&lt;li&gt;Your friend list will reset and you will be logged out of your NNID/PNID account.&lt;/li&gt;&lt;li&gt;System files and eshop titles obtained through Azahar will become inaccessible until the same console is linked again (save data will not be lost).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;Continue?</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="623"/>
+        <source>Invalid country for configured region</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="631"/>
+        <source>Invalid country for console unique data</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -3955,19 +3987,19 @@ Veuillez vérifier votre installation FFmpeg utilisée pour la compilation.</tra
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="506"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3725"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3729"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
         <translation>Vitesse actuelle d&apos;émulation. Les valeurs supérieures ou inférieures à 100% indiquent que l&apos;émulation est plus rapide ou plus lente qu&apos;une 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="509"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3727"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3731"/>
         <source>How many frames per second the app is currently displaying. This will vary from app to app and scene to scene.</source>
         <translation>Nombre d&apos;images par seconde affichées par l&apos;application. Cela varie d&apos;une application à l&apos;autre et d&apos;une scène à l&apos;autre.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="513"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3730"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3734"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
         <translation>Temps nécessaire pour émuler une trame 3DS, sans compter la limitation de trame ou la synchronisation verticale V-Sync. Pour une émulation à pleine vitesse, cela ne devrait pas dépasser 16,67 ms.</translation>
     </message>
@@ -3982,403 +4014,403 @@ Veuillez vérifier votre installation FFmpeg utilisée pour la compilation.</tra
         <translation>Effacer les fichiers récents</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1105"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1108"/>
         <source>&amp;Continue</source>
         <translation>&amp;Continuer</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1107"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1110"/>
         <source>&amp;Pause</source>
         <translation>&amp;Pause</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1150"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1153"/>
         <source>Azahar is running an application</source>
         <extracomment>TRANSLATORS: This string is shown to the user to explain why Citra needs to prevent the computer from sleeping</extracomment>
         <translation>Azahar exécute une application</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1222"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1259"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1225"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1262"/>
         <source>Invalid App Format</source>
         <translation>Format d&apos;application invalide</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1223"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1260"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1226"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1263"/>
         <source>Your app format is not supported.&lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
         <translation>Le format de votre application n&apos;est pas pris en charge.&lt;br/&gt; Veuillez suivre les guides pour extraire à nouveau vos &lt;a href=&apos;https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartouches de jeu&lt;/a&gt; ou les &lt;a href=&apos;https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;titres installés&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1237"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1240"/>
         <source>App Corrupted</source>
         <translation>Application corrompue</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1238"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1241"/>
         <source>Your app is corrupted. &lt;br/&gt;Please follow the guides to redump your &lt;a href=&apos;https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;game cartridges&lt;/a&gt; or &lt;a href=&apos;https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;installed titles&lt;/a&gt;.</source>
         <translation>Votre application est corrompue. &lt;br/&gt;Veuillez suivre les guides pour récupérer vos &lt;a href=&apos;https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;cartouches de jeux&lt;/a&gt; ou les &lt;a href=&apos;https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;titres installés&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1250"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1253"/>
         <source>App Encrypted</source>
         <translation>Application encryptée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1251"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1254"/>
         <source>Your app is encrypted. &lt;br/&gt;&lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Please check our blog for more info.&lt;/a&gt;</source>
         <translation>Votre application est encryptée. &lt;br/&gt;&lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Consultez notre blog pour plus d&apos;informations.&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1272"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1275"/>
         <source>Unsupported App</source>
         <translation>Application non supportée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1273"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1276"/>
         <source>GBA Virtual Console is not supported by Azahar.</source>
         <translation>La console virtuelle de la GBA n&apos;est pas prise en charge par Azahar.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1278"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3325"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1281"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3330"/>
         <source>Artic Server</source>
         <translation>Serveur Artic</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1286"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1289"/>
         <source>Error while loading App!</source>
         <translation>Erreur lors du chargement de l&apos;application !</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1287"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1290"/>
         <source>An unknown error occurred. Please see the log for more details.</source>
         <translation>Une erreur inconnue s&apos;est produite. Veuillez consulter le journal pour plus de détails.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1318"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1321"/>
         <source>CIA must be installed before usage</source>
         <translation>CIA doit être installé avant utilisation</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1319"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1322"/>
         <source>Before using this CIA, you must install it. Do you want to install it now?</source>
         <translation>Avant d&apos;utiliser ce CIA, vous devez l&apos;installer. Voulez-vous l&apos;installer maintenant ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1602"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1603"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1605"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1606"/>
         <source>Slot %1</source>
         <translation>Emplacement %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1610"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1613"/>
         <source>Slot %1 - %2 %3</source>
         <translation>Emplacement %1 - %2 %3</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1717"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1720"/>
         <source>Error Opening %1 Folder</source>
         <translation>Erreur lors de l&apos;ouverture du dossier %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1718"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2049"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1721"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2052"/>
         <source>Folder does not exist!</source>
         <translation>Le répertoire n&apos;existe pas !</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1728"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1731"/>
         <source>Remove Play Time Data</source>
         <translation>Retirer les données de temps de jeu ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1728"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1731"/>
         <source>Reset play time?</source>
         <translation>Réinitialiser le temps de jeu ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1850"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1854"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1860"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1867"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1853"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1857"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1863"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1870"/>
         <source>Create Shortcut</source>
         <translation>Créer un raccourci</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1851"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1854"/>
         <source>Do you want to launch the application in fullscreen?</source>
         <translation>Voulez-vous lancer l&apos;application en plein écran ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1855"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1858"/>
         <source>Successfully created a shortcut to %1</source>
         <translation>Création réussie d&apos;un raccourci vers %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1861"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1864"/>
         <source>This will create a shortcut to the current AppImage. This may not work well if you update. Continue?</source>
         <translation>Cela créera un raccourci vers l&apos;AppImage actuelle. Il se peut que cela ne fonctionne pas bien si vous effectuez une mise à jour. Poursuivre ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1868"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1871"/>
         <source>Failed to create a shortcut to %1</source>
         <translation>Échec de la création d&apos;un raccourci vers %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1886"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1889"/>
         <source>Create Icon</source>
         <translation>Créer icône</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1887"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1890"/>
         <source>Cannot create icon file. Path &quot;%1&quot; does not exist and cannot be created.</source>
         <translation>Impossible de créer le fichier icône. Le chemin &quot;%1&quot; n&apos;existe pas et ne peut pas être créé.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1996"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1999"/>
         <source>Dumping...</source>
         <translation>Extraction...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="1996"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2298"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="1999"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2304"/>
         <source>Cancel</source>
         <translation>Annuler</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2017"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2333"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2335"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2969"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2993"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2020"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2339"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2341"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2971"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2995"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3025"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3388"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3481"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2997"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3027"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3393"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3486"/>
         <source>Azahar</source>
         <translation>Azahar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2018"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2021"/>
         <source>Could not dump base RomFS.
 Refer to the log for details.</source>
         <translation>Impossible d&apos;extraire les RomFS de base.
 Référez-vous aux logs pour plus de détails.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2049"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2052"/>
         <source>Error Opening %1</source>
         <translation>Erreur lors de l&apos;ouverture de %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2056"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2059"/>
         <source>Select Directory</source>
         <translation>Sélectionner un répertoire </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2080"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2083"/>
         <source>Properties</source>
         <translation>Propriétés</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2081"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2084"/>
         <source>The application properties could not be loaded.</source>
         <translation>Les propriétés de l&apos;application n&apos;ont pas pu être chargées.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2091"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2094"/>
         <source>3DS Executable (%1);;All Files (*.*)</source>
         <comment>%1 is an identifier for the 3DS executable file extensions.</comment>
         <translation>Exécutable 3DS (%1);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2095"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2098"/>
         <source>Load File</source>
         <translation>Charger un fichier</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2107"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2180"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2110"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2186"/>
         <source>Set Up System Files</source>
         <translation>Configurer les fichiers système</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2112"/>
-        <source>&lt;p&gt;Azahar needs files from a real console to be able to use some of its features.&lt;br&gt;You can get such files with the &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool&lt;/a&gt;&lt;br&gt; Notes:&lt;ul&gt;&lt;li&gt;&lt;b&gt;This operation will install console unique files to Azahar, do not share your user or nand folders&lt;br&gt;after performing the setup process!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Old 3DS setup is needed for the New 3DS setup to work.&lt;/li&gt;&lt;li&gt;Both setup modes will work regardless of the model of the console running the setup tool.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</source>
-        <translation>&lt;p&gt;Azahar a besoin de fichiers provenant d&apos;une vraie console pour pouvoir utiliser certaines de ses fonctionnalités.&lt;br&gt; Vous pouvez obtenir ces fichiers avec l&apos;&lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;outil d&apos;installation Azahar Artic&lt;/a&gt;&lt;br&gt; Notes :&lt;ul&gt;&lt;li&gt;&lt;b&gt; Cette opération installera des fichiers propres à la console dans Azahar, ne partagez pas vos dossiers utilisateur ou nand&lt;br&gt; après avoir effectué le processus d&apos;installation !&lt;/b&gt;&lt;/li&gt;&lt;li&gt; La configuration de la Old 3DS est nécessaire pour que la configuration de la New 3DS fonctionne.&lt;/li&gt;&lt;li&gt; Les deux modes d&apos;installation fonctionneront quel que soit le modèle de la console qui exécute l&apos;outil d&apos;installation.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</translation>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2115"/>
+        <source>&lt;p&gt;Azahar needs console unique data and firmware files from a real console to be able to use some of its features.&lt;br&gt;Such files and data can be set up with the &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool&lt;/a&gt;&lt;br&gt;Notes:&lt;ul&gt;&lt;li&gt;&lt;b&gt;This operation will install console unique data to Azahar, do not share your user or nand folders&lt;br&gt;after performing the setup process!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;While doing the setup process, Azahar will link to the console running the setup tool. You can unlink the&lt;br&gt;console later from the System tab in the emulator configuration menu.&lt;/li&gt;&lt;li&gt;Do not go online with both Azahar and your 3DS console at the same time after setting up system files,&lt;br&gt;as it could cause issues.&lt;/li&gt;&lt;li&gt;Old 3DS setup is needed for the New 3DS setup to work (doing both setup modes is recommended).&lt;/li&gt;&lt;li&gt;Both setup modes will work regardless of the model of the console running the setup tool.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</source>
+        <translation type="unfinished"/>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2128"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2134"/>
         <source>Enter Azahar Artic Setup Tool address:</source>
         <translation>Entrer l&apos;adresse de l&apos;outil de configuration Artic d&apos;Azahar :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2135"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2141"/>
         <source>&lt;br&gt;Choose setup mode:</source>
         <translation>&lt;br&gt;Choisissez le mode de configuration :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2145"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2151"/>
         <source>(ℹ️) Old 3DS setup</source>
         <translation>(ℹ️) Configuration Old 3DS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2146"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2159"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2152"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2165"/>
         <source>Setup is possible.</source>
         <translation>La configuration est possible.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2148"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2154"/>
         <source>(⚠) New 3DS setup</source>
         <translation>(⚠) Configuration New 3DS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2149"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2155"/>
         <source>Old 3DS setup is required first.</source>
         <translation>La configuration Old 3DS est requise d&apos;abord.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2152"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2158"/>
         <source>(✅) Old 3DS setup</source>
         <translation>(✅) Configuration Old 3DS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2153"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2164"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2159"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2170"/>
         <source>Setup completed.</source>
         <translation>Configuration terminée.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2158"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2164"/>
         <source>(ℹ️) New 3DS setup</source>
         <translation>(ℹ️) Configuration New 3DS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2163"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2169"/>
         <source>(✅) New 3DS setup</source>
         <translation>(✅) Configuration New 3DS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2181"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2187"/>
         <source>The system files for the selected mode are already set up.
 Reinstall the files anyway?</source>
         <translation>Les fichiers système pour le mode sélectionné sont déjà configurés.
 Voulez-vous les réinstaller quand même ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2198"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2204"/>
         <source>Load Files</source>
         <translation>Charger des fichiers</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2199"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2205"/>
         <source>3DS Installation File (*.CIA*)</source>
         <translation>Fichier d&apos;installation 3DS (*.CIA*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2199"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2205"/>
         <source>All Files (*.*)</source>
         <translation>Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2211"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2217"/>
         <source>Connect to Artic Base</source>
         <translation>Se connecter à Artic Base</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2212"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2218"/>
         <source>Enter Artic Base server address:</source>
         <translation>Entrez l&apos;adresse du serveur Artic Base :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2252"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2258"/>
         <source>%1 has been installed successfully.</source>
         <translation>%1 a été installé avec succès.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2255"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2261"/>
         <source>Unable to open File</source>
         <translation>Impossible d&apos;ouvrir le fichier</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2256"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2262"/>
         <source>Could not open %1</source>
         <translation>Impossible d&apos;ouvrir %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2260"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2266"/>
         <source>Installation aborted</source>
         <translation>Installation annulée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2261"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2267"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
         <translation>L&apos;installation de %1 a été interrompue. Veuillez consulter les logs pour plus de détails.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2265"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2271"/>
         <source>Invalid File</source>
         <translation>Fichier invalide</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2265"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2271"/>
         <source>%1 is not a valid CIA</source>
         <translation>%1 n&apos;est pas un CIA valide</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2268"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2274"/>
         <source>CIA Encrypted</source>
         <translation>CIA chiffré</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2269"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2275"/>
         <source>Your CIA file is encrypted.&lt;br/&gt;&lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Please check our blog for more info.&lt;/a&gt;</source>
         <translation>Votre fichier CIA est chiffré.&lt;br/&gt;&lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Consultez notre blog pour plus d&apos;informations.&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2275"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2281"/>
         <source>Unable to find File</source>
         <translation>Impossible de trouver le fichier</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2276"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2282"/>
         <source>Could not find %1</source>
         <translation>Impossible de trouver %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2298"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2304"/>
         <source>Uninstalling &apos;%1&apos;...</source>
         <translation>Désinstallation de &apos;%1&apos;...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2333"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2339"/>
         <source>Failed to uninstall &apos;%1&apos;.</source>
         <translation>Échec de la désinstallation de &apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2336"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2342"/>
         <source>Successfully uninstalled &apos;%1&apos;.</source>
         <translation>Désinstallation de &apos;%1&apos; réussie.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2349"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2355"/>
         <source>File not found</source>
         <translation>Fichier non trouvé</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2350"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2356"/>
         <source>File &quot;%1&quot; not found</source>
         <translation>Le fichier &quot;%1&quot; n&apos;a pas été trouvé</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2635"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2637"/>
         <source>Savestates</source>
         <translation>Points de récupération</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2636"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2638"/>
         <source>Warning: Savestates are NOT a replacement for in-application saves, and are not meant to be reliable.
 
 Use at your own risk!</source>
@@ -4387,86 +4419,86 @@ Use at your own risk!</source>
 À utiliser à vos risques et périls !</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2712"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2718"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2743"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2714"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2720"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2745"/>
         <source>Error opening amiibo data file</source>
         <translation>Erreur d&apos;ouverture du fichier de données amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2713"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2715"/>
         <source>A tag is already in use.</source>
         <translation>Un tag est déjà en cours d&apos;utilisation.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2719"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2721"/>
         <source>Application is not looking for amiibos.</source>
         <translation>L&apos;application ne recherche pas d&apos;amiibos.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2724"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2726"/>
         <source>Amiibo File (%1);; All Files (*.*)</source>
         <translation>Fichier Amiibo (%1);; Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2725"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2727"/>
         <source>Load Amiibo</source>
         <translation>Charger un Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2744"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2746"/>
         <source>Unable to open amiibo file &quot;%1&quot; for reading.</source>
         <translation>Impossible d&apos;ouvrir le fichier amiibo &quot;%1&quot; pour le lire.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2818"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2820"/>
         <source>Record Movie</source>
         <translation>Enregistrer une vidéo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2818"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2820"/>
         <source>Movie recording cancelled.</source>
         <translation>Enregistrement de la vidéo annulé.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2831"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2852"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2833"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2854"/>
         <source>Movie Saved</source>
         <translation>Vidéo enregistrée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2832"/>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2852"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2834"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2854"/>
         <source>The movie is successfully saved.</source>
         <translation>La vidéo a été enregistrée avec succès.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2869"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2871"/>
         <source>Application will unpause</source>
         <translation>L&apos;application sera rétablie.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2870"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2872"/>
         <source>The application will be unpaused, and the next frame will be captured. Is this okay?</source>
         <translation>L&apos;application sera rétablie et l&apos;image suivante sera capturée. Cela vous convient-il ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2881"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2883"/>
         <source>Invalid Screenshot Directory</source>
         <translation>Répertoire des captures d&apos;écran invalide</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2882"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2884"/>
         <source>Cannot create specified screenshot directory. Screenshot path is set back to its default value.</source>
         <translation>Création du répertoire des captures d&apos;écran spécifié impossible. Le chemin d&apos;accès vers les captures d&apos;écran est réinitialisé à sa valeur par défaut.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2908"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2910"/>
         <source>Could not load video dumper</source>
         <translation>Impossible de charger le module de capture vidéo.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2910"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2912"/>
         <source>FFmpeg could not be loaded. Make sure you have a compatible version installed.
 
 To install FFmpeg to Lime, press Open and select your FFmpeg directory.
@@ -4479,210 +4511,210 @@ Pour installer FFmpeg sur Lime, appuyez sur Open et sélectionnez votre réperto
 Pour afficher un guide d&apos;installation de FFmpeg, appuyez sur Aide.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2948"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2950"/>
         <source>Select FFmpeg Directory</source>
         <translation>Sélectionnez le répertoire FFmpeg.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2970"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2972"/>
         <source>The provided FFmpeg directory is missing %1. Please make sure the correct directory was selected.</source>
         <translation>Le répertoire FFmpeg fourni manque %1. Assurez-vous d&apos;avoir sélectionné le répertoire correct.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2993"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2995"/>
         <source>FFmpeg has been sucessfully installed.</source>
         <translation>FFmpeg a été installé avec succès.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="2996"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="2998"/>
         <source>Installation of FFmpeg failed. Check the log file for details.</source>
         <translation>L&apos;installation de FFmpeg a échoué. Consultez le fichier journal pour plus de détails.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3026"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3028"/>
         <source>Could not start video dumping.&lt;br&gt;Please ensure that the video encoder is configured correctly.&lt;br&gt;Refer to the log for details.</source>
         <translation>Impossible de lancer le dump vidéo.&lt;br&gt;Veuillez vous assurer que l&apos;encodeur vidéo est configuré correctement.&lt;br&gt;Reportez-vous au logs pour plus de détails.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3073"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3075"/>
         <source>Recording %1</source>
         <translation>Enregistrement %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3077"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3079"/>
         <source>Playing %1 / %2</source>
         <translation>Lecture de %1 / %2</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3081"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3083"/>
         <source>Movie Finished</source>
         <translation>Vidéo terminée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3099"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3101"/>
         <source>(Accessing SharedExtData)</source>
         <translation>(Accès à SharedExtData)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3101"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3103"/>
         <source>(Accessing SystemSaveData)</source>
         <translation>(Accès à SystemSaveData)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3103"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3105"/>
         <source>(Accessing BossExtData)</source>
         <translation>(Accès à BossExtData)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3105"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3107"/>
         <source>(Accessing ExtData)</source>
         <translation>(Accès à ExtData)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3107"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3109"/>
         <source>(Accessing SaveData)</source>
         <translation>(Accès à SaveData)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3110"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3112"/>
         <source>MB/s</source>
         <translation>Mo/s</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3110"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3112"/>
         <source>KB/s</source>
         <translation>Ko/s</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3135"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3140"/>
         <source>Artic Traffic: %1 %2%3</source>
         <translation>Trafic Artic : %1 %2%3</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3140"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3145"/>
         <source>Speed: %1%</source>
         <translation>Vitesse : %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3142"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3147"/>
         <source>Speed: %1% / %2%</source>
         <translation>Vitesse : %1% / %2%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3146"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3151"/>
         <source>App: %1 FPS</source>
         <translation>App: %1 FPS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3147"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3152"/>
         <source>Frame: %1 ms</source>
         <translation>Trame : %1 ms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3234"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3239"/>
         <source>VOLUME: MUTE</source>
         <translation>VOLUME : MUET</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3237"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3242"/>
         <source>VOLUME: %1%</source>
         <comment>Volume percentage (e.g. 50%)</comment>
         <translation>VOLUME : %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3306"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3311"/>
         <source>%1 is missing. Please &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;dump your system archives&lt;/a&gt;.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
         <translation>%1 est manquant. &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt; extrayez vos archives systèmes&lt;/a&gt;. &lt;br/&gt;Continuer l&apos;émulation pourrait entraîner des plantages et des bugs.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3314"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3319"/>
         <source>A system archive</source>
         <translation>Une archive système</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3317"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3322"/>
         <source>System Archive Not Found</source>
         <translation>Archive système non trouvée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3318"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3323"/>
         <source>System Archive Missing</source>
         <translation>Archive système absente</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3321"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3326"/>
         <source>Save/load Error</source>
         <translation>Erreur de sauvegarde/chargement</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3332"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3337"/>
         <source>Fatal Error</source>
         <translation>Erreur fatale</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3334"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3339"/>
         <source>A fatal error occurred. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Check the log&lt;/a&gt; for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
         <translation>Une erreur fatale est survenue. &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Vérifiez les logs&lt;/a&gt; pour plus d&apos;infos.&lt;br/&gt;Continuer l&apos;émulation pourrait entraîner des crashs et des bugs.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3338"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3343"/>
         <source>Fatal Error encountered</source>
         <translation>Une erreur fatale s&apos;est produite</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3348"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3353"/>
         <source>Continue</source>
         <translation>Continuer</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3351"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3356"/>
         <source>Quit Application</source>
         <translation>Quitter l&apos;application</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3365"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3370"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3388"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3393"/>
         <source>Would you like to exit now?</source>
         <translation>Voulez-vous quitter maintenant ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3482"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3487"/>
         <source>The application is still running. Would you like to stop emulation?</source>
         <translation>L&apos;application est toujours en cours d&apos;exécution. Voulez-vous arrêter l&apos;émulation ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3619"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3624"/>
         <source>Playback Completed</source>
         <translation>Lecture terminée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3619"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3624"/>
         <source>Movie playback completed.</source>
         <translation>Lecture de la vidéo terminée.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3629"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3634"/>
         <source>Update Available</source>
         <translation>Mise à jour disponible</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3633"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3638"/>
         <source>Update %1 for Azahar is available.
 Would you like to download it?</source>
         <translation>La mise à jour %1 pour Azahar est disponible.
 Souhaitez-vous la télécharger ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3652"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3656"/>
         <source>Primary Window</source>
         <translation>Fenêtre principale</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/citra_qt.cpp" line="3654"/>
+        <location filename="../../src/citra_qt/citra_qt.cpp" line="3658"/>
         <source>Secondary Window</source>
         <translation>Fenêtre secondaire</translation>
     </message>
@@ -4788,165 +4820,175 @@ Souhaitez-vous la télécharger ?</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="529"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="938"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="359"/>
+        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Learn more.&lt;/a&gt;</source>
+        <translation>IMPORTANT : Les fichiers encryptés et les fichiers .3ds ne sont plus pris en charge. Il peut être nécessaire de les décrypter et/ou de les renommer en .cci. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;En savoir plus.&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="366"/>
+        <source>Don&apos;t show again</source>
+        <translation>Ne pas montrer à nouveau</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list.cpp" line="564"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="973"/>
         <source>Compatibility</source>
         <translation>Compatibilité</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="530"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="939"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="565"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="974"/>
         <source>Region</source>
         <translation>Région</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="531"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="940"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="566"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="975"/>
         <source>File type</source>
         <translation>Type de fichier</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="532"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="941"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="567"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="976"/>
         <source>Size</source>
         <translation>Taille</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="533"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="942"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="568"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="977"/>
         <source>Play time</source>
         <translation>Temps de jeu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="572"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="607"/>
         <source>Favorite</source>
         <translation>Favori</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="574"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="609"/>
         <source>Open</source>
         <translation>Ouvrir</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="575"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="610"/>
         <source>Application Location</source>
         <translation>Chemin de l&apos;application</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="577"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="612"/>
         <source>Save Data Location</source>
         <translation>Chemin des données de sauvegarde</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="578"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="613"/>
         <source>Extra Data Location</source>
         <translation>Chemin des données additionnelles</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="579"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="614"/>
         <source>Update Data Location</source>
         <translation>Chemin des données de mise à jour</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="580"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="615"/>
         <source>DLC Data Location</source>
         <translation>Chemin des données de DLC</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="582"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="617"/>
         <source>Texture Dump Location</source>
         <translation>Chemin d&apos;extraction de textures</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="583"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="618"/>
         <source>Custom Texture Location</source>
         <translation>Chemin des textures personnalisées</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="584"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="619"/>
         <source>Mods Location</source>
         <translation>Emplacement des Mods</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="586"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="621"/>
         <source>Dump RomFS</source>
         <translation>Extraire RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="588"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="623"/>
         <source>Disk Shader Cache</source>
         <translation>Cache de shader de disque</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="589"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="624"/>
         <source>Open Shader Cache Location</source>
         <translation>Ouvrir l&apos;emplacement du cache de shader</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="593"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="628"/>
         <source>Delete OpenGL Shader Cache</source>
         <translation>Supprimer le cache de shader OpenGL</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="596"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="631"/>
         <source>Uninstall</source>
         <translation>Désinstaller</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="597"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="632"/>
         <source>Everything</source>
         <translation>Tout</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="599"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="634"/>
         <source>Application</source>
         <translation>Application</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="600"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="635"/>
         <source>Update</source>
         <translation>Mise à jour</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="601"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="636"/>
         <source>DLC</source>
         <translation>DLC</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="603"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="638"/>
         <source>Remove Play Time Data</source>
         <translation>Retirer les données de temps de jeu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="606"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="641"/>
         <source>Create Shortcut</source>
         <translation>Créer un raccourci</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="607"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="642"/>
         <source>Add to Desktop</source>
         <translation>Ajouter au bureau</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="609"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="644"/>
         <source>Add to Applications Menu</source>
         <translation>Ajouter au menu d&apos;applications</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="613"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="648"/>
         <source>Properties</source>
         <translation>Propriétés</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="737"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="760"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="770"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="782"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="772"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="795"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="805"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="817"/>
         <source>Azahar</source>
         <translation>Azahar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="738"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="773"/>
         <source>Are you sure you want to completely uninstall '%1'?
 
 This will delete the application if installed, as well as any installed updates or DLC.</source>
@@ -4955,64 +4997,64 @@ This will delete the application if installed, as well as any installed updates 
 Cela supprimera l&apos;application si elle est installée, ainsi que toutes ses mises à jour et DLCs.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="749"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="776"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="784"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="811"/>
         <source>%1 (Update)</source>
         <translation>%1 (Mise à jour)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="753"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="788"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="823"/>
         <source>%1 (DLC)</source>
         <translation>%1 (DLC)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="760"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="795"/>
         <source>Are you sure you want to uninstall &apos;%1&apos;?</source>
         <translation>Êtes-vous sûr de vouloir désinstaller &apos;%1&apos; ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="771"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="806"/>
         <source>Are you sure you want to uninstall the update for &apos;%1&apos;?</source>
         <translation>Êtes-vous sûr de vouloir désinstaller la mise à jour de &apos;%1&apos; ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="783"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="818"/>
         <source>Are you sure you want to uninstall all DLC for &apos;%1&apos;?</source>
         <translation>Êtes-vous sûr de vouloir désinstaller le DLC de &apos;%1&apos; ?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="807"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="842"/>
         <source>Scan Subfolders</source>
         <translation>Scanner les sous-dossiers</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="808"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="843"/>
         <source>Remove Application Directory</source>
         <translation>Supprimer le répertoire d&apos;applications</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="827"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="862"/>
         <source>Move Up</source>
         <translation>Déplacer en haut</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="829"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="864"/>
         <source>Move Down</source>
         <translation>Déplacer en bas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="830"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="865"/>
         <source>Open Directory Location</source>
         <translation>Ouvrir l&apos;emplacement de ce répertoire</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="873"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="908"/>
         <source>Clear</source>
         <translation>Effacer</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="937"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="972"/>
         <source>Name</source>
         <translation>Nom</translation>
     </message>
@@ -5103,7 +5145,7 @@ de démarrage.</translation>
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1097"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1132"/>
         <source>Double-click to add a new folder to the application list</source>
         <translation>Double-cliquez pour ajouter un nouveau dossier à la liste des applications.</translation>
     </message>
@@ -5126,12 +5168,12 @@ de démarrage.</translation>
         <translation>résultats</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="954"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="989"/>
         <source>Filter:</source>
         <translation>Filtre :</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="955"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="990"/>
         <source>Enter pattern to filter</source>
         <translation>Entrer le motif de filtrage</translation>
     </message>
@@ -6248,32 +6290,32 @@ Message de débogage :</translation>
         <translation>Rotation vers le haut</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="643"/>
+        <location filename="../../src/citra_qt/main.ui" line="640"/>
         <source>Report Compatibility</source>
         <translation>Faire un rapport de compatibilité</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="654"/>
+        <location filename="../../src/citra_qt/main.ui" line="648"/>
         <source>Restart</source>
         <translation>Redémarrer</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="662"/>
+        <location filename="../../src/citra_qt/main.ui" line="656"/>
         <source>Load...</source>
         <translation>Charger...</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="670"/>
+        <location filename="../../src/citra_qt/main.ui" line="664"/>
         <source>Remove</source>
         <translation>Supprimer</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="675"/>
+        <location filename="../../src/citra_qt/main.ui" line="669"/>
         <source>Open Azahar Folder</source>
         <translation>Ouvrir le dossier Azahar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.ui" line="683"/>
+        <location filename="../../src/citra_qt/main.ui" line="677"/>
         <source>Configure Current Application...</source>
         <translation>Configurer l&apos;application actuelle...</translation>
     </message>
