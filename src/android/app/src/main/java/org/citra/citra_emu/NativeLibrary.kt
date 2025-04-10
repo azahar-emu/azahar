@@ -186,6 +186,10 @@ object NativeLibrary {
 
     external fun uninstallSystemFiles(old3DS: Boolean)
 
+    external fun isFullConsoleLinked(): Boolean
+
+    external fun unlinkConsole()
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 

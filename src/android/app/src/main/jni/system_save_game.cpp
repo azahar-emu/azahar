@@ -6,6 +6,7 @@
 #include <core/core.h>
 #include <core/hle/service/cfg/cfg.h>
 #include <core/hle/service/ptm/ptm.h>
+#include <core/hw/unique_data.h>
 #include "android_common/android_common.h"
 
 static bool changes_pending = false;
@@ -136,6 +137,23 @@ void Java_org_citra_citra_1emu_utils_SystemSaveGame_regenerateMac(JNIEnv* env,
                                                                   [[maybe_unused]] jobject obj) {
     cfg->GetMacAddress() = Service::CFG::GenerateRandomMAC();
     cfg->SaveMacAddress();
+}
+
+jint Java_org_citra_citra_1emu_utils_SystemSaveGame_getCountryCompatibility(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jint region) {
+    int res = 0;
+    u8 country = cfg->GetCountryCode();
+    if (region != Settings::REGION_VALUE_AUTO_SELECT &&
+        !Service::CFG::Module::IsValidRegionCountry(static_cast<u32>(region), country)) {
+        res |= 1;
+    }
+    if (HW::UniqueData::GetSecureInfoA().IsValid()) {
+        region = static_cast<jint>(cfg->GetRegionValue(true));
+        if (!Service::CFG::Module::IsValidRegionCountry(static_cast<u32>(region), country)) {
+            res |= 2;
+        }
+    }
+    return res;
 }
 
 } // extern "C"

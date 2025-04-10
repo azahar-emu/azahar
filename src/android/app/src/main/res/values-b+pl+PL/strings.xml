@@ -7,6 +7,8 @@
     <string name="app_game_install_description">Następnie należy wybrać folder z aplikacjami. Azahar wyświetli wszystkie ROM-y 3DS w wybranym folderze w aplikacji.\n\nROMy CIA, aktualizacje i DLC będą musiały zostać zainstalowane oddzielnie, klikając ikonę folderu i wybierając opcję Zainstaluj CIA.</string>
     <string name="start">Rozpocznij</string>
     <string name="cancelling">Anulowanie...</string>
+    <string name="important">Ważne</string>
+    <string name="dont_show_again">Nie pokazuj tego ponownie</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ustawienia</string>
@@ -34,6 +36,7 @@
     <string name="select_citra_user_folder_home_description">Zmienia pliki, których Azahar używa do ładowania aplikacji</string>
     <string name="theme_and_color_description">Zmodyfikuj wygląd aplikacji</string>
     <string name="install_cia_title">Instaluj CIA</string>
+    <string name="warning_3ds_files"><![CDATA[Zaszyfrowane pliki i pliki .3ds nie są już obsługiwane. Konieczne może być odszyfrowanie i/lub zmiana nazwy pliku na .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Więcej informacji.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Wybierz sterownik GPU</string>
@@ -126,8 +129,10 @@
     <string name="setup_system_files">Pliki systemowe</string>
     <string name="setup_system_files_description">Wykonywanie operacji na plikach systemowych, takich jak instalowanie plików systemowych lub uruchamianie Home Menu</string>
     <string name="setup_tool_connect">Podłącz do narzędzia Artic Setup Tool</string>
-    <string name="setup_system_files_preamble"><![CDATA[Azahar potrzebuje plików z prawdziwej konsoli, aby móc korzystać z niektórych jej funkcji. Pliki te można uzyskać za pomocą narzędzia <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br> Uwaga:<ul><li><b>Ta operacja zainstaluje unikalne pliki konsoli do Azahar, nie udostępniaj swoich folderów użytkownika lub nand<br>po wykonaniu procesu konfiguracji!</b></li><li>Konfiguracja Old 3DS jest wymagana, aby konfiguracja New 3DS działała.</li><li>Oba tryby konfiguracji będą działać niezależnie od modelu konsoli, na której uruchomiono narzędzie konfiguracji.</li></ul>]]></string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar potrzebuje plików z rzeczywistej konsoli, aby móc korzystać z niektórych jej funkcji. Pliki te można uzyskać za pomocą narzędzia <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br>Uwaga:<ul><li><b>Ta operacja zainstaluje unikalne pliki konsoli do Azahar, nie udostępniaj swoich folderów użytkownika lub nand po wykonaniu procesu konfiguracji!</b></li><li>Podczas procesu konfiguracji Azahar połączy się z konsolą, na której uruchomione jest narzędzie instalacyjne. Konsolę można później odłączyć w zakładce System w menu konfiguracji emulatora.</li><li>Nie korzystaj jednocześnie z Azahar i konsoli 3DS po skonfigurowaniu plików systemowych, bo może to spowodować błędy.</li><li>Old 3DS jest wymagany do działania konfiguracji New 3DS (zalecane jest wykonanie obu tych konfiguracji).</li><li>Oba tryby konfiguracji będą działać niezależnie od modelu konsoli, na której uruchomiono narzędzie konfiguracyjne.</li></ul>]]></string>
     <string name="setup_system_files_detect">Pobieranie bieżącego stanu plików systemowych, proszę zaczekać...</string>
+    <string name="delete_system_files">Odłącz unikalne dane konsoli</string>
+    <string name="delete_system_files_description"><![CDATA[Ta czynność spowoduje odłączenie twojej rzeczywistej konsoli od Azahar, z następującymi konsekwencjami:<br><ul><li>Twój OTP, SecureInfo i LocalFriendCodeSeed zostaną usunięte z Azahar.</li><li>Lista znajomych zostanie zresetowana, a użytkownik zostanie wylogowany z konta NNID/PNID.</li><li>Pliki systemowe i tytuły z eshopu uzyskane za pośrednictwem Azahar staną się niedostępne do czasu ponownego połączenia z tą samą konsolą (dane zapisu nie zostaną utracone).</li></ul><br>Kontynuować?]]></string>
     <string name="setup_system_files_o3ds">Konfiguracja Old 3DS</string>
     <string name="setup_system_files_n3ds">Konfiguracja New 3DS</string>
     <string name="setup_system_files_possible">Konfiguracja jest możliwa.</string>
@@ -174,7 +179,6 @@
     <string name="plugin_loader_description">Ładuje wtyczki 3GX z emulowanej karty SD, jeśli są dostępne.</string>
     <string name="allow_plugin_loader">Zezwól aplikacjom na zmianę stanu programu ładującego wtyczki</string>
     <string name="allow_plugin_loader_description">Umożliwia aplikacjom homebrew włączenie programu ładującego wtyczki, nawet jeśli jest on wyłączony.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Kamera wewnętrzna</string>
     <string name="outer_left_camera">Lewa zewnętrzna kamera</string>
@@ -203,6 +207,9 @@
     <string name="linear_filtering_description">Włącza filtrowanie liniowe, które sprawia, że grafika w grach jest płynniejsza.</string>
     <string name="texture_filter_name">Filtr tekstur</string>
     <string name="texture_filter_description">Ulepsza oprawę wizualną aplikacji poprzez zastosowanie filtrów do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale i MMPX.</string>
+    <string name="advanced">Zaawansowane\"</string>
+    <string name="texture_sampling_name">Próbkowanie tekstur</string>
+    <string name="texture_sampling_description">Zastępuje filtr próbkowania używany przez gry. Może to być przydatne w niektórych przypadkach, gdy gry źle zachowują się podczas skalowania w górę. Jeśli nie masz pewności, ustaw tę opcję na Kontrolowane przez grę.</string>
     <string name="hw_shaders">Włącz shader sprzętu</string>
     <string name="hw_shaders_description">Używa sprzętu do emulacji shaderów 3DS. Po włączeniu, wydajność gry zostanie znacznie poprawiona.</string>
     <string name="shaders_accurate_mul">Dokładne mnożenie</string>
@@ -230,7 +237,7 @@
     <string name="stereoscopy">Sterowanie stereoskopowe</string>
     <string name="render3d">Tryb stereoskopowy 3D</string>
     <string name="factor3d">Zasięg</string>
-    <string name="factor3d_description">Określa wartość suwaka 3D. Powinien być ustawiony na wartość wyższą niż 0%, gdy włączony jest tryb stereoskopowy 3D.</string>
+    <string name="factor3d_description">Określa wartość suwaka 3D. Powinien być ustawiony na wartość wyższą niż 0%, gdy włączony jest tryb stereoskopowy 3D.\nUwaga: Wartość przekraczająca 100% nie jest możliwa na rzeczywistym sprzęcie i może powodować problemy graficzne.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Rozmiar ekranu Cardboarda</string>
     <string name="cardboard_screen_size_description">Skaluje ekran do wartości procentowej jego oryginalnego rozmiaru.</string>
@@ -265,8 +272,8 @@
     <string name="layout_screen_orientation_auto_sensor">Automatycznie</string>
     <string name="layout_screen_orientation_landscape">Widok</string>
     <string name="layout_screen_orientation_landscape_reverse">Odwrócony widok</string>
-    <string name="layout_screen_orientation_portrait">Portret</string>
-    <string name="layout_screen_orientation_portrait_reverse">Odwrócony portret</string>
+    <string name="layout_screen_orientation_portrait">Ekran</string>
+    <string name="layout_screen_orientation_portrait_reverse">Odwrócony Ekran</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Wyczyść</string>
@@ -346,7 +353,7 @@
     <string name="emulation_switch_screen_layout">Geometryczny Układ Ekranu</string>
     <string name="emulation_switch_portrait_layout">Pionowy Układ Ekranu</string>
     <string name="emulation_screen_layout_largescreen">Duży Ekran</string>
-    <string name="emulation_screen_layout_portrait">Obraz</string>
+    <string name="emulation_screen_layout_portrait">Ekran</string>
     <string name="emulation_screen_layout_single">Pojedynczy ekran</string>
     <string name="emulation_screen_layout_sidebyside">Ekrany Obok Siebie</string>
     <string name="emulation_screen_layout_hybrid">Hybrydowy Ekran</string>
@@ -441,6 +448,8 @@
     <string name="save_load_error">Błąd zapisywania/wczytywania</string>
     <string name="fatal_error">Krytyczny Błąd</string>
     <string name="fatal_error_message">Wystąpił błąd krytyczny. Kontynuowanie emulacji może spowodować awarie i błędy.</string>
+    <string name="invalid_region">Nieprawidłowy region</string>
+    <string name="unsupported_encrypted">Nieobsługiwana zaszyfrowana aplikacja</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Przygotowanie shaderów</string>
@@ -472,7 +481,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Powiadomienia Azahar podczas instalacji CIA</string>
     <string name="cia_install_notification_title">Instalacja CIA</string>
-    <string name="cia_install_notification_installing">Instalacja %s (%d/%d)</string>
+    <string name="cia_install_notification_installing">Instalacja %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">Pomyślnie zainstalowano CIA</string>
     <string name="cia_install_notification_error_title">Instalacja CIA nie powiodła się</string>
     <string name="cia_install_success">\"%s\" został pomyślnie zainstalowany</string>
@@ -570,10 +579,14 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubic</string>
-    <string name="nearest_neighbor">Nearest Neighbor</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Kontrolowane przez grę</string>
+    <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="linear">Linear</string>
 
     <!-- Sound output modes -->
     <string name="mono">Mono</string>

@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>dist/citra.png</normaloff>dist/citra.png</iconset>
+    <normaloff>dist/azahar.png</normaloff>dist/azahar.png</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>

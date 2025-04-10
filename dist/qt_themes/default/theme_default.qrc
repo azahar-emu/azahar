@@ -13,7 +13,7 @@
         <file alias="48x48/no_avatar.png">icons/48x48/no_avatar.png</file>
         <file alias="48x48/plus.png">icons/48x48/plus.png</file>
         <file alias="48x48/sd_card.png">icons/48x48/sd_card.png</file>
-        <file alias="256x256/citra.png">icons/256x256/citra.png</file>
+        <file alias="256x256/azahar.png">icons/256x256/azahar.png</file>
         <file alias="48x48/star.png">icons/48x48/star.png</file>
         <file alias="256x256/plus_folder.png">icons/256x256/plus_folder.png</file>
     </qresource>
@@ -31,7 +31,7 @@
         <file alias="48x48/no_avatar.png">icons_light/48x48/no_avatar.png</file>
         <file alias="48x48/plus.png">icons_light/48x48/plus.png</file>
         <file alias="48x48/sd_card.png">icons_light/48x48/sd_card.png</file>
-        <file alias="256x256/citra.png">icons_light/256x256/citra.png</file>
+        <file alias="256x256/azahar.png">icons_light/256x256/azahar.png</file>
         <file alias="48x48/star.png">icons_light/48x48/star.png</file>
         <file alias="256x256/plus_folder.png">icons_light/256x256/plus_folder.png</file>
     </qresource>

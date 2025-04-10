@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -765,7 +765,8 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         it->second = slot_framebuffers.insert(runtime, fb_params, color_surface, depth_surface);
     }
 
-    return FramebufferHelper<T>{this, &slot_framebuffers[it->second], regs.rasterizer, fb_rect};
+    return FramebufferHelper<T>{this, &slot_framebuffers[it->second],
+                                regs.framebuffer.framebuffer.IsFlipped(), regs.rasterizer, fb_rect};
 }
 
 template <class T>

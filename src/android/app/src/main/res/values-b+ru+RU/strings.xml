@@ -3,7 +3,6 @@
 
     <string name="start">Запустить</string>
     <string name="cancelling">Отмена...</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Настройки</string>
     <string name="home_options">Опции</string>
@@ -22,7 +21,6 @@
     <string name="about_description">Версия сборки, разработчики и другое</string>
     <string name="theme_and_color_description">Настройка внешнего вида приложения</string>
     <string name="install_cia_title">Установить CIA</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Выбрать драйвер GPU</string>
     <string name="select_gpu_driver_title">Заменить текущий драйвер GPU устройства?</string>
@@ -114,7 +112,6 @@
     <string name="plugin_loader">Загрузчик плагина 3GX</string>
     <string name="plugin_loader_description">При наличии плагинов 3GX они будут загружаться с эмулируемой SD-карты.</string>
     <string name="allow_plugin_loader_description">Позволять homebrew-приложениям включать загрузчик плагина даже когда он выключен.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Внутренняя камера</string>
     <string name="outer_left_camera">Внешняя камера слева</string>
@@ -158,7 +155,6 @@
     <string name="stereoscopy">Стереоизображение</string>
     <string name="render3d">Стереоскопический режим 3D</string>
     <string name="factor3d">Глубина</string>
-    <string name="factor3d_description">Установка значения уровня 3D. При включении стереоскопического 3D должно быть больше 0%.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Размер экрана Cardboard</string>
     <string name="cardboard_screen_size_description">Масштабирует экран к процентному значению от оригинального размера.</string>
@@ -319,7 +315,6 @@
     <string name="save_load_error">Ошибка сохранения/загрузки</string>
     <string name="fatal_error">Критическая ошибка</string>
     <string name="fatal_error_message">Возникла критическая ошибка. Откройте лог для получения информации.\nВозобновление эмуляции может привести к сбоям и вылетам.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Подготовка шейдеров</string>
     <string name="building_shaders">Построение шейдеров</string>
@@ -345,7 +340,6 @@
         <item quantity="other">Установка %d файлов. Доп. информация в уведомлении.</item>
     </plurals>
     <string name="cia_install_notification_title">Установка CIA</string>
-    <string name="cia_install_notification_installing">Установка %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">Успешная установка CIA</string>
     <string name="cia_install_notification_error_title">Не удалось установить CIA</string>
     <string name="cia_install_success">\"%s\" успешно установлено</string>
@@ -422,11 +416,11 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Бикубический</string>
-    <string name="nearest_neighbor">Ближайший сосед</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <string name="nearest_neighbor">Ближайший сосед</string>
     <!-- Sound output modes -->
     <string name="mono">Моно</string>
     <string name="stereo">Стерео</string>

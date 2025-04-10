@@ -52,6 +52,8 @@ private:
     void UpdateInitTicks(int init_ticks_type);
     void RefreshConsoleID();
     void RefreshMAC();
+    void UnlinkConsole();
+    void CheckCountryValid(u8 country);
 
     void InstallSecureData(const std::string& from_path, const std::string& to_path);
     void RefreshSecureDataStatus();

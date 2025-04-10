@@ -48,6 +48,8 @@ object SystemSaveGame {
     external fun getMac(): String
 
     external fun regenerateMac()
+
+    external fun getCountryCompatibility(region: Int): Int
 }
 
 enum class BirthdayMonth(val code: Int, val days: Int) {

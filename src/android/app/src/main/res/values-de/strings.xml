@@ -7,7 +7,6 @@
     <string name="app_game_install_description">Als Nächstes müssen Sie einen Anwendungsordner auswählen. Azahar zeigt alle 3DS-ROMs im ausgewählten Ordner in der App an.\n\nCIA-ROMs, Updates und DLC müssen separat installiert werden, indem Sie auf das Ordnersymbol klicken und CIA installieren auswählen</string>
     <string name="start">Start</string>
     <string name="cancelling">Wird abgebrochen...</string>
-
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Einstellungen</string>
     <string name="home_options">Optionen</string>
@@ -34,7 +33,6 @@
     <string name="select_citra_user_folder_home_description">Ändere die Dateien, die Azahar nutzt, um Anwendungen zu laden</string>
     <string name="theme_and_color_description">Ändere das Aussehen der App</string>
     <string name="install_cia_title">CIA Installieren</string>
-
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">GPU-Treiber auswählen</string>
     <string name="select_gpu_driver_title">Möchtest du den aktuellen GPU-Treiber ersetzten</string>
@@ -160,7 +158,6 @@
     <string name="plugin_loader_description">Lade 3GX Plugins von der emulierten SD-Karte, wenn sie verfügbar sind.</string>
     <string name="allow_plugin_loader">Erlaubt Anwendungen den Plugin-Lader-Zustand zu ändern</string>
     <string name="allow_plugin_loader_description">Erlaubt es Homebrew-Anwendungen den Plugin-Lader zu aktivieren, auch wenn es sonst deaktiviert ist.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -216,7 +213,6 @@
     <string name="stereoscopy">Stereoskopie</string>
     <string name="render3d">Stereoskopischer 3D-Modus</string>
     <string name="factor3d">Tiefe</string>
-    <string name="factor3d_description">Gibt den Wert des 3D-Schiebereglers an. Dieser Wert sollte auf mehr als 0 % eingestellt werden, wenn Stereoskopisches 3D aktiviert ist.</string>
     <string name="cardboard_vr">Karton-VR</string>
     <string name="cardboard_screen_size">Karton-Bildschirmgröße</string>
     <string name="cardboard_screen_size_description">Skaliert den Bildschirm auf einen Prozentsatz seiner Originalgröße.</string>
@@ -427,7 +423,6 @@
     <string name="save_load_error">Fehler beim Speichern/Laden</string>
     <string name="fatal_error">Schwerwiegender Fehler</string>
     <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen findest du in der Protokolldatei.\nDas Fortfahren könnte zu ungewollten Abstürzen oder Problemen führen.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
     <string name="building_shaders">Shader werden erstellt</string>
@@ -456,7 +451,6 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Azahar-Benachrichtigungen während CIA-Installation</string>
     <string name="cia_install_notification_title">CIA wird installiert</string>
-    <string name="cia_install_notification_installing">Installiere %s (%d/%d)</string>
     <string name="cia_install_notification_success_title">CIA erfolgreich installiert</string>
     <string name="cia_install_notification_error_title">CIA konnte nicht installiert werden</string>
     <string name="cia_install_success">„%s“ wurde erfolgreich installiert</string>
@@ -554,11 +548,11 @@
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bikubisch</string>
-    <string name="nearest_neighbor">Nearest-Neighbor</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <string name="nearest_neighbor">Nearest-Neighbor</string>
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>

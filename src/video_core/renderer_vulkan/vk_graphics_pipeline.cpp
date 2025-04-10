@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -147,7 +147,8 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
     const vk::PipelineRasterizationStateCreateInfo raster_state = {
         .depthClampEnable = false,
         .rasterizerDiscardEnable = false,
-        .cullMode = PicaToVK::CullMode(info.rasterization.cull_mode),
+        .cullMode =
+            PicaToVK::CullMode(info.rasterization.cull_mode, info.rasterization.flip_viewport),
         .frontFace = PicaToVK::FrontFace(info.rasterization.cull_mode),
         .depthBiasEnable = false,
         .lineWidth = 1.0f,

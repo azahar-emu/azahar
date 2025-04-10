@@ -20,9 +20,9 @@ cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-    "${EXTRA_CMAKE_FLAGS[@]}" \
     -DENABLE_QT_TRANSLATION=ON \
-    -DUSE_DISCORD_PRESENCE=ON
+    -DUSE_DISCORD_PRESENCE=ON \
+	"${EXTRA_CMAKE_FLAGS[@]}"
 ninja
 strip -s bin/Release/*
 

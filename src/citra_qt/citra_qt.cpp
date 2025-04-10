@@ -329,6 +329,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     ui->setupUi(this);
     statusBar()->hide();
 
+    setWindowIcon(QIcon(QString::fromStdString(":/icons/azahar.png")));
+
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
@@ -836,7 +838,7 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Increase 3D Factor"), [this] {
         const auto factor_3d = Settings::values.factor_3d.GetValue();
-        if (factor_3d < 100) {
+        if (factor_3d < 255) {
             if (factor_3d % FACTOR_3D_STEP != 0) {
                 Settings::values.factor_3d =
                     factor_3d + FACTOR_3D_STEP - (factor_3d % FACTOR_3D_STEP);
@@ -2112,15 +2114,18 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QVBoxLayout layout(&dialog);
 
     QLabel label_description(
-        tr("<p>Azahar needs files from a real console to be able to use some of its features.<br>"
-           "You can get such files with the <a "
+        tr("<p>Azahar needs console unique data and firmware files from a real console to be "
+           "able to use some of its features.<br>Such files and data can be set up with the <a "
            "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
-           "Artic Setup Tool</a><br> Notes:<ul><li><b>This operation will install console unique "
-           "files "
-           "to Azahar, do not share your user or nand folders<br>after performing the setup "
-           "process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to "
-           "work.</li><li>Both setup modes will work regardless of the model of the console "
-           "running the setup tool.</li></ul><hr></p>"),
+           "Artic Setup Tool</a><br>Notes:<ul><li><b>This operation will install console unique "
+           "data to Azahar, do not share your user or nand folders<br>after performing the setup "
+           "process!</b></li><li>While doing the setup process, Azahar will link to the console "
+           "running the setup tool. You can unlink the<br>console later from the System tab in the "
+           "emulator configuration menu.</li><li>Do not go online with both Azahar and your 3DS "
+           "console at the same time after setting up system files,<br>as it could cause "
+           "issues.</li><li>Old 3DS setup is needed for the New 3DS setup to work (doing both "
+           "setup modes is recommended).</li><li>Both setup modes will work regardless of the "
+           "model of the console running the setup tool.</li></ul><hr></p>"),
         &dialog);
     label_description.setOpenExternalLinks(true);
     layout.addWidget(&label_description);
@@ -2908,7 +2913,7 @@ void GMainWindow::ShowFFmpegErrorMessage() {
     message_box.setText(
         tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
 #ifdef _WIN32
-           "\n\nTo install FFmpeg to Lime, press Open and select your FFmpeg directory."
+           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
 #endif
            "\n\nTo view a guide on how to install FFmpeg, press Help."));
     message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
@@ -3115,7 +3120,7 @@ void GMainWindow::UpdateStatusBar() {
             }
         }
 
-        static const std::array label_color = {QStringLiteral("#ffffff"), QStringLiteral("#eed202"),
+        static const std::array label_color = {QStringLiteral(""), QStringLiteral("#eed202"),
                                                QStringLiteral("#ff3333")};
 
         int style_index;
@@ -3127,8 +3132,11 @@ void GMainWindow::UpdateStatusBar() {
         } else {
             style_index = 0;
         }
-        const QString style_sheet =
-            QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+
+        QString style_sheet;
+        if (!label_color[style_index].isEmpty()) {
+            style_sheet = QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+        }
 
         artic_traffic_label->setText(
             tr("Artic Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
@@ -3634,8 +3642,7 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
     update_prompt.exec();
     if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
         QDesktopServices::openUrl(
-            QUrl(QString::fromStdString("https://github.com/azahar-emu/azahar/releases/tag/") +
-                 version_string));
+            QUrl(QString::fromStdString("https://azahar-emu.org/pages/download/")));
     }
 }
 #endif

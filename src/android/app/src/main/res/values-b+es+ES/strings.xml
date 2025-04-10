@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_disclaimer">Este software ejecutará aplicaciones para la consola portátil Nintendo 3DS. No se incluyen juegos.\n\nAntes de comenzar con la emulación, seleccione una carpeta para almacenar los datos de usuario de Azahar en.\n\nQué es ésto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Datos de usuario de Azahar Android y almacenamiento</a></string>
     <string name="app_notification_channel_description">Notificaciones del emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar está ejecutándose</string>
+    <string name="app_game_install_description">A continuación, deberá seleccionar una Carpeta de Aplicaciones. Azahar mostrará todas las ROM de 3DS de la carpeta seleccionada en la aplicación.\n\nLas ROM CIA, actualizaciones y los DLC deberán instalarse por separado haciendo clic en el icono de la carpeta y seleccionando Instalar CIA.</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancelando...</string>
+    <string name="important">Importante</string>
+    <string name="dont_show_again">No volver a mostrar</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Configuración</string>
     <string name="home_options">Opciones</string>
     <string name="home_search">Buscar</string>
+    <string name="home_games">Aplicaciones</string>
     <string name="settings_description">Configurar opciones del emulador</string>
     <string name="install_game_content">Instalar archivo CIA</string>
+    <string name="install_game_content_description">Instalar aplicaciones, actualizaciones o DLC</string>
     <string name="share_log">Compartir Registro</string>
     <string name="share_log_description">Compartir el archivo de registro de Azahar para depurar problemas</string>
     <string name="gpu_driver_manager">Administrador de drivers de GPU</string>
@@ -21,11 +27,16 @@
     <string name="custom_driver_not_supported">Drivers personalizados no soportados</string>
     <string name="custom_driver_not_supported_description">La carga de drivers personalizados no está soportada en este dispositivo.\n¡Compruebe esta opción otra vez en el futuro para ver si ya está soportada!</string>
     <string name="share_log_not_found">No se encontró ningún archivo de registro</string>
+    <string name="select_games_folder">Seleccionar Directorio de Aplicaciones</string>
+    <string name="select_games_folder_description">Permite que Azahar rellene la lista de aplicaciones</string>
     <string name="about">Acerca de</string>
     <string name="citra_description">Un emulador de 3DS de código abierto</string>
     <string name="about_description">Versión de compilación, créditos y más</string>
+    <string name="games_dir_selected">Directorio de aplicaciones seleccionado</string>
+    <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
     <string name="theme_and_color_description">Modifica el aspecto de la app</string>
     <string name="install_cia_title">Instalar CIA</string>
+    <string name="warning_3ds_files"><![CDATA[Los archivos cifrados y .3ds ya no son compatibles. Puede que sea necesario descifrarlos o renombrarlos a .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Más Información.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -50,7 +61,10 @@
     <string name="welcome_description">Aprenda a configurar &lt;b>Azahar&lt;/b> y entra en la emulación.</string>
     <string name="get_started">Empezar</string>
     <string name="step_complete">¡Completado!</string>
+    <string name="games">Aplicaciones</string>
+    <string name="games_description">Seleccione la carpeta de &lt;b>Aplicaciones&lt;/b> con el botón de debajo.</string>
     <string name="done">Hecho</string>
+    <string name="done_description">¡Todo listo!\n¡Disfruta del emulador!</string>
     <string name="text_continue">Continuar</string>
     <string name="notifications">Notificaciones</string>
     <string name="notifications_description">Concede el permiso de notificaciones con el botón de debajo.</string>
@@ -62,6 +76,8 @@
     <string name="microphone_permission">Micrófono</string>
     <string name="microphone_permission_description">Concede el permiso de micrófono debajo para emular el micrófono de la 3DS.</string>
     <string name="permission_denied">Permiso denegado</string>
+    <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
+    <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
     <string name="warning_help">Ayuda</string>
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancelar</string>
@@ -71,8 +87,12 @@
     <string name="cannot_skip">No puedes saltarte este paso</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
+    <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
     <string name="setup_set_theme">Establecer tema</string>
 
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Buscar y Filtrar Aplicaciones</string>
+    <string name="home_search_games">Buscar Aplicaciones</string>
     <string name="search_recently_played">Recién Jugados</string>
     <string name="search_recently_added">Recién Añadidos</string>
     <string name="search_installed">Instalados</string>
@@ -105,7 +125,23 @@
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
 
+    <!-- System files strings -->
+    <string name="setup_system_files">Archivos de Sistema</string>
+    <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>
+    <string name="setup_tool_connect">Conectar con la herramienta de configuración Artic</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar necesita archivos de una consola real para poder utilizar algunas de sus funciones. Puedes obtener los archivos con la <a href=https://github.com/azahar-emu/ArticSetupTool>herramienta de configuración Artic</a>.<br>Notas:<ul><li><b>Esta operación instalará archivos únicos de la consola en Azahar, ¡no compartas las carpetas de usuario ni nand después de realizar el proceso de configuración!</b></li><li>Tras la configuración, Azahar se enlazará a la consola que ha ejecutado la herramienta de configuración. Puedes desvincular la consola más tarde desde la pestaña \"Archivos de sistema\" del menú de opciones del emulador.</li><li>No te conectes en línea con Azahar y la consola 3DS al mismo tiempo después de configurar los archivos del sistema, ya que esto podría causar problemas.</li><li>Se necesita la configuración de Old 3DS para que funcione la configuración de New 3DS (configurar ambos modos es recomendado).</li><li>Ambos modos de configuración funcionarán independientemente del modelo de la consola que ejecute la herramienta de configuración.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Obteniendo el estado actual de los archivos del sistema, por favor espere...</string>
+    <string name="delete_system_files">Desvincular Datos Únicos de Consola</string>
+    <string name="delete_system_files_description"><![CDATA[Esta acción desvinculará tu consola real de Azahar, con las siguientes consecuencias:<br><ul><li>OTP, SecureInfo y LocalFriendCodeSeed serán eliminados de Azahar.</li><li>Tu lista de amigos se restablecerá y se cerrará la sesión de tu cuenta NNID/PNID.</li><li>Los archivos del sistema y los títulos de la eshop obtenidos a través de Azahar se volverán inaccesibles hasta que la misma consola se vincule nuevamente mediante la herramienta de configuración (los datos guardados no se perderán).</li></ul><br>¿Continuar?]]></string>
+    <string name="setup_system_files_o3ds">Configuración Old 3DS</string>
+    <string name="setup_system_files_n3ds">Configuración New 3DS</string>
+    <string name="setup_system_files_possible">La configuración es posible.</string>
+    <string name="setup_system_files_o3ds_needed">La configuración Old 3DS es necesaria primero.</string>
+    <string name="setup_system_files_completed">Configuración completa.</string>
+    <string name="setup_system_files_enter_address">Introduce la dirección de la herramienta de configuración Artic</string>
+    <string name="setup_system_files_preparing">Preparando configuración, por favor espere...</string>
     <string name="boot_home_menu">Cargar el Menú HOME</string>
+    <string name="show_home_apps">Mostrar las aplicaciones del menú HOME en la lista de aplicaciones</string>
     <string name="run_system_setup">Ejecutar la Configuración de la consola cuando se ejecute el Menú HOME</string>
     <string name="home_menu">Menú HOME</string>
 
@@ -138,9 +174,14 @@
     <string name="steps_per_hour_description">Número de pasos por hora reportados por el podómetro. Rango de 0 a 65.535.</string>
     <string name="console_id">ID de Consola</string>
     <string name="regenerate_console_id">Regenerar ID de Consola</string>
+    <string name="regenerate_console_id_description">Esto reemplazará tu ID de consola de 3DS virtual por una nueva. Tu ID actual será irrecuperable. Esto puede tener efectos inesperados en determinadas aplicaciones. Si usas un archivo de configuración obsoleto, esto podría fallar. ¿Desea continuar?</string>
     <string name="plugin_loader">Cargador de complementos 3GX</string>
     <string name="plugin_loader_description">Carga los plugins 3GX de la SD emulada si están disponibles.</string>
+    <string name="allow_plugin_loader">Permitir que las aplicaciones cambien el estado del cargador de plugins.</string>
     <string name="allow_plugin_loader_description">Permite que las apps de homebrew activen el cargador de complementos incluso cuando está desactivado.</string>
+    <string name="region_mismatch">Advertencia Región No Válida</string>
+    <string name="region_mismatch_emulated">La configuración del país no es válida para la región emulada seleccionada.</string>
+    <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
@@ -170,6 +211,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="linear_filtering">Filtro Linear</string>
     <string name="linear_filtering_description">Activa el filtro linear, que hace que los gráficos del juego se vean más suaves.</string>
     <string name="texture_filter_name">Filtro de Texturas</string>
+    <string name="texture_filter_description">Mejora los gráficos visuales de las aplicaciones aplicando un filtro a las texturas. Los filtros soportados son Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, y MMPX.</string>
+    <string name="advanced">Avanzado</string>
+    <string name="texture_sampling_name">Muestreo de Texturas</string>
+    <string name="texture_sampling_description">Sobreescribe el filtro de muestreo usado en juegos. Puede ser útil en ciertos casos con juegos con bajo rendimiento al subir la resolución. Si no estás seguro, pónlo en Controlado por Juego</string>
     <string name="hw_shaders">Activar Sombreador de Hardware</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="shaders_accurate_mul">Multiplicación Precisa</string>
@@ -181,6 +226,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
     <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o altos incrementarán o reducirán el límite de velocidad.</string>
     <string name="internal_resolution">Resolución interna</string>
+    <string name="internal_resolution_description">Especifica la resolución a la que se quiera renderizar. Una alta resolución mejorará la calidad visual un montón, pero también causará un gran impacto en el rendimiento y puede causar fallos en ciertas aplicaciones.</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -196,7 +242,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="stereoscopy">Estereoscopía</string>
     <string name="render3d">Modo 3D Estereoscópico</string>
     <string name="factor3d">Profundidad</string>
-    <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.</string>
+    <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.\nNota: Los valores de profundidad superiores al 100 % no son posibles en hardware real y pueden causar problemas gráficos.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Tamaño de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un porcentaje de su tamaño original.</string>
@@ -407,6 +453,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="save_load_error">Error de guardado/carga</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
+    <string name="invalid_region">Región no válida</string>
+    <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
@@ -437,7 +485,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     </plurals>
     <string name="cia_install_notification_channel_description">Notificaciones de Azahar durante la instalación de CIAs.</string>
     <string name="cia_install_notification_title">Instalando CIA</string>
-    <string name="cia_install_notification_installing">Instalando %s (%d/%d)</string>
+    <string name="cia_install_notification_installing">Instalando %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA instalado con éxito</string>
     <string name="cia_install_notification_error_title">Falló la instalación del CIA</string>
     <string name="cia_install_success">\"%s\" se ha instalado con éxito</string>
@@ -535,10 +583,14 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- Texture filter names -->
     <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bicubic</string>
-    <string name="nearest_neighbor">Nearest Neighbor</string>
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Controlado por Juego</string>
+    <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="linear">Linear</string>
 
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
@@ -701,6 +753,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="artic_base_connect">Conectar con Artic Base</string>
     <string name="artic_base_enter_address">Introduce la dirección del servidor Artic Base</string>
     <string name="delay_render_thread">Atrasar hilo de renderizado del juego</string>
+    <string name="delay_render_thread_description">Retrasa el hilo de renderización del juego cuando envía datos a la GPU. Ayuda con los problemas de rendimiento en las (muy pocas) aplicaciones de fps dinámicos.</string>
+
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Guardado rápido</string>
     <string name="emulation_quicksave">Guardado rápido</string>
@@ -711,6 +765,20 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="quickload_not_found">Guardado rápido no disponible.</string>
     <string name="miscellaneous">Misceláneos</string>
     <string name="use_artic_base_controller">Usar Artic Controller al estar conectado al servidor de Artic Base</string>
+    <string name="use_artic_base_controller_description">Usa los controles dados por el Servidor de Artic Base al estar conectado a éste en vez de los controles del dispositivo configurado.</string>
     <string name="instant_debug_log">Limpiar la salida del registro en cada mensaje</string>
+    <string name="instant_debug_log_description">Inmediatamente guarda el registro de depuración en el archivo. Utilice ésto si Azahar se bloquea y la salida del registro se está cortando.</string>
     <string name="disable_right_eye_render">Desactivar Renderizado de Ojo Derecho</string>
-    </resources>
+    <string name="disable_right_eye_render_description">Mejora significativamente el rendimiento en algunas aplicaciones, pero puede causar parpadeo en otros.</string>
+    <string name="delay_start_lle_modules">Retrasar el comienzo con módulos LLE</string>
+    <string name="delay_start_lle_modules_description">Retrasa el inicio de la aplicación cuando los módulos LLE están habilitados.</string>
+    <string name="deterministic_async_operations">Operaciones asíncronas deterministas</string>
+    <string name="deterministic_async_operations_description">Hace que las operaciones asíncronas sean deterministas para la depuración. Habilitar esta opción puede causar bloqueos.</string>
+    <string name="enable_required_online_lle_modules">Habilitar los módulos LLE necesarios para las funciones en línea (si están instalados)</string>
+    <string name="enable_required_online_lle_modules_desc">Habilita los módulos LLE necesarios para el modo multijugador en línea, acceso a la eShop, etc.</string>
+    <string name="emulation_settings">Opciones de Emulación</string>
+    <string name="profile_settings">Opciones de Perfil</string>
+    <string name="mac_address">Dirección MAC</string>
+    <string name="regenerate_mac_address">Regenerar Dirección MAC</string>
+    <string name="regenerate_mac_address_description">Esto reemplazará tu dirección MAC actual por una nueva. No se recomienda hacerlo si obtuviste la dirección MAC de tu consola real con la herramienta de configuración. ¿Continuar?</string>
+</resources>

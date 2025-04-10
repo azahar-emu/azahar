@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/game_context_open_app"
+        android:title="@string/game_context_open_app" />
+     <item
+        android:id="@+id/game_context_open_save_dir"
+        android:title="@string/game_context_open_save_dir" />
+    <item
+        android:id="@+id/game_context_open_updates"
+        android:title="@string/game_context_open_updates" />
+    <item
+        android:id="@+id/game_context_open_dlc"
+        android:title="@string/game_context_open_dlc" />
+    <item
+        android:id="@+id/game_context_open_extra"
+        android:title="@string/game_context_open_extra" />
+    <item
+        android:id="@+id/game_context_open_textures"
+        android:title="@string/game_context_open_textures" />
+    <item
+        android:id="@+id/game_context_open_mods"
+        android:title="@string/game_context_open_mods" />
+</menu>

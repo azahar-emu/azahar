@@ -125,6 +125,11 @@ shaders_accurate_mul =
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_shader_jit =
 
+# Overrides the sampling filter used by games. This can be useful in certain
+# cases with poorly behaved games when upscaling.
+# 0 (default): Game Controlled, 1: Nearest Neighbor, 2: Linear
+texture_sampling =
+
 # Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
 # so only turn this off if you notice a speed difference.
 # 0: Off, 1 (default): On
@@ -162,7 +167,7 @@ bg_green =
 render_3d =
 
 # Change 3D Intensity
-# 0 - 100: Intensity. 0 (default)
+# 0 - 255: Intensity. 0 (default)
 factor_3d =
 
 # The name of the post processing shader to apply.
@@ -259,6 +264,10 @@ swap_screen =
 # 2 - Show Bottom Screen Only
 # 3 - Show both screens side by side
 secondary_screen_layout =
+
+# Expands the display area to include the cutout (or notch) area
+# 0 (default): Off, 1: On
+expand_to_cutout_area =
 
 # Screen placement settings when using Cardboard VR (render3d = 4)
 # 30 - 100: Screen size as a percentage of the viewport. 85 (default)
