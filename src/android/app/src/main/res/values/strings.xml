@@ -249,7 +249,7 @@
     <string name="expand_to_cutout_area_description">Expands the display area to include the cutout (or notch) area.</string>
     <string name="emulation_toggle_turbo_speed">Turbo Speed</string>
     <string name="turbo_speed">Turbo Speed</string>
-    <string name="turbo_speed_description">Value used for the turbo hotkey</string>
+    <string name="turbo_speed_description">Emulation speed limit used while the turbo hotkey is active.</string>
     <string name="internal_resolution">Internal Resolution</string>
     <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain applications.</string>
     <string name="internal_resolution_setting_1x">Native (400x240)</string>
