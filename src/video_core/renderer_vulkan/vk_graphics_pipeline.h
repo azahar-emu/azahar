@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -54,6 +54,7 @@ union RasterizationState {
     u8 value = 0;
     BitField<0, 2, Pica::PipelineRegs::TriangleTopology> topology;
     BitField<4, 2, Pica::RasterizerRegs::CullMode> cull_mode;
+    BitField<6, 1, u8> flip_viewport;
 };
 
 union DepthStencilState {

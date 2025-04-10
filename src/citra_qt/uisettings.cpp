@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,8 +7,8 @@
 namespace UISettings {
 
 const Themes themes{{
-    {"Light", "default"},
-    {"Light Colorful", "colorful"},
+    {"System", "default"},
+    {"System With Colorful Icons", "colorful"},
     {"Dark", "qdarkstyle"},
     {"Dark Colorful", "colorful_dark"},
     {"Midnight Blue", "qdarkstyle_midnight_blue"},

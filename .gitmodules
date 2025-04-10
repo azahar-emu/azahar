@@ -6,7 +6,7 @@
     url = https://github.com/neobrain/nihstro.git
 [submodule "soundtouch"]
     path = externals/soundtouch
-    url = https://codeberg.org/soundtouch/soundtouch.git
+    url = https://github.com/azahar-emu/soundtouch.git
 [submodule "catch2"]
     path = externals/catch2
     url = https://github.com/catchorg/Catch2

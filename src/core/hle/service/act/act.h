@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,9 @@ namespace Service::ACT {
 /// Initializes all ACT services
 class Module final {
 public:
+    explicit Module(Core::System& system_);
+    ~Module() = default;
+
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> act, const char* name);
@@ -62,11 +65,17 @@ public:
     };
 
 private:
+    [[maybe_unused]]
+    Core::System& system;
+
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int file_version) {}
+    void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
 };
 
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::ACT
+
+BOOST_CLASS_EXPORT_KEY(Service::ACT::Module)
+SERVICE_CONSTRUCT(Service::ACT::Module)

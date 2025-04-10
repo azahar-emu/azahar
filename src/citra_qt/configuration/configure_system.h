@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -51,19 +51,21 @@ private:
     void UpdateInitTime(int init_clock);
     void UpdateInitTicks(int init_ticks_type);
     void RefreshConsoleID();
+    void RefreshMAC();
+    void UnlinkConsole();
+    void CheckCountryValid(u8 country);
 
     void InstallSecureData(const std::string& from_path, const std::string& to_path);
     void RefreshSecureDataStatus();
 
     void SetupPerGameUI();
 
-    void DownloadFromNUS();
-
 private:
     std::unique_ptr<Ui::ConfigureSystem> ui;
     Core::System& system;
     ConfigurationShared::CheckState is_new_3ds;
     ConfigurationShared::CheckState lle_applets;
+    ConfigurationShared::CheckState required_online_lle_modules;
     bool enabled = false;
 
     std::shared_ptr<Service::CFG::Module> cfg;
@@ -75,4 +77,5 @@ private:
     u8 country_code;
     u16 play_coin;
     bool system_setup;
+    std::string mac_address;
 };

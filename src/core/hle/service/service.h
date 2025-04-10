@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/construct.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -183,12 +184,13 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system);
+void Init(Core::System& system, u64 loading_titleid, std::vector<u64>& lle_modules, bool allow_lle);
 
 struct ServiceModuleInfo {
     std::string name;
     u64 title_id;
     std::function<void(Core::System&)> init_function;
+    bool is_online_recommended;
 };
 
 extern const std::array<ServiceModuleInfo, 41> service_module_map;
@@ -218,6 +220,7 @@ extern const std::array<ServiceModuleInfo, 41> service_module_map;
 #define SERVICE_SERIALIZATION_SIMPLE                                                               \
     template <class Archive>                                                                       \
     void serialize(Archive& ar, const unsigned int) {                                              \
+        DEBUG_SERIALIZATION_POINT;                                                                 \
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);               \
     }                                                                                              \
     friend class boost::serialization::access;

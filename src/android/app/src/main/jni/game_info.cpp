@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -17,7 +17,7 @@
 
 namespace {
 
-std::vector<u8> GetSMDHData(const std::string& path) {
+std::vector<u8> GetSMDHData(const std::string& path, bool& is_encrypted) {
     std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(path);
     if (!loader) {
         return {};
@@ -26,9 +26,13 @@ std::vector<u8> GetSMDHData(const std::string& path) {
     u64 program_id = 0;
     loader->ReadProgramId(program_id);
 
-    std::vector<u8> smdh = [program_id, &loader]() -> std::vector<u8> {
+    std::vector<u8> smdh = [program_id, &loader, &is_encrypted]() -> std::vector<u8> {
         std::vector<u8> original_smdh;
-        loader->ReadIcon(original_smdh);
+        auto result = loader->ReadIcon(original_smdh);
+        if (result == Loader::ResultStatus::ErrorEncrypted) {
+            is_encrypted = true;
+            return original_smdh;
+        }
 
         if (program_id < 0x00040000'00000000 || program_id > 0x00040000'FFFFFFFF)
             return original_smdh;
@@ -62,14 +66,24 @@ static Loader::SMDH* GetPointer(JNIEnv* env, jobject obj) {
 
 JNIEXPORT jlong JNICALL Java_org_citra_citra_1emu_model_GameInfo_initialize(JNIEnv* env, jclass,
                                                                             jstring j_path) {
-    std::vector<u8> smdh_data = GetSMDHData(GetJString(env, j_path));
+    bool is_encrypted = false;
+    std::vector<u8> smdh_data = GetSMDHData(GetJString(env, j_path), is_encrypted);
 
     Loader::SMDH* smdh = nullptr;
-    if (Loader::IsValidSMDH(smdh_data)) {
+    if (is_encrypted) {
+        smdh = new Loader::SMDH;
+        smdh->magic = 0xDEADDEAD;
+    } else if (Loader::IsValidSMDH(smdh_data)) {
         smdh = new Loader::SMDH;
         std::memcpy(smdh, smdh_data.data(), sizeof(Loader::SMDH));
     }
     return reinterpret_cast<jlong>(smdh);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_model_GameInfo_isEncrypted(JNIEnv* env,
+                                                                                jobject obj) {
+    Loader::SMDH* smdh = GetPointer(env, obj);
+    return smdh->magic == 0xDEADDEAD;
 }
 
 JNIEXPORT void JNICALL Java_org_citra_citra_1emu_model_GameInfo_finalize(JNIEnv* env, jobject obj) {

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -40,9 +40,11 @@ ConfigureGeneral::ConfigureGeneral(bool is_powered_on, QWidget* parent)
     ui->emulation_speed_display_label->setMinimumWidth(width);
     ui->emulation_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->screenshot_combo->setVisible(!Settings::IsConfiguringGlobal());
-    ui->updateBox->setVisible(UISettings::values.updater_found);
 #ifndef __unix__
     ui->toggle_gamemode->setVisible(false);
+#endif
+#ifndef ENABLE_QT_UPDATE_CHECKER
+    ui->toggle_update_checker->setVisible(false);
 #endif
 
     SetupPerGameUI();
@@ -63,12 +65,14 @@ ConfigureGeneral::ConfigureGeneral(bool is_powered_on, QWidget* parent)
     });
 
     connect(ui->change_screenshot_dir, &QToolButton::clicked, this, [this] {
+        ui->change_screenshot_dir->setEnabled(false);
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select Screenshot Directory"), ui->screenshot_dir_path->text(),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
             ui->screenshot_dir_path->setText(dir_path);
         }
+        ui->change_screenshot_dir->setEnabled(true);
     });
 }
 
@@ -86,10 +90,8 @@ void ConfigureGeneral::SetConfiguration() {
         ui->toggle_background_mute->setChecked(
             UISettings::values.mute_when_in_background.GetValue());
         ui->toggle_hide_mouse->setChecked(UISettings::values.hide_mouse.GetValue());
-
-        ui->toggle_update_check->setChecked(
+        ui->toggle_update_checker->setChecked(
             UISettings::values.check_for_update_on_start.GetValue());
-        ui->toggle_auto_update->setChecked(UISettings::values.update_on_close.GetValue());
 #ifdef __unix__
         ui->toggle_gamemode->setChecked(Settings::values.enable_gamemode.GetValue());
 #endif
@@ -133,16 +135,6 @@ void ConfigureGeneral::SetConfiguration() {
                                           !UISettings::values.screenshot_path.UsingGlobal());
         ConfigurationShared::SetHighlight(ui->emulation_speed_layout,
                                           !Settings::values.frame_limit.UsingGlobal());
-        ConfigurationShared::SetHighlight(ui->widget_region,
-                                          !Settings::values.region_value.UsingGlobal());
-        const bool is_region_global = Settings::values.region_value.UsingGlobal();
-        ui->region_combobox->setCurrentIndex(
-            is_region_global ? ConfigurationShared::USE_GLOBAL_INDEX
-                             : static_cast<int>(Settings::values.region_value.GetValue()) +
-                                   ConfigurationShared::USE_GLOBAL_OFFSET + 1);
-    } else {
-        // The first item is "auto-select" with actual value -1, so plus one here will do the trick
-        ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
     }
 
     UISettings::values.screenshot_path.SetGlobal(ui->screenshot_combo->currentIndex() ==
@@ -157,12 +149,14 @@ void ConfigureGeneral::SetConfiguration() {
 }
 
 void ConfigureGeneral::ResetDefaults() {
+    ui->button_reset_defaults->setEnabled(false);
     QMessageBox::StandardButton answer = QMessageBox::question(
         this, tr("Azahar"),
         tr("Are you sure you want to <b>reset your settings</b> and close Azahar?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if (answer == QMessageBox::No) {
+        ui->button_reset_defaults->setEnabled(true);
         return;
     }
 
@@ -172,9 +166,6 @@ void ConfigureGeneral::ResetDefaults() {
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.region_value, ui->region_combobox,
-                                             [](s32 index) { return index - 1; });
-
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.frame_limit, ui->emulation_speed_combo, [this](s32) {
             const bool is_maximum = ui->frame_limit->value() == ui->frame_limit->maximum();
@@ -190,9 +181,7 @@ void ConfigureGeneral::ApplyConfiguration() {
         UISettings::values.pause_when_in_background = ui->toggle_background_pause->isChecked();
         UISettings::values.mute_when_in_background = ui->toggle_background_mute->isChecked();
         UISettings::values.hide_mouse = ui->toggle_hide_mouse->isChecked();
-
-        UISettings::values.check_for_update_on_start = ui->toggle_update_check->isChecked();
-        UISettings::values.update_on_close = ui->toggle_auto_update->isChecked();
+        UISettings::values.check_for_update_on_start = ui->toggle_update_checker->isChecked();
 #ifdef __unix__
         Settings::values.enable_gamemode = ui->toggle_gamemode->isChecked();
 #endif
@@ -205,7 +194,6 @@ void ConfigureGeneral::RetranslateUI() {
 
 void ConfigureGeneral::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
         if (is_powered_on) {
             ui->frame_limit->setEnabled(false);
         } else {
@@ -228,11 +216,7 @@ void ConfigureGeneral::SetupPerGameUI() {
 
     ui->turbo_speed->setVisible(false);
     ui->general_group->setVisible(false);
-    ui->updateBox->setVisible(false);
     ui->button_reset_defaults->setVisible(false);
     ui->toggle_gamemode->setVisible(false);
-
-    ConfigurationShared::SetColoredComboBox(
-        ui->region_combobox, ui->widget_region,
-        static_cast<u32>(Settings::values.region_value.GetValue(true) + 1));
+    ui->toggle_update_checker->setVisible(false);
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,6 +30,12 @@ enum class RequestParameterType : u16 {
     IN_INTEGER_64 = 3,
     IN_SMALL_BUFFER = 4,
     IN_BIG_BUFFER = 5,
+};
+enum class LogOnServerType : u8 {
+    LOG_DEBUG = 0,
+    LOG_INFO = 1,
+    LOG_WARNING = 2,
+    LOG_ERROR = 3,
 };
 struct RequestParameter {
     RequestParameterType type{};

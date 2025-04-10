@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -66,6 +66,8 @@ public:
     size_t GetSerializedSize() {
         return serialized_size;
     }
+
+    bool IsPersonal();
 
 private:
     Body ticket_body;

@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -573,9 +573,11 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     capture_buffer_info.reset();
 
     if (Settings::values.lle_applets) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(system, FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (process) {
             return ResultSuccess;
         }
@@ -602,9 +604,11 @@ Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     last_prepared_library_applet = applet_id;
 
     if (Settings::values.lle_applets) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(system, FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (process) {
             return ResultSuccess;
         }
@@ -814,9 +818,11 @@ Result AppletManager::StartSystemApplet(AppletId applet_id, std::shared_ptr<Kern
     const auto slot_id =
         applet_id == AppletId::HomeMenu ? AppletSlot::HomeMenu : AppletSlot::SystemApplet;
     if (!GetAppletSlot(slot_id)->registered) {
+        bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
-        auto process = NS::LaunchTitle(system, FS::MediaType::NAND,
-                                       GetTitleIdForApplet(applet_id, cfg->GetRegionValue()));
+        auto process =
+            NS::LaunchTitle(system, FS::MediaType::NAND,
+                            GetTitleIdForApplet(applet_id, cfg->GetRegionValue(is_setup)));
         if (!process) {
             // TODO: Find the right error code.
             return {ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotSupported,
@@ -1422,7 +1428,7 @@ void AppletManager::EnsureHomeMenuLoaded() {
     }
 
     auto cfg = Service::CFG::GetModule(system);
-    auto menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, cfg->GetRegionValue());
+    auto menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, cfg->GetRegionValue(false));
     auto process = NS::LaunchTitle(system, FS::MediaType::NAND, menu_title_id);
     if (!process) {
         LOG_WARNING(Service_APT,

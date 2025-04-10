@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Citra</string>
+   <string>Azahar</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>dist/citra.png</normaloff>dist/citra.png</iconset>
+    <normaloff>dist/azahar.png</normaloff>dist/azahar.png</iconset>
   </property>
   <property name="tabShape">
    <enum>QTabWidget::Rounded</enum>
@@ -50,7 +50,7 @@
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
-     <string>&amp;File</string>
+     <string>File</string>
     </property>
     <widget class="QMenu" name="menu_Boot_Home_Menu">
      <property name="title">
@@ -79,6 +79,8 @@
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="action_Connect_Artic"/>
+    <addaction name="separator"/>
+    <addaction name="action_Setup_System_Files"/>
     <addaction name="menu_Boot_Home_Menu"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
@@ -91,7 +93,7 @@
    </widget>
    <widget class="QMenu" name="menu_Emulation">
     <property name="title">
-     <string>&amp;Emulation</string>
+     <string>Emulation</string>
     </property>
     <widget class="QMenu" name="menu_Save_State">
      <property name="title">
@@ -119,7 +121,7 @@
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
-     <string>&amp;View</string>
+     <string>View</string>
     </property>
     <widget class="QMenu" name="menu_View_Debugging">
      <property name="title">
@@ -207,10 +209,8 @@
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
-     <string>&amp;Help</string>
+     <string>Help</string>
     </property>
-    <addaction name="action_Check_For_Updates"/>
-    <addaction name="action_Open_Maintenance_Tool"/>
     <addaction name="separator"/>
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
@@ -238,6 +238,11 @@
   <action name="action_Connect_Artic">
     <property name="text">
       <string>Connect to Artic Base...</string>
+    </property>
+  </action>
+  <action name="action_Setup_System_Files">
+    <property name="text">
+      <string>Set Up System Files...</string>
     </property>
   </action>
   <action name="action_Boot_Home_Menu_JPN">
@@ -277,7 +282,7 @@
   </action>
   <action name="action_Exit">
    <property name="text">
-    <string>E&amp;xit</string>
+    <string>Exit</string>
    </property>
   </action>
   <action name="action_Pause">
@@ -285,7 +290,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Pause</string>
+    <string>Pause</string>
    </property>
   </action>
   <action name="action_Stop">
@@ -293,7 +298,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>&amp;Stop</string>
+    <string>Stop</string>
    </property>
   </action>
   <action name="action_Save">
@@ -491,15 +496,7 @@
     <string>Open Log Folder</string>
    </property>
    <property name="toolTip">
-    <string>Opens the Citra Log folder</string>
-   </property>
-  </action>
-  <action name="action_Open_Maintenance_Tool">
-   <property name="text">
-    <string>Modify Citra Install</string>
-   </property>
-   <property name="toolTip">
-    <string>Opens the maintenance tool to modify your Citra installation</string>
+    <string>Opens the Azahar Log folder</string>
    </property>
   </action>
   <action name="action_Screen_Layout_Default">
@@ -638,20 +635,9 @@
     <string>Rotate Upright</string>
    </property>
   </action>
-  <action name="action_Check_For_Updates">
-   <property name="text">
-    <string>Check for Updates</string>
-   </property>
-  </action>
   <action name="action_Report_Compatibility">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Report Compatibility</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
    </property>
   </action>
   <action name="action_Restart">

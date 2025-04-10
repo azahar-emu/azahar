@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,6 +41,7 @@ namespace Service::APT {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
+    DEBUG_SERIALIZATION_POINT;
     ar & shared_font_mem;
     ar & shared_font_loaded;
     ar & shared_font_relocated;
@@ -195,7 +196,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 bool Module::LoadSharedFont() {
     auto cfg = Service::CFG::GetModule(system);
     u8 font_region_code;
-    switch (cfg->GetRegionValue()) {
+    switch (cfg->GetRegionValue(false)) {
     case 4: // CHN
         font_region_code = 2;
         break;
