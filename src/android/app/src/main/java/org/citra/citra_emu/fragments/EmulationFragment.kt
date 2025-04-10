@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,6 +27,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
@@ -244,8 +245,15 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             )
         }
 
-        binding.inGameMenu.getHeaderView(0).findViewById<TextView>(R.id.text_game_title).text =
-            game.title
+        binding.inGameMenu.getHeaderView(0).apply {
+            val titleView = findViewById<TextView>(R.id.text_game_title)
+            val iconView = findViewById<ImageView>(R.id.game_icon)
+
+            titleView.text = game.title
+
+            GameIconUtils.loadGameIcon(requireActivity(), game, iconView)
+        }
+
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {

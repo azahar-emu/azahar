@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -79,13 +79,13 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     if (!backend->AllowsCachedReads()) {
         auto& buffer = rp.PopMappedBuffer();
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-        std::unique_ptr<u8*> data = std::make_unique<u8*>(static_cast<u8*>(operator new(length)));
-        const auto read = backend->Read(offset, length, *data);
+        std::unique_ptr<u8[]> data = std::make_unique_for_overwrite<u8[]>(length);
+        const auto read = backend->Read(offset, length, data.get());
         if (read.Failed()) {
             rb.Push(read.Code());
             rb.Push<u32>(0);
         } else {
-            buffer.Write(*data, 0, *read);
+            buffer.Write(data.get(), 0, *read);
             rb.Push(ResultSuccess);
             rb.Push<u32>(static_cast<u32>(*read));
         }
@@ -106,7 +106,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         // Output
         Result ret{0};
         Kernel::MappedBuffer* buffer;
-        std::unique_ptr<u8*> data;
+        std::unique_ptr<u8[]> data;
         std::size_t read_size;
     };
 
@@ -122,10 +122,9 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     // LOG_DEBUG(Service_FS, "cache={}, offset={}, length={}", cache_ready, offset, length);
     ctx.RunAsync(
         [this, async_data](Kernel::HLERequestContext& ctx) {
-            async_data->data =
-                std::make_unique<u8*>(static_cast<u8*>(operator new(async_data->length)));
+            async_data->data = std::make_unique_for_overwrite<u8[]>(async_data->length);
             const auto read =
-                backend->Read(async_data->offset, async_data->length, *async_data->data);
+                backend->Read(async_data->offset, async_data->length, async_data->data.get());
             if (read.Failed()) {
                 async_data->ret = read.Code();
                 async_data->read_size = 0;
@@ -156,7 +155,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                 rb.Push(async_data->ret);
                 rb.Push<u32>(0);
             } else {
-                async_data->buffer->Write(*async_data->data, 0, async_data->read_size);
+                async_data->buffer->Write(async_data->data.get(), 0, async_data->read_size);
                 rb.Push(ResultSuccess);
                 rb.Push<u32>(static_cast<u32>(async_data->read_size));
             }

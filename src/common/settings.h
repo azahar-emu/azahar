@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -450,7 +450,10 @@ struct Values {
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
-    SwitchableSetting<bool> lle_applets{false, "lle_applets"};
+    SwitchableSetting<bool> lle_applets{true, "lle_applets"};
+    SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
+    SwitchableSetting<bool> enable_required_online_lle_modules{
+        false, "enable_required_online_lle_modules"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
@@ -617,5 +620,15 @@ void SaveProfile(int index);
 void CreateProfile(std::string name);
 void DeleteProfile(int index);
 void RenameCurrentProfile(std::string new_name);
+
+extern bool is_temporary_frame_limit;
+extern double temporary_frame_limit;
+static inline void ResetTemporaryFrameLimit() {
+    is_temporary_frame_limit = false;
+    temporary_frame_limit = 0;
+}
+static inline double GetFrameLimit() {
+    return is_temporary_frame_limit ? temporary_frame_limit : values.frame_limit.GetValue();
+}
 
 } // namespace Settings

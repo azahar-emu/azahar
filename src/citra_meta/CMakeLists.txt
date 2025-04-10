@@ -9,7 +9,7 @@ set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "azahar")
 if (APPLE)
     set(DIST_DIR "../../dist/apple")
     set(APPLE_RESOURCES
-        "${DIST_DIR}/citra.icns"
+        "${DIST_DIR}/azahar.icns"
         "${DIST_DIR}/LaunchScreen.storyboard"
         "${DIST_DIR}/launch_logo.png"
     )
@@ -25,7 +25,7 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${BUILD_FULLNAME}"
-        MACOSX_BUNDLE_ICON_FILE "citra.icns"
+        MACOSX_BUNDLE_ICON_FILE "azahar.icns"
         RESOURCE "${APPLE_RESOURCES}"
     )
 

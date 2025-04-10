@@ -13,6 +13,7 @@ import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
@@ -241,6 +242,30 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
     }
 
+    private var countryCompatibilityChanged = true
+
+    private fun checkCountryCompatibility() {
+        if (countryCompatibilityChanged) {
+            countryCompatibilityChanged = false
+            val compatFlags = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
+            if (compatFlags != 0) {
+                var message = ""
+                if (compatFlags and 1 != 0) {
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
+                }
+                if (compatFlags and 2 != 0) {
+                    if (message.isNotEmpty()) message += "\n\n"
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_console)
+                }
+                MaterialAlertDialogBuilder(settingsAdapter.context)
+                    .setTitle(R.string.region_mismatch)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
     private fun addSystemSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_system))
@@ -255,51 +280,74 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val valueAsString get() = string
                 override val defaultValue = "AZAHAR"
             }
+            add(HeaderSetting(R.string.emulation_settings))
             add(
-                StringInputSetting(
-                    usernameSetting,
-                    R.string.username,
+                SwitchSetting(
+                    IntSetting.NEW_3DS,
+                    R.string.new_3ds,
                     0,
-                    "AZAHAR",
-                    10
+                    IntSetting.NEW_3DS.key,
+                    IntSetting.NEW_3DS.defaultValue
                 )
             )
             add(
+                SwitchSetting(
+                    IntSetting.LLE_APPLETS,
+                    R.string.lle_applets,
+                    0,
+                    IntSetting.LLE_APPLETS.key,
+                    IntSetting.LLE_APPLETS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES,
+                    R.string.enable_required_online_lle_modules,
+                    R.string.enable_required_online_lle_modules_desc,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.key,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.defaultValue
+                )
+            )
+            add(HeaderSetting(R.string.profile_settings))
+            val regionSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() {
+                        val ret = IntSetting.EMULATED_REGION.int
+                        checkCountryCompatibility()
+                        return ret
+                    }
+                    set(value) {
+                        IntSetting.EMULATED_REGION.int = value
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
+                override val key = IntSetting.EMULATED_REGION.key
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = IntSetting.EMULATED_REGION.defaultValue
+            }
+            add(
                 SingleChoiceSetting(
-                    IntSetting.EMULATED_REGION,
+                    regionSetting,
                     R.string.emulated_region,
                     0,
                     R.array.regionNames,
                     R.array.regionValues,
-                    IntSetting.EMULATED_REGION.key,
-                    IntSetting.EMULATED_REGION.defaultValue
                 )
             )
-
-            val systemLanguageSetting = object : AbstractIntSetting {
-                override var int: Int
-                    get() = SystemSaveGame.getSystemLanguage()
-                    set(value) = SystemSaveGame.setSystemLanguage(value)
-                override val key = null
-                override val section = null
-                override val isRuntimeEditable = false
-                override val valueAsString get() = int.toString()
-                override val defaultValue = 1
-            }
-            add(
-                SingleChoiceSetting(
-                    systemLanguageSetting,
-                    R.string.emulated_language,
-                    0,
-                    R.array.languageNames,
-                    R.array.languageValues
-                )
-            )
-
             val systemCountrySetting = object : AbstractShortSetting {
                 override var short: Short
-                    get() = SystemSaveGame.getCountryCode()
-                    set(value) = SystemSaveGame.setCountryCode(value)
+                    get() {
+                        val ret = SystemSaveGame.getCountryCode()
+                        checkCountryCompatibility()
+                        return ret;
+                    }
+                    set(value) {
+                        SystemSaveGame.setCountryCode(value)
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
                 override val key = null
                 override val section = null
                 override val isRuntimeEditable = false
@@ -321,7 +369,34 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     countries.map { it.second }.toTypedArray()
                 )
             )
-
+            val systemLanguageSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = SystemSaveGame.getSystemLanguage()
+                    set(value) = SystemSaveGame.setSystemLanguage(value)
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = 1
+            }
+            add(
+                SingleChoiceSetting(
+                    systemLanguageSetting,
+                    R.string.emulated_language,
+                    0,
+                    R.array.languageNames,
+                    R.array.languageValues
+                )
+            )
+            add(
+                StringInputSetting(
+                    usernameSetting,
+                    R.string.username,
+                    0,
+                    "AZAHAR",
+                    10
+                )
+            )
             val playCoinSettings = object : AbstractIntSetting {
                 override var int: Int
                     get() = SystemSaveGame.getPlayCoins()
@@ -362,6 +437,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     { settingsAdapter.onClickRegenerateConsoleId() },
                     { "0x${SystemSaveGame.getConsoleId().toHexString().uppercase()}" }
+                )
+            )
+            add(
+                RunnableSetting(
+                    R.string.mac_address,
+                    0,
+                    false,
+                    0,
+                    { settingsAdapter.onClickRegenerateMAC() },
+                    { SystemSaveGame.getMac() }
                 )
             )
 
@@ -693,7 +778,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     IntSetting.USE_ARTIC_BASE_CONTROLLER,
                     R.string.use_artic_base_controller,
-                    R.string.use_artic_base_controller_desc,
+                    R.string.use_artic_base_controller_description,
                     IntSetting.USE_ARTIC_BASE_CONTROLLER.key,
                     IntSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
@@ -831,7 +916,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.factor3d,
                     R.string.factor3d_description,
                     0,
-                    100,
+                    255,
                     "%",
                     IntSetting.STEREOSCOPIC_3D_DEPTH.key,
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()
@@ -914,6 +999,19 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
+            add(HeaderSetting(R.string.advanced))
+            add(
+                SingleChoiceSetting(
+                    IntSetting.TEXTURE_SAMPLING,
+                    R.string.texture_sampling_name,
+                    R.string.texture_sampling_description,
+                    R.array.textureSamplingNames,
+                    R.array.textureSamplingValues,
+                    IntSetting.TEXTURE_SAMPLING.key,
+                    IntSetting.TEXTURE_SAMPLING.defaultValue
+                )
+            )
+
             // Disabled until custom texture implementation gets rewrite, current one overloads RAM
             // and crashes Citra.
             // add(
@@ -940,6 +1038,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.screenOrientationValues,
                     IntSetting.ORIENTATION_OPTION.key,
                     IntSetting.ORIENTATION_OPTION.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA,
+                    R.string.expand_to_cutout_area,
+                    R.string.expand_to_cutout_area_description,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.key,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.defaultValue
                 )
             )
             add(
@@ -1406,24 +1513,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
             add(
-                SwitchSetting(
-                    IntSetting.NEW_3DS,
-                    R.string.new_3ds,
-                    0,
-                    IntSetting.NEW_3DS.key,
-                    IntSetting.NEW_3DS.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    IntSetting.LLE_APPLETS,
-                    R.string.lle_applets,
-                    0,
-                    IntSetting.LLE_APPLETS.key,
-                    IntSetting.LLE_APPLETS.defaultValue
-                )
-            )
-            add(
                 SliderSetting(
                     IntSetting.CPU_CLOCK_SPEED,
                     R.string.cpu_clock_speed,
@@ -1475,11 +1564,30 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.INSTANT_DEBUG_LOG,
                     R.string.instant_debug_log,
-                    R.string.instant_debug_log_desc,
+                    R.string.instant_debug_log_description,
                     BooleanSetting.INSTANT_DEBUG_LOG.key,
                     BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DELAY_START_LLE_MODULES,
+                    R.string.delay_start_lle_modules,
+                    R.string.delay_start_lle_modules_description,
+                    BooleanSetting.DELAY_START_LLE_MODULES.key,
+                    BooleanSetting.DELAY_START_LLE_MODULES.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS,
+                    R.string.deterministic_async_operations,
+                    R.string.deterministic_async_operations_description,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.key,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
+                )
+            )
+
         }
     }
 

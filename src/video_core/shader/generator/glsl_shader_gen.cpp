@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -37,6 +37,7 @@ layout (set = 0, binding = 1, std140) uniform vs_data {
 layout (binding = 1, std140) uniform vs_data {
 #endif
     bool enable_clip1;
+    bool flip_viewport;
     vec4 clip_coef;
 };
 
@@ -123,6 +124,9 @@ void main() {
     normquat = vert_normquat;
     view = vert_view;
     vec4 vtx_pos = SanitizeVertex(vert_position);
+    if (flip_viewport) {
+        vtx_pos.y = -vtx_pos.y;
+    }
     gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
     if (use_clip_planes) {
@@ -238,6 +242,9 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
         out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+        out += "    if (flip_viewport) {\n";
+        out += "        vtx_pos.y = -vtx_pos.y;\n";
+        out += "    }\n";
         out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
@@ -332,6 +339,9 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
     out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+    out += "    if (flip_viewport) {\n";
+    out += "        vtx_pos.y = -vtx_pos.y;\n";
+    out += "    }\n";
     out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0

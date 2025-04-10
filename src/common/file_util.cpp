@@ -516,11 +516,16 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
     return true;
 }
 
-u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
-                      unsigned int recursion) {
-    const auto callback = [recursion, &parent_entry](u64* num_entries_out,
-                                                     const std::string& directory,
-                                                     const std::string& virtual_name) -> bool {
+u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry, unsigned int recursion,
+                      std::atomic<bool>* stop_flag) {
+    const auto callback = [recursion, &parent_entry,
+                           stop_flag](u64* num_entries_out, const std::string& directory,
+                                      const std::string& virtual_name) -> bool {
+        // Break early and return error if stop is requested
+        if (stop_flag && *stop_flag) {
+            return false;
+        }
+
         FSTEntry entry;
         entry.virtualName = virtual_name;
         entry.physicalName = directory + DIR_SEP + virtual_name;
@@ -783,8 +788,15 @@ void SetUserPath(const std::string& path) {
     } else {
 #ifdef _WIN32
         user_path = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
+        std::string& legacy_citra_user_path = g_paths[UserPath::LegacyCitraUserDir];
+        std::string& legacy_lime3ds_user_path = g_paths[UserPath::LegacyLime3DSUserDir];
+
         if (!FileUtil::IsDirectory(user_path)) {
             user_path = AppDataRoamingDirectory() + DIR_SEP EMU_DATA_DIR DIR_SEP;
+            legacy_citra_user_path =
+                AppDataRoamingDirectory() + DIR_SEP LEGACY_CITRA_DATA_DIR DIR_SEP;
+            legacy_lime3ds_user_path =
+                AppDataRoamingDirectory() + DIR_SEP LEGACY_LIME3DS_DATA_DIR DIR_SEP;
         } else {
             LOG_INFO(Common_Filesystem, "Using the local user directory");
         }
@@ -796,6 +808,8 @@ void SetUserPath(const std::string& path) {
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
 #else
+        std::string& legacy_citra_user_path = g_paths[UserPath::LegacyCitraUserDir];
+        std::string& legacy_lime3ds_user_path = g_paths[UserPath::LegacyLime3DSUserDir];
         auto current_dir = FileUtil::GetCurrentDir();
         if (current_dir.has_value() &&
             FileUtil::Exists(current_dir.value() + USERDATA_DIR DIR_SEP)) {
@@ -804,23 +818,47 @@ void SetUserPath(const std::string& path) {
             g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
         } else {
             std::string data_dir = GetUserDirectory("XDG_DATA_HOME") + DIR_SEP EMU_DATA_DIR DIR_SEP;
+
+            std::string legacy_citra_data_dir =
+                GetUserDirectory("XDG_DATA_HOME") + DIR_SEP LEGACY_CITRA_DATA_DIR DIR_SEP;
+            std::string legacy_lime3ds_data_dir =
+                GetUserDirectory("XDG_DATA_HOME") + DIR_SEP LEGACY_LIME3DS_DATA_DIR DIR_SEP;
             std::string config_dir =
                 GetUserDirectory("XDG_CONFIG_HOME") + DIR_SEP EMU_DATA_DIR DIR_SEP;
             std::string cache_dir =
                 GetUserDirectory("XDG_CACHE_HOME") + DIR_SEP EMU_DATA_DIR DIR_SEP;
+
+            g_paths.emplace(UserPath::LegacyCitraConfigDir,
+                            GetUserDirectory("XDG_CONFIG_HOME") +
+                                DIR_SEP LEGACY_CITRA_DATA_DIR DIR_SEP);
+            g_paths.emplace(UserPath::LegacyCitraCacheDir,
+                            GetUserDirectory("XDG_CACHE_HOME") +
+                                DIR_SEP LEGACY_CITRA_DATA_DIR DIR_SEP);
+            g_paths.emplace(UserPath::LegacyLime3DSConfigDir,
+                            GetUserDirectory("XDG_CONFIG_HOME") +
+                                DIR_SEP LEGACY_LIME3DS_DATA_DIR DIR_SEP);
+            g_paths.emplace(UserPath::LegacyLime3DSCacheDir,
+                            GetUserDirectory("XDG_CACHE_HOME") +
+                                DIR_SEP LEGACY_LIME3DS_DATA_DIR DIR_SEP);
 
 #if defined(__APPLE__)
             // If XDG directories don't already exist from a previous setup, use standard macOS
             // paths.
             if (!FileUtil::Exists(data_dir) && !FileUtil::Exists(config_dir) &&
                 !FileUtil::Exists(cache_dir)) {
-                data_dir = GetHomeDirectory() + DIR_SEP APPLE_EMU_DATA_DIR DIR_SEP;
+                data_dir = GetHomeDirectory() + DIR_SEP EMU_APPLE_DATA_DIR DIR_SEP;
+                legacy_citra_data_dir =
+                    GetHomeDirectory() + DIR_SEP LEGACY_CITRA_APPLE_DATA_DIR DIR_SEP;
+                legacy_lime3ds_data_dir =
+                    GetHomeDirectory() + DIR_SEP LEGACY_LIME3DS_APPLE_DATA_DIR DIR_SEP;
                 config_dir = data_dir + CONFIG_DIR DIR_SEP;
                 cache_dir = data_dir + CACHE_DIR DIR_SEP;
             }
 #endif
 
             user_path = data_dir;
+            legacy_citra_user_path = legacy_citra_data_dir;
+            legacy_lime3ds_user_path = legacy_lime3ds_data_dir;
             g_paths.emplace(UserPath::ConfigDir, config_dir);
             g_paths.emplace(UserPath::CacheDir, cache_dir);
         }

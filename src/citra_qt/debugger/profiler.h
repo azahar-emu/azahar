@@ -1,8 +1,10 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
+
+#if MICROPROFILE_ENABLED
 
 #include <QWidget>
 #include "common/common_types.h"
@@ -24,3 +26,5 @@ protected:
 private:
     QAction* toggle_view_action = nullptr;
 };
+
+#endif

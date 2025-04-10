@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -46,9 +46,6 @@ union BatteryState {
 };
 
 using MacAddress = std::array<u8, 6>;
-
-// Default MAC address in the Nintendo 3DS range
-constexpr MacAddress DefaultMac = {0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
 enum class WifiLinkLevel : u8 {
     Off = 0,

@@ -1,0 +1,777 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_disclaimer">Este software irá executar aplicativos feitos para o console portátil Nintendo 3DS. Nenhum jogo está incluído.\n\nAntes de começar a emulação, selecione uma pasta para armazenar os dados do usuário do Azahar.\n\nO que é isto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dados e armazenamento do usuário do Azahar para Android</a></string>
+    <string name="app_notification_channel_description">Notificações do emulador Azahar 3DS</string>
+    <string name="app_notification_running">Azahar está Executando</string>
+    <string name="app_game_install_description">Em seguida, você precisará selecionar uma pasta de Aplicativos. O Azahar exibirá todas as ROMs de 3DS dentro da pasta selecionada no aplicativo.\n\nROMs, atualizações e DLC no formato CIA precisarão ser instaladas separadamente clicando no ícone da pasta e selecionando Instalar CIA.</string>
+    <string name="start">Iniciar</string>
+    <string name="cancelling">Cancelando...</string>
+    <string name="important">Importante</string>
+    <string name="dont_show_again">Não mostrar novamente</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Configurações</string>
+    <string name="home_options">Opções</string>
+    <string name="home_search">Procurar</string>
+    <string name="home_games">Aplicativos</string>
+    <string name="settings_description">Definir configurações do emulador</string>
+    <string name="install_game_content">Instale o arquivo CIA</string>
+    <string name="install_game_content_description">Instalar aplicativos, atualizações ou DLC</string>
+    <string name="share_log">Compartilhar registro</string>
+    <string name="share_log_description">Compartilhe o arquivo de log do Azahar para depurar problemas</string>
+    <string name="gpu_driver_manager">Gerenciador de driver da GPU</string>
+    <string name="install_gpu_driver">Instale o driver da GPU</string>
+    <string name="install_gpu_driver_description">Instale drivers alternativos para poder obter desempenho ou precisão</string>
+    <string name="driver_already_installed">Driver já instalado</string>
+    <string name="custom_driver_not_supported">Drivers personalizados não suportados</string>
+    <string name="custom_driver_not_supported_description">O carregamento de driver personalizado não é suportado atualmente para este dispositivo.\nVerifique esta opção novamente no futuro para ver se o suporte foi adicionado!</string>
+    <string name="share_log_not_found">Nenhum arquivo de log encontrado</string>
+    <string name="select_games_folder">Selecione a Pasta de Aplicativos</string>
+    <string name="select_games_folder_description">Permitir que o Azahar preencha a lista de aplicativos</string>
+    <string name="about">Sobre</string>
+    <string name="citra_description">Um emulador de 3DS de código aberto</string>
+    <string name="about_description">Versão de compilação, créditos e mais</string>
+    <string name="games_dir_selected">Diretório de aplicativos selecionado</string>
+    <string name="select_citra_user_folder_home_description">Altera os arquivos que o Azahar usa para carregar aplicativos</string>
+    <string name="theme_and_color_description">Modificar a aparência do aplicativo</string>
+    <string name="install_cia_title">Instale a CIA</string>
+    <string name="warning_3ds_files"><![CDATA[Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Saiba mais.</a>]]></string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">Selecione o driver GPU</string>
+    <string name="select_gpu_driver_title">Você quer substituir seu driver de GPU atual?</string>
+    <string name="select_gpu_driver_install">Instalar</string>
+    <string name="select_gpu_driver_default">Padrão</string>
+    <string name="select_gpu_driver_install_success">Instalado %s</string>
+    <string name="select_gpu_driver_use_default">Usando driver de GPU padrão</string>
+    <string name="select_gpu_driver_error">Driver inválido selecionado, usando o padrão do sistema!</string>
+    <string name="system_gpu_driver">Driver de GPU do sistema</string>
+    <string name="installing_driver">Instalando driver…</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Copiado para a área de transferência</string>
+    <string name="contributors">Contribuidores</string>
+    <string name="contributors_description">Contribuidores que tornaram o Azahar possível</string>
+    <string name="licenses_description">Projetos usados pelo Azahar para Android</string>
+    <string name="build">Compilação</string>
+    <string name="licenses">Licenças</string>
+    <!-- Setup strings -->
+    <string name="welcome">Bem-vindo</string>
+    <string name="welcome_description">Aprenda a como configurar o &lt;b>Azahar&lt;/b> e pule para a emulação.</string>
+    <string name="get_started">Comece agora</string>
+    <string name="step_complete">Concluído!</string>
+    <string name="games">Aplicativos</string>
+    <string name="games_description">Selecione sua pasta de &lt;b>Aplicativos&lt;/b> com o botão abaixo.</string>
+    <string name="done">Pronto</string>
+    <string name="done_description">Tudo certo.\nAproveite o emulador!</string>
+    <string name="text_continue">Continuar</string>
+    <string name="notifications">Notificações</string>
+    <string name="notifications_description">Conceda a permissão de notificação com o botão abaixo.</string>
+    <string name="give_permission">Conceder permissão</string>
+    <string name="notification_warning">Ignorar a solicitação de notificação?</string>
+    <string name="notification_warning_description">O Azahar não poderá te notificar de informações importantes.</string>
+    <string name="camera_permission">Câmera</string>
+    <string name="camera_permission_description">Conceda acesso a câmera abaixo para emular a câmera do 3DS.</string>
+    <string name="microphone_permission">Microfone</string>
+    <string name="microphone_permission_description">Conceda a acesso ao microfone abaixo para emular o microfone do 3DS.</string>
+    <string name="permission_denied">Permissão negada</string>
+    <string name="add_games_warning">Pular a seleção da pasta de aplicativos?</string>
+    <string name="add_games_warning_description">Os softwares não serão exibidos na lista de Aplicativos se uma pasta não for selecionada.</string>
+    <string name="warning_help">Ajuda</string>
+    <string name="warning_skip">Pular</string>
+    <string name="warning_cancel">Cancelar</string>
+    <string name="select_citra_user_folder">Selecione a Pasta do Usuário</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Selecione o seu diretório de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dados de usuário</a>com o botão abaixo.]]></string>
+    <string name="select">Selecionar</string>
+    <string name="cannot_skip">Você não pode pular esta etapa</string>
+    <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
+    <string name="set_up_theme_settings">Configurações de Tema</string>
+    <string name="setup_theme_settings_description">Configure suas preferências de tema para o Azahar.</string>
+    <string name="setup_set_theme">Definir Tema</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Pesquisar e Filtrar Aplicativos</string>
+    <string name="home_search_games">Pesquisar Aplicativos</string>
+    <string name="search_recently_played">Recentemente Jogado</string>
+    <string name="search_recently_added">Recentemente adicionado</string>
+    <string name="search_installed">Instalado</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Analógico</string>
+    <string name="controller_c">Direcional C-Stick</string>
+    <string name="controller_hotkeys">Teclas de atalho</string>
+    <string name="controller_triggers">Gatilhos</string>
+    <string name="controller_trigger">Gatilho</string>
+    <string name="controller_dpad">Direcional D-Pad</string>
+    <string name="controller_dpad_axis">D-Pad (Eixo)</string>
+    <string name="controller_dpad_axis_description">Alguns controles podem não ser capazes de mapear os D-pads para um eixo. Se esse for o caso, use a seção de D-Pad (Botões).</string>
+    <string name="controller_dpad_button">D-Pad (Botão)</string>
+    <string name="controller_dpad_button_description">Só mapeie o D-pad para isso se você se você estiver encontrando problemas com o mapeamento de botão do D-Pad (Eixo).</string>
+    <string name="controller_axis_vertical">Eixo vertical</string>
+    <string name="controller_axis_horizontal">Eixo horizontal</string>
+    <string name="direction_up">Cima</string>
+    <string name="direction_down">Baixo</string>
+    <string name="direction_left">Esquerda</string>
+    <string name="direction_right">Direita</string>
+    <string name="input_dialog_title">Vincular %1$s %2$s</string>
+    <string name="input_dialog_description">Pressione ou mova uma entrada.</string>
+    <string name="input_binding">Mapeamento de controles</string>
+    <string name="input_binding_description">Pressione ou mova um botão/alavanca para mapear para %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Mova o seu joystick para cima ou para baixo.</string>
+    <string name="input_binding_description_horizontal_axis">Mova o seu joystick para esquerda ou para direita.</string>
+    <string name="button_home">Menu Principal</string>
+    <string name="button_swap">Trocar telas</string>
+    <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
+    <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">Arquivos do Sistema</string>
+    <string name="setup_system_files_description">Executar operações de arquivos do sistema, como instalar arquivos do sistema ou iniciar o Menu Principal.</string>
+    <string name="setup_tool_connect">Conectar à Ferramenta de Configuração do Artic</string>
+    <string name="setup_system_files_detect">Buscando o status atual dos arquivos do sistema, por favor, aguarde...</string>
+    <string name="delete_system_files">Desvincular dados exclusivos do console</string>
+    <string name="setup_system_files_o3ds">Configuração do Antigo 3DS</string>
+    <string name="setup_system_files_n3ds">Configuração do Novo 3DS</string>
+    <string name="setup_system_files_possible">É possível configurar.</string>
+    <string name="setup_system_files_o3ds_needed">A configuração do Antigo 3DS é requisitada primeiro.</string>
+    <string name="setup_system_files_completed">A configuração já foi concluída.</string>
+    <string name="setup_system_files_enter_address">Digite o endereço da Ferramenta de Configuração do Artic</string>
+    <string name="setup_system_files_preparing">Preparando configuração, aguarde...</string>
+    <string name="boot_home_menu">Iniciar o MENU INICIAL</string>
+    <string name="show_home_apps">Mostrar apps do MENU INICIAL na lista de Aplicativos</string>
+    <string name="run_system_setup">Execute as configurações de sistema quando o Menu Principal for iniciado.</string>
+    <string name="home_menu">MENU INICIAL</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Botões</string>
+    <string name="button">Botão</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Utiliza um compilador Just-in-Time (JIT) para emulação da CPU. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="init_clock">Relógio</string>
+    <string name="init_clock_description">Configura o relógio emulado do 3DS para refletir o do seu dispositivo ou para começar numa data e hora simulados.</string>
+    <string name="cpu_clock_speed">Velocidade do Clock da CPU</string>
+
+    <!-- System settings strings -->
+    <string name="username">Nome de usuário</string>
+    <string name="new_3ds">Modo do Novo 3DS</string>
+    <string name="lle_applets">Usar miniaplicativos LLE (se instalados)</string>
+    <string name="clock">Relógio</string>
+    <string name="init_time">Tempo de deslocamento</string>
+    <string name="init_time_description">Se o relógio estiver definido como \"Relógio simulado\", isso altera a data e a hora fixas de início.</string>
+    <string name="emulated_region">Região</string>
+    <string name="emulated_language">Linguagem</string>
+    <string name="birthday">Aniversário</string>
+    <string name="birthday_month">Mês</string>
+    <string name="birthday_day">Dia</string>
+    <string name="country">País</string>
+    <string name="play_coins">Moedas de Jogo</string>
+    <string name="steps_per_hour">Passos do Pedômetro por Hora</string>
+    <string name="steps_per_hour_description">Número de passos por hora relatados pelo pedômetro. Na faixa de 0 a 65.535.</string>
+    <string name="console_id">ID do console</string>
+    <string name="regenerate_console_id">Gerar Novamente o ID do Console</string>
+    <string name="regenerate_console_id_description">Isso substituirá seu ID do console 3DS virtual atual por um novo. Seu ID do console 3DS virtual atual não poderá ser recuperado. Isso pode ter efeitos inesperados dentro dos aplicativos. Poderão ocorrer falhas ao usar um arquivo salvo de configuração desatualizado. Deseja continuar?</string>
+    <string name="plugin_loader">Carregador de Plug-ins 3GX</string>
+    <string name="plugin_loader_description">Carregar plug-ins 3GX do cartão SD emulado, se estiverem disponíveis.</string>
+    <string name="allow_plugin_loader">Permitir que os Aplicativos Alterem o Estado do Carregador de Plug-ins</string>
+    <string name="allow_plugin_loader_description">Permitir que aplicativos homebrew habilitem o carregador de plugins mesmo quando ele estiver desabilitado.</string>
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Câmera frontal</string>
+    <string name="outer_left_camera">Câmera traseira esquerda</string>
+    <string name="outer_right_camera">Câmera traseira direita</string>
+    <string name="image_source">Fonte da Imagem da Câmera</string>
+    <string name="image_source_description">Define a origem da imagem da câmera virtual. Você pode usar um arquivo de imagem ou uma câmera do dispositivo, quando compatível.</string>
+    <string name="camera_device">Câmera</string>
+    <string name="camera_device_description">Se a \"Origem da imagem\" for definida como \"Câmera do dispositivo\", esta opção define a câmera física a ser usada.</string>
+    <string name="camera_facing_front">Frontal</string>
+    <string name="camera_facing_back">Traseira</string>
+    <string name="camera_facing_external">Externa</string>
+    <string name="image_flip">Virar</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">Renderizador</string>
+    <string name="graphics_api">API de gráficos</string>
+    <string name="spirv_shader_gen">Ativar geração de shaders SPIR-V</string>
+    <string name="spirv_shader_gen_description">Emite o fragment shader usado para emular PICA usando SPIR-V em vez de GLSL</string>
+    <string name="async_shaders">Ativar a compilação assíncrona de shaders</string>
+    <string name="async_shaders_description">Compila shaders em segundo plano para reduzir travamentos durante o jogo. Quando ativado, espere falhas gráficas temporárias</string>
+    <string name="renderer_debug">Renderizador de Depuração</string>
+    <string name="renderer_debug_description">Registre informações adicionais de depuração relacionadas a gráficos. Quando ativado, o desempenho do jogo será significativamente reduzido.</string>
+    <string name="vsync">Ativar sincronização vertical</string>
+    <string name="vsync_description">Sincroniza a taxa de quadros do jogo com a taxa de atualização da tela do seu dispositivo.</string>
+    <string name="linear_filtering">Filtragem Linear</string>
+    <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
+    <string name="texture_filter_name">Filtro de texturas</string>
+    <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
+    <string name="advanced">Avançado\"</string>
+    <string name="texture_sampling_name">Amostragem de Texturas</string>
+    <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
+    <string name="hw_shaders">Ativar Shaders via Hardware</string>
+    <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="shaders_accurate_mul">Multiplicação precisa</string>
+    <string name="shaders_accurate_mul_description">Utiliza uma multiplicação mais precisa de shaders no hardware, o que pode corrigir problemas visuais. Quando ativada, pode haver redução no desempenho.</string>
+    <string name="asynchronous_gpu">Ativar emulação de GPU assíncrona</string>
+    <string name="asynchronous_gpu_description">Usa uma thread separada para emular a GPU de forma assíncrona. Esta opção aprimora o desempenho quando ativada.</string>
+    <string name="frame_limit_enable">Limite de velocidade</string>
+    <string name="frame_limit_enable_description">Quando ativado, a velocidade da emulação será limitada a uma porcentagem da velocidade normal.</string>
+    <string name="frame_limit_slider">Limite de velocidade percentual</string>
+    <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
+    <string name="internal_resolution">Resolução Interna</string>
+    <string name="internal_resolution_description">Especifica a resolução utilizada para renderização. Uma resolução alta melhorará muito a qualidade visual, mas poderá também impactar muito no desempenho e causar defeitos em certos aplicativos.</string>
+    <string name="internal_resolution_setting_1x">Nativo (400x240)</string>
+    <string name="internal_resolution_setting_2x">2x Nativo (800x480)</string>
+    <string name="internal_resolution_setting_3x">3x Nativo (1200x720)</string>
+    <string name="internal_resolution_setting_4x">4x Nativo (1600x960)</string>
+    <string name="internal_resolution_setting_5x">5x Nativo (2000x1200)</string>
+    <string name="internal_resolution_setting_6x">6x Nativo (2400x1440)</string>
+    <string name="internal_resolution_setting_7x">7x Nativo (2800x1680)</string>
+    <string name="internal_resolution_setting_8x">8x Nativo (3200x1920)</string>
+    <string name="internal_resolution_setting_9x">9x Nativo (3600x2160)</string>
+    <string name="internal_resolution_setting_10x">10x Nativo (4000x2400)</string>
+    <string name="performance_warning">Desativar esta opção reduzirá consideravelmente o desempenho da emulação! Para obter a melhor experiência, recomendamos deixá-la ativada.</string>
+    <string name="debug_warning">Aviso: modificar estas configurações tornará a emulação mais lenta</string>
+    <string name="stereoscopy">Estereoscopia</string>
+    <string name="render3d">Modo 3D Estereoscópico</string>
+    <string name="factor3d">Profundidade</string>
+    <string name="factor3d_description">Especifica o valor do controle deslizante 3D. Deve ser definido como superior a 0% quando o 3D Estereoscópico estiver ativado.\nNota: Valores de profundidade acima de 100% não são possíveis no hardware real e podem causar problemas gráficos</string>
+    <string name="cardboard_vr">VR Cardboard </string>
+    <string name="cardboard_screen_size">Tamanho da Tela do Cardboard</string>
+    <string name="cardboard_screen_size_description">Dimensiona a tela para uma porcentagem de seu tamanho original.</string>
+    <string name="cardboard_x_shift">Deslocamento Horizontal</string>
+    <string name="cardboard_x_shift_description">Especifica a porcentagem de espaço vazio para deslocar as telas horizontalmente. Os valores positivos aproximam os dois olhos do meio, enquanto os valores negativos os afastam.</string>
+    <string name="cardboard_y_shift">Deslocamento Vertical</string>
+    <string name="cardboard_y_shift_description">Especifica a porcentagem de espaço vazio para deslocar as telas verticalmente. Valores positivos movem os dois olhos para baixo, enquanto valores negativos os movem para cima.</string>
+    <string name="use_shader_jit">Sombreador JIT</string>
+    <string name="use_disk_shader_cache">Cache de Sombreadores em Disco</string>
+    <string name="use_disk_shader_cache_description">Reduz as interrupções armazenando e carregando os sombreadores gerados no disco. Não pode ser usado sem ativar o Sombreador de Hardware.</string>
+    <string name="utility">Utilitário</string>
+    <string name="dump_textures">Extrair Texturas</string>
+    <string name="dump_textures_description">As texturas são extraídas em dump/textures/[Title ID]/.</string>
+    <string name="custom_textures">Texturas personalizadas</string>
+    <string name="custom_textures_description">As texturas são carregadas de load/textures/[Title ID]/.</string>
+    <string name="preload_textures">Pré-carregar Texturas Personalizadas</string>
+    <string name="preload_textures_description">Carrega todas as texturas personalizadas na memória. Este recurso pode usar muita memória.</string>
+    <string name="async_custom_loading">Carregamento assíncrono de texturas personalizadas</string>
+    <string name="async_custom_loading_description">Carrega texturas personalizadas de forma assíncrona com threads de segundo plano para reduzir travamentos.</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Volume</string>
+    <string name="audio_stretch">Alongamento de Áudio</string>
+    <string name="audio_stretch_description">Estica o áudio para reduzir engasgos. Quando ativado, aumenta a latência do áudio e reduz levemente o desempenho.</string>
+    <string name="realtime_audio">Ativar áudio em tempo real</string>
+    <string name="realtime_audio_description">Dimensiona a velocidade de reprodução de áudio para compensar quedas na taxa de quadros da emulação. Isso significa que o áudio será reproduzido em velocidade máxima mesmo quando a taxa de quadros do jogo estiver baixa. Pode causar problemas de dessincronização de áudio.</string>
+    <string name="audio_input_type">Dispositivo de entrada de áudio</string>
+    <string name="sound_output_mode">Modo de Saída de Som</string>
+
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">Orientação da Tela</string>
+    <string name="layout_screen_orientation_auto_sensor">Automático</string>
+    <string name="layout_screen_orientation_landscape">Paisagem</string>
+    <string name="layout_screen_orientation_landscape_reverse">Paisagem Reversa</string>
+    <string name="layout_screen_orientation_portrait">Retrato</string>
+    <string name="layout_screen_orientation_portrait_reverse">Retrato Reverso</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Limpar</string>
+    <string name="slider_default">Padrão</string>
+    <string name="ini_saved">As configurações foram salvas</string>
+    <string name="gameid_saved">As configurações de %1$s foram salvas</string>
+    <string name="error_saving">Erro ao salvar %1$s.ini: %2$s</string>
+    <string name="loading">Carregando…</string>
+    <string name="next">Próximo</string>
+    <string name="back">Voltar</string>
+    <string name="learn_more">Saber mais</string>
+    <string name="close">Fechar</string>
+    <string name="reset_to_default">Redefinir para o Padrão</string>
+    <string name="redump_games"><![CDATA[Por favor, siga os tutoriais para recarregar seus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuchos de jogos</a> ou <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títulos instalados</a>.]]></string>
+    <string name="option_default">Padrão</string>
+    <string name="none">Nenhum</string>
+    <string name="auto">Automático</string>
+    <string name="off">Desligado</string>
+    <string name="install">Instalar</string>
+    <string name="delete">Excluir</string>
+    <string name="reset_all_settings">Redefinir todas as configurações?</string>
+    <string name="reset_all_settings_description">Todas as configurações avançadas serão redefinidas para sua configuração padrão. Isso não pode ser desfeito.</string>
+    <string name="settings_reset">Configurações redefinidas</string>
+    <string name="select_rtc_date">Selecione a data RTC</string>
+    <string name="select_rtc_time">Selecione o horário RTC</string>
+    <string name="reset_setting_confirmation">Você quer redefinir essa configuração para o valor padrão?</string>
+    <string name="setting_not_editable">Você não pode editar isso agora</string>
+    <string name="setting_not_editable_description">Esta opção não pode ser alterada enquanto o jogo estiver em execução.</string>
+    <string name="auto_select">Seleção Automática</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Escolher pasta de jogos</string>
+
+    <!-- Game Properties -->
+    <string name="properties">Propriedades</string>
+    <string name="properties_not_loaded">Não foi possível carregar as propriedades do jogo.</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Configurações</string>
+    <string name="preferences_general">Geral</string>
+    <string name="preferences_system">Sistema</string>
+    <string name="preferences_camera">Câmera</string>
+    <string name="preferences_controls">Controle</string>
+    <string name="preferences_graphics">Gráficos</string>
+    <string name="preferences_audio">Áudio</string>
+    <string name="preferences_debug">Depuração</string>
+    <string name="preferences_theme">Tema e Cor</string>
+    <string name="preferences_layout">Disposição</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">Sua ROM está Criptografada</string>
+    <string name="loader_error_invalid_format">Formato inválido de ROM</string>
+    <string name="loader_error_file_not_found">O arquivo ROM não existe</string>
+    <string name="no_game_present">Nenhum jogo inicializável presente!</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Pressione Voltar para acessar o menu.</string>
+    <string name="emulation_save_state">Salvar estado</string>
+    <string name="emulation_load_state">Carregar estado</string>
+    <string name="emulation_empty_state_slot">Compartimento %1$d</string>
+    <string name="emulation_occupied_state_slot">Compartimento %1$d - %2$tF %2$tR</string>
+    <string name="emulation_show_fps">Mostrar FPS</string>
+    <string name="emulation_haptic_feedback">Feedback Tátil</string>
+    <string name="emulation_overlay_options">Opções de Sobreposição</string>
+    <string name="emulation_configure_controls">Configurar controles</string>
+    <string name="emulation_edit_layout">Editar Disposição</string>
+    <string name="emulation_done">Pronto</string>
+    <string name="emulation_toggle_controls">Alternar controles</string>
+    <string name="emulation_control_scale">Ajustar escala</string>
+    <string name="emulation_control_scale_global">Escala Global</string>
+    <string name="emulation_control_scale_reset_all">Redefinir Tudo</string>
+    <string name="emulation_control_opacity">Ajustar a Opacidade</string>
+    <string name="emulation_control_joystick_rel_center">Centro Relativo do Analógico</string>
+    <string name="emulation_control_dpad_slide_enable">Deslize do D-Pad</string>
+    <string name="emulation_open_settings">Abrir configurações</string>
+    <string name="emulation_open_cheats">Mostrar Trapaças</string>
+    <string name="emulation_switch_screen_layout">Disposição de tela em paisagem</string>
+    <string name="emulation_switch_portrait_layout">Disposição da tela em retrato</string>
+    <string name="emulation_screen_layout_largescreen">Tela Grande</string>
+    <string name="emulation_screen_layout_portrait">Retrato</string>
+    <string name="emulation_screen_layout_single">Tela única</string>
+    <string name="emulation_screen_layout_sidebyside">Telas lado a lado</string>
+    <string name="emulation_screen_layout_hybrid">Telas Híbridas</string>
+    <string name="emulation_screen_layout_original">Original</string>
+    <string name="emulation_portrait_layout_top_full">Padrão</string>
+    <string name="emulation_screen_layout_custom">Disposição Personalizada</string>
+    <string name="emulation_small_screen_position">Posição da Tela Pequena</string>
+    <string name="small_screen_position_description">Onde a tela pequena deverá aparecer relativa à grande na Disposição da Tela Grande?</string>
+    <string name="small_screen_position_top_right">Superior Direita</string>
+    <string name="small_screen_position_middle_right">Centro à Direita</string>
+    <string name="small_screen_position_bottom_right">Inferior Direita (Padrão)</string>
+    <string name="small_screen_position_top_left">Superior Esquerda</string>
+    <string name="small_screen_position_middle_left">Centro à Esquerda</string>
+    <string name="small_screen_position_bottom_left">Inferior Esquerda</string>
+    <string name="small_screen_position_above">Acima</string>
+    <string name="small_screen_position_below">Abaixo</string>
+    <string name="large_screen_proportion">Proporção de Tela Grande</string>
+    <string name="large_screen_proportion_description">Quantas vezes maior é a tela grande em relação à tela pequena no Layout de Tela Grande?</string>
+    <string name="emulation_adjust_custom_layout">Ajuste a Disposição Personalizada nas Configurações</string>
+    <string name="emulation_landscape_custom_layout">Disposição Personalizada em Paisagem</string>
+    <string name="emulation_portrait_custom_layout">Disposição Personalizada em Retrato</string>
+    <string name="emulation_top_screen">Tela Superior</string>
+    <string name="emulation_bottom_screen">Tela Inferior</string>
+    <string name="emulation_custom_layout_x">Posição X</string>
+    <string name="emulation_custom_layout_y">Posição Y</string>
+    <string name="emulation_custom_layout_width">Largura</string>
+    <string name="emulation_custom_layout_height">Altura</string>
+    <string name="emulation_cycle_landscape_layouts">Trocar Disposições</string>
+    <string name="emulation_swap_screens">Trocar telas</string>
+    <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>
+    <string name="emulation_show_overlay">Mostrar sobreposição</string>
+    <string name="emulation_close_game">Fechar jogo</string>
+    <string name="emulation_toggle_pause">Alternar Pausa</string>
+    <string name="emulation_close_game_message">Deseja mesmo fechar o jogo atual?</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">Carregar</string>
+    <string name="menu_emulation_amiibo_remove">Remover</string>
+    <string name="select_amiibo">Selecione o Arquivo Amiibo</string>
+    <string name="amiibo_load_error">Erro ao Carregar Amiibo</string>
+    <string name="amiibo_load_error_message">Ocorreu um erro ao carregar o arquivo de Amiibo selecionado. Verifique se é o arquivo correto.</string>
+    <string name="pause_emulation">Pausar Emulação</string>
+    <string name="resume_emulation">Retomar Emulação</string>
+    <string name="lock_drawer">Bloquear Espaço</string>
+    <string name="unlock_drawer">Desbloquear Espaço</string>
+
+    <string name="write_permission_needed">Você precisa permitir o acesso de escrita no armazenamento externo para que o emulador funcione</string>
+    <string name="load_settings">Carregando configurações...</string>
+
+    <string name="external_storage_not_mounted">O armazenamento externo precisa estar disponível para poder usar o Azahar</string>
+
+    <string name="select_dir">Selecionar esta pasta</string>
+    <string name="empty_gamelist">Nenhum arquivo foi encontrado ou nenhuma pasta de jogos foi selecionada ainda.</string>
+
+    <string name="do_not_show_this_again">Não mostrar novamente</string>
+    <string name="searching_directory">Procurando diretório: %s</string>
+    <string name="move_data">Mover Dados</string>
+    <string name="moving_data">Movendo Dados…</string>
+    <string name="copy_file_name">Copiar arquivo: %s</string>
+    <string name="copy_complete">Cópia Concluída</string>
+    <string name="savestates">Save States</string>
+    <string name="savestate_warning_message">Aviso: Os Savestates NÃO substituem os salvamentos no jogo e não foram feitos para serem confiáveis.\n\nUse por sua própria conta e risco!</string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Teclado virtual</string>
+    <string name="i_forgot">Esqueci</string>
+    <string name="fixed_length_required">O tamanho do texto não está correto (precisa ter %dcaracteres)</string>
+    <string name="max_length_exceeded">O texto é muito longo (não deve ter mais que %d caracteres)</string>
+    <string name="blank_input_not_allowed">Controle vazio não é permitido</string>
+    <string name="empty_input_not_allowed">Controle vazio não é permitido</string>
+    <string name="invalid_input">Entrada inválida</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Seletor de Mii</string>
+    <string name="standard_mii">Mii Padrão</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">Selecionar Imagem</string>
+    <string name="camera">Câmera</string>
+    <string name="camera_permission_needed">O Azahar precisa de acesso à sua câmera para emular as câmeras do 3DS.\n\nVocê também tem a opção de definir a \"Origem da imagem\" como \"Imagem estática\" nas configurações de câmera.</string>
+
+    <!-- Microphone -->
+    <string name="microphone">Microfone</string>
+    <string name="microphone_permission_needed">O Azahar precisa acessar seu microfone para emular o microfone do 3DS.\n\nComo alternativa, você também pode alterar o \"Dispositivo de Entrada de Áudio\" nas Configurações de Áudio.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">Parar</string>
+    <string name="continue_button">Continuar</string>
+    <string name="system_archive_not_found">Arquivo de Sistema Não Encontrado</string>
+    <string name="system_archive_not_found_message">%sestá faltando. Por favor, descarregue os arquivos do seu sistema.\nContinuar a emulação pode resultar em falhas e bugs.</string>
+    <string name="cia_file_not_found">A Instalação Falhou. O arquivo CIA não foi encontrado.</string>
+    <string name="system_archive_general">Um arquivo de sistema</string>
+    <string name="save_load_error">Erro ao Salvar/Carregar</string>
+    <string name="fatal_error">Erro Fatal</string>
+    <string name="fatal_error_message">Ocorreu um erro fatal. Verifique o registro para obter detalhes.\nContinuar a emulação pode resultar em falhas e bugs.</string>
+    <string name="invalid_region">Região inválida</string>
+    <string name="unsupported_encrypted">Aplicativo criptografado não suportado</string>
+
+    <!-- Disk Shader Cache -->
+    <string name="preparing_shaders">Preparando Shaders</string>
+    <string name="building_shaders">Construindo Shaders</string>
+
+    <!-- About Game Dialog -->
+    <string name="play">Jogar</string>
+    <string name="shortcut">Atalho</string>
+
+    <!-- Cheats -->
+    <string name="cheats">Truques</string>
+    <string name="cheats_add">Adicionar Trapaça</string>
+    <string name="cheats_name">Nome</string>
+    <string name="cheats_notes">Notas</string>
+    <string name="cheats_code">Código</string>
+    <string name="cheats_edit">Editar</string>
+    <string name="cheats_delete">Apagar</string>
+    <string name="cheats_delete_confirmation">Deseja mesmo apagar \"%1$s\"?</string>
+    <string name="cheats_error_no_name">O nome não pode estar vazio</string>
+    <string name="cheats_error_no_code_lines">O código não pode estar vazio</string>
+    <string name="cheats_error_on_line">Erro on-line %1$d</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="one">instalando %d arquivo. Veja a notificação para mais detalhes.</item>
+        <item quantity="many">instalando %d arquivos. Veja a notificação para mais detalhes.</item>
+        <item quantity="other">instalando %d arquivos. Veja a notificação para mais detalhes.</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">Notificações do Azahar durante a instalação do CIA</string>
+    <string name="cia_install_notification_title">Instalando CIA</string>
+    <string name="cia_install_notification_installing">Instalando %1$s (%2$d/%3$d)</string>
+    <string name="cia_install_notification_success_title">CIA Instalado com sucesso</string>
+    <string name="cia_install_notification_error_title">Erro ao instalar o CIA</string>
+    <string name="cia_install_success">\"%s\" foi instalado com sucesso</string>
+    <string name="cia_install_error_aborted">A instalação de \"%s\" foi interrompida.\n Por favor, consulte o registro para mais detalhes</string>
+    <string name="cia_install_error_invalid">\"%s\" não é um CIA válido</string>
+    <string name="cia_install_error_encrypted">\"%s\" deve ser descriptografado antes de ser usado com o Azahar.\n É necessário um 3DS real</string>
+    <string name="cia_install_error_unknown">Ocorreu um erro desconhecido durante a instalação de \"%s\".\n Consulte o registro para obter mais detalhes</string>
+
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s %2$s</string>
+    <string name="memory_byte">Byte</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- System theme -->
+    <string name="change_theme_mode">Modo do Tema</string>
+    <string name="theme_mode_follow_system">Usar o Mesmo do Sistema</string>
+    <string name="theme_mode_light">Claro</string>
+    <string name="theme_mode_dark">Escuro</string>
+
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
+    <string name="material_you_description">Usar o tema de cores do sistema operacional em todo o aplicativo (Substitui a configuração \"Cor do Tema\" quando ativado)</string>
+
+    <!-- Static theme color -->
+    <string name="static_theme_color">Cor do Tema</string>
+    <string name="static_theme_color_description">Altera o tema de cores dos menus do aplicativo</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Fundos Pretos</string>
+    <string name="use_black_backgrounds_description">Ao usar o tema escuro, aplique fundos pretos.</string>
+
+    <!-- Clock types -->
+    <string name="device_clock">Clock do Dispositivo</string>
+    <string name="simulated_clock">Clock Simulado</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">USA</string>
+    <string name="system_region_eur">EUR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Japonês (日本語)</string>
+    <string name="language_english">Inglês</string>
+    <string name="language_french">Francês (Français)</string>
+    <string name="language_german">Alemão (Deutsch)</string>
+    <string name="language_italian">Italiano (Italiano)</string>
+    <string name="language_spanish">Espanhol (Español)</string>
+    <string name="language_simplified_chinese">Chinês Simplificado (简体中文)</string>
+    <string name="language_korean">Coreano (한국어)</string>
+    <string name="language_dutch">Holandês (Holanda)</string>
+    <string name="language_portuguese">Português (Português)</string>
+    <string name="language_russian">Russo (Русский)</string>
+    <string name="language_traditional_chinese">Chinês Tradicional (正體中文)</string>
+
+    <!-- Camera image sources -->
+    <string name="blank">Em Branco</string>
+    <string name="still_image">Imagem Estática</string>
+    <string name="device_camera">Câmera do Dispositivo</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">Qualquer Câmera Frontal</string>
+    <string name="any_back_camera">Qualquer Câmera Traseira</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">Horizontal</string>
+    <string name="vertical">Vertical</string>
+    <string name="reverse">Reverso</string>
+
+    <!-- Audio input types -->
+    <string name="static_noise">Ruído Estático</string>
+    <string name="real_cubeb">Dispositivo Real (cubeb)</string>
+    <string name="real_openal">Dispositivo Real (OpenAL)</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">Lado a Lado</string>
+    <string name="reverse_side_by_side">Inverter Lado a Lado</string>
+    <string name="anaglyph">Anáglifo</string>
+    <string name="interlaced">Entrelaçado</string>
+    <string name="reverse_interlaced">Entrelaçado Reverso</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGL ES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="bicubic">Bicúbico</string>
+    <string name="scaleforce">ScaleForce</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Controlado pelo Jogo</string>
+    <string name="nearest_neighbor">Ponto Vizinho Mais Próximo</string>
+    <string name="linear">Linear</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Estéreo</string>
+    <string name="surround">Surround</string>
+
+    <!-- Countries -->
+    <string name="japan">Japão</string>
+    <string name="anguilla">Anguilla</string>
+    <string name="antigua_and_barbuda">Antígua e Barbuda</string>
+    <string name="argentina">Argentina</string>
+    <string name="aruba">Aruba</string>
+    <string name="bahamas">Bahamas</string>
+    <string name="barbados">Barbados</string>
+    <string name="belize">Belize</string>
+    <string name="bolivia">Bolívia</string>
+    <string name="brazil">Brasil</string>
+    <string name="british_virgin_islands">Ilhas Virgens Britânicas</string>
+    <string name="canada">Canadá</string>
+    <string name="cayman_islands">Ilhas Cayman</string>
+    <string name="chile">Chile</string>
+    <string name="colombia">Colômbia</string>
+    <string name="costa_rica">Costa Rica</string>
+    <string name="dominica">Dominica</string>
+    <string name="dominican_republic">República Dominicana</string>
+    <string name="ecuador">Equador</string>
+    <string name="el_salvador">El Salvador</string>
+    <string name="french_guiana">Guiana Francesa</string>
+    <string name="grenada">Granada</string>
+    <string name="guadeloupe">Guadalupe</string>
+    <string name="guatemala">Guatemala</string>
+    <string name="guyana">Guiana</string>
+    <string name="haiti">Haiti</string>
+    <string name="honduras">Honduras</string>
+    <string name="jamaica">Jamaica</string>
+    <string name="matinique">Martinica</string>
+    <string name="mexico">México</string>
+    <string name="monsterrat">Montserrat</string>
+    <string name="netherlands_antilles">Antilhas Neerlandesas</string>
+    <string name="nicaragua">Nicarágua</string>
+    <string name="panama">Panamá</string>
+    <string name="paraguay">Paraguai</string>
+    <string name="peru">Peru</string>
+    <string name="saint_kittis_and_nevis">São Cristóvão e Névis</string>
+    <string name="saint_lucia">Santa Lúcia</string>
+    <string name="saint_vincent_and_the_grenadines">São Vicente e Granadinas</string>
+    <string name="suriname">Suriname</string>
+    <string name="trinidad_and_tobago">Trindade e Tobago</string>
+    <string name="turks_and_caicos_islands">Ilhas Turcas e Caicos</string>
+    <string name="united_states">Estados Unidos</string>
+    <string name="uruguay">Uruguai</string>
+    <string name="us_virgin_islands">Ilhas Virgens Americanas</string>
+    <string name="venezuela">Venezuela</string>
+    <string name="albania">Albânia</string>
+    <string name="australia">Austrália</string>
+    <string name="austria">Áustria</string>
+    <string name="belgium">Bélgica</string>
+    <string name="bosnia_and_herzegovnia">Bósnia e Herzegovina</string>
+    <string name="botswana">Botsuana</string>
+    <string name="bulgaria">Bulgária</string>
+    <string name="croatia">Croácia</string>
+    <string name="cyprus">Chipre</string>
+    <string name="czech_republic">República Checa</string>
+    <string name="denmark">Dinamarca</string>
+    <string name="estonia">Estônia</string>
+    <string name="finland">Finlândia</string>
+    <string name="france">França</string>
+    <string name="germany">Alemanha</string>
+    <string name="greece">Grécia</string>
+    <string name="hungary">Hungria</string>
+    <string name="iceland">Islândia</string>
+    <string name="ireland">Irlanda</string>
+    <string name="italy">Itália</string>
+    <string name="latvia">Letônia</string>
+    <string name="lesotho">Lesoto</string>
+    <string name="liechtenstein">Liechtenstein</string>
+    <string name="lithuania">Lituânia</string>
+    <string name="luxembourg">Luxemburgo</string>
+    <string name="macedonia">Macedônia</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Montenegro</string>
+    <string name="mozambique">Moçambique</string>
+    <string name="namibia">Namíbia</string>
+    <string name="netherlands">Países Baixos</string>
+    <string name="new_zealand">Nova Zelândia</string>
+    <string name="norway">Noruega</string>
+    <string name="poland">Polônia</string>
+    <string name="portugal">Portugal</string>
+    <string name="romania">Romênia</string>
+    <string name="russia">Rússia</string>
+    <string name="serbia">Sérvia</string>
+    <string name="slovakia">Eslováquia</string>
+    <string name="slovenia">Eslovênia</string>
+    <string name="south_africa">África do Sul</string>
+    <string name="spain">Espanha</string>
+    <string name="swaziland">Essuatíni</string>
+    <string name="sweden">Suécia</string>
+    <string name="switzerland">Suíça</string>
+    <string name="turkey">Turquia</string>
+    <string name="united_kingdom">Reino Unido</string>
+    <string name="zambia">Zâmbia</string>
+    <string name="zimbabwe">Zimbábue</string>
+    <string name="azerbaijan">Azerbaijão</string>
+    <string name="mauritania">Mauritânia</string>
+    <string name="mali">Mali</string>
+    <string name="niger">Níger</string>
+    <string name="chad">Chade</string>
+    <string name="sudan">Sudão</string>
+    <string name="eritrea">Eritreia</string>
+    <string name="djibouti">Djibouti</string>
+    <string name="somalia">Somália</string>
+    <string name="andorra">Andorra</string>
+    <string name="gibraltar">Gibraltar</string>
+    <string name="guernsey">Guernsey</string>
+    <string name="isle_of_man">Ilha de Man</string>
+    <string name="jersey">Jersey</string>
+    <string name="monaco">Mônaco</string>
+    <string name="taiwan">Taiwan</string>
+    <string name="south_korea">Coreia do Sul</string>
+    <string name="hong_kong">Hong Kong</string>
+    <string name="macau">Macau</string>
+    <string name="indonesia">Indonésia</string>
+    <string name="singapore">Singapura</string>
+    <string name="thailand">Tailândia</string>
+    <string name="philippines">Filipinas</string>
+    <string name="malaysia">Malásia</string>
+    <string name="china">China</string>
+    <string name="united_arab_emirates">Emirados Árabes Unidos</string>
+    <string name="india">Índia</string>
+    <string name="egypt">Egito</string>
+    <string name="oman">Omã</string>
+    <string name="qatar">Catar</string>
+    <string name="kuwait">Kuwait</string>
+    <string name="saudi_arabia">Arábia Saudita</string>
+    <string name="syria">Síria</string>
+    <string name="bahrain">Bahrein</string>
+    <string name="jordan">Jordan</string>
+    <string name="san_marino">San Marino</string>
+    <string name="vatican_city">Cidade do Vaticano</string>
+    <string name="bermuda">Bermudas</string>
+
+    <!-- Months -->
+    <string name="january">Janeiro</string>
+    <string name="february">Fevereiro</string>
+    <string name="march">Março</string>
+    <string name="april">Abril</string>
+    <string name="may">Maio</string>
+    <string name="june">Junho</string>
+    <string name="july">Julho</string>
+    <string name="august">Agosto</string>
+    <string name="september">Setembro</string>
+    <string name="october">Outubro</string>
+    <string name="november">Novembro</string>
+    <string name="december">Dezembro</string>
+
+    <!-- Artic base -->
+    <string name="artic_server_comm_error">Falha ao comunicar-se com o servidor Artic Base. A emulação será interrompida.</string>
+    <string name="artic_base">Artic Base</string>
+    <string name="artic_base_connect_description">Conecte-se a um console real que esteja executando um servidor Artic Base</string>
+    <string name="artic_base_connect">Conectar-se ao Artic Base</string>
+    <string name="artic_base_enter_address">Digite o endereço do servidor Artic Base</string>
+    <string name="delay_render_thread">Atrasar thread de renderização do aplicativo</string>
+    <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">Salvar rápido</string>
+    <string name="emulation_quicksave">Salvar rápido</string>
+    <string name="emulation_quickload">Carregar rápido</string>
+    <string name="emulation_occupied_quicksave_slot">Salvar rápido - %1$tF %1$tR</string>
+    <string name="quicksave_saving">Salvando...</string>
+    <string name="quickload_loading">Carregando...</string>
+    <string name="quickload_not_found">Nenhum Salvamento Rápido disponível.</string>
+    <string name="miscellaneous">Diversos</string>
+    <string name="use_artic_base_controller">Use o Controle Artic quando conectado ao Servidor Artic Base</string>
+    <string name="use_artic_base_controller_description">Use os controles fornecidos pelo Artic Base Server ao se conectar a ele, em vez do dispositivo de entrada configurado.</string>
+    <string name="instant_debug_log">Limpar a saída do log a cada mensagem</string>
+    <string name="instant_debug_log_description">Grava imediatamente o log de depuração no arquivo. Use isto se o Azahar travar e a saída do log estiver sendo cortada.</string>
+    <string name="disable_right_eye_render">Desativar a renderização do olho direito</string>
+    <string name="disable_right_eye_render_description">Melhora muito o desempenho em alguns aplicativos, mas pode causar piscadas em outros.</string>
+    <string name="delay_start_lle_modules">Atraso na inicialização com módulos LLE</string>
+    <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>
+    <string name="deterministic_async_operations">Operações Assíncronas Determinísticas</string>
+    <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
+    <string name="enable_required_online_lle_modules">Ativa os módulos LLE necessários para os recursos online (se instalado)</string>
+    <string name="enable_required_online_lle_modules_desc">Ativa os módulos LLE necessários para o multijogador online, acesso à eShop, etc.</string>
+    <string name="emulation_settings">Configurações de Emulação</string>
+    <string name="profile_settings">Configurações de Perfil</string>
+    <string name="mac_address">Endereço MAC</string>
+    <string name="regenerate_mac_address">Gerar Novamente o Endereço MAC</string>
+    <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Deseja continuar?</string>
+</resources>

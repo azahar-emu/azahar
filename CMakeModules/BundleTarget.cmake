@@ -117,6 +117,9 @@ if (BUNDLE_TARGET_EXECUTE)
             set(extra_linuxdeploy_args --plugin qt)
         endif()
 
+        # Set up app icon
+        file(COPY_FILE "${source_path}/dist/azahar.svg" "${CMAKE_BINARY_DIR}/dist/org.azahar_emu.Azahar.svg")
+
         message(STATUS "Creating AppDir for executable ${executable_path}")
         execute_process(COMMAND ${CMAKE_COMMAND} -E env
             ${extra_linuxdeploy_env}
@@ -124,7 +127,7 @@ if (BUNDLE_TARGET_EXECUTE)
             ${extra_linuxdeploy_args}
             --plugin checkrt
             --executable "${executable_path}"
-            --icon-file "${source_path}/dist/citra.svg"
+            --icon-file "${CMAKE_BINARY_DIR}/dist/org.azahar_emu.Azahar.svg"
             --desktop-file "${source_path}/dist/${executable_name}.desktop"
             --appdir "${appdir_path}"
             RESULT_VARIABLE linuxdeploy_appdir_result)
@@ -282,7 +285,7 @@ else()
             COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/dist/")
         add_custom_command(
             TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dist/icon.png" "${CMAKE_BINARY_DIR}/bundle/dist/citra.png")
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dist/azahar.png" "${CMAKE_BINARY_DIR}/bundle/dist/azahar.png")
         add_custom_command(
             TARGET bundle
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/license.txt" "${CMAKE_BINARY_DIR}/bundle/")

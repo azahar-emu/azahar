@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <cstring>
 #include <QImage>
 #include "citra_qt/camera/camera_util.h"
+#include "citra_qt/util/util.h"
 
 namespace CameraUtil {
 
@@ -213,9 +214,9 @@ std::vector<u16> ProcessImage(const QImage& image, int width, int height, bool o
     }
     QImage scaled =
         image.scaled(width, height, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-    QImage transformed =
-        scaled.copy((scaled.width() - width) / 2, (scaled.height() - height) / 2, width, height)
-            .mirrored(flip_horizontal, flip_vertical);
+    QImage transformed = GetMirroredImage(
+        scaled.copy((scaled.width() - width) / 2, (scaled.height() - height) / 2, width, height),
+        flip_horizontal, flip_vertical);
     if (output_rgb) {
         QImage converted = transformed.convertToFormat(QImage::Format_RGB16);
         std::memcpy(buffer.data(), converted.bits(), width * height * sizeof(u16));

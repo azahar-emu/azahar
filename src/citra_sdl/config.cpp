@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -224,6 +224,7 @@ void SdlConfig::ReadValues() {
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
     ReadSetting("System", Settings::values.lle_applets);
+    ReadSetting("System", Settings::values.enable_required_online_lle_modules);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
@@ -328,6 +329,8 @@ void SdlConfig::ReadValues() {
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
     ReadSetting("Miscellaneous", Settings::values.log_regex_filter);
+    ReadSetting("Miscellaneous", Settings::values.delay_start_for_lle_modules);
+    ReadSetting("Miscellaneous", Settings::values.deterministic_async_operations);
 
     // Apply the log_filter setting as the logger has already been initialized
     // and doesn't pick up the filter on its own.

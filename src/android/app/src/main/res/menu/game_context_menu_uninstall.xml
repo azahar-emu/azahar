@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/game_context_uninstall"
+        android:title="@string/uninstall_cia" />
+    <item
+        android:id="@+id/game_context_uninstall_dlc"
+        android:title="@string/game_context_uninstall_dlc" />
+    <item
+        android:id="@+id/game_context_uninstall_updates"
+        android:title="@string/game_context_uninstall_updates" />
+</menu>
