@@ -35,8 +35,12 @@
     <item
         android:id="@+id/menu_swap_screens"
         android:icon="@drawable/ic_splitscreen"
-
         android:title="@string/emulation_swap_screens" />
+
+    <item
+        android:id="@+id/menu_rotate_upright"
+        android:icon="@drawable/ic_rotate_up_right"
+        android:title="@string/emulation_rotate_upright" />
 
     <item
         android:id="@+id/menu_lock_drawer"
