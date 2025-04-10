@@ -366,7 +366,12 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
             is_tainted = true;
             has_exefs = true;
         } else {
-            exefs_file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
+            if (file->IsCrypto()) {
+                exefs_file = HW::UniqueData::OpenUniqueCryptoFile(
+                    filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+            } else {
+                exefs_file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
+            }
         }
     } else if (FileUtil::Exists(exefsdir_override) && FileUtil::IsDirectory(exefsdir_override)) {
         is_tainted = true;

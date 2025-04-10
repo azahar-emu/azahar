@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -82,9 +82,6 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
     Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
-
-    bool updater_found;
-    Settings::Setting<bool> update_on_close{false, "update_on_close"};
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
 
     // Discord RPC
@@ -97,6 +94,7 @@ struct Values {
     Settings::Setting<GameListText> game_list_row_2{GameListText::FileName, "row2"};
     Settings::Setting<bool> game_list_hide_no_icon{false, "hideNoIcon"};
     Settings::Setting<bool> game_list_single_line_mode{false, "singleLineMode"};
+    Settings::Setting<bool> show_3ds_files_warning{true, "show_3ds_files_warning"};
 
     // Compatibility List
     Settings::Setting<bool> show_compat_column{true, "show_compat_column"};

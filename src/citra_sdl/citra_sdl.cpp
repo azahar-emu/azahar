@@ -298,7 +298,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
             }
             case 'v':
                 const std::string version_string =
-                    std::string("Azahar ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+                    std::string("Azahar ") + Common::g_build_fullname;
                 ShowCommandOutput("Version", version_string);
                 exit(0);
             }

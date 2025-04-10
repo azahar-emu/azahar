@@ -1,4 +1,8 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// PPSSPP Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -346,6 +350,18 @@ public:
         return main_thread_extended_sleep;
     }
 
+    void ReportAsyncState(bool state) {
+        if (state) {
+            pending_async_operations++;
+        } else {
+            pending_async_operations--;
+        }
+    }
+
+    bool AreAsyncOperationsPending() {
+        return pending_async_operations != 0;
+    }
+
 private:
     void MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode, u64 override_init_time);
 
@@ -353,6 +369,8 @@ private:
 
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
+
+    std::atomic<int> pending_async_operations{};
 
     // Note: keep the member order below in order to perform correct destruction.
     // Thread manager is destructed before process list in order to Stop threads and clear thread

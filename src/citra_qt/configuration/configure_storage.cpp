@@ -1,4 +1,4 @@
-// Copyright 2021 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,6 +21,7 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
     });
 
     connect(ui->change_nand_dir, &QPushButton::clicked, this, [this]() {
+        ui->change_nand_dir->setEnabled(false);
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select NAND Directory"),
             QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
@@ -29,6 +30,7 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
             FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir, dir_path.toStdString());
             SetConfiguration();
         }
+        ui->change_nand_dir->setEnabled(true);
     });
 
     connect(ui->open_sdmc_dir, &QPushButton::clicked, []() {
@@ -37,6 +39,7 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
     });
 
     connect(ui->change_sdmc_dir, &QPushButton::clicked, this, [this]() {
+        ui->change_sdmc_dir->setEnabled(false);
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select SDMC Directory"),
             QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)),
@@ -45,6 +48,7 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
             FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir, dir_path.toStdString());
             SetConfiguration();
         }
+        ui->change_sdmc_dir->setEnabled(true);
     });
 
     connect(ui->toggle_virtual_sd, &QCheckBox::clicked, this, [this]() {

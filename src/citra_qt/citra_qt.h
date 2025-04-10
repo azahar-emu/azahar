@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,13 @@
 #include <array>
 #include <memory>
 #include <vector>
+#ifdef __unix__
+#include <QDBusObjectPath>
+#endif
+#ifdef ENABLE_QT_UPDATE_CHECKER
+#include <QFuture>
+#include <QFutureWatcher>
+#endif
 #include <QMainWindow>
 #include <QPushButton>
 #include <QString>
@@ -14,12 +21,9 @@
 #include <QTranslator>
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/hotkeys.h"
+#include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
-
-#ifdef __unix__
-#include <QDBusObjectPath>
-#endif
 
 // Needs to be included at the end due to https://bugreports.qt.io/browse/QTBUG-73263
 #include <filesystem>
@@ -42,7 +46,9 @@ class GRenderWindow;
 class IPCRecorderWidget;
 class LLEServiceModulesWidget;
 class LoadingScreen;
+#if MICROPROFILE_ENABLED
 class MicroProfileDialog;
+#endif
 class MultiplayerState;
 class ProfilerWidget;
 class QFileOpenEvent;
@@ -53,9 +59,6 @@ class QProgressBar;
 class QPushButton;
 class QSlider;
 class RegistersWidget;
-#if ENABLE_QT_UPDATER
-class Updater;
-#endif
 class WaitTreeWidget;
 
 namespace Camera {
@@ -166,13 +169,6 @@ private:
     void SetDiscordEnabled(bool state);
     void LoadAmiibo(const QString& filename);
 
-#if ENABLE_QT_UPDATER
-    void ShowUpdaterWidgets();
-    void ShowUpdatePrompt();
-    void ShowNoUpdatePrompt();
-    void CheckForUpdates();
-#endif
-
     /**
      * Stores the filename in the recently loaded files list.
      * The new filename is stored at the beginning of the recently loaded files list.
@@ -232,7 +228,6 @@ private slots:
     void OnStopGame();
     void OnSaveState();
     void OnLoadState();
-    void OnMenuReportCompatibility();
     /// Called whenever a user selects a game in the game list widget.
     void OnGameListLoadFile(QString game_path);
     void OnGameListOpenFolder(u64 program_id, GameListOpenTarget target);
@@ -246,6 +241,7 @@ private slots:
     void OnGameListOpenPerGameProperties(const QString& file);
     void OnConfigurePerGame();
     void OnMenuLoadFile();
+    void OnMenuSetUpSystemFiles();
     void OnMenuInstallCIA();
     void OnMenuConnectArticBase();
     void OnMenuBootHomeMenu(u32 region);
@@ -290,18 +286,15 @@ private slots:
     /// Called whenever a user selects Help->About Azahar
     void OnMenuAboutCitra();
 
-#if ENABLE_QT_UPDATER
-    void OnUpdateFound(bool found, bool error);
-    void OnCheckForUpdates();
-    void OnOpenUpdater();
-#endif
-
     void OnLanguageChanged(const QString& locale);
     void OnMouseActivity();
 
     void OnDecreaseVolume();
     void OnIncreaseVolume();
     void OnMute();
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    void OnEmulatorUpdateAvailable();
+#endif
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
@@ -349,6 +342,10 @@ private:
     bool message_label_used_for_movie = false;
 
     MultiplayerState* multiplayer_state = nullptr;
+
+    // Created before `config` to ensure that emu data directory
+    // isn't created before the check is performed
+    UserDataMigrator user_data_migrator;
     std::unique_ptr<QtConfig> config;
 
     // Whether emulation is currently running in Citra.
@@ -386,7 +383,9 @@ private:
 
     // Debugger panes
     ProfilerWidget* profilerWidget;
+#if MICROPROFILE_ENABLED
     MicroProfileDialog* microProfileDialog;
+#endif
     RegistersWidget* registersWidget;
     GPUCommandStreamWidget* graphicsWidget;
     GPUCommandListWidget* graphicsCommandsWidget;
@@ -396,12 +395,6 @@ private:
     IPCRecorderWidget* ipcRecorderWidget;
     LLEServiceModulesWidget* lleServiceModulesWidget;
     WaitTreeWidget* waitTreeWidget;
-#if ENABLE_QT_UPDATER
-    Updater* updater;
-#endif
-
-    bool explicit_update_check = false;
-    bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
     std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;
@@ -426,6 +419,12 @@ private:
     HotkeyRegistry hotkey_registry;
 
     std::shared_ptr<Camera::QtMultimediaCameraHandlerFactory> qt_cameras;
+
+    // Prompt shown when update check succeeds
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    QFuture<QString> update_future;
+    QFutureWatcher<QString> update_watcher;
+#endif
 
 #ifdef __unix__
     QDBusObjectPath wake_lock{};

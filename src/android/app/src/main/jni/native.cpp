@@ -36,8 +36,10 @@
 #include "core/frontend/camera/factory.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/nfc/nfc.h"
+#include "core/hw/unique_data.h"
 #include "core/loader/loader.h"
 #include "core/savestate.h"
+#include "core/system_titles.h"
 #include "jni/android_common/android_common.h"
 #include "jni/applets/mii_selector.h"
 #include "jni/applets/swkbd.h"
@@ -229,7 +231,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
             if (result == Core::System::ResultStatus::ShutdownRequested) {
                 return result; // This also exits the emulation activity
             } else {
-                InputManager::NDKMotionHandler()->DisableSensors();
+                auto* handler = InputManager::NDKMotionHandler();
+                if (handler) {
+                    handler->DisableSensors();
+                }
                 if (!HandleCoreError(result, system.GetStatusDetails())) {
                     // Frontend requests us to abort
                     // If the error was an Artic disconnect, return shutdown request.
@@ -238,7 +243,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     }
                     return result;
                 }
-                InputManager::NDKMotionHandler()->EnableSensors();
+                handler = InputManager::NDKMotionHandler();
+                if (handler) {
+                    handler->EnableSensors();
+                }
             }
         } else {
             // Ensure no audio bleeds out while game is paused
@@ -435,11 +443,25 @@ jlongArray Java_org_citra_citra_1emu_NativeLibrary_getSystemTitleIds(JNIEnv* env
     return jTitles;
 }
 
-jobject Java_org_citra_citra_1emu_NativeLibrary_downloadTitleFromNus([[maybe_unused]] JNIEnv* env,
-                                                                     [[maybe_unused]] jobject obj,
-                                                                     jlong title) {
-    [[maybe_unused]] const auto title_id = static_cast<u64>(title);
-    return IDCache::GetJavaCiaInstallStatus(Service::AM::InstallStatus::ErrorAborted);
+jbooleanArray Java_org_citra_citra_1emu_NativeLibrary_areSystemTitlesInstalled(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
+    const auto installed = Core::AreSystemTitlesInstalled();
+    jbooleanArray jInstalled = env->NewBooleanArray(2);
+    jboolean* elements = env->GetBooleanArrayElements(jInstalled, nullptr);
+
+    elements[0] = installed.first ? JNI_TRUE : JNI_FALSE;
+    elements[1] = installed.second ? JNI_TRUE : JNI_FALSE;
+
+    env->ReleaseBooleanArrayElements(jInstalled, elements, 0);
+
+    return jInstalled;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_uninstallSystemFiles(JNIEnv* env,
+                                                                  [[maybe_unused]] jobject obj,
+                                                                  jboolean old3ds) {
+    Core::UninstallSystemFiles(old3ds ? Core::SystemTitleSet::Old3ds
+                                      : Core::SystemTitleSet::New3ds);
 }
 
 [[maybe_unused]] static bool CheckKgslPresent() {
@@ -467,13 +489,19 @@ void Java_org_citra_citra_1emu_NativeLibrary_unPauseEmulation([[maybe_unused]] J
                                                               [[maybe_unused]] jobject obj) {
     pause_emulation = false;
     running_cv.notify_all();
-    InputManager::NDKMotionHandler()->EnableSensors();
+    auto* handler = InputManager::NDKMotionHandler();
+    if (handler) {
+        handler->EnableSensors();
+    }
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
     pause_emulation = true;
-    InputManager::NDKMotionHandler()->DisableSensors();
+    auto* handler = InputManager::NDKMotionHandler();
+    if (handler) {
+        handler->DisableSensors();
+    }
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
@@ -743,6 +771,14 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host CPU: {}", Common::GetCPUCaps().cpu_string);
     // There is no decent way to get the OS version, so we log the API level instead.
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
+}
+
+jboolean Java_org_citra_citra_1emu_NativeLibrary_isFullConsoleLinked(JNIEnv* env, jobject obj) {
+    return HW::UniqueData::IsFullConsoleLinked();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_unlinkConsole(JNIEnv* env, jobject obj) {
+    HW::UniqueData::UnlinkConsole();
 }
 
 } // extern "C"

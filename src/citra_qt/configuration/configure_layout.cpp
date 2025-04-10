@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -98,8 +98,10 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
 #endif
 
     connect(ui->bg_button, &QPushButton::clicked, this, [this] {
+        ui->bg_button->setEnabled(false);
         const QColor new_bg_color = QColorDialog::getColor(bg_color);
         if (!new_bg_color.isValid()) {
+            ui->bg_button->setEnabled(true);
             return;
         }
         bg_color = new_bg_color;
@@ -107,6 +109,7 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
         pixmap.fill(bg_color);
         const QIcon color_icon(pixmap);
         ui->bg_button->setIcon(color_icon);
+        ui->bg_button->setEnabled(true);
     });
 }
 

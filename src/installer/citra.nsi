@@ -1,4 +1,4 @@
-; Copyright Dolphin Emulator Project / Lime3DS Emulator Project
+; Copyright Dolphin Emulator Project / Azahar Emulator Project
 ; Licensed under GPLv2 or any later version
 ; Refer to the license.txt file included.
 
@@ -46,7 +46,7 @@ ShowUnInstDetails show
 !include "nsDialogs.nsh"
 
 ; MUI Settings
-!define MUI_ICON "../../dist/citra.ico"
+!define MUI_ICON "../../dist/azahar.ico"
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 
 ; License page
@@ -160,20 +160,16 @@ Section "Base"
   !insertmacro UPDATE_DISPLAYNAME
 
   ; Create start menu and desktop shortcuts
-  ; This needs to be done after Dolphin.exe is copied
-  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk" "$INSTDIR\azahar.exe"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
+  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
+  CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
     CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
 
   ; ??
   SetOutPath "$TEMP"
-SectionEnd
-
-Section -AdditionalIcons
-  ; Create start menu shortcut for the uninstaller
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk" "$INSTDIR\uninst.exe" "/$MultiUser.InstallMode"
 SectionEnd
 
 !include "FileFunc.nsh"
@@ -200,10 +196,11 @@ SectionEnd
 Section Uninstall
   !insertmacro UPDATE_DISPLAYNAME
 
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-
   Delete "$DESKTOP\$DisplayName.lnk"
+  Delete "$SMPROGRAMS\$DisplayName.lnk"
+
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
   RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 
   ; Be a bit careful to not delete files a user may have put into the install directory.

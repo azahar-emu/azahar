@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -235,6 +235,7 @@ void Config::ReadValues() {
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
     ReadSetting("System", Settings::values.lle_applets);
+    ReadSetting("System", Settings::values.enable_required_online_lle_modules);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {

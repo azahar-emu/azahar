@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_notification_channel_description">Azahar 3DS emulatorius</string>
+    <string name="start">Pradėti</string>
+    <string name="cancelling">Atšaukiama...</string>
+    <string name="dont_show_again">Daugiau niekada nerodyti</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Nustatymai</string>
+    <string name="home_options">Pasirinkimai</string>
+    <string name="home_search">Paieška</string>
+    <string name="share_log">Dalintis žurnalu</string>
+    <string name="about">Apie</string>
+    <string name="select_gpu_driver_install">Instaliuoti</string>
+    <string name="licenses">Licencijos</string>
+    <string name="done">Baigta</string>
+    <string name="text_continue">Tęsti</string>
+    <string name="notifications">Pranešimai</string>
+    <string name="give_permission">Priimti leidimą</string>
+    <string name="camera_permission">Kamera</string>
+    <string name="microphone_permission">Mikrofonas</string>
+    <string name="permission_denied">Leidimas atmestas</string>
+    <string name="warning_help">Pagalba</string>
+    <string name="warning_skip">Praleisti</string>
+    <string name="warning_cancel">Atšaukti</string>
+    <string name="select">Pasirinkti</string>
+    <string name="button_swap">Apkeisti ekranus</string>
+    <string name="init_clock">Laikrodis</string>
+    <!-- System settings strings -->
+    <string name="username">Vartotojo vardas</string>
+    <string name="clock">Laikrodis</string>
+    <string name="emulated_region">Regionas</string>
+    <string name="emulated_language">Kalba</string>
+    <string name="birthday_month">Mėnesis</string>
+    <string name="birthday_day">Diena</string>
+    <string name="country">Šalis</string>
+    <string name="camera_device">Kamera</string>
+    <string name="camera_facing_front">Priekio</string>
+    <string name="camera_facing_back">Galo</string>
+    <string name="camera_facing_external">Išorinė</string>
+    <string name="image_flip">Apversti</string>
+
+    <string name="shaders_accurate_mul">Tikslus atkurimas</string>
+    <string name="frame_limit_enable">Riboti greitį</string>
+    <string name="internal_resolution">Vidinė rezoliucija </string>
+    <string name="factor3d">Gylis</string>
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Garsumas</string>
+    <string name="realtime_audio">Įjungti realaus laiko garsą</string>
+    <string name="layout_screen_orientation_auto_sensor">Automatinis</string>
+    <string name="learn_more">Sužinoti daugiau</string>
+    <string name="close">Uždaryti</string>
+    <string name="reset_all_settings">Atstatyti visus nustatymus?</string>
+    <string name="preferences_system">Sistema</string>
+    <string name="preferences_camera">Kamera</string>
+    <string name="preferences_graphics">Grafika</string>
+    <string name="preferences_audio">Garsas</string>
+    <string name="preferences_layout">Išdėstymas</string>
+
+    <string name="emulation_show_fps">Rodyti FPS</string>
+    <string name="emulation_edit_layout">Redaguoti išdėstymą</string>
+    <string name="emulation_done">Baigta</string>
+    <string name="emulation_close_game">Uždaryti žaidimą</string>
+    <string name="menu_emulation_amiibo_remove">Pašalinti</string>
+    <string name="i_forgot">Aš pamiršau</string>
+    <string name="camera">Kamera</string>
+    <!-- Microphone -->
+    <string name="microphone">Mikrofonas</string>
+    <string name="continue_button">Tęsti</string>
+    <!-- About Game Dialog -->
+    <string name="play">Žaisti</string>
+    <string name="cheats_edit">Redaguoti</string>
+    <string name="cheats_delete">Ištrinti</string>
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Juodas fonas</string>
+    <!-- Clock types -->
+    <string name="device_clock">Įrenginio laikas</string>
+    <string name="albania">Albanija</string>
+    <string name="australia">Australija</string>
+    <string name="austria">Austrija</string>
+    <string name="belgium">Belgija</string>
+    <string name="bosnia_and_herzegovnia">Bosnija ir Hercegovina</string>
+    <string name="botswana">Botsvana</string>
+    <string name="bulgaria">Bulgarija</string>
+    <string name="croatia">Kroatija</string>
+    <string name="cyprus">Kipras</string>
+    <string name="czech_republic">Čekija</string>
+    <string name="denmark">Danija</string>
+    <string name="estonia">Estija</string>
+    <string name="finland">Suomija</string>
+    <string name="lithuania">Lietuva</string>
+    </resources>

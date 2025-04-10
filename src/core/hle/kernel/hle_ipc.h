@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,7 @@
 #include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/serialization/boost_small_vector.hpp"
+#include "common/settings.h"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/object.h"
@@ -231,6 +232,9 @@ public:
         virtual ~WakeupCallback() = default;
         virtual void WakeUp(std::shared_ptr<Thread> thread, HLERequestContext& context,
                             ThreadWakeupReason reason) = 0;
+        virtual bool SupportsSerialization() {
+            return true;
+        }
 
     private:
         template <class Archive>
@@ -257,28 +261,26 @@ private:
     template <typename ResultFunctor>
     class AsyncWakeUpCallback : public WakeupCallback {
     public:
-        explicit AsyncWakeUpCallback(ResultFunctor res_functor, std::future<void> fut)
-            : functor(res_functor) {
+        explicit AsyncWakeUpCallback(KernelSystem& kernel, ResultFunctor res_functor,
+                                     std::future<void> fut)
+            : kernel(kernel), functor(res_functor) {
             future = std::move(fut);
         }
 
         void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
-                    Kernel::ThreadWakeupReason reason) {
+                    Kernel::ThreadWakeupReason reason) override {
             functor(ctx);
+            kernel.ReportAsyncState(false);
+        }
+
+        bool SupportsSerialization() override {
+            return false;
         }
 
     private:
+        KernelSystem& kernel;
         ResultFunctor functor;
         std::future<void> future;
-
-        template <class Archive>
-        void serialize(Archive& ar, const unsigned int) {
-            if (!Archive::is_loading::value && future.valid()) {
-                future.wait();
-            }
-            ar & functor;
-        }
-        friend class boost::serialization::access;
     };
 
 public:
@@ -300,11 +302,12 @@ public:
     void RunAsync(AsyncFunctor async_section, ResultFunctor result_function,
                   bool really_async = true) {
 
-        if (really_async) {
+        if (!Settings::values.deterministic_async_operations && really_async) {
+            kernel.ReportAsyncState(true);
             this->SleepClientThread(
                 "RunAsync", std::chrono::nanoseconds(-1),
                 std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
-                    result_function,
+                    kernel, result_function,
                     std::move(std::async(std::launch::async, [this, async_section] {
                         s64 sleep_for = async_section(*this);
                         this->thread->WakeAfterDelay(sleep_for, true);
@@ -313,8 +316,9 @@ public:
         } else {
             s64 sleep_for = async_section(*this);
             if (sleep_for > 0) {
+                kernel.ReportAsyncState(true);
                 auto parallel_wakeup = std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
-                    result_function, std::move(std::future<void>()));
+                    kernel, result_function, std::move(std::future<void>()));
                 this->SleepClientThread("RunAsync", std::chrono::nanoseconds(sleep_for),
                                         parallel_wakeup);
             } else {
