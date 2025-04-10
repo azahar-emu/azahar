@@ -40,18 +40,18 @@ class HotkeyFunctions (
         NativeLibrary.reloadSettings()
 
         val context = CitraApplication.appContext
-        Toast.makeText(context
-            , "Changed Emulation Speed to: ${IntSetting.FRAME_LIMIT.int}%", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context,
+            "Changed Emulation Speed to: ${IntSetting.FRAME_LIMIT.int}%", Toast.LENGTH_SHORT).show()
     }
 
     fun resetTurboSpeed() {
         if (isTurboSpeedEnabled) {
             isTurboSpeedEnabled = false
             NativeLibrary.toggleTurboSpeed(false)
-        IntSetting.FRAME_LIMIT.int = normalSpeed
+            IntSetting.FRAME_LIMIT.int = normalSpeed
 
-        settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
-        NativeLibrary.reloadSettings()
+            settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
+            NativeLibrary.reloadSettings()
         }
     }
 }
