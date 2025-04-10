@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -121,20 +121,20 @@ class HomeSettingsFragment : Fragment() {
                 }
             ),
             HomeSetting(
-                R.string.system_files,
-                R.string.system_files_description,
+                R.string.install_game_content,
+                R.string.install_game_content_description,
+                R.drawable.ic_install,
+                { mainActivity.ciaFileInstaller.launch(true) }
+            ),
+            HomeSetting(
+                R.string.setup_system_files,
+                R.string.setup_system_files_description,
                 R.drawable.ic_system_update,
                 {
                     exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
                     parentFragmentManager.primaryNavigationFragment?.findNavController()
                         ?.navigate(R.id.action_homeSettingsFragment_to_systemFilesFragment)
                 }
-            ),
-            HomeSetting(
-                R.string.install_game_content,
-                R.string.install_game_content_description,
-                R.drawable.ic_install,
-                { mainActivity.ciaFileInstaller.launch(true) }
             ),
             HomeSetting(
                 R.string.share_log,

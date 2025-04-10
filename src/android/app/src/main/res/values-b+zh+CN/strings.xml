@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_disclaimer">该软件运行任天堂 3DS 掌机的游戏。该软件不包含游戏\n\n在开始模拟之前，请选择一个文件夹来存储 Azahar 的用户数据。\n\n了解详情：\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>百科 - Citra Android 用户数据与存储</a></string>
+    <string name="app_notification_channel_description">Azahar 3DS 模拟器通知</string>
+    <string name="app_notification_running">Azahar 正在运行</string>
+    <string name="app_game_install_description">接下来，您需要选择一个应用文件夹。Azahar 将显示所选文件夹中的所有 3DS ROM。\n\nCIA ROM、更新和 DLC 需要分别进行安装，具体为点击文件夹图标并选择“安装 CIA”。</string>
+    <string name="start">开始</string>
+    <string name="cancelling">取消中…</string>
+    <string name="important">重要提示</string>
+    <string name="dont_show_again">不再显示</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">设置</string>
+    <string name="home_options">选项</string>
+    <string name="home_search">搜索</string>
+    <string name="home_games">应用</string>
+    <string name="settings_description">配置模拟器设置项</string>
+    <string name="install_game_content">安装 CIA 文件</string>
+    <string name="install_game_content_description">安装应用、更新或 DLC</string>
+    <string name="share_log">分享日志文件</string>
+    <string name="share_log_description">分享 Azahar 的日志文件来调试问题</string>
+    <string name="gpu_driver_manager">GPU 驱动管理器</string>
+    <string name="install_gpu_driver">安装 GPU 驱动</string>
+    <string name="install_gpu_driver_description">安装替代的驱动以获得更好的性能及精度</string>
+    <string name="driver_already_installed">驱动已安装</string>
+    <string name="custom_driver_not_supported">不支持自定义驱动</string>
+    <string name="custom_driver_not_supported_description">此设备暂不支持自定义驱动。\n请之后再来查看您的设备是否已被支持！</string>
+    <string name="share_log_not_found">未找到日志文件</string>
+    <string name="select_games_folder">选择应用文件夹</string>
+    <string name="select_games_folder_description">允许 Azahar 填充应用列表</string>
+    <string name="about">关于</string>
+    <string name="citra_description">一款开源的 3DS 模拟器</string>
+    <string name="about_description">构建版本、贡献者以及更多</string>
+    <string name="games_dir_selected">已选择应用目录</string>
+    <string name="select_citra_user_folder_home_description">更改 Azahar 用于加载应用的相关文件</string>
+    <string name="theme_and_color_description">更改应用程序的外观</string>
+    <string name="install_cia_title">安装 CIA</string>
+    <string name="warning_3ds_files"><![CDATA[加密文件和 3ds 后缀名文件不再受支持。可能需要解密和/或重命名为 cci 后缀名。<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">了解详情。</a>]]></string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">选择 GPU 驱动</string>
+    <string name="select_gpu_driver_title">您要替换当前的 GPU 驱动吗？</string>
+    <string name="select_gpu_driver_install">安装</string>
+    <string name="select_gpu_driver_default">默认</string>
+    <string name="select_gpu_driver_install_success">已安装 %s</string>
+    <string name="select_gpu_driver_use_default">使用默认 GPU 驱动</string>
+    <string name="select_gpu_driver_error">您选择了无效的驱动，因此将使用系统默认驱动！</string>
+    <string name="system_gpu_driver">系统 GPU 驱动</string>
+    <string name="installing_driver">正在安装驱动…</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">已复制到剪贴板</string>
+    <string name="contributors">贡献者</string>
+    <string name="contributors_description">使 Azahar 得以实现的贡献者</string>
+    <string name="licenses_description">Azahar 安卓版使用的项目</string>
+    <string name="build">构建版本</string>
+    <string name="licenses">许可证</string>
+    <!-- Setup strings -->
+    <string name="welcome">欢迎！</string>
+    <string name="welcome_description">了解如何设置 &lt;b>Azahar&lt;/b> 并进行模拟。</string>
+    <string name="get_started">开始</string>
+    <string name="step_complete">完成！</string>
+    <string name="games">应用</string>
+    <string name="games_description">使用下面的按钮选择您的 &lt;b>应用&lt;/b> 文件夹。</string>
+    <string name="done">完成</string>
+    <string name="done_description">一切就绪。\n尽情使用模拟器吧！</string>
+    <string name="text_continue">继续</string>
+    <string name="notifications">通知</string>
+    <string name="notifications_description">点击下面的按钮授予通知权限。</string>
+    <string name="give_permission">授予权限</string>
+    <string name="notification_warning">跳过授予通知权限？</string>
+    <string name="notification_warning_description">Azahar 将无法通知您重要信息。</string>
+    <string name="camera_permission">摄像头</string>
+    <string name="camera_permission_description">在下方授予访问相机权限以模拟 3DS 的摄像头。</string>
+    <string name="microphone_permission">麦克风</string>
+    <string name="microphone_permission_description">在下方授予访问麦克风权限以模拟 3DS 的麦克风。</string>
+    <string name="permission_denied">授权遭拒</string>
+    <string name="add_games_warning">跳过选择应用文件夹？</string>
+    <string name="add_games_warning_description">如果未选择文件夹，软件将不会显示在应用列表中。</string>
+    <string name="warning_help">帮助</string>
+    <string name="warning_skip">跳过</string>
+    <string name="warning_cancel">取消</string>
+    <string name="select_citra_user_folder">选择用户文件夹</string>
+    <string name="select_citra_user_folder_description"><![CDATA[使用下面的按钮选择您的 <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">用户数据</a>目录。]]></string>
+    <string name="select">选择</string>
+    <string name="cannot_skip">此步骤不可跳过</string>
+    <string name="cannot_skip_directory_description">此步骤是 Azahar 正常运行所必需的。请选择一个目录，然后才可继续。</string>
+    <string name="set_up_theme_settings">主题设置</string>
+    <string name="setup_theme_settings_description">配置您的 Azahar 主题偏好。</string>
+    <string name="setup_set_theme">设置主题</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">搜索和筛选应用</string>
+    <string name="home_search_games">搜索应用</string>
+    <string name="search_recently_played">最近游玩</string>
+    <string name="search_recently_added">最近添加</string>
+    <string name="search_installed">已安装</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">方向摇杆</string>
+    <string name="controller_c">C 摇杆</string>
+    <string name="controller_hotkeys">热键</string>
+    <string name="controller_triggers">双肩按键</string>
+    <string name="controller_trigger">双肩按键</string>
+    <string name="controller_dpad">十字方向键</string>
+    <string name="controller_dpad_axis">十字键（摇杆轴）</string>
+    <string name="controller_dpad_axis_description">有些控制器可能无法将其方向键映射为轴。如果是这种情况，只能使用方向键（按键）部分。</string>
+    <string name="controller_dpad_button">十字键（按键）</string>
+    <string name="controller_dpad_button_description">仅当您在方向键 (轴) 映射遇到问题时，才将方向键映射到这些按键。</string>
+    <string name="controller_axis_vertical">上/下轴</string>
+    <string name="controller_axis_horizontal">左/右轴</string>
+    <string name="direction_up">上</string>
+    <string name="direction_down">下</string>
+    <string name="direction_left">左</string>
+    <string name="direction_right">右</string>
+    <string name="input_dialog_title">绑定 %1$s %2$s</string>
+    <string name="input_dialog_description">按下或移动以进行输入。</string>
+    <string name="input_binding">绑定输入</string>
+    <string name="input_binding_description">按下按键或轻推摇杆，将其绑定到 %1$s。</string>
+    <string name="input_binding_description_vertical_axis">向上或向下轻推您的摇杆。</string>
+    <string name="input_binding_description_horizontal_axis">向左或向右轻推您的摇杆。</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">交换屏幕</string>
+    <string name="input_message_analog_only">此操作只能绑定到游戏手柄的摇杆或十字方向键上！</string>
+    <string name="input_message_button_only">此操作只能绑定到游戏手柄的按键上！</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">系统文件</string>
+    <string name="setup_system_files_description">执行系统文件操作，如安装系统文件或启动 HOME 菜单</string>
+    <string name="setup_tool_connect">连接到 Artic 设置工具</string>
+    <string name="setup_system_files_detect">正在获取当前系统文件状态，请稍候...</string>
+    <string name="setup_system_files_o3ds">老 3DS 设置</string>
+    <string name="setup_system_files_n3ds">新 3DS 设置</string>
+    <string name="setup_system_files_possible">可以进行设置。</string>
+    <string name="setup_system_files_o3ds_needed">首先需要设置老 3DS。</string>
+    <string name="setup_system_files_completed">设置已完成。</string>
+    <string name="setup_system_files_enter_address">输入 Artic 设置工具地址</string>
+    <string name="setup_system_files_preparing">正在准备设置，请稍候...</string>
+    <string name="boot_home_menu">启动 HOME 菜单</string>
+    <string name="show_home_apps">在应用列表中显示 HOME 菜单应用</string>
+    <string name="run_system_setup">启动 HOME 菜单时运行系统设置</string>
+    <string name="home_menu">HOME 菜单</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">按键</string>
+    <string name="button">按键</string>
+
+    <!-- Core settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">使用即时编译 (JIT) 进行 CPU 仿真。启用后，游戏性能将显著提高。</string>
+    <string name="init_clock">系统时钟类型</string>
+    <string name="init_clock_description">将模拟 3DS 时钟设为映射设备的实际时钟或是使用自定义的时间和日期。</string>
+    <string name="cpu_clock_speed">CPU 时钟频率</string>
+
+    <!-- System settings strings -->
+    <string name="username">用户名</string>
+    <string name="new_3ds">New 3DS 模式</string>
+    <string name="lle_applets">使用 LLE 小程序 (如果已安装)</string>
+    <string name="clock">设备时钟</string>
+    <string name="init_time">模拟时钟</string>
+    <string name="init_time_description">如果将“系统时钟类型”设置为“模拟时钟”，可以修改时钟的日期和时间。</string>
+    <string name="emulated_region">区域</string>
+    <string name="emulated_language">语言</string>
+    <string name="birthday">生日</string>
+    <string name="birthday_month">月</string>
+    <string name="birthday_day">日</string>
+    <string name="country">国家/地区</string>
+    <string name="play_coins">游戏币</string>
+    <string name="steps_per_hour">计步器每小时步数</string>
+    <string name="steps_per_hour_description">计步器报告的每小时步数。范围从 0 到 65535。</string>
+    <string name="console_id">设备 ID</string>
+    <string name="regenerate_console_id">重新生成设备 ID</string>
+    <string name="regenerate_console_id_description">这将使用一个新的虚拟 3DS 掌机 ID 取代您当前的虚拟 3DS 掌机 ID。您当前的虚拟 3DS 掌机 ID 将无法恢复。对应用内部可能会产生意外影响。如果您使用一个过时的配置存档则可能会失败。是否继续？</string>
+    <string name="plugin_loader">3GX 插件加载器</string>
+    <string name="plugin_loader_description">当插件可用时，从模拟 SD 卡加载 3GX 插件。</string>
+    <string name="allow_plugin_loader">允许应用更改插件加载器状态</string>
+    <string name="allow_plugin_loader_description">允许自制程序启用插件加载器。</string>
+    <!-- Camera settings strings -->
+    <string name="inner_camera">内置摄像头</string>
+    <string name="outer_left_camera">外置左摄像头</string>
+    <string name="outer_right_camera">外置右摄像头</string>
+    <string name="image_source">摄像头图像来源</string>
+    <string name="image_source_description">设置虚拟摄像头的图像来源。您可以选择一张图片或一个支持的摄像头设备。</string>
+    <string name="camera_device">摄像头</string>
+    <string name="camera_device_description">如果将“图像来源”设置为“实体摄像设备”，将会使用设备的摄像头作为图像来源。</string>
+    <string name="camera_facing_front">前置摄像头</string>
+    <string name="camera_facing_back">后置摄像头</string>
+    <string name="camera_facing_external">外置摄像头</string>
+    <string name="image_flip">图像翻转</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">渲染器</string>
+    <string name="graphics_api">图形 API</string>
+    <string name="spirv_shader_gen">启用 SPIR-V 着色器</string>
+    <string name="spirv_shader_gen_description">使用 SPIR-V 而不是 GLSL 来模拟 PICA 的着色器</string>
+    <string name="async_shaders">启用异步着色器编译</string>
+    <string name="async_shaders_description">在后台编译着色器以减少卡顿。可能出现短暂的图形故障</string>
+    <string name="renderer_debug">调试渲染器</string>
+    <string name="renderer_debug_description">记录更多与图形相关的调试信息。启用后，游戏性能将显著降低。</string>
+    <string name="vsync">启用垂直同步</string>
+    <string name="vsync_description">将游戏帧率与设备的屏幕刷新率同步。</string>
+    <string name="linear_filtering">线性过滤</string>
+    <string name="linear_filtering_description">开启后，游戏视觉效果会更加平滑。</string>
+    <string name="texture_filter_name">纹理滤镜</string>
+    <string name="texture_filter_description">通过对纹理使用滤镜来增强应用的视觉效果。支持的滤镜包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
+    <string name="advanced">高级选项\"</string>
+    <string name="texture_sampling_name">纹理采样</string>
+    <string name="texture_sampling_description">覆盖游戏所使用的采样过滤器。这在某些情况下提升表现不佳的游戏画质时可能很有用。如果不确定，请将其设置为“由游戏控制”</string>
+    <string name="hw_shaders">启用硬件着色器</string>
+    <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
+    <string name="shaders_accurate_mul">精确乘法运算</string>
+    <string name="shaders_accurate_mul_description">在硬件着色器中使用更加精确的乘法运算，这可能会修复一些图形错误。启用后，性能将有所降低。</string>
+    <string name="asynchronous_gpu">启用异步 GPU 模拟</string>
+    <string name="asynchronous_gpu_description">使用一个单独线程异步模拟 GPU 。启用后，游戏性能将有所提高。</string>
+    <string name="frame_limit_enable">运行速度限制</string>
+    <string name="frame_limit_enable_description">启用时，运行速度将被限制为正常速度的指定百分比。</string>
+    <string name="frame_limit_slider">限制运行速度百分比</string>
+    <string name="frame_limit_slider_description">指定限制运行速度的百分比。默认情况下，100% 将限制为正常运行速度。较高或较低的值将增加或降低运行速度。</string>
+    <string name="internal_resolution">内部分辨率</string>
+    <string name="internal_resolution_description">指定渲染使用的分辨率。高分辨率将大大提高视觉质量，但也会对性能造成很大影响，并可能导致某些应用出现故障。</string>
+    <string name="internal_resolution_setting_1x">原生（400x240）</string>
+    <string name="internal_resolution_setting_2x">2 倍（800x480）</string>
+    <string name="internal_resolution_setting_3x">3 倍（1200x720）</string>
+    <string name="internal_resolution_setting_4x">4 倍（1600x960）</string>
+    <string name="internal_resolution_setting_5x">5 倍（2000x1200）</string>
+    <string name="internal_resolution_setting_6x">6 倍（2400x1440）</string>
+    <string name="internal_resolution_setting_7x">7 倍（2800x1680）</string>
+    <string name="internal_resolution_setting_8x">8 倍（3200x1920）</string>
+    <string name="internal_resolution_setting_9x">9 倍（3600x2160）</string>
+    <string name="internal_resolution_setting_10x">10 倍（4000x2400）</string>
+    <string name="performance_warning">关闭此项将显著降低模拟性能！为了获得最佳体验，建议启用。</string>
+    <string name="debug_warning">警告：更改这些设置将降低模拟速度！</string>
+    <string name="stereoscopy">画面立体</string>
+    <string name="render3d">立体 3D 模式</string>
+    <string name="factor3d">画面深度</string>
+    <string name="factor3d_description">指定 3D 滑块按钮的值。启用立体 3D 模式时，应将其设置为高于 0% 的值。\n注意：实机硬件上不可能出现超过 100% 的深度值，并且可能会导致图形问题</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size">Cardboard 屏幕尺寸</string>
+    <string name="cardboard_screen_size_description">将屏幕缩放至其原始大小的指定百分比。</string>
+    <string name="cardboard_x_shift">水平偏移</string>
+    <string name="cardboard_x_shift_description">指定用于水平移动屏幕的百分比。正值会将左右两个视野移向中间，而负值会将左右两个视野向外侧移动。</string>
+    <string name="cardboard_y_shift">竖直偏移</string>
+    <string name="cardboard_y_shift_description">指定用于竖直移动屏幕的百分比。正值会将左右两个视野向底部移动，而负值会将左右两个视野向顶部移动。</string>
+    <string name="use_shader_jit">着色器即时编译</string>
+    <string name="use_disk_shader_cache">磁盘着色器缓存</string>
+    <string name="use_disk_shader_cache_description">通过将生成的着色器缓存到磁盘并加载，以减少卡顿。使用此功能需要启用硬件着色器。</string>
+    <string name="utility">工具</string>
+    <string name="dump_textures">转储纹理文件</string>
+    <string name="dump_textures_description">纹理文件将转储到 dump/textures/[Title ID] 目录中。</string>
+    <string name="custom_textures">自定义纹理</string>
+    <string name="custom_textures_description">加载 load/textures/[Title ID] 目录下的自定义纹理。</string>
+    <string name="preload_textures">预加载自定义纹理</string>
+    <string name="preload_textures_description">将所有的自定义纹理加载到内存中。可能会占用大量内存。</string>
+    <string name="async_custom_loading">异步加载自定义纹理</string>
+    <string name="async_custom_loading_description">在后台异步加载自定义纹理，以减少卡顿。</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_volume">音量</string>
+    <string name="audio_stretch">音频拉伸</string>
+    <string name="audio_stretch_description">拉伸音频以减少卡顿。启用后，会增加音频延迟并略微降低性能。</string>
+    <string name="realtime_audio">启用实时音频</string>
+    <string name="realtime_audio_description">调整音频播放速度以适应模拟帧率的下降。这意味着即使游戏帧率较低，音频也会全速播放。可能会导致音频不同步问题。</string>
+    <string name="audio_input_type">音频输入设备</string>
+    <string name="sound_output_mode">声音输出模式</string>
+
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">屏幕方向</string>
+    <string name="layout_screen_orientation_auto_sensor">自动</string>
+    <string name="layout_screen_orientation_landscape">横向</string>
+    <string name="layout_screen_orientation_landscape_reverse">横向反转</string>
+    <string name="layout_screen_orientation_portrait">纵向</string>
+    <string name="layout_screen_orientation_portrait_reverse">纵向反转</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">清除</string>
+    <string name="slider_default">默认</string>
+    <string name="ini_saved">已保存的设置</string>
+    <string name="gameid_saved">已将设置保存于 %1$s 中</string>
+    <string name="error_saving">保存 %1$s.ini 失败：%2$s</string>
+    <string name="loading">加载中…</string>
+    <string name="next">下一步</string>
+    <string name="back">上一步</string>
+    <string name="learn_more">了解更多</string>
+    <string name="close">关闭</string>
+    <string name="reset_to_default">恢复默认</string>
+    <string name="redump_games"><![CDATA[请按照指南以转储您的<a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">游戏卡带</a>或<a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">已安装的应用</a>。]]></string>
+    <string name="option_default">默认</string>
+    <string name="none">无</string>
+    <string name="auto">自动</string>
+    <string name="off">关闭</string>
+    <string name="install">安装</string>
+    <string name="delete">删除</string>
+    <string name="reset_all_settings">重置所有设置项？</string>
+    <string name="reset_all_settings_description">所有高级选项都将恢复为默认值。此操作不可撤销。</string>
+    <string name="settings_reset">设置项重置</string>
+    <string name="select_rtc_date">选择日期</string>
+    <string name="select_rtc_time">选择时间</string>
+    <string name="reset_setting_confirmation">您要将此设置项重置为默认值吗？</string>
+    <string name="setting_not_editable">您现在不能编辑此项</string>
+    <string name="setting_not_editable_description">在游戏运行时此项不能更改。</string>
+    <string name="auto_select">自动选择</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">选择游戏目录</string>
+
+    <!-- Game Properties -->
+    <string name="properties">属性</string>
+    <string name="properties_not_loaded">无法加载游戏属性。</string>
+
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">设置</string>
+    <string name="preferences_general">通用</string>
+    <string name="preferences_system">系统</string>
+    <string name="preferences_camera">摄像头</string>
+    <string name="preferences_controls">游戏手柄</string>
+    <string name="preferences_graphics">图形</string>
+    <string name="preferences_audio">声音</string>
+    <string name="preferences_debug">调试</string>
+    <string name="preferences_theme">主题和色彩</string>
+    <string name="preferences_layout">布局</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">您的 ROM 是加密的</string>
+    <string name="loader_error_invalid_format">无效的 ROM 格式</string>
+    <string name="loader_error_file_not_found">ROM 文件不存在</string>
+    <string name="no_game_present">目前没有可启动的游戏！</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_menu_help">按返回键呼出菜单。</string>
+    <string name="emulation_save_state">保存存档</string>
+    <string name="emulation_load_state">读取存档</string>
+    <string name="emulation_empty_state_slot">插槽 %1$d</string>
+    <string name="emulation_occupied_state_slot">插槽 %1$d - %2$tF %2$tR</string>
+    <string name="emulation_show_fps">显示 FPS</string>
+    <string name="emulation_haptic_feedback">触摸反馈</string>
+    <string name="emulation_overlay_options">虚拟按键选项</string>
+    <string name="emulation_configure_controls">控制设置</string>
+    <string name="emulation_edit_layout">编辑布局</string>
+    <string name="emulation_done">完成</string>
+    <string name="emulation_toggle_controls">切换控制</string>
+    <string name="emulation_control_scale">调整大小</string>
+    <string name="emulation_control_scale_global">全局缩放</string>
+    <string name="emulation_control_scale_reset_all">重置全部</string>
+    <string name="emulation_control_opacity">调整透明度</string>
+    <string name="emulation_control_joystick_rel_center">相对摇杆中心</string>
+    <string name="emulation_control_dpad_slide_enable">十字方向键滑动</string>
+    <string name="emulation_open_settings">打开设置项</string>
+    <string name="emulation_open_cheats">开启金手指</string>
+    <string name="emulation_switch_screen_layout">屏幕布局</string>
+    <string name="emulation_switch_portrait_layout">纵向屏幕布局</string>
+    <string name="emulation_screen_layout_largescreen">大屏幕</string>
+    <string name="emulation_screen_layout_portrait">纵向</string>
+    <string name="emulation_screen_layout_single">单个屏幕</string>
+    <string name="emulation_screen_layout_sidebyside">并排屏幕</string>
+    <string name="emulation_screen_layout_hybrid">混合式屏幕</string>
+    <string name="emulation_screen_layout_original">原始</string>
+    <string name="emulation_portrait_layout_top_full">默认</string>
+    <string name="emulation_screen_layout_custom">自定义布局</string>
+    <string name="emulation_small_screen_position">小屏幕位置</string>
+    <string name="small_screen_position_description">在“大屏幕”布局中，小屏幕相对于大屏幕应该出现的位置？</string>
+    <string name="small_screen_position_top_right">右上</string>
+    <string name="small_screen_position_middle_right">右中</string>
+    <string name="small_screen_position_bottom_right">右下（默认）</string>
+    <string name="small_screen_position_top_left">左上</string>
+    <string name="small_screen_position_middle_left">左中</string>
+    <string name="small_screen_position_bottom_left">左下</string>
+    <string name="small_screen_position_above">上面</string>
+    <string name="small_screen_position_below">下面</string>
+    <string name="large_screen_proportion">大屏幕占比</string>
+    <string name="large_screen_proportion_description">“大屏幕”布局中大屏幕比小屏幕大多少倍？</string>
+    <string name="emulation_adjust_custom_layout">在设置中调整自定义布局</string>
+    <string name="emulation_landscape_custom_layout">横向自定义布局</string>
+    <string name="emulation_portrait_custom_layout">纵向自定义布局</string>
+    <string name="emulation_top_screen">上屏幕</string>
+    <string name="emulation_bottom_screen">下屏幕</string>
+    <string name="emulation_custom_layout_x">X-位置</string>
+    <string name="emulation_custom_layout_y">Y-位置</string>
+    <string name="emulation_custom_layout_width">宽度</string>
+    <string name="emulation_custom_layout_height">高度</string>
+    <string name="emulation_cycle_landscape_layouts">环形布局</string>
+    <string name="emulation_swap_screens">交换上下屏</string>
+    <string name="emulation_touch_overlay_reset">重置虚拟按键</string>
+    <string name="emulation_show_overlay">显示虚拟按键</string>
+    <string name="emulation_close_game">关闭游戏</string>
+    <string name="emulation_toggle_pause">暂停/继续</string>
+    <string name="emulation_close_game_message">您确定要关闭当前的游戏吗？</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">加载</string>
+    <string name="menu_emulation_amiibo_remove">移除</string>
+    <string name="select_amiibo">选择 Amiibo 文件</string>
+    <string name="amiibo_load_error">加载 Amiibo 时出错</string>
+    <string name="amiibo_load_error_message">加载该 Amiibo 文件时，发生了一个错误。请检查文件是否完整无错误。</string>
+    <string name="pause_emulation">暂停模拟</string>
+    <string name="resume_emulation">继续模拟</string>
+    <string name="lock_drawer">锁定侧滑菜单</string>
+    <string name="unlock_drawer">解锁侧滑菜单</string>
+
+    <string name="write_permission_needed">您需要允许 Lime3DS 对外部存储器进行读写访问，以便模拟器正常工作。</string>
+    <string name="load_settings">正在加载设置…</string>
+
+    <string name="external_storage_not_mounted">需要可用的外部存储才能使用 Azahar</string>
+
+    <string name="select_dir">选择此目录</string>
+    <string name="empty_gamelist">找不到游戏文件或尚未添加游戏目录。</string>
+
+    <string name="do_not_show_this_again">不要再显示</string>
+    <string name="searching_directory">正在搜索目录：%s</string>
+    <string name="move_data">数据移动</string>
+    <string name="moving_data">移动数据中…</string>
+    <string name="copy_file_name">复制文件：%s</string>
+    <string name="copy_complete">复制完成</string>
+    <string name="savestates">保存存档</string>
+    <string name="savestate_warning_message">警告：即时存档不能替代游戏内存档，它并不完全可靠。
+\n
+\n您必须自行承担使用风险！</string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">软件键盘</string>
+    <string name="i_forgot">我忘记了</string>
+    <string name="fixed_length_required">文本长度不正确（应为 %d 个字符）</string>
+    <string name="max_length_exceeded">输入文本过长（不应超过 %d 个字符）</string>
+    <string name="blank_input_not_allowed">不允许空白输入</string>
+    <string name="empty_input_not_allowed">请输入字符</string>
+    <string name="invalid_input">无效输入</string>
+
+    <!-- Mii Selector -->
+    <string name="mii_selector">Mii 选择器</string>
+    <string name="standard_mii">标准 Mii</string>
+
+    <!-- Camera -->
+    <string name="camera_select_image">选择图像</string>
+    <string name="camera">摄像头</string>
+    <string name="camera_permission_needed">Azahar 需要访问您的摄像头来模拟 3DS 的摄像头。\n\n或者，您也可以在摄像头设置中将“图像来源”设置为“静止图像”。</string>
+
+    <!-- Microphone -->
+    <string name="microphone">麦克风</string>
+    <string name="microphone_permission_needed">Azahar 需要访问您的麦克风来模拟 3DS 的麦克风。\n\n或者，您也可以在音频设置中更改“音频输入设备”。</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">中止</string>
+    <string name="continue_button">继续</string>
+    <string name="system_archive_not_found">未找到系统档案</string>
+    <string name="system_archive_not_found_message">%s 丢失。请转储您的系统档案。\n继续模拟可能会导致错误和崩溃。</string>
+    <string name="cia_file_not_found">安装失败。未找到 CIA 文件。</string>
+    <string name="system_archive_general">系统档案</string>
+    <string name="save_load_error">保存/读取出现错误</string>
+    <string name="fatal_error">致命错误</string>
+    <string name="fatal_error_message">发生致命错误。请查阅日志获取相关信息。\n继续模拟可能会导致错误和崩溃。</string>
+    <string name="invalid_region">无效的地区</string>
+    <string name="unsupported_encrypted">不支持的加密应用</string>
+
+    <!-- Disk Shader Cache -->
+    <string name="preparing_shaders">正在准备着色器</string>
+    <string name="building_shaders">正在构建着色器</string>
+
+    <!-- About Game Dialog -->
+    <string name="play">开始游戏</string>
+    <string name="shortcut">快捷方式</string>
+
+    <!-- Cheats -->
+    <string name="cheats">金手指</string>
+    <string name="cheats_add">添加金手指</string>
+    <string name="cheats_name">名称</string>
+    <string name="cheats_notes">注释</string>
+    <string name="cheats_code">代码</string>
+    <string name="cheats_edit">编辑</string>
+    <string name="cheats_delete">删除</string>
+    <string name="cheats_delete_confirmation">您确定要删除“%1$s”吗？</string>
+    <string name="cheats_error_no_name">名称不能为空</string>
+    <string name="cheats_error_no_code_lines">代码不能为空</string>
+    <string name="cheats_error_on_line">第 %1$d 行出现错误</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="other">正在安装 %d 个文件。请查看通知了解详情。</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">CIA 安装期间的 Azahar 通知</string>
+    <string name="cia_install_notification_title">正在安装 CIA 文件</string>
+    <string name="cia_install_notification_installing">正在安装 %1$s (%2$d/%3$d)</string>
+    <string name="cia_install_notification_success_title">CIA 文件安装成功</string>
+    <string name="cia_install_notification_error_title">CIA 文件安装失败</string>
+    <string name="cia_install_success">“%s”已安装成功</string>
+    <string name="cia_install_error_aborted">“%s”的安装中断。
+\n详情请参阅日志文件</string>
+    <string name="cia_install_error_invalid">“%s”不是有效的 CIA 文件</string>
+    <string name="cia_install_error_encrypted">“%s”必须先解密才能与 Azahar 一起使用。\n 需要一台真正的 3DS 掌机</string>
+    <string name="cia_install_error_unknown">安装“%s”时出现未知错误。
+\n详情请参阅日志文件</string>
+
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s %2$s</string>
+    <string name="memory_byte">字节</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- System theme -->
+    <string name="change_theme_mode">主题模式</string>
+    <string name="theme_mode_follow_system">跟随系统</string>
+    <string name="theme_mode_light">浅色</string>
+    <string name="theme_mode_dark">深色</string>
+
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
+    <string name="material_you_description">在整个应用中使用操作系统的颜色主题（启用后将覆盖“主题颜色”设置）</string>
+
+    <!-- Static theme color -->
+    <string name="static_theme_color">主题颜色</string>
+    <string name="static_theme_color_description">更改应用菜单的颜色主题</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">黑色背景</string>
+    <string name="use_black_backgrounds_description">使用深色主题时，套用黑色背景。</string>
+
+    <!-- Clock types -->
+    <string name="device_clock">设备时钟</string>
+    <string name="simulated_clock">模拟时钟</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">日本（JPN）</string>
+    <string name="system_region_usa">北美（USA）</string>
+    <string name="system_region_eur">欧洲（EUR）</string>
+    <string name="system_region_aus">澳大利亚（AUS）</string>
+    <string name="system_region_chn">中国大陆（CHN）</string>
+    <string name="system_region_kor">韩国（KOR）</string>
+    <string name="system_region_twn">港台（TWN）</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">日语（日本語）</string>
+    <string name="language_english">英语（English）</string>
+    <string name="language_french">法语（Français）</string>
+    <string name="language_german">德语（Deutsch）</string>
+    <string name="language_italian">意大利语（Italiano）</string>
+    <string name="language_spanish">西班牙语（Español）</string>
+    <string name="language_simplified_chinese">简体中文</string>
+    <string name="language_korean">朝鲜语（한국어）</string>
+    <string name="language_dutch">荷兰语（Nederlands）</string>
+    <string name="language_portuguese">葡萄牙语（Português）</string>
+    <string name="language_russian">俄语（Русский）</string>
+    <string name="language_traditional_chinese">繁体中文（正體中文）</string>
+
+    <!-- Camera image sources -->
+    <string name="blank">空白</string>
+    <string name="still_image">图片</string>
+    <string name="device_camera">实体摄像头</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">前置摄像头</string>
+    <string name="any_back_camera">后置摄像头</string>
+
+    <!-- Camera flip names -->
+    <string name="horizontal">水平偏移</string>
+    <string name="vertical">竖直偏移</string>
+    <string name="reverse">颠倒</string>
+
+    <!-- Audio input types -->
+    <string name="static_noise">静态噪声</string>
+    <string name="real_cubeb">实体设备（cubeb）</string>
+    <string name="real_openal">实体设备（OpenAL）</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">并排屏幕</string>
+    <string name="reverse_side_by_side">反向并排</string>
+    <string name="anaglyph">立体图形</string>
+    <string name="interlaced">交错</string>
+    <string name="reverse_interlaced">逆向交错</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGL ES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="bicubic">双三线过滤</string>
+    <string name="scaleforce">强制缩放</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">由游戏控制</string>
+    <string name="nearest_neighbor">最近邻</string>
+    <string name="linear">线性过滤</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">单声道</string>
+    <string name="stereo">立体声</string>
+    <string name="surround">环绕声</string>
+
+    <!-- Countries -->
+    <string name="japan">日本</string>
+    <string name="anguilla">安圭拉</string>
+    <string name="antigua_and_barbuda">安提瓜和巴布达</string>
+    <string name="argentina">阿根廷</string>
+    <string name="aruba">阿鲁巴</string>
+    <string name="bahamas">巴哈马</string>
+    <string name="barbados">巴巴多斯</string>
+    <string name="belize">伯利兹</string>
+    <string name="bolivia">玻利维亚</string>
+    <string name="brazil">巴西</string>
+    <string name="british_virgin_islands">英属维尔京群岛</string>
+    <string name="canada">加拿大</string>
+    <string name="cayman_islands">开曼群岛</string>
+    <string name="chile">智利</string>
+    <string name="colombia">哥伦比亚</string>
+    <string name="costa_rica">哥斯达黎加</string>
+    <string name="dominica">多米尼克</string>
+    <string name="dominican_republic">多米尼加</string>
+    <string name="ecuador">厄瓜多尔</string>
+    <string name="el_salvador">萨尔瓦多</string>
+    <string name="french_guiana">法属圭亚那</string>
+    <string name="grenada">格林纳达</string>
+    <string name="guadeloupe">瓜德罗普</string>
+    <string name="guatemala">危地马拉</string>
+    <string name="guyana">圭亚那</string>
+    <string name="haiti">海地</string>
+    <string name="honduras">洪都拉斯</string>
+    <string name="jamaica">牙买加</string>
+    <string name="matinique">马提尼克</string>
+    <string name="mexico">墨西哥</string>
+    <string name="monsterrat">蒙特塞拉特</string>
+    <string name="netherlands_antilles">荷属安的列斯群岛</string>
+    <string name="nicaragua">尼加拉瓜</string>
+    <string name="panama">巴拿马</string>
+    <string name="paraguay">巴拉圭</string>
+    <string name="peru">秘鲁</string>
+    <string name="saint_kittis_and_nevis">圣基茨和尼维斯</string>
+    <string name="saint_lucia">圣卢西亚</string>
+    <string name="saint_vincent_and_the_grenadines">圣文森特和格林纳丁斯</string>
+    <string name="suriname">苏里南</string>
+    <string name="trinidad_and_tobago">特立尼达和多巴哥</string>
+    <string name="turks_and_caicos_islands">特克斯和凯科斯群岛</string>
+    <string name="united_states">美国</string>
+    <string name="uruguay">乌拉圭</string>
+    <string name="us_virgin_islands">美属维尔京群岛</string>
+    <string name="venezuela">委内瑞拉</string>
+    <string name="albania">阿尔巴尼亚</string>
+    <string name="australia">澳大利亚</string>
+    <string name="austria">奥地利</string>
+    <string name="belgium">比利时</string>
+    <string name="bosnia_and_herzegovnia">波斯尼亚和黑塞哥维那</string>
+    <string name="botswana">博茨瓦纳</string>
+    <string name="bulgaria">保加利亚</string>
+    <string name="croatia">克罗地亚</string>
+    <string name="cyprus">塞浦路斯</string>
+    <string name="czech_republic">捷克</string>
+    <string name="denmark">丹麦</string>
+    <string name="estonia">爱沙尼亚</string>
+    <string name="finland">芬兰</string>
+    <string name="france">法国</string>
+    <string name="germany">德国</string>
+    <string name="greece">希腊</string>
+    <string name="hungary">匈牙利</string>
+    <string name="iceland">冰岛</string>
+    <string name="ireland">爱尔兰</string>
+    <string name="italy">意大利</string>
+    <string name="latvia">拉脱维亚</string>
+    <string name="lesotho">莱索托</string>
+    <string name="liechtenstein">列支敦士登</string>
+    <string name="lithuania">立陶宛</string>
+    <string name="luxembourg">卢森堡</string>
+    <string name="macedonia">马其顿</string>
+    <string name="malta">马耳他</string>
+    <string name="montenegro">黑山</string>
+    <string name="mozambique">莫桑比克</string>
+    <string name="namibia">纳米比亚</string>
+    <string name="netherlands">荷兰</string>
+    <string name="new_zealand">新西兰</string>
+    <string name="norway">挪威</string>
+    <string name="poland">波兰</string>
+    <string name="portugal">葡萄牙</string>
+    <string name="romania">罗马尼亚</string>
+    <string name="russia">俄罗斯</string>
+    <string name="serbia">塞尔维亚</string>
+    <string name="slovakia">斯洛伐克</string>
+    <string name="slovenia">斯洛文尼亚</string>
+    <string name="south_africa">南非</string>
+    <string name="spain">西班牙</string>
+    <string name="swaziland">斯威士兰</string>
+    <string name="sweden">瑞典</string>
+    <string name="switzerland">瑞士</string>
+    <string name="turkey">土耳其</string>
+    <string name="united_kingdom">英国</string>
+    <string name="zambia">赞比亚</string>
+    <string name="zimbabwe">津巴布韦</string>
+    <string name="azerbaijan">阿塞拜疆</string>
+    <string name="mauritania">毛里塔尼亚</string>
+    <string name="mali">马里</string>
+    <string name="niger">尼日尔</string>
+    <string name="chad">乍得</string>
+    <string name="sudan">苏丹</string>
+    <string name="eritrea">厄立特里亚</string>
+    <string name="djibouti">吉布提</string>
+    <string name="somalia">索马里</string>
+    <string name="andorra">安道尔</string>
+    <string name="gibraltar">直布罗陀</string>
+    <string name="guernsey">根西岛</string>
+    <string name="isle_of_man">马恩岛</string>
+    <string name="jersey">泽西岛</string>
+    <string name="monaco">摩纳哥</string>
+    <string name="taiwan">中国台湾</string>
+    <string name="south_korea">韩国</string>
+    <string name="hong_kong">中国香港</string>
+    <string name="macau">中国澳门</string>
+    <string name="indonesia">印度尼西亚</string>
+    <string name="singapore">新加坡</string>
+    <string name="thailand">泰国</string>
+    <string name="philippines">菲律宾</string>
+    <string name="malaysia">马来西亚</string>
+    <string name="china">中国大陆</string>
+    <string name="united_arab_emirates">阿联酋</string>
+    <string name="india">印度</string>
+    <string name="egypt">埃及</string>
+    <string name="oman">阿曼</string>
+    <string name="qatar">卡塔尔</string>
+    <string name="kuwait">科威特</string>
+    <string name="saudi_arabia">沙特阿拉伯</string>
+    <string name="syria">叙利亚</string>
+    <string name="bahrain">巴林</string>
+    <string name="jordan">约旦</string>
+    <string name="san_marino">圣马力诺</string>
+    <string name="vatican_city">梵蒂冈城</string>
+    <string name="bermuda">百慕大群岛</string>
+
+    <!-- Months -->
+    <string name="january">一月</string>
+    <string name="february">二月</string>
+    <string name="march">三月</string>
+    <string name="april">四月</string>
+    <string name="may">五月</string>
+    <string name="june">六月</string>
+    <string name="july">七月</string>
+    <string name="august">八月</string>
+    <string name="september">九月</string>
+    <string name="october">十月</string>
+    <string name="november">十一月</string>
+    <string name="december">十二月</string>
+
+    <!-- Artic base -->
+    <string name="artic_server_comm_error">无法与 Artic Base 服务器通信。将停止模拟。</string>
+    <string name="artic_base">Artic Base</string>
+    <string name="artic_base_connect_description">连接到运行 Artic Base 服务器的真实主机</string>
+    <string name="artic_base_connect">连接到 Artic Base</string>
+    <string name="artic_base_enter_address">输入 Arctic Base 服务器地址</string>
+    <string name="delay_render_thread">延迟游戏渲染线程</string>
+    <string name="delay_render_thread_description">在游戏渲染线程向 GPU 提交数据时延迟线程。有助于解决（极少数）具有动态帧率应用的性能问题。</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">快速保存</string>
+    <string name="emulation_quicksave">快速保存</string>
+    <string name="emulation_quickload">快速加载</string>
+    <string name="emulation_occupied_quicksave_slot">快速保存 - %1$tF %1$tR</string>
+    <string name="quicksave_saving">正在保存...</string>
+    <string name="quickload_loading">正在加载...</string>
+    <string name="quickload_not_found">没有可用的快速保存。</string>
+    <string name="miscellaneous">杂项</string>
+    <string name="use_artic_base_controller">连接到 Artic Base 服务器时使用 Artic 控制器</string>
+    <string name="use_artic_base_controller_description">连接到 Artic Base 服务器时使用其提供的控制器，而不是配置的输入设备。</string>
+    <string name="instant_debug_log">刷新每条消息的日志输出</string>
+    <string name="instant_debug_log_description">立即将调试日志提交到文件。如果 Azahar 崩溃并且日志输出被切断，请使用此选项。</string>
+    <string name="disable_right_eye_render">禁用右眼渲染</string>
+    <string name="disable_right_eye_render_description">极大地提高某些应用的性能，但可能会导致其他应用出现闪烁。</string>
+    <string name="delay_start_lle_modules">使用 LLE 模块延迟启动</string>
+    <string name="delay_start_lle_modules_description">当 LLE 模块启用时延迟应用的启动。</string>
+    <string name="deterministic_async_operations">确定性异步操作</string>
+    <string name="deterministic_async_operations_description">使异步操作在调试时具有确定性。启用此功能可能会导致停滞。</string>
+    <string name="enable_required_online_lle_modules">启用在线功能所需的 LLE 模块（如果已安装）</string>
+    <string name="enable_required_online_lle_modules_desc">启用在线多人游戏、eShop 访问等所需的 LLE 模块。</string>
+    <string name="emulation_settings">模拟设置</string>
+    <string name="profile_settings">资料设置</string>
+    <string name="mac_address">MAC 地址</string>
+    <string name="regenerate_mac_address">重新生成 MAC 地址</string>
+    <string name="regenerate_mac_address_description">这将用新 MAC 地址替换您当前的 MAC 地址。如果您使用设置工具从真实掌机获取 MAC 地址，则不建议执行此操作。是否继续？</string>
+</resources>

@@ -1,10 +1,11 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <optional>
+#include <utility>
 #include <vector>
 #include "common/common_types.h"
 
@@ -25,5 +26,10 @@ std::string GetHomeMenuNcchPath(u32 region);
 
 /// Returns the region of a system title, if it can be determined.
 std::optional<u32> GetSystemTitleRegion(u64 title_id);
+
+/// Determines if all system titles are installed for o3ds and n3ds.
+std::pair<bool, bool> AreSystemTitlesInstalled();
+
+void UninstallSystemFiles(SystemTitleSet set);
 
 } // namespace Core

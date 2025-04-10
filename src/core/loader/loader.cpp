@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -112,6 +112,12 @@ static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::
         return std::make_unique<AppLoader_NCCH>(system, std::move(file), filepath);
 
     case FileType::ARTIC: {
+        Apploader_Artic::ArticInitMode mode = Apploader_Artic::ArticInitMode::NONE;
+        if (filename.starts_with("articinio://")) {
+            mode = Apploader_Artic::ArticInitMode::O3DS;
+        } else if (filename.starts_with("articinin://")) {
+            mode = Apploader_Artic::ArticInitMode::N3DS;
+        }
         auto strToUInt = [](const std::string& str) -> int {
             char* pEnd = NULL;
             unsigned long ul = ::strtoul(str.c_str(), &pEnd, 10);
@@ -121,7 +127,7 @@ static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::
         };
 
         u16 port = 5543;
-        std::string server_addr = filename;
+        std::string server_addr = filename.substr(12);
         auto pos = server_addr.find(":");
         if (pos != server_addr.npos) {
             int newVal = strToUInt(server_addr.substr(pos + 1));
@@ -130,7 +136,7 @@ static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::
                 server_addr = server_addr.substr(0, pos);
             }
         }
-        return std::make_unique<Apploader_Artic>(system, server_addr, port);
+        return std::make_unique<Apploader_Artic>(system, server_addr, port, mode);
     }
 
     default:
@@ -139,9 +145,10 @@ static std::unique_ptr<AppLoader> GetFileLoader(Core::System& system, FileUtil::
 }
 
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
-    if (filename.starts_with("articbase://")) {
+    if (filename.starts_with("articbase://") || filename.starts_with("articinio://") ||
+        filename.starts_with("articinin://")) {
         return GetFileLoader(Core::System::GetInstance(), FileUtil::IOFile(), FileType::ARTIC,
-                             filename.substr(12), "");
+                             filename, "");
     }
 
     FileUtil::IOFile file(filename, "rb");

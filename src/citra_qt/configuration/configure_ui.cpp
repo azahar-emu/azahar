@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,8 +30,13 @@ void ConfigureUi::InitializeLanguageComboBox() {
         QString locale = it.next();
         locale.truncate(locale.lastIndexOf(QLatin1Char{'.'}));
         locale.remove(0, locale.lastIndexOf(QLatin1Char{'/'}) + 1);
-        const QString lang = QLocale::languageToString(QLocale(locale).language());
+        QString lang = QLocale::languageToString(QLocale(locale).language());
         const QString country = QLocale::territoryToString(QLocale(locale).territory());
+        if (locale == QString::fromStdString("ca_ES_valencia")) {
+            // QT returns "Catalan" for the "Valencian" dialect, so we have to change the
+            // language name manually here.
+            lang = QString::fromStdString("Valencian");
+        }
         ui->language_combobox->addItem(QStringLiteral("%1 (%2)").arg(lang, country), locale);
     }
 

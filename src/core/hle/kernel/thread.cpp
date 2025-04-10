@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -59,6 +59,19 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar & wait_objects;
     ar & wait_address;
     ar & name;
+    if (Archive::is_loading::value) {
+        bool serialize_blocked;
+        ar & serialize_blocked;
+        if (!serialize_blocked) {
+            ar & wakeup_callback;
+        }
+    } else {
+        bool serialize_blocked = wakeup_callback.get() && !wakeup_callback->SupportsSerialization();
+        ar & serialize_blocked;
+        if (!serialize_blocked) {
+            ar & wakeup_callback;
+        }
+    }
     ar & wakeup_callback;
 }
 SERIALIZE_IMPL(Thread)

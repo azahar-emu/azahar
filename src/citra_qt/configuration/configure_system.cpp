@@ -237,8 +237,17 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             &ConfigureSystem::UpdateInitTicks);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
-    connect(ui->button_start_download, &QPushButton::clicked, this,
-            &ConfigureSystem::DownloadFromNUS);
+    connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
+    connect(ui->button_unlink_console, &QPushButton::clicked, this,
+            &ConfigureSystem::UnlinkConsole);
+    connect(ui->combo_country, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this](int index) {
+                CheckCountryValid(static_cast<u8>(ui->combo_country->itemData(index).toInt()));
+            });
+    connect(ui->region_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            [this]([[maybe_unused]] int index) {
+                CheckCountryValid(static_cast<u8>(ui->combo_country->currentData().toInt()));
+            });
 
     connect(ui->button_secure_info, &QPushButton::clicked, this, [this] {
         ui->button_secure_info->setEnabled(false);
@@ -279,36 +288,10 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             ui->combo_country->addItem(tr(country_names.at(i)), i);
         }
     }
+    ui->label_country_invalid->setVisible(false);
+    ui->label_country_invalid->setStyleSheet(QStringLiteral("QLabel { color: #ff3333; }"));
 
     SetupPerGameUI();
-
-    ui->combo_download_set->setCurrentIndex(0);    // set to Minimal
-    ui->combo_download_region->setCurrentIndex(0); // set to the base region
-
-    HW::AES::InitKeys(true);
-    bool keys_available = HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure1) &&
-                          HW::AES::IsKeyXAvailable(HW::AES::KeySlotID::NCCHSecure2);
-    for (u8 i = 0; i < HW::AES::MaxCommonKeySlot && keys_available; i++) {
-        HW::AES::SelectCommonKeyIndex(i);
-        if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::TicketCommonKey)) {
-            keys_available = false;
-            break;
-        }
-    }
-    if (keys_available) {
-        ui->button_start_download->setEnabled(true);
-        ui->combo_download_set->setEnabled(true);
-        ui->combo_download_region->setEnabled(true);
-        ui->label_nus_download->setText(tr("Download System Files from Nintendo servers"));
-    } else {
-        ui->button_start_download->setEnabled(false);
-        ui->combo_download_set->setEnabled(false);
-        ui->combo_download_region->setEnabled(false);
-        ui->label_nus_download->setTextInteractionFlags(Qt::TextBrowserInteraction);
-        ui->label_nus_download->setOpenExternalLinks(true);
-        ui->label_nus_download->setText(tr("Azahar is missing keys to download system files."));
-    }
-
     ConfigureTime();
 }
 
@@ -316,6 +299,19 @@ ConfigureSystem::~ConfigureSystem() = default;
 
 void ConfigureSystem::SetConfiguration() {
     enabled = !system.IsPoweredOn();
+
+    if (!Settings::IsConfiguringGlobal()) {
+        ConfigurationShared::SetHighlight(ui->region_label,
+                                          !Settings::values.region_value.UsingGlobal());
+        const bool is_region_global = Settings::values.region_value.UsingGlobal();
+        ui->region_combobox->setCurrentIndex(
+            is_region_global ? ConfigurationShared::USE_GLOBAL_INDEX
+                             : static_cast<int>(Settings::values.region_value.GetValue()) +
+                                   ConfigurationShared::USE_GLOBAL_OFFSET + 1);
+    } else {
+        // The first item is "auto-select" with actual value -1, so plus one here will do the trick
+        ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
+    }
 
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock.GetValue()));
     QDateTime date_time;
@@ -348,6 +344,8 @@ void ConfigureSystem::SetConfiguration() {
 
     ui->toggle_new_3ds->setChecked(Settings::values.is_new_3ds.GetValue());
     ui->toggle_lle_applets->setChecked(Settings::values.lle_applets.GetValue());
+    ui->enable_required_online_lle_modules->setChecked(
+        Settings::values.enable_required_online_lle_modules.GetValue());
     ui->plugin_loader->setChecked(Settings::values.plugin_loader_enabled.GetValue());
     ui->allow_plugin_loader->setChecked(Settings::values.allow_plugin_loader.GetValue());
 }
@@ -376,6 +374,7 @@ void ConfigureSystem::ReadSystemSettings() {
     // set the country code
     country_code = cfg->GetCountryCode();
     ui->combo_country->setCurrentIndex(ui->combo_country->findData(country_code));
+    CheckCountryValid(country_code);
 
     // set whether system setup is needed
     system_setup = cfg->IsSystemSetupNeeded();
@@ -385,13 +384,12 @@ void ConfigureSystem::ReadSystemSettings() {
     u64 console_id = cfg->GetConsoleUniqueId();
     ui->label_console_id->setText(
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
+    mac_address = cfg->GetMacAddress();
+    ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
 
     // set play coin
     play_coin = Service::PTM::Module::GetPlayCoins();
     ui->spinBox_play_coins->setValue(play_coin);
-
-    // set firmware download region
-    ui->combo_download_region->setCurrentIndex(static_cast<int>(cfg->GetRegionValue()));
 
     // Refresh secure data status
     RefreshSecureDataStatus();
@@ -399,6 +397,10 @@ void ConfigureSystem::ReadSystemSettings() {
 
 void ConfigureSystem::ApplyConfiguration() {
     if (enabled) {
+        ConfigurationShared::ApplyPerGameSetting(&Settings::values.region_value,
+                                                 ui->region_combobox,
+                                                 [](s32 index) { return index - 1; });
+
         bool modified = false;
 
         // apply username
@@ -459,6 +461,9 @@ void ConfigureSystem::ApplyConfiguration() {
                                                  is_new_3ds);
         ConfigurationShared::ApplyPerGameSetting(&Settings::values.lle_applets,
                                                  ui->toggle_lle_applets, lle_applets);
+        ConfigurationShared::ApplyPerGameSetting(
+            &Settings::values.enable_required_online_lle_modules,
+            ui->enable_required_online_lle_modules, required_online_lle_modules);
 
         Settings::values.init_clock =
             static_cast<Settings::InitClock>(ui->combo_init_clock->currentIndex());
@@ -481,9 +486,14 @@ void ConfigureSystem::ApplyConfiguration() {
         Settings::values.init_time_offset = time_offset_days + time_offset_time;
         Settings::values.is_new_3ds = ui->toggle_new_3ds->isChecked();
         Settings::values.lle_applets = ui->toggle_lle_applets->isChecked();
+        Settings::values.enable_required_online_lle_modules =
+            ui->enable_required_online_lle_modules->isChecked();
 
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
+
+        cfg->GetMacAddress() = mac_address;
+        cfg->SaveMacAddress();
     }
 }
 
@@ -547,14 +557,17 @@ void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
 }
 
 void ConfigureSystem::RefreshConsoleID() {
+    ui->button_regenerate_console_id->setEnabled(false);
     QMessageBox::StandardButton reply;
-    QString warning_text = tr("This will replace your current virtual 3DS with a new one. "
-                              "Your current virtual 3DS will not be recoverable. "
-                              "This might have unexpected effects in applications. This might fail "
-                              "if you use an outdated config save. Continue?");
-    reply = QMessageBox::critical(this, tr("Warning"), warning_text,
-                                  QMessageBox::No | QMessageBox::Yes);
+    QString warning_text =
+        tr("This will replace your current virtual 3DS console ID with a new one. "
+           "Your current virtual 3DS console ID will not be recoverable. "
+           "This might have unexpected effects in applications. This might fail "
+           "if you use an outdated config save. Continue?");
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
     if (reply == QMessageBox::No) {
+        ui->button_regenerate_console_id->setEnabled(true);
         return;
     }
 
@@ -563,6 +576,73 @@ void ConfigureSystem::RefreshConsoleID() {
     cfg->UpdateConfigNANDSavegame();
     ui->label_console_id->setText(
         tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
+    ui->button_regenerate_console_id->setEnabled(true);
+}
+
+void ConfigureSystem::RefreshMAC() {
+    ui->button_regenerate_mac->setEnabled(false);
+    QMessageBox::StandardButton reply;
+    QString warning_text = tr("This will replace your current MAC address with a new one. "
+                              "It is not recommended to do this if you got the MAC address from "
+                              "your real console using the setup tool. Continue?");
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
+    if (reply == QMessageBox::No) {
+        ui->button_regenerate_mac->setEnabled(true);
+        return;
+    }
+
+    mac_address = Service::CFG::GenerateRandomMAC();
+    ui->label_mac->setText(tr("MAC: %1").arg(QString::fromStdString(mac_address)));
+    ui->button_regenerate_mac->setEnabled(true);
+}
+
+void ConfigureSystem::UnlinkConsole() {
+    ui->button_unlink_console->setEnabled(false);
+    QMessageBox::StandardButton reply;
+    QString warning_text =
+        tr("This action will unlink your real console from Azahar, with the following "
+           "consequences:<br><ul><li>Your OTP, SecureInfo and LocalFriendCodeSeed will be removed "
+           "from Azahar.</li><li>Your friend list will reset and you will be logged out of your "
+           "NNID/PNID account.</li><li>System files and eshop titles obtained through Azahar will "
+           "become inaccessible until the same console is linked again (save data will not be "
+           "lost).</li></ul><br>Continue?");
+    reply =
+        QMessageBox::warning(this, tr("Warning"), warning_text, QMessageBox::No | QMessageBox::Yes);
+    if (reply == QMessageBox::No) {
+        ui->button_unlink_console->setEnabled(true);
+        return;
+    }
+
+    HW::UniqueData::UnlinkConsole();
+    RefreshSecureDataStatus();
+    ui->button_unlink_console->setEnabled(true);
+}
+
+void ConfigureSystem::CheckCountryValid(u8 country) {
+    // TODO(PabloMK7): Make this per-game compatible
+    if (!Settings::IsConfiguringGlobal())
+        return;
+
+    s32 region = ui->region_combobox->currentIndex() - 1;
+    QString label_text;
+
+    if (region != Settings::REGION_VALUE_AUTO_SELECT &&
+        !cfg->IsValidRegionCountry(static_cast<u32>(region), country)) {
+        label_text = tr("Invalid country for configured region");
+    }
+    if (HW::UniqueData::GetSecureInfoA().IsValid()) {
+        region = static_cast<u32>(cfg->GetRegionValue(true));
+        if (!cfg->IsValidRegionCountry(static_cast<u32>(region), country)) {
+            if (!label_text.isEmpty()) {
+                label_text += QString::fromStdString("\n");
+            }
+            label_text += tr("Invalid country for console unique data");
+        }
+    }
+
+    ui->label_country_invalid->setText(label_text);
+    ui->label_country_invalid->setVisible(!label_text.isEmpty());
 }
 
 void ConfigureSystem::InstallSecureData(const std::string& from_path, const std::string& to_path) {
@@ -605,6 +685,15 @@ void ConfigureSystem::RefreshSecureDataStatus() {
         tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadOTP())).c_str()));
     ui->label_movable_status->setText(
         tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadMovable())).c_str()));
+
+    if (HW::UniqueData::IsFullConsoleLinked()) {
+        ui->linked_console->setVisible(true);
+        ui->button_otp->setEnabled(false);
+        ui->button_secure_info->setEnabled(false);
+        ui->button_friend_code_seed->setEnabled(false);
+    } else {
+        ui->linked_console->setVisible(false);
+    }
 }
 
 void ConfigureSystem::RetranslateUI() {
@@ -616,6 +705,9 @@ void ConfigureSystem::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_new_3ds->setEnabled(Settings::values.is_new_3ds.UsingGlobal());
         ui->toggle_lle_applets->setEnabled(Settings::values.lle_applets.UsingGlobal());
+        ui->enable_required_online_lle_modules->setEnabled(
+            Settings::values.enable_required_online_lle_modules.UsingGlobal());
+        ui->region_combobox->setEnabled(Settings::values.region_value.UsingGlobal());
         return;
     }
 
@@ -627,6 +719,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_init_ticks_type->setVisible(false);
     ui->label_init_ticks_value->setVisible(false);
     ui->label_console_id->setVisible(false);
+    ui->label_mac->setVisible(false);
     ui->label_sound->setVisible(false);
     ui->label_language->setVisible(false);
     ui->label_country->setVisible(false);
@@ -648,6 +741,7 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->edit_init_ticks_value->setVisible(false);
     ui->toggle_system_setup->setVisible(false);
     ui->button_regenerate_console_id->setVisible(false);
+    ui->button_regenerate_mac->setVisible(false);
     // Apps can change the state of the plugin loader, so plugins load
     // to a chainloaded app with specific parameters. Don't allow
     // the plugin loader state to be configured per-game as it may
@@ -655,20 +749,16 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->label_plugin_loader->setVisible(false);
     ui->plugin_loader->setVisible(false);
     ui->allow_plugin_loader->setVisible(false);
-    // Disable the system firmware downloader.
-    ui->label_nus_download->setVisible(false);
-    ui->body_nus_download->setVisible(false);
+    ui->group_real_console_unique_data->setVisible(false);
 
     ConfigurationShared::SetColoredTristate(ui->toggle_new_3ds, Settings::values.is_new_3ds,
                                             is_new_3ds);
     ConfigurationShared::SetColoredTristate(ui->toggle_lle_applets, Settings::values.lle_applets,
                                             lle_applets);
-}
-
-void ConfigureSystem::DownloadFromNUS() {
-    ui->button_start_download->setEnabled(false);
-
-    QMessageBox::critical(this, tr("Azahar"), tr("Downloading from NUS has been deprecated."));
-
-    ui->button_start_download->setEnabled(true);
+    ConfigurationShared::SetColoredTristate(ui->enable_required_online_lle_modules,
+                                            Settings::values.enable_required_online_lle_modules,
+                                            required_online_lle_modules);
+    ConfigurationShared::SetColoredComboBox(
+        ui->region_combobox, ui->region_label,
+        static_cast<u32>(Settings::values.region_value.GetValue(true) + 1));
 }

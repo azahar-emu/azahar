@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,9 +42,9 @@ enum class IntSetting(
     PORTRAIT_BOTTOM_Y("custom_portrait_bottom_y",Settings.SECTION_LAYOUT,480),
     PORTRAIT_BOTTOM_WIDTH("custom_portrait_bottom_width",Settings.SECTION_LAYOUT,640),
     PORTRAIT_BOTTOM_HEIGHT("custom_portrait_bottom_height",Settings.SECTION_LAYOUT,480),
-    AUDIO_INPUT_TYPE("output_type", Settings.SECTION_AUDIO, 0),
+    AUDIO_INPUT_TYPE("input_type", Settings.SECTION_AUDIO, 0),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, 1),
-    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 0),
+    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, 1),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),
     LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, 1),
     SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, 0),
@@ -60,6 +60,7 @@ enum class IntSetting(
     VSYNC("use_vsync_new", Settings.SECTION_RENDERER, 1),
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, 0),
     TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
+    TEXTURE_SAMPLING("texture_sampling", Settings.SECTION_RENDERER, 0),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, 1),
     DELAY_RENDER_THREAD_US("delay_game_render_thread_us", Settings.SECTION_RENDERER, 0),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),

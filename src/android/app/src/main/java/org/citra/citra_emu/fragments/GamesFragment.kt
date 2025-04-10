@@ -1,17 +1,22 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.fragments
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Bundle
+import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
+import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -23,6 +28,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -34,7 +40,6 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
-import android.net.Uri
 
 class GamesFragment : Fragment() {
     private var _binding: FragmentGamesBinding? = null
@@ -42,6 +47,7 @@ class GamesFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
+    private var show3DSFileWarning: Boolean = true
     private lateinit var gameAdapter: GameAdapter
 
     private val openImageLauncher = registerForActivityResult(
@@ -156,6 +162,34 @@ class GamesFragment : Fragment() {
         }
 
         setInsets()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (show3DSFileWarning &&
+            !PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+                .getBoolean("show_3ds_files_warning", false)) {
+            val message = HtmlCompat.fromHtml(getString(R.string.warning_3ds_files),
+                HtmlCompat.FROM_HTML_MODE_LEGACY)
+
+            context?.let {
+                val alert = MaterialAlertDialogBuilder(it)
+                    .setTitle(getString(R.string.important))
+                    .setMessage(message)
+                    .setPositiveButton(R.string.dont_show_again) { _, _ ->
+                        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+                            .edit() {
+                            putBoolean("show_3ds_files_warning", true)
+                        }
+                    }
+                    .show()
+
+                val alertMessage = alert.findViewById<View>(android.R.id.message) as TextView
+                alertMessage.movementMethod = LinkMovementMethod.getInstance()
+            }
+        }
+        show3DSFileWarning = false
     }
 
     override fun onDestroyView() {

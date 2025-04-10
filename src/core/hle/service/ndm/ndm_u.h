@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -274,6 +274,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        DEBUG_SERIALIZATION_POINT;
         ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
         ar & daemon_bit_mask;
         ar & default_daemon_bit_mask;

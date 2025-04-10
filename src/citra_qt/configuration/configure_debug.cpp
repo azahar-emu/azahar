@@ -102,6 +102,8 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit.GetValue());
     ui->delay_start_for_lle_modules->setChecked(
         Settings::values.delay_start_for_lle_modules.GetValue());
+    ui->deterministic_async_operations->setChecked(
+        Settings::values.deterministic_async_operations.GetValue());
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
@@ -137,6 +139,8 @@ void ConfigureDebug::ApplyConfiguration() {
     Common::Log::SetRegexFilter(Settings::values.log_regex_filter.GetValue());
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::values.delay_start_for_lle_modules = ui->delay_start_for_lle_modules->isChecked();
+    Settings::values.deterministic_async_operations =
+        ui->deterministic_async_operations->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();

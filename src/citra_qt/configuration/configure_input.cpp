@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -377,8 +377,10 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
             });
 
     connect(ui->buttonMotionTouch, &QPushButton::clicked, this, [this] {
+        ui->buttonMotionTouch->setEnabled(false);
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
-        return motion_touch_dialog->exec();
+        motion_touch_dialog->exec();
+        ui->buttonMotionTouch->setEnabled(true);
     });
 
     ui->buttonDelete->setEnabled(ui->profile->count() > 1);
@@ -580,9 +582,11 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
 }
 
 void ConfigureInput::AutoMap() {
+    ui->buttonAutoMap->setEnabled(false);
     if (QMessageBox::information(this, tr("Information"),
                                  tr("After pressing OK, press any button on your joystick"),
                                  QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+        ui->buttonAutoMap->setEnabled(true);
         return;
     }
     input_setter = [this](const Common::ParamPackage& params) {
@@ -597,6 +601,7 @@ void ConfigureInput::AutoMap() {
     }
     timeout_timer->start(5000); // Cancel after 5 seconds
     poll_timer->start(200);     // Check for new inputs every 200ms
+    ui->buttonAutoMap->setEnabled(true);
 }
 
 void ConfigureInput::HandleClick(QPushButton* button,
@@ -671,13 +676,16 @@ void ConfigureInput::RetranslateUI() {
 }
 
 void ConfigureInput::NewProfile() {
+    ui->buttonNew->setEnabled(false);
     const QString name =
         QInputDialog::getText(this, tr("New Profile"), tr("Enter the name for the new profile."));
     if (name.isEmpty()) {
+        ui->buttonNew->setEnabled(true);
         return;
     }
     if (IsProfileNameDuplicate(name)) {
         WarnProposedProfileNameIsDuplicate();
+        ui->buttonNew->setEnabled(true);
         return;
     }
 
@@ -688,12 +696,15 @@ void ConfigureInput::NewProfile() {
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
     LoadConfiguration();
     ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+    ui->buttonNew->setEnabled(true);
 }
 
 void ConfigureInput::DeleteProfile() {
+    ui->buttonDelete->setEnabled(false);
     const auto answer = QMessageBox::question(
         this, tr("Delete Profile"), tr("Delete profile %1?").arg(ui->profile->currentText()));
     if (answer != QMessageBox::Yes) {
+        ui->buttonDelete->setEnabled(true);
         return;
     }
     const int index = ui->profile->currentIndex();
@@ -705,18 +716,22 @@ void ConfigureInput::DeleteProfile() {
 }
 
 void ConfigureInput::RenameProfile() {
+    ui->buttonRename->setEnabled(false);
     const QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
     if (new_name.isEmpty()) {
+        ui->buttonRename->setEnabled(true);
         return;
     }
     if (IsProfileNameDuplicate(new_name)) {
         WarnProposedProfileNameIsDuplicate();
+        ui->buttonRename->setEnabled(true);
         return;
     }
 
     ui->profile->setItemText(ui->profile->currentIndex(), new_name);
     Settings::RenameCurrentProfile(new_name.toStdString());
     Settings::SaveProfile(ui->profile->currentIndex());
+    ui->buttonRename->setEnabled(true);
 }
 
 bool ConfigureInput::IsProfileNameDuplicate(const QString& name) const {

@@ -1,4 +1,4 @@
-// Copyright 2024 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,6 +30,28 @@ struct HackManager {
                                    HackAllowMode default_mode = HackAllowMode::ALLOW) {
         const HackEntry* hack = GetHack(type, title_id);
         return (hack != nullptr) ? hack->mode : default_mode;
+    }
+
+    /**
+     * Overrides the provided boolean setting depending on the hack type for the title ID
+     * If there is no hack, or the hack is set to allow, the setting value is returned
+     * If the hack disallows, false is returned.
+     * If the hack forces, true is returned.
+     */
+    bool OverrideBooleanSetting(const HackType& type, u64 title_id, bool setting_value) {
+        const HackEntry* hack = GetHack(type, title_id);
+        if (hack == nullptr)
+            return setting_value;
+        switch (hack->mode) {
+        case HackAllowMode::DISALLOW:
+            return false;
+        case HackAllowMode::FORCE:
+            return true;
+        case HackAllowMode::ALLOW:
+        default:
+            break;
+        }
+        return setting_value;
     }
 
     std::multimap<HackType, HackEntry> entries;
