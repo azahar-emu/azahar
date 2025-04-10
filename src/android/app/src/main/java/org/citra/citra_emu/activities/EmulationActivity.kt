@@ -77,8 +77,8 @@ class EmulationActivity : AppCompatActivity() {
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, hotkeyFunctions)
+        hotkeyFunctions = HotkeyFunctions(settingsViewModel.settings)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, hotkeyFunctions, this)
         setContentView(binding.root)
 
         val navHostFragment =

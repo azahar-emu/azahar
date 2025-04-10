@@ -10,6 +10,6 @@ enum class Hotkey(val button: Int) {
     CLOSE_GAME(10003),
     PAUSE_OR_RESUME(10004),
     QUICKSAVE(10005),
-    QUICKLOAD(10006);
+    QUICKLOAD(10006),
     TURBO_SPEED(10007);
 }

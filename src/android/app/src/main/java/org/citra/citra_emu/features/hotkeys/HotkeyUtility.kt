@@ -11,9 +11,12 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 
-class HotkeyUtility(private val screenAdjustmentUtil: ScreenAdjustmentUtil, private val context: Context) {
+class HotkeyUtility(
+    private val screenAdjustmentUtil: ScreenAdjustmentUtil,
+    private val hotkeyFunctions: HotkeyFunctions,
+    private val context: Context) {
 
-    val hotkeyButtons = Hotkey.entries.map { it.button }
+    private val hotkeyButtons = Hotkey.entries.map { it.button }
 
     fun handleHotkey(bindedButton: Int): Boolean {
         if(hotkeyButtons.contains(bindedButton)) {
