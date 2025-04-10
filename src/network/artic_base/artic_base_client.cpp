@@ -471,6 +471,14 @@ std::optional<Client::Response> Client::Send(Request& request) {
     return std::optional<Client::Response>(std::move(resp.response));
 }
 
+void Client::LogOnServer(ArticBaseCommon::LogOnServerType log_type, const std::string& message) {
+    auto req = NewRequest("__log");
+    req.AddParameterS8(static_cast<s8>(log_type));
+    req.AddParameterBuffer(message.data(), message.size());
+
+    Send(req);
+}
+
 void Client::SignalCommunicationError(const std::string& msg) {
     StopImpl(true);
     LOG_CRITICAL(Network, "Communication error");

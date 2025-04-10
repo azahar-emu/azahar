@@ -11,6 +11,7 @@
 #include <QFutureWatcher>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPalette>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
@@ -69,6 +70,9 @@
 #include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
+#ifdef ENABLE_QT_UPDATE_CHECKER
+#include "citra_qt/update_checker.h"
+#endif
 #include "citra_qt/util/clickable_label.h"
 #include "citra_qt/util/graphics_device_info.h"
 #include "citra_qt/util/util.h"
@@ -325,6 +329,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     ui->setupUi(this);
     statusBar()->hide();
 
+    setWindowIcon(QIcon(QString::fromStdString(":/icons/azahar.png")));
+
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
@@ -384,6 +390,21 @@ GMainWindow::GMainWindow(Core::System& system_)
     UpdateWindowTitle();
 
     show();
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    if (UISettings::values.check_for_update_on_start) {
+        update_future = QtConcurrent::run([]() -> QString {
+            const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
+            if (latest_release && latest_release.value() != Common::g_build_fullname) {
+                return QString::fromStdString(latest_release.value());
+            }
+            return QString{};
+        });
+        QObject::connect(&update_watcher, &QFutureWatcher<QString>::finished, this,
+                         &GMainWindow::OnEmulatorUpdateAvailable);
+        update_watcher.setFuture(update_future);
+    }
+#endif
 
     game_list->LoadCompatibilityList();
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -817,7 +838,7 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Increase 3D Factor"), [this] {
         const auto factor_3d = Settings::values.factor_3d.GetValue();
-        if (factor_3d < 100) {
+        if (factor_3d < 255) {
             if (factor_3d % FACTOR_3D_STEP != 0) {
                 Settings::values.factor_3d =
                     factor_3d + FACTOR_3D_STEP - (factor_3d % FACTOR_3D_STEP);
@@ -992,7 +1013,10 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Pause, &GMainWindow::OnPauseContinueGame);
     connect_menu(ui->action_Stop, &GMainWindow::OnStopGame);
     connect_menu(ui->action_Restart, [this] { BootGame(QString(game_path)); });
-    connect_menu(ui->action_Report_Compatibility, &GMainWindow::OnMenuReportCompatibility);
+    connect_menu(ui->action_Report_Compatibility, []() {
+        QDesktopServices::openUrl(QUrl(QStringLiteral(
+            "https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md")));
+    });
     connect_menu(ui->action_Configure, &GMainWindow::OnConfigure);
     connect_menu(ui->action_Configure_Current_Game, &GMainWindow::OnConfigurePerGame);
 
@@ -2090,15 +2114,18 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QVBoxLayout layout(&dialog);
 
     QLabel label_description(
-        tr("<p>Azahar needs files from a real console to be able to use some of its features.<br>"
-           "You can get such files with the <a "
+        tr("<p>Azahar needs console unique data and firmware files from a real console to be "
+           "able to use some of its features.<br>Such files and data can be set up with the <a "
            "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
-           "Artic Setup Tool</a><br> Notes:<ul><li><b>This operation will install console unique "
-           "files "
-           "to Azahar, do not share your user or nand folders<br>after performing the setup "
-           "process!</b></li><li>Old 3DS setup is needed for the New 3DS setup to "
-           "work.</li><li>Both setup modes will work regardless of the model of the console "
-           "running the setup tool.</li></ul><hr></p>"),
+           "Artic Setup Tool</a><br>Notes:<ul><li><b>This operation will install console unique "
+           "data to Azahar, do not share your user or nand folders<br>after performing the setup "
+           "process!</b></li><li>While doing the setup process, Azahar will link to the console "
+           "running the setup tool. You can unlink the<br>console later from the System tab in the "
+           "emulator configuration menu.</li><li>Do not go online with both Azahar and your 3DS "
+           "console at the same time after setting up system files,<br>as it could cause "
+           "issues.</li><li>Old 3DS setup is needed for the New 3DS setup to work (doing both "
+           "setup modes is recommended).</li><li>Both setup modes will work regardless of the "
+           "model of the console running the setup tool.</li></ul><hr></p>"),
         &dialog);
     label_description.setOpenExternalLinks(true);
     layout.addWidget(&label_description);
@@ -2121,6 +2148,8 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
     QRadioButton radio1(&dialog);
     QRadioButton radio2(&dialog);
     if (!install_state.first) {
+        radio1.setChecked(true);
+
         radio1.setText(tr("(\u2139\uFE0F) Old 3DS setup"));
         radio1.setToolTip(tr("Setup is possible."));
 
@@ -2132,14 +2161,17 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
         radio1.setToolTip(tr("Setup completed."));
 
         if (!install_state.second) {
+            radio2.setChecked(true);
+
             radio2.setText(tr("(\u2139\uFE0F) New 3DS setup"));
             radio2.setToolTip(tr("Setup is possible."));
         } else {
+            radio1.setChecked(true);
+
             radio2.setText(tr("(\u2705) New 3DS setup"));
             radio2.setToolTip(tr("Setup completed."));
         }
     }
-    radio1.setChecked(true);
     layout.addWidget(&radio1);
     layout.addWidget(&radio2);
 
@@ -2403,10 +2435,6 @@ void GMainWindow::OnStopGame() {
 void GMainWindow::OnLoadComplete() {
     loading_screen->OnLoadComplete();
     UpdateSecondaryWindowVisibility();
-}
-
-void GMainWindow::OnMenuReportCompatibility() {
-    // NoOp
 }
 
 void GMainWindow::ToggleFullscreen() {
@@ -2885,7 +2913,7 @@ void GMainWindow::ShowFFmpegErrorMessage() {
     message_box.setText(
         tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
 #ifdef _WIN32
-           "\n\nTo install FFmpeg to Lime, press Open and select your FFmpeg directory."
+           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
 #endif
            "\n\nTo view a guide on how to install FFmpeg, press Help."));
     message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
@@ -3092,7 +3120,7 @@ void GMainWindow::UpdateStatusBar() {
             }
         }
 
-        static const std::array label_color = {QStringLiteral("#ffffff"), QStringLiteral("#eed202"),
+        static const std::array label_color = {QStringLiteral(""), QStringLiteral("#eed202"),
                                                QStringLiteral("#ff3333")};
 
         int style_index;
@@ -3104,8 +3132,11 @@ void GMainWindow::UpdateStatusBar() {
         } else {
             style_index = 0;
         }
-        const QString style_sheet =
-            QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+
+        QString style_sheet;
+        if (!label_color[style_index].isEmpty()) {
+            style_sheet = QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+        }
 
         artic_traffic_label->setText(
             tr("Artic Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
@@ -3465,9 +3496,27 @@ void GMainWindow::filterBarSetChecked(bool state) {
     emit(OnToggleFilterBar());
 }
 
+inline bool isDarkMode() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    // Use colorScheme for Qt 6.5 and later
+    const auto scheme = QGuiApplication::styleHints()->colorScheme();
+    return scheme == Qt::ColorScheme::Dark;
+#else
+    // Fallback for Qt 6.4: Check the window palette
+    QPalette palette = QGuiApplication::palette();
+    return palette.color(QPalette::Window).lightness() < 128; // Rough check for dark mode
+#endif
+}
+
 void GMainWindow::UpdateUITheme() {
     const QString icons_base_path = QStringLiteral(":/icons/");
-    const QString default_theme = QStringLiteral("default");
+    QString default_theme;
+    if (!isDarkMode()) {
+        default_theme = QStringLiteral("default");
+    } else {
+        default_theme = QStringLiteral("default_with_light_icons");
+    }
+
     const QString default_theme_path = icons_base_path + default_theme;
 
     const QString& current_theme = UISettings::values.theme;
@@ -3576,6 +3625,27 @@ void GMainWindow::OnMoviePlaybackCompleted() {
     OnPauseGame();
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
 }
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+void GMainWindow::OnEmulatorUpdateAvailable() {
+    QString version_string = update_future.result();
+    if (version_string.isEmpty())
+        return;
+
+    QMessageBox update_prompt(this);
+    update_prompt.setWindowTitle(tr("Update Available"));
+    update_prompt.setIcon(QMessageBox::Information);
+    update_prompt.addButton(QMessageBox::Yes);
+    update_prompt.addButton(QMessageBox::Ignore);
+    update_prompt.setText(tr("Update %1 for Azahar is available.\nWould you like to download it?")
+                              .arg(version_string));
+    update_prompt.exec();
+    if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
+        QDesktopServices::openUrl(
+            QUrl(QString::fromStdString("https://azahar-emu.org/pages/download/")));
+    }
+}
+#endif
 
 void GMainWindow::UpdateWindowTitle() {
     const QString full_name = QString::fromUtf8(Common::g_build_fullname);

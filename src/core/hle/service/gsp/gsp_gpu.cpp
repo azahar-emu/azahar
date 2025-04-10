@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -716,6 +716,7 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
 
 template <class Archive>
 void GSP_GPU::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & shared_memory;
     ar & active_thread_id;

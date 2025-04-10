@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -107,6 +107,40 @@ class DocumentsTree {
     }
 
     @Synchronized
+    fun folderUriHelper(path: String, createIfNotExists: Boolean = false): Uri? {
+        root ?: return null
+        val components = path.split(DELIMITER).filter { it.isNotEmpty() }
+        var current = root
+
+        for (component in components) {
+            if (!current!!.loaded) {
+                structTree(current)
+            }
+
+            var child = current.findChild(component)
+
+            // Create directory if it doesn't exist and creation is enabled
+            if (child == null && createIfNotExists) {
+                try {
+                    val createdDir = FileUtil.createDir(current.uri.toString(), component) ?: return null
+                    child = DocumentsNode(createdDir, true).apply {
+                        parent = current
+                    }
+                    current.addChild(child)
+                } catch (e: Exception) {
+                    error("[DocumentsTree]: Cannot create directory, error: " + e.message)
+                    return null
+                }
+            } else if (child == null) {
+                return null
+            }
+
+            current = child
+        }
+        return current?.uri
+    }
+
+    @Synchronized
     fun isDirectory(filepath: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         return node.isDirectory
@@ -161,8 +195,8 @@ class DocumentsTree {
         val node = resolvePath(filepath) ?: return false
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
-            DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
-            node.rename(filename)
+            val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
+            node.rename(filename, newUri)
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
@@ -255,10 +289,11 @@ class DocumentsTree {
         }
 
         @Synchronized
-        fun rename(name: String) {
+        fun rename(name: String, uri: Uri?) {
             parent ?: return
             parent!!.removeChild(this)
             this.name = name
+            this.uri = uri
             parent!!.addChild(this)
         }
 

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -28,8 +28,15 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         }
     }
 
-    fun onStart() {
+    fun onResume() {
         SystemSaveGame.load()
+    }
+
+    fun onPause() {
+        SystemSaveGame.save()
+    }
+
+    fun onStart() {
         prepareDirectoriesIfNeeded()
     }
 
@@ -56,7 +63,6 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
             settings.saveSettings(activityView)
-            SystemSaveGame.save()
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)

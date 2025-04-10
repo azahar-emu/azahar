@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -559,6 +559,7 @@ void QtConfig::ReadMiscellaneousValues() {
     ReadBasicSetting(Settings::values.log_filter);
     ReadBasicSetting(Settings::values.log_regex_filter);
     ReadBasicSetting(Settings::values.enable_gamemode);
+    ReadBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -724,6 +725,7 @@ void QtConfig::ReadSystemValues() {
 
     ReadGlobalSetting(Settings::values.is_new_3ds);
     ReadGlobalSetting(Settings::values.lle_applets);
+    ReadGlobalSetting(Settings::values.enable_required_online_lle_modules);
     ReadGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -795,7 +797,6 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.enable_discord_presence);
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        ReadUpdaterValues();
         ReadUILayoutValues();
         ReadUIGameListValues();
         ReadShortcutValues();
@@ -827,6 +828,7 @@ void QtConfig::ReadUIGameListValues() {
     ReadBasicSetting(UISettings::values.game_list_row_2);
     ReadBasicSetting(UISettings::values.game_list_hide_no_icon);
     ReadBasicSetting(UISettings::values.game_list_single_line_mode);
+    ReadBasicSetting(UISettings::values.show_3ds_files_warning);
 
     ReadBasicSetting(UISettings::values.show_compat_column);
     ReadBasicSetting(UISettings::values.show_region_column);
@@ -857,15 +859,6 @@ void QtConfig::ReadUILayoutValues() {
     UISettings::values.microprofile_geometry =
         ReadSetting(QStringLiteral("microProfileDialogGeometry")).toByteArray();
     ReadBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::ReadUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    ReadBasicSetting(UISettings::values.check_for_update_on_start);
-    ReadBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }
@@ -1123,6 +1116,7 @@ void QtConfig::SaveMiscellaneousValues() {
     WriteBasicSetting(Settings::values.log_filter);
     WriteBasicSetting(Settings::values.log_regex_filter);
     WriteBasicSetting(Settings::values.enable_gamemode);
+    WriteBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -1256,6 +1250,7 @@ void QtConfig::SaveSystemValues() {
 
     WriteGlobalSetting(Settings::values.is_new_3ds);
     WriteGlobalSetting(Settings::values.lle_applets);
+    WriteGlobalSetting(Settings::values.enable_required_online_lle_modules);
     WriteGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -1310,7 +1305,6 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.enable_discord_presence);
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        SaveUpdaterValues();
         SaveUILayoutValues();
         SaveUIGameListValues();
         SaveShortcutValues();
@@ -1342,6 +1336,7 @@ void QtConfig::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.game_list_row_2);
     WriteBasicSetting(UISettings::values.game_list_hide_no_icon);
     WriteBasicSetting(UISettings::values.game_list_single_line_mode);
+    WriteBasicSetting(UISettings::values.show_3ds_files_warning);
 
     WriteBasicSetting(UISettings::values.show_compat_column);
     WriteBasicSetting(UISettings::values.show_region_column);
@@ -1370,15 +1365,6 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(QStringLiteral("microProfileDialogGeometry"),
                  UISettings::values.microprofile_geometry);
     WriteBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::SaveUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    WriteBasicSetting(UISettings::values.check_for_update_on_start);
-    WriteBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }

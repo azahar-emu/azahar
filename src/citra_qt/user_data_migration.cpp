@@ -82,6 +82,10 @@ void UserDataMigrator::ShowMigrationPrompt(QMainWindow* main_window) {
         }
     }
 
+    else { // Neither Citra or Lime3DS data was found; Do nothing
+        return;
+    }
+
     // If we're here, the user chose not to migrate
     ShowMigrationCancelledMessage(main_window);
 }

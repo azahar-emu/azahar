@@ -1,4 +1,4 @@
-﻿// Copyright 2014 Citra Emulator Project
+﻿// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -48,7 +48,6 @@ private:
     void ReadUIValues();
     void ReadUIGameListValues();
     void ReadUILayoutValues();
-    void ReadUpdaterValues();
     void ReadUtilityValues();
     void ReadWebServiceValues();
     void ReadVideoDumpingValues();
@@ -70,7 +69,6 @@ private:
     void SaveUIValues();
     void SaveUIGameListValues();
     void SaveUILayoutValues();
-    void SaveUpdaterValues();
     void SaveUtilityValues();
     void SaveWebServiceValues();
     void SaveVideoDumpingValues();

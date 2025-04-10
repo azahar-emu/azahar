@@ -1,7 +1,8 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/archives.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -10,7 +11,12 @@
 #include "core/hle/service/act/act_errors.h"
 #include "core/hle/service/act/act_u.h"
 
+SERIALIZE_EXPORT_IMPL(Service::ACT::Module)
+SERVICE_CONSTRUCT_IMPL(Service::ACT::Module)
+
 namespace Service::ACT {
+
+Module::Module(Core::System& system_) : system(system_) {}
 
 Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
     : ServiceFramework(name, 3), act(std::move(act)) {}
@@ -59,9 +65,15 @@ void Module::Interface::GetAccountInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
+template <class Archive>
+void Module::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
+}
+SERIALIZE_IMPL(Module)
+
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto act = std::make_shared<Module>();
+    auto act = std::make_shared<Module>(system);
     std::make_shared<ACT_A>(act)->InstallAsService(service_manager);
     std::make_shared<ACT_U>(act)->InstallAsService(service_manager);
 }

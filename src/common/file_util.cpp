@@ -516,11 +516,16 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
     return true;
 }
 
-u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
-                      unsigned int recursion) {
-    const auto callback = [recursion, &parent_entry](u64* num_entries_out,
-                                                     const std::string& directory,
-                                                     const std::string& virtual_name) -> bool {
+u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry, unsigned int recursion,
+                      std::atomic<bool>* stop_flag) {
+    const auto callback = [recursion, &parent_entry,
+                           stop_flag](u64* num_entries_out, const std::string& directory,
+                                      const std::string& virtual_name) -> bool {
+        // Break early and return error if stop is requested
+        if (stop_flag && *stop_flag) {
+            return false;
+        }
+
         FSTEntry entry;
         entry.virtualName = virtual_name;
         entry.physicalName = directory + DIR_SEP + virtual_name;

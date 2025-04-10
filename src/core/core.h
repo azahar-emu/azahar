@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -345,6 +346,16 @@ public:
                (mic_permission_granted = mic_permission_func());
     }
 
+    enum class SaveStateStatus {
+        NONE,
+        LOADING,
+        SAVING,
+    };
+
+    SaveStateStatus GetSaveStateStatus() {
+        return save_state_status;
+    }
+
     void SaveState(u32 slot) const;
 
     void LoadState(u32 slot);
@@ -440,6 +451,11 @@ private:
 
     std::atomic_bool is_powered_on{};
 
+    SaveStateStatus save_state_status = SaveStateStatus::NONE;
+    SaveStateStatus save_state_request_status = SaveStateStatus::NONE;
+    u32 save_state_slot = 0;
+    std::chrono::steady_clock::time_point save_state_request_time{};
+
     ResultStatus status = ResultStatus::Success;
     std::string status_details = "";
     /// Saved variables for reset
@@ -459,6 +475,8 @@ private:
 
     boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
     boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
+
+    std::vector<u64> lle_modules;
 
     friend class boost::serialization::access;
     template <typename Archive>

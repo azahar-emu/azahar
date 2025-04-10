@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,6 +26,7 @@ namespace Service::CAM {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
+    DEBUG_SERIALIZATION_POINT;
     ar & cameras;
     ar & ports;
     ar & is_camera_reload_pending;

@@ -5,8 +5,11 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <functional>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <boost/serialization/array.hpp>
@@ -1022,11 +1025,15 @@ public:
 private:
     void ScanForTickets();
 
+    void ScanForTicketsImpl();
+
     /**
      * Scans the for titles in a storage medium for listing.
      * @param media_type the storage medium to scan
      */
     void ScanForTitles(Service::FS::MediaType media_type);
+
+    void ScanForTitlesImpl(Service::FS::MediaType media_type);
 
     /**
      * Scans all storage mediums for titles for listing.
@@ -1037,8 +1044,15 @@ private:
     bool cia_installing = false;
     bool force_old_device_id = false;
     bool force_new_device_id = false;
+
+    std::atomic<bool> stop_scan_flag = false;
+    std::future<void> scan_tickets_future;
+    std::future<void> scan_titles_future;
+    std::future<void> scan_all_future;
+    std::mutex am_lists_mutex;
     std::array<std::vector<u64_le>, 3> am_title_list;
     std::multimap<u64, u64> am_ticket_list;
+
     std::shared_ptr<Kernel::Mutex> system_updater_mutex;
     std::shared_ptr<CurrentImportingTitle> importing_title;
     std::map<u64, ImportTitleContext> import_title_contexts;

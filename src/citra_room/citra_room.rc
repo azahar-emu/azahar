@@ -6,7 +6,7 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-CITRA_ICON              ICON                    "../../dist/citra.ico"
+CITRA_ICON              ICON                    "../../dist/azahar.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -14,4 +14,4 @@ CITRA_ICON              ICON                    "../../dist/citra.ico"
 // RT_MANIFEST
 //
 
-0                       RT_MANIFEST             "../../dist/citra.manifest"
+0                       RT_MANIFEST             "../../dist/azahar.manifest"

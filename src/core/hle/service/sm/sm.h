@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -89,11 +89,13 @@ private:
 
     template <class Archive>
     void save(Archive& ar, const unsigned int file_version) const {
+        DEBUG_SERIALIZATION_POINT;
         ar << registered_services;
     }
 
     template <class Archive>
     void load(Archive& ar, const unsigned int file_version) {
+        DEBUG_SERIALIZATION_POINT;
         ar >> registered_services;
         registered_services_inverse.clear();
         for (const auto& pair : registered_services) {

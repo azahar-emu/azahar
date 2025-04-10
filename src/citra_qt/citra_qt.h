@@ -7,6 +7,13 @@
 #include <array>
 #include <memory>
 #include <vector>
+#ifdef __unix__
+#include <QDBusObjectPath>
+#endif
+#ifdef ENABLE_QT_UPDATE_CHECKER
+#include <QFuture>
+#include <QFutureWatcher>
+#endif
 #include <QMainWindow>
 #include <QPushButton>
 #include <QString>
@@ -17,10 +24,6 @@
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
-
-#ifdef __unix__
-#include <QDBusObjectPath>
-#endif
 
 // Needs to be included at the end due to https://bugreports.qt.io/browse/QTBUG-73263
 #include <filesystem>
@@ -225,7 +228,6 @@ private slots:
     void OnStopGame();
     void OnSaveState();
     void OnLoadState();
-    void OnMenuReportCompatibility();
     /// Called whenever a user selects a game in the game list widget.
     void OnGameListLoadFile(QString game_path);
     void OnGameListOpenFolder(u64 program_id, GameListOpenTarget target);
@@ -290,6 +292,9 @@ private slots:
     void OnDecreaseVolume();
     void OnIncreaseVolume();
     void OnMute();
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    void OnEmulatorUpdateAvailable();
+#endif
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
@@ -414,6 +419,12 @@ private:
     HotkeyRegistry hotkey_registry;
 
     std::shared_ptr<Camera::QtMultimediaCameraHandlerFactory> qt_cameras;
+
+    // Prompt shown when update check succeeds
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    QFuture<QString> update_future;
+    QFutureWatcher<QString> update_watcher;
+#endif
 
 #ifdef __unix__
     QDBusObjectPath wake_lock{};

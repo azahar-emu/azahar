@@ -110,6 +110,16 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         presenter.saveState(outState)
     }
 
+    override fun onPause() {
+        super.onPause()
+        presenter.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        presenter.onResume()
+    }
+
     override fun onStart() {
         super.onStart()
         presenter.onStart()

@@ -165,6 +165,8 @@ public:
         ping_enabled = enable;
     }
 
+    void LogOnServer(ArticBaseCommon::LogOnServerType log_type, const std::string& message);
+
 private:
     static constexpr const int SERVER_VERSION = 2;
 

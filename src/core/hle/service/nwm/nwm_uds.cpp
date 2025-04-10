@@ -33,6 +33,7 @@ namespace Service::NWM {
 
 template <class Archive>
 void NWM_UDS::serialize(Archive& ar, const unsigned int) {
+    DEBUG_SERIALIZATION_POINT;
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & node_map;
     ar & connection_event;
