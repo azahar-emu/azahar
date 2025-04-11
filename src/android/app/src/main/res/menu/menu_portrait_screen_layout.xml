@@ -8,12 +8,12 @@
             android:title="@string/emulation_portrait_layout_top_full" />
 
         <item
-            android:id="@+id/menu_portrait_layout_custom"
-            android:title="@string/emulation_screen_layout_custom" />
-
-        <item
             android:id="@+id/menu_portrait_layout_original"
             android:title="@string/emulation_screen_layout_original" />
+
+        <item
+            android:id="@+id/menu_portrait_layout_custom"
+            android:title="@string/emulation_screen_layout_custom" />
 
     </group>
 
