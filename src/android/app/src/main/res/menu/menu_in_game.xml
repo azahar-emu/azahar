@@ -54,6 +54,11 @@
         android:title="@string/preferences_settings" />
 
     <item
+        android:id="@+id/menu_multiplayer"
+        android:icon="@drawable/ic_network"
+        android:title="@string/multiplayer" />
+
+    <item
         android:id="@+id/menu_exit"
         android:icon="@drawable/ic_exit"
         android:title="@string/emulation_close_game" />
