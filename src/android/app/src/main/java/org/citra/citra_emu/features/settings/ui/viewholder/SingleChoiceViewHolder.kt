@@ -27,7 +27,7 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
         binding.textSettingValue.visibility = View.VISIBLE
         binding.textSettingValue.text = getTextSetting()
 
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f
             binding.textSettingValue.alpha = 1f
@@ -84,7 +84,7 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
             adapter.onClickDisabledSetting(!setting.isEditable)

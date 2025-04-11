@@ -30,6 +30,11 @@ abstract class SettingsItem(
 
     open var isEnabled: Boolean = true
 
+    val isActive: Boolean
+        get() {
+            return this.isEditable && this.isEnabled
+        }
+
     companion object {
         const val TYPE_HEADER = 0
         const val TYPE_SWITCH = 1

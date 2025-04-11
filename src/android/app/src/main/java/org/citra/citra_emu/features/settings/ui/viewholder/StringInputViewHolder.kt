@@ -26,7 +26,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         binding.textSettingValue.visibility = View.VISIBLE
         binding.textSettingValue.text = setting.setting?.valueAsString
 
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f
             binding.textSettingValue.alpha = 1f
@@ -46,7 +46,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
             adapter.onClickDisabledSetting(!setting.isEditable)

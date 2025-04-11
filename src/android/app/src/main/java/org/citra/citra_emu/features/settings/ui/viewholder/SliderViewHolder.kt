@@ -35,7 +35,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
             else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
         }
 
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             binding.textSettingName.alpha = 1f
             binding.textSettingDescription.alpha = 1f
             binding.textSettingValue.alpha = 1f
@@ -47,7 +47,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
     }
 
     override fun onClick(clicked: View) {
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             adapter.onSliderClick(setting, bindingAdapterPosition)
         } else {
             adapter.onClickDisabledSetting(!setting.isEditable)
@@ -55,7 +55,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable && setting.isEnabled) {
+        if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
             adapter.onClickDisabledSetting(!setting.isEditable)
