@@ -52,7 +52,7 @@ class EmulationActivity : AppCompatActivity() {
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
     var isActivityRecreated = false
     private val emulationViewModel: EmulationViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    val settingsViewModel: SettingsViewModel by viewModels()
 
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil

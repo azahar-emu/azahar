@@ -773,6 +773,7 @@ object NativeLibrary {
         const val BUTTON_DEBUG = 781
         const val BUTTON_GPIO14 = 782
         const val BUTTON_SWAP = 800
+        const val BUTTON_TURBO = 801
     }
 
     /**

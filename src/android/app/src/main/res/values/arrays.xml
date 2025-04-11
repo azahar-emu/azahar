@@ -131,6 +131,7 @@
         <item>@string/controller_c</item>
         <item>@string/button_home</item>
         <item>@string/button_swap</item>
+        <item>@string/button_turbo</item>
     </string-array>
 
     <string-array name="cameraImageSourceNames">
