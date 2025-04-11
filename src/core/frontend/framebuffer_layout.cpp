@@ -452,7 +452,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 width = Core::kScreenTopWidth;
             }
             // 2.25f comes from HybridScreenLayout's scale_factor value.
-            width = (width + (Core::kScreenTopWidth / 2.25f)) * res_scale;
+            width = static_cast<int>((width + (Core::kScreenTopWidth / 2.25f)) * res_scale);
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
