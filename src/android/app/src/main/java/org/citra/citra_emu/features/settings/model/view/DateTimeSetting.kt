@@ -12,8 +12,7 @@ class DateTimeSetting(
     titleId: Int,
     descriptionId: Int,
     val key: String? = null,
-    private val defaultValue: String? = null,
-    override var isEnabled: Boolean = true
+    private val defaultValue: String? = null
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_DATETIME_SETTING
 
