@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -133,6 +133,7 @@ class InputBindingSetting(
                 Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKlOAD -> Hotkey.QUICKLOAD.button
+                Settings.HOTKEY_TURBO_SPEED -> Hotkey.TURBO_SPEED.button
                 else -> -1
             }
 

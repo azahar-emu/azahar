@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -442,6 +442,24 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             return LargeFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
                                     Settings::values.upright_screen.GetValue(), 1,
                                     Settings::SmallScreenPosition::MiddleRight);
+
+        case Settings::LayoutOption::HybridScreen:
+            height = Core::kScreenTopHeight * res_scale;
+
+            if (Settings::values.swap_screen.GetValue()) {
+                width = Core::kScreenBottomWidth;
+            } else {
+                width = Core::kScreenTopWidth;
+            }
+            // 2.25f comes from HybridScreenLayout's scale_factor value.
+            width = static_cast<int>((width + (Core::kScreenTopWidth / 2.25f)) * res_scale);
+
+            if (Settings::values.upright_screen.GetValue()) {
+                std::swap(width, height);
+            }
+
+            return HybridScreenLayout(width, height, Settings::values.swap_screen.GetValue(),
+                                      Settings::values.upright_screen.GetValue());
 
         case Settings::LayoutOption::Default:
         default:
