@@ -403,8 +403,14 @@ void QtConfig::ReadControlValues() {
             ReadSetting(QStringLiteral("touch_device"), QStringLiteral("engine:emu_window"))
                 .toString()
                 .toStdString();
+        profile.controller_touch_device =
+            ReadSetting(QStringLiteral("controller_touch_device"),QStringLiteral(""))
+                .toString()
+                .toStdString();
         profile.use_touch_from_button =
             ReadSetting(QStringLiteral("use_touch_from_button"), false).toBool();
+        profile.use_touchpad =
+            ReadSetting(QStringLiteral("use_touchpad"), false).toBool();
         profile.touch_from_button_map_index =
             ReadSetting(QStringLiteral("touch_from_button_map"), 0).toInt();
         profile.touch_from_button_map_index =
@@ -983,6 +989,8 @@ void QtConfig::SaveControlValues() {
         WriteSetting(QStringLiteral("touch_device"), QString::fromStdString(profile.touch_device),
                      QStringLiteral("engine:emu_window"));
         WriteSetting(QStringLiteral("use_touch_from_button"), profile.use_touch_from_button, false);
+        WriteSetting(QStringLiteral("use_touchpad"), profile.use_touchpad, false);
+        WriteSetting(QStringLiteral("controller_touch_device"), QString::fromStdString(profile.controller_touch_device), QStringLiteral(""));
         WriteSetting(QStringLiteral("touch_from_button_map"), profile.touch_from_button_map_index,
                      0);
         WriteSetting(QStringLiteral("udp_input_address"),
