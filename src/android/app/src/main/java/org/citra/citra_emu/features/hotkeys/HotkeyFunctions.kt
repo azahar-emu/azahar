@@ -26,7 +26,6 @@ class HotkeyFunctions (
 
     fun toggleTurboSpeed() {
         if (isTurboSpeedEnabled) {
-            normalSpeed = IntSetting.FRAME_LIMIT.int
             IntSetting.FRAME_LIMIT.int = IntSetting.TURBO_SPEED.int
         } else {
             IntSetting.FRAME_LIMIT.int = normalSpeed
@@ -41,12 +40,10 @@ class HotkeyFunctions (
     }
 
     fun resetTurboSpeed() {
-        if (isTurboSpeedEnabled) {
-            isTurboSpeedEnabled = false
-            IntSetting.FRAME_LIMIT.int = normalSpeed
+        isTurboSpeedEnabled = false
+        IntSetting.FRAME_LIMIT.int = normalSpeed
 
-            settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
-            NativeLibrary.reloadSettings()
-        }
+        settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
+        NativeLibrary.reloadSettings()
     }
 }
