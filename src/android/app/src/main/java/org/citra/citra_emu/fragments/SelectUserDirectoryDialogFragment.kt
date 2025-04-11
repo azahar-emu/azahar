@@ -24,7 +24,7 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
         isCancelable = false
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_citra_user_folder)
-            .setMessage(R.string.cannot_skip_directory_description)
+            .setMessage(R.string.selecting_user_directory_without_write_permissions)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 mainActivity?.openCitraDirectory?.launch(null)
             }
