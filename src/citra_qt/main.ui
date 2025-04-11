@@ -108,7 +108,6 @@
       <string>Load State</string>
      </property>
      <addaction name="action_Load_from_Newest_Slot"/>
-
      <addaction name="action_Quick_Load"/>
      <addaction name="separator"/>
     </widget>
