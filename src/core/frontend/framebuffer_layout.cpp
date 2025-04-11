@@ -61,7 +61,6 @@ FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool swapped) {
     res.top_screen = res.top_screen.TranslateY(shiftY);
     res.bottom_screen = res.bottom_screen.TranslateY(shiftY);
     return res;
-
 }
 
 FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
@@ -376,7 +375,8 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 Settings::values.swap_screen.GetValue(), is_portrait);
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
             width = Core::kScreenTopWidth * res_scale;
-            height = static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) * res_scale;
+            height = static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
+                     res_scale;
             return PortraitTopFullFrameLayout(width, height,
                                               Settings::values.swap_screen.GetValue());
         case Settings::PortraitLayoutOption::PortraitOriginal:

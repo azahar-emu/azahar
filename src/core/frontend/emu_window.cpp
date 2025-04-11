@@ -222,7 +222,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
                 width, height, Settings::values.swap_screen.GetValue(), is_portrait_mode);
             break;
         case Settings::PortraitLayoutOption::PortraitOriginal:
-            layout = Layout::PortraitOriginalLayout(width, height, Settings::values.swap_screen.GetValue());
+            layout = Layout::PortraitOriginalLayout(width, height,
+                                                    Settings::values.swap_screen.GetValue());
             break;
         }
     } else {
