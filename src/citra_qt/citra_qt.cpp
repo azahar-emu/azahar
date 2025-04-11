@@ -771,9 +771,9 @@ void GMainWindow::InitializeHotkeys() {
                          QStringLiteral("Rotate Screens Upright"));
     link_action_shortcut(ui->action_Advance_Frame, QStringLiteral("Advance Frame"));
     link_action_shortcut(ui->action_Load_from_Newest_Slot,
-                         QStringLiteral("Load from Newest Non-Quick Slot"));
+                         QStringLiteral("Load from Newest Non-Quicksave Slot"));
     link_action_shortcut(ui->action_Save_to_Oldest_Slot,
-                         QStringLiteral("Save to Oldest Non-Quick Slot"));
+                         QStringLiteral("Save to Oldest Non-Quicksave Slot"));
     link_action_shortcut(ui->action_Quick_Save, QStringLiteral("Quick Save"));
     link_action_shortcut(ui->action_Quick_Load, QStringLiteral("Quick Load"));
     link_action_shortcut(ui->action_View_Lobby, QStringLiteral("Multiplayer Browse Public Rooms"));
