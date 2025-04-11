@@ -186,17 +186,6 @@ object NativeLibrary {
 
     external fun unlinkConsole()
 
-
-    /**
-     * Turbo speed.
-     */
-    external fun toggleTurboSpeed(enabled: Boolean)
-
-    external fun getTurboSpeedSlider(): Int
-
-    external fun setTurboSpeedSlider(value: Int)
-
-
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
