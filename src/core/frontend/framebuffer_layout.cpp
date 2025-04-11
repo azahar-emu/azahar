@@ -444,7 +444,6 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                     Settings::SmallScreenPosition::MiddleRight);
 
         case Settings::LayoutOption::HybridScreen:
-        default:
             width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale;
             height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
 
@@ -456,6 +455,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                       Settings::values.upright_screen.GetValue());
 
         case Settings::LayoutOption::Default:
+        default:
             width = Core::kScreenTopWidth * res_scale;
             height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
 
