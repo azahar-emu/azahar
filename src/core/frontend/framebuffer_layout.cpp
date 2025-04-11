@@ -444,8 +444,15 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                     Settings::SmallScreenPosition::MiddleRight);
 
         case Settings::LayoutOption::HybridScreen:
-            width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            height = Core::kScreenTopHeight * res_scale;
+
+            if (Settings::values.swap_screen.GetValue()) {
+                width = Core::kScreenBottomWidth;
+            } else {
+                width = Core::kScreenTopWidth;
+            }
+            // 2.25f comes from HybridScreenLayout's scale_factor value.
+            width = (width + (Core::kScreenTopWidth / 2.25f)) * res_scale;
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
