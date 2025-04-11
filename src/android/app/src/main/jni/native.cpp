@@ -773,8 +773,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
 }
 
-void JNICALL Java_org_citra_citra_1emu_NativeLibrary_toggleTurboSpeed(
-    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jboolean enabled) {
+void JNICALL Java_org_citra_citra_1emu_NativeLibrary_toggleTurboSpeed([[maybe_unused]] JNIEnv* env,
+                                                                      [[maybe_unused]] jobject obj,
+                                                                      jboolean enabled) {
     Settings::values.turbo_speed = enabled ? true : false;
 }
 
