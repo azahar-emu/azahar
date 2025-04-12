@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -60,7 +60,7 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
 
     override fun onClick(clicked: View) {
         if (!setting.isRuntimeRunnable && EmulationActivity.isRunning()) {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(true)
         } else {
             setting.runnable.invoke()
         }

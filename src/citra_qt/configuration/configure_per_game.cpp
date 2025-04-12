@@ -1,5 +1,10 @@
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
-// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// Copyright 2020 yuzu Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 
 #include <utility>
 #include <vector>
@@ -35,7 +40,7 @@ ConfigurePerGame::ConfigurePerGame(QWidget* parent, u64 title_id_, const QString
 
     const bool is_powered_on = system.IsPoweredOn();
     audio_tab = std::make_unique<ConfigureAudio>(is_powered_on, this);
-    general_tab = std::make_unique<ConfigureGeneral>(this);
+    general_tab = std::make_unique<ConfigureGeneral>(is_powered_on, this);
     enhancements_tab = std::make_unique<ConfigureEnhancements>(this);
     layout_tab = std::make_unique<ConfigureLayout>(this);
     graphics_tab =

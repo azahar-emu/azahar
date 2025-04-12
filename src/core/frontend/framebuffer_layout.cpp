@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,6 +43,18 @@ FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool swapped
     ASSERT(width > 0);
     ASSERT(height > 0);
     const float scale_factor = swapped ? 1.25f : 0.8f;
+    FramebufferLayout res = LargeFrameLayout(width, height, swapped, false, scale_factor,
+                                             Settings::SmallScreenPosition::BelowLarge);
+    const int shiftY = -(int)(swapped ? res.bottom_screen.top : res.top_screen.top);
+    res.top_screen = res.top_screen.TranslateY(shiftY);
+    res.bottom_screen = res.bottom_screen.TranslateY(shiftY);
+    return res;
+}
+
+FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool swapped) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+    const float scale_factor = 1;
     FramebufferLayout res = LargeFrameLayout(width, height, swapped, false, scale_factor,
                                              Settings::SmallScreenPosition::BelowLarge);
     const int shiftY = -(int)(swapped ? res.bottom_screen.top : res.top_screen.top);
@@ -346,7 +358,7 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
 
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary,
                                                  bool is_portrait) {
-    int width, height;
+    u32 width, height;
     if (is_portrait) {
         auto layout_option = Settings::values.portrait_layout_option.GetValue();
         switch (layout_option) {
@@ -363,9 +375,14 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 Settings::values.swap_screen.GetValue(), is_portrait);
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
             width = Core::kScreenTopWidth * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            height = static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
+                     res_scale;
             return PortraitTopFullFrameLayout(width, height,
                                               Settings::values.swap_screen.GetValue());
+        case Settings::PortraitLayoutOption::PortraitOriginal:
+            width = Core::kScreenTopWidth * res_scale;
+            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            return PortraitOriginalLayout(width, height, Settings::values.swap_screen.GetValue());
         }
     } else {
         auto layout_option = Settings::values.layout_option.GetValue();
@@ -443,6 +460,24 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                     Settings::values.upright_screen.GetValue(), 1,
                                     Settings::SmallScreenPosition::MiddleRight);
 
+        case Settings::LayoutOption::HybridScreen:
+            height = Core::kScreenTopHeight * res_scale;
+
+            if (Settings::values.swap_screen.GetValue()) {
+                width = Core::kScreenBottomWidth;
+            } else {
+                width = Core::kScreenTopWidth;
+            }
+            // 2.25f comes from HybridScreenLayout's scale_factor value.
+            width = static_cast<int>((width + (Core::kScreenTopWidth / 2.25f)) * res_scale);
+
+            if (Settings::values.upright_screen.GetValue()) {
+                std::swap(width, height);
+            }
+
+            return HybridScreenLayout(width, height, Settings::values.swap_screen.GetValue(),
+                                      Settings::values.upright_screen.GetValue());
+
         case Settings::LayoutOption::Default:
         default:
             width = Core::kScreenTopWidth * res_scale;
@@ -479,6 +514,7 @@ FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout) {
     if (is_portrait) {
         switch (Settings::values.portrait_layout_option.GetValue()) {
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
+        case Settings::PortraitLayoutOption::PortraitOriginal:
             cardboard_screen_width = top_screen_width;
             cardboard_screen_height = top_screen_height + bottom_screen_height;
             bottom_screen_left += (top_screen_width - bottom_screen_width) / 2;
