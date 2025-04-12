@@ -17,18 +17,6 @@ object PermissionsHandler {
     val preferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
-    /**
-     * Read the user directory. If the CITRA_DIRECTORY preference is not set, check
-     * to see if lime3DS is set, use that instead, and replace the preference.
-     */
-
-    fun limeDirectory(): String? {
-        return preferences.getString("LIME3DS_DIRECTORY","")
-    }
-
-    /**
-     * Returns true if we need to ask the user what to do
-     */
     fun needToUpdateManually(): Boolean {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
         val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
@@ -54,7 +42,6 @@ object PermissionsHandler {
 
     fun removeLimeDirectoryPreference() {
         preferences.edit().remove("LIME3DS_DIRECTORY").apply()
-        preferences.edit().commit()
     }
 
     fun hasWriteAccess(context: Context): Boolean {
