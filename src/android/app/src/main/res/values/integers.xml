@@ -67,7 +67,7 @@
     <integer name="N3DS_BUTTON_START_PORTRAIT_Y">794</integer>
     <integer name="N3DS_BUTTON_SWAP_PORTRAIT_X">460</integer>
     <integer name="N3DS_BUTTON_SWAP_PORTRAIT_Y">675</integer>
-    <integer name="N3DS_BUTTON_TURBO_PORTRAIT_X">580</integer>
-    <integer name="N3DS_BUTTON_TURBO_PORTRAIT_Y">675</integer>
+    <integer name="N3DS_BUTTON_TURBO_PORTRAIT_X">453</integer>
+    <integer name="N3DS_BUTTON_TURBO_PORTRAIT_Y">720</integer>
 
 </resources>
