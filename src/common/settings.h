@@ -51,6 +51,7 @@ enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
     PortraitTopFullWidth,
     PortraitCustomLayout,
+    PortraitOriginal
 };
 
 enum class SecondaryScreenLayout : u32 {
@@ -503,6 +504,7 @@ struct Values {
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
+    SwitchableSetting<int, true> turbo_speed{200, 0, 1000, "turbo_speed"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
