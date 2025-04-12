@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -17,7 +17,7 @@ class ConfigureGeneral : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGeneral(QWidget* parent = nullptr);
+    explicit ConfigureGeneral(bool is_powered_on, QWidget* parent = nullptr);
     ~ConfigureGeneral() override;
 
     void ResetDefaults();
@@ -29,4 +29,5 @@ public:
 
 private:
     std::unique_ptr<Ui::ConfigureGeneral> ui;
+    bool is_powered_on;
 };
