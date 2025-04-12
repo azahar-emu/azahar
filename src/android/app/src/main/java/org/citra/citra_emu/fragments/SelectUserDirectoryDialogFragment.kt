@@ -6,13 +6,18 @@ package org.citra.citra_emu.fragments
 
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
 class SelectUserDirectoryDialogFragment : DialogFragment() {
@@ -22,11 +27,15 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
         mainActivity = requireActivity() as MainActivity
 
         isCancelable = false
+        val preferences: SharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+        val cd = PermissionsHandler.citraDirectory
+
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_citra_user_folder)
             .setMessage(R.string.selecting_user_directory_without_write_permissions)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                mainActivity?.openCitraDirectory?.launch(null)
+                mainActivity?.openCitraDirectory?.launch(cd)
             }
             .show()
     }

@@ -10,6 +10,8 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
+import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.PermissionsHandler.hasWriteAccess
 import java.io.File
 import java.io.FileOutputStream

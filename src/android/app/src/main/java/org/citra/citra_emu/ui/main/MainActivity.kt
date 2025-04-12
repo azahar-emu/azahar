@@ -4,9 +4,11 @@
 
 package org.citra.citra_emu.ui.main
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
@@ -45,6 +47,7 @@ import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
+import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
 import org.citra.citra_emu.utils.CiaInstallWorker
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -54,6 +57,7 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
+
 
 class MainActivity : AppCompatActivity(), ThemeProvider {
     private lateinit var binding: ActivityMainBinding
@@ -179,7 +183,11 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     private fun checkUserPermissions() {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
-
+        if (PermissionsHandler.needToUpdateManually()) {
+            UpdateUserDirectoryDialogFragment.newInstance(this).show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
+        }else {
+            PermissionsHandler.updateDirectory()
+        }
         if (!firstTimeSetup && !PermissionsHandler.hasWriteAccess(this) &&
             !homeViewModel.isPickingUserDir.value
         ) {
@@ -300,8 +308,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             windowInsets
         }
 
+    class OpenDocumentTreeWithInitialUri : ActivityResultContracts.OpenDocumentTree() {
+        override fun createIntent(context: Context, input: Uri?): Intent {
+            val intent = super.createIntent(context, input)
+            input?.let {
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it)
+            }
+            return intent
+        }
+    }
     val openCitraDirectory = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
+        OpenDocumentTreeWithInitialUri()
     ) { result: Uri? ->
         if (result == null) {
             return@registerForActivityResult

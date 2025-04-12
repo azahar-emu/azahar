@@ -17,6 +17,46 @@ object PermissionsHandler {
     val preferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
+    /**
+     * Read the user directory. If the CITRA_DIRECTORY preference is not set, check
+     * to see if lime3DS is set, use that instead, and replace the preference.
+     */
+
+    fun limeDirectory(): String? {
+        return preferences.getString("LIME3DS_DIRECTORY","")
+    }
+
+    /**
+     * Returns true if we need to ask the user what to do
+     */
+    fun needToUpdateManually(): Boolean {
+        val directoryString = preferences.getString(CITRA_DIRECTORY, "")
+        val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
+        return (directoryString != "" && limeDirectoryString != "" && directoryString != limeDirectoryString)
+    }
+
+    fun updateDirectory() {
+        val directoryString = preferences.getString(CITRA_DIRECTORY, "")
+        val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
+        if (needToUpdateManually()) {
+            //uh-oh, we shouldn't be here, the dialog box should have already done this
+            return;
+        }
+       if (directoryString == "" && limeDirectoryString != "") {
+            // This is a straight upgrade from Lime->Azahar
+            setCitraDirectory(limeDirectoryString)
+            removeLimeDirectoryPreference()
+        }else if (directoryString != "" && directoryString == limeDirectoryString) {
+            // duplicate
+            removeLimeDirectoryPreference()
+        }
+    }
+
+    fun removeLimeDirectoryPreference() {
+        preferences.edit().remove("LIME3DS_DIRECTORY").apply()
+        preferences.edit().commit()
+    }
+
     fun hasWriteAccess(context: Context): Boolean {
         try {
             if (citraDirectory.toString().isEmpty()) {

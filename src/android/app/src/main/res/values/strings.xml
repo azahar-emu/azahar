@@ -93,6 +93,9 @@
     <string name="warning_cancel">Cancel</string>
     <string name="select_citra_user_folder">Select User Folder</string>
     <string name="select_citra_user_folder_description"><![CDATA[Select your <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">user data</a> directory with the button below.]]></string>
+    <string name="select_which_user_directory_to_use">You appear to have user directories set for both Lime3DS and Azahar. This is likely because you did an upgrade, and chose a different user directory after upgrading. This may have resulted in you thinking you lost saves or other settings - we apologize if that happened. Would you like to go back to using your original Lime3DS user directory, restoring settings and save games from Lime, or keep your current Azahar user directory? Neither directory will be deleted, no matter your choice.</string>
+    <string name="keep_current_azahar_directory">Keep Current Azahar Directory</string>
+    <string name="use_prior_lime3ds_directory">Use Prior Lime3DS Directory</string>
     <string name="select">Select</string>
     <string name="cannot_skip">You can\'t skip this step</string>
     <string name="cannot_skip_directory_description">This step is required to allow Azahar to work. Please select a directory and then you can continue.</string>
@@ -823,4 +826,5 @@
     <string name="mac_address">MAC Address</string>
     <string name="regenerate_mac_address">Regenerate MAC Address</string>
     <string name="regenerate_mac_address_description">This will replace your current MAC address with a new one. It is not recommended to do this if you got the MAC address from your real console using the setup tool. Continue?</string>
+
 </resources>
