@@ -7,7 +7,6 @@ package org.citra.citra_emu.features.settings.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
-import android.graphics.Color
 import android.icu.util.Calendar
 import android.icu.util.TimeZone
 import android.text.Editable
@@ -17,11 +16,11 @@ import android.text.TextWatcher
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -68,7 +67,6 @@ import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.SystemSaveGame
-import java.lang.IllegalStateException
 import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
 import kotlin.math.roundToInt
@@ -155,15 +153,71 @@ class SettingsAdapter(
         return getItem(position)?.type ?: -1
     }
 
-    fun setSettingsList(settings: ArrayList<SettingsItem>?) {
-        this.settings = settings ?: arrayListOf()
-        notifyDataSetChanged()
+    fun setSettingsList(newSettings: ArrayList<SettingsItem>?) {
+        if (settings == null) {
+            settings = newSettings ?: arrayListOf()
+            notifyDataSetChanged()
+            return
+        }
+
+        val oldSettings = settings
+        val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = oldSettings?.size ?: 0
+            override fun getNewListSize() = newSettings?.size ?: 0
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                val oldItem = oldSettings?.get(oldItemPosition)?.setting
+                val newItem = newSettings?.get(newItemPosition)?.setting
+                return oldItem?.key == newItem?.key
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                val oldItem = oldSettings?.get(oldItemPosition)
+                val newItem = newSettings?.get(newItemPosition)
+
+                if (oldItem == null || newItem == null || oldItem.type != newItem.type) {
+                    return false
+                }
+
+                return when (oldItem.type) {
+                    SettingsItem.TYPE_SLIDER -> {
+                        (oldItem as SliderSetting).isEnabled == (newItem as SliderSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_SWITCH -> {
+                        (oldItem as SwitchSetting).isEnabled == (newItem as SwitchSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_SINGLE_CHOICE -> {
+                        (oldItem as SingleChoiceSetting).isEnabled == (newItem as SingleChoiceSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_DATETIME_SETTING -> {
+                        (oldItem as DateTimeSetting).isEnabled == (newItem as DateTimeSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_STRING_SINGLE_CHOICE -> {
+                        (oldItem as StringSingleChoiceSetting).isEnabled == (newItem as StringSingleChoiceSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_STRING_INPUT -> {
+                        (oldItem as StringInputSetting).isEnabled == (newItem as StringInputSetting).isEnabled
+                    }
+                    else -> {
+                        oldItem == newItem
+                    }
+                }
+            }
+        })
+
+        settings = newSettings ?: arrayListOf()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     fun onBooleanClick(item: SwitchSetting, position: Int, checked: Boolean) {
         val setting = item.setChecked(checked)
         fragmentView.putSetting(setting)
         fragmentView.onSettingChanged()
+
+        // If statement is required otherwise the app will crash on activity recreate ex. theme settings
+        if (fragmentView.activityView != null)
+            // Reload the settings list to update the UI
+            fragmentView.loadSettingsList()
     }
 
     private fun onSingleChoiceClick(item: SingleChoiceSetting) {
@@ -249,6 +303,7 @@ class SettingsAdapter(
             notifyItemChanged(clickedPosition)
             val setting = item.setSelectedValue(rtcString)
             fragmentView.putSetting(setting)
+            fragmentView.loadSettingsList()
             clickedItem = null
         }
         datePicker.show(
@@ -404,6 +459,7 @@ class SettingsAdapter(
                         else -> throw IllegalStateException("Unrecognized type used for SingleChoiceSetting!")
                     }
                     fragmentView?.putSetting(setting)
+                    fragmentView.loadSettingsList()
                     closeDialog()
                 }
             }
@@ -427,6 +483,7 @@ class SettingsAdapter(
                     }
 
                     fragmentView?.putSetting(setting)
+                    fragmentView.loadSettingsList()
                     closeDialog()
                 }
             }
@@ -449,6 +506,7 @@ class SettingsAdapter(
                             fragmentView?.putSetting(setting)
                         }
                    }
+                    fragmentView.loadSettingsList()
                     closeDialog()
                 }
             }
@@ -461,6 +519,7 @@ class SettingsAdapter(
                     }
                     val setting = it.setSelectedValue(textInputValue ?: "")
                     fragmentView?.putSetting(setting)
+                    fragmentView.loadSettingsList()
                     closeDialog()
                }
             }
@@ -490,6 +549,7 @@ class SettingsAdapter(
                 }
                 notifyItemChanged(position)
                 fragmentView.onSettingChanged()
+                fragmentView.loadSettingsList()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -497,10 +557,19 @@ class SettingsAdapter(
         return true
     }
 
-    fun onClickDisabledSetting() {
-        MessageDialogFragment.newInstance(
-            R.string.setting_not_editable,
+    fun onClickDisabledSetting(isRuntimeDisabled: Boolean) {
+        val titleId = if (isRuntimeDisabled)
+            R.string.setting_not_editable
+        else
+            R.string.setting_disabled
+        val messageId = if (isRuntimeDisabled)
             R.string.setting_not_editable_description
+        else
+            R.string.setting_disabled_description
+
+        MessageDialogFragment.newInstance(
+            titleId,
+            messageId
         ).show((fragmentView as SettingsFragment).childFragmentManager, MessageDialogFragment.TAG)
     }
 
