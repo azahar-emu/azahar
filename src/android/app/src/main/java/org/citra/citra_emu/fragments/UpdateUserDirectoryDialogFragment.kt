@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
@@ -43,8 +44,8 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
         val radioGroup = dialogView.findViewById<RadioGroup>(R.id.radioGroup)
 
         val choices = listOf(
-            R.string.keep_current_azahar_directory.toString() to cd,
-            R.string.use_prior_lime3ds_directory.toString() to ld
+            getString(R.string.keep_current_azahar_directory) to Uri.parse(cd).path,
+            getString(R.string.use_prior_lime3ds_directory) to Uri.parse(ld).path
         )
         var selected = 0 // 0 = current, 1 = prior
 

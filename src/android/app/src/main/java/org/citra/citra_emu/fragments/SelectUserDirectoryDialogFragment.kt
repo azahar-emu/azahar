@@ -30,7 +30,6 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
         val cd = PermissionsHandler.citraDirectory
-
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_citra_user_folder)
             .setMessage(R.string.selecting_user_directory_without_write_permissions)
