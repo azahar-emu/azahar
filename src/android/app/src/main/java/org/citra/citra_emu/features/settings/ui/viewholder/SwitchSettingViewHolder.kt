@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -33,26 +33,26 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
             adapter.onBooleanClick(item, bindingAdapterPosition, binding.switchWidget.isChecked)
         }
 
-        binding.switchWidget.isEnabled = setting.isEditable
+        binding.switchWidget.isEnabled = setting.isActive
 
-        val textAlpha = if (setting.isEditable) 1f else 0.5f
+        val textAlpha = if (setting.isActive) 1f else 0.5f
         binding.textSettingName.alpha = textAlpha
         binding.textSettingDescription.alpha = textAlpha
     }
 
     override fun onClick(clicked: View) {
-        if (setting.isEditable) {
+        if (setting.isActive) {
             binding.switchWidget.toggle()
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        if (setting.isEditable) {
+        if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting()
+            adapter.onClickDisabledSetting(!setting.isEditable)
         }
         return false
     }

@@ -467,9 +467,19 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
             NativeLibrary.unPauseEmulation()
+
             // If the overlay is enabled, we need to update the position if changed
             val position = IntSetting.PERF_OVERLAY_POSITION.int
             updateStatsPosition(position)
+
+            binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
+                menuItem.title = resources.getString(R.string.pause_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.ic_pause,
+                    requireContext().theme
+                )
+            }
             return
         }
 
@@ -910,10 +920,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         val layoutOptionMenuItem = when (IntSetting.PORTRAIT_SCREEN_LAYOUT.int) {
             PortraitScreenLayout.TOP_FULL_WIDTH.int ->
                 R.id.menu_portrait_layout_top_full
-
+            PortraitScreenLayout.ORIGINAL.int ->
+                R.id.menu_portrait_layout_original
             PortraitScreenLayout.CUSTOM_PORTRAIT_LAYOUT.int ->
                 R.id.menu_portrait_layout_custom
-
             else ->
                 R.id.menu_portrait_layout_top_full
 
@@ -925,6 +935,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             when (it.itemId) {
                 R.id.menu_portrait_layout_top_full -> {
                     screenAdjustmentUtil.changePortraitOrientation(PortraitScreenLayout.TOP_FULL_WIDTH.int)
+                    true
+                }
+
+                R.id.menu_portrait_layout_original -> {
+                    screenAdjustmentUtil.changePortraitOrientation(PortraitScreenLayout.ORIGINAL.int)
                     true
                 }
 

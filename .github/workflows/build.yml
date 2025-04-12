@@ -50,11 +50,11 @@ jobs:
       - name: Build
         run: ./.ci/linux.sh
       - name: Pack
+        if: ${{ matrix.target == 'appimage' }}
         run: ./.ci/pack.sh
-        if: ${{ matrix.target == 'appimage' }}
       - name: Upload
-        uses: actions/upload-artifact@v4
         if: ${{ matrix.target == 'appimage' }}
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -148,19 +148,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Set up MSVC
+        if: ${{ matrix.target == 'msvc' }}
         uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ matrix.target == 'msvc' }}
       - name: Install extra tools (MSVC)
-        run: choco install ccache ninja wget
         if: ${{ matrix.target == 'msvc' }}
+        run: choco install ccache ninja ptime wget
       - name: Install vulkan-sdk (MSVC)
+        if: ${{ matrix.target == 'msvc' }}
         run: |
           wget https://sdk.lunarg.com/sdk/download/1.3.296.0/windows/VulkanSDK-1.3.296.0-Installer.exe -O D:/a/_temp/vulkan.exe
           D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
-        if: ${{ matrix.target == 'msvc' }}
       - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
         if: ${{ matrix.target == 'msys2' }}
+        uses: msys2/setup-msys2@v2
         with:
           msystem: clang64
           update: true
@@ -168,10 +168,16 @@ jobs:
           pacboy: >-
             toolchain:p ccache:p cmake:p ninja:p spirv-tools:p
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
+      - name: Install extra tools (MSYS2)
+        if: ${{ matrix.target == 'msys2' }}
+        uses: crazy-max/ghaction-chocolatey@v3
+        with:
+          args: install ptime wget
       - name: Install NSIS
+        if: ${{ github.ref_type == 'tag' }}
         run: |
-          Invoke-WebRequest https://deac-riga.dl.sourceforge.net/project/nsis/NSIS%203/3.10/nsis-3.10-setup.exe?viasf=1 -OutFile C:\WINDOWS\Temp\nsis-3.10-setup.exe
-          Invoke-Expression "& C:\WINDOWS\Temp\nsis-3.10-setup.exe \S"
+          wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
+          ptime D:/a/_temp/nsis-setup.exe /S
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
@@ -241,8 +247,8 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
   ios:
-    runs-on: macos-14
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: macos-14
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content

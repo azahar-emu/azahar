@@ -15,7 +15,8 @@ class SingleChoiceSetting(
     val choicesId: Int,
     val valuesId: Int,
     val key: String? = null,
-    val defaultValue: Int? = null
+    val defaultValue: Int? = null,
+    override var isEnabled: Boolean = true
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SINGLE_CHOICE
 

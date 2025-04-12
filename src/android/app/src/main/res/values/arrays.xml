@@ -31,11 +31,13 @@
 
     <string-array name="portraitLayouts">
         <item>@string/emulation_portrait_layout_top_full</item>
+        <item>@string/emulation_screen_layout_original</item>
         <item>@string/emulation_screen_layout_custom</item>
     </string-array>
 
     <integer-array name="portraitLayoutValues">
         <item>0</item>
+        <item>2</item>
         <item>1</item>
     </integer-array>
 
@@ -326,6 +328,7 @@
     </integer-array>
 
     <string-array name="resolutionFactorNames">
+        <item>@string/internal_resolution_setting_auto</item>
         <item>@string/internal_resolution_setting_1x</item>
         <item>@string/internal_resolution_setting_2x</item>
         <item>@string/internal_resolution_setting_3x</item>
@@ -338,6 +341,7 @@
         <item>@string/internal_resolution_setting_10x</item>
     </string-array>
     <integer-array name="resolutionFactorValues">
+        <item>0</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>
