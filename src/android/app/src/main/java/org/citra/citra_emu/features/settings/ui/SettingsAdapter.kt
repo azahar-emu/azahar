@@ -555,7 +555,7 @@ class SettingsAdapter(
         return true
     }
 
-    fun onClickDisabledSetting(isRuntimeDisabled: Boolean) {
+    fun onClickDisabledSetting(isRuntimeDisabled: Boolean, item: SettingsItem? = null) {
         val titleId = if (isRuntimeDisabled)
             R.string.setting_not_editable
         else
@@ -564,10 +564,16 @@ class SettingsAdapter(
             R.string.setting_not_editable_description
         else
             R.string.setting_disabled_description
+        val requiredSettingNameString =
+            if (item?.requiredSettingName != null)
+                context.getString(R.string.setting_disabled_hint) + (item?.requiredSettingName?.let { "\n\n$it" } ?: "")
+            else
+                ""
 
         MessageDialogFragment.newInstance(
             titleId,
-            messageId
+            context.getString(messageId),
+            requiredSettingNameString
         ).show((fragmentView as SettingsFragment).childFragmentManager, MessageDialogFragment.TAG)
     }
 

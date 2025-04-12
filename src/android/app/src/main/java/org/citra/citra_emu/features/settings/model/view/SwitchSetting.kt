@@ -14,7 +14,8 @@ class SwitchSetting(
     descriptionId: Int,
     val key: String? = null,
     val defaultValue: Any? = null,
-    override var isEnabled: Boolean = true
+    override val isEnabled: Boolean = true,
+    override val requiredSettingName: String? = null
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SWITCH
 

@@ -44,7 +44,7 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
         if (setting.isActive) {
             binding.switchWidget.toggle()
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
     }
 
@@ -52,7 +52,7 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
         return false
     }

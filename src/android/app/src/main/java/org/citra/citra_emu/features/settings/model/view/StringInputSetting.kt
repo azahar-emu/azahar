@@ -13,7 +13,8 @@ class StringInputSetting(
     descriptionId: Int,
     val defaultValue: String,
     val characterLimit: Int = 0,
-    override var isEnabled: Boolean = true
+    override val isEnabled: Boolean = true,
+    override val requiredSettingName: String? = null
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_STRING_INPUT
 
