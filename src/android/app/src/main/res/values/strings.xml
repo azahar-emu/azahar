@@ -306,6 +306,12 @@
     <string name="layout_screen_orientation_landscape_reverse">Reverse Landscape</string>
     <string name="layout_screen_orientation_portrait">Portrait</string>
     <string name="layout_screen_orientation_portrait_reverse">Reverse Portrait</string>
+    <string name="aspect_ratio_default">Default</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Stretch</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Clear</string>
@@ -822,4 +828,5 @@
     <string name="mac_address">MAC Address</string>
     <string name="regenerate_mac_address">Regenerate MAC Address</string>
     <string name="regenerate_mac_address_description">This will replace your current MAC address with a new one. It is not recommended to do this if you got the MAC address from your real console using the setup tool. Continue?</string>
+    <string name="emulation_aspect_ratio">Aspect Ratio</string>
 </resources>

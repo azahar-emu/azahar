@@ -77,13 +77,19 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bot_screen;
     float emulation_aspect_ratio;
-    top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
-    bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
-    emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
+    const float window_aspect_ratio = static_cast<float>(height) / width;
+
+    float top_aspect_ratio =
+        res.EmulationAspectRatio(Settings::values.aspect_ratio.GetValue(), window_aspect_ratio);
+    float bot_aspect_ratio =
+        res.EmulationAspectRatio(Settings::values.aspect_ratio.GetValue(), window_aspect_ratio);
+
+    top_screen = MaxRectangle(screen_window_area, top_aspect_ratio);
+    bot_screen = MaxRectangle(screen_window_area, bot_aspect_ratio);
+    emulation_aspect_ratio = (swapped) ? bot_aspect_ratio : top_aspect_ratio;
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
                            (Settings::values.screen_bottom_stretch.GetValue() && swapped);
-    const float window_aspect_ratio = static_cast<float>(height) / width;
 
     if (stretched) {
         top_screen = {Settings::values.screen_top_leftright_padding.GetValue(),
@@ -669,6 +675,24 @@ std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption la
         return std::make_pair(min_height, min_width);
     } else {
         return std::make_pair(min_width, min_height);
+    }
+}
+
+float FramebufferLayout::EmulationAspectRatio(Settings::AspectRatio aspect,
+                                              float window_aspect_ratio) {
+    switch (aspect) {
+    case Settings::AspectRatio::Default:
+        return static_cast<float>(Core::kScreenTopHeight) / Core::kScreenTopWidth;
+    case Settings::AspectRatio::R4_3:
+        return 3.0f / 4.0f;
+    case Settings::AspectRatio::R21_9:
+        return 9.0f / 21.0f;
+    case Settings::AspectRatio::R16_10:
+        return 10.0f / 16.0f;
+    case Settings::AspectRatio::Stretch:
+        return window_aspect_ratio;
+    default:
+        return static_cast<float>(Core::kScreenTopHeight) / Core::kScreenTopWidth;
     }
 }
 
