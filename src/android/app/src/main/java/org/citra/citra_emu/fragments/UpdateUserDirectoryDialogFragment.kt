@@ -47,7 +47,7 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
             getString(R.string.keep_current_azahar_directory) to Uri.parse(cd).path,
             getString(R.string.use_prior_lime3ds_directory) to Uri.parse(ld).path
         )
-        var selected = 0 // 0 = current, 1 = prior
+        var selected = -1 // 0 = current, 1 = prior, -1 = no selection
 
         choices.forEachIndexed { index, (label, subtext) ->
             val container = LinearLayout(requireContext()).apply {
@@ -70,11 +70,11 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
             container.addView(subTextView)
             radioGroup.addView(container)
 
-            // Select first by default
-            if (index == 0) {
-                radioButton.isChecked = true
-                selected = 0
-            }
+//            by default, neither should be selected
+//            if (index == 0) {
+//                radioButton.isChecked = true
+//                selected = 0
+//            }
 
             // RadioGroup expects RadioButtons directly, so we need to manage selection ourselves
             radioButton.setOnClickListener {
@@ -95,7 +95,11 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
                 if (selected == 1) {
                     PermissionsHandler.setCitraDirectory(ld)
                 }
-                PermissionsHandler.removeLimeDirectoryPreference()
+                if (selected >= 0) {
+                    PermissionsHandler.removeLimeDirectoryPreference()
+                    // if the user doesn't select anything, keep both prefs
+                    // so the dialog pops again next time
+                }
             }
             .show()
     }
