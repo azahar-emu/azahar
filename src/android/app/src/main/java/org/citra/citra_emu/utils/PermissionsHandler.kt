@@ -14,18 +14,19 @@ import org.citra.citra_emu.CitraApplication
 
 object PermissionsHandler {
     const val CITRA_DIRECTORY = "CITRA_DIRECTORY"
+    const val LIME3DS_DIRECTORY = "LIME3DS_DIRECTORY"
     val preferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     fun needToUpdateManually(): Boolean {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
-        val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
+        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
         return (directoryString != "" && limeDirectoryString != "" && directoryString != limeDirectoryString)
     }
 
     fun updateDirectory() {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
-        val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
+        val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
         if (needToUpdateManually()) {
             //dialog box will update
             return;
@@ -44,7 +45,7 @@ object PermissionsHandler {
     }
 
     fun removeLimeDirectoryPreference() {
-        preferences.edit().remove("LIME3DS_DIRECTORY").apply()
+        preferences.edit().remove(LIME3DS_DIRECTORY).apply()
     }
 
     fun hasWriteAccess(context: Context): Boolean {
