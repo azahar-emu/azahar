@@ -28,18 +28,19 @@ object PermissionsHandler {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
         val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
         if (needToUpdateManually()) {
-            //dialog box will update
+            // Dialog box will update
             return;
         }
        if (directoryString == "" && limeDirectoryString != "") {
-            // This is a straight upgrade from Lime->Azahar
+            // Upgrade from Lime3DS to Azahar
             setCitraDirectory(limeDirectoryString)
             removeLimeDirectoryPreference()
             DirectoryInitialization.resetCitraDirectoryState()
             DirectoryInitialization.start()
 
        }else if (directoryString != "" && directoryString == limeDirectoryString) {
-            // duplicate
+            // Both the Lime3DS and Azahar directories are the same,
+            // so delete the obsolete Lime3DS value.
             removeLimeDirectoryPreference()
         }
     }
