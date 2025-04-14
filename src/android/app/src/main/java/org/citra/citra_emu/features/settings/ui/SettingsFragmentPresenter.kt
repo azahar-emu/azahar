@@ -16,6 +16,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenLayout
@@ -97,6 +98,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_CONTROLS -> addControlsSettings(sl)
             Settings.SECTION_RENDERER -> addGraphicsSettings(sl)
             Settings.SECTION_LAYOUT -> addLayoutSettings(sl)
+            Settings.SECTION_NETWORK -> addNetworkSettings(sl)
             Settings.SECTION_AUDIO -> addAudioSettings(sl)
             Settings.SECTION_DEBUG -> addDebugSettings(sl)
             Settings.SECTION_THEME -> addThemeSettings(sl)
@@ -177,6 +179,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     R.drawable.ic_fit_screen,
                     Settings.SECTION_LAYOUT
+                )
+            )
+            add(
+                SubmenuSetting(
+                    R.string.preferences_network,
+                    0,
+                    R.drawable.ic_network,
+                    Settings.SECTION_NETWORK
                 )
             )
             add(
@@ -319,6 +329,26 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(HeaderSetting(R.string.profile_settings))
+            add(
+                StringInputSetting(
+                    usernameSetting,
+                    R.string.username,
+                    0,
+                    defaultValue = "AZAHAR"
+                )
+            )
+            add(
+                SingleChoiceSetting(
+                    IntSetting.EMULATED_REGION,
+                    R.string.emulated_region,
+                    0,
+                    R.array.regionNames,
+                    R.array.regionValues,
+                    IntSetting.EMULATED_REGION.key,
+                    IntSetting.EMULATED_REGION.defaultValue
+                )
+            )
+
             val regionSetting = object : AbstractIntSetting {
                 override var int: Int
                     get() {
@@ -1331,6 +1361,40 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
         }
 
+    }
+
+    private fun addNetworkSettings (sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
+        sl.apply {
+            add(
+                StringInputSetting(
+                    StringSetting.NETWORK_USERNAME,
+                    R.string.network_username,
+                    R.string.network_username_description,
+                    StringSetting.NETWORK_USERNAME.key,
+                    StringSetting.NETWORK_USERNAME.defaultValue,
+                    10,
+                )
+            )
+            add(
+                StringInputSetting(
+                    StringSetting.WEB_API_URL,
+                    R.string.web_api_url,
+                    R.string.web_api_url_description,
+                    StringSetting.WEB_API_URL.key,
+                    StringSetting.WEB_API_URL.defaultValue,
+                )
+            )
+            add(
+                StringInputSetting(
+                    StringSetting.NETWORK_TOKEN,
+                    R.string.network_token,
+                    R.string.network_token_description,
+                    StringSetting.NETWORK_TOKEN.key,
+                    StringSetting.NETWORK_TOKEN.defaultValue,
+                )
+            )
+        }
     }
 
     private fun addAudioSettings(sl: ArrayList<SettingsItem>) {

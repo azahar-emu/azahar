@@ -20,7 +20,6 @@
 #include "common/logging/log.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "network/announce_multiplayer_session.h"
-#include "network/network_settings.h"
 #include "ui_host_room.h"
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/verify_user_jwt.h"
@@ -52,9 +51,9 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
 
     // Restore the settings:
     ui->username->setText(UISettings::values.room_nickname);
-    if (ui->username->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
+    if (ui->username->text().isEmpty() && !Settings::values.citra_username.GetValue().empty()) {
         // Use Citra Web Service user name as nickname by default
-        ui->username->setText(QString::fromStdString(NetSettings::values.citra_username));
+        ui->username->setText(QString::fromStdString(Settings::values.citra_username.GetValue()));
     }
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
@@ -92,7 +91,7 @@ std::unique_ptr<Network::VerifyUser::Backend> HostRoomWindow::CreateVerifyBacken
     if (use_validation) {
 #ifdef ENABLE_WEB_SERVICE
         verify_backend =
-            std::make_unique<WebService::VerifyUserJWT>(NetSettings::values.web_api_url);
+            std::make_unique<WebService::VerifyUserJWT>(Settings::values.web_api_url.GetValue());
 #else
         verify_backend = std::make_unique<Network::VerifyUser::NullBackend>();
 #endif
@@ -141,11 +140,11 @@ void HostRoomWindow::Host() {
             ban_list = UISettings::values.ban_list;
         }
         if (auto room = Network::GetRoom().lock()) {
-            bool created = room->Create(ui->room_name->text().toStdString(),
-                                        ui->room_description->toPlainText().toStdString(), "",
-                                        static_cast<u16>(port), password, ui->max_player->value(),
-                                        NetSettings::values.citra_username, game_name.toStdString(),
-                                        game_id, CreateVerifyBackend(is_public), ban_list);
+            bool created = room->Create(
+                ui->room_name->text().toStdString(),
+                ui->room_description->toPlainText().toStdString(), "", static_cast<u16>(port),
+                password, ui->max_player->value(), Settings::values.citra_username.GetValue(),
+                game_name.toStdString(), game_id, CreateVerifyBackend(is_public), ban_list);
             if (!created) {
                 NetworkMessage::ErrorManager::ShowError(
                     NetworkMessage::ErrorManager::COULD_NOT_CREATE_ROOM);
@@ -179,9 +178,9 @@ void HostRoomWindow::Host() {
         std::string token;
 #ifdef ENABLE_WEB_SERVICE
         if (is_public) {
-            WebService::Client client(NetSettings::values.web_api_url,
-                                      NetSettings::values.citra_username,
-                                      NetSettings::values.citra_token);
+            WebService::Client client(Settings::values.web_api_url.GetValue(),
+                                      Settings::values.citra_username.GetValue(),
+                                      Settings::values.citra_token.GetValue());
             if (auto room = Network::GetRoom().lock()) {
                 token = client.GetExternalJWT(room->GetVerifyUID()).returned_data;
             }
