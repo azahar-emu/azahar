@@ -23,6 +23,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.HomeViewModel
@@ -90,7 +91,7 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
                     PermissionsHandler.setCitraDirectory(ld)
                 }
                 if (selected >= 0) {
-                    PermissionsHandler.removeLimeDirectoryPreference()
+                    CitraDirectoryUtils.removeLimeDirectoryPreference()
                     DirectoryInitialization.resetCitraDirectoryState()
                     DirectoryInitialization.start()
                 }

@@ -46,6 +46,7 @@ import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
 import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
 import org.citra.citra_emu.utils.CiaInstallWorker
 import org.citra.citra_emu.utils.CitraDirectoryHelper
+import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
@@ -65,17 +66,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-        PermissionsHandler.attemptAutomaticUpdateDirectory()
+        CitraDirectoryUtils.attemptAutomaticUpdateDirectory()
         splashScreen.setKeepOnScreenCondition {
             !DirectoryInitialization.areCitraDirectoriesReady() &&
                     PermissionsHandler.hasWriteAccess(this) &&
-                    !PermissionsHandler.needToUpdateManually()
+                    !CitraDirectoryUtils.needToUpdateManually()
         }
 
 
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
             DirectoryInitialization.areCitraDirectoriesReady() &&
-            !PermissionsHandler.needToUpdateManually()) {
+            !CitraDirectoryUtils.needToUpdateManually()) {
             settingsViewModel.settings.loadSettings()
         }
 
@@ -188,7 +189,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         ) {
             SelectUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-        } else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && PermissionsHandler.needToUpdateManually()) {
+        } else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && CitraDirectoryUtils.needToUpdateManually()) {
             UpdateUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
         }
