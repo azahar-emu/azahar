@@ -24,11 +24,10 @@ object PermissionsHandler {
         return (directoryString != "" && limeDirectoryString != "" && directoryString != limeDirectoryString)
     }
 
-    fun updateDirectory() {
+    fun attemptAutomaticUpdateDirectory() {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
         val limeDirectoryString = preferences.getString(LIME3DS_DIRECTORY,"")
         if (needToUpdateManually()) {
-            // Dialog box will update
             return;
         }
        if (directoryString == "" && limeDirectoryString != "") {
@@ -38,7 +37,7 @@ object PermissionsHandler {
             DirectoryInitialization.resetCitraDirectoryState()
             DirectoryInitialization.start()
 
-       }else if (directoryString != "" && directoryString == limeDirectoryString) {
+       } else if (directoryString != "" && directoryString == limeDirectoryString) {
             // Both the Lime3DS and Azahar directories are the same,
             // so delete the obsolete Lime3DS value.
             removeLimeDirectoryPreference()

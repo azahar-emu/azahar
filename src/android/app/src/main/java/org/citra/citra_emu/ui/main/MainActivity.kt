@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-        PermissionsHandler.updateDirectory()
+        PermissionsHandler.attemptAutomaticUpdateDirectory()
         splashScreen.setKeepOnScreenCondition {
             !DirectoryInitialization.areCitraDirectoriesReady() &&
                     PermissionsHandler.hasWriteAccess(this) &&
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         ) {
             SelectUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-        }else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && PermissionsHandler.needToUpdateManually()) {
+        } else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && PermissionsHandler.needToUpdateManually()) {
             UpdateUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
         }
