@@ -10,7 +10,9 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.ViewModelProvider
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.viewmodel.HomeViewModel
 
 object PermissionsHandler {
     const val CITRA_DIRECTORY = "CITRA_DIRECTORY"
@@ -34,7 +36,10 @@ object PermissionsHandler {
             // This is a straight upgrade from Lime->Azahar
             setCitraDirectory(limeDirectoryString)
             removeLimeDirectoryPreference()
-        }else if (directoryString != "" && directoryString == limeDirectoryString) {
+            DirectoryInitialization.resetCitraDirectoryState()
+            DirectoryInitialization.start()
+
+       }else if (directoryString != "" && directoryString == limeDirectoryString) {
             // duplicate
             removeLimeDirectoryPreference()
         }

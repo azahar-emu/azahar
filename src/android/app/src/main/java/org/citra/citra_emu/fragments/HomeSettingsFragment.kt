@@ -159,7 +159,7 @@ class HomeSettingsFragment : Fragment() {
                 R.string.select_citra_user_folder,
                 R.string.select_citra_user_folder_home_description,
                 R.drawable.ic_home,
-                { mainActivity?.openCitraDirectory?.launch(null) },
+                { mainActivity?.openCitraDirectory?.launch(PermissionsHandler.citraDirectory) },
                 details = homeViewModel.userDir
             ),
             HomeSetting(
@@ -249,6 +249,7 @@ class HomeSettingsFragment : Fragment() {
         val oldLog = logDirectory?.findFile("azahar_log.old.txt")
 
         val intent = Intent().apply {
+            action = Intent.ACTION_SEND
             action = Intent.ACTION_SEND
             type = "text/plain"
         }

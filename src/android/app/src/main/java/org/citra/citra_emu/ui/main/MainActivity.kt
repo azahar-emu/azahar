@@ -70,13 +70,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        PermissionsHandler.updateDirectory()
         splashScreen.setKeepOnScreenCondition {
             !DirectoryInitialization.areCitraDirectoriesReady() &&
-                    PermissionsHandler.hasWriteAccess(this)
+                    PermissionsHandler.hasWriteAccess(this) &&
+                    !PermissionsHandler.needToUpdateManually()
         }
 
+
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
-            DirectoryInitialization.areCitraDirectoriesReady()) {
+            DirectoryInitialization.areCitraDirectoriesReady() &&
+            !PermissionsHandler.needToUpdateManually()) {
             settingsViewModel.settings.loadSettings()
         }
 
@@ -183,16 +187,15 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     private fun checkUserPermissions() {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
-        if (PermissionsHandler.needToUpdateManually()) {
-            UpdateUserDirectoryDialogFragment.newInstance(this).show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
-        }else {
-            PermissionsHandler.updateDirectory()
-        }
+
         if (!firstTimeSetup && !PermissionsHandler.hasWriteAccess(this) &&
             !homeViewModel.isPickingUserDir.value
         ) {
             SelectUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+        }else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && PermissionsHandler.needToUpdateManually()) {
+            UpdateUserDirectoryDialogFragment.newInstance(this)
+                .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
         }
     }
 
@@ -308,17 +311,8 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             windowInsets
         }
 
-    class OpenDocumentTreeWithInitialUri : ActivityResultContracts.OpenDocumentTree() {
-        override fun createIntent(context: Context, input: Uri?): Intent {
-            val intent = super.createIntent(context, input)
-            input?.let {
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it)
-            }
-            return intent
-        }
-    }
     val openCitraDirectory = registerForActivityResult(
-        OpenDocumentTreeWithInitialUri()
+        ActivityResultContracts.OpenDocumentTree()
     ) { result: Uri? ->
         if (result == null) {
             return@registerForActivityResult

@@ -27,7 +27,6 @@ class HomeViewModel : ViewModel() {
 
     val isPickingUserDir get() = _isPickingUserDir.asStateFlow()
     private val _isPickingUserDir = MutableStateFlow(false)
-
     val userDir get() = _userDir.asStateFlow()
     private val _userDir = MutableStateFlow(
         Uri.parse(
