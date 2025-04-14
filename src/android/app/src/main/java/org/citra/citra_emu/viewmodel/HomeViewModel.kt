@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,6 +27,7 @@ class HomeViewModel : ViewModel() {
 
     val isPickingUserDir get() = _isPickingUserDir.asStateFlow()
     private val _isPickingUserDir = MutableStateFlow(false)
+
     val userDir get() = _userDir.asStateFlow()
     private val _userDir = MutableStateFlow(
         Uri.parse(
