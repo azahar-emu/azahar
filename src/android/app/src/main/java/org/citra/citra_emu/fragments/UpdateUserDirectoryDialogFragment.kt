@@ -9,7 +9,6 @@ import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
-import android.provider.ContactsContract.Directory
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -18,11 +17,9 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity

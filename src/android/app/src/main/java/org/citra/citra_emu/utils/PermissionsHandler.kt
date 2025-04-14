@@ -10,9 +10,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.preference.PreferenceManager
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.ViewModelProvider
 import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.viewmodel.HomeViewModel
 
 object PermissionsHandler {
     const val CITRA_DIRECTORY = "CITRA_DIRECTORY"
@@ -29,7 +27,7 @@ object PermissionsHandler {
         val directoryString = preferences.getString(CITRA_DIRECTORY, "")
         val limeDirectoryString = preferences.getString("LIME3DS_DIRECTORY","")
         if (needToUpdateManually()) {
-            //uh-oh, we shouldn't be here, the dialog box should have already done this
+            //dialog box will update
             return;
         }
        if (directoryString == "" && limeDirectoryString != "") {

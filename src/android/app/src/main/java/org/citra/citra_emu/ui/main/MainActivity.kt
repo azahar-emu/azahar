@@ -4,11 +4,9 @@
 
 package org.citra.citra_emu.ui.main
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.DocumentsContract
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
@@ -36,10 +34,8 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.R
-import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.features.settings.model.Settings
