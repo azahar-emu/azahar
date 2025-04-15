@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,6 +70,8 @@ class EmulationActivity : AppCompatActivity() {
     private var isEmulationRunning: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+
         ThemeUtil.setTheme(this)
 
         settingsViewModel.settings.loadSettings()
