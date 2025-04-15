@@ -3889,7 +3889,9 @@ void LaunchQtFrontend(int argc, char* argv[]) {
 
     // Init settings params
     QCoreApplication::setOrganizationName(QStringLiteral("Azahar Developers"));
+    QCoreApplication::setOrganizationDomain(QStringLiteral("azahar_emu.org"));
     QCoreApplication::setApplicationName(QStringLiteral("Azahar"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("org.azahar_emu.Azahar"));
 
     auto rounding_policy = GetHighDpiRoundingPolicy();
     QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);
