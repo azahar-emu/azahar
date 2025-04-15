@@ -14,6 +14,7 @@
 #include "audio_core/sink_details.h"
 #include "common/common_types.h"
 #include "core/hle/service/cam/cam_params.h"
+#include "core/rpc/udp_server.h"
 
 namespace Settings {
 
@@ -585,6 +586,8 @@ struct Values {
     Setting<bool> delay_start_for_lle_modules{true, "delay_start_for_lle_modules"};
     Setting<bool> use_gdbstub{false, "use_gdbstub"};
     Setting<u16> gdbstub_port{24689, "gdbstub_port"};
+    Setting<bool> use_rpc_server{true, "use_rpc_server"};
+    Setting<u16> rpc_server_port{Core::RPC::DEFAULT_PORT, "rpc_server_port"};
     Setting<bool> instant_debug_log{false, "instant_debug_log"};
 
     // Miscellaneous

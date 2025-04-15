@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
-#include <array>
 #include <QKeySequence>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
@@ -497,6 +495,10 @@ void QtConfig::ReadDebuggingValues() {
         qt_config->value(QStringLiteral("record_frame_times"), false).toBool();
     ReadBasicSetting(Settings::values.use_gdbstub);
     ReadBasicSetting(Settings::values.gdbstub_port);
+#ifdef ENABLE_SCRIPTING
+    ReadBasicSetting(Settings::values.use_rpc_server);
+    ReadBasicSetting(Settings::values.rpc_server_port);
+#endif
     ReadBasicSetting(Settings::values.renderer_debug);
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
@@ -1058,6 +1060,10 @@ void QtConfig::SaveDebuggingValues() {
     qt_config->setValue(QStringLiteral("record_frame_times"), Settings::values.record_frame_times);
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);
+#ifdef ENABLE_SCRIPTING
+    WriteBasicSetting(Settings::values.use_rpc_server);
+    WriteBasicSetting(Settings::values.rpc_server_port);
+#endif
     WriteBasicSetting(Settings::values.renderer_debug);
     WriteBasicSetting(Settings::values.instant_debug_log);
 
