@@ -160,9 +160,6 @@ Section "Base"
   !insertmacro UPDATE_DISPLAYNAME
 
   ; Create start menu and desktop shortcuts
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
   CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
     CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
@@ -198,10 +195,6 @@ Section Uninstall
 
   Delete "$DESKTOP\$DisplayName.lnk"
   Delete "$SMPROGRAMS\$DisplayName.lnk"
-
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
