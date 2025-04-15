@@ -2104,7 +2104,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
             std::vector<u64> title_id_list;
 
             Result res{0};
-            std::vector<u8> out;
+            std::vector<TitleInfo> out;
             Kernel::MappedBuffer* title_id_list_buffer;
             Kernel::MappedBuffer* title_info_out;
         };
@@ -2144,7 +2144,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
                     return 0;
                 }
 
-                async_data->out.resize(title_infos->second);
+                async_data->out.resize(title_infos->second / sizeof(TitleInfo));
                 memcpy(async_data->out.data(), title_infos->first, title_infos->second);
                 return 0;
             },
@@ -2156,7 +2156,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
                     rb.PushMappedBuffer(*async_data->title_info_out);
                 } else {
                     async_data->title_info_out->Write(async_data->out.data(), 0,
-                                                      async_data->out.size());
+                                                      async_data->out.size() * sizeof(TitleInfo));
 
                     IPC::RequestBuilder rb(ctx, 1, 4);
                     rb.Push(async_data->res);
