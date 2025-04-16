@@ -317,6 +317,7 @@
     <string name="ini_saved">Saved settings</string>
     <string name="gameid_saved">Saved settings for %1$s</string>
     <string name="error_saving">Error saving %1$s.ini: %2$s</string>
+    <string name="saving">Saving…</string>
     <string name="loading">Loading…</string>
     <string name="next">Next</string>
     <string name="back">Back</string>
@@ -807,8 +808,6 @@
     <string name="emulation_quicksave">Quicksave</string>
     <string name="emulation_quickload">Quickload</string>
     <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
-    <string name="quicksave_saving">Saving…</string>
-    <string name="quickload_loading">Loading…</string>
     <string name="quickload_not_found">No Quicksave available.</string>
     <string name="miscellaneous">Miscellaneous</string>
     <string name="use_artic_base_controller">Use Artic Controller when connected to Artic Base Server</string>

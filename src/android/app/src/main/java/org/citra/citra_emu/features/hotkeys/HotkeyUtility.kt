@@ -29,13 +29,13 @@ class HotkeyUtility(
                 Hotkey.QUICKSAVE.button -> {
                     NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                     Toast.makeText(context,
-                        context.getString(R.string.quicksave_saving),
+                        context.getString(R.string.saving),
                         Toast.LENGTH_SHORT).show()
                 }
                 Hotkey.QUICKLOAD.button -> {
                     val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                     val stringRes = if(wasLoaded) {
-                        R.string.quickload_loading
+                        R.string.loading
                     } else {
                         R.string.quickload_not_found
                     }
