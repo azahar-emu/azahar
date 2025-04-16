@@ -538,7 +538,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 DateTimeSetting(
                     StringSetting.INIT_TIME,
                     R.string.simulated_clock,
-                    R.string.init_time_description,
+                    R.string.simulated_clock_description,
                     StringSetting.INIT_TIME.key,
                     StringSetting.INIT_TIME.defaultValue
                 )
