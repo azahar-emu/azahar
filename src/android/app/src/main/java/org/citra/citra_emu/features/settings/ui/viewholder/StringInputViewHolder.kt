@@ -39,7 +39,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
 
     override fun onClick(clicked: View) {
         if (!setting.isEditable || !setting.isEnabled) {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
             return
         }
         adapter.onStringInputClick((setting as StringInputSetting), bindingAdapterPosition)
@@ -49,7 +49,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
         return false
     }

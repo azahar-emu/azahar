@@ -17,6 +17,7 @@ class MessageDialogFragment : DialogFragment() {
         val titleId = requireArguments().getInt(TITLE_ID)
         val descriptionId = requireArguments().getInt(DESCRIPTION_ID)
         val descriptionString = requireArguments().getString(DESCRIPTION_STRING) ?: ""
+        val secondaryDescriptionString = requireArguments().getString(DESCRIPTION_STRING_2) ?: ""
         val helpLinkId = requireArguments().getInt(HELP_LINK)
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
@@ -24,7 +25,11 @@ class MessageDialogFragment : DialogFragment() {
             .setTitle(titleId)
 
         if (descriptionString.isNotEmpty()) {
-            dialog.setMessage(descriptionString)
+            dialog.setMessage(if (secondaryDescriptionString.isNotEmpty()) {
+                "$descriptionString\n\n$secondaryDescriptionString"
+            } else {
+                descriptionString
+            })
         } else if (descriptionId != 0) {
             dialog.setMessage(descriptionId)
         }
@@ -49,6 +54,7 @@ class MessageDialogFragment : DialogFragment() {
         private const val TITLE_ID = "Title"
         private const val DESCRIPTION_ID = "Description"
         private const val DESCRIPTION_STRING = "Description_string"
+        private const val DESCRIPTION_STRING_2 = "Description_string_2"
         private const val HELP_LINK = "Link"
 
         fun newInstance(
@@ -70,6 +76,7 @@ class MessageDialogFragment : DialogFragment() {
         fun newInstance(
             titleId: Int,
             description: String,
+            secondaryDescription: String = "",
             helpLinkId: Int = 0
         ): MessageDialogFragment {
             val dialog = MessageDialogFragment()
@@ -77,6 +84,7 @@ class MessageDialogFragment : DialogFragment() {
             bundle.apply {
                 putInt(TITLE_ID, titleId)
                 putString(DESCRIPTION_STRING, description)
+                putString(DESCRIPTION_STRING_2, secondaryDescription)
                 putInt(HELP_LINK, helpLinkId)
             }
             dialog.arguments = bundle

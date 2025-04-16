@@ -45,7 +45,7 @@ class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter
         if (setting.isEditable) {
             adapter.onInputBindingClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
     }
 
@@ -53,7 +53,7 @@ class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter
         if (setting.isEditable) {
             adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
         return false
     }
