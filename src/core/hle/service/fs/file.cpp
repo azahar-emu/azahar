@@ -169,6 +169,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     u64 offset = rp.Pop<u64>();
     u32 length = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
     LOG_TRACE(Service_FS, "Write {}: offset=0x{:x} length={}, flags=0x{:x}", GetName(), offset,
               length, flags);
 
@@ -180,14 +181,13 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     if (file->subfile) {
         rb.Push(FileSys::ResultUnsupportedOpenFlags);
         rb.Push<u32>(0);
-        rb.PushMappedBuffer(rp.PopMappedBuffer());
+        rb.PushMappedBuffer(buffer);
         return;
     }
     bool flush = (flags & 0xFF) != 0, update_timestamp = (flags & 0xFF00) != 0;
 
     if (!backend->AllowsCachedReads()) {
         std::vector<u8> data(length);
-        auto& buffer = rp.PopMappedBuffer();
         buffer.Read(data.data(), 0, data.size());
         ResultVal<std::size_t> written =
             backend->Write(offset, data.size(), flush, update_timestamp, data.data());
@@ -223,7 +223,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     async_data->offset = offset;
     async_data->flush = flush;
     async_data->update_timestamp = update_timestamp;
-    async_data->buffer = &rp.PopMappedBuffer();
+    async_data->buffer = &buffer;
     async_data->file = file;
 
     ctx.RunAsync(
