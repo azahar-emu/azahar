@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -157,6 +157,11 @@ Loader::ResultStatus CIAContainer::LoadTitleMetadata(std::span<const u8> tmd_dat
     return cia_tmd.Load(tmd_data, offset);
 }
 
+Loader::ResultStatus CIAContainer::LoadTitleMetadata(const TitleMetadata& tmd) {
+    cia_tmd = tmd;
+    return Loader::ResultStatus::Success;
+}
+
 Loader::ResultStatus CIAContainer::LoadMetadata(std::span<const u8> meta_data, std::size_t offset) {
     if (meta_data.size() - offset < sizeof(Metadata)) {
         return Loader::ResultStatus::Error;
@@ -167,7 +172,7 @@ Loader::ResultStatus CIAContainer::LoadMetadata(std::span<const u8> meta_data, s
     return Loader::ResultStatus::Success;
 }
 
-const Ticket& CIAContainer::GetTicket() const {
+Ticket& CIAContainer::GetTicket() {
     return cia_ticket;
 }
 
