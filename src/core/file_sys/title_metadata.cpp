@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -173,6 +173,10 @@ u16 TitleMetadata::GetContentTypeByIndex(std::size_t index) const {
 
 u64 TitleMetadata::GetContentSizeByIndex(std::size_t index) const {
     return tmd_chunks[index].size;
+}
+
+bool TitleMetadata::GetContentOptional(std::size_t index) const {
+    return (static_cast<u16>(tmd_chunks[index].type) & FileSys::TMDContentTypeFlag::Optional) != 0;
 }
 
 std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(std::size_t index) const {

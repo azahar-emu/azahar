@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -46,9 +46,10 @@ public:
     Loader::ResultStatus LoadTicket(std::span<const u8> ticket_data, std::size_t offset = 0);
     Loader::ResultStatus LoadTicket(const Ticket& ticket);
     Loader::ResultStatus LoadTitleMetadata(std::span<const u8> tmd_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadTitleMetadata(const TitleMetadata& tmd);
     Loader::ResultStatus LoadMetadata(std::span<const u8> meta_data, std::size_t offset = 0);
 
-    const Ticket& GetTicket() const;
+    Ticket& GetTicket();
     const TitleMetadata& GetTitleMetadata() const;
     std::array<u64, 0x30>& GetDependencies();
     u32 GetCoreVersion() const;
