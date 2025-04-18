@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -144,6 +144,11 @@ Samples CubebInput::Read() {
     while (impl->sample_queue.Pop(queue)) {
         samples.insert(samples.end(), queue.begin(), queue.end());
     }
+
+    if (samples.empty()) {
+        samples = GenerateSilentSamples(parameters);
+    }
+
     return samples;
 }
 
