@@ -115,6 +115,23 @@
         <item>11</item>
     </integer-array>
 
+    <string-array name="statsPosition">
+        <item>@string/overlay_position_top_left</item>
+        <item>@string/overlay_position_center_top</item>
+        <item>@string/overlay_position_top_right</item>
+        <item>@string/overlay_position_bottom_left</item>
+        <item>@string/overlay_position_center_bottom</item>
+        <item>@string/overlay_position_bottom_right</item>
+    </string-array>
+    <integer-array name="statsPositionValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </integer-array>
+
     <string-array name="n3dsButtons">
         <item>@string/button_a</item>
         <item>@string/button_b</item>

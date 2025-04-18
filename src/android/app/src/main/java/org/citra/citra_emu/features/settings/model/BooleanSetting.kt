@@ -17,6 +17,13 @@ enum class BooleanSetting(
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
+    SHOW_FPS("show_fps", Settings.SECTION_LAYOUT, true),
+    SHOW_FRAMETIME("show_frame_time", Settings.SECTION_LAYOUT, false),
+    SHOW_SPEED("show_speed", Settings.SECTION_LAYOUT, false),
+    SHOW_APP_RAM_USAGE("show_app_ram_usage", Settings.SECTION_LAYOUT, false),
+    SHOW_SYSTEM_RAM_USAGE("show_system_ram_usage", Settings.SECTION_LAYOUT, false),
+    SHOW_BAT_TEMPERATURE("show_bat_temperature", Settings.SECTION_LAYOUT, false),
+    OVERLAY_BACKGROUND("overlay_background", Settings.SECTION_LAYOUT, false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),
     DETERMINISTIC_ASYNC_OPERATIONS("deterministic_async_operations", Settings.SECTION_DEBUG, false),
     REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false);
