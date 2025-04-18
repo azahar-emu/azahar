@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,8 @@ enum class PacketType : u32 {
     Undefined = 0,
     ReadMemory = 1,
     WriteMemory = 2,
+    ProcessList = 3,
+    SetGetProcess = 4,
 };
 
 struct PacketHeader {
@@ -24,11 +26,21 @@ struct PacketHeader {
     u32 packet_size;
 };
 
+#pragma pack(push, 1)
+struct ProcessInfo {
+    u32 process_id;
+    u64 title_id;
+    std::array<u8, 8> process_name;
+};
+static_assert(sizeof(ProcessInfo) == 0x14, "Incorrect ProcessInfo size");
+#pragma pack(pop)
+
 constexpr u32 CURRENT_VERSION = 1;
 constexpr u32 MIN_PACKET_SIZE = sizeof(PacketHeader);
-constexpr u32 MAX_PACKET_DATA_SIZE = 32;
+constexpr u32 MAX_PACKET_DATA_SIZE = 1024;
 constexpr u32 MAX_PACKET_SIZE = MIN_PACKET_SIZE + MAX_PACKET_DATA_SIZE;
 constexpr u32 MAX_READ_SIZE = MAX_PACKET_DATA_SIZE;
+constexpr u32 MAX_PROCESSES_IN_LIST = (MAX_PACKET_DATA_SIZE - sizeof(u32)) / sizeof(ProcessInfo);
 
 class Packet {
 public:
@@ -69,9 +81,6 @@ public:
     }
 
 private:
-    void HandleReadMemory(u32 address, u32 data_size);
-    void HandleWriteMemory(u32 address, std::span<const u8> data);
-
     struct PacketHeader header;
     std::array<u8, MAX_PACKET_DATA_SIZE> packet_data;
 

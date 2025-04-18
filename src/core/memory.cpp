@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -448,8 +448,8 @@ void MemorySystem::UnregisterPageTable(std::shared_ptr<PageTable> page_table) {
 }
 
 template <typename T>
-T MemorySystem::Read(const VAddr vaddr) {
-    const u8* page_pointer = impl->current_page_table->pointers[vaddr >> CITRA_PAGE_BITS];
+T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr) {
+    const u8* page_pointer = page_table->pointers[vaddr >> CITRA_PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         T value;
@@ -472,7 +472,7 @@ T MemorySystem::Read(const VAddr vaddr) {
         }
     }
 
-    PageType type = impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS];
+    PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X} at PC 0x{:08X}", sizeof(T) * 8, vaddr,
@@ -496,8 +496,9 @@ T MemorySystem::Read(const VAddr vaddr) {
 }
 
 template <typename T>
-void MemorySystem::Write(const VAddr vaddr, const T data) {
-    u8* page_pointer = impl->current_page_table->pointers[vaddr >> CITRA_PAGE_BITS];
+void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr,
+                         const T data) {
+    u8* page_pointer = page_table->pointers[vaddr >> CITRA_PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         std::memcpy(&page_pointer[vaddr & CITRA_PAGE_MASK], &data, sizeof(T));
@@ -521,7 +522,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
         }
     }
 
-    PageType type = impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS];
+    PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
@@ -773,19 +774,35 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
 }
 
 u8 MemorySystem::Read8(const VAddr addr) {
-    return Read<u8>(addr);
+    return Read<u8>(impl->current_page_table, addr);
+}
+
+u8 MemorySystem::Read8(const Kernel::Process& process, VAddr addr) {
+    return Read<u8>(process.vm_manager.page_table, addr);
 }
 
 u16 MemorySystem::Read16(const VAddr addr) {
-    return Read<u16_le>(addr);
+    return Read<u16_le>(impl->current_page_table, addr);
+}
+
+u16 MemorySystem::Read16(const Kernel::Process& process, VAddr addr) {
+    return Read<u16_le>(process.vm_manager.page_table, addr);
 }
 
 u32 MemorySystem::Read32(const VAddr addr) {
-    return Read<u32_le>(addr);
+    return Read<u32_le>(impl->current_page_table, addr);
+}
+
+u32 MemorySystem::Read32(const Kernel::Process& process, VAddr addr) {
+    return Read<u32_le>(process.vm_manager.page_table, addr);
 }
 
 u64 MemorySystem::Read64(const VAddr addr) {
-    return Read<u64_le>(addr);
+    return Read<u64_le>(impl->current_page_table, addr);
+}
+
+u64 MemorySystem::Read64(const Kernel::Process& process, VAddr addr) {
+    return Read<u64_le>(process.vm_manager.page_table, addr);
 }
 
 void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_addr,
@@ -799,19 +816,35 @@ void MemorySystem::ReadBlock(VAddr src_addr, void* dest_buffer, std::size_t size
 }
 
 void MemorySystem::Write8(const VAddr addr, const u8 data) {
-    Write<u8>(addr, data);
+    Write<u8>(impl->current_page_table, addr, data);
+}
+
+void MemorySystem::Write8(const Kernel::Process& process, const VAddr addr, const u8 data) {
+    Write<u8>(process.vm_manager.page_table, addr, data);
 }
 
 void MemorySystem::Write16(const VAddr addr, const u16 data) {
-    Write<u16_le>(addr, data);
+    Write<u16_le>(impl->current_page_table, addr, data);
+}
+
+void MemorySystem::Write16(const Kernel::Process& process, const VAddr addr, const u16 data) {
+    Write<u16_le>(process.vm_manager.page_table, addr, data);
 }
 
 void MemorySystem::Write32(const VAddr addr, const u32 data) {
-    Write<u32_le>(addr, data);
+    Write<u32_le>(impl->current_page_table, addr, data);
+}
+
+void MemorySystem::Write32(const Kernel::Process& process, const VAddr addr, const u32 data) {
+    Write<u32_le>(process.vm_manager.page_table, addr, data);
 }
 
 void MemorySystem::Write64(const VAddr addr, const u64 data) {
-    Write<u64_le>(addr, data);
+    Write<u64_le>(impl->current_page_table, addr, data);
+}
+
+void MemorySystem::Write64(const Kernel::Process& process, const VAddr addr, const u64 data) {
+    Write<u64_le>(process.vm_manager.page_table, addr, data);
 }
 
 bool MemorySystem::WriteExclusive8(const VAddr addr, const u8 data, const u8 expected) {
