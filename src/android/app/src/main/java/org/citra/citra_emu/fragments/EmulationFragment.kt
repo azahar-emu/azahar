@@ -80,6 +80,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
+
     private lateinit var emulationActivity: EmulationActivity
 
     private var _binding: FragmentEmulationBinding? = null
