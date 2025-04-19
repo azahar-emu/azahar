@@ -394,7 +394,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     }
 
     cheat_engine.LoadCheatFile(title_id);
-    cheat_engine.Connect();
+    cheat_engine.Connect(process->process_id);
 
     perf_stats = std::make_unique<PerfStats>(title_id);
 
@@ -814,9 +814,11 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 
     // This needs to be set from somewhere - might as well be here!
     if (Archive::is_loading::value) {
+        u32 cheats_pid;
+        ar & cheats_pid;
         timing->UnlockEventQueue();
         memory->SetDSP(*dsp_core);
-        cheat_engine.Connect();
+        cheat_engine.Connect(cheats_pid);
         gpu->Sync();
 
         // Re-register gpu callback, because gsp service changed after service_manager got
@@ -824,6 +826,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
         gpu->SetInterruptHandler(
             [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+    } else {
+        u32 cheats_pid = cheat_engine.GetConnectedPID();
+        ar & cheats_pid;
     }
 
     save_state_status = SaveStateStatus::NONE;

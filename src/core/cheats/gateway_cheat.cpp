@@ -56,10 +56,10 @@ static inline std::enable_if_t<std::is_integral_v<T>> CompOp(const GatewayCheat:
     }
 }
 
-static inline void LoadOffsetOp(Memory::MemorySystem& memory, const GatewayCheat::CheatLine& line,
-                                State& state) {
+static inline void LoadOffsetOp(Memory::MemorySystem& memory, const Kernel::Process& process,
+                                const GatewayCheat::CheatLine& line, State& state) {
     u32 addr = line.address + state.offset;
-    state.offset = memory.Read32(addr);
+    state.offset = memory.Read32(process, addr);
 }
 
 static inline void LoopOp(const GatewayCheat::CheatLine& line, State& state) {
@@ -145,6 +145,7 @@ static inline void JokerOp(const GatewayCheat::CheatLine& line, State& state,
 }
 
 static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Core::System& system,
+                           const Kernel::Process& process,
                            std::span<const GatewayCheat::CheatLine> cheat_lines) {
     if (state.if_flag > 0) {
         // Skip over the additional patch lines
@@ -166,7 +167,7 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
             state.current_line_nr++;
         }
         first = !first;
-        system.Memory().Write32(addr, tmp);
+        system.Memory().Write32(process, addr, tmp);
         addr += 4;
         num_bytes -= 4;
     }
@@ -174,7 +175,7 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
         u32 tmp = (first ? cheat_lines[state.current_line_nr].first
                          : cheat_lines[state.current_line_nr].value) >>
                   bit_offset;
-        system.Memory().Write8(addr, static_cast<u8>(tmp));
+        system.Memory().Write8(process, addr, static_cast<u8>(tmp));
         addr += 1;
         num_bytes -= 1;
         bit_offset += 8;
@@ -229,16 +230,27 @@ GatewayCheat::GatewayCheat(std::string name_, std::string code, std::string comm
 
 GatewayCheat::~GatewayCheat() = default;
 
-void GatewayCheat::Execute(Core::System& system) const {
+void GatewayCheat::Execute(Core::System& system, u32 process_id) const {
     State state;
 
     Memory::MemorySystem& memory = system.Memory();
-    auto Read8 = [&memory](VAddr addr) { return memory.Read8(addr); };
-    auto Read16 = [&memory](VAddr addr) { return memory.Read16(addr); };
-    auto Read32 = [&memory](VAddr addr) { return memory.Read32(addr); };
-    auto Write8 = [&memory](VAddr addr, u8 value) { memory.Write8(addr, value); };
-    auto Write16 = [&memory](VAddr addr, u16 value) { memory.Write16(addr, value); };
-    auto Write32 = [&memory](VAddr addr, u32 value) { memory.Write32(addr, value); };
+    std::shared_ptr<Kernel::Process> process = system.Kernel().GetProcessById(process_id);
+    if (!process) {
+        return;
+    }
+
+    auto Read8 = [&memory, &process](VAddr addr) { return memory.Read8(*process, addr); };
+    auto Read16 = [&memory, &process](VAddr addr) { return memory.Read16(*process, addr); };
+    auto Read32 = [&memory, &process](VAddr addr) { return memory.Read32(*process, addr); };
+    auto Write8 = [&memory, &process](VAddr addr, u8 value) {
+        memory.Write8(*process, addr, value);
+    };
+    auto Write16 = [&memory, &process](VAddr addr, u16 value) {
+        memory.Write16(*process, addr, value);
+    };
+    auto Write32 = [&memory, &process](VAddr addr, u32 value) {
+        memory.Write32(*process, addr, value);
+    };
 
     for (state.current_line_nr = 0; state.current_line_nr < cheat_lines.size();
          state.current_line_nr++) {
@@ -261,7 +273,7 @@ void GatewayCheat::Execute(Core::System& system) const {
                 // EXXXXXXX YYYYYYYY
                 // Copies YYYYYYYY bytes from (current code location + 8) to [XXXXXXXX + offset].
                 // We need to call this here to skip the additional patch lines
-                PatchOp(line, state, system, cheat_lines);
+                PatchOp(line, state, system, *process, cheat_lines);
                 break;
             case CheatType::Terminator:
                 // D0000000 00000000 - ENDIF
@@ -336,7 +348,7 @@ void GatewayCheat::Execute(Core::System& system) const {
             break;
         case CheatType::LoadOffset:
             // BXXXXXXX 00000000 - offset = word[XXXXXXX+offset]
-            LoadOffsetOp(system.Memory(), line, state);
+            LoadOffsetOp(system.Memory(), *process, line, state);
             break;
         case CheatType::Loop: {
             // C0000000 YYYYYYYY - LOOP next block YYYYYYYY times
@@ -417,7 +429,7 @@ void GatewayCheat::Execute(Core::System& system) const {
         case CheatType::Patch: {
             // EXXXXXXX YYYYYYYY
             // Copies YYYYYYYY bytes from (current code location + 8) to [XXXXXXXX + offset].
-            PatchOp(line, state, system, cheat_lines);
+            PatchOp(line, state, system, *process, cheat_lines);
             break;
         }
         }
