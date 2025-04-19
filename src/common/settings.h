@@ -421,6 +421,8 @@ struct InputProfile {
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
     std::string touch_device;
+    std::string controller_touch_device;
+    bool use_touchpad;
     bool use_touch_from_button;
     int touch_from_button_map_index;
     std::string udp_input_address;

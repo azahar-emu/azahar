@@ -2,16 +2,16 @@
 <ui version="4.0">
  <class>ConfigureMotionTouch</class>
  <widget class="QDialog" name="ConfigureMotionTouch">
-  <property name="windowTitle">
-   <string>Configure Motion / Touch</string>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>450</height>
+    <width>517</width>
+    <height>659</height>
    </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Configure Motion / Touch</string>
   </property>
   <layout class="QVBoxLayout">
    <item>
@@ -175,6 +175,24 @@
         </item>
        </layout>
       </item>
+      <item>
+       <layout class="QHBoxLayout" name="touchpad_hlayout">
+        <item>
+         <widget class="QCheckBox" name="touchpad_checkbox">
+          <property name="text">
+           <string>Use controller (e.g. DualSense) touchpad</string>
+          </property>
+         </widget>
+        </item>
+        <item alignment="Qt::AlignRight">
+         <widget class="QPushButton" name="touchpad_config_btn">
+          <property name="text">
+           <string>Configure</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>
@@ -324,4 +342,5 @@
   </layout>
  </widget>
  <resources/>
+ <connections/>
 </ui>
