@@ -34,7 +34,6 @@ import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
-import org.citra.citra_emu.features.hotkeys.HotkeyFunctions
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
@@ -46,6 +45,7 @@ import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
+import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
 class EmulationActivity : AppCompatActivity() {
@@ -57,7 +57,6 @@ class EmulationActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
-    private lateinit var hotkeyFunctions: HotkeyFunctions
     private lateinit var hotkeyUtility: HotkeyUtility
 
     private val emulationFragment: EmulationFragment
@@ -80,8 +79,7 @@ class EmulationActivity : AppCompatActivity() {
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
-        hotkeyFunctions = HotkeyFunctions(settingsViewModel.settings)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, hotkeyFunctions, this)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
         val navHostFragment =
@@ -144,7 +142,6 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        hotkeyFunctions.resetTurboSpeed()
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null

@@ -146,6 +146,8 @@
     <string name="button_zr" translatable="false">ZR</string>
     <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
+    <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
+    <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">System Files</string>

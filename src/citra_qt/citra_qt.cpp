@@ -813,10 +813,10 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Custom Textures"),
                      [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
 
-    connect_shortcut(QStringLiteral("Toggle Turbo Mode"), &GMainWindow::ToggleEmulationSpeed);
+    connect_shortcut(QStringLiteral("Toggle Turbo Mode"),
+                     [&] { GMainWindow::SetTurboEnabled(!GMainWindow::IsTurboEnabled()); });
 
     connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
-
     connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
     connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
@@ -2380,7 +2380,6 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
-    GetInitialFrameLimit();
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2440,11 +2439,7 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
-    if (turbo_mode_active) {
-        turbo_mode_active = false;
-        Settings::values.frame_limit.SetValue(initial_frame_limit);
-        UpdateStatusBar();
-    }
+    SetTurboEnabled(false);
 
     play_time_manager->Stop();
     // Update game list to show new play time
@@ -2597,52 +2592,48 @@ void GMainWindow::ChangeSmallScreenPosition() {
     UpdateSecondaryWindowVisibility();
 }
 
-void GMainWindow::GetInitialFrameLimit() {
-    initial_frame_limit = Settings::values.frame_limit.GetValue();
-    turbo_mode_active = false;
+bool GMainWindow::IsTurboEnabled() {
+    return turbo_mode_active;
 }
 
-void GMainWindow::ToggleEmulationSpeed() {
-    static bool key_pressed = false; // Prevent spam on hold
+void GMainWindow::SetTurboEnabled(bool state) {
+    turbo_mode_active = state;
+    GMainWindow::ReloadTurbo();
+}
 
-    if (!key_pressed) {
-        key_pressed = true;
-        turbo_mode_active = !turbo_mode_active;
-
-        if (turbo_mode_active) {
-            Settings::values.frame_limit.SetValue(Settings::values.turbo_speed.GetValue());
-        } else {
-            Settings::values.frame_limit.SetValue(initial_frame_limit);
-        }
-
-        UpdateStatusBar();
-        QTimer::singleShot(200, [] { key_pressed = false; });
+void GMainWindow::ReloadTurbo() {
+    if (IsTurboEnabled()) {
+        Settings::temporary_frame_limit = Settings::values.turbo_speed.GetValue();
+        Settings::is_temporary_frame_limit = true;
+    } else {
+        Settings::is_temporary_frame_limit = false;
     }
+
+    UpdateStatusBar();
 }
 
+// TODO: This should probably take in something more descriptive than a bool. -OS
 void GMainWindow::AdjustSpeedLimit(bool increase) {
-    if (!turbo_mode_active) {
-        return;
-    }
-
     const int SPEED_LIMIT_STEP = 5;
-    int turbo_speed = Settings::values.turbo_speed.GetValue();
+    auto active_limit =
+        IsTurboEnabled() ? &Settings::values.turbo_speed : &Settings::values.frame_limit;
+    const auto active_limit_value = active_limit->GetValue();
 
     if (increase) {
-        if (turbo_speed < 995) {
-            Settings::values.turbo_speed.SetValue(turbo_speed + SPEED_LIMIT_STEP);
-            Settings::values.frame_limit.SetValue(turbo_speed + SPEED_LIMIT_STEP);
+        if (active_limit_value < 995) {
+            active_limit->SetValue(active_limit_value + SPEED_LIMIT_STEP);
         }
     } else {
-        if (turbo_speed > SPEED_LIMIT_STEP) {
-            Settings::values.turbo_speed.SetValue(turbo_speed - SPEED_LIMIT_STEP);
-            Settings::values.frame_limit.SetValue(turbo_speed - SPEED_LIMIT_STEP);
+        if (active_limit_value > SPEED_LIMIT_STEP) {
+            active_limit->SetValue(active_limit_value - SPEED_LIMIT_STEP);
         }
     }
 
-    if (turbo_mode_active) {
-        UpdateStatusBar();
+    if (IsTurboEnabled()) {
+        ReloadTurbo();
     }
+
+    UpdateStatusBar();
 }
 
 void GMainWindow::ToggleScreenLayout() {
@@ -2762,6 +2753,7 @@ void GMainWindow::OnConfigure() {
         } else {
             setMouseTracking(false);
         }
+        ReloadTurbo();
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
         UpdateStatusButtons();

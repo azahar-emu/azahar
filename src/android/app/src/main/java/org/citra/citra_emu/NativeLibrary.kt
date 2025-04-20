@@ -186,6 +186,10 @@ object NativeLibrary {
 
     external fun unlinkConsole()
 
+    external fun setTemporaryFrameLimit(speed: Double)
+
+    external fun disableTemporaryFrameLimit()
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 

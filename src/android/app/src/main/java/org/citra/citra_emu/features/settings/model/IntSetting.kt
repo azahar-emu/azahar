@@ -97,8 +97,7 @@ enum class IntSetting(
             ASYNC_CUSTOM_LOADING,
             AUDIO_INPUT_TYPE,
             USE_ARTIC_BASE_CONTROLLER,
-            SHADERS_ACCURATE_MUL,
-            FRAME_LIMIT
+            SHADERS_ACCURATE_MUL
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

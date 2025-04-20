@@ -24,11 +24,11 @@ static constexpr int SettingsToSlider(int value) {
     return (value - 5) / 5;
 }
 
-ConfigureGeneral::ConfigureGeneral(bool is_powered_on, QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureGeneral>()), is_powered_on{is_powered_on} {
+ConfigureGeneral::ConfigureGeneral(QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureGeneral>()) {
     ui->setupUi(this);
 
-    connect(ui->turbo_speed, &QSlider::valueChanged, this, [&](int value) {
+    connect(ui->turbo_speed, &QSlider::valueChanged, this, [&](double value) {
         Settings::values.turbo_speed.SetValue(SliderToSettings(value));
         ui->turbo_speed_display_label->setText(
             QStringLiteral("%1%").arg(Settings::values.turbo_speed.GetValue()));
@@ -112,10 +112,7 @@ void ConfigureGeneral::SetConfiguration() {
     }
 
     if (!Settings::IsConfiguringGlobal()) {
-        if (is_powered_on) {
-            ui->emulation_speed_combo->setEnabled(false);
-            ui->frame_limit->setEnabled(false);
-        } else if (Settings::values.frame_limit.UsingGlobal()) {
+        if (Settings::values.frame_limit.UsingGlobal()) {
             ui->emulation_speed_combo->setCurrentIndex(0);
             ui->frame_limit->setEnabled(false);
         } else {
@@ -194,11 +191,7 @@ void ConfigureGeneral::RetranslateUI() {
 
 void ConfigureGeneral::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
-        if (is_powered_on) {
-            ui->frame_limit->setEnabled(false);
-        } else {
-            ui->frame_limit->setEnabled(Settings::values.frame_limit.UsingGlobal());
-        }
+        ui->frame_limit->setEnabled(Settings::values.frame_limit.UsingGlobal());
         return;
     }
 

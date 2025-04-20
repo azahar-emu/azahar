@@ -156,6 +156,10 @@ use_frame_limit =
 # 1 - 9999: Speed limit as a percentage of target game speed. 100 (default)
 frame_limit =
 
+# Alternative frame limit which can be triggered by the user
+# 1 - 9999: Speed limit as a percentage of target game speed. 100 (default)
+turbo_speed =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 0.0 for all.
 bg_red =

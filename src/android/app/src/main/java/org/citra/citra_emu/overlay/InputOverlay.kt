@@ -24,8 +24,8 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.features.hotkeys.HotkeyFunctions
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.TurboHelper
 import java.lang.NullPointerException
 import kotlin.math.min
 
@@ -46,7 +46,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
     private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
-    private val hotkeyFunctions = HotkeyFunctions(settingsViewModel.settings)
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -108,8 +107,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
 
             if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-
-                hotkeyFunctions.setTurboSpeed((!hotkeyFunctions.isTurboSpeedEnabled))
+                TurboHelper.setTurboEnabled((!TurboHelper.isTurboSpeedEnabled()))
             }
 
             NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.id, button.status)
