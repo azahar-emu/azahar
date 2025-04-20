@@ -122,6 +122,7 @@
     <string name="input_binding_description_horizontal_axis">Przesuń analog w lewo lub w prawo.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Zamień ekrany</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Ten kontroler musi być powiązany z drążkiem analogowym gamepada lub z krzyżakiem!</string>
     <string name="input_message_button_only">Ten kontroler musi być powiązany z przyciskiem gamepada!</string>
 
@@ -179,6 +180,10 @@
     <string name="plugin_loader_description">Ładuje wtyczki 3GX z emulowanej karty SD, jeśli są dostępne.</string>
     <string name="allow_plugin_loader">Zezwól aplikacjom na zmianę stanu programu ładującego wtyczki</string>
     <string name="allow_plugin_loader_description">Umożliwia aplikacjom homebrew włączenie programu ładującego wtyczki, nawet jeśli jest on wyłączony.</string>
+    <string name="region_mismatch">Ostrzeżenie o niedopasowaniu regionów</string>
+    <string name="region_mismatch_emulated">Ustawienie kraju nie jest prawidłowe dla wybranego emulowanego regionu.</string>
+    <string name="region_mismatch_console">Ustawienie kraju nie jest prawidłowe dla aktualnie podłączonej konsoli.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Kamera wewnętrzna</string>
     <string name="outer_left_camera">Lewa zewnętrzna kamera</string>
@@ -217,11 +222,17 @@
     <string name="asynchronous_gpu">Włącz asynchroniczną emulację GPU</string>
     <string name="asynchronous_gpu_description">Używa oddzielnego wątku do asynchronicznej emulacji GPU. Po włączeniu, wydajność zostanie poprawiona.</string>
     <string name="frame_limit_enable">Ogranicz prędkość</string>
-    <string name="frame_limit_enable_description">Po włączeniu prędkość emulacji zostanie ograniczona do określonego procentu normalnej prędkości.</string>
+    <string name="frame_limit_enable_description">Po włączeniu prędkość emulacji zostanie ograniczona do określonego procentu normalnej prędkości. Jeśli opcja ta jest wyłączona, prędkość emulacji nie zostanie ograniczona, a klawisz skrótu prędkości turbo nie będzie działał.</string>
     <string name="frame_limit_slider">Ogranicz procent prędkości</string>
     <string name="frame_limit_slider_description">Określa wartość procentową ograniczenia prędkości emulacji. Przy domyślnej wartości 100% emulacja będzie ograniczona do normalnej prędkości. Wyższe lub niższe wartości zwiększają lub zmniejszają ograniczenie prędkości.</string>
+    <string name="expand_to_cutout_area">Rozszerz do obszaru wycięcia</string>
+    <string name="expand_to_cutout_area_description">Rozszerza obszar wyświetlania o obszar wycięcia.</string>
+    <string name="emulation_toggle_turbo_speed">Prędkość Turbo</string>
+    <string name="turbo_speed">Prędkość Turbo</string>
+    <string name="turbo_speed_description">Limit prędkości emulacji wykorzystywany, gdy aktywny jest klawisz skrótu turbo.</string>
     <string name="internal_resolution">Rozdzielczość Wewnętrzna</string>
     <string name="internal_resolution_description">Określa rozdzielczość używaną do renderowania. Wysoka rozdzielczość znacznie poprawi jakość wizualną, ale jest również dość obciążająca dla wydajności i może powodować błędy w niektórych aplikacjach.</string>
+    <string name="internal_resolution_setting_auto">Automatyczne (Rozmiar ekranu)</string>
     <string name="internal_resolution_setting_1x">Natywna (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Natywna (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Natywna (1200x720)</string>
@@ -301,6 +312,8 @@
     <string name="select_rtc_time">Wybierz czas RTC</string>
     <string name="reset_setting_confirmation">Czy chcesz przywrócić to ustawienie do domyślnej wartości?</string>
     <string name="setting_not_editable">Nie możesz teraz tego edytować</string>
+    <string name="setting_disabled">Ustawienie wyłączone</string>
+    <string name="setting_disabled_description">To ustawienie jest obecnie wyłączone, ponieważ inne ustawienie nie jest odpowiednią wartością.</string>
     <string name="setting_not_editable_description">Tej opcji nie można zmienić podczas gry.</string>
     <string name="auto_select">Wybór automatyczny</string>
 
@@ -458,6 +471,16 @@
     <!-- About Game Dialog -->
     <string name="play">Odtwórz</string>
     <string name="shortcut">Skrót</string>
+    <string name="uninstalling">Odinstalowywanie...</string>
+    <string name="game_context_open_save_dir">Otwórz folder zapisanych danych</string>
+    <string name="game_context_open_app">Otwórz folder aplikacji</string>
+    <string name="game_context_open_mods">Otwórz folder modów</string>
+    <string name="game_context_open_textures">Otwórz folder tekstur</string>
+    <string name="game_context_open_dlc">Otwórz folder z plikami DLC</string>
+    <string name="game_context_open_updates">Otwórz folder aktualizacji</string>
+    <string name="game_context_open_extra">Otwórz folder Extra</string>
+    <string name="game_context_uninstall_dlc">Odinstaluj DLC</string>
+    <string name="game_context_uninstall_updates">Odinstaluj aktualizacje</string>
 
     <!-- Cheats -->
     <string name="cheats">Cheaty</string>
@@ -777,4 +800,5 @@
     <string name="mac_address">Adres MAC</string>
     <string name="regenerate_mac_address">Wygeneruj adres MAC</string>
     <string name="regenerate_mac_address_description">Spowoduje to zastąpienie bieżącego adresu MAC nowym. Nie zaleca się wykonywania tej czynności, jeśli adres MAC został uzyskany z rzeczywistej konsoli za pomocą narzędzia konfiguracyjnego. Kontynuować?</string>
+
 </resources>

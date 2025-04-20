@@ -83,9 +83,12 @@
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Selecione a Pasta do Usuário</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecione o seu diretório de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dados de usuário</a>com o botão abaixo.]]></string>
+    <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
+    <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
     <string name="cannot_skip">Você não pode pular esta etapa</string>
     <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Você perdeu suas permissões de escrita no seu diretório de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">dados de usuário</a>, onde dados salvos e outras informações são guardadas.  Isso pode acontecer depois que algum app ou Android atualiza. Re-selecione o diretório para reobter as permissões para que você possa continuar.</string>
     <string name="set_up_theme_settings">Configurações de Tema</string>
     <string name="setup_theme_settings_description">Configure suas preferências de tema para o Azahar.</string>
     <string name="setup_set_theme">Definir Tema</string>
@@ -122,6 +125,7 @@
     <string name="input_binding_description_horizontal_axis">Mova o seu joystick para esquerda ou para direita.</string>
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
 
@@ -177,6 +181,10 @@
     <string name="plugin_loader_description">Carregar plug-ins 3GX do cartão SD emulado, se estiverem disponíveis.</string>
     <string name="allow_plugin_loader">Permitir que os Aplicativos Alterem o Estado do Carregador de Plug-ins</string>
     <string name="allow_plugin_loader_description">Permitir que aplicativos homebrew habilitem o carregador de plugins mesmo quando ele estiver desabilitado.</string>
+    <string name="region_mismatch">Aviso de inconsistência de região</string>
+    <string name="region_mismatch_emulated">O país configurado não é válido para a região emulada selecionada.</string>
+    <string name="region_mismatch_console">O país configurado não é válido para o console vinculado atual.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Câmera frontal</string>
     <string name="outer_left_camera">Câmera traseira esquerda</string>
@@ -215,11 +223,17 @@
     <string name="asynchronous_gpu">Ativar emulação de GPU assíncrona</string>
     <string name="asynchronous_gpu_description">Usa uma thread separada para emular a GPU de forma assíncrona. Esta opção aprimora o desempenho quando ativada.</string>
     <string name="frame_limit_enable">Limite de velocidade</string>
-    <string name="frame_limit_enable_description">Quando ativado, a velocidade da emulação será limitada a uma porcentagem da velocidade normal.</string>
+    <string name="frame_limit_enable_description">Quando ativo, a velocidade de emulação será limitada à uma porcentagem especificada da velocidade normal. Se desativado, a velocidade de emulação será destravada e a tecla de atalho do turbo não irá funcionar.</string>
     <string name="frame_limit_slider">Limite de velocidade percentual</string>
     <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
+    <string name="expand_to_cutout_area">Expandir para a área recortada</string>
+    <string name="expand_to_cutout_area_description">Expande a área da tela para incluir a área recortada (ou notch).</string>
+    <string name="emulation_toggle_turbo_speed">Velocidade Turbo</string>
+    <string name="turbo_speed">Velocidade Turbo</string>
+    <string name="turbo_speed_description">Velocidade de emulação limitada usada enquanto a tecla de atalho do turbo estiver ativa.</string>
     <string name="internal_resolution">Resolução Interna</string>
     <string name="internal_resolution_description">Especifica a resolução utilizada para renderização. Uma resolução alta melhorará muito a qualidade visual, mas poderá também impactar muito no desempenho e causar defeitos em certos aplicativos.</string>
+    <string name="internal_resolution_setting_auto">Automático (tamanho da tela)</string>
     <string name="internal_resolution_setting_1x">Nativo (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativo (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativo (1200x720)</string>
@@ -299,6 +313,8 @@
     <string name="select_rtc_time">Selecione o horário RTC</string>
     <string name="reset_setting_confirmation">Você quer redefinir essa configuração para o valor padrão?</string>
     <string name="setting_not_editable">Você não pode editar isso agora</string>
+    <string name="setting_disabled">Configuração desativada</string>
+    <string name="setting_disabled_description">Esta configuração está atualmente desativada porque outra configuração não está com o valor correto.</string>
     <string name="setting_not_editable_description">Esta opção não pode ser alterada enquanto o jogo estiver em execução.</string>
     <string name="auto_select">Seleção Automática</string>
 
@@ -456,6 +472,16 @@
     <!-- About Game Dialog -->
     <string name="play">Jogar</string>
     <string name="shortcut">Atalho</string>
+    <string name="uninstalling">Desinstalando...</string>
+    <string name="game_context_open_save_dir">Abrir pasta de dados salvos</string>
+    <string name="game_context_open_app">Abrir pasta do aplicativo</string>
+    <string name="game_context_open_mods">Abrir pasta de mods</string>
+    <string name="game_context_open_textures">Abrir pasta de texturas</string>
+    <string name="game_context_open_dlc">Abrir pasta de DLC</string>
+    <string name="game_context_open_updates">Abrir pasta de atualizações</string>
+    <string name="game_context_open_extra">Abrir pasta extra</string>
+    <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
+    <string name="game_context_uninstall_updates">Desinstalar atualizações</string>
 
     <!-- Cheats -->
     <string name="cheats">Truques</string>
@@ -774,4 +800,5 @@
     <string name="mac_address">Endereço MAC</string>
     <string name="regenerate_mac_address">Gerar Novamente o Endereço MAC</string>
     <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Deseja continuar?</string>
+
 </resources>

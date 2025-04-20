@@ -129,7 +129,10 @@
     <string name="setup_system_files">Systemfiler</string>
     <string name="setup_system_files_description">Udfør handlinger som installation af systemfiler eller opstart af startmenu</string>
     <string name="setup_tool_connect">Opret forbindelse til Artic opsætningsværktøj</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar har brug for unikke konsoldata og firmwarefiler fra en rigtig konsol for at kunne bruge nogle af dens funktioner. Disse filer og data kan sættes op med <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br>Bemærk:<ul><li><b>Denne handling vil installere unikke konsoldata til Azahar, del ikke dine bruger- eller nand-mapper efter at have udført opsætningsprocessen!</b></li><li>Mens du udfører opsætningsprocessen, vil Azahar forbinde til konsollen, der kører opsætningsværktøjet. Du kan fjerne forbindelsen til konsollen senere fra fanen Systemfiler i emulatorindstillingsmenuen.</li><li>Gå ikke online med både Azahar og din 3DS-konsol på samme tid efter opsætning af systemfiler, da dette kan medføre problemer.</li><li>Gammel 3DS-opsætning er nødvendig for at den nye 3DS-opsætning kan fungere (det anbefales at opsætte begge dele).</li><li>Begge opsætningstilstande fungerer uanset hvilken model af konsollen, der kører opsætningsværktøjet.</li></ul>]]></string>
     <string name="setup_system_files_detect">Henter den aktuelle status for systemfiler, vent venligst...</string>
+    <string name="delete_system_files">Fjern linket til de unikke konsoldata</string>
+    <string name="delete_system_files_description"><![CDATA[Denne handling vil fjerne forbindelsen mellem din rigtige konsol og Azahar, med følgende konsekvenser:<br><ul><li>Din OTP, SecureInfo og LocalFriendCodeSeed vil blive fjernet fra Azahar.</li><li>Din venneliste nulstilles, og du bliver logget ud af din NNID/PNID-konto.</li><li>Systemfiler og eshop-titler opnået gennem Azahar bliver utilgængelige, indtil den samme konsol er linket igen ved hjælp af opsætningsværktøjet (gemte data går ikke tabt).</li></ul><br>Fortsætte?]]></string>
     <string name="setup_system_files_o3ds">Gammel 3DS opsætning</string>
     <string name="setup_system_files_n3ds">Ny 3DS-opsætning</string>
     <string name="setup_system_files_possible">Opsætning er mulig.</string>
@@ -138,7 +141,7 @@
     <string name="setup_system_files_enter_address">Indtast adressen til Artic opsætningsværktøj</string>
     <string name="setup_system_files_preparing">Forbereder opsætning, vent venligst...</string>
     <string name="boot_home_menu">Start HOME-menuen</string>
-    <string name="show_home_apps">Vi apps i HOME menu i listen over applikationer</string>
+    <string name="show_home_apps">Vi apps i HOME menu i applikationslisten</string>
     <string name="run_system_setup">Kør systemopsætning, når HOME-menuen startes.</string>
     <string name="home_menu">HOME menu</string>
 
@@ -176,6 +179,10 @@
     <string name="plugin_loader_description">Indlæser 3GX plugins fra det emulerede SD-kort, hvis de er tilgængelige.</string>
     <string name="allow_plugin_loader">Tillad applikationer at ændre plugin-indlæserens tilstand</string>
     <string name="allow_plugin_loader_description">Tillader at homebrew applikationer kan aktivere plugin-indlæseren, selv når den er deaktiveret.</string>
+    <string name="region_mismatch">Advarsel om uoverensstemmelse i region</string>
+    <string name="region_mismatch_emulated">Landeindstillingen er ikke gyldig for det valgte emulerede område.</string>
+    <string name="region_mismatch_console">Landeindstillingen er ikke gyldig for den aktuelle forbundne konsol.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -204,6 +211,9 @@
     <string name="linear_filtering_description">Aktiverer lineær filtrering, hvilket får spillets grafik til at se mere jævnt ud.</string>
     <string name="texture_filter_name">Teksturfilter</string>
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
+    <string name="advanced">Avanceret\"</string>
+    <string name="texture_sampling_name">Tekstur sampling</string>
+    <string name="texture_sampling_description">Tilsidesætter det samplingsfilter, der bruges af spillene. Dette kan i nogle tilfælde være nyttigt for spil, der ikke håndterer opskalering godt. Hvis du er usikker, skal du indstille dette til Styret af spillene.</string>
     <string name="hw_shaders">Aktiver hardware shader</string>
     <string name="hw_shaders_description">Bruger hardware til at efterligne 3DS shaders. Når det er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
     <string name="shaders_accurate_mul">Nøjagtig multiplikation</string>
@@ -211,9 +221,10 @@
     <string name="asynchronous_gpu">Aktiver asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Bruger en separat tråd til at emulere GPU\'en asynkront. Når den er aktiveret, vil ydeevnen blive forbedret.</string>
     <string name="frame_limit_enable">Begræns hastighed</string>
-    <string name="frame_limit_enable_description">Når den er aktiveret, vil emuleringshastigheden være begrænset til en specificeret procentdel af normal hastighed.</string>
     <string name="frame_limit_slider">Begræns hastighedsprocent</string>
     <string name="frame_limit_slider_description">Angiver procentdelen emuleringshastigheden skal begrænses til. Med standardværdien på 100% vil emulering være begrænset til normal hastighed. Værdier højere eller lavere vil øge eller mindske hastighedsgrænsen.</string>
+    <string name="expand_to_cutout_area">Anvend området ved frontkamera</string>
+    <string name="expand_to_cutout_area_description">Udvider visningsområdet til at omfatte området ved frontkameraet (eller indhakket).</string>
     <string name="internal_resolution">Intern opløsning</string>
     <string name="internal_resolution_description">Angiver den opløsning, der bruges til renderingen. En høj opløsning vil forbedre den visuelle kvalitet meget, men kræver også stor ydelse og kan forårsage fejl i visse applikationer.</string>
     <string name="internal_resolution_setting_1x">Indbygget (400x240)</string>
@@ -452,6 +463,16 @@
     <!-- About Game Dialog -->
     <string name="play">Spil</string>
     <string name="shortcut">Genvej</string>
+    <string name="uninstalling">Afinstallerer...</string>
+    <string name="game_context_open_save_dir">Åbn mappen med gemt data</string>
+    <string name="game_context_open_app">Åbn applikationsmappe</string>
+    <string name="game_context_open_mods">Åbn mappen med Mods</string>
+    <string name="game_context_open_textures">Åbn mappen med teksturer</string>
+    <string name="game_context_open_dlc">Åbn mappen med DLC</string>
+    <string name="game_context_open_updates">Åbn mappen med opdateringer</string>
+    <string name="game_context_open_extra">Åbn mappen med ekstra</string>
+    <string name="game_context_uninstall_dlc">Afinstaller DLC</string>
+    <string name="game_context_uninstall_updates">Afinstaller opdateringer</string>
 
     <!-- Cheats -->
     <string name="cheats">Snyd</string>
@@ -575,7 +596,11 @@
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Styret af spillene</string>
     <string name="nearest_neighbor">Nærmeste nabo</string>
+    <string name="linear">Lineær</string>
+
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>
@@ -765,4 +790,5 @@
     <string name="mac_address">MAC-adresse</string>
     <string name="regenerate_mac_address">Udtag ny MAC-adresse</string>
     <string name="regenerate_mac_address_description">Dette vil erstatte din nuværende MAC-adresse med en ny. Det anbefales ikke at gøre dette, hvis du har fået MAC-adressen fra din rigtige konsol ved hjælp af opsætningsværktøjet. Fortsætte?</string>
+
 </resources>

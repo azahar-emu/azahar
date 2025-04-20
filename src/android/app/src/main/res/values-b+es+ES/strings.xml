@@ -83,9 +83,13 @@
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Seleccionar Carpeta de Usuario</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecciona tu directorio de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">datos de usuario</a> con el botón de abajo.]]></string>
+    <string name="select_which_user_directory_to_use">Parece que tienes directorios de usuario configurados tanto para Lime3DS como para Azahar. Probablemente se deba a que actualizaste a Azahar y, cuando se te pidió, elegiste un directorio de usuario diferente al que usabas para Lime3DS.\n\nEsto puede haberte hecho pensar que perdiste partidas guardadas u otras configuraciones; te pedimos disculpas si eso ocurrió.\n\n¿Prefieres volver a usar tu directorio de usuario original de Lime3DS, restaurando la configuración y las partidas guardadas de Lime3DS, o conservar tu directorio de usuario actual de Azahar?\n\nNinguno de los directorios se eliminará, independientemente de tu elección, y puedes cambiar libremente entre ellos usando la opción \"Seleccionar carpeta de usuario\".</string>
+    <string name="keep_current_azahar_directory">Mantener el directorio Azahar actual</string>
+    <string name="use_prior_lime3ds_directory">Usar el directorio de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No puedes saltarte este paso</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de algunas actualizaciones de aplicaciones o de Android. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
     <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
     <string name="setup_set_theme">Establecer tema</string>
@@ -122,6 +126,7 @@
     <string name="input_binding_description_horizontal_axis">Mueve el joystick a izquierda o derecha.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercambiar Pantallas</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">¡Este control debe asignarse a un stick analógico del mando o a un eje del Pad de Control!</string>
     <string name="input_message_button_only">¡Este control debe asignarse a un botón del mando!</string>
 
@@ -222,11 +227,17 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="asynchronous_gpu">Activar Emulación Asíncrona de la GPU</string>
     <string name="asynchronous_gpu_description">Usa un hilo separado para emular la GPU de manera asíncrona. Cuando se active, el rendimiento mejorará.</string>
     <string name="frame_limit_enable">Límite de velocidad</string>
-    <string name="frame_limit_enable_description">Cuando se active, la velocidad de emulación estará limitada a un porcentaje determinado de la velocidad normal.</string>
+    <string name="frame_limit_enable_description">Cuando se active, la velocidad de emulación estará limitada a un porcentaje determinado de la velocidad normal. Cuando se desactive, la velocidad de emulación no tendrá límite y la tecla de acceso rápido de velocidad turbo no funcionará.</string>
     <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
     <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o altos incrementarán o reducirán el límite de velocidad.</string>
+    <string name="expand_to_cutout_area">Expandir al área de recorte</string>
+    <string name="expand_to_cutout_area_description">Amplía el área de visualización para incluir el área de recorte (o muesca).</string>
+    <string name="emulation_toggle_turbo_speed">Velocidad Turbo</string>
+    <string name="turbo_speed">Velocidad Turbo</string>
+    <string name="turbo_speed_description">Límite de velocidad de emulación utilizado mientras la tecla de acceso rápido turbo está activa.</string>
     <string name="internal_resolution">Resolución interna</string>
     <string name="internal_resolution_description">Especifica la resolución a la que se quiera renderizar. Una alta resolución mejorará la calidad visual un montón, pero también causará un gran impacto en el rendimiento y puede causar fallos en ciertas aplicaciones.</string>
+    <string name="internal_resolution_setting_auto">Auto (Tamaño Pantalla)</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -306,6 +317,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
     <string name="reset_setting_confirmation">¿Quiere reiniciar esta configuración a su valor por defecto?</string>
     <string name="setting_not_editable">No puedes editarlo ahora</string>
+    <string name="setting_disabled">Configuración deshabilitada</string>
+    <string name="setting_disabled_description">Esta configuración está actualmente deshabilitada debido a que otra configuración no tiene el valor apropiado.</string>
     <string name="setting_not_editable_description">Esta opción no puede cambiarse mientras se está ejecutando un juego.</string>
     <string name="auto_select">Auto-elegir</string>
 
@@ -463,6 +476,17 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
     <string name="shortcut">Atajo</string>
+    <string name="uninstall_cia">Desinstalar Aplicación</string>
+    <string name="uninstalling">Desinstalando...</string>
+    <string name="game_context_open_save_dir">Abrir Carpeta de Guardado</string>
+    <string name="game_context_open_app">Abrir Carpeta de Aplicación</string>
+    <string name="game_context_open_mods">Abrir Carpeta de Mods</string>
+    <string name="game_context_open_textures">Abrir Carpeta de Texturas</string>
+    <string name="game_context_open_dlc">Abrir Carpeta de DLC</string>
+    <string name="game_context_open_updates">Abrir Carpeta de Actualizaciones</string>
+    <string name="game_context_open_extra">Abrir Carpeta Extra</string>
+    <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
+    <string name="game_context_uninstall_updates">Desinstalar Actualizaciones</string>
 
     <!-- Cheats -->
     <string name="cheats">Trucos</string>
@@ -781,4 +805,5 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="mac_address">Dirección MAC</string>
     <string name="regenerate_mac_address">Regenerar Dirección MAC</string>
     <string name="regenerate_mac_address_description">Esto reemplazará tu dirección MAC actual por una nueva. No se recomienda hacerlo si obtuviste la dirección MAC de tu consola real con la herramienta de configuración. ¿Continuar?</string>
+
 </resources>

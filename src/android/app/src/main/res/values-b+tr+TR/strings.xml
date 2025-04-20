@@ -2,19 +2,36 @@
 <resources>
 
     <string name="cancelling">İptal ediliyor...</string>
+    <string name="important">Önemli</string>
+    <string name="dont_show_again">Tekrar gösterme</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ayarlar</string>
     <string name="home_options">Seçenekler</string>
+    <string name="settings_description">Emülatör ayarlarını yapılandır</string>
+    <string name="driver_already_installed">Sürücü zaten yüklü</string>
     <string name="about">Hakkında</string>
+    <string name="citra_description">Açık kaynaklı bir 3DS emülatörü</string>
     <string name="select_gpu_driver_default">Varsayılan</string>
+    <string name="installing_driver">Sürücü yükleniyor...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Panoya kopyalandı</string>
     <string name="contributors">Katkıda Bulunanlar</string>
     <string name="contributors_description">Azahar\'ı mümkün kılan kişiler</string>
+    <string name="licenses">Lisanslar</string>
+    <!-- Setup strings -->
+    <string name="welcome">Hoş geldiniz!</string>
+    <string name="done">Bitti</string>
+    <string name="notifications">Bildirimler</string>
     <string name="give_permission">İzin ver</string>
     <string name="camera_permission">Kamera</string>
     <string name="microphone_permission">Mikrofon</string>
     <string name="warning_help">Yardım</string>
+    <string name="warning_skip">Atla</string>
     <string name="select">Seç</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
+    <string name="setup_theme_settings_description">Azahar için tema tercihlerinizi yapılandırın.</string>
     <string name="setup_set_theme">Tema Ayarla</string>
 
     <string name="controller_axis_vertical">Yukarı/Aşağı Eksen</string>
@@ -23,6 +40,8 @@
     <string name="direction_down">Aşağı</string>
     <string name="direction_left">Sol</string>
     <string name="direction_right">Sağ</string>
+    <!-- System files strings -->
+    <string name="setup_system_files">Sistem Dosyaları</string>
     <!-- Core settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="new_3ds">Yeni 3DS Modu</string>
@@ -31,12 +50,15 @@
     <string name="birthday_month">Ay</string>
     <string name="birthday_day">Gün</string>
     <string name="country">Ülke</string>
+    <string name="plugin_loader">3GX Eklenti Yükleyici</string>
     <!-- Camera settings strings -->
     <string name="inner_camera"> 
 İç Kamera</string>
     <string name="camera_device">Kamera</string>
     <string name="camera_facing_front">Ön</string>
+    <string name="camera_facing_back">Geri</string>
     <string name="vsync">V-Sync\'i Etkinleştir</string>
+    <string name="advanced">Gelişmiş\"</string>
     <string name="internal_resolution_setting_1x">Doğal (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Doğal (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Doğal (1200x720)</string>
@@ -50,11 +72,20 @@
     <string name="render3d">Stereoskopik 3B Modu</string>
     <string name="factor3d">Derinlik</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
+    <string name="layout_screen_orientation_portrait">Portre</string>
+    <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Temizle</string>
     <string name="slider_default">Varsayılan</string>
     <string name="loading">Yükleniyor...</string>
+    <string name="next">Sonraki</string>
     <string name="back">Geri</string>
+    <string name="close">Kapat</string>
+    <string name="reset_to_default">Varsayılanlara Sıfırla</string>
     <string name="option_default">Varsayılan</string>
     <string name="delete">Sil</string>
+    <string name="reset_all_settings">Tüm Ayarlar Sıfırlansın Mı?</string>
     <string name="auto_select">Otomatik Seç</string>
 
     <!-- Game Properties -->
@@ -68,6 +99,9 @@
     <string name="preferences_camera">Kamera</string>
     <string name="preferences_audio">Ses</string>
     <string name="preferences_theme">Tema ve Renk</string>
+    <string name="emulation_show_fps">FPS\'i Göster</string>
+    <string name="emulation_configure_controls">Kontrolleri Yapılandır</string>
+    <string name="emulation_done">Bitti</string>
     <string name="emulation_control_scale_reset_all">Tümünü Sıfırla</string>
     <string name="emulation_control_opacity">Görünürlüğü Ayarla</string>
     <string name="emulation_open_settings">Ayarları Aç</string>
@@ -81,13 +115,18 @@
     <string name="small_screen_position_bottom_left">Sol Alt</string>
     <string name="emulation_custom_layout_width">Genişlik</string>
     <string name="emulation_custom_layout_height">Yükseklik</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Yükle</string>
     <string name="menu_emulation_amiibo_remove">Kaldır</string>
     <string name="select_amiibo">Amiibo Dosyası Seç</string>
     <string name="pause_emulation">Emülasyonu Duraklat</string>
     <string name="resume_emulation">Emülasyonu Devam Ettir</string>
+    <string name="load_settings">Ayarlar Yükleniyor...</string>
+
     <string name="select_dir">Bu Dizini Seç</string>
+    <string name="do_not_show_this_again">Bunu tekrar gösterme</string>
     <string name="searching_directory">Dizin aranıyor: %s</string>
+    <string name="copy_complete">Kopyalama Tamamlandı</string>
     <string name="i_forgot">Unuttum</string>
     <!-- Mii Selector -->
     <string name="mii_selector">Mii Seçici</string>
@@ -98,6 +137,10 @@
     <string name="microphone">Mikrofon</string>
     <string name="system_archive_not_found">Sistem Arşivi Bulunamadı</string>
     <string name="system_archive_general">Bir sistem arşivi</string>
+    <string name="invalid_region">Geçersiz bölge</string>
+    <string name="shortcut">Kısayol</string>
+    <string name="uninstalling">Siliniyor...</string>
+    <string name="game_context_open_dlc">DLC Klasörünü Aç</string>
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>
@@ -123,10 +166,16 @@
     <string name="static_theme_color">Tema Rengi</string>
     <!-- Clock types -->
     <string name="device_clock">Cihaz Saati</string>
+    <!-- Language names -->
+    <string name="language_japanese">Japonca (日本語)</string>
     <string name="language_english">İngilizce</string>
+    <string name="language_french">Fransızca (Français)</string>
     <string name="language_german">Almanca (Deutsch)</string>
     <string name="language_italian">İtalyanca (Italiano)</string>
     <string name="language_spanish">İspanyolca (Español)</string>
+    <string name="language_korean">Korece (한국어)</string>
+    <string name="language_portuguese">Portekizce (Português)</string>
+    <string name="language_russian">Rusça (Русский)</string>
     <!-- Camera image sources -->
     <string name="blank">Boş</string>
     <string name="device_camera">Cihaz Kamerası</string>
@@ -136,6 +185,8 @@
     <string name="vertical">Dikey</string>
     <string name="reverse">Ters</string>
 
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
     <string name="vulkan">Vulkan</string>
 
     <string name="bicubic">Bikübik</string>
@@ -147,12 +198,15 @@
     <string name="anguilla">Anguilla</string>
     <string name="argentina">Arjantin</string>
     <string name="bahamas">Bahamalar</string>
+    <string name="belize">Belize</string>
     <string name="bolivia">Bolivya</string>
     <string name="brazil">Brezilya</string>
+    <string name="british_virgin_islands">Britanya Virjin Adaları</string>
     <string name="canada">Kanada</string>
     <string name="chile">Şili</string>
     <string name="colombia">Kolombiya</string>
     <string name="costa_rica">Kosta Rika</string>
+    <string name="dominican_republic">Dominik Cumhuriyeti</string>
     <string name="ecuador">Ekvador</string>
     <string name="el_salvador">El Salvador</string>
     <string name="french_guiana">Fransız Guyanası</string>
@@ -269,4 +323,8 @@
 
     <string name="quicksave_saving">Kaydediliyor...</string>
     <string name="quickload_loading">Yükleniyor...</string>
+    <string name="miscellaneous">Çeşitli</string>
+    <string name="emulation_settings">Emülasyon Ayarları</string>
+    <string name="profile_settings">Profil Ayarları</string>
+    <string name="mac_address">MAC Adresi</string>
     </resources>

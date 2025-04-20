@@ -83,9 +83,13 @@
     <string name="warning_cancel">Cancel·lar</string>
     <string name="select_citra_user_folder">Seleccionar carpeta d\'usuari.</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecciona el vostre directori de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dades d\'usuari</a> amb el següent botó.]]></string>
+    <string name="select_which_user_directory_to_use">Sembla que tens directoris d\'usuari configurats tant per a Lime3DS com per a Azahar. Probablement es deu al fet que vas actualitzar a Azahar i, quan se\'t va demanar, vas triar un directori d\'usuari diferent del qual usaves per a Lime3DS.\n\nAixó pot haver-te fet pensar que vas perdre partides guardades o altres configuracions; et demanem disculpes si això va ocórrer.\n\nPreferixes tornar a usar el teu directori d\'usuari original de Lime3DS, restaurant la configuració i les partides guardades de Lime3DS, o conservar el teu directori d\'usuari actual d\'Azahar?\n\nCap dels directoris s\'eliminarà, independentment de la teua elecció, i pots canviar lliurement entre ells usant l\'opció \"Seleccionar carpeta d\'usuari\".</string>
+    <string name="keep_current_azahar_directory">Mantindre el directori Azahar actual</string>
+    <string name="use_prior_lime3ds_directory">Usar el directori de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No pots saltar aquest pas</string>
     <string name="cannot_skip_directory_description">Aquest pas és necessari perquè Azahar funcione. Selecciona un directori i després podràs continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdut els permisos d\'escriptura en el teu  <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directori de dades d\'usuari</a>, on es guarden les partides guardades i altra informació. Això pot ocórrer després d\'algunes actualitzacions d\'aplicacions o d\'Android. Torna a seleccionar el directori per a recuperar els permisos i poder continuar.</string>
     <string name="set_up_theme_settings">Configuració de tema</string>
     <string name="setup_theme_settings_description">Configura les teues preferències de temes per a Azahar.</string>
     <string name="setup_set_theme">Establir tema</string>
@@ -122,6 +126,7 @@
     <string name="input_binding_description_horizontal_axis">Mou el joystick a esquerra o dreta.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercanviar Pantalles</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Aquest control s\'ha d\'assignar a un estic analògic del comandament o a un eix del Pad de Control!</string>
     <string name="input_message_button_only">Aquest control s\'ha d\'assignar a un botó del comandament!</string>
 
@@ -222,11 +227,17 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="asynchronous_gpu">Activar Emulació Asíncrona de la GPU</string>
     <string name="asynchronous_gpu_description">Usa un fil separat per a emular la GPU de manera asíncrona. Quan s\'active, el rendiment millorarà.</string>
     <string name="frame_limit_enable">Límit de velocitat</string>
-    <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal.</string>
+    <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal. Quan es desactive, la velocitat d\'emulació no tindrà límit i la tecla d\'accés ràpid de velocitat turbo no funcionarà.</string>
     <string name="frame_limit_slider">Limitar percentatge de velocitat</string>
     <string name="frame_limit_slider_description">Especifica el valor al qual es limita la velocitat d\'emulació. Amb el valor per defecte del 100%, l\'emulació es limitarà a la velocitat normal. Els valors alts o baixos incrementaran o reduiran el límit de velocitat.</string>
+    <string name="expand_to_cutout_area">Expandir a l\'àrea de retallada</string>
+    <string name="expand_to_cutout_area_description">Amplia l\'àrea de visualització per a incloure l\'àrea de retallada (o osca).</string>
+    <string name="emulation_toggle_turbo_speed">Velocitat Turbo</string>
+    <string name="turbo_speed">Velocitat Turbo</string>
+    <string name="turbo_speed_description">Límit de velocitat d\'emulació utilitzat mentres la tecla d\'accés ràpid turbo està activa.</string>
     <string name="internal_resolution">Resolució interna</string>
     <string name="internal_resolution_description">Especifica la resolució utilitzada per a renderitzar. Una resolució alta millora considerablement la qualitat visual, però també afecta bastant al rendiment i pot causar problemes en unes certes aplicacions.</string>
+    <string name="internal_resolution_setting_auto">Auto (Grandària Pantalla)</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -306,6 +317,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
     <string name="reset_setting_confirmation">Vols reiniciar esta configuració al seu valor per defecte?</string>
     <string name="setting_not_editable">No pots editar-ho ara</string>
+    <string name="setting_disabled">Configuració deshabilitada</string>
+    <string name="setting_disabled_description">Esta configuració està actualment deshabilitada perquè una altra configuració no té el valor apropiat.</string>
     <string name="setting_not_editable_description">Esta opció no pot canviar-se mentres s\'està executant un joc.</string>
     <string name="auto_select">Auto-elegir</string>
 
@@ -463,6 +476,17 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
     <string name="shortcut">Drecera</string>
+    <string name="uninstall_cia">Desinstal·lar Aplicació</string>
+    <string name="uninstalling">Desinstal·lant...</string>
+    <string name="game_context_open_save_dir">Obrir Carpeta de Guardat</string>
+    <string name="game_context_open_app">Obrir Carpeta d\'Aplicació</string>
+    <string name="game_context_open_mods">Obrir Carpeta de Mods</string>
+    <string name="game_context_open_textures">Obrir Carpeta de Textures</string>
+    <string name="game_context_open_dlc">Obrir Carpeta de DLC</string>
+    <string name="game_context_open_updates">Obrir Carpeta d\'Actualitzacions</string>
+    <string name="game_context_open_extra">Obrir Carpeta Extra</string>
+    <string name="game_context_uninstall_dlc">Desinstal·lar DLC</string>
+    <string name="game_context_uninstall_updates">Desinstal·lar Actualitzacions</string>
 
     <!-- Cheats -->
     <string name="cheats">Trucs</string>
@@ -780,4 +804,5 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="mac_address">Adreça MAC</string>
     <string name="regenerate_mac_address">Regenerar adreça MAC</string>
     <string name="regenerate_mac_address_description">Això reemplaçarà la teua adreça MAC actual per una nova. No es recomana fer-ho si vas obtindre la direcció MAC de la teua consola real amb la ferramenta de configuració. Continuar?</string>
+
 </resources>

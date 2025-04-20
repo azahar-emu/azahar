@@ -193,7 +193,6 @@
     <string name="asynchronous_gpu">Asynchrone GPU-Emulation aktivieren</string>
     <string name="asynchronous_gpu_description">Verwendet einen separaten Thread, um die GPU asynchron zu emulieren. Wenn aktiviert, wird die Leistung verbessert.</string>
     <string name="frame_limit_enable">Höchstgeschwindigkeit</string>
-    <string name="frame_limit_enable_description">Wenn aktiviert, wird die Emulationsgeschwindigkeit auf einen angegebenen Prozentsatz der normalen Geschwindigkeit begrenzt.</string>
     <string name="frame_limit_slider">Höchstgeschwindigkeit in Prozent</string>
     <string name="frame_limit_slider_description">Gibt den Prozentsatz zur Begrenzung der Emulationsgeschwindigkeit an. Mit der Voreinstellung von 100% wird die Emulation auf normale Geschwindigkeit begrenzt. Höhere oder niedrigere Werte erhöhen oder verringern die Geschwindigkeitsbeschränkung.</string>
     <string name="internal_resolution">Interne Auflösung</string>
@@ -430,7 +429,6 @@
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
     <string name="shortcut">Verknüpfung</string>
-
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>

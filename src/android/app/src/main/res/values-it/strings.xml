@@ -216,7 +216,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="asynchronous_gpu">Abilita emulazione GPU asincrona</string>
     <string name="asynchronous_gpu_description">Utilizza un thread separato per emulare la GPU in differita. Se abilitato, le prestazioni miglioreranno.</string>
     <string name="frame_limit_enable">Limita Velocità</string>
-    <string name="frame_limit_enable_description">Se abilitato, la velocità d\'emulazione sarà limitata ad una percentuale specifica di velocità normale.</string>
     <string name="frame_limit_slider">Limita Velocità tramite Percentuale</string>
     <string name="frame_limit_slider_description">Specifica a quale percentuale limitare la velocità d\'emulazione. Utilizzando l\'impostazione predefinita di 100% l\'emulazione sarà limitata alla velocità normale. Valori superiori o inferiori aumenteranno o diminuiranno il limite di velocità.</string>
     <string name="internal_resolution">Risoluzione Interna</string>
@@ -456,7 +455,6 @@ Divertiti usando l\'emulatore!</string>
     <!-- About Game Dialog -->
     <string name="play">Riproduci</string>
     <string name="shortcut">Scorciatoia</string>
-
     <!-- Cheats -->
     <string name="cheats">Trucchi</string>
     <string name="cheats_add">Aggiungi Trucco</string>
@@ -770,4 +768,5 @@ Divertiti usando l\'emulatore!</string>
     <string name="mac_address">Indirizzo MAC</string>
     <string name="regenerate_mac_address">Rigenera indirizzo MAC</string>
     <string name="regenerate_mac_address_description">Questo rimpiazzerà il tuo indirizzo MAC attuale con uno nuovo. È sconsigliato farlo se hai impostato l\'indirizzo MAC dalla tua console reale usando il Setup Tool. Continuare?</string>
+
 </resources>

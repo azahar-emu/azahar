@@ -53,7 +53,6 @@
     <string name="asynchronous_gpu">Aktiver asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Bruker en egen tråd for å emulere GPU asynkront. Når dette er aktivert, forbedres ytelsen.</string>
     <string name="frame_limit_enable">Aktiver fartsbegrensning</string>
-    <string name="frame_limit_enable_description">Når dette er aktivert, vil emuleringshastigheten være begrenset til en spesifisert prosentandel av normal hastighet.</string>
     <string name="frame_limit_slider">Begrens fartsprosent </string>
     <string name="frame_limit_slider_description">Angir prosentandelen som skal begrense emuleringshastighet. Med standard 100% emulering vil være begrenset til normal hastighet. Verdier høyere eller lavere vil øke eller redusere fartsgrensen.</string>
     <string name="internal_resolution">Intern oppløsning</string>

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -52,6 +52,22 @@ public:
      * conditions, but can be lax if the data is coming in from another source like a real mic.
      */
     virtual Samples Read() = 0;
+
+    /**
+     * Generates a buffer of silence.
+     * Takes into account the sample size and signedness of the input.
+     */
+    virtual Samples GenerateSilentSamples(const InputParameters& params) {
+        u8 silent_value = 0x00;
+
+        if (params.sample_size == 8) {
+            silent_value = params.sign == Signedness::Unsigned ? 0x80 : 0x00;
+            return std::vector<u8>(32, silent_value);
+        } else {
+            silent_value = params.sign == Signedness::Unsigned ? 0x80 : 0x00;
+            return std::vector<u8>(64, silent_value);
+        }
+    }
 
 protected:
     InputParameters parameters;

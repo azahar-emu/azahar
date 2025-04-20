@@ -510,6 +510,7 @@ struct Values {
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
                                                            "large_screen_proportion"};
+    SwitchableSetting<int> screen_gap{0, "screen_gap"};
     SwitchableSetting<SmallScreenPosition> small_screen_position{SmallScreenPosition::BottomRight,
                                                                  "small_screen_position"};
     Setting<u16> custom_top_x{0, "custom_top_x"};

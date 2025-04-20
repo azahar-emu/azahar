@@ -229,10 +229,18 @@ bool Module::LoadSharedFont() {
 
     const char16_t* file_name[4] = {u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
                                     u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
-    const RomFS::RomFSFile font_file =
+    RomFS::RomFSFile font_file =
         RomFS::GetFile(romfs_buffer.data(), {file_name[font_region_code - 1]});
-    if (font_file.Data() == nullptr)
-        return false;
+    if (font_file.Data() == nullptr) {
+        if (font_region_code != 1) {
+            font_file = RomFS::GetFile(romfs_buffer.data(), {file_name[0]});
+            if (font_file.Data() == nullptr) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 
     struct {
         u32_le status;

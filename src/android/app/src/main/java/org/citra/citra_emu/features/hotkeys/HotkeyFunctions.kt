@@ -26,13 +26,8 @@ class HotkeyFunctions (
 
     fun toggleTurboSpeed() {
         if (isTurboSpeedEnabled) {
-            normalSpeed = IntSetting.FRAME_LIMIT.int
-            NativeLibrary.toggleTurboSpeed(true)
-            NativeLibrary.setTurboSpeedSlider(IntSetting.TURBO_SPEED.int)
             IntSetting.FRAME_LIMIT.int = IntSetting.TURBO_SPEED.int
         } else {
-            NativeLibrary.toggleTurboSpeed(false)
-            NativeLibrary.setTurboSpeedSlider(normalSpeed)
             IntSetting.FRAME_LIMIT.int = normalSpeed
         }
 
@@ -45,13 +40,10 @@ class HotkeyFunctions (
     }
 
     fun resetTurboSpeed() {
-        if (isTurboSpeedEnabled) {
-            isTurboSpeedEnabled = false
-            NativeLibrary.toggleTurboSpeed(false)
-            IntSetting.FRAME_LIMIT.int = normalSpeed
+        isTurboSpeedEnabled = false
+        IntSetting.FRAME_LIMIT.int = normalSpeed
 
-            settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
-            NativeLibrary.reloadSettings()
-        }
+        settings.saveSetting(IntSetting.FRAME_LIMIT, SettingsFile.FILE_NAME_CONFIG)
+        NativeLibrary.reloadSettings()
     }
 }

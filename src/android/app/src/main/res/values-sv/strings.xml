@@ -206,7 +206,6 @@
     <string name="asynchronous_gpu">Aktivera asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Använder en separat tråd för att emulera GPU:n asynkront. När detta är aktiverat kommer prestandan att förbättras.</string>
     <string name="frame_limit_enable">Begränsa hastighet</string>
-    <string name="frame_limit_enable_description">När den är aktiverad begränsas emuleringshastigheten till en angiven procentandel av normal hastighet.</string>
     <string name="frame_limit_slider">Gränsa hastigheten i procent</string>
     <string name="frame_limit_slider_description">Anger procentsatsen för att begränsa emuleringshastigheten. Med standardvärdet 100% kommer emuleringen att begränsas till normal hastighet. Värden som är högre eller lägre ökar eller minskar hastighetsgränsen.</string>
     <string name="internal_resolution">Intern upplösning</string>
@@ -443,7 +442,6 @@
     <!-- About Game Dialog -->
     <string name="play">Spela</string>
     <string name="shortcut">Genväg</string>
-
     <!-- Cheats -->
     <string name="cheats">Fusk</string>
     <string name="cheats_add">Lägg till fusk</string>
@@ -755,4 +753,5 @@
     <string name="mac_address">MAC-adress</string>
     <string name="regenerate_mac_address">Återgenerera MAC-adress</string>
     <string name="regenerate_mac_address_description">Detta kommer att ersätta din nuvarande MAC-adress med en ny. Det är inte rekommenderat att göra detta om du fick MAC-adressen från din riktiga konsol med hjälp av installationsverktyget. Fortsätta?</string>
+
 </resources>

@@ -122,6 +122,7 @@
     <string name="input_binding_description_horizontal_axis">向左或向右轻推您的摇杆。</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">交换屏幕</string>
+    <string name="button_turbo">加速</string>
     <string name="input_message_analog_only">此操作只能绑定到游戏手柄的摇杆或十字方向键上！</string>
     <string name="input_message_button_only">此操作只能绑定到游戏手柄的按键上！</string>
 
@@ -129,7 +130,10 @@
     <string name="setup_system_files">系统文件</string>
     <string name="setup_system_files_description">执行系统文件操作，如安装系统文件或启动 HOME 菜单</string>
     <string name="setup_tool_connect">连接到 Artic 设置工具</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar 需要来自真实掌机的独有数据和固件文件才能使用其部分功能。此类文件和数据可通过 <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic 设置工具</a>进行设置。<br>注意：<ul><li><b>此操作会将掌机独有数据安装到 Azahar，执行设置过程后请勿共享您的用户或 nand 文件夹！</b></li><li>在执行设置过程时，Azahar 将关联到运行设置工具的掌机。您可以随时从模拟器配置菜单的“系统”选项卡中取消关联掌机。</li><li>设置系统文件后，请勿同时使用 Azahar 和 3DS 掌机联网，因为这可能会导致问题。</li><li>新 3DS 设置需要先进行老 3DS 设置才能运作（建议两种设置模式都执行）。</li><li>无论运行设置工具的掌机型号如何，两种设置模式均可运作。</li></ul>]]></string>
     <string name="setup_system_files_detect">正在获取当前系统文件状态，请稍候...</string>
+    <string name="delete_system_files">取消关联掌机独有数据</string>
+    <string name="delete_system_files_description"><![CDATA[此操作将取消您真实掌机与 Azahar 的关联，并产生以下后果：<br><ul><li>您的 OTP、SecureInfo 和 LocalFriendCodeSeed 文件将从 Azahar 中删除。</li><li>您的好友列表将被重置，并且注销 NNID/PNID 帐户。</li><li>通过 Azahar 获得的系统文件和 eshop 数字版应用将变得无法访问，直到再次关联同一掌机（保存的数据不会丢失）。</ul><br>是否继续？]]></string>
     <string name="setup_system_files_o3ds">老 3DS 设置</string>
     <string name="setup_system_files_n3ds">新 3DS 设置</string>
     <string name="setup_system_files_possible">可以进行设置。</string>
@@ -176,6 +180,10 @@
     <string name="plugin_loader_description">当插件可用时，从模拟 SD 卡加载 3GX 插件。</string>
     <string name="allow_plugin_loader">允许应用更改插件加载器状态</string>
     <string name="allow_plugin_loader_description">允许自制程序启用插件加载器。</string>
+    <string name="region_mismatch">区域不匹配警告</string>
+    <string name="region_mismatch_emulated">此国家/地区设置对于所选择的模拟区域无效。</string>
+    <string name="region_mismatch_console">此国家/地区设置对于当前关联的掌机无效。</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
     <string name="outer_left_camera">外置左摄像头</string>
@@ -214,11 +222,17 @@
     <string name="asynchronous_gpu">启用异步 GPU 模拟</string>
     <string name="asynchronous_gpu_description">使用一个单独线程异步模拟 GPU 。启用后，游戏性能将有所提高。</string>
     <string name="frame_limit_enable">运行速度限制</string>
-    <string name="frame_limit_enable_description">启用时，运行速度将被限制为正常速度的指定百分比。</string>
+    <string name="frame_limit_enable_description">启用后，模拟速度将被限制为正常速度的指定百分比。如果禁用，模拟速度则不受限制，并且加速热键将不起作用。</string>
     <string name="frame_limit_slider">限制运行速度百分比</string>
     <string name="frame_limit_slider_description">指定限制运行速度的百分比。默认情况下，100% 将限制为正常运行速度。较高或较低的值将增加或降低运行速度。</string>
+    <string name="expand_to_cutout_area">扩展到裁剪区域</string>
+    <string name="expand_to_cutout_area_description">扩大显示区域以包含裁剪（或切口）区域。</string>
+    <string name="emulation_toggle_turbo_speed">加速</string>
+    <string name="turbo_speed">加速</string>
+    <string name="turbo_speed_description">加速热键激活时使用的模拟速度限制。</string>
     <string name="internal_resolution">内部分辨率</string>
     <string name="internal_resolution_description">指定渲染使用的分辨率。高分辨率将大大提高视觉质量，但也会对性能造成很大影响，并可能导致某些应用出现故障。</string>
+    <string name="internal_resolution_setting_auto">自动（屏幕大小）</string>
     <string name="internal_resolution_setting_1x">原生（400x240）</string>
     <string name="internal_resolution_setting_2x">2 倍（800x480）</string>
     <string name="internal_resolution_setting_3x">3 倍（1200x720）</string>
@@ -298,6 +312,8 @@
     <string name="select_rtc_time">选择时间</string>
     <string name="reset_setting_confirmation">您要将此设置项重置为默认值吗？</string>
     <string name="setting_not_editable">您现在不能编辑此项</string>
+    <string name="setting_disabled">设置已禁用</string>
+    <string name="setting_disabled_description">由于另一个设置不是合适的值，此设置当前已被禁用。</string>
     <string name="setting_not_editable_description">在游戏运行时此项不能更改。</string>
     <string name="auto_select">自动选择</string>
 
@@ -457,6 +473,16 @@
     <!-- About Game Dialog -->
     <string name="play">开始游戏</string>
     <string name="shortcut">快捷方式</string>
+    <string name="uninstalling">正在卸载...</string>
+    <string name="game_context_open_save_dir">打开存档数据文件夹</string>
+    <string name="game_context_open_app">打开应用文件夹</string>
+    <string name="game_context_open_mods">打开模组文件夹</string>
+    <string name="game_context_open_textures">打开纹理文件夹</string>
+    <string name="game_context_open_dlc">打开 DLC 文件夹</string>
+    <string name="game_context_open_updates">打开更新文件夹</string>
+    <string name="game_context_open_extra">打开额外数据文件夹</string>
+    <string name="game_context_uninstall_dlc">卸载 DLC</string>
+    <string name="game_context_uninstall_updates">卸载更新</string>
 
     <!-- Cheats -->
     <string name="cheats">金手指</string>
@@ -775,4 +801,5 @@
     <string name="mac_address">MAC 地址</string>
     <string name="regenerate_mac_address">重新生成 MAC 地址</string>
     <string name="regenerate_mac_address_description">这将用新 MAC 地址替换您当前的 MAC 地址。如果您使用设置工具从真实掌机获取 MAC 地址，则不建议执行此操作。是否继续？</string>
+
 </resources>

@@ -33,6 +33,7 @@ enum class IntSetting(
     LANDSCAPE_BOTTOM_Y("custom_bottom_y",Settings.SECTION_LAYOUT,480),
     LANDSCAPE_BOTTOM_WIDTH("custom_bottom_width",Settings.SECTION_LAYOUT,640),
     LANDSCAPE_BOTTOM_HEIGHT("custom_bottom_height",Settings.SECTION_LAYOUT,480),
+    SCREEN_GAP("screen_gap",Settings.SECTION_LAYOUT,0),
     PORTRAIT_SCREEN_LAYOUT("portrait_layout_option",Settings.SECTION_LAYOUT,0),
     PORTRAIT_TOP_X("custom_portrait_top_x",Settings.SECTION_LAYOUT,0),
     PORTRAIT_TOP_Y("custom_portrait_top_y",Settings.SECTION_LAYOUT,0),

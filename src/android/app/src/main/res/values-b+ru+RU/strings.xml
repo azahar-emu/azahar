@@ -146,7 +146,6 @@
     <string name="asynchronous_gpu">Вкл. асинхронную эмуляцию GPU</string>
     <string name="asynchronous_gpu_description">Использовать отдельный поток для асинхронной эмуляции GPU. При включении повышает производительность.</string>
     <string name="frame_limit_enable">Ограничивать скорость</string>
-    <string name="frame_limit_enable_description">При включении устанавливает скорость эмуляции на указанный процент от нормальной скорости.</string>
     <string name="frame_limit_slider">Процент ограничения скорости</string>
     <string name="frame_limit_slider_description">Устанавливает процентное значение для ограничения скорости эмуляции. Стандартное значение 100% соответствует нормальной скорости. Более высокие или низкие значения повышают или понижают лимит скорости.</string>
     <string name="internal_resolution">Внутреннее разрешение</string>

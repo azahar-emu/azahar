@@ -211,7 +211,6 @@
     <string name="asynchronous_gpu">Active l\'émulation asynchone du GPU</string>
     <string name="asynchronous_gpu_description">Utilise une unité d’exécution séparée pour émuler le GPU de manière asynchrone. La performance sera améliorée.</string>
     <string name="frame_limit_enable">Limite de vitesse</string>
-    <string name="frame_limit_enable_description">Lorsqu\'elle est activée, la vitesse d\'émulation sera limitée par un pourcentage spécifique de la vitesse normale.</string>
     <string name="frame_limit_slider">Limiter le pourcentage de vitesse</string>
     <string name="frame_limit_slider_description">Définit le taux de limitation de la vitesse d\'émulation. À 100%, par défaut, l\'émulation sera limitée à la vitesse normale. Des valeurs supérieures ou inférieures augmenteront ou diminueront  la limite de la vitesse.</string>
     <string name="internal_resolution">Résolution interne</string>
@@ -451,7 +450,6 @@
     <!-- About Game Dialog -->
     <string name="play">Jouer</string>
     <string name="shortcut">Raccourci</string>
-
     <!-- Cheats -->
     <string name="cheats">Codes de triche</string>
     <string name="cheats_add">Ajouter un code de triche</string>
@@ -765,4 +763,5 @@
     <string name="mac_address">Adresse MAC</string>
     <string name="regenerate_mac_address">Régénérer l\'adresse MAC</string>
     <string name="regenerate_mac_address_description">Cela remplacera votre adresse MAC actuelle par une nouvelle. Il n\'est pas recommandé d\'effectuer cette opération si vous avez obtenu l\'adresse MAC de votre console réelle à l\'aide de l\'outil de configuration. Continuer ?</string>
+
 </resources>

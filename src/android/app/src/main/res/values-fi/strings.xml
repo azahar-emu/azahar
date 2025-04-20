@@ -38,7 +38,6 @@
     <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
     <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="frame_limit_enable">Aktivoi nopeuden rajoitus</string>
-    <string name="frame_limit_enable_description">Kun aktivoitu, emulaation nopeus on rajoitettu asetettuun prosenttiin normaalista nopeudesta.</string>
     <string name="frame_limit_slider">Rajoita nopeusprosenttia</string>
     <string name="audio_stretch">Aktivoi äänen venytys</string>
     <!-- Miscellaneous -->

@@ -5,6 +5,7 @@
 #include <vector>
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hw/unique_data.h"
 #include "core/system_titles.h"
 
 namespace Core {
@@ -193,22 +194,22 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                              .name = "NNID Web Browser Data",
                              .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
                                      SystemTitleSet::Minimal,
-                             .title_id_lows = {0x00018002, 0x00018002, 0x00018002, 0x00018002,
-                                               0x00018002, 0x00018002, 0x00018002},
+                             .title_id_lows = {0x00018002, 0x00018002, 0x00018002, 0x00018002, 0,
+                                               0, 0},
                          },
                          {
                              .name = "Miiverse Offline Mode Web Browser Data",
                              .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
                                      SystemTitleSet::Minimal,
-                             .title_id_lows = {0x00018102, 0x00018102, 0x00018102, 0x00018102,
-                                               0x00018102, 0x00018102, 0x00018102},
+                             .title_id_lows = {0x00018102, 0x00018102, 0x00018102, 0x00018102, 0,
+                                               0, 0},
                          },
                          {
                              .name = "NNID/Miiverse OSS CROs",
                              .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
                                      SystemTitleSet::Minimal,
-                             .title_id_lows = {0x00018202, 0x00018202, 0x00018202, 0x00018202,
-                                               0x00018202, 0x00018202, 0x00018202},
+                             .title_id_lows = {0x00018202, 0x00018202, 0x00018202, 0x00018202, 0,
+                                               0, 0},
                          },
                          {
                              .name = "NFC Peripheral Firmware",
@@ -258,8 +259,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          {
                              .name = "Error Display (Safe Mode, O3DS)",
                              .sets = SystemTitleSet::Old3ds,
-                             .title_id_lows = {0x00008A03, 0x00008A03, 0x00008A03, 0x00008A03,
-                                               0x00008A03, 0x00008A03, 0x00008A03},
+                             .title_id_lows = {0x00008A03, 0x00008A03, 0x00008A03, 0x00008A03, 0,
+                                               0, 0},
                          },
                          {
                              .name = "Error Display (Safe Mode, N3DS)",
@@ -483,8 +484,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                              .name = "EULA",
                              .sets = SystemTitleSet::Old3ds | SystemTitleSet::New3ds |
                                      SystemTitleSet::Minimal,
-                             .title_id_lows = {0x00013202, 0x00013302, 0x00013102, 0x00013102,
-                                               0x00013502, 0, 0},
+                             .title_id_lows = {0x00013202, 0x00013302, 0x00013102, 0x00013102, 0,
+                                               0, 0},
                          },
                          {
                              .name = "JPN/EUR/USA System Font",
@@ -904,8 +905,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          {
                              .name = "NIM Module (Safe Mode, O3DS)",
                              .sets = SystemTitleSet::Old3ds,
-                             .title_id_lows = {0x00002C03, 0x00002C03, 0x00002C03, 0x00002C03,
-                                               0x00002C03, 0x00002C03, 0x00002C03},
+                             .title_id_lows = {0x00002C03, 0x00002C03, 0x00002C03, 0x00002C03, 0,
+                                               0, 0},
                          },
                          {
                              .name = "NIM Module (Safe Mode, N3DS)",
@@ -1067,8 +1068,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          {
                              .name = "NS Module (Safe Mode, O3DS)",
                              .sets = SystemTitleSet::Old3ds,
-                             .title_id_lows = {0x00008003, 0x00008003, 0x00008003, 0x00008003,
-                                               0x00008003, 0x00008003, 0x00008003},
+                             .title_id_lows = {0x00008003, 0x00008003, 0x00008003, 0x00008003, 0,
+                                               0, 0},
                          },
                          {
                              .name = "NS Module (Safe Mode, N3DS)",
@@ -1120,8 +1121,8 @@ static const std::array<SystemTitleCategory, NUM_SYSTEM_TITLE_CATEGORIES>
                          {
                              .name = "AGB_FIRM (O3DS)",
                              .sets = SystemTitleSet::Old3ds,
-                             .title_id_lows = {0x00000202, 0x00000202, 0x00000202, 0x00000202,
-                                               0x00000202, 0x00000202, 0x00000202},
+                             .title_id_lows = {0x00000202, 0x00000202, 0x00000202, 0x00000202, 0,
+                                               0x00000202, 0},
                          },
                          {
                              .name = "AGB_FIRM (N3DS)",
@@ -1215,6 +1216,10 @@ std::pair<bool, bool> AreSystemTitlesInstalled() {
     std::array<u32, NUM_SYSTEM_TITLE_REGIONS> n_installed_titles{};
     std::array<u32, NUM_SYSTEM_TITLE_REGIONS> n_total_titles{};
 
+    static const char* region_names[NUM_SYSTEM_TITLE_REGIONS] = {
+        "JPN", "USA", "EUR", "AUS", "CHN", "KOR", "TWN",
+    };
+
     for (auto categ = system_titles.begin(); categ != system_titles.end(); categ++) {
         for (auto title = categ->titles.begin(); title != categ->titles.end(); title++) {
 
@@ -1241,6 +1246,14 @@ std::pair<bool, bool> AreSystemTitlesInstalled() {
                     if (title->sets & SystemTitleSet::New3ds) {
                         n_installed_titles[i]++;
                     }
+                } else {
+                    std::string set = (title->sets & SystemTitleSet::Old3ds) ? "O3DS" : "";
+                    if (title->sets & SystemTitleSet::New3ds) {
+                        set += set.empty() ? "N3DS" : "/N3DS";
+                    }
+
+                    LOG_DEBUG(Service_AM, "{}, {}, {}, {} not found", categ->name, title->name,
+                              region_names[i], set);
                 }
             }
         }
@@ -1252,13 +1265,19 @@ std::pair<bool, bool> AreSystemTitlesInstalled() {
     for (size_t i = 0; i < o_installed_titles.size(); i++) {
         if (o_installed_titles[i] == o_total_titles[i]) {
             o_all = true;
+            // CHN/TWN don't have n3ds variants
+            if (i == HW::UniqueData::Region::CHN || i == HW::UniqueData::Region::TWN) {
+                n_all = true;
+            }
             break;
         }
     }
-    for (size_t i = 0; i < n_installed_titles.size(); i++) {
-        if (n_installed_titles[i] == n_total_titles[i]) {
-            n_all = true;
-            break;
+    if (!n_all) {
+        for (size_t i = 0; i < n_installed_titles.size(); i++) {
+            if (n_installed_titles[i] == n_total_titles[i]) {
+                n_all = true;
+                break;
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,6 +24,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.hotkeys.HotkeyFunctions
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import java.lang.NullPointerException
 import kotlin.math.min
@@ -44,6 +45,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
+    private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
+    private val hotkeyFunctions = HotkeyFunctions(settingsViewModel.settings)
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -102,6 +105,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
             if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
                 swapScreen()
+            }
+
+            if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
+
+                hotkeyFunctions.setTurboSpeed((!hotkeyFunctions.isTurboSpeedEnabled))
             }
 
             NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.id, button.status)
@@ -468,6 +476,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 )
             )
         }
+
+        if (preferences.getBoolean("buttonToggle15", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.button_turbo,
+                    R.drawable.button_turbo_pressed,
+                    NativeLibrary.ButtonType.BUTTON_TURBO,
+                    orientation
+                )
+            )
+        }
     }
 
     fun refreshControls() {
@@ -673,6 +693,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 NativeLibrary.ButtonType.BUTTON_SWAP.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_SWAP_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_TURBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
+            )
             .apply()
     }
 
@@ -816,6 +844,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 NativeLibrary.ButtonType.BUTTON_SWAP.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_SWAP_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
+            )
             .apply()
     }
 
@@ -928,6 +964,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 NativeLibrary.ButtonType.BUTTON_START,
                 NativeLibrary.ButtonType.BUTTON_SELECT,
                 NativeLibrary.ButtonType.BUTTON_SWAP -> 0.08f
+                NativeLibrary.ButtonType.BUTTON_TURBO -> 0.10f
 
                 NativeLibrary.ButtonType.TRIGGER_L,
                 NativeLibrary.ButtonType.TRIGGER_R,

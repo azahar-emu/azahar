@@ -2,18 +2,27 @@
 <resources>
 
     <string name="app_notification_channel_description">Azahar 3DS emulatorius</string>
+    <string name="app_notification_running">Azahar veikia</string>
     <string name="start">Pradėti</string>
     <string name="cancelling">Atšaukiama...</string>
+    <string name="important">Svarbu</string>
     <string name="dont_show_again">Daugiau niekada nerodyti</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Nustatymai</string>
     <string name="home_options">Pasirinkimai</string>
     <string name="home_search">Paieška</string>
+    <string name="home_games">Aplikacijos</string>
     <string name="share_log">Dalintis žurnalu</string>
+    <string name="share_log_not_found">Žurnalas nerastas</string>
     <string name="about">Apie</string>
+    <string name="citra_description">Atviro kodo 3DS emulatorius</string>
     <string name="select_gpu_driver_install">Instaliuoti</string>
     <string name="licenses">Licencijos</string>
+    <!-- Setup strings -->
+    <string name="welcome">Sveiki!</string>
+    <string name="get_started">Pradėti</string>
+    <string name="step_complete">Baigta!</string>
     <string name="done">Baigta</string>
     <string name="text_continue">Tęsti</string>
     <string name="notifications">Pranešimai</string>
@@ -24,38 +33,51 @@
     <string name="warning_help">Pagalba</string>
     <string name="warning_skip">Praleisti</string>
     <string name="warning_cancel">Atšaukti</string>
+    <string name="select_citra_user_folder">Pasirinkti vartotojo aplanką</string>
     <string name="select">Pasirinkti</string>
+    <string name="cannot_skip">Tu negali praleisti šio žingsnio</string>
+    <string name="search_recently_played">Nesenai žaista</string>
+    <string name="search_recently_added">Nesenai pridėta</string>
     <string name="button_swap">Apkeisti ekranus</string>
+    <!-- System files strings -->
+    <string name="setup_system_files">Sistemos failai</string>
     <string name="init_clock">Laikrodis</string>
     <!-- System settings strings -->
     <string name="username">Vartotojo vardas</string>
     <string name="clock">Laikrodis</string>
     <string name="emulated_region">Regionas</string>
     <string name="emulated_language">Kalba</string>
+    <string name="birthday">Gimtadienis</string>
     <string name="birthday_month">Mėnesis</string>
     <string name="birthday_day">Diena</string>
     <string name="country">Šalis</string>
+    <string name="console_id">Konsolės ID</string>
     <string name="camera_device">Kamera</string>
     <string name="camera_facing_front">Priekio</string>
     <string name="camera_facing_back">Galo</string>
     <string name="camera_facing_external">Išorinė</string>
     <string name="image_flip">Apversti</string>
 
-    <string name="shaders_accurate_mul">Tikslus atkurimas</string>
+    <string name="graphics_api">Grafikos API</string>
+    <string name="shaders_accurate_mul">Tikslus atkūrimas</string>
     <string name="frame_limit_enable">Riboti greitį</string>
     <string name="internal_resolution">Vidinė rezoliucija </string>
     <string name="factor3d">Gylis</string>
     <!-- Audio settings strings -->
     <string name="audio_volume">Garsumas</string>
+    <string name="audio_stretch">Garso ištempimas</string>
     <string name="realtime_audio">Įjungti realaus laiko garsą</string>
     <string name="layout_screen_orientation_auto_sensor">Automatinis</string>
     <string name="learn_more">Sužinoti daugiau</string>
     <string name="close">Uždaryti</string>
     <string name="reset_all_settings">Atstatyti visus nustatymus?</string>
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Nustatymai</string>
     <string name="preferences_system">Sistema</string>
     <string name="preferences_camera">Kamera</string>
     <string name="preferences_graphics">Grafika</string>
     <string name="preferences_audio">Garsas</string>
+    <string name="preferences_theme">Tema ir Spalva</string>
     <string name="preferences_layout">Išdėstymas</string>
 
     <string name="emulation_show_fps">Rodyti FPS</string>
@@ -63,6 +85,8 @@
     <string name="emulation_done">Baigta</string>
     <string name="emulation_close_game">Uždaryti žaidimą</string>
     <string name="menu_emulation_amiibo_remove">Pašalinti</string>
+    <string name="pause_emulation">Pristabdyti Emuliaciją</string>
+    <string name="resume_emulation">Atstabdyti Emuliaciją</string>
     <string name="i_forgot">Aš pamiršau</string>
     <string name="camera">Kamera</string>
     <!-- Microphone -->
@@ -70,12 +94,53 @@
     <string name="continue_button">Tęsti</string>
     <!-- About Game Dialog -->
     <string name="play">Žaisti</string>
+    <string name="cheats_name">Pavadinimas</string>
+    <string name="cheats_code">Kodas</string>
     <string name="cheats_edit">Redaguoti</string>
     <string name="cheats_delete">Ištrinti</string>
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Juodas fonas</string>
     <!-- Clock types -->
     <string name="device_clock">Įrenginio laikas</string>
+    <string name="simulated_clock">Netikras laikas</string>
+
+    <string name="language_english">Anglų</string>
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="surround">Erdvinis</string>
+
+    <!-- Countries -->
+    <string name="japan">Japonija</string>
+    <string name="anguilla">Angilija</string>
+    <string name="antigua_and_barbuda">Antigva ir Barbuda</string>
+    <string name="argentina">Argentina</string>
+    <string name="aruba">Aruba</string>
+    <string name="bahamas">Bahamos</string>
+    <string name="barbados">Barbadosas</string>
+    <string name="belize">Belizas</string>
+    <string name="bolivia">Bolivija</string>
+    <string name="brazil">Brazilija</string>
+    <string name="canada">Kanada</string>
+    <string name="chile">Čilė</string>
+    <string name="colombia">Kolumbija</string>
+    <string name="costa_rica">Kosta Rika</string>
+    <string name="dominica">Dominika</string>
+    <string name="dominican_republic">Dominikos respublika</string>
+    <string name="ecuador">Ekvadoras</string>
+    <string name="el_salvador">El Salvadoras</string>
+    <string name="french_guiana">Prancūzų Gviana</string>
+    <string name="grenada">Grenada</string>
+    <string name="guadeloupe">Gvadelupa</string>
+    <string name="jamaica">Jamaika</string>
+    <string name="mexico">Meksika</string>
+    <string name="peru">Peru</string>
+    <string name="united_states">Jungtinės Amerikos Valstijos</string>
+    <string name="venezuela">Venesuela</string>
     <string name="albania">Albanija</string>
     <string name="australia">Australija</string>
     <string name="austria">Austrija</string>
@@ -89,5 +154,69 @@
     <string name="denmark">Danija</string>
     <string name="estonia">Estija</string>
     <string name="finland">Suomija</string>
+    <string name="france">Prancūzija</string>
+    <string name="germany">Vokietija</string>
+    <string name="greece">Graikija</string>
+    <string name="hungary">Vengrija</string>
+    <string name="iceland">Islandija</string>
+    <string name="ireland">Airija</string>
+    <string name="italy">Italija</string>
+    <string name="latvia">Latvija</string>
+    <string name="lesotho">Lesotas</string>
+    <string name="liechtenstein">Lichtenšteinas</string>
     <string name="lithuania">Lietuva</string>
+    <string name="luxembourg">Liuksemburgas</string>
+    <string name="macedonia">Makedonija</string>
+    <string name="malta">Malta</string>
+    <string name="montenegro">Juodkalnija</string>
+    <string name="mozambique">Mozambikas</string>
+    <string name="namibia">Namibija</string>
+    <string name="netherlands">Nyderlandai</string>
+    <string name="new_zealand">Naujoji Zelandija</string>
+    <string name="norway">Norvegija</string>
+    <string name="poland">Lenkija</string>
+    <string name="portugal">Portugalija</string>
+    <string name="romania">Rumunija</string>
+    <string name="russia">Rusija</string>
+    <string name="serbia">Serbija</string>
+    <string name="slovakia">Slovakija</string>
+    <string name="slovenia">Slovėnija</string>
+    <string name="south_africa">Pietų Afrika</string>
+    <string name="spain">Ispanija</string>
+    <string name="swaziland">Svazilandas</string>
+    <string name="sweden">Švedija</string>
+    <string name="switzerland">Šveicarija</string>
+    <string name="turkey">Turkija</string>
+    <string name="united_kingdom">Jungtinė Karalystė</string>
+    <string name="zambia">Zambija</string>
+    <string name="zimbabwe">Zimbabvė</string>
+    <string name="azerbaijan">Azerbaidžanas</string>
+    <string name="mauritania">Mauritanija</string>
+    <string name="mali">Malis</string>
+    <string name="niger">Nigeris</string>
+    <string name="chad">Čadas</string>
+    <string name="sudan">Sudanas</string>
+    <string name="andorra">Andora</string>
+    <string name="taiwan">Taivanas</string>
+    <string name="south_korea">Pietų Korėja</string>
+    <string name="hong_kong">Hong Kongas</string>
+    <string name="macau">Makao</string>
+    <string name="indonesia">Indonezija</string>
+    <string name="singapore">Singapūras</string>
+    <string name="thailand">Tailandas</string>
+    <string name="philippines">Filipinai</string>
+    <string name="malaysia">Malaizija</string>
+    <string name="china">Kinija</string>
+    <string name="united_arab_emirates">Jungtiniai Arabų Emyratai</string>
+    <string name="india">Indija</string>
+    <string name="egypt">Egiptas</string>
+    <string name="oman">Omanas</string>
+    <string name="san_marino">San Marinas</string>
+    <string name="vatican_city">Vatikanas</string>
+    <!-- Months -->
+    <string name="january">Sausis</string>
+    <string name="february">Vasaris</string>
+    <string name="march">Kovas</string>
+    <string name="april">Balandis</string>
+    <string name="may">Gegužė</string>
     </resources>
