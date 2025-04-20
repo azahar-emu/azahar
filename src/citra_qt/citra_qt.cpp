@@ -2603,7 +2603,7 @@ void GMainWindow::SetTurboEnabled(bool state) {
 
 void GMainWindow::ReloadTurbo() {
     if (IsTurboEnabled()) {
-        Settings::temporary_frame_limit = Settings::values.turbo_speed.GetValue();
+        Settings::temporary_frame_limit = Settings::values.turbo_limit.GetValue();
         Settings::is_temporary_frame_limit = true;
     } else {
         Settings::is_temporary_frame_limit = false;
@@ -2616,7 +2616,7 @@ void GMainWindow::ReloadTurbo() {
 void GMainWindow::AdjustSpeedLimit(bool increase) {
     const int SPEED_LIMIT_STEP = 5;
     auto active_limit =
-        IsTurboEnabled() ? &Settings::values.turbo_speed : &Settings::values.frame_limit;
+        IsTurboEnabled() ? &Settings::values.turbo_limit : &Settings::values.frame_limit;
     const auto active_limit_value = active_limit->GetValue();
 
     if (increase) {

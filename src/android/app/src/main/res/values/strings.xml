@@ -146,6 +146,7 @@
     <string name="button_zr" translatable="false">ZR</string>
     <string name="input_message_analog_only">This control must be bound to a gamepad analog stick or D-pad axis!</string>
     <string name="input_message_button_only">This control must be bound to a gamepad button!</string>
+    <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
     <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
 
@@ -247,11 +248,10 @@
     <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed. If disabled, emulation speed will be uncapped and the turbo speed hotkey will not work.</string>
     <string name="frame_limit_slider">Limit Speed Percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
+    <string name="turbo_limit">Turbo Speed Limit</string>
+    <string name="turbo_limit_description">Emulation speed limit used while the turbo hotkey is active.</string>
     <string name="expand_to_cutout_area">Expand to Cutout Area</string>
     <string name="expand_to_cutout_area_description">Expands the display area to include the cutout (or notch) area.</string>
-    <string name="emulation_toggle_turbo_speed">Turbo Speed</string>
-    <string name="turbo_speed">Turbo Speed</string>
-    <string name="turbo_speed_description">Emulation speed limit used while the turbo hotkey is active.</string>
     <string name="internal_resolution">Internal Resolution</string>
     <string name="internal_resolution_description">Specifies the resolution used to render at. A high resolution will improve visual quality a lot but is also quite heavy on performance and might cause glitches in certain applications.</string>
     <string name="internal_resolution_setting_auto">Auto (Screen Size)</string>

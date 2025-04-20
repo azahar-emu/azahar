@@ -25,7 +25,7 @@ class HotkeyUtility(
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
                 Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
                 Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
-                Hotkey.TURBO_SPEED.button -> TurboHelper.setTurboEnabled(!TurboHelper.isTurboSpeedEnabled())
+                Hotkey.TURBO_LIMIT.button -> TurboHelper.setTurboEnabled(!TurboHelper.isTurboSpeedEnabled())
                 Hotkey.QUICKSAVE.button -> {
                     NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                     Toast.makeText(context,

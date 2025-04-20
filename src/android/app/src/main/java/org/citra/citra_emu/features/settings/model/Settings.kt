@@ -139,7 +139,7 @@ class Settings {
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
-        const val HOTKEY_TURBO_SPEED = "hotkey_turbo_speed"
+        const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -206,7 +206,7 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKlOAD,
-            HOTKEY_TURBO_SPEED
+            HOTKEY_TURBO_LIMIT
         )
         val hotkeyTitles = listOf(
             R.string.emulation_swap_screens,
@@ -215,7 +215,7 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
-            R.string.emulation_toggle_turbo_speed
+            R.string.turbo_limit_hotkey
         )
 
         const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"

@@ -27,7 +27,7 @@ object TurboHelper {
         val toastMessage: String
 
         if (turboSpeedEnabled) {
-            NativeLibrary.setTemporaryFrameLimit(IntSetting.TURBO_SPEED.int.toDouble())
+            NativeLibrary.setTemporaryFrameLimit(IntSetting.TURBO_LIMIT.int.toDouble())
             toastMessage = context.getString(R.string.turbo_enabled_toast)
         } else {
             NativeLibrary.disableTemporaryFrameLimit()

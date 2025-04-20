@@ -67,7 +67,7 @@ enum class IntSetting(
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, 0),
-    TURBO_SPEED("turbo_speed", Settings.SECTION_CORE, 200);
+    TURBO_LIMIT("turbo_limit", Settings.SECTION_CORE, 200);
 
     override var int: Int = defaultValue
 
