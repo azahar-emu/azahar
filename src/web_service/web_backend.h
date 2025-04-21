@@ -54,7 +54,7 @@ public:
      * @return the result of the request.
      */
     Common::WebResult PatchJson(const std::string& path, const std::string& data,
-        bool allow_anonymous);
+                                bool allow_anonymous);
 
     /**
      * Gets a plain string from the specified path.
