@@ -193,7 +193,7 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
         {"password", required_argument, 0, 'w'},
         {"preferred-app", required_argument, 0, 's'},
         {"preferred-app-id", required_argument, 0, 'i'},
-        {"username", optional_argument, 0, 'u'},
+        {"username", required_argument, 0, 'u'},
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
         {"ban-list-file", required_argument, 0, 'b'},
