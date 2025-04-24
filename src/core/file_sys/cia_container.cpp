@@ -13,11 +13,11 @@
 namespace FileSys {
 
 Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
-    std::vector<u8> header_data(sizeof(Header));
+    std::vector<u8> header_data(sizeof(CIAHeader));
 
     // Load the CIA Header
-    ResultVal<std::size_t> read_result = backend.Read(0, sizeof(Header), header_data.data());
-    if (read_result.Failed() || *read_result != sizeof(Header))
+    ResultVal<std::size_t> read_result = backend.Read(0, sizeof(CIAHeader), header_data.data());
+    if (read_result.Failed() || *read_result != sizeof(CIAHeader))
         return Loader::ResultStatus::Error;
 
     Loader::ResultStatus result = LoadHeader(header_data);
@@ -65,8 +65,8 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
         return Loader::ResultStatus::Error;
 
     // Load CIA Header
-    std::vector<u8> header_data(sizeof(Header));
-    if (file.ReadBytes(header_data.data(), sizeof(Header)) != sizeof(Header))
+    std::vector<u8> header_data(sizeof(CIAHeader));
+    if (file.ReadBytes(header_data.data(), sizeof(CIAHeader)) != sizeof(CIAHeader))
         return Loader::ResultStatus::Error;
 
     Loader::ResultStatus result = LoadHeader(header_data);
@@ -134,11 +134,12 @@ Loader::ResultStatus CIAContainer::Load(std::span<const u8> file_data) {
 }
 
 Loader::ResultStatus CIAContainer::LoadHeader(std::span<const u8> header_data, std::size_t offset) {
-    if (header_data.size() - offset < sizeof(Header)) {
+    if (header_data.size() - offset < sizeof(CIAHeader)) {
         return Loader::ResultStatus::Error;
     }
 
-    std::memcpy(&cia_header, header_data.data(), sizeof(Header));
+    std::memcpy(&cia_header, header_data.data(), sizeof(CIAHeader));
+    has_header = true;
 
     return Loader::ResultStatus::Success;
 }
@@ -264,5 +265,8 @@ void CIAContainer::Print() const {
     for (u16 i = 0; i < cia_tmd.GetContentCount(); i++) {
         LOG_DEBUG(Service_FS, "Content {:x} Offset:   0x{:08x} bytes", i, GetContentOffset(i));
     }
+}
+const CIAHeader* CIAContainer::GetHeader() {
+    return has_header ? &cia_header : nullptr;
 }
 } // namespace FileSys

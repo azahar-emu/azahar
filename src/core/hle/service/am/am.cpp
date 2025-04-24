@@ -425,8 +425,8 @@ CIAFile::CIAFile(Core::System& system_, Service::FS::MediaType media_type, bool 
     // If data is being installing from CDN, provide a fake header to the container so that
     // it's not uninitialized.
     if (from_cdn) {
-        FileSys::CIAContainer::Header fake_header{
-            .header_size = sizeof(FileSys::CIAContainer::Header),
+        FileSys::CIAHeader fake_header{
+            .header_size = sizeof(FileSys::CIAHeader),
             .type = 0,
             .version = 0,
             .cert_size = 0,
@@ -548,6 +548,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
                                  buffer + (range_min - offset) + available_to_write);
 
             if ((tmd.GetContentTypeByIndex(i) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
+                if (!decryption_authorized) {
+                    LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
+                    return Result(ErrorDescription::NotAuthorized, ErrorModule::AM,
+                                  ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                }
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
 
@@ -663,7 +668,8 @@ Result CIAFile::PrepareToImportContent(const FileSys::TitleMetadata& tmd) {
         content_file_paths.emplace_back(path);
     }
 
-    if (container.GetTitleMetadata().HasEncryptedContent()) {
+    if (container.GetTitleMetadata().HasEncryptedContent(from_cdn ? nullptr
+                                                                  : container.GetHeader())) {
         if (!decryption_authorized) {
             LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
             return {ErrorDescription::NotAuthorized, ErrorModule::AM, ErrorSummary::InvalidState,
@@ -728,9 +734,7 @@ Result CIAFile::ProvideTMDForAdditionalContent(const FileSys::TitleMetadata& tmd
 
     is_additional_content = true;
 
-    PrepareToImportContent(container.GetTitleMetadata());
-
-    return ResultSuccess;
+    return PrepareToImportContent(container.GetTitleMetadata());
 }
 
 const FileSys::TitleMetadata& CIAFile::GetTMD() {
@@ -762,6 +766,11 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
     std::vector<u8> temp(buffer, buffer + std::min(static_cast<u64>(length), remaining_to_write));
 
     if ((tmd.GetContentTypeByIndex(content_index) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
+        if (!decryption_authorized) {
+            LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
+            return Result(ErrorDescription::NotAuthorized, ErrorModule::AM,
+                          ErrorSummary::InvalidState, ErrorLevel::Permanent);
+        }
         decryption_state->content[content_index].ProcessData(temp.data(), temp.data(), temp.size());
     }
 
@@ -1000,7 +1009,7 @@ InstallStatus InstallCIA(const std::string& path,
             Core::System::GetInstance(),
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
-        if (container.GetTitleMetadata().HasEncryptedContent()) {
+        if (container.GetTitleMetadata().HasEncryptedContent(container.GetHeader())) {
             LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
             return InstallStatus::ErrorEncrypted;
         }

@@ -17,6 +17,8 @@ enum class ResultStatus;
 
 namespace FileSys {
 
+struct CIAHeader;
+
 enum TMDContentTypeFlag : u16 {
     Encrypted = 1 << 0,
     Disc = 1 << 2,
@@ -99,7 +101,7 @@ public:
     u64 GetContentSizeByIndex(std::size_t index) const;
     bool GetContentOptional(std::size_t index) const;
     std::array<u8, 16> GetContentCTRByIndex(std::size_t index) const;
-    bool HasEncryptedContent() const;
+    bool HasEncryptedContent(const CIAHeader* header = nullptr) const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);

@@ -6,6 +6,7 @@
 #include "common/alignment.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "core/file_sys/cia_container.h"
 #include "core/file_sys/signature.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/loader/loader.h"
@@ -185,9 +186,14 @@ std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(std::size_t index) const 
     return ctr;
 }
 
-bool TitleMetadata::HasEncryptedContent() const {
-    return std::any_of(tmd_chunks.begin(), tmd_chunks.end(), [](auto& chunk) {
-        return (static_cast<u16>(chunk.type) & FileSys::TMDContentTypeFlag::Encrypted) != 0;
+bool TitleMetadata::HasEncryptedContent(const CIAHeader* header) const {
+    return std::any_of(tmd_chunks.begin(), tmd_chunks.end(), [header](auto& chunk) {
+        bool is_crypted =
+            (static_cast<u16>(chunk.type) & FileSys::TMDContentTypeFlag::Encrypted) != 0;
+        if (header) {
+            is_crypted = is_crypted && header->IsContentPresent(static_cast<u16>(chunk.index));
+        }
+        return is_crypted;
     });
 }
 
