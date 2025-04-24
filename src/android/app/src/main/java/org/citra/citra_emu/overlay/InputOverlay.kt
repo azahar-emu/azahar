@@ -110,6 +110,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 TurboHelper.setTurboEnabled((!TurboHelper.isTurboSpeedEnabled()))
             }
 
+            if (button.id == NativeLibrary.ButtonType.BUTTON_COMBO) {
+                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_A, button.status)
+                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, NativeLibrary.ButtonType.BUTTON_X, button.status)
+            }
+
             NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.id, button.status)
             shouldUpdateView = true
         }
@@ -486,6 +491,17 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 )
             )
         }
+        if (preferences.getBoolean("buttonToggle16", true)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.button_combo,                // your default icon
+                    R.drawable.button_combo_pressed,        // your pressed icon
+                    NativeLibrary.ButtonType.BUTTON_COMBO,  // your new button type in NativeLibrary
+                    orientation
+                )
+            )
+        }
     }
 
     fun refreshControls() {
@@ -699,6 +715,15 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
+            )
+
             .apply()
     }
 
@@ -849,6 +874,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .apply()
     }
