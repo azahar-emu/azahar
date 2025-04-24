@@ -500,6 +500,8 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
 
+    loading_shaders_label = new QLabel();
+
     artic_traffic_label = new QLabel();
     artic_traffic_label->setToolTip(
         tr("Current Artic traffic speed. Higher values indicate bigger transfer loads."));
@@ -515,8 +517,8 @@ void GMainWindow::InitializeWidgets() {
         tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
            "full-speed emulation this should be at most 16.67 ms."));
 
-    for (auto& label :
-         {artic_traffic_label, emu_speed_label, game_fps_label, emu_frametime_label}) {
+    for (auto& label : {loading_shaders_label, artic_traffic_label, emu_speed_label, game_fps_label,
+                        emu_frametime_label}) {
         label->setVisible(false);
         label->setFrameStyle(QFrame::NoFrame);
         label->setContentsMargins(4, 0, 4, 0);
@@ -1430,6 +1432,8 @@ void GMainWindow::BootGame(const QString& filename) {
 
     connect(emu_thread.get(), &EmuThread::LoadProgress, loading_screen,
             &LoadingScreen::OnLoadProgress, Qt::QueuedConnection);
+    connect(emu_thread.get(), &EmuThread::SwitchDiskResources, this,
+            &GMainWindow::OnSwitchDiskResources, Qt::QueuedConnection);
     connect(emu_thread.get(), &EmuThread::HideLoadingScreen, loading_screen,
             &LoadingScreen::OnLoadComplete);
 
@@ -1529,6 +1533,7 @@ void GMainWindow::ShutdownGame() {
     status_bar_update_timer.stop();
     message_label_used_for_movie = false;
     show_artic_label = false;
+    loading_shaders_label->setVisible(false);
     artic_traffic_label->setVisible(false);
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
@@ -3710,6 +3715,18 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
     }
 }
 #endif
+
+void GMainWindow::OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                        std::size_t total) {
+    if (stage == VideoCore::LoadCallbackStage::Prepare) {
+        loading_shaders_label->setText(QString());
+        loading_shaders_label->setVisible(true);
+    } else if (stage == VideoCore::LoadCallbackStage::Complete) {
+        loading_shaders_label->setVisible(false);
+    } else {
+        loading_shaders_label->setText(loading_screen->GetStageTranslation(stage, value, total));
+    }
+}
 
 void GMainWindow::UpdateWindowTitle() {
     const QString full_name = QString::fromUtf8(Common::g_build_fullname);

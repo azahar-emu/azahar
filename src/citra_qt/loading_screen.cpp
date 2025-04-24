@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -184,14 +184,7 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
     }
 
     // update labels and progress bar
-    const auto& stg = tr(stage_translations.at(stage));
-    if (stage == VideoCore::LoadCallbackStage::Decompile ||
-        stage == VideoCore::LoadCallbackStage::Build ||
-        stage == VideoCore::LoadCallbackStage::Preload) {
-        ui->stage->setText(stg.arg(value).arg(total));
-    } else {
-        ui->stage->setText(stg);
-    }
+    ui->stage->setText(GetStageTranslation(stage, value, total));
     ui->value->setText(estimate);
     ui->progress_bar->setValue(static_cast<int>(value));
     previous_time = now;
@@ -203,6 +196,18 @@ void LoadingScreen::paintEvent(QPaintEvent* event) {
     QPainter p(this);
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
     QWidget::paintEvent(event);
+}
+
+QString LoadingScreen::GetStageTranslation(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                           std::size_t total) {
+    const auto& stg = tr(stage_translations.at(stage));
+    if (stage == VideoCore::LoadCallbackStage::Decompile ||
+        stage == VideoCore::LoadCallbackStage::Build ||
+        stage == VideoCore::LoadCallbackStage::Preload) {
+        return stg.arg(value).arg(total);
+    } else {
+        return stg;
+    }
 }
 
 void LoadingScreen::Clear() {}

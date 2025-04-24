@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
+#include "core/loader/loader.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
@@ -84,8 +85,8 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
                                    VideoCore::CustomTexManager& custom_tex_manager,
                                    VideoCore::RendererBase& renderer, Driver& driver_)
     : VideoCore::RasterizerAccelerated{memory, pica}, driver{driver_},
-      shader_manager{renderer.GetRenderWindow(), driver, !driver.IsOpenGLES()},
-      runtime{driver, renderer}, res_cache{memory, custom_tex_manager, runtime, regs, renderer},
+      render_window{renderer.GetRenderWindow()}, runtime{driver, renderer},
+      res_cache{memory, custom_tex_manager, runtime, regs, renderer},
       vertex_buffer{driver, GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE},
       uniform_buffer{driver, GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE},
       index_buffer{driver, GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE},
@@ -173,9 +174,86 @@ void RasterizerOpenGL::TickFrame() {
     res_cache.TickFrame();
 }
 
-void RasterizerOpenGL::LoadDiskResources(const std::atomic_bool& stop_loading,
-                                         const VideoCore::DiskResourceLoadCallback& callback) {
-    shader_manager.LoadDiskCache(stop_loading, callback, accurate_mul);
+void RasterizerOpenGL::LoadDefaultDiskResources(
+    const std::atomic_bool& stop_loading, const VideoCore::DiskResourceLoadCallback& callback) {
+    // First element in vector is the default one and cannot be removed.
+    u64 program_id;
+    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
+        Loader::ResultStatus::Success) {
+        program_id = 0;
+    }
+
+    shader_managers.clear();
+    curr_shader_manager = shader_managers.emplace_back(std::make_shared<ShaderProgramManager>(
+        render_window, driver, program_id, !driver.IsOpenGLES()));
+
+    curr_shader_manager->LoadDiskCache(stop_loading, callback, accurate_mul);
+}
+
+void RasterizerOpenGL::SwitchDiskResources(u64 title_id) {
+    // NOTE: curr_shader_manager can be null if emulation restarted without calling
+    // LoadDefaultDiskResources
+
+    // Check if the current manager is for the specified TID.
+    if (curr_shader_manager && curr_shader_manager->GetProgramID() == title_id) {
+        return;
+    }
+
+    // Search for an existing manager
+    size_t new_pos = 0;
+    for (new_pos = 0; new_pos < shader_managers.size(); new_pos++) {
+        if (shader_managers[new_pos]->GetProgramID() == title_id) {
+            break;
+        }
+    }
+    // Manager does not exist, create it and append to the end
+    if (new_pos >= shader_managers.size()) {
+        new_pos = shader_managers.size();
+        auto& new_manager = shader_managers.emplace_back(std::make_shared<ShaderProgramManager>(
+            render_window, driver, title_id, !driver.IsOpenGLES()));
+
+        if (switch_disk_resources_callback) {
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        }
+
+        std::atomic_bool stop_loading;
+        new_manager->LoadDiskCache(stop_loading, switch_disk_resources_callback, accurate_mul);
+
+        if (switch_disk_resources_callback) {
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
+        }
+    }
+
+    auto is_applet = [](u64 tid) {
+        constexpr u32 APPLET_TID_HIGH = 0x00040030;
+        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
+    };
+
+    bool prev_applet = curr_shader_manager ? is_applet(curr_shader_manager->GetProgramID()) : false;
+    bool new_applet = is_applet(shader_managers[new_pos]->GetProgramID());
+    curr_shader_manager = shader_managers[new_pos];
+
+    if (prev_applet) {
+        // If we came from an applet, clean up all other applets
+        for (auto it = shader_managers.begin(); it != shader_managers.end();) {
+            if (it == shader_managers.begin() || *it == curr_shader_manager ||
+                !is_applet((*it)->GetProgramID())) {
+                it++;
+                continue;
+            }
+            it = shader_managers.erase(it);
+        }
+    }
+    if (!new_applet) {
+        // If we are going into a non-applet, clean up everything
+        for (auto it = shader_managers.begin(); it != shader_managers.end();) {
+            if (it == shader_managers.begin() || *it == curr_shader_manager) {
+                it++;
+                continue;
+            }
+            it = shader_managers.erase(it);
+        }
+    }
 }
 
 void RasterizerOpenGL::SyncFixedState() {
@@ -271,7 +349,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    return shader_manager.UseProgrammableVertexShader(regs, pica.vs_setup, accurate_mul);
+    return curr_shader_manager->UseProgrammableVertexShader(regs, pica.vs_setup, accurate_mul);
 }
 
 bool RasterizerOpenGL::SetupGeometryShader() {
@@ -286,9 +364,9 @@ bool RasterizerOpenGL::SetupGeometryShader() {
     // lighting and care about proper quaternions. Otherwise just use standard vertex+fragment
     // shaders
     if (regs.lighting.disable) {
-        shader_manager.UseTrivialGeometryShader();
+        curr_shader_manager->UseTrivialGeometryShader();
     } else {
-        shader_manager.UseFixedGeometryShader(regs);
+        curr_shader_manager->UseFixedGeometryShader(regs);
     }
 
     return true;
@@ -333,7 +411,7 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
     SetupVertexArray(buffer_ptr, buffer_offset, vs_input_index_min, vs_input_index_max);
     vertex_buffer.Unmap(vs_input_size);
 
-    shader_manager.ApplyTo(state, accurate_mul);
+    curr_shader_manager->ApplyTo(state, accurate_mul);
     state.Apply();
 
     if (is_indexed) {
@@ -444,7 +522,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Sync and bind the shader
     if (shader_dirty) {
-        shader_manager.UseFragmentShader(regs, user_config);
+        curr_shader_manager->UseFragmentShader(regs, user_config);
         shader_dirty = false;
     }
 
@@ -462,9 +540,9 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     } else {
         state.draw.vertex_array = sw_vao.handle;
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
-        shader_manager.UseTrivialVertexShader();
-        shader_manager.UseTrivialGeometryShader();
-        shader_manager.ApplyTo(state, accurate_mul);
+        curr_shader_manager->UseTrivialVertexShader();
+        curr_shader_manager->UseTrivialGeometryShader();
+        curr_shader_manager->ApplyTo(state, accurate_mul);
         state.Apply();
 
         std::size_t max_vertices = 3 * (VERTEX_BUFFER_SIZE / (3 * sizeof(HardwareVertex)));

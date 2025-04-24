@@ -215,7 +215,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
     std::unique_ptr<Frontend::GraphicsContext> cpu_context;
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(stop_run, &LoadDiskCacheProgress);
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(stop_run,
+                                                                   &LoadDiskCacheProgress);
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
 

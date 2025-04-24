@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -78,8 +78,15 @@ public:
         return false;
     }
 
-    virtual void LoadDiskResources([[maybe_unused]] const std::atomic_bool& stop_loading,
-                                   [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
+    virtual void LoadDefaultDiskResources(
+        [[maybe_unused]] const std::atomic_bool& stop_loading,
+        [[maybe_unused]] const DiskResourceLoadCallback& callback) {}
+
+    virtual void SwitchDiskResources([[maybe_unused]] u64 title_id) {}
+
+    static void SetSwitchDiskResourcesCallback(const DiskResourceLoadCallback& callback) {
+        switch_disk_resources_callback = callback;
+    }
 
     virtual void SyncEntireState() {}
 
@@ -89,5 +96,9 @@ public:
 
 protected:
     bool accurate_mul = false;
+
+    // Rasterizer gets destroyed on reboot, so make the callback
+    // static until a better solution is found.
+    static DiskResourceLoadCallback switch_disk_resources_callback;
 };
 } // namespace VideoCore

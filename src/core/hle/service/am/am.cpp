@@ -509,9 +509,7 @@ Result CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t off
         return FileSys::ResultFileNotFound;
     }
 
-    PrepareToImportContent(tmd);
-
-    return ResultSuccess;
+    return PrepareToImportContent(tmd);
 }
 
 ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length, const u8* buffer) {
