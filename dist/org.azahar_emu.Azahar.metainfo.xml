@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+  <id>org.azahar_emu.Azahar</id>
+  <name>Azahar</name>
+  <developer id="org.azahar_emu.Azahar">
+    <name>Azahar Contributors</name>
+    <url>https://github.com/azahar-emu/azahar/graphs/contributors</url>
+  </developer>
+  <summary>Open-source 3DS emulator project based on Citra.</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-2.0</project_license>
+  <launchable type="desktop-id">org.azahar_emu.Azahar.desktop</launchable>
+  <url type="homepage">https://azahar-emu.org/</url>
+  <url type="bugtracker">https://github.com/azahar-emu/azahar/issues</url>
+  <url type="contact">https://discord.com/invite/4ZjMpAp3M6</url>
+  <branding>
+    <color type="primary" scheme_preference="light">#ffffdd</color>
+    <color type="primary" scheme_preference="dark">#808080</color>
+  </branding>
+  <description>
+    <p>Azahar is an open-source 3DS emulator based on Citra.</p>
+    <p>This project was born as a merge between PabloMK7's Citra fork and Lime3DS.</p>
+    <p>Our mission is to create the definitive platform for future development of Citra, a discontinued 3DS emulator</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Pokemon Ultra Moon</caption>
+      <image type="source">https://cdn.jsdelivr.net/gh/azahar-emu/branding@502e4178456f04dc16946a1338ef56d83237ac55/screenshots/pokemon-ultra-moon.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Star Fox 64 3D</caption>
+      <image type="source">https://cdn.jsdelivr.net/gh/azahar-emu/branding@502e4178456f04dc16946a1338ef56d83237ac55/screenshots/star-fox-64-3d.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Luigi's Mansion: Dark Moon</caption>
+      <image type="source">https://cdn.jsdelivr.net/gh/azahar-emu/branding@502e4178456f04dc16946a1338ef56d83237ac55/screenshots/luigis-mansion-dark-moon.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>New Super Mario Bros 2</caption>
+      <image type="source">https://cdn.jsdelivr.net/gh/azahar-emu/branding@502e4178456f04dc16946a1338ef56d83237ac55/screenshots/new-super-mario-bros-2.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Metroid: Samus Returns</caption>
+      <image>https://cdn.jsdelivr.net/gh/azahar-emu/branding@502e4178456f04dc16946a1338ef56d83237ac55/screenshots/metroid-samus-returns.png</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Game</category>
+  </categories>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <recommends>
+    <control>touch</control>
+    <control>gamepad</control>
+  </recommends>
+  <keywords>
+    <keyword>retro</keyword>
+    <keyword>emulator</keyword>
+    <keyword>3ds</keyword>
+  </keywords>
+  <provides>
+    <binary>azahar</binary>
+    <binary>azahar-room</binary>
+    <id>org.azahar_emu.Azahar.desktop</id>
+    <id>org.azahar_emu.Azahar.room.desktop</id>
+  </provides>
+  <releases>
+    <release version="2120.3" date="2025-04-15">
+      <url>https://github.com/azahar-emu/azahar/releases/tag/2120.3</url>
+    </release>
+    <release version="2120.2" date="2025-03-31">
+      <url>https://github.com/azahar-emu/azahar/releases/tag/2120.2</url>
+    </release>
+    <release version="2120.1" date="2025-03-22">
+      <url>https://github.com/azahar-emu/azahar/releases/tag/2120.1</url>
+    </url>
+    <release version="2120" date="2025-03-21">
+      <url>https://github.com/azahar-emu/azahar/releases/tag/2120</url>
+    </url>      
+    </releases>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">moderate</content_attribute>
+  </content_rating>
+</component>
