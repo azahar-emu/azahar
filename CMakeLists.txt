@@ -504,6 +504,9 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.desktop"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
             RENAME "org.azahar_emu.Azahar.desktop")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar-room.desktop"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
+            RENAME "org.azahar_emu.Azahar.room.desktop")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps"
             RENAME "org.azahar_emu.Azahar.svg")
@@ -512,4 +515,6 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
             RENAME "org.azahar_emu.Azahar.png")
     install(FILES "${PROJECT_SOURCE_DIR}/dist/org.azahar_emu.Azahar.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/org.azahar_emu.Azahar.metainfo.xml"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo")
 endif()
