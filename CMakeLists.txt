@@ -504,9 +504,11 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.desktop"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
             RENAME "org.azahar_emu.Azahar.desktop")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar-room.desktop"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
-            RENAME "org.azahar_emu.Azahar.room.desktop")
+    if(ENABLE_ROOM)
+        install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar-room.desktop"
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
+                RENAME "org.azahar_emu.Azahar.room.desktop")
+    endif()
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps"
             RENAME "org.azahar_emu.Azahar.svg")
