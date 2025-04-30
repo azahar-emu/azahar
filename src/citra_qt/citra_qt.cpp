@@ -394,9 +394,12 @@ GMainWindow::GMainWindow(Core::System& system_)
 #ifdef ENABLE_QT_UPDATE_CHECKER
     if (UISettings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
-            const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
-            if (latest_release && latest_release.value() != Common::g_build_fullname) {
-                return QString::fromStdString(latest_release.value());
+            const bool is_prerelease = // TODO: This can be done better -OS
+                (strstr(Common::g_build_fullname, "rc") != NULL);
+            const std::optional<std::string> latest_release_tag =
+                UpdateChecker::GetLatestRelease(is_prerelease);
+            if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
+                return QString::fromStdString(latest_release_tag.value());
             }
             return QString{};
         });
