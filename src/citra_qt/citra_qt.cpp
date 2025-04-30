@@ -389,6 +389,11 @@ GMainWindow::GMainWindow(Core::System& system_)
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
 
+#ifdef __APPLE__
+    // Workaround for https://github.com/azahar-emu/azahar/issues/933
+    ui->menubar->setNativeMenuBar(false);
+#endif
+
     show();
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
