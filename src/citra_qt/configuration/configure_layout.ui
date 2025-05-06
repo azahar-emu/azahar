@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>705</width>
-    <height>856</height>
+    <height>656</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -20,8 +20,29 @@
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QScrollArea" name="scrollArea">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="lineWidth">
+      <number>1</number>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -30,8 +51,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>689</width>
-        <height>840</height>
+        <width>688</width>
+        <height>799</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
