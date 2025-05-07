@@ -1188,7 +1188,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         if (sb.isNotEmpty()) sb.append(" | ")
                         sb.append(
                             String.format(
-                                "FT: %.1fms",
+                                "Frametime: %.1fms",
                                 (perfStats[FRAMETIME] * 1000.0f).toFloat()
                             )
                         )
