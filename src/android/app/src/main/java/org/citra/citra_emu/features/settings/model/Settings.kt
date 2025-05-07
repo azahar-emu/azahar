@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -134,12 +134,18 @@ class Settings {
         const val KEY_DPAD_AXIS_VERTICAL = "dpad_axis_vertical"
         const val KEY_DPAD_AXIS_HORIZONTAL = "dpad_axis_horizontal"
         const val HOTKEY_SCREEN_SWAP = "hotkey_screen_swap"
+        const val HOTKEY_SELECT_LAYOUT_0 = "hotkey_select_layout_0"
+        const val HOTKEY_SELECT_LAYOUT_1 = "hotkey_select_layout_1"
+        const val HOTKEY_SELECT_LAYOUT_2 = "hotkey_select_layout_2"
+        const val HOTKEY_SELECT_LAYOUT_3 = "hotkey_select_layout_3"
+        const val HOTKEY_SELECT_LAYOUT_4 = "hotkey_select_layout_4"
+        const val HOTKEY_SELECT_LAYOUT_5 = "hotkey_select_layout_5"
+        const val HOTKEY_SELECT_LAYOUT_6 = "hotkey_select_layout_6"
         const val HOTKEY_CYCLE_LAYOUT = "hotkey_toggle_layout"
         const val HOTKEY_CLOSE_GAME = "hotkey_close_game"
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
-        const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -206,7 +212,13 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKlOAD,
-            HOTKEY_TURBO_LIMIT
+            HOTKEY_USE_DEFAULT_LAYOUT,
+            HOTKEY_USE_SINGLESCREEN_LAYOUT,
+            HOTKEY_USE_LARGESCREEN_LAYOUT,
+            HOTKEY_USE_HYBRIDSCREEN_LAYOUT,
+            HOTKEY_USE_SIDESCREEN_LAYOUT,
+            HOTKEY_USE_SEPARATEWINDOWS_LAYOUT,
+            HOTKEY_USE_CUSTOM_LAYOUT
         )
         val hotkeyTitles = listOf(
             R.string.emulation_swap_screens,
@@ -215,7 +227,13 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
-            R.string.turbo_limit_hotkey
+            R.string.emulation_use_default_layout,
+            R.string.emulation_use_singlescreen_layout,
+            R.string.emulation_use_largescreen_layout,
+            R.string.emulation_use_hybridscreen_layout,
+            R.string.emulation_use_sidescreen_layout,
+            R.string.emulation_use_separatewindows_layout,
+            R.string.emulation_use_custom_layout
         )
 
         const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"

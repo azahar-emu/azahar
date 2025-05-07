@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,5 +11,11 @@ enum class Hotkey(val button: Int) {
     PAUSE_OR_RESUME(10004),
     QUICKSAVE(10005),
     QUICKLOAD(10006),
-    TURBO_LIMIT(10007);
+    USE_DEFAULT_LAYOUT(10010),
+    USE_SINGLESCREEN_LAYOUT(10011),
+    USE_LARGESCREEN_LAYOUT(10012),
+    USE_HYBRIDSCREEN_LAYOUT(10013),
+    USE_SIDESCREEN_LAYOUT(10014),
+    USE_SEPARATEWINDOWS_LAYOUT(10015),
+    USE_CUSTOM_LAYOUT(10016);
 }

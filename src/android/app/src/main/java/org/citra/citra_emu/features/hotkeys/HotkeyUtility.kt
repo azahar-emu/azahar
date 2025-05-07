@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,14 +9,11 @@ import android.widget.Toast
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
-import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 
-class HotkeyUtility(
-    private val screenAdjustmentUtil: ScreenAdjustmentUtil,
-    private val context: Context) {
+class HotkeyUtility(private val screenAdjustmentUtil: ScreenAdjustmentUtil, private val context: Context) {
 
-    private val hotkeyButtons = Hotkey.entries.map { it.button }
+    val hotkeyButtons = Hotkey.entries.map { it.button }
 
     fun handleHotkey(bindedButton: Int): Boolean {
         if(hotkeyButtons.contains(bindedButton)) {
@@ -25,17 +22,23 @@ class HotkeyUtility(
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
                 Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
                 Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
-                Hotkey.TURBO_LIMIT.button -> TurboHelper.setTurboEnabled(!TurboHelper.isTurboSpeedEnabled())
+                Hotkey.USE_DEFAULT_LAYOUT.button -> {screenAdjustmentUtil.selectLayout(0)}
+                Hotkey.USE_SINGLESCREEN_LAYOUT.button -> {screenAdjustmentUtil.useLayout(1)}
+                Hotkey.USE_LARGESCREEN_LAYOUT.button -> {screenAdjustmentUtil.useLayout(2)}
+                Hotkey.USE_HYBRIDSCREEN_LAYOUT.button -> {screenAdjustmentUtil.useLayout(3)}
+                Hotkey.USE_SIDESCREEN_LAYOUT.button -> {screenAdjustmentUtil.useLayout(4)}
+                Hotkey.USE_SEPARATEWINDOWS_LAYOUT.button -> {screenAdjustmentUtil.useLayout(5)}
+                Hotkey.USE_CUSTOM_LAYOUT.button -> {screenAdjustmentUtil.useLayout(6)}
                 Hotkey.QUICKSAVE.button -> {
                     NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                     Toast.makeText(context,
-                        context.getString(R.string.saving),
+                        context.getString(R.string.quicksave_saving),
                         Toast.LENGTH_SHORT).show()
                 }
                 Hotkey.QUICKLOAD.button -> {
                     val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                     val stringRes = if(wasLoaded) {
-                        R.string.loading
+                        R.string.quickload_loading
                     } else {
                         R.string.quickload_not_found
                     }
