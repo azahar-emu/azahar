@@ -215,7 +215,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
     std::unique_ptr<Frontend::GraphicsContext> cpu_context;
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(stop_run, &LoadDiskCacheProgress);
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(stop_run,
+                                                                   &LoadDiskCacheProgress);
 
     LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
 
@@ -773,28 +774,22 @@ void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIE
     LOG_INFO(Frontend, "Host OS: Android API level {}", android_get_device_api_level());
 }
 
-void JNICALL Java_org_citra_citra_1emu_NativeLibrary_toggleTurboSpeed([[maybe_unused]] JNIEnv* env,
-                                                                      [[maybe_unused]] jobject obj,
-                                                                      jboolean enabled) {
-    Settings::values.turbo_speed = enabled ? true : false;
-}
-
-jint JNICALL Java_org_citra_citra_1emu_NativeLibrary_getTurboSpeedSlider(
-    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
-    return static_cast<jint>(Settings::values.turbo_speed);
-}
-
-void JNICALL Java_org_citra_citra_1emu_NativeLibrary_setTurboSpeedSlider(
-    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj, jint value) {
-    Settings::values.turbo_speed = value;
-}
-
 jboolean Java_org_citra_citra_1emu_NativeLibrary_isFullConsoleLinked(JNIEnv* env, jobject obj) {
     return HW::UniqueData::IsFullConsoleLinked();
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_unlinkConsole(JNIEnv* env, jobject obj) {
     HW::UniqueData::UnlinkConsole();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setTemporaryFrameLimit(JNIEnv* env, jobject obj,
+                                                                    jdouble speed) {
+    Settings::temporary_frame_limit = speed;
+    Settings::is_temporary_frame_limit = true;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_disableTemporaryFrameLimit(JNIEnv* env, jobject obj) {
+    Settings::is_temporary_frame_limit = false;
 }
 
 } // extern "C"

@@ -4,6 +4,10 @@ GITDATE="`git show -s --date=short --format='%ad' | sed 's/-//g'`"
 GITREV="`git show -s --format='%h'`"
 REV_NAME="azahar-unified-source-${GITDATE}-${GITREV}"
 
+if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+    REV_NAME="azahar-unified-source-$GITHUB_REF_NAME"
+fi
+
 COMPAT_LIST='dist/compatibility_list/compatibility_list.json'
 
 mkdir artifacts

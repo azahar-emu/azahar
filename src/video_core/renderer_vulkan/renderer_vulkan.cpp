@@ -178,6 +178,11 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
         window.RecreateFrame(frame, layout.width, layout.height);
     }
 
+    clear_color.float32[0] = Settings::values.bg_red.GetValue();
+    clear_color.float32[1] = Settings::values.bg_green.GetValue();
+    clear_color.float32[2] = Settings::values.bg_blue.GetValue();
+    clear_color.float32[3] = 1.0f;
+
     DrawScreens(frame, layout, flipped);
     scheduler.Flush(frame->render_ready);
 

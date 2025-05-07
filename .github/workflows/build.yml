@@ -49,9 +49,11 @@ jobs:
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Build
         run: ./.ci/linux.sh
-      - name: Pack
+      - name: Move AppImage to artifacts directory
         if: ${{ matrix.target == 'appimage' }}
-        run: ./.ci/pack.sh
+        run: |
+          mkdir -p artifacts
+          mv build/bundle/*.AppImage artifacts/
       - name: Upload
         if: ${{ matrix.target == 'appimage' }}
         uses: actions/upload-artifact@v4
@@ -188,8 +190,8 @@ jobs:
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
-          mkdir bin
-          move /y *.exe bin\
+          mkdir ..\..\artifacts 2> NUL
+          move /y *.exe ..\..\artifacts\
         shell: cmd
       - name: Pack
         run: ./.ci/pack.sh

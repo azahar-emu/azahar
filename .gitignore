@@ -13,6 +13,7 @@ src/common/scm_rev.cpp
 # Project/editor files
 *.swp
 *.kdev4
+.markdown-preview.html
 .idea/
 .vs/
 .vscode/

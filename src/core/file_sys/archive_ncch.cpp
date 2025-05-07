@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -133,6 +133,9 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
         constexpr u32 region_manifest = 0x00010402;
         constexpr u32 ng_word_list = 0x00010302;
         constexpr u32 shared_font = 0x00014002;
+        constexpr u32 shared_font_CHN = 0x00014102;
+        constexpr u32 shared_font_KOR = 0x00014202;
+        constexpr u32 shared_font_TWN = 0x00014302;
 
         u32 high = static_cast<u32>(title_id >> 32);
         u32 low = static_cast<u32>(title_id & 0xFFFFFFFF);
@@ -156,6 +159,11 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
                 LOG_WARNING(
                     Service_FS,
                     "Shared Font file missing. Loading open source replacement from memory");
+                archive_data =
+                    std::vector<u8>(std::begin(SHARED_FONT_DATA), std::end(SHARED_FONT_DATA));
+            } else if (low == shared_font_CHN || low == shared_font_KOR || low == shared_font_TWN) {
+                LOG_ERROR(Service_FS, "CHN/KOR/TWN shared font file missing. Loading open source "
+                                      "replacement, but text will not display properly");
                 archive_data =
                     std::vector<u8>(std::begin(SHARED_FONT_DATA), std::end(SHARED_FONT_DATA));
             }

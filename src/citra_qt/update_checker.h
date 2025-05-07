@@ -8,5 +8,5 @@
 #include <string>
 
 namespace UpdateChecker {
-std::optional<std::string> CheckForUpdate();
+std::optional<std::string> GetLatestRelease(bool);
 }

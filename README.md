@@ -92,7 +92,7 @@ Memory: 2GB of RAM. 4GB is recommended
 ```
 ### Android
 ```
-Operating System: Android 9.0+
+Operating System: Android 9.0+ (64-bit)
 CPU: Snapdragon 835 SoC or better
 GPU: OpenGL ES 3.2 or Vulkan 1.1 support
 Memory: 2GB of RAM. 4GB is recommended

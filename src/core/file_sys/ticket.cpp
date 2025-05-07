@@ -100,8 +100,11 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
 
     if (total_size < content_index_end)
         return Loader::ResultStatus::Error;
-    content_index.resize(content_index_size);
-    std::memcpy(content_index.data(), &file_data[offset + content_index_start], content_index_size);
+    std::vector<u8> content_index_vec;
+    content_index_vec.resize(content_index_size);
+    std::memcpy(content_index_vec.data(), &file_data[offset + content_index_start],
+                content_index_size);
+    content_index.Load(this, content_index_vec);
 
     return Loader::ResultStatus::Success;
 }
@@ -132,7 +135,7 @@ std::vector<u8> Ticket::Serialize() const {
                                   reinterpret_cast<const u8*>(&ticket_body) + sizeof(ticket_body)};
     ret.insert(ret.end(), body_span.begin(), body_span.end());
 
-    ret.insert(ret.end(), content_index.begin(), content_index.end());
+    ret.insert(ret.end(), content_index.GetRaw().cbegin(), content_index.GetRaw().cend());
 
     return ret;
 }
@@ -167,7 +170,7 @@ std::optional<std::array<u8, 16>> Ticket::GetTitleKey() const {
     return title_key;
 }
 
-bool Ticket::IsPersonal() {
+bool Ticket::IsPersonal() const {
     if (ticket_body.console_id == 0u) {
         // Common ticket
         return false;
@@ -180,6 +183,90 @@ bool Ticket::IsPersonal() {
     }
 
     return ticket_body.console_id == otp.GetDeviceID();
+}
+
+void Ticket::ContentIndex::Initialize() {
+    if (!parent || initialized) {
+        return;
+    }
+
+    if (content_index.size() < sizeof(MainHeader)) {
+        LOG_ERROR(Service_FS, "Ticket content index is too small");
+        return;
+    }
+    MainHeader* main_header = reinterpret_cast<MainHeader*>(content_index.data());
+    if (main_header->always1 != 1 || main_header->header_size != sizeof(MainHeader) ||
+        main_header->context_index_size != content_index.size() ||
+        main_header->index_header_size != sizeof(IndexHeader)) {
+        u16 always1 = main_header->always1;
+        u16 header_size = main_header->header_size;
+        u32 context_index_size = main_header->context_index_size;
+        u16 index_header_size = main_header->index_header_size;
+        LOG_ERROR(Service_FS,
+                  "Ticket content index has unexpected parameters title_id={}, ticket_id={}, "
+                  "always1={}, header_size={}, "
+                  "size={}, index_header_size={}",
+                  parent->GetTitleID(), parent->GetTicketID(), always1, header_size,
+                  context_index_size, index_header_size);
+        return;
+    }
+    for (u32 i = 0; i < main_header->index_headers_count; i++) {
+        IndexHeader* curr_header = reinterpret_cast<IndexHeader*>(
+            content_index.data() + main_header->index_headers_offset +
+            main_header->index_header_size * i);
+        if (curr_header->type != 3 || curr_header->entry_size != sizeof(RightsField)) {
+            u16 type = curr_header->type;
+            LOG_WARNING(Service_FS,
+                        "Found unsupported index header type, skiping... title_id={}, "
+                        "ticket_id={}, type={}",
+                        parent->GetTitleID(), parent->GetTicketID(), type);
+            continue;
+        }
+        for (u32 j = 0; j < curr_header->entry_count; j++) {
+            RightsField* field = reinterpret_cast<RightsField*>(
+                content_index.data() + curr_header->data_offset + curr_header->entry_size * j);
+            rights.push_back(*field);
+        }
+    }
+    initialized = true;
+}
+
+bool Ticket::ContentIndex::HasRights(u16 content_index) {
+    if (!initialized) {
+        Initialize();
+        if (!initialized)
+            return false;
+    }
+    // From:
+    // https://github.com/d0k3/GodMode9/blob/4424c37a89337ffb074c80807da1e80f358779b7/arm9/source/game/ticket.c#L198
+    if (rights.empty()) {
+        return content_index < 256; // when no fields, true if below 256
+    }
+
+    bool has_right = false;
+
+    // it loops until one of these happens:
+    // - we run out of bit fields
+    // - at the first encounter of an index offset field that's bigger than index
+    // - at the first encounter of a positive indicator of content rights
+    for (u32 i = 0; i < rights.size(); i++) {
+        u16 start_index = rights[i].start_index;
+        if (content_index < start_index) {
+            break;
+        }
+
+        u16 bit_pos = content_index - start_index;
+        if (bit_pos >= 1024) {
+            continue; // not in this field
+        }
+
+        if (rights[i].rights[bit_pos / 8] & (1 << (bit_pos % 8))) {
+            has_right = true;
+            break;
+        }
+    }
+
+    return has_right;
 }
 
 } // namespace FileSys

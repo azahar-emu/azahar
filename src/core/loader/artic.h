@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    static constexpr u32 SETUP_TOOL_VERSION = 1;
+    static constexpr u32 SETUP_TOOL_VERSION = 2;
     /**
      * Loads .code section into memory for booting
      * @param process The newly created process

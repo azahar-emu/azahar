@@ -12,6 +12,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.TurboHelper
 
 class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
     val settings: Settings get() = activityView.settings
@@ -66,6 +67,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+            TurboHelper.reloadTurbo() // TODO: Can this go someone else? -OS
         }
         NativeLibrary.reloadSettings()
     }

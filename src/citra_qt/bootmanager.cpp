@@ -72,9 +72,14 @@ void EmuThread::run() {
                              std::size_t total) { emit LoadProgress(stage, value, total); });
     }
 
+    system.GPU().Renderer().Rasterizer()->SetSwitchDiskResourcesCallback(
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
+            emit SwitchDiskResources(stage, value, total);
+        });
+
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             emit LoadProgress(stage, value, total);
         });

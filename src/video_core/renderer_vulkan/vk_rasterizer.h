@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -45,8 +45,8 @@ public:
     ~RasterizerVulkan() override;
 
     void TickFrame();
-    void LoadDiskResources(const std::atomic_bool& stop_loading,
-                           const VideoCore::DiskResourceLoadCallback& callback) override;
+    void LoadDefaultDiskResources(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) override;
 
     void DrawTriangles() override;
     void FlushAll() override;

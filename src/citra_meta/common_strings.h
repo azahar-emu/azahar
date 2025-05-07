@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,6 +25,10 @@ constexpr char help_string[] =
     // TODO: Move -m outside of this check when it is implemented in Qt frontend
     "-m, --multiplayer [nick:password@address:port]   Nickname, password, address and port for "
     "multiplayer (currently only usable with SDL frontend)\n"
+#endif
+#ifdef ENABLE_ROOM
+    "    --room                  Utilize dedicated multiplayer room functionality (equivalent to "
+    "the old citra-room executable)\n"
 #endif
     "-v, --version               Output version information and exit\n"
     "-w, --windowed              Start in windowed mode";

@@ -9,11 +9,11 @@ import android.widget.Toast
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
+import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
-    private val hotkeyFunctions: HotkeyFunctions,
     private val context: Context) {
 
     private val hotkeyButtons = Hotkey.entries.map { it.button }
@@ -25,17 +25,17 @@ class HotkeyUtility(
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
                 Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
                 Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
-                Hotkey.TURBO_SPEED.button -> hotkeyFunctions.setTurboSpeed(!hotkeyFunctions.isTurboSpeedEnabled)
+                Hotkey.TURBO_LIMIT.button -> TurboHelper.setTurboEnabled(!TurboHelper.isTurboSpeedEnabled())
                 Hotkey.QUICKSAVE.button -> {
                     NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                     Toast.makeText(context,
-                        context.getString(R.string.quicksave_saving),
+                        context.getString(R.string.saving),
                         Toast.LENGTH_SHORT).show()
                 }
                 Hotkey.QUICKLOAD.button -> {
                     val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                     val stringRes = if(wasLoaded) {
-                        R.string.quickload_loading
+                        R.string.loading
                     } else {
                         R.string.quickload_not_found
                     }

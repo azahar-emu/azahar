@@ -5,8 +5,7 @@
     <string name="app_notification_channel_description">Azahar 3DS-Emulator-Benachrichtigungen</string>
     <string name="app_notification_running">Azahar läuft</string>
     <string name="app_game_install_description">Als Nächstes müssen Sie einen Anwendungsordner auswählen. Azahar zeigt alle 3DS-ROMs im ausgewählten Ordner in der App an.\n\nCIA-ROMs, Updates und DLC müssen separat installiert werden, indem Sie auf das Ordnersymbol klicken und CIA installieren auswählen</string>
-    <string name="start">Start</string>
-    <string name="cancelling">Wird abgebrochen...</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Einstellungen</string>
     <string name="home_options">Optionen</string>
@@ -119,7 +118,6 @@
     <string name="button_swap">Bildschirme tauschen</string>
     <string name="input_message_analog_only">Diese Eingabe muss an einen Analogstick oder eine Steuerkreuz-Achse gebunden sein!</string>
     <string name="input_message_button_only">Diese Eingabe muss an einen Gamepad-Knopf gebunden sein!</string>
-
     <string name="boot_home_menu">HOME-Menü starten</string>
     <string name="show_home_apps">Zeige Home Menü Apps in der Anwendungs Liste</string>
     <string name="run_system_setup">System-Setup ausführen, wenn das HOME-Menü aufgerufen wird</string>
@@ -129,20 +127,14 @@
     <string name="generic_buttons">Knöpfe</string>
     <string name="button">Knopf</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">Benutzt den Just-in-Time (JIT) Compiler für die CPU-Emulation. Wenn aktiviert wird die Spielleistung stark verbessert.</string>
-    <string name="init_clock">Uhr</string>
-    <string name="init_clock_description">Du kannst die 3DS-Uhr so einstellen, dass sie entweder die Systemzeit deines Gerätes widerspiegelt, oder dir eine eigene Zeit aussuchen.</string>
-    <string name="cpu_clock_speed">CPU-Takt-Rate</string>
-
-    <!-- System settings strings -->
     <string name="username">Nutzername</string>
     <string name="new_3ds">New 3DS-Modus</string>
     <string name="lle_applets">Nutze LLE-Applets (sofern installiert)</string>
     <string name="clock">Uhr</string>
-    <string name="init_time">Zeitverschiebung</string>
-    <string name="init_time_description">Falls die Systemuhr auf „Simulierte Uhr“ gesetzt ist, verschiebt dies die Ursprungszeit und das Ursprungsdatum, auf die die Uhr eingestellt war dementsprechend.</string>
+    <string name="init_clock">Uhr</string>
+    <string name="init_clock_description">Du kannst die 3DS-Uhr so einstellen, dass sie entweder die Systemzeit deines Gerätes widerspiegelt, oder dir eine eigene Zeit aussuchen.</string>
+    <string name="device_clock">Systemuhr</string>
+    <string name="simulated_clock">Simulierte Uhr</string>
     <string name="emulated_region">Region</string>
     <string name="emulated_language">Sprache</string>
     <string name="birthday">Geburtstag</string>
@@ -178,22 +170,17 @@
     <string name="spirv_shader_gen_description">Gibt den Fragment-Shader aus, der zur Emulation von PICA unter Verwendung von SPIR-V statt GLSL verwendet wird.</string>
     <string name="async_shaders">Asynchrone GPU-Emulation aktivieren</string>
     <string name="async_shaders_description">Kompiliere Shader im Hintergrund, um das Stottern des Spiels zu reduzieren. Dadurch kann es zu temporären grafischen Fehlern während des Spielens kommen.</string>
-    <string name="renderer_debug">Debug-Renderer</string>
-    <string name="renderer_debug_description">Zusätzliche grafisch spezifische Debuginformationen werden protokolliert. Wenn dies aktiviert ist, ist die Leistung des Spiels minimal reduziert.</string>
-    <string name="vsync">V-Sync aktivieren</string>
-    <string name="vsync_description">Synchronisiert die Bildrate des Spiels mit der Bildwiederholrate des Geräts.</string>
     <string name="linear_filtering">Lineare Filterung</string>
     <string name="linear_filtering_description">Aktiviert lineare Filterung, welche die Spieltexturen glättet.</string>
     <string name="texture_filter_name">Texturfilter</string>
     <string name="texture_filter_description">Verbessert die Optik von Anwendungen durch Anwenden eines Filters auf Texturen. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale und MMPX.</string>
-    <string name="hw_shaders">Hardware Shader aktivieren</string>
-    <string name="hw_shaders_description">Benutzt Hardware, um die 3DS-Shader zu emulieren. Wenn aktiviert, wird die Spielleistung stark verbessert.</string>
+    <string name="delay_render_thread">Game-Render-Thread verzögern</string>
+    <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
     <string name="shaders_accurate_mul">Genaue Multiplikation</string>
     <string name="shaders_accurate_mul_description">Benutzt genauere Multiplikation in Hardware-Shadern, welche einige Grafikbugs fixen kann. Wenn aktiviert, ist die Leistung reduziert.</string>
     <string name="asynchronous_gpu">Asynchrone GPU-Emulation aktivieren</string>
     <string name="asynchronous_gpu_description">Verwendet einen separaten Thread, um die GPU asynchron zu emulieren. Wenn aktiviert, wird die Leistung verbessert.</string>
     <string name="frame_limit_enable">Höchstgeschwindigkeit</string>
-    <string name="frame_limit_enable_description">Wenn aktiviert, wird die Emulationsgeschwindigkeit auf einen angegebenen Prozentsatz der normalen Geschwindigkeit begrenzt.</string>
     <string name="frame_limit_slider">Höchstgeschwindigkeit in Prozent</string>
     <string name="frame_limit_slider_description">Gibt den Prozentsatz zur Begrenzung der Emulationsgeschwindigkeit an. Mit der Voreinstellung von 100% wird die Emulation auf normale Geschwindigkeit begrenzt. Höhere oder niedrigere Werte erhöhen oder verringern die Geschwindigkeitsbeschränkung.</string>
     <string name="internal_resolution">Interne Auflösung</string>
@@ -213,6 +200,8 @@
     <string name="stereoscopy">Stereoskopie</string>
     <string name="render3d">Stereoskopischer 3D-Modus</string>
     <string name="factor3d">Tiefe</string>
+    <string name="disable_right_eye_render">Rendering für das rechte Auge deaktivieren</string>
+    <string name="disable_right_eye_render_description">Verbessert die Leistung in einigen Anwendungen erheblich, kann in anderen jedoch zu Flackern führen.</string>
     <string name="cardboard_vr">Karton-VR</string>
     <string name="cardboard_screen_size">Karton-Bildschirmgröße</string>
     <string name="cardboard_screen_size_description">Skaliert den Bildschirm auf einen Prozentsatz seiner Originalgröße.</string>
@@ -242,6 +231,17 @@
     <string name="audio_input_type">Audioeingabegerät</string>
     <string name="sound_output_mode">Tonausgabemodus</string>
 
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Benutzt den Just-in-Time (JIT) Compiler für die CPU-Emulation. Wenn aktiviert wird die Spielleistung stark verbessert.</string>
+    <string name="hw_shaders">Hardware Shader aktivieren</string>
+    <string name="hw_shaders_description">Benutzt Hardware, um die 3DS-Shader zu emulieren. Wenn aktiviert, wird die Spielleistung stark verbessert.</string>
+    <string name="cpu_clock_speed">CPU-Takt-Rate</string>
+    <string name="vsync">V-Sync aktivieren</string>
+    <string name="vsync_description">Synchronisiert die Bildrate des Spiels mit der Bildwiederholrate des Geräts.</string>
+    <string name="renderer_debug">Debug-Renderer</string>
+    <string name="renderer_debug_description">Zusätzliche grafisch spezifische Debuginformationen werden protokolliert. Wenn dies aktiviert ist, ist die Leistung des Spiels minimal reduziert.</string>
+    <string name="instant_debug_log">Protokollausgabe bei jeder Nachricht</string>
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Bildschirmausrichtung</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisch</string>
@@ -278,7 +278,8 @@
     <string name="setting_not_editable">Du kannst das nicht bearbeiten</string>
     <string name="setting_not_editable_description">Diese Einstellung kann nicht geändert werden, solange ein Spiel läuft.</string>
     <string name="auto_select">Automatisch auswählen</string>
-
+    <string name="start">Start</string>
+    <string name="cancelling">Wird abgebrochen...</string>
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
@@ -362,6 +363,8 @@
     <string name="emulation_show_overlay">Overlay anzeigen</string>
     <string name="emulation_close_game">Spiel schließen</string>
     <string name="emulation_toggle_pause">Pause umschalten</string>
+    <string name="miscellaneous">Weiteres</string>
+    <string name="use_artic_base_controller">Verwende den Artic Controller, wenn eine Verbindung zum Artic Base Server besteht</string>
     <string name="emulation_close_game_message">Möchtest du das Spiel wirklich schließen?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Laden</string>
@@ -430,7 +433,6 @@
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
     <string name="shortcut">Verknüpfung</string>
-
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>
@@ -487,10 +489,6 @@
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Schwarzer Hintergrund</string>
     <string name="use_black_backgrounds_description">Wenn das dunkle Design aktiviert ist, wird der Hintergrund tiefschwarz dargestellt.</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">Systemuhr</string>
-    <string name="simulated_clock">Simulierte Uhr</string>
 
     <!-- Region names -->
     <string name="system_region_jpn">JPN</string>
@@ -713,20 +711,12 @@
     <string name="artic_base_connect_description">Verbinde dich mit einer echten Konsole, die über Artic-Base läuft.</string>
     <string name="artic_base_connect">Verbinde dich mit Artic-Base</string>
     <string name="artic_base_enter_address">Gib die Artic-Base-Serveradresse ein</string>
-    <string name="delay_render_thread">Game-Render-Thread verzögern</string>
-    <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Schnellspeichern</string>
     <string name="emulation_quicksave">Schnellspeichern</string>
     <string name="emulation_quickload">Schnellladen</string>
     <string name="emulation_occupied_quicksave_slot">Schnellspeichern - %1$tF %1$tR</string>
-    <string name="quicksave_saving">Speichervorgang...</string>
-    <string name="quickload_loading">Ladevorgang...</string>
     <string name="quickload_not_found">Kein Schnellspeicher vorhanden.</string>
-    <string name="miscellaneous">Weiteres</string>
-    <string name="use_artic_base_controller">Verwende den Artic Controller, wenn eine Verbindung zum Artic Base Server besteht</string>
-    <string name="instant_debug_log">Protokollausgabe bei jeder Nachricht</string>
-    <string name="disable_right_eye_render">Rendering für das rechte Auge deaktivieren</string>
-    <string name="disable_right_eye_render_description">Verbessert die Leistung in einigen Anwendungen erheblich, kann in anderen jedoch zu Flackern führen.</string>
-    </resources>
+
+</resources>

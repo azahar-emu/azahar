@@ -21,6 +21,7 @@
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/pica/regs_lcd.h"
+#include "video_core/renderer_base.h"
 #include "video_core/right_eye_disabler.h"
 
 SERIALIZE_EXPORT_IMPL(Service::GSP::SessionData)
@@ -612,6 +613,8 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
                 ErrorLevel::Success};
     }
+
+    gpu.Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
 
     if (blocking) {
         // TODO: The thread should be put to sleep until acquired.

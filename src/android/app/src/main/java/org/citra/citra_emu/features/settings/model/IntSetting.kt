@@ -33,6 +33,7 @@ enum class IntSetting(
     LANDSCAPE_BOTTOM_Y("custom_bottom_y",Settings.SECTION_LAYOUT,480),
     LANDSCAPE_BOTTOM_WIDTH("custom_bottom_width",Settings.SECTION_LAYOUT,640),
     LANDSCAPE_BOTTOM_HEIGHT("custom_bottom_height",Settings.SECTION_LAYOUT,480),
+    SCREEN_GAP("screen_gap",Settings.SECTION_LAYOUT,0),
     PORTRAIT_SCREEN_LAYOUT("portrait_layout_option",Settings.SECTION_LAYOUT,0),
     PORTRAIT_TOP_X("custom_portrait_top_x",Settings.SECTION_LAYOUT,0),
     PORTRAIT_TOP_Y("custom_portrait_top_y",Settings.SECTION_LAYOUT,0),
@@ -66,7 +67,7 @@ enum class IntSetting(
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, 0),
     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, 0),
-    TURBO_SPEED("turbo_speed", Settings.SECTION_CORE, 200),
+    TURBO_LIMIT("turbo_limit", Settings.SECTION_CORE, 200),
     PERF_OVERLAY_POSITION("perf_overlay_position", Settings.SECTION_LAYOUT, 0);
 
     override var int: Int = defaultValue
@@ -97,8 +98,7 @@ enum class IntSetting(
             ASYNC_CUSTOM_LOADING,
             AUDIO_INPUT_TYPE,
             USE_ARTIC_BASE_CONTROLLER,
-            SHADERS_ACCURATE_MUL,
-            FRAME_LIMIT
+            SHADERS_ACCURATE_MUL
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }

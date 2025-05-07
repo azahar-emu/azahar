@@ -19,6 +19,12 @@ enum class ResultStatus;
 
 namespace FileSys {
 class Ticket {
+    struct LimitEntry {
+        u32_be type; // 4 -> Play times?
+        u32_be value;
+    };
+    static_assert(sizeof(LimitEntry) == 0x8, "LimitEntry structure size is wrong");
+
 public:
 #pragma pack(push, 1)
     struct Body {
@@ -42,7 +48,7 @@ public:
         INSERT_PADDING_BYTES(1);
         u8 audit;
         INSERT_PADDING_BYTES(0x42);
-        std::array<u8, 0x40> limits;
+        std::array<LimitEntry, 0x8> limits;
     };
     static_assert(sizeof(Body) == 0x164, "Ticket body structure size is wrong");
 #pragma pack(pop)
@@ -67,13 +73,66 @@ public:
         return serialized_size;
     }
 
-    bool IsPersonal();
+    bool IsPersonal() const;
+
+    bool HasRights(u16 index) {
+        return content_index.HasRights(index);
+    }
+
+    class ContentIndex {
+    public:
+        struct MainHeader {
+            u16_be always1;
+            u16_be header_size;
+            u32_be context_index_size;
+            u32_be index_headers_offset;
+            u16_be index_headers_count;
+            u16_be index_header_size;
+            u32_be padding;
+        };
+
+        struct IndexHeader {
+            u32_be data_offset;
+            u32_be entry_count;
+            u32_be entry_size;
+            u32_be total_size;
+            u16_be type;
+            u16_be padding;
+        };
+
+        struct RightsField {
+            u16_be unknown;
+            u16_be start_index;
+            std::array<u8, 0x80> rights;
+        };
+
+        ContentIndex() {}
+
+        void Load(Ticket* p, const std::vector<u8>& data) {
+            parent = p;
+            content_index = data;
+        }
+
+        const std::vector<u8>& GetRaw() const {
+            return content_index;
+        }
+
+        bool HasRights(u16 content_index);
+
+    private:
+        void Initialize();
+
+        bool initialized = false;
+        std::vector<u8> content_index;
+        std::vector<RightsField> rights;
+        Ticket* parent = nullptr;
+    };
 
 private:
     Body ticket_body;
     u32_be signature_type;
     std::vector<u8> ticket_signature;
-    std::vector<u8> content_index;
+    ContentIndex content_index;
 
     size_t serialized_size = 0;
 };

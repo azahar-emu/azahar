@@ -5,10 +5,6 @@
     <string name="app_notification_channel_description">Azahar 3DS 模拟器通知</string>
     <string name="app_notification_running">Azahar 正在运行</string>
     <string name="app_game_install_description">接下来，您需要选择一个应用文件夹。Azahar 将显示所选文件夹中的所有 3DS ROM。\n\nCIA ROM、更新和 DLC 需要分别进行安装，具体为点击文件夹图标并选择“安装 CIA”。</string>
-    <string name="start">开始</string>
-    <string name="cancelling">取消中…</string>
-    <string name="important">重要提示</string>
-    <string name="dont_show_again">不再显示</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">设置</string>
@@ -83,9 +79,13 @@
     <string name="warning_cancel">取消</string>
     <string name="select_citra_user_folder">选择用户文件夹</string>
     <string name="select_citra_user_folder_description"><![CDATA[使用下面的按钮选择您的 <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">用户数据</a>目录。]]></string>
+    <string name="select_which_user_directory_to_use">您似乎同时为 Lime3DS 和 Azahar 设置了用户目录。这可能是因为您升级到了 Azahar，并在系统提示时选择了与 Lime3DS 不同的用户目录。\n\n这可能导致您误以为丢失了存档或其他设置 - 如果发生这种情况，我们深表歉意。\n\n您想恢复原来的 Lime3DS 用户目录、Lime3DS 设置和游戏存档，还是保持当前的 ​​Azahar 用户目录？\n\n无论您选择哪种方式，这两个目录都不会被删除，您可以使用“选择用户文件夹”选项在它们之间自由切换。</string>
+    <string name="keep_current_azahar_directory">保持当前的 Azahar 目录</string>
+    <string name="use_prior_lime3ds_directory">使用先前的 Lime3DS 目录</string>
     <string name="select">选择</string>
     <string name="cannot_skip">此步骤不可跳过</string>
     <string name="cannot_skip_directory_description">此步骤是 Azahar 正常运行所必需的。请选择一个目录，然后才可继续。</string>
+    <string name="selecting_user_directory_without_write_permissions">您已失去对<a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">用户数据</a>目录的写入权限，该目录用于存储存档和其他信息数据。某些应用或 Android 更新后可能会出现这种情况。请重新选择该目录以重新获得权限，才能继续操作。</string>
     <string name="set_up_theme_settings">主题设置</string>
     <string name="setup_theme_settings_description">配置您的 Azahar 主题偏好。</string>
     <string name="setup_set_theme">设置主题</string>
@@ -122,14 +122,21 @@
     <string name="input_binding_description_horizontal_axis">向左或向右轻推您的摇杆。</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">交换屏幕</string>
+    <string name="button_turbo">加速</string>
     <string name="input_message_analog_only">此操作只能绑定到游戏手柄的摇杆或十字方向键上！</string>
     <string name="input_message_button_only">此操作只能绑定到游戏手柄的按键上！</string>
+    <string name="turbo_limit_hotkey">加速</string>
+    <string name="turbo_enabled_toast">加速已启用</string>
+    <string name="turbo_disabled_toast">加速已禁用</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">系统文件</string>
     <string name="setup_system_files_description">执行系统文件操作，如安装系统文件或启动 HOME 菜单</string>
     <string name="setup_tool_connect">连接到 Artic 设置工具</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar 需要来自真实掌机的独有数据和固件文件才能使用其部分功能。此类文件和数据可通过 <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic 设置工具</a>进行设置。<br>注意：<ul><li><b>此操作会将掌机独有数据安装到 Azahar，执行设置过程后请勿共享您的用户或 nand 文件夹！</b></li><li>在执行设置过程时，Azahar 将关联到运行设置工具的掌机。您可以随时从模拟器配置菜单的“系统”选项卡中取消关联掌机。</li><li>设置系统文件后，请勿同时使用 Azahar 和 3DS 掌机联网，因为这可能会导致问题。</li><li>新 3DS 设置需要先进行老 3DS 设置才能运作（建议两种设置模式都执行）。</li><li>无论运行设置工具的掌机型号如何，两种设置模式均可运作。</li></ul>]]></string>
     <string name="setup_system_files_detect">正在获取当前系统文件状态，请稍候...</string>
+    <string name="delete_system_files">取消关联掌机独有数据</string>
+    <string name="delete_system_files_description"><![CDATA[此操作将取消您真实掌机与 Azahar 的关联，并产生以下后果：<br><ul><li>您的 OTP、SecureInfo 和 LocalFriendCodeSeed 文件将从 Azahar 中删除。</li><li>您的好友列表将被重置，并且注销 NNID/PNID 帐户。</li><li>通过 Azahar 获得的系统文件和 eshop 数字版应用将变得无法访问，直到再次关联同一掌机（保存的数据不会丢失）。</ul><br>是否继续？]]></string>
     <string name="setup_system_files_o3ds">老 3DS 设置</string>
     <string name="setup_system_files_n3ds">新 3DS 设置</string>
     <string name="setup_system_files_possible">可以进行设置。</string>
@@ -146,20 +153,20 @@
     <string name="generic_buttons">按键</string>
     <string name="button">按键</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">使用即时编译 (JIT) 进行 CPU 仿真。启用后，游戏性能将显著提高。</string>
-    <string name="init_clock">系统时钟类型</string>
-    <string name="init_clock_description">将模拟 3DS 时钟设为映射设备的实际时钟或是使用自定义的时间和日期。</string>
-    <string name="cpu_clock_speed">CPU 时钟频率</string>
-
     <!-- System settings strings -->
+    <string name="emulation_settings">模拟设置</string>
     <string name="username">用户名</string>
     <string name="new_3ds">New 3DS 模式</string>
     <string name="lle_applets">使用 LLE 小程序 (如果已安装)</string>
+    <string name="enable_required_online_lle_modules">启用在线功能所需的 LLE 模块（如果已安装）</string>
+    <string name="enable_required_online_lle_modules_desc">启用在线多人游戏、eShop 访问等所需的 LLE 模块。</string>
     <string name="clock">设备时钟</string>
-    <string name="init_time">模拟时钟</string>
-    <string name="init_time_description">如果将“系统时钟类型”设置为“模拟时钟”，可以修改时钟的日期和时间。</string>
+    <string name="init_clock">系统时钟类型</string>
+    <string name="init_clock_description">将模拟 3DS 时钟设为映射设备的实际时钟或是使用自定义的时间和日期。</string>
+    <string name="device_clock">设备时钟</string>
+    <string name="simulated_clock">模拟时钟</string>
+    <string name="simulated_clock_description">如果将“系统时钟类型”设置为“模拟时钟”，可以修改时钟的日期和时间。</string>
+    <string name="profile_settings">资料设置</string>
     <string name="emulated_region">区域</string>
     <string name="emulated_language">语言</string>
     <string name="birthday">生日</string>
@@ -172,10 +179,17 @@
     <string name="console_id">设备 ID</string>
     <string name="regenerate_console_id">重新生成设备 ID</string>
     <string name="regenerate_console_id_description">这将使用一个新的虚拟 3DS 掌机 ID 取代您当前的虚拟 3DS 掌机 ID。您当前的虚拟 3DS 掌机 ID 将无法恢复。对应用内部可能会产生意外影响。如果您使用一个过时的配置存档则可能会失败。是否继续？</string>
+    <string name="mac_address">MAC 地址</string>
+    <string name="regenerate_mac_address">重新生成 MAC 地址</string>
+    <string name="regenerate_mac_address_description">这将用新 MAC 地址替换您当前的 MAC 地址。如果您使用设置工具从真实掌机获取 MAC 地址，则不建议执行此操作。是否继续？</string>
     <string name="plugin_loader">3GX 插件加载器</string>
     <string name="plugin_loader_description">当插件可用时，从模拟 SD 卡加载 3GX 插件。</string>
     <string name="allow_plugin_loader">允许应用更改插件加载器状态</string>
     <string name="allow_plugin_loader_description">允许自制程序启用插件加载器。</string>
+    <string name="region_mismatch">区域不匹配警告</string>
+    <string name="region_mismatch_emulated">此国家/地区设置对于所选择的模拟区域无效。</string>
+    <string name="region_mismatch_console">此国家/地区设置对于当前关联的掌机无效。</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
     <string name="outer_left_camera">外置左摄像头</string>
@@ -196,29 +210,30 @@
     <string name="spirv_shader_gen_description">使用 SPIR-V 而不是 GLSL 来模拟 PICA 的着色器</string>
     <string name="async_shaders">启用异步着色器编译</string>
     <string name="async_shaders_description">在后台编译着色器以减少卡顿。可能出现短暂的图形故障</string>
-    <string name="renderer_debug">调试渲染器</string>
-    <string name="renderer_debug_description">记录更多与图形相关的调试信息。启用后，游戏性能将显著降低。</string>
-    <string name="vsync">启用垂直同步</string>
-    <string name="vsync_description">将游戏帧率与设备的屏幕刷新率同步。</string>
     <string name="linear_filtering">线性过滤</string>
     <string name="linear_filtering_description">开启后，游戏视觉效果会更加平滑。</string>
     <string name="texture_filter_name">纹理滤镜</string>
     <string name="texture_filter_description">通过对纹理使用滤镜来增强应用的视觉效果。支持的滤镜包括 Anime4K Ultrafast、Bicubic、ScaleForce、xBRZ freescale 和 MMPX。</string>
+    <string name="delay_render_thread">延迟游戏渲染线程</string>
+    <string name="delay_render_thread_description">在游戏渲染线程向 GPU 提交数据时延迟线程。有助于解决（极少数）具有动态帧率应用的性能问题。</string>
     <string name="advanced">高级选项\"</string>
     <string name="texture_sampling_name">纹理采样</string>
     <string name="texture_sampling_description">覆盖游戏所使用的采样过滤器。这在某些情况下提升表现不佳的游戏画质时可能很有用。如果不确定，请将其设置为“由游戏控制”</string>
-    <string name="hw_shaders">启用硬件着色器</string>
-    <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
     <string name="shaders_accurate_mul">精确乘法运算</string>
     <string name="shaders_accurate_mul_description">在硬件着色器中使用更加精确的乘法运算，这可能会修复一些图形错误。启用后，性能将有所降低。</string>
     <string name="asynchronous_gpu">启用异步 GPU 模拟</string>
     <string name="asynchronous_gpu_description">使用一个单独线程异步模拟 GPU 。启用后，游戏性能将有所提高。</string>
     <string name="frame_limit_enable">运行速度限制</string>
-    <string name="frame_limit_enable_description">启用时，运行速度将被限制为正常速度的指定百分比。</string>
+    <string name="frame_limit_enable_description">启用后，模拟速度将被限制为正常速度的指定百分比。如果禁用，模拟速度则不受限制，并且加速热键将不起作用。</string>
     <string name="frame_limit_slider">限制运行速度百分比</string>
     <string name="frame_limit_slider_description">指定限制运行速度的百分比。默认情况下，100% 将限制为正常运行速度。较高或较低的值将增加或降低运行速度。</string>
+    <string name="turbo_limit">加速限制</string>
+    <string name="turbo_limit_description">加速热键激活时使用的模拟速度限制。</string>
+    <string name="expand_to_cutout_area">扩展到裁剪区域</string>
+    <string name="expand_to_cutout_area_description">扩大显示区域以包含裁剪（或切口）区域。</string>
     <string name="internal_resolution">内部分辨率</string>
     <string name="internal_resolution_description">指定渲染使用的分辨率。高分辨率将大大提高视觉质量，但也会对性能造成很大影响，并可能导致某些应用出现故障。</string>
+    <string name="internal_resolution_setting_auto">自动（屏幕大小）</string>
     <string name="internal_resolution_setting_1x">原生（400x240）</string>
     <string name="internal_resolution_setting_2x">2 倍（800x480）</string>
     <string name="internal_resolution_setting_3x">3 倍（1200x720）</string>
@@ -235,6 +250,8 @@
     <string name="render3d">立体 3D 模式</string>
     <string name="factor3d">画面深度</string>
     <string name="factor3d_description">指定 3D 滑块按钮的值。启用立体 3D 模式时，应将其设置为高于 0% 的值。\n注意：实机硬件上不可能出现超过 100% 的深度值，并且可能会导致图形问题</string>
+    <string name="disable_right_eye_render">禁用右眼渲染</string>
+    <string name="disable_right_eye_render_description">极大地提高某些应用的性能，但可能会导致其他应用出现闪烁。</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard 屏幕尺寸</string>
     <string name="cardboard_screen_size_description">将屏幕缩放至其原始大小的指定百分比。</string>
@@ -264,6 +281,23 @@
     <string name="audio_input_type">音频输入设备</string>
     <string name="sound_output_mode">声音输出模式</string>
 
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">使用即时编译 (JIT) 进行 CPU 仿真。启用后，游戏性能将显著提高。</string>
+    <string name="hw_shaders">启用硬件着色器</string>
+    <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
+    <string name="cpu_clock_speed">CPU 时钟频率</string>
+    <string name="vsync">启用垂直同步</string>
+    <string name="vsync_description">将游戏帧率与设备的屏幕刷新率同步。</string>
+    <string name="renderer_debug">调试渲染器</string>
+    <string name="renderer_debug_description">记录更多与图形相关的调试信息。启用后，游戏性能将显著降低。</string>
+    <string name="instant_debug_log">刷新每条消息的日志输出</string>
+    <string name="instant_debug_log_description">立即将调试日志提交到文件。如果 Azahar 崩溃并且日志输出被切断，请使用此选项。</string>
+    <string name="delay_start_lle_modules">使用 LLE 模块延迟启动</string>
+    <string name="delay_start_lle_modules_description">当 LLE 模块启用时延迟应用的启动。</string>
+    <string name="deterministic_async_operations">确定性异步操作</string>
+    <string name="deterministic_async_operations_description">使异步操作在调试时具有确定性。启用此功能可能会导致停滞。</string>
+
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">屏幕方向</string>
     <string name="layout_screen_orientation_auto_sensor">自动</string>
@@ -278,6 +312,7 @@
     <string name="ini_saved">已保存的设置</string>
     <string name="gameid_saved">已将设置保存于 %1$s 中</string>
     <string name="error_saving">保存 %1$s.ini 失败：%2$s</string>
+    <string name="saving">正在保存...</string>
     <string name="loading">加载中…</string>
     <string name="next">下一步</string>
     <string name="back">上一步</string>
@@ -298,8 +333,14 @@
     <string name="select_rtc_time">选择时间</string>
     <string name="reset_setting_confirmation">您要将此设置项重置为默认值吗？</string>
     <string name="setting_not_editable">您现在不能编辑此项</string>
+    <string name="setting_disabled">设置已禁用</string>
+    <string name="setting_disabled_description">由于另一个设置不是合适的值，此设置当前已被禁用。</string>
     <string name="setting_not_editable_description">在游戏运行时此项不能更改。</string>
     <string name="auto_select">自动选择</string>
+    <string name="start">开始</string>
+    <string name="cancelling">取消中…</string>
+    <string name="important">重要提示</string>
+    <string name="dont_show_again">不再显示</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">选择游戏目录</string>
@@ -367,6 +408,8 @@
     <string name="small_screen_position_bottom_left">左下</string>
     <string name="small_screen_position_above">上面</string>
     <string name="small_screen_position_below">下面</string>
+    <string name="screen_gap">屏幕间隔</string>
+    <string name="screen_gap_description">所有双屏模式下屏幕之间的间隔。以像素为单位，相对于上屏的 240 像素高度进行测量。</string>
     <string name="large_screen_proportion">大屏幕占比</string>
     <string name="large_screen_proportion_description">“大屏幕”布局中大屏幕比小屏幕大多少倍？</string>
     <string name="emulation_adjust_custom_layout">在设置中调整自定义布局</string>
@@ -384,6 +427,9 @@
     <string name="emulation_show_overlay">显示虚拟按键</string>
     <string name="emulation_close_game">关闭游戏</string>
     <string name="emulation_toggle_pause">暂停/继续</string>
+    <string name="miscellaneous">杂项</string>
+    <string name="use_artic_base_controller">连接到 Artic Base 服务器时使用 Artic 控制器</string>
+    <string name="use_artic_base_controller_description">连接到 Artic Base 服务器时使用其提供的控制器，而不是配置的输入设备。</string>
     <string name="emulation_close_game_message">您确定要关闭当前的游戏吗？</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">加载</string>
@@ -457,6 +503,17 @@
     <!-- About Game Dialog -->
     <string name="play">开始游戏</string>
     <string name="shortcut">快捷方式</string>
+    <string name="uninstall_cia">卸载应用</string>
+    <string name="uninstalling">正在卸载...</string>
+    <string name="game_context_open_save_dir">打开存档数据文件夹</string>
+    <string name="game_context_open_app">打开应用文件夹</string>
+    <string name="game_context_open_mods">打开模组文件夹</string>
+    <string name="game_context_open_textures">打开纹理文件夹</string>
+    <string name="game_context_open_dlc">打开 DLC 文件夹</string>
+    <string name="game_context_open_updates">打开更新文件夹</string>
+    <string name="game_context_open_extra">打开额外数据文件夹</string>
+    <string name="game_context_uninstall_dlc">卸载 DLC</string>
+    <string name="game_context_uninstall_updates">卸载更新</string>
 
     <!-- Cheats -->
     <string name="cheats">金手指</string>
@@ -516,10 +573,6 @@
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">黑色背景</string>
     <string name="use_black_backgrounds_description">使用深色主题时，套用黑色背景。</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">设备时钟</string>
-    <string name="simulated_clock">模拟时钟</string>
 
     <!-- Region names -->
     <string name="system_region_jpn">日本（JPN）</string>
@@ -746,33 +799,12 @@
     <string name="artic_base_connect_description">连接到运行 Artic Base 服务器的真实主机</string>
     <string name="artic_base_connect">连接到 Artic Base</string>
     <string name="artic_base_enter_address">输入 Arctic Base 服务器地址</string>
-    <string name="delay_render_thread">延迟游戏渲染线程</string>
-    <string name="delay_render_thread_description">在游戏渲染线程向 GPU 提交数据时延迟线程。有助于解决（极少数）具有动态帧率应用的性能问题。</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">快速保存</string>
     <string name="emulation_quicksave">快速保存</string>
     <string name="emulation_quickload">快速加载</string>
     <string name="emulation_occupied_quicksave_slot">快速保存 - %1$tF %1$tR</string>
-    <string name="quicksave_saving">正在保存...</string>
-    <string name="quickload_loading">正在加载...</string>
     <string name="quickload_not_found">没有可用的快速保存。</string>
-    <string name="miscellaneous">杂项</string>
-    <string name="use_artic_base_controller">连接到 Artic Base 服务器时使用 Artic 控制器</string>
-    <string name="use_artic_base_controller_description">连接到 Artic Base 服务器时使用其提供的控制器，而不是配置的输入设备。</string>
-    <string name="instant_debug_log">刷新每条消息的日志输出</string>
-    <string name="instant_debug_log_description">立即将调试日志提交到文件。如果 Azahar 崩溃并且日志输出被切断，请使用此选项。</string>
-    <string name="disable_right_eye_render">禁用右眼渲染</string>
-    <string name="disable_right_eye_render_description">极大地提高某些应用的性能，但可能会导致其他应用出现闪烁。</string>
-    <string name="delay_start_lle_modules">使用 LLE 模块延迟启动</string>
-    <string name="delay_start_lle_modules_description">当 LLE 模块启用时延迟应用的启动。</string>
-    <string name="deterministic_async_operations">确定性异步操作</string>
-    <string name="deterministic_async_operations_description">使异步操作在调试时具有确定性。启用此功能可能会导致停滞。</string>
-    <string name="enable_required_online_lle_modules">启用在线功能所需的 LLE 模块（如果已安装）</string>
-    <string name="enable_required_online_lle_modules_desc">启用在线多人游戏、eShop 访问等所需的 LLE 模块。</string>
-    <string name="emulation_settings">模拟设置</string>
-    <string name="profile_settings">资料设置</string>
-    <string name="mac_address">MAC 地址</string>
-    <string name="regenerate_mac_address">重新生成 MAC 地址</string>
-    <string name="regenerate_mac_address_description">这将用新 MAC 地址替换您当前的 MAC 地址。如果您使用设置工具从真实掌机获取 MAC 地址，则不建议执行此操作。是否继续？</string>
+
 </resources>

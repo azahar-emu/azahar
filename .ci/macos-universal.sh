@@ -11,7 +11,7 @@ BASE_ARTIFACT_ARCH="${BASE_ARTIFACT##*-}"
 mv $BASE_ARTIFACT $BUNDLE_DIR
 
 # Executable binary paths that need to be combined.
-BIN_PATHS=(azahar-room Azahar.app/Contents/MacOS/azahar)
+BIN_PATHS=(Azahar.app/Contents/MacOS/azahar)
 
 # Dylib paths that need to be combined.
 IFS=$'\n'
@@ -36,8 +36,11 @@ for OTHER_ARTIFACT in "${ARTIFACTS_LIST[@]:1}"; do
     done
 done
 
+# Remove leftover libs so that they aren't distributed
+rm -rf "${BUNDLE_DIR}/libs"
+
 # Re-sign executables and bundles after combining.
-APP_PATHS=(azahar-room Azahar.app)
+APP_PATHS=(Azahar.app)
 for APP_PATH in "${APP_PATHS[@]}"; do
     codesign --deep -fs - $BUNDLE_DIR/$APP_PATH
 done

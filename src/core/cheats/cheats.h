@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,7 +30,7 @@ public:
     ~CheatEngine();
 
     /// Registers the cheat execution callback.
-    void Connect();
+    void Connect(u32 process_id);
 
     /// Returns a span of the currently active cheats.
     std::span<const std::shared_ptr<CheatBase>> GetCheats() const;
@@ -50,6 +50,10 @@ public:
     /// Saves currently active cheats to file for the specified title id.
     void SaveCheatFile(u64 title_id) const;
 
+    u32 GetConnectedPID() const {
+        return process_id;
+    }
+
 private:
     /// The cheat execution callback.
     void RunCallback(std::uintptr_t user_data, s64 cycles_late);
@@ -58,6 +62,7 @@ private:
     Core::System& system;
     Core::TimingEventType* event;
     std::optional<u64> loaded_title_id;
+    u32 process_id = 0xFFFFFFFF;
     std::vector<std::shared_ptr<CheatBase>> cheats_list;
     mutable std::shared_mutex cheats_list_mutex;
 };

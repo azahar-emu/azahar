@@ -5,10 +5,6 @@
     <string name="app_notification_channel_description">Notificações do emulador Azahar 3DS</string>
     <string name="app_notification_running">Azahar está Executando</string>
     <string name="app_game_install_description">Em seguida, você precisará selecionar uma pasta de Aplicativos. O Azahar exibirá todas as ROMs de 3DS dentro da pasta selecionada no aplicativo.\n\nROMs, atualizações e DLC no formato CIA precisarão ser instaladas separadamente clicando no ícone da pasta e selecionando Instalar CIA.</string>
-    <string name="start">Iniciar</string>
-    <string name="cancelling">Cancelando...</string>
-    <string name="important">Importante</string>
-    <string name="dont_show_again">Não mostrar novamente</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Configurações</string>
@@ -83,9 +79,13 @@
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Selecione a Pasta do Usuário</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecione o seu diretório de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dados de usuário</a>com o botão abaixo.]]></string>
+    <string name="select_which_user_directory_to_use">Parece que você tem diretórios de usuários configurados para ambos o Lime3DS e o Azahar. Isso ocorreu devido a você ter atualizado para o Azahar, e quando solicitado, escolha um diretório de usuário diferente daquele que foi usado pelo Lime3DS.\n\nIsso pode ter resultado em você pensar que tenha perdidos dados salvos ou outras configurações - pedimos desculpas caso isso tenha acontecido.\n\nGostaria de voltar a usar sua pasta de usuário original do Lime3DS, restaurar configurações e salvar os jogos do Lime3DS, ou manter o diretório de usuário do Azahar atual?\n\nNenhum dos diretórios serão excluídos, independente de sua escolha, sinta-se livre para trocar entre elas usando a opção Selecionar Pasta de Usuário.</string>
+    <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
+    <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
     <string name="cannot_skip">Você não pode pular esta etapa</string>
     <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Você perdeu suas permissões de escrita no seu diretório de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">dados de usuário</a>, onde dados salvos e outras informações são guardadas.  Isso pode acontecer depois que algum app ou Android atualiza. Re-selecione o diretório para reobter as permissões para que você possa continuar.</string>
     <string name="set_up_theme_settings">Configurações de Tema</string>
     <string name="setup_theme_settings_description">Configure suas preferências de tema para o Azahar.</string>
     <string name="setup_set_theme">Definir Tema</string>
@@ -122,15 +122,17 @@
     <string name="input_binding_description_horizontal_axis">Mova o seu joystick para esquerda ou para direita.</string>
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Arquivos do Sistema</string>
     <string name="setup_system_files_description">Executar operações de arquivos do sistema, como instalar arquivos do sistema ou iniciar o Menu Principal.</string>
     <string name="setup_tool_connect">Conectar à Ferramenta de Configuração do Artic</string>
+    <string name="setup_system_files_preamble"><![CDATA[O Azahar precisa dos dados exclusivos do console e arquivos de firmware de um console real para que seja possível usar alguns de seus recursos. Tais arquivos e dados podem ser configurados através da <a href=https://github.com/azahar-emu/ArticSetupTool>Ferramenta de Configuração Artic do Azahar</a>.<br>Notas:<ul><li><b>Esta operação instalará os dados exclusivos do console para o Azahar, não compartilhe sua pasta de usuário ou nand depois de realizar este processo!</b></li><li>Enquanto estiver realizando o processo de configuração, o Azahar irá vincular-se ao console executando a ferramenta de configuração. Você poderá desvincular o console mais tarde na aba Sistema no menu de configuração do emulador.</li><li>Não entre no online com ambos Azahar e seu console 3DS ao mesmo tempo depois de configurar os arquivos de sistema, já que isso poderá causar problemas.</li><li>A configuração do Antigo 3DS é necessária para a configuração do Novo 3DS funcionar (realizar ambas as configurações é recomendado).</li><li>Ambos os modos de configuração irão funcionar independente do modelo do console executando a ferramenta de configuração.</li></ul>]]></string>
     <string name="setup_system_files_detect">Buscando o status atual dos arquivos do sistema, por favor, aguarde...</string>
     <string name="delete_system_files">Desvincular dados exclusivos do console</string>
+    <string name="delete_system_files_description"><![CDATA[Esta ação irá desvincular seu console real do Azahar, com as seguintes consequências:<br><ul><li>Seu OTP, SecureInfo e LocalFriendCodeSeed serão removidos do Azahar.</li><li>Sua lista de amigos será redefinida e sua sessão será finalizada em sua conta NNID/PNID.</li><li>Arquivos do sistema e títulos da eshop obtidos pelo Azahar se tornarão inacessíveis até que o mesmo console seja vinculado de novo usando a ferramenta de configuração (dados salvos não serão perdidos).</li></ul><br>Deseja continuar?]]></string>
     <string name="setup_system_files_o3ds">Configuração do Antigo 3DS</string>
     <string name="setup_system_files_n3ds">Configuração do Novo 3DS</string>
     <string name="setup_system_files_possible">É possível configurar.</string>
@@ -147,20 +149,19 @@
     <string name="generic_buttons">Botões</string>
     <string name="button">Botão</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">Utiliza um compilador Just-in-Time (JIT) para emulação da CPU. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
-    <string name="init_clock">Relógio</string>
-    <string name="init_clock_description">Configura o relógio emulado do 3DS para refletir o do seu dispositivo ou para começar numa data e hora simulados.</string>
-    <string name="cpu_clock_speed">Velocidade do Clock da CPU</string>
-
     <!-- System settings strings -->
+    <string name="emulation_settings">Configurações de Emulação</string>
     <string name="username">Nome de usuário</string>
     <string name="new_3ds">Modo do Novo 3DS</string>
     <string name="lle_applets">Usar miniaplicativos LLE (se instalados)</string>
+    <string name="enable_required_online_lle_modules">Ativa os módulos LLE necessários para os recursos online (se instalado)</string>
+    <string name="enable_required_online_lle_modules_desc">Ativa os módulos LLE necessários para o multijogador online, acesso à eShop, etc.</string>
     <string name="clock">Relógio</string>
-    <string name="init_time">Tempo de deslocamento</string>
-    <string name="init_time_description">Se o relógio estiver definido como \"Relógio simulado\", isso altera a data e a hora fixas de início.</string>
+    <string name="init_clock">Relógio</string>
+    <string name="init_clock_description">Configura o relógio emulado do 3DS para refletir o do seu dispositivo ou para começar numa data e hora simulados.</string>
+    <string name="device_clock">Clock do Dispositivo</string>
+    <string name="simulated_clock">Clock Simulado</string>
+    <string name="profile_settings">Configurações de Perfil</string>
     <string name="emulated_region">Região</string>
     <string name="emulated_language">Linguagem</string>
     <string name="birthday">Aniversário</string>
@@ -173,10 +174,17 @@
     <string name="console_id">ID do console</string>
     <string name="regenerate_console_id">Gerar Novamente o ID do Console</string>
     <string name="regenerate_console_id_description">Isso substituirá seu ID do console 3DS virtual atual por um novo. Seu ID do console 3DS virtual atual não poderá ser recuperado. Isso pode ter efeitos inesperados dentro dos aplicativos. Poderão ocorrer falhas ao usar um arquivo salvo de configuração desatualizado. Deseja continuar?</string>
+    <string name="mac_address">Endereço MAC</string>
+    <string name="regenerate_mac_address">Gerar Novamente o Endereço MAC</string>
+    <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Deseja continuar?</string>
     <string name="plugin_loader">Carregador de Plug-ins 3GX</string>
     <string name="plugin_loader_description">Carregar plug-ins 3GX do cartão SD emulado, se estiverem disponíveis.</string>
     <string name="allow_plugin_loader">Permitir que os Aplicativos Alterem o Estado do Carregador de Plug-ins</string>
     <string name="allow_plugin_loader_description">Permitir que aplicativos homebrew habilitem o carregador de plugins mesmo quando ele estiver desabilitado.</string>
+    <string name="region_mismatch">Aviso de inconsistência de região</string>
+    <string name="region_mismatch_emulated">O país configurado não é válido para a região emulada selecionada.</string>
+    <string name="region_mismatch_console">O país configurado não é válido para o console vinculado atual.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Câmera frontal</string>
     <string name="outer_left_camera">Câmera traseira esquerda</string>
@@ -197,29 +205,28 @@
     <string name="spirv_shader_gen_description">Emite o fragment shader usado para emular PICA usando SPIR-V em vez de GLSL</string>
     <string name="async_shaders">Ativar a compilação assíncrona de shaders</string>
     <string name="async_shaders_description">Compila shaders em segundo plano para reduzir travamentos durante o jogo. Quando ativado, espere falhas gráficas temporárias</string>
-    <string name="renderer_debug">Renderizador de Depuração</string>
-    <string name="renderer_debug_description">Registre informações adicionais de depuração relacionadas a gráficos. Quando ativado, o desempenho do jogo será significativamente reduzido.</string>
-    <string name="vsync">Ativar sincronização vertical</string>
-    <string name="vsync_description">Sincroniza a taxa de quadros do jogo com a taxa de atualização da tela do seu dispositivo.</string>
     <string name="linear_filtering">Filtragem Linear</string>
     <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
     <string name="texture_filter_name">Filtro de texturas</string>
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
+    <string name="delay_render_thread">Atrasar thread de renderização do aplicativo</string>
+    <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
     <string name="advanced">Avançado\"</string>
     <string name="texture_sampling_name">Amostragem de Texturas</string>
     <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
-    <string name="hw_shaders">Ativar Shaders via Hardware</string>
-    <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
     <string name="shaders_accurate_mul">Multiplicação precisa</string>
     <string name="shaders_accurate_mul_description">Utiliza uma multiplicação mais precisa de shaders no hardware, o que pode corrigir problemas visuais. Quando ativada, pode haver redução no desempenho.</string>
     <string name="asynchronous_gpu">Ativar emulação de GPU assíncrona</string>
     <string name="asynchronous_gpu_description">Usa uma thread separada para emular a GPU de forma assíncrona. Esta opção aprimora o desempenho quando ativada.</string>
     <string name="frame_limit_enable">Limite de velocidade</string>
-    <string name="frame_limit_enable_description">Quando ativado, a velocidade da emulação será limitada a uma porcentagem da velocidade normal.</string>
+    <string name="frame_limit_enable_description">Quando ativo, a velocidade de emulação será limitada à uma porcentagem especificada da velocidade normal. Se desativado, a velocidade de emulação será destravada e a tecla de atalho do turbo não irá funcionar.</string>
     <string name="frame_limit_slider">Limite de velocidade percentual</string>
     <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
+    <string name="expand_to_cutout_area">Expandir para a área recortada</string>
+    <string name="expand_to_cutout_area_description">Expande a área da tela para incluir a área recortada (ou notch).</string>
     <string name="internal_resolution">Resolução Interna</string>
     <string name="internal_resolution_description">Especifica a resolução utilizada para renderização. Uma resolução alta melhorará muito a qualidade visual, mas poderá também impactar muito no desempenho e causar defeitos em certos aplicativos.</string>
+    <string name="internal_resolution_setting_auto">Automático (tamanho da tela)</string>
     <string name="internal_resolution_setting_1x">Nativo (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativo (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativo (1200x720)</string>
@@ -236,6 +243,8 @@
     <string name="render3d">Modo 3D Estereoscópico</string>
     <string name="factor3d">Profundidade</string>
     <string name="factor3d_description">Especifica o valor do controle deslizante 3D. Deve ser definido como superior a 0% quando o 3D Estereoscópico estiver ativado.\nNota: Valores de profundidade acima de 100% não são possíveis no hardware real e podem causar problemas gráficos</string>
+    <string name="disable_right_eye_render">Desativar a renderização do olho direito</string>
+    <string name="disable_right_eye_render_description">Melhora muito o desempenho em alguns aplicativos, mas pode causar piscadas em outros.</string>
     <string name="cardboard_vr">VR Cardboard </string>
     <string name="cardboard_screen_size">Tamanho da Tela do Cardboard</string>
     <string name="cardboard_screen_size_description">Dimensiona a tela para uma porcentagem de seu tamanho original.</string>
@@ -264,6 +273,23 @@
     <string name="realtime_audio_description">Dimensiona a velocidade de reprodução de áudio para compensar quedas na taxa de quadros da emulação. Isso significa que o áudio será reproduzido em velocidade máxima mesmo quando a taxa de quadros do jogo estiver baixa. Pode causar problemas de dessincronização de áudio.</string>
     <string name="audio_input_type">Dispositivo de entrada de áudio</string>
     <string name="sound_output_mode">Modo de Saída de Som</string>
+
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Utiliza um compilador Just-in-Time (JIT) para emulação da CPU. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="hw_shaders">Ativar Shaders via Hardware</string>
+    <string name="hw_shaders_description">Utiliza o hardware para emular os shaders do 3DS. Quando ativado, o desempenho do jogo será consideravelmente melhorado.</string>
+    <string name="cpu_clock_speed">Velocidade do Clock da CPU</string>
+    <string name="vsync">Ativar sincronização vertical</string>
+    <string name="vsync_description">Sincroniza a taxa de quadros do jogo com a taxa de atualização da tela do seu dispositivo.</string>
+    <string name="renderer_debug">Renderizador de Depuração</string>
+    <string name="renderer_debug_description">Registre informações adicionais de depuração relacionadas a gráficos. Quando ativado, o desempenho do jogo será significativamente reduzido.</string>
+    <string name="instant_debug_log">Limpar a saída do log a cada mensagem</string>
+    <string name="instant_debug_log_description">Grava imediatamente o log de depuração no arquivo. Use isto se o Azahar travar e a saída do log estiver sendo cortada.</string>
+    <string name="delay_start_lle_modules">Atraso na inicialização com módulos LLE</string>
+    <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>
+    <string name="deterministic_async_operations">Operações Assíncronas Determinísticas</string>
+    <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
 
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientação da Tela</string>
@@ -299,8 +325,14 @@
     <string name="select_rtc_time">Selecione o horário RTC</string>
     <string name="reset_setting_confirmation">Você quer redefinir essa configuração para o valor padrão?</string>
     <string name="setting_not_editable">Você não pode editar isso agora</string>
+    <string name="setting_disabled">Configuração desativada</string>
+    <string name="setting_disabled_description">Esta configuração está atualmente desativada porque outra configuração não está com o valor correto.</string>
     <string name="setting_not_editable_description">Esta opção não pode ser alterada enquanto o jogo estiver em execução.</string>
     <string name="auto_select">Seleção Automática</string>
+    <string name="start">Iniciar</string>
+    <string name="cancelling">Cancelando...</string>
+    <string name="important">Importante</string>
+    <string name="dont_show_again">Não mostrar novamente</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Escolher pasta de jogos</string>
@@ -385,6 +417,9 @@
     <string name="emulation_show_overlay">Mostrar sobreposição</string>
     <string name="emulation_close_game">Fechar jogo</string>
     <string name="emulation_toggle_pause">Alternar Pausa</string>
+    <string name="miscellaneous">Diversos</string>
+    <string name="use_artic_base_controller">Use o Controle Artic quando conectado ao Servidor Artic Base</string>
+    <string name="use_artic_base_controller_description">Use os controles fornecidos pelo Artic Base Server ao se conectar a ele, em vez do dispositivo de entrada configurado.</string>
     <string name="emulation_close_game_message">Deseja mesmo fechar o jogo atual?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Carregar</string>
@@ -456,6 +491,17 @@
     <!-- About Game Dialog -->
     <string name="play">Jogar</string>
     <string name="shortcut">Atalho</string>
+    <string name="uninstall_cia">Desinstalar Aplicativo</string>
+    <string name="uninstalling">Desinstalando...</string>
+    <string name="game_context_open_save_dir">Abrir pasta de dados salvos</string>
+    <string name="game_context_open_app">Abrir pasta do aplicativo</string>
+    <string name="game_context_open_mods">Abrir pasta de mods</string>
+    <string name="game_context_open_textures">Abrir pasta de texturas</string>
+    <string name="game_context_open_dlc">Abrir pasta de DLC</string>
+    <string name="game_context_open_updates">Abrir pasta de atualizações</string>
+    <string name="game_context_open_extra">Abrir pasta extra</string>
+    <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
+    <string name="game_context_uninstall_updates">Desinstalar atualizações</string>
 
     <!-- Cheats -->
     <string name="cheats">Truques</string>
@@ -515,10 +561,6 @@
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Fundos Pretos</string>
     <string name="use_black_backgrounds_description">Ao usar o tema escuro, aplique fundos pretos.</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">Clock do Dispositivo</string>
-    <string name="simulated_clock">Clock Simulado</string>
 
     <!-- Region names -->
     <string name="system_region_jpn">JPN</string>
@@ -745,33 +787,12 @@
     <string name="artic_base_connect_description">Conecte-se a um console real que esteja executando um servidor Artic Base</string>
     <string name="artic_base_connect">Conectar-se ao Artic Base</string>
     <string name="artic_base_enter_address">Digite o endereço do servidor Artic Base</string>
-    <string name="delay_render_thread">Atrasar thread de renderização do aplicativo</string>
-    <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Salvar rápido</string>
     <string name="emulation_quicksave">Salvar rápido</string>
     <string name="emulation_quickload">Carregar rápido</string>
     <string name="emulation_occupied_quicksave_slot">Salvar rápido - %1$tF %1$tR</string>
-    <string name="quicksave_saving">Salvando...</string>
-    <string name="quickload_loading">Carregando...</string>
     <string name="quickload_not_found">Nenhum Salvamento Rápido disponível.</string>
-    <string name="miscellaneous">Diversos</string>
-    <string name="use_artic_base_controller">Use o Controle Artic quando conectado ao Servidor Artic Base</string>
-    <string name="use_artic_base_controller_description">Use os controles fornecidos pelo Artic Base Server ao se conectar a ele, em vez do dispositivo de entrada configurado.</string>
-    <string name="instant_debug_log">Limpar a saída do log a cada mensagem</string>
-    <string name="instant_debug_log_description">Grava imediatamente o log de depuração no arquivo. Use isto se o Azahar travar e a saída do log estiver sendo cortada.</string>
-    <string name="disable_right_eye_render">Desativar a renderização do olho direito</string>
-    <string name="disable_right_eye_render_description">Melhora muito o desempenho em alguns aplicativos, mas pode causar piscadas em outros.</string>
-    <string name="delay_start_lle_modules">Atraso na inicialização com módulos LLE</string>
-    <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>
-    <string name="deterministic_async_operations">Operações Assíncronas Determinísticas</string>
-    <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
-    <string name="enable_required_online_lle_modules">Ativa os módulos LLE necessários para os recursos online (se instalado)</string>
-    <string name="enable_required_online_lle_modules_desc">Ativa os módulos LLE necessários para o multijogador online, acesso à eShop, etc.</string>
-    <string name="emulation_settings">Configurações de Emulação</string>
-    <string name="profile_settings">Configurações de Perfil</string>
-    <string name="mac_address">Endereço MAC</string>
-    <string name="regenerate_mac_address">Gerar Novamente o Endereço MAC</string>
-    <string name="regenerate_mac_address_description">Isto substituirá seu endereço MAC atual por um novo. Não é recomendado fazer isso se você possuir o endereço MAC do seu console real usando esta ferramenta de configuração. Deseja continuar?</string>
+
 </resources>

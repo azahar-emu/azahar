@@ -18,6 +18,7 @@ namespace HW::UniqueData {
 
 static SecureInfoA secure_info_a;
 static bool secure_info_a_signature_valid = false;
+static bool secure_info_a_region_changed = false;
 static LocalFriendCodeSeedB local_friend_code_seed_b;
 static bool local_friend_code_seed_b_signature_valid = false;
 static FileSys::OTP otp;
@@ -41,8 +42,10 @@ bool MovableSed::VerifySignature() const {
 
 SecureDataLoadStatus LoadSecureInfoA() {
     if (secure_info_a.IsValid()) {
-        return secure_info_a_signature_valid ? SecureDataLoadStatus::Loaded
-                                             : SecureDataLoadStatus::InvalidSignature;
+        return secure_info_a_signature_valid
+                   ? SecureDataLoadStatus::Loaded
+                   : (secure_info_a_region_changed ? SecureDataLoadStatus::RegionChanged
+                                                   : SecureDataLoadStatus::InvalidSignature);
     }
     std::string file_path = GetSecureInfoAPath();
     if (!FileUtil::Exists(file_path)) {
@@ -61,13 +64,31 @@ SecureDataLoadStatus LoadSecureInfoA() {
     }
 
     HW::AES::InitKeys();
+    secure_info_a_region_changed = false;
     secure_info_a_signature_valid = secure_info_a.VerifySignature();
     if (!secure_info_a_signature_valid) {
-        LOG_WARNING(HW, "SecureInfo_A signature check failed");
+        // Check if the file has been region changed
+        SecureInfoA copy = secure_info_a;
+        for (u8 orig_reg = 0; orig_reg < Region::COUNT; orig_reg++) {
+            if (orig_reg == secure_info_a.body.region) {
+                continue;
+            }
+            copy.body.region = orig_reg;
+            if (copy.VerifySignature()) {
+                secure_info_a_region_changed = true;
+                LOG_WARNING(HW, "SecureInfo_A is region changed and its signature invalid");
+                break;
+            }
+        }
+        if (!secure_info_a_region_changed) {
+            LOG_WARNING(HW, "SecureInfo_A signature check failed");
+        }
     }
 
-    return secure_info_a_signature_valid ? SecureDataLoadStatus::Loaded
-                                         : SecureDataLoadStatus::InvalidSignature;
+    return secure_info_a_signature_valid
+               ? SecureDataLoadStatus::Loaded
+               : (secure_info_a_region_changed ? SecureDataLoadStatus::RegionChanged
+                                               : SecureDataLoadStatus::InvalidSignature);
 }
 
 SecureDataLoadStatus LoadLocalFriendCodeSeedB() {

@@ -279,22 +279,12 @@ else()
         add_custom_target(bundle)
         add_custom_command(
             TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/")
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/"
+            POST_BUILD)
         add_custom_command(
             TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bundle/dist/")
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/dist/azahar.png" "${CMAKE_BINARY_DIR}/bundle/dist/azahar.png")
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/license.txt" "${CMAKE_BINARY_DIR}/bundle/")
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${CMAKE_BINARY_DIR}/bundle/")
-        add_custom_command(
-            TARGET bundle
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/dist/scripting" "${CMAKE_BINARY_DIR}/bundle/scripting")
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/dist/scripting" "${CMAKE_BINARY_DIR}/bundle/scripting"
+            POST_BUILD)
 
         # On Linux, add a command to prepare linuxdeploy and any required plugins before any bundling occurs.
         if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
@@ -305,7 +295,8 @@ else()
                 "-DLINUXDEPLOY_PATH=${CMAKE_BINARY_DIR}/externals/linuxdeploy"
                 "-DLINUXDEPLOY_ARCH=${CMAKE_HOST_SYSTEM_PROCESSOR}"
                 -P "${CMAKE_SOURCE_DIR}/CMakeModules/BundleTarget.cmake"
-                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+                POST_BUILD)
         endif()
     endfunction()
 

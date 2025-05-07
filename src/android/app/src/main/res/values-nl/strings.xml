@@ -3,8 +3,6 @@
 
     <string name="app_notification_channel_description">Azahar 3DS emulator notificaties</string>
     <string name="app_notification_running">Azahar is Actief</string>
-    <string name="start">Start</string>
-    <string name="cancelling">Annuleren…</string>
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Instellingen</string>
     <string name="home_options">Opties</string>
@@ -102,7 +100,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="button_swap">Verwissel Schermen</string>
     <string name="input_message_analog_only">Deze besturing moet worden gekoppeld aan een analoge gamepad-stick of D-pad-as!</string>
     <string name="input_message_button_only">Deze besturing moet aan een gamepadknop zijn gekoppeld!</string>
-
     <string name="boot_home_menu">Start het HOME Menu</string>
     <string name="run_system_setup">Start Systeem-Instellingen wanneer het HOME menu wordt opgestart</string>
     <string name="home_menu">HOME Menu</string>
@@ -111,20 +108,12 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="generic_buttons">Knoppen</string>
     <string name="button">Knop</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU-JIT</string>
-    <string name="cpu_jit_description">Maakt gebruik van de Just-in-Time (JIT)-compiler voor CPU-emulatie. Indien ingeschakeld, worden de spelprestaties aanzienlijk verbeterd.</string>
-    <string name="init_clock">Klok</string>
-    <string name="init_clock_description">Stel de geëmuleerde 3DS-klok zo in dat deze de klok van je apparaat weerspiegelt of start op een gesimuleerde datum en tijd.</string>
-    <string name="cpu_clock_speed">CPU Klok Snelheid</string>
-
-    <!-- System settings strings -->
     <string name="username">Gebruikersnaam</string>
     <string name="new_3ds">New 3DS Modus</string>
     <string name="lle_applets">Gebruik LLE-applets (indien geïnstalleerd)</string>
     <string name="clock">Klok</string>
-    <string name="init_time">Offset-tijd</string>
-    <string name="init_time_description">Als de klok is ingesteld op \"Gesimuleerde klok\", verandert dit de vaste datum en tijd waarop moet worden gestart.</string>
+    <string name="init_clock">Klok</string>
+    <string name="init_clock_description">Stel de geëmuleerde 3DS-klok zo in dat deze de klok van je apparaat weerspiegelt of start op een gesimuleerde datum en tijd.</string>
     <string name="emulated_region">Regio</string>
     <string name="emulated_language">Taal</string>
     <string name="birthday">Geboortedatum</string>
@@ -138,4 +127,10 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="regenerate_console_id">Console-ID opnieuw genereren</string>
     <string name="plugin_loader">3GX-pluginlader</string>
     <string name="plugin_loader_description">Laadt 3GX-plug-ins van de geëmuleerde SD-kaart als deze beschikbaar zijn.</string>
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU-JIT</string>
+    <string name="cpu_jit_description">Maakt gebruik van de Just-in-Time (JIT)-compiler voor CPU-emulatie. Indien ingeschakeld, worden de spelprestaties aanzienlijk verbeterd.</string>
+    <string name="cpu_clock_speed">CPU Klok Snelheid</string>
+    <string name="start">Start</string>
+    <string name="cancelling">Annuleren…</string>
     </resources>

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="install_game_content">Εγκατάσταση αρχείου CIA</string>
+    <string name="about">Σχετικά</string>
+    <string name="install_cia_title">Εγκατάσταση CIA</string>
+    <string name="select_gpu_driver_install">Εγκατάσταση</string>
+    <string name="select_gpu_driver_install_success">Εγκαταστάθηκε %s</string>
     </resources>

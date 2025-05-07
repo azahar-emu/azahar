@@ -389,14 +389,22 @@ GMainWindow::GMainWindow(Core::System& system_)
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
 
+#ifdef __APPLE__
+    // Workaround for https://github.com/azahar-emu/azahar/issues/933
+    ui->menubar->setNativeMenuBar(false);
+#endif
+
     show();
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
     if (UISettings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
-            const std::optional<std::string> latest_release = UpdateChecker::CheckForUpdate();
-            if (latest_release && latest_release.value() != Common::g_build_fullname) {
-                return QString::fromStdString(latest_release.value());
+            const bool is_prerelease = // TODO: This can be done better -OS
+                (strstr(Common::g_build_fullname, "rc") != NULL);
+            const std::optional<std::string> latest_release_tag =
+                UpdateChecker::GetLatestRelease(is_prerelease);
+            if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
+                return QString::fromStdString(latest_release_tag.value());
             }
             return QString{};
         });
@@ -500,6 +508,8 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
 
+    loading_shaders_label = new QLabel();
+
     artic_traffic_label = new QLabel();
     artic_traffic_label->setToolTip(
         tr("Current Artic traffic speed. Higher values indicate bigger transfer loads."));
@@ -515,8 +525,8 @@ void GMainWindow::InitializeWidgets() {
         tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
            "full-speed emulation this should be at most 16.67 ms."));
 
-    for (auto& label :
-         {artic_traffic_label, emu_speed_label, game_fps_label, emu_frametime_label}) {
+    for (auto& label : {loading_shaders_label, artic_traffic_label, emu_speed_label, game_fps_label,
+                        emu_frametime_label}) {
         label->setVisible(false);
         label->setFrameStyle(QFrame::NoFrame);
         label->setContentsMargins(4, 0, 4, 0);
@@ -813,10 +823,10 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Custom Textures"),
                      [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
 
-    connect_shortcut(QStringLiteral("Toggle Turbo Mode"), &GMainWindow::ToggleEmulationSpeed);
+    connect_shortcut(QStringLiteral("Toggle Turbo Mode"),
+                     [&] { GMainWindow::SetTurboEnabled(!GMainWindow::IsTurboEnabled()); });
 
     connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
-
     connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
     connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
@@ -1430,6 +1440,8 @@ void GMainWindow::BootGame(const QString& filename) {
 
     connect(emu_thread.get(), &EmuThread::LoadProgress, loading_screen,
             &LoadingScreen::OnLoadProgress, Qt::QueuedConnection);
+    connect(emu_thread.get(), &EmuThread::SwitchDiskResources, this,
+            &GMainWindow::OnSwitchDiskResources, Qt::QueuedConnection);
     connect(emu_thread.get(), &EmuThread::HideLoadingScreen, loading_screen,
             &LoadingScreen::OnLoadComplete);
 
@@ -1529,6 +1541,7 @@ void GMainWindow::ShutdownGame() {
     status_bar_update_timer.stop();
     message_label_used_for_movie = false;
     show_artic_label = false;
+    loading_shaders_label->setVisible(false);
     artic_traffic_label->setVisible(false);
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
@@ -1614,6 +1627,9 @@ void GMainWindow::UpdateSaveStates() {
         }
     }
     for (const auto& savestate : savestates) {
+        if (savestate.slot >= Core::SaveStateSlotCount) {
+            continue;
+        }
         const bool display_name =
             savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
             !savestate.build_name.empty();
@@ -1654,7 +1670,7 @@ void GMainWindow::UpdateSaveStates() {
     for (u32 i = 1; i < Core::SaveStateSlotCount; ++i) {
         if (!actions_load_state[i]->isEnabled()) {
             // Prefer empty slot
-            oldest_slot = i + 1;
+            oldest_slot = i;
             oldest_slot_time = 0;
             break;
         }
@@ -2380,7 +2396,6 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
-    GetInitialFrameLimit();
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2440,11 +2455,7 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
-    if (turbo_mode_active) {
-        turbo_mode_active = false;
-        Settings::values.frame_limit.SetValue(initial_frame_limit);
-        UpdateStatusBar();
-    }
+    SetTurboEnabled(false);
 
     play_time_manager->Stop();
     // Update game list to show new play time
@@ -2597,52 +2608,48 @@ void GMainWindow::ChangeSmallScreenPosition() {
     UpdateSecondaryWindowVisibility();
 }
 
-void GMainWindow::GetInitialFrameLimit() {
-    initial_frame_limit = Settings::values.frame_limit.GetValue();
-    turbo_mode_active = false;
+bool GMainWindow::IsTurboEnabled() {
+    return turbo_mode_active;
 }
 
-void GMainWindow::ToggleEmulationSpeed() {
-    static bool key_pressed = false; // Prevent spam on hold
+void GMainWindow::SetTurboEnabled(bool state) {
+    turbo_mode_active = state;
+    GMainWindow::ReloadTurbo();
+}
 
-    if (!key_pressed) {
-        key_pressed = true;
-        turbo_mode_active = !turbo_mode_active;
-
-        if (turbo_mode_active) {
-            Settings::values.frame_limit.SetValue(Settings::values.turbo_speed.GetValue());
-        } else {
-            Settings::values.frame_limit.SetValue(initial_frame_limit);
-        }
-
-        UpdateStatusBar();
-        QTimer::singleShot(200, [] { key_pressed = false; });
+void GMainWindow::ReloadTurbo() {
+    if (IsTurboEnabled()) {
+        Settings::temporary_frame_limit = Settings::values.turbo_limit.GetValue();
+        Settings::is_temporary_frame_limit = true;
+    } else {
+        Settings::is_temporary_frame_limit = false;
     }
+
+    UpdateStatusBar();
 }
 
+// TODO: This should probably take in something more descriptive than a bool. -OS
 void GMainWindow::AdjustSpeedLimit(bool increase) {
-    if (!turbo_mode_active) {
-        return;
-    }
-
     const int SPEED_LIMIT_STEP = 5;
-    int turbo_speed = Settings::values.turbo_speed.GetValue();
+    auto active_limit =
+        IsTurboEnabled() ? &Settings::values.turbo_limit : &Settings::values.frame_limit;
+    const auto active_limit_value = active_limit->GetValue();
 
     if (increase) {
-        if (turbo_speed < 995) {
-            Settings::values.turbo_speed.SetValue(turbo_speed + SPEED_LIMIT_STEP);
-            Settings::values.frame_limit.SetValue(turbo_speed + SPEED_LIMIT_STEP);
+        if (active_limit_value < 995) {
+            active_limit->SetValue(active_limit_value + SPEED_LIMIT_STEP);
         }
     } else {
-        if (turbo_speed > SPEED_LIMIT_STEP) {
-            Settings::values.turbo_speed.SetValue(turbo_speed - SPEED_LIMIT_STEP);
-            Settings::values.frame_limit.SetValue(turbo_speed - SPEED_LIMIT_STEP);
+        if (active_limit_value > SPEED_LIMIT_STEP) {
+            active_limit->SetValue(active_limit_value - SPEED_LIMIT_STEP);
         }
     }
 
-    if (turbo_mode_active) {
-        UpdateStatusBar();
+    if (IsTurboEnabled()) {
+        ReloadTurbo();
     }
+
+    UpdateStatusBar();
 }
 
 void GMainWindow::ToggleScreenLayout() {
@@ -2762,6 +2769,7 @@ void GMainWindow::OnConfigure() {
         } else {
             setMouseTracking(false);
         }
+        ReloadTurbo();
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
         UpdateStatusButtons();
@@ -3719,6 +3727,18 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
 }
 #endif
 
+void GMainWindow::OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                        std::size_t total) {
+    if (stage == VideoCore::LoadCallbackStage::Prepare) {
+        loading_shaders_label->setText(QString());
+        loading_shaders_label->setVisible(true);
+    } else if (stage == VideoCore::LoadCallbackStage::Complete) {
+        loading_shaders_label->setVisible(false);
+    } else {
+        loading_shaders_label->setText(loading_screen->GetStageTranslation(stage, value, total));
+    }
+}
+
 void GMainWindow::UpdateWindowTitle() {
     const QString full_name = QString::fromUtf8(Common::g_build_fullname);
 
@@ -3889,7 +3909,9 @@ void LaunchQtFrontend(int argc, char* argv[]) {
 
     // Init settings params
     QCoreApplication::setOrganizationName(QStringLiteral("Azahar Developers"));
+    QCoreApplication::setOrganizationDomain(QStringLiteral("azahar_emu.org"));
     QCoreApplication::setApplicationName(QStringLiteral("Azahar"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("org.azahar_emu.Azahar"));
 
     auto rounding_policy = GetHighDpiRoundingPolicy();
     QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);

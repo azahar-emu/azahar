@@ -1,42 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="cancelling">İptal ediliyor...</string>
+    <string name="app_disclaimer">Bu yazılım Nintendo 3DS el konsolu uygulamalarını çalıştırmak içindir. Hiçbir oyun dosyası içermez. \n\nEmülasyon yapmaya başlamadan önce lütfen Azahar kullanıcı verilerinin depolanması için bir dosya seçin. \n\nBu nedir?:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android Kullanıcı verileri ve depolama</a></string>
+    <string name="app_notification_channel_description">Azahar 3DS emülatörü bildirimleri</string>
+    <string name="app_notification_running">Azahar çalışıyor</string>
+    <string name="app_game_install_description">Sırada, bir Uygulama Dosyası seçmelisiniz. Azahar seçili dosyadaki bütün 3DS ROM\'larını uygulamada gösterecektir.\n\nCİA ROM\'larının, güncellemelerin ve DLC\'lerin; dosya ikonuna tıklanıp \"CIA İndir\"i seçerek ayrı olarak indirilmesi gerekir.</string>
+
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Ayarlar</string>
     <string name="home_options">Seçenekler</string>
+    <string name="home_search">Ara</string>
+    <string name="home_games">Uygulamalar</string>
+    <string name="settings_description">Emülatör ayarlarını yapılandır</string>
+    <string name="install_game_content">CIA Dosyası Yükle</string>
+    <string name="install_game_content_description">Uygulamalar, güncellemeler veya DLC yükle</string>
+    <string name="share_log">Log\'u Paylaş</string>
+    <string name="share_log_description">Sorunları gidermek için Azahar\'ın log dosyasını paylaş</string>
+    <string name="gpu_driver_manager">GPU Sürücü Yöneticisi</string>
+    <string name="install_gpu_driver">GPU Sürücüsü Yükle</string>
+    <string name="install_gpu_driver_description">Daha iyi performans veya doğruluk olasılığı için alternatif sürücü yükle</string>
+    <string name="driver_already_installed">Sürücü zaten yüklü</string>
+    <string name="custom_driver_not_supported">Özel sürücüler desteklenmiyor</string>
+    <string name="custom_driver_not_supported_description">Bu cihaz için özel sürücü yükleme henüz desteklenmiyor. \nLütfen gelecekte destek eklenmiş mi diye tekrar kontrol edin! </string>
+    <string name="share_log_not_found">Log dosyası bulunamadı</string>
+    <string name="select_games_folder">Uygulamalar Dosyasını Seç</string>
+    <string name="select_games_folder_description">Azahar\'ın uygulama listesini doldurmasına izin verir</string>
     <string name="about">Hakkında</string>
+    <string name="citra_description">Açık kaynaklı bir 3DS emülatörü</string>
+    <string name="about_description">Yapı sürümü, katkıda bulunanlar ve daha fazlası</string>
+    <string name="games_dir_selected">Uygulama dizini seçildi</string>
+    <string name="select_citra_user_folder_home_description">Azahar\'ın uygulama yüklemek için kullandığı dosyaları değiştirir</string>
+    <string name="theme_and_color_description">Uygulamanın görünüşünü değiştir</string>
+    <string name="install_cia_title">CIA Yükle</string>
+    <string name="warning_3ds_files"><![CDATA[Şifrelenmiş dosyalar ve .3ds dosyaları artık desteklenmemektedir. Dosyanın şifresinin çözülmesi ve/veya .cci olarak yeniden adlandırması gerekli olabilir.<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Daha fazla öğren.</a>]]></string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">GPU Sürücüsü seç</string>
+    <string name="select_gpu_driver_title">Halihazırda var olan GPU sürücüsünü değiştirmek ister misiniz?</string>
+    <string name="select_gpu_driver_install">Yükle</string>
     <string name="select_gpu_driver_default">Varsayılan</string>
+    <string name="select_gpu_driver_install_success">%syüklendi</string>
+    <string name="select_gpu_driver_use_default">Varsayılan GPU sürücüsü kullanılıyor</string>
+    <string name="select_gpu_driver_error">Geçersiz sürücü seçildi, varsayılan sistem sürücüsü kullanılıyor!</string>
+    <string name="system_gpu_driver">Sistem GPU sürücüsü</string>
+    <string name="installing_driver">Sürücü yükleniyor...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Panoya kopyalandı</string>
     <string name="contributors">Katkıda Bulunanlar</string>
     <string name="contributors_description">Azahar\'ı mümkün kılan kişiler</string>
+    <string name="licenses_description">Android için Azahar tarafından kullanılan projeler</string>
+    <string name="build">Yapı</string>
+    <string name="licenses">Lisanslar</string>
+    <!-- Setup strings -->
+    <string name="welcome">Hoş geldiniz!</string>
+    <string name="welcome_description">&lt;b>Azahar&lt;/b>\'ı nasıl kuracağını öğren ve emülasyona başla.</string>
+    <string name="get_started">Başlayın</string>
+    <string name="step_complete">Tamamlandı!</string>
+    <string name="games">Uygulamalar</string>
+    <string name="games_description">Aşağıdaki buton ile &lt;b>Applications&lt;/b> dosyasını seçin.</string>
+    <string name="done">Bitti</string>
+    <string name="done_description">Her şey hazır! \nEmülatörü güle güle kullanın!</string>
+    <string name="text_continue">Devam et</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="notifications_description">Aşağıdaki buton ile bildirim izni verin.</string>
     <string name="give_permission">İzin ver</string>
+    <string name="notification_warning">Bildirim izni vermeyi geçmek istediğinizden emin misiniz?</string>
+    <string name="notification_warning_description">Azahar sizi önemli bilgiler hakkında bilgilendiremeyecek.</string>
     <string name="camera_permission">Kamera</string>
+    <string name="camera_permission_description">3DS kamera emülasyonu için aşağıdaki izni verin.</string>
     <string name="microphone_permission">Mikrofon</string>
+    <string name="microphone_permission_description">3DS mikrofon emülasyonu için aşağıdaki izni verin.</string>
+    <string name="permission_denied">İzin reddedildi</string>
+    <string name="add_games_warning">Uygulama dosyasını seçmeyi atla?</string>
+    <string name="add_games_warning_description">Eğer bir dosya seçili değilse yazılımlar uygulama listesinde görünmeyecektir.</string>
     <string name="warning_help">Yardım</string>
+    <string name="warning_skip">Atla</string>
+    <string name="warning_cancel">İptal et</string>
+    <string name="select_citra_user_folder">Kullanıcı Dosyası Seç</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Aşağıdaki butonla <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">kullanıcı verileri</a>dizinini seçin.]]></string>
+    <string name="select_which_user_directory_to_use">Hem Lime3DS hem de Azahar için ayarlanmış kullanıcı dizinleriniz var gibi görünüyor. Bunun nedeni muhtemelen Azahar\'a geçmiş olmanız ve sorulduğunda Lime3DS için kullanılandan farklı bir kullanıcı dizini seçmiş olmanızdır.\n\nBu, kayıtları veya diğer ayarları kaybettiğinizi düşünmenize neden olmuş olabilir - böyle bir şey olduysa özür dileriz. \n\nOrijinal Lime3DS kullanıcı dizininizi kullanmaya geri dönmek, Lime3DS\'deki ayarları ve oyun kayıtlarını geri yüklemek mi istersiniz; yoksa mevcut Azahar kullanıcı dizininizi korumak mı? \n\nSeçiminiz ne olursa olsun her iki dizin de silinmeyecektir ve Kullanıcı Klasörü Seç seçeneğini kullanarak aralarında serbestçe geçiş yapabilirsiniz.</string>
+    <string name="keep_current_azahar_directory">Şimdiki Azahar Dizinini Koru</string>
+    <string name="use_prior_lime3ds_directory">Eski Lime3DS Dizinini Kullan</string>
     <string name="select">Seç</string>
+    <string name="cannot_skip">Bu adımı geçemezsiniz</string>
+    <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
+    <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
+    <string name="setup_theme_settings_description">Azahar için tema tercihlerinizi yapılandırın.</string>
     <string name="setup_set_theme">Tema Ayarla</string>
 
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Uygulamaları Ara ve Filtrele</string>
+    <string name="home_search_games">Uygulamaları Ara</string>
+    <string name="search_recently_played">Son oynanan</string>
+    <string name="search_recently_added">Son eklenen</string>
+    <string name="search_installed">Yüklü</string>
+
+    <!-- Input related strings -->
+    <string name="controller_circlepad">Circle Pad</string>
+    <string name="controller_c">C-Stick</string>
+    <string name="controller_hotkeys">Kısayol tuşları</string>
+    <string name="controller_triggers">Tetik tuşları</string>
+    <string name="controller_trigger">Tetik tuşu</string>
+    <string name="controller_dpad">D-Pad</string>
+    <string name="controller_dpad_axis">D-Pad (Eksen)</string>
+    <string name="controller_dpad_axis_description">Bazı oyun kolları D-pad\'lerini bir eksen olarak atayamayabilir. Durum buysa D-Pad (butonlar) bölümünü kullanın.</string>
+    <string name="controller_dpad_button">D-pad (Buton)</string>
+    <string name="controller_dpad_button_description">Sadece D-Pad (Eksen) atamasında sorun yaşıyorsanız D-Pad\'inizi bunlara atayın.</string>
     <string name="controller_axis_vertical">Yukarı/Aşağı Eksen</string>
     <string name="controller_axis_horizontal">Sol/Sağ Eksen</string>
     <string name="direction_up">Yukarı</string>
     <string name="direction_down">Aşağı</string>
     <string name="direction_left">Sol</string>
     <string name="direction_right">Sağ</string>
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
+    <string name="input_dialog_title">Ata %1$s%2$s</string>
+    <string name="input_dialog_description">Bir girdiye basın veya hareket ettirin.</string>
+    <string name="input_binding">Girdi Ataması</string>
+    <string name="input_binding_description">Bir girdiyi %1$s e atamak için basın veya hareket ettirin.</string>
+    <string name="input_binding_description_vertical_axis">Joystick\'inizi yukarı veya aşağı kaydırın.</string>
+    <string name="input_binding_description_horizontal_axis">Joystick\'inizi sağa veya sola kaydırın.</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">Ekranları değiştir</string>
+    <string name="button_turbo">Turbo</string>
+    <string name="input_message_analog_only">Bu kontrol bir oyun kolu analog çubuğuna veya D-pad eksenine bağlanmalıdır!</string>
+    <string name="input_message_button_only">Bu kontrol bir oyun kolu düğmesine bağlı olmalıdır!</string>
+    <string name="turbo_limit_hotkey">Turbo Hız</string>
+    <string name="turbo_enabled_toast">Turbo Hız Aktif</string>
+    <string name="turbo_disabled_toast">Turbo Hız Devre Dışı</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">Sistem Dosyaları</string>
+    <string name="setup_system_files_description">Sistem dosyaları yüklemek veya Home menüsünü başlatmak gibi sistem dosyası işlemlerini gerçekleştirin</string>
+    <string name="setup_tool_connect">Artic Kurulum Aracına Bağlan</string>
+    <string name="setup_system_files_detect">Mevcut sistem dosyaları durumu toplanıyor, lütfen bekleyin...</string>
+    <string name="setup_system_files_o3ds">Eski 3DS Kurulumu</string>
+    <string name="setup_system_files_n3ds">Yeni 3DS Kurulumu</string>
+    <string name="setup_system_files_possible">Kurulum mümkün.</string>
+    <string name="setup_system_files_o3ds_needed">Önce eski 3DS kurulumu gereklidir.</string>
+    <string name="setup_system_files_completed">Kurulum zaten tamamlandı.</string>
+    <string name="setup_system_files_preparing">Kurulum hazırlanıyor, lütfen bekleyin...</string>
+    <string name="boot_home_menu">HOME Menüsünü Aç</string>
+    <string name="show_home_apps">HOME menü uygulamalarını Uygulamalar listesinde göster</string>
+    <string name="run_system_setup">HOME menüsü açıldığında sistem kurulumunu başlat</string>
+    <string name="home_menu">HOME Menüsü</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Butonlar</string>
+    <string name="button">Buton</string>
+
+    <!-- System settings strings -->
+    <string name="emulation_settings">Emülasyon Ayarları</string>
+    <string name="username">Kullanıcı adı</string>
     <string name="new_3ds">Yeni 3DS Modu</string>
+    <string name="lle_applets">LLE Applet\'lerini kullan (eğer yüklüyse)</string>
+    <string name="enable_required_online_lle_modules">Çevrimiçi özellikler için gerekli LLE modüllerini etkinleştirin (yüklüyse)</string>
+    <string name="enable_required_online_lle_modules_desc">Çevrimiçi çok oyunculu oyun, eShop erişimi vb. için gereken LLE modüllerini etkinleştirir.</string>
+    <string name="clock">Saat</string>
+    <string name="init_clock">Saat</string>
+    <string name="init_clock_description">Taklit edilen 3DS saatini cihazınızın saatini yansıtacak veya simüle edilmiş bir tarih ve saatte başlayacak şekilde ayarlayın.</string>
+    <string name="device_clock">Cihaz Saati</string>
+    <string name="simulated_clock">Simüle Edilmiş Saat</string>
+    <string name="simulated_clock_description">Saat “Simüle edilmiş saat” olarak ayarlanmışsa, bu başlanılan sabit tarih ve saati değiştirir.</string>
+    <string name="profile_settings">Profil Ayarları</string>
     <string name="emulated_region">Bölge</string>
     <string name="emulated_language">Dil</string>
+    <string name="birthday">Doğum günü</string>
     <string name="birthday_month">Ay</string>
     <string name="birthday_day">Gün</string>
     <string name="country">Ülke</string>
+    <string name="play_coins">Play Coin\'leri</string>
+    <string name="steps_per_hour">Saat Başına Adımsayar Adımları</string>
+    <string name="steps_per_hour_description">Adımsayar tarafından bildirilen saat başına adım sayısı. 0 ile 65,535 arasında değişir.</string>
+    <string name="console_id">Konsol İD\'si</string>
+    <string name="regenerate_console_id">Konsol İD\'sini Yeniden Oluştur</string>
+    <string name="regenerate_console_id_description">Bu, mevcut sanal 3DS konsol kimliğinizi yenisiyle değiştirecektir. Mevcut sanal 3DS konsol kimliğiniz kurtarılamayacaktır. Bu, uygulamaların içinde beklenmedik etkilere neden olabilir. Eski bir konfigürasyon kaydı kullanıyorsanız bu işlem başarısız olabilir. Devam etmek istiyor musunuz?</string>
+    <string name="mac_address">MAC Adresi</string>
+    <string name="regenerate_mac_address">MAC Adresini Yeniden Oluştur</string>
+    <string name="regenerate_mac_address_description">Bu, mevcut MAC adresinizi yenisiyle değiştirecektir. MAC adresini kurulum aracını kullanarak gerçek konsolunuzdan aldıysanız bunu yapmanız önerilmez. Yine de devam mı?</string>
+    <string name="plugin_loader">3GX Eklenti Yükleyici</string>
+    <string name="plugin_loader_description">3GX eklentilerini eğer mevcutsa emüle edilmiş SD karttan yükler.</string>
+    <string name="allow_plugin_loader">Uygulamaların Eklenti Yükleyici Durumunu Değiştirmesine İzin Verin</string>
+    <string name="allow_plugin_loader_description">Homebrew uygulamalarının devre dışı olsa bile eklenti yükleyiciyi etkinleştirmesine izin verir.</string>
+    <string name="region_mismatch">Bölge Uyuşmazlık Uyarısı</string>
+    <string name="region_mismatch_emulated">Ülke ayarı emülasyon bölgesi için geçerli değil.</string>
+    <string name="region_mismatch_console">Ülke ayarı bağlı olan konsol için geçerli değil.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera"> 
 İç Kamera</string>
+    <string name="outer_left_camera">Dış Sol Kamera</string>
+    <string name="outer_right_camera">Dış Sağ Kamera</string>
+    <string name="image_source">Kamera Resim Kaynağı</string>
     <string name="camera_device">Kamera</string>
     <string name="camera_facing_front">Ön</string>
-    <string name="vsync">V-Sync\'i Etkinleştir</string>
+    <string name="camera_facing_back">Geri</string>
+    <!-- Graphics settings strings -->
+    <string name="renderer">İşleyici</string>
+    <string name="graphics_api">Grafik API\'ı</string>
+    <string name="spirv_shader_gen">SPIR-V gölgelendirici oluşturmayı etkinleştir</string>
+    <string name="async_shaders">Asenkron gölgeleme derlemesini etkinleştir</string>
+    <string name="async_shaders_description">Oyun sırasında takılmayı azaltmak için gölgelendiricileri arka planda derler. Etkinleştirildiğinde geçici grafik hataları meydana gelebilir.</string>
+    <string name="linear_filtering">Doğrusal filtreleme</string>
+    <string name="linear_filtering_description">Oyun görsellerinin daha pürüzsüz görünmesini sağlayan doğrusal filtrelemeyi etkinleştirir.</string>
+    <string name="texture_filter_name">Doku Filtresi</string>
+    <string name="texture_filter_description">Dokulara bir filtre uygulayarak uygulamaların görsellerini geliştirir. Desteklenen filtreler Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale ve MMPX\'tir.</string>
+    <string name="delay_render_thread">Oyun işleme iş parçacığını geciktir</string>
+    <string name="delay_render_thread_description">GPU\'ya veri gönderirken oyun işleme iş parçacığını geciktirin. Dinamik kare hızlarına sahip (çok az sayıda) uygulamada performans sorunlarına yardımcı olur.</string>
+    <string name="advanced">Gelişmiş\"</string>
+    <string name="texture_sampling_name">Doku Örnekleme</string>
+    <string name="texture_sampling_description">Oyunlar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, yükseltme sırasında kötü davranan oyunlarla ilgili bazı durumlarda yararlı olabilir. Emin değilseniz, bunu Oyun Kontrollü olarak ayarlayın.</string>
+    <string name="shaders_accurate_mul">İsabetli Çoğaltma</string>
+    <string name="shaders_accurate_mul_description">Donanım gölgelendiricilerinde daha doğru çarpım kullanır, bu da bazı grafik hatalarını düzeltebilir. Etkinleştirildiğinde performans düşecektir.</string>
+    <string name="asynchronous_gpu">Asenkron GPU emülasyonunu etkinleştir</string>
+    <string name="asynchronous_gpu_description">GPU emülasyonunu asenkron olarak yapmak için ayrı bir iş parçacığı kullanır. Etkinleştirildiğinde performans artacaktır.</string>
+    <string name="frame_limit_enable">Hızı Sınırlandır</string>
+    <string name="frame_limit_enable_description">Etkinleştirildiğinde, emülasyon hızı normal hızın belirli bir yüzdesiyle sınırlandırılır. Devre dışı bırakılırsa, emülasyon hızı sınırlandırılmaz ve turbo hız kısayol tuşu çalışmaz.</string>
+    <string name="frame_limit_slider">Hız Sınırlandırma Yüzdesi</string>
+    <string name="frame_limit_slider_description">Emülasyon hızını sınırlamak için yüzdeyi belirtir. Varsayılan değer olan %100 ile emülasyon normal hız ile sınırlandırılacaktır. Daha yüksek veya daha düşük değerler hız sınırını artıracak veya azaltacaktır Etkinleştirildiğinde, emülasyon hızı normal hızın belirli bir yüzdesiyle sınırlandırılacaktır. Devre dışı bırakılırsa, emülasyon hızı sınırlandırılmaz ve turbo hız kısayol tuşu çalışmaz.</string>
+    <string name="turbo_limit">Turbo Hız Limiti</string>
+    <string name="turbo_limit_description">Turbo kısayolu aktfiken kullanılan emülasyon hız limiti.</string>
+    <string name="internal_resolution">İç Çözünürlük</string>
+    <string name="internal_resolution_description">Render için kullanılan çözünürlüğü belirtir. Yüksek çözünürlük görsel kaliteyi çok artıracaktır ancak performans açısından da oldukça ağırdır ve bazı uygulamalarda aksaklıklara neden olabilir.</string>
+    <string name="internal_resolution_setting_auto">Otomatik (Ekran Boyutu)</string>
     <string name="internal_resolution_setting_1x">Doğal (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Doğal (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Doğal (1200x720)</string>
@@ -47,15 +233,87 @@
     <string name="internal_resolution_setting_8x">8x Doğal (3200x1920)</string>
     <string name="internal_resolution_setting_9x">9x Doğal (3600x2160)</string>
     <string name="internal_resolution_setting_10x">10x Doğal (4000x2400)</string>
+    <string name="performance_warning">Bu ayarın kapatılması emülasyon performansını önemli ölçüde düşürecektir! En iyi deneyim için bu ayarı etkin bırakmanız önerilir.</string>
+    <string name="debug_warning">Uyarı: Bu ayarları değiştirmek emülasyonu yavaşlatacaktır</string>
+    <string name="stereoscopy">Stereoskopi</string>
     <string name="render3d">Stereoskopik 3B Modu</string>
     <string name="factor3d">Derinlik</string>
+    <string name="factor3d_description">3D kaydıracının değerini belirtir. Stereoskopik 3D etkinleştirildiğinde bu değer %0\'dan daha yüksek bir değere ayarlanmalıdır.\nNot: %100\'ün üzerindeki derinlik değerleri gerçek donanımda mümkün değildir ve grafik sorunlarına neden olabilir</string>
+    <string name="disable_right_eye_render">Sağ Göz Render\'ını Devre Dışı Bırak</string>
+    <string name="disable_right_eye_render_description">Bazı uygulamalarda performansı büyük ölçüde artırır, ancak diğerlerinde titremeye neden olabilir.</string>
+    <string name="cardboard_vr">Karton VR</string>
+    <string name="cardboard_screen_size">Karton Ekran Boyutu</string>
+    <string name="cardboard_screen_size_description">Ekranı orijinal boyutunun belirli bir yüzdesine ölçeklendirir.</string>
+    <string name="cardboard_x_shift">Yatay kaydırma</string>
+    <string name="cardboard_x_shift_description">Ekranları yatay olarak kaydırmak için boş alanın yüzdesini belirtir. Pozitif değerler iki gözü ortaya yaklaştırırken, negatif değerler uzaklaştırır.</string>
+    <string name="cardboard_y_shift">Dikey kaydırma</string>
+    <string name="cardboard_y_shift_description">Ekranları dikey olarak kaydırmak için boş alanın yüzdesini belirtir. Pozitif değerler iki gözü aşağıya doğru hareket ettirirken, negatif değerler yukarıya doğru hareket ettirir.</string>
+    <string name="use_shader_jit">Shader JIT</string>
+    <string name="use_disk_shader_cache">Disk Gölgelendirici Önbelleği</string>
+    <string name="use_disk_shader_cache_description">Oluşturulan gölgelendiricileri diske depolayarak ve yükleyerek takılmayı azaltın. Donanım Gölgelendiricisi Etkinleştirilmeden kullanılamaz.</string>
+    <string name="custom_textures">Özel Dokular</string>
+    <string name="preload_textures">Özel Dokuları Önceden Yükle</string>
+    <string name="preload_textures_description">Tüm özel dokuları belleğe yükler. Bu özellik çok fazla bellek kullanabilir.</string>
+    <string name="async_custom_loading">Asenkron Özel Doku Yükleme</string>
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Ses düzeyi</string>
+    <string name="audio_stretch">Ses Gerdirme</string>
+    <string name="realtime_audio">Gerçek zamanlı sesi etkinleştir</string>
+    <string name="realtime_audio_description">Emülasyon kare hızındaki düşüşleri hesaba katmak için ses çalma hızını ölçeklendirir. Bu, oyun kare hızı düşük olsa bile sesin tam hızda çalınacağı anlamına gelir. Ses senkronizasyon sorunlarına neden olabilir.</string>
+    <string name="audio_input_type">Ses Giriş Cihazı</string>
+    <string name="sound_output_mode">Ses Çıkış Modu</string>
+
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">CPU emülasyonu için Just-in-Time (JIT) derleyicisini kullanır. Etkinleştirildiğinde, oyun performansı önemli ölçüde artacaktır.</string>
+    <string name="hw_shaders">Donanımsal Shader\'ı Etkinleştir</string>
+    <string name="hw_shaders_description">3DS shader\'larının emülasyonu için donanımı kullanır. Etkinleştirildiğinde oyun performansı önemli ölçüde artacaktır.</string>
+    <string name="cpu_clock_speed">CPU Saat Hızı</string>
+    <string name="vsync">V-Sync\'i Etkinleştir</string>
+    <string name="vsync_description">Oyun kare hızını cihazınızın yenileme hızına senkronize eder.</string>
+    <string name="delay_start_lle_modules">LLE modülleriyle başlamayı geciktir</string>
+    <string name="delay_start_lle_modules_description">LLE modülleri etkinken uygulamanın başlamasını geciktirir</string>
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">Ekran Yönelimi</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
+    <string name="layout_screen_orientation_portrait">Portre</string>
+    <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
+
+    <!-- Miscellaneous -->
+    <string name="clear">Temizle</string>
     <string name="slider_default">Varsayılan</string>
+    <string name="ini_saved">Ayarlar kaydedildi</string>
+    <string name="gameid_saved">%1$siçin ayarlar kaydedildi</string>
+    <string name="error_saving">%1$s.ini\'yi kaydederken hata oluştu%2$s</string>
+    <string name="saving">Kaydediliyor...</string>
     <string name="loading">Yükleniyor...</string>
+    <string name="next">Sonraki</string>
     <string name="back">Geri</string>
+    <string name="learn_more">Daha Fazla Öğren </string>
+    <string name="close">Kapat</string>
+    <string name="reset_to_default">Varsayılanlara Sıfırla</string>
     <string name="option_default">Varsayılan</string>
+    <string name="off">Kapalı</string>
+    <string name="install">Yükle</string>
     <string name="delete">Sil</string>
+    <string name="reset_all_settings">Tüm Ayarlar Sıfırlansın Mı?</string>
+    <string name="reset_all_settings_description">Tüm gelişmiş ayarlar varsayılanlara sıfırlanacaktır. Bu işlem geri alınamaz.</string>
+    <string name="settings_reset">Ayarları sıfırla</string>
+    <string name="select_rtc_date">Gerçek Zamanlı Saat tarihini seç</string>
+    <string name="select_rtc_time">Gerçek Zamanlı Saat zamanını seç</string>
+    <string name="reset_setting_confirmation">Bu ayarı varsayılan değerlerine döndürmek ister misiniz?</string>
+    <string name="setting_not_editable">Bunu şu an düzenleyemezsin</string>
+    <string name="setting_disabled">Ayar devre dışı bırakıldı</string>
+    <string name="setting_disabled_description">Bu ayar, başka bir ayarın uygun değer olmaması nedeniyle şu anda devre dışı bırakılmıştır.</string>
+    <string name="setting_not_editable_description">Bu seçenek oyun devam ederken değiştirilemez.</string>
     <string name="auto_select">Otomatik Seç</string>
+    <string name="start">Başlat</string>
+    <string name="cancelling">İptal ediliyor...</string>
+    <string name="important">Önemli</string>
+    <string name="dont_show_again">Tekrar gösterme</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Oyun Dosyası Seç</string>
 
     <!-- Game Properties -->
     <string name="properties">Özellikler</string>
@@ -66,46 +324,181 @@
     <string name="preferences_general">Genel</string>
     <string name="preferences_system">Sistem</string>
     <string name="preferences_camera">Kamera</string>
+    <string name="preferences_controls">Oyun Kolu</string>
+    <string name="preferences_graphics">Grafikler</string>
     <string name="preferences_audio">Ses</string>
+    <string name="preferences_debug">Hata Ayıklama</string>
     <string name="preferences_theme">Tema ve Renk</string>
+    <string name="preferences_layout">Düzen</string>
+
+    <!-- ROM loading errors -->
+    <string name="loader_error_encrypted">ROM\'unuz Şifreli</string>
+    <string name="loader_error_invalid_format">Geçersiz ROM formatı</string>
+    <string name="loader_error_file_not_found">ROM dosyası mevcut değil</string>
+    <string name="no_game_present">Başlatılabilir oyun yok!</string>
+
+    <!-- Emulation Menu -->
+    <string name="emulation_menu_help">Menüye erişmek için Geri\'ye basın</string>
+    <string name="emulation_save_state">Durumu Kaydet</string>
+    <string name="emulation_load_state">Durumu Yükle</string>
+    <string name="emulation_show_fps">FPS\'i Göster</string>
+    <string name="emulation_haptic_feedback">Dokunsal Geri Bildirim</string>
+    <string name="emulation_configure_controls">Kontrolleri Yapılandır</string>
+    <string name="emulation_edit_layout">Düzeni Değiştir</string>
+    <string name="emulation_done">Bitti</string>
+    <string name="emulation_control_scale">Ölçeği Ayarla</string>
     <string name="emulation_control_scale_reset_all">Tümünü Sıfırla</string>
     <string name="emulation_control_opacity">Görünürlüğü Ayarla</string>
+    <string name="emulation_control_dpad_slide_enable">D-Pad kayması</string>
     <string name="emulation_open_settings">Ayarları Aç</string>
     <string name="emulation_open_cheats">Hileleri Aç</string>
+    <string name="emulation_switch_screen_layout">Yatay Ekran Düzeni</string>
+    <string name="emulation_switch_portrait_layout">Dikey Ekran Düzeni</string>
+    <string name="emulation_screen_layout_largescreen">Büyük Ekran</string>
     <string name="emulation_screen_layout_portrait">Portre</string>
     <string name="emulation_screen_layout_single">Tek Ekran</string>
+    <string name="emulation_screen_layout_sidebyside">Yan Yana Ekranlar</string>
+    <string name="emulation_screen_layout_hybrid">Hibrit Ekranlar</string>
     <string name="emulation_screen_layout_original">Orijinal</string>
     <string name="emulation_portrait_layout_top_full">Varsayılan</string>
+    <string name="emulation_screen_layout_custom">Özel Düzen</string>
+    <string name="emulation_small_screen_position">Küçük Ekran Konumu</string>
+    <string name="small_screen_position_description">Büyük Ekran Düzeninde küçük ekran büyük ekrana kıyasla nerede olmalı?</string>
     <string name="small_screen_position_top_right">Sağ Üst</string>
+    <string name="small_screen_position_middle_right">Orta Sağ</string>
+    <string name="small_screen_position_bottom_right">Sağ Alt (varsayılan)</string>
     <string name="small_screen_position_top_left">Sol Üst</string>
+    <string name="small_screen_position_middle_left">Orta Sol</string>
     <string name="small_screen_position_bottom_left">Sol Alt</string>
+    <string name="small_screen_position_above">Yukarı</string>
+    <string name="small_screen_position_below">Aşağı</string>
+    <string name="large_screen_proportion">Büyük Ekran Oranı</string>
+    <string name="large_screen_proportion_description">Büyük Ekran düzeninde büyük ekran küçük ekrandan kaç kat daha büyük olsun?</string>
+    <string name="emulation_adjust_custom_layout">Ayarlarda Özel Düzeni Değiştirin</string>
+    <string name="emulation_landscape_custom_layout">Özel Yatay Düzen</string>
+    <string name="emulation_portrait_custom_layout">Özel Dikey Düzen</string>
+    <string name="emulation_top_screen">Üst Ekran</string>
+    <string name="emulation_bottom_screen">Alt Ekran</string>
+    <string name="emulation_custom_layout_x">X-Konumu</string>
+    <string name="emulation_custom_layout_y">Y-Konumu</string>
     <string name="emulation_custom_layout_width">Genişlik</string>
     <string name="emulation_custom_layout_height">Yükseklik</string>
+    <string name="emulation_swap_screens">Ekranları Değiştir</string>
+    <string name="emulation_close_game">Oyunu Kapat</string>
+    <string name="miscellaneous">Çeşitli</string>
+    <string name="use_artic_base_controller">Artic Base Sunucusundayken Artic Oyun Kolunu kullan</string>
+    <string name="emulation_close_game_message">Mevcut oyunu kapatmak istediğinizden emin misiniz?</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Yükle</string>
     <string name="menu_emulation_amiibo_remove">Kaldır</string>
     <string name="select_amiibo">Amiibo Dosyası Seç</string>
+    <string name="amiibo_load_error">Amiibo Yüklenirken Hata Oluştu</string>
+    <string name="amiibo_load_error_message">Belirtilen Amiibo dosyası yüklenirken bir hata oluştu. Lütfen dosyanın doğru olup olmadığını kontrol edin.</string>
     <string name="pause_emulation">Emülasyonu Duraklat</string>
     <string name="resume_emulation">Emülasyonu Devam Ettir</string>
+    <string name="write_permission_needed">Emülatörün çalışması için harici depolama alanına yazma erişimine izin vermeniz gerekir</string>
+    <string name="load_settings">Ayarlar Yükleniyor...</string>
+
+    <string name="external_storage_not_mounted">Azahar\'ı kullanmak için harici depolama alanının kullanılabilir olması gerekir</string>
+
     <string name="select_dir">Bu Dizini Seç</string>
+    <string name="empty_gamelist">Hiçbir dosya bulunamadı veya henüz hiçbir oyun dizini seçilmedi.</string>
+
+    <string name="do_not_show_this_again">Bunu tekrar gösterme</string>
     <string name="searching_directory">Dizin aranıyor: %s</string>
+    <string name="move_data">Verileri Taşı</string>
+    <string name="moving_data">Veriler Taşınıyor...</string>
+    <string name="copy_file_name">Dosya kopyalanıyor: %s</string>
+    <string name="copy_complete">Kopyalama Tamamlandı</string>
+    <string name="savestates">Kayıt Durumları</string>
+    <string name="savestate_warning_message">Uyarı: Kayıt durumları uygulama içi kayıtları için bir vekil değildir ve güvenilir olmaları için tasarlanmamıştır. \n\nKullanım riski size aittir!</string>
+
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Sanal Klavye</string>
     <string name="i_forgot">Unuttum</string>
+    <string name="fixed_length_required">Metin uzunluğu uygun değil (%d karakter olmalı)</string>
+    <string name="max_length_exceeded">Metin fazla uzun (%d karakterden daha uzun olmamalı)</string>
+    <string name="blank_input_not_allowed">Boş girdiye izin verilmiyor.</string>
+    <string name="empty_input_not_allowed">Boş girdiye izin verilmiyor.</string>
+    <string name="invalid_input">Geçersiz girdi</string>
+
     <!-- Mii Selector -->
     <string name="mii_selector">Mii Seçici</string>
     <string name="standard_mii">Standart Mii</string>
 
+    <!-- Camera -->
+    <string name="camera_select_image">Resim Seçin</string>
     <string name="camera">Kamera</string>
+    <string name="camera_permission_needed">Azahar\'ın 3DS\'in kameralarını taklit etmek için kameranıza erişmesi gerekir.\n\nAlternatif olarak, Kamera Ayarlarında “Görüntü Kaynağı ”nı “Hareketsiz Görüntü” olarak da ayarlayabilirsiniz.</string>
+
     <!-- Microphone -->
     <string name="microphone">Mikrofon</string>
+    <string name="microphone_permission_needed">Azahar\'ın 3DS\'in mikrofonunu taklit etmek için mikrofonunuza erişmesi gerekir.\n\nAlternatif olarak, Ses Ayarları\'nda “Ses Giriş Aygıtı ”nı da değiştirebilirsiniz.</string>
+
+    <!-- Core Errors -->
+    <string name="abort_button">İptal et</string>
+    <string name="continue_button">Devam et</string>
     <string name="system_archive_not_found">Sistem Arşivi Bulunamadı</string>
+    <string name="system_archive_not_found_message">%seksik. Lütfen sistem arşivlerinizi indirin.\nEmülasyona devam etmek çökmelere ve hatalara neden olabilir.</string>
+    <string name="cia_file_not_found">Kurulum Başarısız. CIA dosyası bulunamadı.</string>
     <string name="system_archive_general">Bir sistem arşivi</string>
+    <string name="save_load_error">Kaydetme/yükleme Hatası</string>
+    <string name="fatal_error">Ölümcül Hata</string>
+    <string name="fatal_error_message">Ölümcül bir hata oluştu. Ayrıntılar için log\'u kontrol edin.\nEmülasyona devam etmek çökmelere ve hatalara neden olabilir.</string>
+    <string name="invalid_region">Geçersiz bölge</string>
+    <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
+
+    <!-- Disk Shader Cache -->
+    <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
+    <string name="building_shaders">Gölgelendiriciler Oluşturuluyor</string>
+
+    <!-- About Game Dialog -->
+    <string name="play">Oyna</string>
+    <string name="shortcut">Kısayol</string>
+    <string name="uninstall_cia">Uygulamayı Sil</string>
+    <string name="uninstalling">Siliniyor...</string>
+    <string name="game_context_open_save_dir">Kayıt Verileri Klasörünü Aç</string>
+    <string name="game_context_open_app">Uygulama Dosyasını Aç</string>
+    <string name="game_context_open_mods">Mod Dosyasını Aç</string>
+    <string name="game_context_open_textures">Dokular Klasörünü Aç</string>
+    <string name="game_context_open_dlc">DLC Klasörünü Aç</string>
+    <string name="game_context_open_updates">Güncellemeler Dosyasını Aç</string>
+    <string name="game_context_open_extra">Ekstra Klasörünü Aç</string>
+    <string name="game_context_uninstall_dlc">DLC\'leri Sil</string>
+    <string name="game_context_uninstall_updates">Güncellemeleri Sil</string>
+
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>
+    <string name="cheats_name">İsim</string>
     <string name="cheats_notes">Notlar</string>
+    <string name="cheats_code">Kod</string>
     <string name="cheats_edit">Düzenle</string>
     <string name="cheats_delete">Sil</string>
+    <string name="cheats_delete_confirmation">\"%1$s\"i silmek istediğinizden emin misiniz?</string>
+    <string name="cheats_error_no_name">İsim boş olamaz</string>
     <string name="cheats_error_no_code_lines">Kod boş olamaz</string>
+    <string name="cheats_error_on_line">%1$d. satırda hata</string>
+
+    <!-- CIA Install -->
+    <plurals name="cia_install_toast">
+        <item quantity="one">%ddosyası indiriliyor. Daha fazla detay için bildirime bakın.</item>
+        <item quantity="other">%ddosyaları indiriliyor. Daha fazla detay için bildirime bakın.</item>
+    </plurals>
+    <string name="cia_install_notification_channel_description">CIA Kurulumu sırasında Azahar bildirimleri</string>
+    <string name="cia_install_notification_title">CİA Yükleniyor</string>
+    <string name="cia_install_notification_installing">Yükleniyor %1$s(%2$d/%3$d)</string>
+    <string name="cia_install_notification_success_title">CİA başarıyla yüklendi</string>
+    <string name="cia_install_notification_error_title">CİA yüklemesi başarısız oldu</string>
     <string name="cia_install_success">\"%s\" başarıyla yüklendi</string>
+    <string name="cia_install_error_aborted">\"%s\" yüklemesi durduruldu.\nDaha fazla detay için lütfen log a bakın.</string>
+    <string name="cia_install_error_invalid">\"%s\" geçerli bir CİA değil</string>
+    <string name="cia_install_error_encrypted">\"%s\" Azahar\'la kullanılmadan önce şifresi çözülmelidir. \n Gerçek bir 3DS gereklidir.</string>
+    <string name="cia_install_error_unknown">\"%s\" yüklenirken bilinmeyen bir hata meydana geldi.\n Daha fazla detay için lütfen log a bakın</string>
+
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s%2$s</string>
+    <string name="memory_byte">Bit</string>
     <string name="memory_byte_shorthand">B</string>
     <string name="memory_kilobyte">KB</string>
     <string name="memory_megabyte">MB</string>
@@ -116,46 +509,112 @@
 
     <!-- System theme -->
     <string name="change_theme_mode">Tema Modu</string>
+    <string name="theme_mode_follow_system">Sistemle Aynı</string>
     <string name="theme_mode_light">Açık</string>
     <string name="theme_mode_dark">Koyu</string>
 
+    <string name="material_you_description">Uygulama genelinde işletim sisteminin renk temasını kullanın (Etkinleştirildiğinde “Tema Rengi” ayarını geçersiz kılar)</string>
+
     <!-- Static theme color -->
     <string name="static_theme_color">Tema Rengi</string>
-    <!-- Clock types -->
-    <string name="device_clock">Cihaz Saati</string>
+    <string name="static_theme_color_description">Uygulama menülerinin renk temasını değiştirin</string>
+
+    <!-- Black backgrounds theme -->
+    <string name="use_black_backgrounds">Siyah Arkaplanlar</string>
+    <string name="use_black_backgrounds_description">Koyu temayı kullanırken siyah arka plan uygulayın.</string>
+
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">ABD</string>
+    <string name="system_region_eur">AVR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Japonca (日本語)</string>
     <string name="language_english">İngilizce</string>
+    <string name="language_french">Fransızca (Français)</string>
     <string name="language_german">Almanca (Deutsch)</string>
     <string name="language_italian">İtalyanca (Italiano)</string>
     <string name="language_spanish">İspanyolca (Español)</string>
+    <string name="language_simplified_chinese">Basitleştirilmiş Çince (简体中文)</string>
+    <string name="language_korean">Korece (한국어)</string>
+    <string name="language_dutch">Felemenkçe (Hollanda)</string>
+    <string name="language_portuguese">Portekizce (Português)</string>
+    <string name="language_russian">Rusça (Русский)</string>
+    <string name="language_traditional_chinese">Geleneksel Çince (正體中文)</string>
+
     <!-- Camera image sources -->
     <string name="blank">Boş</string>
+    <string name="still_image">Sabit Görüntü</string>
     <string name="device_camera">Cihaz Kamerası</string>
+
+    <!-- Camera device names -->
+    <string name="any_front_camera">Herhangi Bir Ön Kamera</string>
+    <string name="any_back_camera">Herhangi Bir Arka Kamera</string>
 
     <!-- Camera flip names -->
     <string name="horizontal">Yatay</string>
     <string name="vertical">Dikey</string>
     <string name="reverse">Ters</string>
 
+    <!-- Audio input types -->
+    <string name="static_noise">Statik Ses</string>
+    <string name="real_cubeb">Gerçek Cihaz (cubeb)</string>
+    <string name="real_openal">Gerçek Cihaz (OpenAL)</string>
+
+    <!-- Render 3D modes -->
+    <string name="side_by_side">Yan Yana</string>
+    <string name="reverse_side_by_side">Ters Yan Yana</string>
+    <string name="anaglyph">Anaglif</string>
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
     <string name="vulkan">Vulkan</string>
 
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
     <string name="bicubic">Bikübik</string>
+    <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Oyun Kontrollü</string>
+    <string name="linear">Lineer</string>
+
+    <!-- Sound output modes -->
+    <string name="mono">Mono</string>
+    <string name="stereo">Stereo</string>
+    <string name="surround">Üç boyutlu</string>
 
     <!-- Countries -->
     <string name="japan">Japonya</string>
     <string name="anguilla">Anguilla</string>
+    <string name="antigua_and_barbuda">Antigua ve Barbuda</string>
     <string name="argentina">Arjantin</string>
+    <string name="aruba">Aruba</string>
     <string name="bahamas">Bahamalar</string>
+    <string name="barbados">Barbados</string>
+    <string name="belize">Belize</string>
     <string name="bolivia">Bolivya</string>
     <string name="brazil">Brezilya</string>
+    <string name="british_virgin_islands">Britanya Virjin Adaları</string>
     <string name="canada">Kanada</string>
+    <string name="cayman_islands">Cayman Adaları</string>
     <string name="chile">Şili</string>
     <string name="colombia">Kolombiya</string>
     <string name="costa_rica">Kosta Rika</string>
+    <string name="dominica">Dominika</string>
+    <string name="dominican_republic">Dominik Cumhuriyeti</string>
     <string name="ecuador">Ekvador</string>
     <string name="el_salvador">El Salvador</string>
     <string name="french_guiana">Fransız Guyanası</string>
+    <string name="grenada">Grenada</string>
+    <string name="guadeloupe">Guadelup</string>
+    <string name="guatemala">Guatemala</string>
+    <string name="guyana">Guyana</string>
     <string name="haiti">Haiti</string>
     <string name="honduras">Honduras</string>
     <string name="jamaica">Jamaika</string>
@@ -167,10 +626,14 @@
     <string name="paraguay">Paraguay</string>
     <string name="peru">Peru</string>
     <string name="saint_kittis_and_nevis">Saint Kitts ve Nevis</string>
+    <string name="saint_lucia">Saint Lucia</string>
+    <string name="saint_vincent_and_the_grenadines">Saint Vincent ve Grenadinler</string>
     <string name="suriname">Surinam</string>
+    <string name="trinidad_and_tobago">Trinidad ve Tobago</string>
     <string name="turks_and_caicos_islands">Turks ve Caicos Adaları</string>
     <string name="united_states">Amerika Birleşik Devletleri</string>
     <string name="uruguay">Uruguay</string>
+    <string name="us_virgin_islands">ABD Virgin Adaları</string>
     <string name="venezuela">Venezuela</string>
     <string name="albania">Arnavutluk</string>
     <string name="australia">Avustralya</string>
@@ -193,6 +656,7 @@
     <string name="ireland">İrlanda</string>
     <string name="italy">İtalya</string>
     <string name="latvia">Letonya</string>
+    <string name="lesotho">Lesotho</string>
     <string name="liechtenstein">Lihtenştayn</string>
     <string name="lithuania">Litvanya</string>
     <string name="luxembourg">Lüksemburg</string>
@@ -223,12 +687,17 @@
     <string name="azerbaijan">Azerbaycan</string>
     <string name="mauritania">Moritanya</string>
     <string name="mali">Mali</string>
+    <string name="niger">Nijerya</string>
+    <string name="chad">Çad</string>
     <string name="sudan">Sudan</string>
     <string name="eritrea">Eritre</string>
     <string name="djibouti">Cibuti</string>
+    <string name="somalia">Somali</string>
     <string name="andorra">Andorra</string>
     <string name="gibraltar">Cebelitarık</string>
+    <string name="guernsey">Guernsey</string>
     <string name="isle_of_man">Man Adası</string>
+    <string name="jersey">Jersey</string>
     <string name="monaco">Monako</string>
     <string name="taiwan">Tayvan</string>
     <string name="south_korea">Güney Kore</string>
@@ -251,6 +720,7 @@
     <string name="bahrain">Bahreyn</string>
     <string name="jordan">Ürdün</string>
     <string name="san_marino">San Marino</string>
+    <string name="vatican_city">Vatikan</string>
     <string name="bermuda">Bermuda</string>
 
     <!-- Months -->
@@ -267,6 +737,18 @@
     <string name="november">Kasım</string>
     <string name="december">Aralık</string>
 
-    <string name="quicksave_saving">Kaydediliyor...</string>
-    <string name="quickload_loading">Yükleniyor...</string>
-    </resources>
+    <!-- Artic base -->
+    <string name="artic_server_comm_error">Artic Base sunucusu ile iletişim kurulamadı. Emülasyon durdurulacaktır.</string>
+    <string name="artic_base">Artic Base</string>
+    <string name="artic_base_connect_description">Artic Base sunucusu kullanan gerçek bir konsola bağlan</string>
+    <string name="artic_base_connect">Artic Base\'e Bağlan</string>
+    <string name="artic_base_enter_address">Artic Base sunucu adresi gir</string>
+
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">Hızlı Kayıt</string>
+    <string name="emulation_quicksave">Hızlı Kayıt</string>
+    <string name="emulation_quickload">Hızlı Yükle</string>
+    <string name="emulation_occupied_quicksave_slot">Hızlı Kayıt - %1$tF %1$tR</string>
+    <string name="quickload_not_found">Hiçbir Hızlı Kayıt mevcut değil.</string>
+
+</resources>

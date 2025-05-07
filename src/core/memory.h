@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -287,6 +287,17 @@ public:
     u8 Read8(VAddr addr);
 
     /**
+     * Reads an 8-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 8-bit value from.
+     *
+     * @returns the read 8-bit unsigned value.
+     */
+    u8 Read8(const Kernel::Process& process, VAddr addr);
+
+    /**
      * Reads a 16-bit unsigned value from the current process' address space
      * at the given virtual address.
      *
@@ -295,6 +306,17 @@ public:
      * @returns the read 16-bit unsigned value.
      */
     u16 Read16(VAddr addr);
+
+    /**
+     * Reads a 16-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 16-bit value from.
+     *
+     * @returns the read 16-bit unsigned value.
+     */
+    u16 Read16(const Kernel::Process& process, VAddr addr);
 
     /**
      * Reads a 32-bit unsigned value from the current process' address space
@@ -307,6 +329,17 @@ public:
     u32 Read32(VAddr addr);
 
     /**
+     * Reads a 32-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value.
+     */
+    u32 Read32(const Kernel::Process& process, VAddr addr);
+
+    /**
      * Reads a 64-bit unsigned value from the current process' address space
      * at the given virtual address.
      *
@@ -315,6 +348,17 @@ public:
      * @returns the read 64-bit value.
      */
     u64 Read64(VAddr addr);
+
+    /**
+     * Reads a 64-bit unsigned value from the process' address space
+     * at the given virtual address.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 64-bit value from.
+     *
+     * @returns the read 64-bit value.
+     */
+    u64 Read64(const Kernel::Process& process, VAddr addr);
 
     /**
      * Writes an 8-bit unsigned integer to the given virtual address in
@@ -328,6 +372,18 @@ public:
     void Write8(VAddr addr, u8 data);
 
     /**
+     * Writes an 8-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 8-bit unsigned integer to.
+     * @param data The 8-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory at the given virtual address contains the specified data value.
+     */
+    void Write8(const Kernel::Process& process, VAddr addr, u8 data);
+
+    /**
      * Writes a 16-bit unsigned integer to the given virtual address in
      * the current process' address space.
      *
@@ -337,6 +393,18 @@ public:
      * @post The memory range [addr, sizeof(data)) contains the given data value.
      */
     void Write16(VAddr addr, u16 data);
+
+    /**
+     * Writes a 16-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 16-bit unsigned integer to.
+     * @param data The 16-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write16(const Kernel::Process& process, VAddr addr, u16 data);
 
     /**
      * Writes a 32-bit unsigned integer to the given virtual address in
@@ -350,6 +418,18 @@ public:
     void Write32(VAddr addr, u32 data);
 
     /**
+     * Writes a 32-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 32-bit unsigned integer to.
+     * @param data The 32-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write32(const Kernel::Process& process, VAddr addr, u32 data);
+
+    /**
      * Writes a 64-bit unsigned integer to the given virtual address in
      * the current process' address space.
      *
@@ -359,6 +439,18 @@ public:
      * @post The memory range [addr, sizeof(data)) contains the given data value.
      */
     void Write64(VAddr addr, u64 data);
+
+    /**
+     * Writes a 64-bit unsigned integer to the given virtual address in
+     * the process' address space.
+     *
+     * @param process The process to write to.
+     * @param addr The virtual address to write the 64-bit unsigned integer to.
+     * @param data The 64-bit unsigned integer to write to the given virtual address.
+     *
+     * @post The memory range [addr, sizeof(data)) contains the given data value.
+     */
+    void Write64(const Kernel::Process& process, VAddr addr, u64 data);
 
     /**
      * Writes a {8, 16, 32, 64}-bit unsigned integer to the given virtual address in
@@ -555,10 +647,10 @@ public:
 
 private:
     template <typename T>
-    T Read(const VAddr vaddr);
+    T Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr);
 
     template <typename T>
-    void Write(const VAddr vaddr, const T data);
+    void Write(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr, const T data);
 
     template <typename T>
     bool WriteExclusive(const VAddr vaddr, const T data, const T expected);

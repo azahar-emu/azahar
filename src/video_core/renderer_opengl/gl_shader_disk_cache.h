@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -83,7 +87,7 @@ struct ShaderDiskCacheDump {
 
 class ShaderDiskCache {
 public:
-    explicit ShaderDiskCache(bool separable);
+    explicit ShaderDiskCache(u64 title_id, bool separable);
     ~ShaderDiskCache() = default;
 
     /// Loads transferable cache. If file has a old version or on failure, it deletes the file.
@@ -112,6 +116,9 @@ public:
 
     /// Serializes virtual precompiled shader cache file to real file
     void SaveVirtualPrecompiledFile();
+
+    /// Get current game's title id as u64
+    u64 GetProgramID() const;
 
 private:
     /// Loads the transferable cache. Returns empty on failure.
@@ -160,9 +167,6 @@ private:
 
     /// Get user's shader directory path
     std::string GetBaseDir() const;
-
-    /// Get current game's title id as u64
-    u64 GetProgramID();
 
     /// Get current game's title id
     std::string GetTitleID();

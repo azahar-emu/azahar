@@ -1,12 +1,11 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-add_executable(citra_room
+add_library(citra_room STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     citra_room.cpp
+    citra_room.h
     citra_room.rc
 )
-
-set_target_properties(citra_room PROPERTIES OUTPUT_NAME "azahar-room")
 
 create_target_directory_groups(citra_room)
 
