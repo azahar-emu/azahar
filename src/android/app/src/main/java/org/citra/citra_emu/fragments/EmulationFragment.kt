@@ -1253,10 +1253,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     private fun updateStatsPosition(position: Int) {
         val params = binding.showStatsOverlayText.layoutParams as CoordinatorLayout.LayoutParams
+        val padding = (20 * resources.displayMetrics.density).toInt() // 20dp
+        params.setMargins(padding, 0, padding, 0)
+
         when (position) {
             0 -> {
                 params.gravity = (Gravity.TOP or Gravity.START)
-                params.setMargins(resources.getDimensionPixelSize(R.dimen.spacing_large), 0, 0, 0)
             }
 
             1 -> {
@@ -1265,12 +1267,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
             2 -> {
                 params.gravity = (Gravity.TOP or Gravity.END)
-                params.setMargins(0, 0, resources.getDimensionPixelSize(R.dimen.spacing_large), 0)
             }
 
             3 -> {
                 params.gravity = (Gravity.BOTTOM or Gravity.START)
-                params.setMargins(resources.getDimensionPixelSize(R.dimen.spacing_large), 0, 0, 0)
             }
 
             4 -> {
@@ -1279,7 +1279,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
             5 -> {
                 params.gravity = (Gravity.BOTTOM or Gravity.END)
-                params.setMargins(0, 0, resources.getDimensionPixelSize(R.dimen.spacing_large), 0)
             }
         }
 
