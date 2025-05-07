@@ -21,7 +21,7 @@ enum class BooleanSetting(
     SHOW_FRAMETIME("show_frame_time", Settings.SECTION_LAYOUT, false),
     SHOW_SPEED("show_speed", Settings.SECTION_LAYOUT, false),
     SHOW_APP_RAM_USAGE("show_app_ram_usage", Settings.SECTION_LAYOUT, false),
-    SHOW_SYSTEM_RAM_USAGE("show_system_ram_usage", Settings.SECTION_LAYOUT, false),
+    SHOW_AVAILABLE_RAM("show_available_ram", Settings.SECTION_LAYOUT, false),
     SHOW_BAT_TEMPERATURE("show_bat_temperature", Settings.SECTION_LAYOUT, false),
     OVERLAY_BACKGROUND("overlay_background", Settings.SECTION_LAYOUT, false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),

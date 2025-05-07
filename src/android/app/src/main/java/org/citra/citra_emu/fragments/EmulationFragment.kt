@@ -1212,7 +1212,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         sb.append("Process\u00A0RAM:\u00A0$appRamUsage\u00A0MB")
                     }
 
-                    if (BooleanSetting.SHOW_SYSTEM_RAM_USAGE.boolean) {
+                    if (BooleanSetting.SHOW_AVAILABLE_RAM.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         context?.let { ctx ->
                             val activityManager =

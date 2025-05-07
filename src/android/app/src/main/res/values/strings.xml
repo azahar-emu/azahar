@@ -549,8 +549,8 @@
     <string name="show_speed_description">Display current emulation speed percentage</string>
     <string name="show_app_ram_usage">Show App Memory Usage</string>
     <string name="show_app_ram_usage_description">Display the amount of RAM getting used by the emulator</string>
-    <string name="show_system_ram_usage">Show System Memory Usage</string>
-    <string name="show_system_ram_usage_description">Display the amount of RAM getting used by the system</string>
+    <string name="show_available_ram">Show Available Memory</string>
+    <string name="show_available_ram_description">Display the amount of RAM which is available</string>
     <string name="show_bat_temperature">Show Battery Temperature</string>
     <string name="show_bat_temperature_description">Display current Battery temperature in Celsius and Fahrenheit</string>
     <string name="overlay_position">Overlay Position</string>

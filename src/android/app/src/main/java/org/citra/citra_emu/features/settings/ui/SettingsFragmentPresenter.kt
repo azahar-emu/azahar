@@ -1235,10 +1235,10 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_SYSTEM_RAM_USAGE,
-                    R.string.show_system_ram_usage,
-                    R.string.show_system_ram_usage_description,
-                    "show_system_ram_usage",
+                    BooleanSetting.SHOW_AVAILABLE_RAM,
+                    R.string.show_available_ram,
+                    R.string.show_available_ram_description,
+                    "show_available_ram",
                     false
                 )
             )
