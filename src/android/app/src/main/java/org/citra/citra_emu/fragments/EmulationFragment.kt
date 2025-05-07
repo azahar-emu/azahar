@@ -1238,7 +1238,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                     binding.showStatsOverlayText.text = sb.toString()
                 }
-                perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 3000)
+                perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
             }
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
             binding.showStatsOverlayText.visibility = View.VISIBLE
