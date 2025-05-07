@@ -1154,18 +1154,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(
                 SwitchSetting(
                     object : AbstractBooleanSetting {
-                        override val key = "EmulationMenuSettings_showPerfStatsOvelray"
+                        override val key = "EmulationMenuSettings_showPerfStatsOverlay"
                         override val section = Settings.SECTION_LAYOUT
                         override val defaultValue = false
                         override var boolean: Boolean
-                            get() = EmulationMenuSettings.showStatsOvelray
-                            set(value) { EmulationMenuSettings.showStatsOvelray = value }
+                            get() = EmulationMenuSettings.showStatsOverlay
+                            set(value) { EmulationMenuSettings.showStatsOverlay = value }
                         override val isRuntimeEditable = true
                         override val valueAsString: String get() = boolean.toString()
                     },
                     R.string.enable_stats_overlay_,
                     0,
-                    "EmulationMenuSettings_showPerfStatsOvelray",
+                    "EmulationMenuSettings_showPerfStatsOverlay",
                     false
                 )
             )

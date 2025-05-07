@@ -185,7 +185,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
 
         // Show/hide the "Stats" overlay
-        updateshowStatsOvelray()
+        updateshowStatsOverlay()
 
         val position = IntSetting.PERF_OVERLAY_POSITION.int
         updateStatsPosition(position)
@@ -658,7 +658,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
             findItem(R.id.menu_show_stats_overlay).isChecked =
-                EmulationMenuSettings.showStatsOvelray
+                EmulationMenuSettings.showStatsOverlay
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
                 EmulationMenuSettings.joystickRelCenter
@@ -675,14 +675,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_show_stats_overlay -> {
-                    EmulationMenuSettings.showStatsOvelray = !EmulationMenuSettings.showStatsOvelray
-                    updateshowStatsOvelray()
+                    EmulationMenuSettings.showStatsOverlay = !EmulationMenuSettings.showStatsOverlay
+                    updateshowStatsOverlay()
                     true
                 }
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
-                    updateshowStatsOvelray()
+                    updateshowStatsOverlay()
                     true
                 }
 
@@ -1167,8 +1167,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
-    fun updateshowStatsOvelray() {
-        if (EmulationMenuSettings.showStatsOvelray) {
+    fun updateshowStatsOverlay() {
+        if (EmulationMenuSettings.showStatsOverlay) {
             val SYSTEM_FPS = 0
             val FPS = 1
             val FRAMETIME = 2
