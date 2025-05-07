@@ -1221,8 +1221,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                                 ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                             val memInfo = ActivityManager.MemoryInfo()
                             activityManager.getMemoryInfo(memInfo)
-                            val usedRamMB = (memInfo.totalMem - memInfo.availMem) / 1048576L
-                            sb.append("RAM: $usedRamMB MB")
+                            val megabyteBytes = 1048576L
+                            val availableRam = memInfo.availMem / megabyteBytes
+                            sb.append("Available RAM: $availableRam MB")
                         }
                     }
 
