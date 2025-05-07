@@ -185,7 +185,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
 
         // Show/hide the "Stats" overlay
-        updateshowStatsOverlay()
+        updateShowStatsOverlay()
 
         val position = IntSetting.PERF_OVERLAY_POSITION.int
         updateStatsPosition(position)
@@ -676,13 +676,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 R.id.menu_show_stats_overlay -> {
                     EmulationMenuSettings.showStatsOverlay = !EmulationMenuSettings.showStatsOverlay
-                    updateshowStatsOverlay()
+                    updateShowStatsOverlay()
                     true
                 }
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
-                    updateshowStatsOverlay()
+                    updateShowStatsOverlay()
                     true
                 }
 
@@ -1167,7 +1167,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
-    fun updateshowStatsOverlay() {
+    fun updateShowStatsOverlay() {
         if (EmulationMenuSettings.showStatsOverlay) {
             val SYSTEM_FPS = 0
             val FPS = 1
