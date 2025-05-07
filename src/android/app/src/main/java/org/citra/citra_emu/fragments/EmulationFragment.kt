@@ -1179,40 +1179,41 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             perfStatsUpdater = Runnable {
                 val sb = StringBuilder()
                 val perfStats = NativeLibrary.getPerfStats()
+                val dividerString = "\u00A0\u2502 "
                 if (perfStats[FPS] > 0) {
                     if (BooleanSetting.SHOW_FPS.boolean) {
-                        sb.append(String.format("FPS: %d", (perfStats[FPS] + 0.5).toInt()))
+                        sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
                     }
 
                     if (BooleanSetting.SHOW_FRAMETIME.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
+                        if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
-                                "Frametime: %.1fms",
+                                "Frametime:\u00A0%.1fms",
                                 (perfStats[FRAMETIME] * 1000.0f).toFloat()
                             )
                         )
                     }
 
                     if (BooleanSetting.SHOW_SPEED.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
+                        if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
-                                "Speed: %d%%",
+                                "Speed:\u00A0%d%%",
                                 (perfStats[SPEED] * 100.0 + 0.5).toInt()
                             )
                         )
                     }
 
                     if (BooleanSetting.SHOW_APP_RAM_USAGE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
+                        if (sb.isNotEmpty()) sb.append(dividerString)
                         val appRamUsage =
                             File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
-                        sb.append("Process RAM: $appRamUsage MB")
+                        sb.append("Process\u00A0RAM:\u00A0$appRamUsage\u00A0MB")
                     }
 
                     if (BooleanSetting.SHOW_SYSTEM_RAM_USAGE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
+                        if (sb.isNotEmpty()) sb.append(dividerString)
                         context?.let { ctx ->
                             val activityManager =
                                 ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -1220,12 +1221,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                             activityManager.getMemoryInfo(memInfo)
                             val megabyteBytes = 1048576L
                             val availableRam = memInfo.availMem / megabyteBytes
-                            sb.append("Available RAM: $availableRam MB")
+                            sb.append("Available\u00A0RAM:\u00A0$availableRam\u00A0MB")
                         }
                     }
 
                     if (BooleanSetting.SHOW_BAT_TEMPERATURE.boolean) {
-                        if (sb.isNotEmpty()) sb.append(" | ")
+                        if (sb.isNotEmpty()) sb.append(dividerString)
                         val batteryTemp = getBatteryTemperature()
                         val tempF = celsiusToFahrenheit(batteryTemp)
                         sb.append(String.format("%.1f°C/%.1f°F", batteryTemp, tempF))
