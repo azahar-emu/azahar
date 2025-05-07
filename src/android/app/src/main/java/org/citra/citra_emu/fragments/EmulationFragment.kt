@@ -183,7 +183,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             binding.surfaceInputOverlay.setIsInEditMode(false)
         }
 
-
         // Show/hide the "Stats" overlay
         updateShowStatsOverlay()
 
@@ -1168,6 +1167,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     fun updateShowStatsOverlay() {
+        if (perfStatsUpdater != null) {
+            perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
+        }
+
         if (EmulationMenuSettings.showStatsOverlay) {
             val SYSTEM_FPS = 0
             val FPS = 1
@@ -1238,14 +1241,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                     binding.showStatsOverlayText.text = sb.toString()
                 }
-                perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
+                    perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
             }
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
             binding.showStatsOverlayText.visibility = View.VISIBLE
         } else {
-            if (perfStatsUpdater != null) {
-                perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
-            }
             binding.showStatsOverlayText.visibility = View.GONE
         }
     }
