@@ -1149,7 +1149,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.performance_overlay_options))
         sl.apply {
 
-            add(HeaderSetting(R.string.performance_overlay_customization))
+            add(HeaderSetting(R.string.visibility))
 
             add(
                 SwitchSetting(
@@ -1191,7 +1191,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
 
 
-            add(HeaderSetting(R.string.performance_overlay_items))
+            add(HeaderSetting(R.string.information))
 
             add(
                 SwitchSetting(

@@ -362,6 +362,8 @@
     <string name="cancelling">Cancelling…</string>
     <string name="important">Important</string>
     <string name="dont_show_again">Don\'t show again</string>
+    <string name="visibility">Visibility</string>
+    <string name="information">Information</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>
@@ -536,8 +538,6 @@
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Show Performance Overlay</string>
-    <string name="performance_overlay_customization">Customization</string>
-    <string name="performance_overlay_items">Visibility</string>
     <string name="performance_overlay_options">Performance Overlay</string>
     <string name="performance_overlay_enable">Enable Performance Overlay</string>
     <string name="performance_overlay_options_description">Configure whether the performance overlay is shown and what information is displayed.</string>
