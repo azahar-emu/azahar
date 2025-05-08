@@ -7,8 +7,8 @@
         android:checkable="true" />
 
     <item
-        android:id="@+id/menu_show_performance_overlay"
-        android:title="@string/show_performance_overlay"
+        android:id="@+id/menu_performance_overlay_show"
+        android:title="@string/performance_overlay_show"
         android:checkable="true" />
 
     <item

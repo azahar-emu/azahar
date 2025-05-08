@@ -656,7 +656,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
-            findItem(R.id.menu_show_performance_overlay).isChecked =
+            findItem(R.id.menu_performance_overlay_show).isChecked =
                 EmulationMenuSettings.showPerformanceOverlay
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
@@ -673,7 +673,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
-                R.id.menu_show_performance_overlay -> {
+                R.id.menu_performance_overlay_show -> {
                     EmulationMenuSettings.showPerformanceOverlay = !EmulationMenuSettings.showPerformanceOverlay
                     updateShowPerformanceOverlay()
                     true

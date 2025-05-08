@@ -1197,7 +1197,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_FPS,
                     R.string.overlay_show_fps,
-                    R.string.show_fps_description,
+                    R.string.overlay_show_fps_description,
                     "overlay_show_fps",
                     true
                 )
@@ -1206,8 +1206,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_FRAMETIME,
-                    R.string.show_frametime,
-                    R.string.show_frametime_description,
+                    R.string.overlay_show_frametime,
+                    R.string.overlay_show_frametime_description,
                     "overlay_show_frame_time",
                     true
                 )
@@ -1217,7 +1217,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_SPEED,
                     R.string.overlay_show_speed,
-                    R.string.show_speed_description,
+                    R.string.overlay_show_speed_description,
                     "overlay_show_speed",
                     false
                 )
@@ -1227,7 +1227,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
                     R.string.overlay_show_app_ram_usage,
-                    R.string.show_app_ram_usage_description,
+                    R.string.overlay_show_app_ram_usage_description,
                     "overlay_show_app_ram_usage",
                     false
                 )
@@ -1237,7 +1237,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
                     R.string.overlay_show_available_ram,
-                    R.string.show_available_ram_description,
+                    R.string.overlay_show_available_ram_description,
                     "overlay_show_available_ram",
                     false
                 )
@@ -1247,7 +1247,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SwitchSetting(
                     BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
                     R.string.overlay_show_battery_temp,
-                    R.string.show_bat_temperature_description,
+                    R.string.overlay_show_battery_temp_description,
                     "overlay_show_battery_temp",
                     false
                 )
