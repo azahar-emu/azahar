@@ -103,7 +103,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_THEME -> addThemeSettings(sl)
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
-            Settings.SECTION_STATS_OVERLAY -> addStatsOverlaySettings(sl)
+            Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -1120,10 +1120,10 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SubmenuSetting(
-                    R.string.stats_overlay_options,
-                    R.string.stats_overlay_options_description,
+                    R.string.performance_overlay_options,
+                    R.string.performance_overlay_options_description,
                     R.drawable.ic_stats,
-                    Settings.SECTION_STATS_OVERLAY
+                    Settings.SECTION_PERFORMANCE_OVERLAY
                 )
             )
             add(
@@ -1145,27 +1145,27 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
     }
 
-    private fun addStatsOverlaySettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.stats_overlay_options))
+    private fun addPerformanceOverlaySettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.performance_overlay_options))
         sl.apply {
 
-            add(HeaderSetting(R.string.stats_overlay_customization))
+            add(HeaderSetting(R.string.performance_overlay_customization))
 
             add(
                 SwitchSetting(
                     object : AbstractBooleanSetting {
-                        override val key = "EmulationMenuSettings_showPerfStatsOverlay"
+                        override val key = "EmulationMenuSettings_showPerfPerformanceOverlay"
                         override val section = Settings.SECTION_LAYOUT
                         override val defaultValue = false
                         override var boolean: Boolean
-                            get() = EmulationMenuSettings.showStatsOverlay
-                            set(value) { EmulationMenuSettings.showStatsOverlay = value }
+                            get() = EmulationMenuSettings.showPerformanceOverlay
+                            set(value) { EmulationMenuSettings.showPerformanceOverlay = value }
                         override val isRuntimeEditable = true
                         override val valueAsString: String get() = boolean.toString()
                     },
-                    R.string.enable_stats_overlay_,
+                    R.string.performance_overlay_enable,
                     0,
-                    "EmulationMenuSettings_showPerfStatsOverlay",
+                    "EmulationMenuSettings_showPerfPerformanceOverlay",
                     false
                 )
             )
@@ -1191,7 +1191,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
 
 
-            add(HeaderSetting(R.string.stats_overlay_items))
+            add(HeaderSetting(R.string.performance_overlay_items))
 
             add(
                 SwitchSetting(

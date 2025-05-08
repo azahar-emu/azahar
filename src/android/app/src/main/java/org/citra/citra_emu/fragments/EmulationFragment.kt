@@ -184,7 +184,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         // Show/hide the "Stats" overlay
-        updateShowStatsOverlay()
+        updateShowPerformanceOverlay()
 
         val position = IntSetting.OVERLAY_POSITION.int
         updateStatsPosition(position)
@@ -656,8 +656,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
-            findItem(R.id.menu_show_stats_overlay).isChecked =
-                EmulationMenuSettings.showStatsOverlay
+            findItem(R.id.menu_show_performance_overlay).isChecked =
+                EmulationMenuSettings.showPerformanceOverlay
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
                 EmulationMenuSettings.joystickRelCenter
@@ -673,15 +673,15 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
-                R.id.menu_show_stats_overlay -> {
-                    EmulationMenuSettings.showStatsOverlay = !EmulationMenuSettings.showStatsOverlay
-                    updateShowStatsOverlay()
+                R.id.menu_show_performance_overlay -> {
+                    EmulationMenuSettings.showPerformanceOverlay = !EmulationMenuSettings.showPerformanceOverlay
+                    updateShowPerformanceOverlay()
                     true
                 }
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
-                    updateShowStatsOverlay()
+                    updateShowPerformanceOverlay()
                     true
                 }
 
@@ -1166,12 +1166,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
-    fun updateShowStatsOverlay() {
+    fun updateShowPerformanceOverlay() {
         if (perfStatsUpdater != null) {
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
         }
 
-        if (EmulationMenuSettings.showStatsOverlay) {
+        if (EmulationMenuSettings.showPerformanceOverlay) {
             val SYSTEM_FPS = 0
             val FPS = 1
             val FRAMETIME = 2
@@ -1233,25 +1233,25 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     }
 
                     if (BooleanSetting.OVERLAY_BACKGROUND.boolean) {
-                        binding.showStatsOverlayText.setBackgroundResource(R.color.citra_transparent_black)
+                        binding.showPerformanceOverlayText.setBackgroundResource(R.color.citra_transparent_black)
                     } else {
-                        binding.showStatsOverlayText.setBackgroundResource(0)
+                        binding.showPerformanceOverlayText.setBackgroundResource(0)
                     }
 
-                    binding.showStatsOverlayText.text = sb.toString()
+                    binding.showPerformanceOverlayText.text = sb.toString()
                 }
                     perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
             }
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
-            binding.showStatsOverlayText.visibility = View.VISIBLE
+            binding.showPerformanceOverlayText.visibility = View.VISIBLE
         } else {
-            binding.showStatsOverlayText.visibility = View.GONE
+            binding.showPerformanceOverlayText.visibility = View.GONE
         }
     }
 
 
     private fun updateStatsPosition(position: Int) {
-        val params = binding.showStatsOverlayText.layoutParams as CoordinatorLayout.LayoutParams
+        val params = binding.showPerformanceOverlayText.layoutParams as CoordinatorLayout.LayoutParams
         val padding = (20 * resources.displayMetrics.density).toInt() // 20dp
         params.setMargins(padding, 0, padding, 0)
 
@@ -1281,7 +1281,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             }
         }
 
-        binding.showStatsOverlayText.layoutParams = params
+        binding.showPerformanceOverlayText.layoutParams = params
     }
 
     private fun getBatteryTemperature(): Float {

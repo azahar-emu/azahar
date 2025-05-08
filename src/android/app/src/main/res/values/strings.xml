@@ -534,13 +534,13 @@
     <string name="game_context_uninstall_dlc">Uninstall DLC</string>
     <string name="game_context_uninstall_updates">Uninstall Updates</string>
 
-    <!-- Stats Overlay settings -->
-    <string name="show_stats_overlay">Show Performance Overlay</string>
-    <string name="stats_overlay_customization">Customization</string>
-    <string name="stats_overlay_items">Visibility</string>
-    <string name="stats_overlay_options">Performance Overlay</string>
-    <string name="enable_stats_overlay_">Enable Performance Overlay</string>
-    <string name="stats_overlay_options_description">Configure whether the performance overlay is shown and what information is displayed.</string>
+    <!-- Performance Overlay settings -->
+    <string name="show_performance_overlay">Show Performance Overlay</string>
+    <string name="performance_overlay_customization">Customization</string>
+    <string name="performance_overlay_items">Visibility</string>
+    <string name="performance_overlay_options">Performance Overlay</string>
+    <string name="performance_overlay_enable">Enable Performance Overlay</string>
+    <string name="performance_overlay_options_description">Configure whether the performance overlay is shown and what information is displayed.</string>
     <string name="overlay_show_fps">Show FPS</string>
     <string name="show_fps_description">Display current frames per second</string>
     <string name="show_frametime">Show Frametime</string>
