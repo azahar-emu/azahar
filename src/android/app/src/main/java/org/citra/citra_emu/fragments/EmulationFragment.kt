@@ -681,7 +681,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 R.id.menu_haptic_feedback -> {
                     EmulationMenuSettings.hapticFeedback = !EmulationMenuSettings.hapticFeedback
-                    updateShowPerformanceOverlay()
                     true
                 }
 
