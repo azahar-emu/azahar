@@ -1182,7 +1182,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SingleChoiceSetting(
-                    IntSetting.OVERLAY_POSITION,
+                    IntSetting.PERFORMANCE_OVERLAY_POSITION,
                     R.string.overlay_position,
                     R.string.overlay_position_description,
                     R.array.statsPosition,

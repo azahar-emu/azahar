@@ -186,7 +186,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // Show/hide the "Stats" overlay
         updateShowPerformanceOverlay()
 
-        val position = IntSetting.OVERLAY_POSITION.int
+        val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
         updateStatsPosition(position)
 
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -468,7 +468,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             NativeLibrary.unPauseEmulation()
 
             // If the overlay is enabled, we need to update the position if changed
-            val position = IntSetting.OVERLAY_POSITION.int
+            val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
             updateStatsPosition(position)
 
             binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->

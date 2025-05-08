@@ -213,7 +213,7 @@ layout_option =
 # 3: Bottom Left
 # 4: Center Bottom
 # 5: Bottom Right
-perf_overlay_position =
+performance_overlay_position =
 
 # Screen Gap - adds a gap between screens in all two-screen modes
 # Measured in pixels relative to the 240px default height of the screens
