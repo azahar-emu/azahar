@@ -139,6 +139,7 @@
     <string name="setup_system_files_possible">Kurulum mümkün.</string>
     <string name="setup_system_files_o3ds_needed">Önce eski 3DS kurulumu gereklidir.</string>
     <string name="setup_system_files_completed">Kurulum zaten tamamlandı.</string>
+    <string name="setup_system_files_enter_address">Artic Kurulum Aracı adresini girin</string>
     <string name="setup_system_files_preparing">Kurulum hazırlanıyor, lütfen bekleyin...</string>
     <string name="boot_home_menu">HOME Menüsünü Aç</string>
     <string name="show_home_apps">HOME menü uygulamalarını Uygulamalar listesinde göster</string>
@@ -177,7 +178,7 @@
     <string name="regenerate_console_id_description">Bu, mevcut sanal 3DS konsol kimliğinizi yenisiyle değiştirecektir. Mevcut sanal 3DS konsol kimliğiniz kurtarılamayacaktır. Bu, uygulamaların içinde beklenmedik etkilere neden olabilir. Eski bir konfigürasyon kaydı kullanıyorsanız bu işlem başarısız olabilir. Devam etmek istiyor musunuz?</string>
     <string name="mac_address">MAC Adresi</string>
     <string name="regenerate_mac_address">MAC Adresini Yeniden Oluştur</string>
-    <string name="regenerate_mac_address_description">Bu, mevcut MAC adresinizi yenisiyle değiştirecektir. MAC adresini kurulum aracını kullanarak gerçek konsolunuzdan aldıysanız bunu yapmanız önerilmez. Yine de devam mı?</string>
+    <string name="regenerate_mac_address_description">Bu, mevcut MAC adresinizi yenisiyle değiştirecektir. MAC adresini kurulum aracını kullanarak gerçek konsolunuzdan aldıysanız bunu yapmanız önerilmez. Yine de devam etmek ister misiniz?</string>
     <string name="plugin_loader">3GX Eklenti Yükleyici</string>
     <string name="plugin_loader_description">3GX eklentilerini eğer mevcutsa emüle edilmiş SD karttan yükler.</string>
     <string name="allow_plugin_loader">Uygulamaların Eklenti Yükleyici Durumunu Değiştirmesine İzin Verin</string>
@@ -191,8 +192,10 @@
 İç Kamera</string>
     <string name="outer_left_camera">Dış Sol Kamera</string>
     <string name="outer_right_camera">Dış Sağ Kamera</string>
-    <string name="image_source">Kamera Resim Kaynağı</string>
+    <string name="image_source">Kamera Görüntü Kaynağı</string>
+    <string name="image_source_description">Sanal kameranın görüntü kaynağını ayarlar. Bir görüntü dosyası veya desteklendiğinde bir cihaz kamerası kullanabilirsiniz.</string>
     <string name="camera_device">Kamera</string>
+    <string name="camera_device_description">“Görüntü Kaynağı” ayarı ‘Cihaz Kamerası’ olarak ayarlanmışsa, bu ayar kullanılacak fiziksel kamerayı ayarlar.</string>
     <string name="camera_facing_front">Ön</string>
     <string name="camera_facing_back">Geri</string>
     <!-- Graphics settings strings -->
@@ -209,7 +212,7 @@
     <string name="delay_render_thread_description">GPU\'ya veri gönderirken oyun işleme iş parçacığını geciktirin. Dinamik kare hızlarına sahip (çok az sayıda) uygulamada performans sorunlarına yardımcı olur.</string>
     <string name="advanced">Gelişmiş\"</string>
     <string name="texture_sampling_name">Doku Örnekleme</string>
-    <string name="texture_sampling_description">Oyunlar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, yükseltme sırasında kötü davranan oyunlarla ilgili bazı durumlarda yararlı olabilir. Emin değilseniz, bunu Oyun Kontrollü olarak ayarlayın.</string>
+    <string name="texture_sampling_description">Uygulamalar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, görüntü yükseltme sırasında hatalı davranan uygulamaların olduğu bazı durumlarda faydalı olabilir. Emin değilseniz, bunu Uygulama Kontrollü olarak ayarlayın.</string>
     <string name="shaders_accurate_mul">İsabetli Çoğaltma</string>
     <string name="shaders_accurate_mul_description">Donanım gölgelendiricilerinde daha doğru çarpım kullanır, bu da bazı grafik hatalarını düzeltebilir. Etkinleştirildiğinde performans düşecektir.</string>
     <string name="asynchronous_gpu">Asenkron GPU emülasyonunu etkinleştir</string>
@@ -258,6 +261,7 @@
     <!-- Audio settings strings -->
     <string name="audio_volume">Ses düzeyi</string>
     <string name="audio_stretch">Ses Gerdirme</string>
+    <string name="audio_stretch_description">Takılmayı azaltmak için sesi esnetir. Etkinleştirildiğinde, ses gecikmesini artırır ve performansı biraz düşürür.</string>
     <string name="realtime_audio">Gerçek zamanlı sesi etkinleştir</string>
     <string name="realtime_audio_description">Emülasyon kare hızındaki düşüşleri hesaba katmak için ses çalma hızını ölçeklendirir. Bu, oyun kare hızı düşük olsa bile sesin tam hızda çalınacağı anlamına gelir. Ses senkronizasyon sorunlarına neden olabilir.</string>
     <string name="audio_input_type">Ses Giriş Cihazı</string>
@@ -271,11 +275,19 @@
     <string name="cpu_clock_speed">CPU Saat Hızı</string>
     <string name="vsync">V-Sync\'i Etkinleştir</string>
     <string name="vsync_description">Oyun kare hızını cihazınızın yenileme hızına senkronize eder.</string>
+    <string name="renderer_debug_description">Grafiklerle ilgili ek hata ayıklama bilgilerini günlüğe kaydedin. Etkinleştirildiğinde, oyun performansı önemli ölçüde azalacaktır.</string>
+    <string name="instant_debug_log">Her mesajda günlük çıktısını temizle</string>
+    <string name="instant_debug_log_description">Hata ayıklama günlüğünü hemen dosyaya işler. Azahar çöküyor ve günlük çıktısı kesiliyorsa bunu kullanın.</string>
     <string name="delay_start_lle_modules">LLE modülleriyle başlamayı geciktir</string>
     <string name="delay_start_lle_modules_description">LLE modülleri etkinken uygulamanın başlamasını geciktirir</string>
+    <string name="deterministic_async_operations">Deterministik Asenkron İşlemler</string>
+    <string name="deterministic_async_operations_description">Hata ayıklama için asenkron işlemleri deterministik hale getirir. Bunu etkinleştirmek donmalara neden olabilir.</string>
+
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Ekran Yönelimi</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
+    <string name="layout_screen_orientation_landscape">Yatay</string>
+    <string name="layout_screen_orientation_landscape_reverse">Ters Yatay</string>
     <string name="layout_screen_orientation_portrait">Portre</string>
     <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
 
@@ -292,6 +304,7 @@
     <string name="learn_more">Daha Fazla Öğren </string>
     <string name="close">Kapat</string>
     <string name="reset_to_default">Varsayılanlara Sıfırla</string>
+    <string name="redump_games"><![CDATA[Lütfen <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">oyun kartuşlarınızı</a> veya <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">yüklü başlıklarınızı</a>yeniden yüklemek için kılavuzları izleyin.]]></string>
     <string name="option_default">Varsayılan</string>
     <string name="off">Kapalı</string>
     <string name="install">Yükle</string>
@@ -341,8 +354,11 @@
     <string name="emulation_menu_help">Menüye erişmek için Geri\'ye basın</string>
     <string name="emulation_save_state">Durumu Kaydet</string>
     <string name="emulation_load_state">Durumu Yükle</string>
+    <string name="emulation_empty_state_slot">Yuva %1$d</string>
+    <string name="emulation_occupied_state_slot">Yuva %1$d - %2$tF %2$tR</string>
     <string name="emulation_show_fps">FPS\'i Göster</string>
     <string name="emulation_haptic_feedback">Dokunsal Geri Bildirim</string>
+    <string name="emulation_overlay_options">Yerleşim Seçenekleri</string>
     <string name="emulation_configure_controls">Kontrolleri Yapılandır</string>
     <string name="emulation_edit_layout">Düzeni Değiştir</string>
     <string name="emulation_done">Bitti</string>
@@ -372,6 +388,8 @@
     <string name="small_screen_position_bottom_left">Sol Alt</string>
     <string name="small_screen_position_above">Yukarı</string>
     <string name="small_screen_position_below">Aşağı</string>
+    <string name="screen_gap">Ekran Boşluğu</string>
+    <string name="screen_gap_description">Tüm iki ekran modlarında ekranlar arasındaki boşluk. Büyük ekranın 240 piksel yüksekliğine göre px cinsinden ölçülür.</string>
     <string name="large_screen_proportion">Büyük Ekran Oranı</string>
     <string name="large_screen_proportion_description">Büyük Ekran düzeninde büyük ekran küçük ekrandan kaç kat daha büyük olsun?</string>
     <string name="emulation_adjust_custom_layout">Ayarlarda Özel Düzeni Değiştirin</string>
@@ -384,9 +402,13 @@
     <string name="emulation_custom_layout_width">Genişlik</string>
     <string name="emulation_custom_layout_height">Yükseklik</string>
     <string name="emulation_swap_screens">Ekranları Değiştir</string>
+    <string name="emulation_touch_overlay_reset">Yerleşimi Sıfırla</string>
+    <string name="emulation_show_overlay">Yerleşimi Göster</string>
     <string name="emulation_close_game">Oyunu Kapat</string>
+    <string name="emulation_toggle_pause">Duraklatmayı Aç / Kapat</string>
     <string name="miscellaneous">Çeşitli</string>
     <string name="use_artic_base_controller">Artic Base Sunucusundayken Artic Oyun Kolunu kullan</string>
+    <string name="use_artic_base_controller_description">Artic Base Sunucusuna bağlanıldığında yapılandırılmış giriş cihazı yerine Artic Base Sunucusu tarafından sağlanan kontrolleri kullanın.</string>
     <string name="emulation_close_game_message">Mevcut oyunu kapatmak istediğinizden emin misiniz?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Yükle</string>
@@ -513,6 +535,8 @@
     <string name="theme_mode_light">Açık</string>
     <string name="theme_mode_dark">Koyu</string>
 
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
     <string name="material_you_description">Uygulama genelinde işletim sisteminin renk temasını kullanın (Etkinleştirildiğinde “Tema Rengi” ayarını geçersiz kılar)</string>
 
     <!-- Static theme color -->
@@ -569,6 +593,9 @@
     <string name="side_by_side">Yan Yana</string>
     <string name="reverse_side_by_side">Ters Yan Yana</string>
     <string name="anaglyph">Anaglif</string>
+    <string name="interlaced">Geçmeli</string>
+    <string name="reverse_interlaced">Ters Geçmeli</string>
+
     <!-- Graphics API names -->
     <string name="opengles">OpenGLES</string>
     <string name="vulkan">Vulkan</string>
@@ -621,6 +648,7 @@
     <string name="matinique">Martinik</string>
     <string name="mexico">Meksika</string>
     <string name="monsterrat">Montserrat</string>
+    <string name="netherlands_antilles">Hollanda Antilleri</string>
     <string name="nicaragua">Nikaragua</string>
     <string name="panama">Panama</string>
     <string name="paraguay">Paraguay</string>

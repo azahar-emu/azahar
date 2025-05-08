@@ -8,7 +8,7 @@
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Einstellungen</string>
-    <string name="home_options">Optionen</string>
+    <string name="home_options">Einstellungen</string>
     <string name="home_search">Suchen</string>
     <string name="home_games">Anwendungen</string>
     <string name="settings_description">Emulatoreinstellungen ändern </string>
@@ -32,6 +32,8 @@
     <string name="select_citra_user_folder_home_description">Ändere die Dateien, die Azahar nutzt, um Anwendungen zu laden</string>
     <string name="theme_and_color_description">Ändere das Aussehen der App</string>
     <string name="install_cia_title">CIA Installieren</string>
+    <string name="warning_3ds_files"><![CDATA[Verschlüsselte Dateien und .3ds-Dateien werden nicht mehr unterstützt. Eine Entschlüsselung und/oder Umbenennung in .cci kann erforderlich sein. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Erfahre mehr.</a>]]></string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">GPU-Treiber auswählen</string>
     <string name="select_gpu_driver_title">Möchtest du den aktuellen GPU-Treiber ersetzten</string>
@@ -75,11 +77,15 @@
     <string name="warning_help">Hilfe</string>
     <string name="warning_skip">Überspringen</string>
     <string name="warning_cancel">Abbrechen</string>
-    <string name="select_citra_user_folder">Wähle einen Nutzterordner aus</string>
+    <string name="select_citra_user_folder">Wähle ein Nutzerverzeichnis aus</string>
     <string name="select_citra_user_folder_description"><![CDATA[Wähle dein <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">Nutzerdaten</a>verzeichnis, mit dem unteren Knopf.]]></string>
+    <string name="select_which_user_directory_to_use">Es hat den Anschein, dass du Nutzerverzeichnisse für Lime3DS und Azahar eingerichtet hast. Das kann daran liegen, dass du von Lime3DS auf Azahar upgegradet hast und dabei ein neues Verzeichnis ausgewählt hast.\n\nEs kann sein, dass du dadurch gedacht hast, dass deine Speicherstände verloren gegangen sind - Wir entschuldigen und, sollte dies der Fall sein.\n\nMöchtest du wieder dein ursprüngliches Lime3DS-Verzeichnis nutzen, wodurch deine Einstellungen und Speicherstände von Lime3DS wiederhergestellt werden, oder das aktuelle Azahar-Nutzerverzeichnis nutzen?\n\nKeine der Verzeinisse werden dadurch gelöscht und du kannst das Verzeichnis jederzeit wechseln, indem du die „Wähle ein Nutzerverzeichnis aus“-Option auswählst.</string>
+    <string name="keep_current_azahar_directory">Aktuelles Azahar-Verzeichnis behalten</string>
+    <string name="use_prior_lime3ds_directory">Vorheriges Lime3DS-Verzeichnis nutzen</string>
     <string name="select">Auswählen</string>
     <string name="cannot_skip">Du kannst diesen Schritt nicht überspringen</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
+    <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
     <string name="setup_theme_settings_description">Konfigurieren sie ihre Designeinstellungen für Azahar.</string>
     <string name="setup_set_theme">Design wählen</string>
@@ -116,8 +122,28 @@
     <string name="input_binding_description_horizontal_axis">Bewegen den Joystick nach links oder rechts.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Bildschirme tauschen</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Diese Eingabe muss an einen Analogstick oder eine Steuerkreuz-Achse gebunden sein!</string>
     <string name="input_message_button_only">Diese Eingabe muss an einen Gamepad-Knopf gebunden sein!</string>
+    <string name="turbo_limit_hotkey">Turbogeschwindigkeit</string>
+    <string name="turbo_enabled_toast">Turbogeschwindigkeit aktiviert</string>
+    <string name="turbo_disabled_toast">Turbogeschwindigkeit deaktiviert</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">Systemdateien</string>
+    <string name="setup_system_files_description">Systemdateivorgänge wie die Installation von Systemdateien oder das Booten des HOME-Menüs durchführen</string>
+    <string name="setup_tool_connect">Verbindung mit Artic-Einrichtungstool erstellen</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar benötigt Dateien von einer echten Konsole, um einige seiner Funktionen nutzen zu können. Du kannst diese Dateien mit dem Azahar Artic Einrichtung-Tool bekommen.<br>Hinweise:<ul><li><b>Bei diesem Vorgang werden konsolenspezifische Dateien in Azahar installiert. Gib deine Benutzer- oder NAND-Ordner nicht frei, nachdem der Einrichtungsvorgang durchgeführt wurde!</b></li><li>Während des Einrichtungsvorgangs, verknüpft Azahar deine Konsole mit dem Einrichtungstool. Du kannst die Verknüpfung jederzeit im  „Systemdateien“-Reiter in den Emulatoreinstellungen beenden.</li><li>Gehe nicht zeitgleich mit deinem eigenen 3DS und Azahr online, da dies sonst zu Probleme führen könnte.</li><li>Damit die New 3DS-Einrichtung funktioniert, ist zuerst eine Old 3DS-Einrichtung erforderlich (Es wird empfohlen beides einzurichten).</li><li>Beide Setup-Modi funktionieren unabhängig vom Modell der Konsole, auf dem das Setup-Tool ausgeführt wird.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Aktueller Systemdateienstatus wird abgerufen, bitte warten...</string>
+    <string name="delete_system_files">Einzigartige Konsolendaten entkoppeln</string>
+    <string name="delete_system_files_description"><![CDATA[Dadurch wird die Verknüpfung zwischen Azahar und deiner echten Konsole getrennt, was folgendes mitsichbringt:<br><ul><li>Dein OTP, SecureInfo und LocalFriendCodeSeed  werden von Azahar entfernt.</li><li>Deine Freundesliste wird zurückgesetzt und du wirst aus deinem NNID/PNID Account abgemeldet.</li><li>Systemdateien und eShop-Titel, die durch Azahar erhalten wurden, werden unzugänglich, bis die Konsole wieder verknüpft wird (Speicherdaten gehen nicht verloren).</li></ul><br>Forfahren?]]></string>
+    <string name="setup_system_files_o3ds">Old 3DS-Einrichtung</string>
+    <string name="setup_system_files_n3ds">New 3DS-Einrichtung</string>
+    <string name="setup_system_files_possible">Einrichtung ist möglich.</string>
+    <string name="setup_system_files_o3ds_needed">Du musst zuerst die Old 3DS-Einrichtung abschließen.</string>
+    <string name="setup_system_files_completed">Einrichtung bereits abgeschlossen.</string>
+    <string name="setup_system_files_enter_address">Gib die Adresse des Artic Einrichtung-Tools ein</string>
+    <string name="setup_system_files_preparing">Einrichtung wird vorbereitet, bitte warten...</string>
     <string name="boot_home_menu">HOME-Menü starten</string>
     <string name="show_home_apps">Zeige Home Menü Apps in der Anwendungs Liste</string>
     <string name="run_system_setup">System-Setup ausführen, wenn das HOME-Menü aufgerufen wird</string>
@@ -127,14 +153,20 @@
     <string name="generic_buttons">Knöpfe</string>
     <string name="button">Knopf</string>
 
+    <!-- System settings strings -->
+    <string name="emulation_settings">Emulationseinstellungen</string>
     <string name="username">Nutzername</string>
     <string name="new_3ds">New 3DS-Modus</string>
     <string name="lle_applets">Nutze LLE-Applets (sofern installiert)</string>
+    <string name="enable_required_online_lle_modules">Aktivere benötigte LLE-Module, um Online-Funktionen zu aktivieren (sofern installiert)</string>
+    <string name="enable_required_online_lle_modules_desc">Aktiviert die LLE-Module, die vonnöten sind, um Online-Multispieler, eShop-Zugriff und mehr zu verwenden.</string>
     <string name="clock">Uhr</string>
     <string name="init_clock">Uhr</string>
     <string name="init_clock_description">Du kannst die 3DS-Uhr so einstellen, dass sie entweder die Systemzeit deines Gerätes widerspiegelt, oder dir eine eigene Zeit aussuchen.</string>
     <string name="device_clock">Systemuhr</string>
     <string name="simulated_clock">Simulierte Uhr</string>
+    <string name="simulated_clock_description">Falls die Systemuhr auf „Simulierte Uhr“ gesetzt ist, verschiebt dies dementsprechend die Ursprungszeit und das Ursprungsdatum, auf das die Uhr eingestellt war.</string>
+    <string name="profile_settings">Profileinstellungen</string>
     <string name="emulated_region">Region</string>
     <string name="emulated_language">Sprache</string>
     <string name="birthday">Geburtstag</string>
@@ -146,10 +178,18 @@
     <string name="steps_per_hour_description">Anzahl der Schritte, die pro Stunde am Schrittzähler hinzugefügt werden soll. Wähle einen Bereich zwischen 0 und 65.535.</string>
     <string name="console_id">Konsolen-ID</string>
     <string name="regenerate_console_id">Konsolen-ID regenerieren</string>
+    <string name="regenerate_console_id_description">Dadurch wird deine aktuelle virtuelle 3DS Konsolen-ID durch eine neue ersetzt. Die aktuelle virtuelle Konsolen-ID kann nicht wiederhergestellt werden. Dies kann unerwartete Auswirkungen auf Anwendungen haben. Dies kann fehlschlagen, wenn du eine veraltete Konfigurationsspeicherdatei nutzt. Fortfahren?</string>
+    <string name="mac_address">MAC-Adresse</string>
+    <string name="regenerate_mac_address">MAC-Adresse regenerieren</string>
+    <string name="regenerate_mac_address_description">Dadurch wird deine aktuelle MAC-Adresse durch eine neue ersetzt. Dies wird nicht empfohlen, wenn du die MAC-Adresse mithilfe des Einrichtungs-Tools von deiner echten Konsole erhalten hast. Fortfahren?</string>
     <string name="plugin_loader">3GX-Plugin-Lader</string>
     <string name="plugin_loader_description">Lade 3GX Plugins von der emulierten SD-Karte, wenn sie verfügbar sind.</string>
     <string name="allow_plugin_loader">Erlaubt Anwendungen den Plugin-Lader-Zustand zu ändern</string>
     <string name="allow_plugin_loader_description">Erlaubt es Homebrew-Anwendungen den Plugin-Lader zu aktivieren, auch wenn es sonst deaktiviert ist.</string>
+    <string name="region_mismatch">Region passt nicht überein</string>
+    <string name="region_mismatch_emulated">Die Ländereinstellung ist für die ausgewählte emulierte Region nicht gültig.</string>
+    <string name="region_mismatch_console">Die Ländereinstellung ist für die gekoppelte Konsole ungültig.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -176,15 +216,24 @@
     <string name="texture_filter_description">Verbessert die Optik von Anwendungen durch Anwenden eines Filters auf Texturen. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale und MMPX.</string>
     <string name="delay_render_thread">Game-Render-Thread verzögern</string>
     <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
+    <string name="advanced">Fortgeschritten\"</string>
+    <string name="texture_sampling_name">Textur-Sampling</string>
+    <string name="texture_sampling_description">Setzt den von Spielen verwendeten Sampling-Filter außer Kraft. Dies kann in bestimmten Fällen nützlich sein, wenn sich die Spiele beim Hochskalieren schlecht verhalten. Wenn du dir unsicher bist, setze diese Einstellung auf „Spielgesteuert“</string>
     <string name="shaders_accurate_mul">Genaue Multiplikation</string>
     <string name="shaders_accurate_mul_description">Benutzt genauere Multiplikation in Hardware-Shadern, welche einige Grafikbugs fixen kann. Wenn aktiviert, ist die Leistung reduziert.</string>
     <string name="asynchronous_gpu">Asynchrone GPU-Emulation aktivieren</string>
     <string name="asynchronous_gpu_description">Verwendet einen separaten Thread, um die GPU asynchron zu emulieren. Wenn aktiviert, wird die Leistung verbessert.</string>
     <string name="frame_limit_enable">Höchstgeschwindigkeit</string>
+    <string name="frame_limit_enable_description">Wenn aktiviert, wird die Emulationsgeschwindigkeit auf einen angegebenen Prozentsatz der normalen Geschwindigkeit begrenzt.  Wenn diese Option deaktiviert ist, wird die Emulationsgeschwindigkeit nicht begrenzt und der Hotkey für die Turbogeschwindigkeit funktioniert nicht.</string>
     <string name="frame_limit_slider">Höchstgeschwindigkeit in Prozent</string>
     <string name="frame_limit_slider_description">Gibt den Prozentsatz zur Begrenzung der Emulationsgeschwindigkeit an. Mit der Voreinstellung von 100% wird die Emulation auf normale Geschwindigkeit begrenzt. Höhere oder niedrigere Werte erhöhen oder verringern die Geschwindigkeitsbeschränkung.</string>
+    <string name="turbo_limit">Turbogeschwindigkeitslimit</string>
+    <string name="turbo_limit_description">Emulationsgeschwindigkeit wird genutzt, während der Turbo-Hotkey aktiviert ist.</string>
+    <string name="expand_to_cutout_area">Zum Ausschnitbereich erweitern</string>
+    <string name="expand_to_cutout_area_description">Erweitert den Displaybereich, um den Ausschnitt- oder Einkerbungsbereich einzuschließen.</string>
     <string name="internal_resolution">Interne Auflösung</string>
     <string name="internal_resolution_description">Gibt die zum Rendern verwendete Auflösung an. Eine hohe Auflösung verbessert die Bildqualität erheblich, geht aber auch zu Lasten der Leistung und kann bei bestimmten Anwendungen zu Störungen führen.</string>
+    <string name="internal_resolution_setting_auto">Auto (Bildschirmgröße)</string>
     <string name="internal_resolution_setting_1x">Nativ (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativ (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativ (1200x720)</string>
@@ -200,6 +249,7 @@
     <string name="stereoscopy">Stereoskopie</string>
     <string name="render3d">Stereoskopischer 3D-Modus</string>
     <string name="factor3d">Tiefe</string>
+    <string name="factor3d_description">Gibt den Wert des 3D-Schiebereglers an. Dieser Wert sollte auf mehr als 0 % eingestellt werden, wenn Stereoskopisches 3D aktiviert ist.\nHinweis: Tiefenwerte über 100% werden nicht von echter Hardware unterstützt und könnten zu grafischen Fehlern führen.</string>
     <string name="disable_right_eye_render">Rendering für das rechte Auge deaktivieren</string>
     <string name="disable_right_eye_render_description">Verbessert die Leistung in einigen Anwendungen erheblich, kann in anderen jedoch zu Flackern führen.</string>
     <string name="cardboard_vr">Karton-VR</string>
@@ -242,6 +292,12 @@
     <string name="renderer_debug">Debug-Renderer</string>
     <string name="renderer_debug_description">Zusätzliche grafisch spezifische Debuginformationen werden protokolliert. Wenn dies aktiviert ist, ist die Leistung des Spiels minimal reduziert.</string>
     <string name="instant_debug_log">Protokollausgabe bei jeder Nachricht</string>
+    <string name="instant_debug_log_description">Überträgt das Debugprotokoll sofort in eine Datei. Verwenden Sie dies, wenn Azahar abstürzt und die Protokollausgabe abgeschnitten wird.</string>
+    <string name="delay_start_lle_modules">Start mit LLE-Module verzögern</string>
+    <string name="delay_start_lle_modules_description">Verzögert den Start der App, wenn die LLE-Module aktiviert sind.</string>
+    <string name="deterministic_async_operations">Deterministische asynchrone Operationen</string>
+    <string name="deterministic_async_operations_description">Asynchrone Operationen werden für Debug-Zwecke deterministisch. Die Aktivierung dieser Funktion kann zum Einfrieren führen.</string>
+
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Bildschirmausrichtung</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisch</string>
@@ -256,6 +312,7 @@
     <string name="ini_saved">Einstellungen gespeichert</string>
     <string name="gameid_saved">Einstellungen gespeichert für %1$s</string>
     <string name="error_saving">Fehler beim Speichern von %1$s.ini: %2$s</string>
+    <string name="saving">Speichervorgang...</string>
     <string name="loading">Ladevorgang...</string>
     <string name="next">Weiter</string>
     <string name="back">Zurück</string>
@@ -276,10 +333,15 @@
     <string name="select_rtc_time">RTC-Zeit auswählen</string>
     <string name="reset_setting_confirmation">Möchtest du diese Einstellung auf den Werkzustand zurücksetzen?</string>
     <string name="setting_not_editable">Du kannst das nicht bearbeiten</string>
+    <string name="setting_disabled">Einstellungen deaktiviert</string>
+    <string name="setting_disabled_description">Diese Einstellung ist aktuell deaktiviert, da eine andere Einstellung nicht den geeigneten Wert hat. </string>
     <string name="setting_not_editable_description">Diese Einstellung kann nicht geändert werden, solange ein Spiel läuft.</string>
     <string name="auto_select">Automatisch auswählen</string>
     <string name="start">Start</string>
     <string name="cancelling">Wird abgebrochen...</string>
+    <string name="important">Wichtig</string>
+    <string name="dont_show_again">Nicht noch einmal anzeigen</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
@@ -346,6 +408,8 @@
     <string name="small_screen_position_bottom_left">Unten Links</string>
     <string name="small_screen_position_above">Oben</string>
     <string name="small_screen_position_below">Unten</string>
+    <string name="screen_gap">Bildschirmabstand</string>
+    <string name="screen_gap_description">Abstand zwischen den Bildschirmen in allen Zwei-Bildschirm-Modi. Gemessen in px relativ zur 240px-Höhe des größeren Bildschirms.</string>
     <string name="large_screen_proportion">Größe des großen Bildschirms</string>
     <string name="large_screen_proportion_description">Wie viel größer ist der große Bildschirm, als der kleine in der Bildschirmanordnung?</string>
     <string name="emulation_adjust_custom_layout">Bearbeite die benutzerdefinierte Anordnung in den Einstellungen</string>
@@ -365,6 +429,7 @@
     <string name="emulation_toggle_pause">Pause umschalten</string>
     <string name="miscellaneous">Weiteres</string>
     <string name="use_artic_base_controller">Verwende den Artic Controller, wenn eine Verbindung zum Artic Base Server besteht</string>
+    <string name="use_artic_base_controller_description">Verwende die Artic Base Server bereitgestellten Steuerelemente, wenn du damit verbunden bist, anstelle des konfigurierten Eingabegeräts.</string>
     <string name="emulation_close_game_message">Möchtest du das Spiel wirklich schließen?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Laden</string>
@@ -426,6 +491,9 @@
     <string name="save_load_error">Fehler beim Speichern/Laden</string>
     <string name="fatal_error">Schwerwiegender Fehler</string>
     <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen findest du in der Protokolldatei.\nDas Fortfahren könnte zu ungewollten Abstürzen oder Problemen führen.</string>
+    <string name="invalid_region">Ungültige Region</string>
+    <string name="unsupported_encrypted">Nicht unterstützte verschlüsselte Anwendung</string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
     <string name="building_shaders">Shader werden erstellt</string>
@@ -433,6 +501,18 @@
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
     <string name="shortcut">Verknüpfung</string>
+    <string name="uninstall_cia">Anwendung deinstallieren</string>
+    <string name="uninstalling">Deinstallationsvorgang...</string>
+    <string name="game_context_open_save_dir">Speicherdateienverzeichnis öffnen</string>
+    <string name="game_context_open_app">Anwendungsverzeichnis öffnen</string>
+    <string name="game_context_open_mods">Modverzeichnis öffnen</string>
+    <string name="game_context_open_textures">Texturverzeichnis öffnen</string>
+    <string name="game_context_open_dlc">DLC-Verzeichnis öffnen</string>
+    <string name="game_context_open_updates">Updates-Verzeichnis öffnen</string>
+    <string name="game_context_open_extra">Extraverzeichnis öffnen</string>
+    <string name="game_context_uninstall_dlc">DLC deinstallieren</string>
+    <string name="game_context_uninstall_updates">Updates deinstallieren</string>
+
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>
@@ -453,6 +533,7 @@
     </plurals>
     <string name="cia_install_notification_channel_description">Azahar-Benachrichtigungen während CIA-Installation</string>
     <string name="cia_install_notification_title">CIA wird installiert</string>
+    <string name="cia_install_notification_installing">Installiere %1$s (%2$d/%3$d)</string>
     <string name="cia_install_notification_success_title">CIA erfolgreich installiert</string>
     <string name="cia_install_notification_error_title">CIA konnte nicht installiert werden</string>
     <string name="cia_install_success">„%s“ wurde erfolgreich installiert</string>
@@ -550,7 +631,11 @@
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Spielgesteuert</string>
     <string name="nearest_neighbor">Nearest-Neighbor</string>
+    <string name="linear">Linear</string>
+
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>

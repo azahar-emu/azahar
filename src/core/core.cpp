@@ -826,6 +826,18 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
         gpu->SetInterruptHandler(
             [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+
+        // Switch the shader cache to the title running when the savestate was created
+        const u32 thread_id = gsp->GetActiveClientThreadId();
+        if (thread_id != std::numeric_limits<u32>::max()) {
+            const auto thread = kernel->GetThreadByID(thread_id);
+            if (thread) {
+                const std::shared_ptr<Kernel::Process> process = thread->owner_process.lock();
+                if (process) {
+                    gpu->Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
+                }
+            }
+        }
     } else {
         u32 cheats_pid = cheat_engine.GetConnectedPID();
         ar & cheats_pid;

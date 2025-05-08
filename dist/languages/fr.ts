@@ -1915,203 +1915,203 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <translation>Forme</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="29"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="65"/>
         <source>Screens</source>
         <translation>Écrans</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="50"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="86"/>
         <source>Screen Layout</source>
         <translation>Disposition des écrans</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="58"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="94"/>
         <source>Default</source>
         <translation>Défaut</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="63"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
         <source>Single Screen</source>
         <translation>Un seul écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="68"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="104"/>
         <source>Large Screen</source>
         <translation>Écran large</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="73"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="109"/>
         <source>Side by Side</source>
         <translation>Côte à côte</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="78"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="114"/>
         <source>Separate Windows</source>
         <translation>Fenêtres séparées</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="83"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="119"/>
         <source>Hybrid Screen</source>
         <translation>Écran hybride</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="88"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="302"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="124"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="338"/>
         <source>Custom Layout</source>
         <translation>Disposition personnalisée</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="135"/>
         <source>Swap Screens</source>
         <translation>Permuter les écrans</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="106"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="142"/>
         <source>Rotate Screens Upright</source>
         <translation>Rotation des écrans vers le haut</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="128"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="164"/>
         <source>Screen Gap</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="166"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="202"/>
         <source>Large Screen Proportion</source>
         <translation>Proportion du grand écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="204"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="240"/>
         <source>Small Screen Position</source>
         <translation>Proportion du petit écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="212"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="248"/>
         <source>Upper Right</source>
         <translation>En haut à droite</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="217"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="253"/>
         <source>Middle Right</source>
         <translation>Au milieu à droite</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="222"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="258"/>
         <source>Bottom Right (default)</source>
         <translation>En bas à droite (défaut)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="227"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="263"/>
         <source>Upper Left</source>
         <translation>En haut à gauche</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="232"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="268"/>
         <source>Middle Left</source>
         <translation>Au milieu à gauche</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
         <source>Bottom Left</source>
         <translation>En bas à gauche</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="242"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="278"/>
         <source>Above large screen</source>
         <translation>Au dessus du grand écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="247"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="283"/>
         <source>Below large screen</source>
         <translation>En dessous du grand écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="309"/>
         <source>Background Color</source>
         <translation>Couleur de fond</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="310"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="537"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="573"/>
         <source>Top Screen</source>
         <translation>Écran supérieur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="316"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="411"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="352"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="447"/>
         <source>X Position</source>
         <translation>Position X</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="326"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="366"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="386"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="421"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="461"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="481"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="553"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="580"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="629"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="362"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="382"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="402"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="422"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="457"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="477"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="497"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="517"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="589"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="616"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="665"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="678"/>
         <source>px</source>
         <translation>px</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="336"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="431"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="372"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="467"/>
         <source>Y Position</source>
         <translation>Position Y</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="356"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="451"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="392"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="487"/>
         <source>Width</source>
         <translation>Largeur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="376"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="471"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="412"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="507"/>
         <source>Height</source>
         <translation>Hauteur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="405"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
         <source>Bottom Screen</source>
         <translation>Écran inférieur</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="498"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="534"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom Screen Opacity % (OpenGL Only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;% d&apos;opacité de l&apos;écran inférieur (OpenGL uniquement)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="529"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="565"/>
         <source>Single Screen Layout</source>
         <translation>Disposition avec un seul écran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="543"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="652"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="579"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="688"/>
         <source>Stretch</source>
         <translation>Étiré</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="563"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="612"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="599"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="648"/>
         <source>Left/Right Padding</source>
         <translation>Marge Gauche/Droite</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="570"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="619"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="655"/>
         <source>Top/Bottom Padding</source>
         <translation>Marge Haut/Bas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="673"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="709"/>
         <source>Note: These settings affect the Single Screen and Separate Windows layouts</source>
         <translation>Note : Ces paramètres affectent les dispositions Un seul écran et Fenêtres séparées</translation>
     </message>

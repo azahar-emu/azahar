@@ -1109,7 +1109,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="291"/>
         <source>Note: Depth values over 100% are not possible on real hardware and may cause graphical issues</source>
-        <translation type="unfinished"></translation>
+        <translation>Hinweis: Tiefenwerte über 100% sind auf echter Hardware nicht möglich und könnten grafischen Problemen verursachen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="300"/>
@@ -1247,7 +1247,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="168"/>
         <source>Turbo Speed Limit:</source>
-        <translation type="unfinished"></translation>
+        <translation>Turbogeschwindigkeitslimit:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="232"/>
@@ -1419,7 +1419,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="261"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure, set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Überschreibt die Sampling-Filter welche von Anwendungen benutzt werden. Dies kann in bestimmten Fällen bei schlecht funktionierenden Anwendungen beim Hochskalieren nützlich sein. Wenn Sie sich nicht sicher sind, setzen Sie diese Anwendung auf kkntrolliert&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="264"/>
@@ -1518,7 +1518,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="105"/>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="110"/>
         <source>Toggle Turbo Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Turbomodus umschalten</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="106"/>
@@ -1536,7 +1536,7 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="127"/>
         <source>The per-application speed and turbo speed hotkeys cannot be bound at the same time.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Pro-Anwendungsgeschwindigkeits- und der Turbigeschwindigkeits-Hotkey kann nicht zur selben Zeit gebunden werden.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="136"/>
@@ -1915,203 +1915,203 @@ Möchtest du den Fehler ignorieren und fortfahren?</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="29"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="65"/>
         <source>Screens</source>
         <translation>Bildschirme</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="50"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="86"/>
         <source>Screen Layout</source>
         <translation>Bildschirmanordnung</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="58"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="94"/>
         <source>Default</source>
         <translation>Standard</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="63"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
         <source>Single Screen</source>
         <translation>Einzelbildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="68"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="104"/>
         <source>Large Screen</source>
         <translation>Großer Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="73"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="109"/>
         <source>Side by Side</source>
         <translation>Nebeneinander</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="78"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="114"/>
         <source>Separate Windows</source>
         <translation>Getrennte Fenster</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="83"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="119"/>
         <source>Hybrid Screen</source>
         <translation>Hybrid-Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="88"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="302"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="124"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="338"/>
         <source>Custom Layout</source>
         <translation>Benutzerdefinierte Anordnung</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="135"/>
         <source>Swap Screens</source>
         <translation>Bildschirme tauschen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="106"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="142"/>
         <source>Rotate Screens Upright</source>
         <translation>Bildschirme aufrecht rotieren</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="128"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="164"/>
         <source>Screen Gap</source>
-        <translation type="unfinished"></translation>
+        <translation>Bildschirmabstand</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="166"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="202"/>
         <source>Large Screen Proportion</source>
         <translation>Größe des großen Bildschirms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="204"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="240"/>
         <source>Small Screen Position</source>
         <translation>Position des kleinen Bildschirms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="212"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="248"/>
         <source>Upper Right</source>
         <translation>Oben rechts</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="217"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="253"/>
         <source>Middle Right</source>
         <translation>Mitte rechts</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="222"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="258"/>
         <source>Bottom Right (default)</source>
         <translation>Unten rechts (Standard)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="227"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="263"/>
         <source>Upper Left</source>
         <translation>Oben links</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="232"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="268"/>
         <source>Middle Left</source>
         <translation>Mitte links</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
         <source>Bottom Left</source>
         <translation>Unten links</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="242"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="278"/>
         <source>Above large screen</source>
         <translation>Überm großen Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="247"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="283"/>
         <source>Below large screen</source>
         <translation>Unterm großen Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="309"/>
         <source>Background Color</source>
         <translation>Hintergrundfarbe</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="310"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="537"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="573"/>
         <source>Top Screen</source>
         <translation>Oberer Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="316"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="411"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="352"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="447"/>
         <source>X Position</source>
         <translation>X-Position</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="326"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="366"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="386"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="421"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="461"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="481"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="553"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="580"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="629"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="362"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="382"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="402"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="422"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="457"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="477"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="497"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="517"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="589"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="616"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="665"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="678"/>
         <source>px</source>
         <translation>px</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="336"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="431"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="372"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="467"/>
         <source>Y Position</source>
         <translation>Y-Position</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="356"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="451"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="392"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="487"/>
         <source>Width</source>
         <translation>Breite</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="376"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="471"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="412"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="507"/>
         <source>Height</source>
         <translation>Höhe</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="405"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
         <source>Bottom Screen</source>
         <translation>Unterer Bildschirm</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="498"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="534"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom Screen Opacity % (OpenGL Only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Untere Bildschirmdeckkraft % (Nur OpenGL)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="529"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="565"/>
         <source>Single Screen Layout</source>
         <translation>Einzelbildschirmanordnung</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="543"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="652"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="579"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="688"/>
         <source>Stretch</source>
         <translation>Strecken</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="563"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="612"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="599"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="648"/>
         <source>Left/Right Padding</source>
         <translation>Umrandung (Links/Rechts)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="570"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="619"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="655"/>
         <source>Top/Bottom Padding</source>
         <translation>Umrandung (Oben/Unten)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="673"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="709"/>
         <source>Note: These settings affect the Single Screen and Separate Windows layouts</source>
         <translation>Hinweis: Diese Einstellungen beeinflussen die „Einzelbildschirm“- und „Getrennte Fenster“-Anordnung</translation>
     </message>
@@ -2526,7 +2526,7 @@ Online-Funktionen (sofern installiert)</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="103"/>
         <source>Auto-select</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisch auswählen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="159"/>
@@ -3589,7 +3589,7 @@ Online-Funktionen (sofern installiert)</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="604"/>
         <source>This action will unlink your real console from Azahar, with the following consequences:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Your OTP, SecureInfo and LocalFriendCodeSeed will be removed from Azahar.&lt;/li&gt;&lt;li&gt;Your friend list will reset and you will be logged out of your NNID/PNID account.&lt;/li&gt;&lt;li&gt;System files and eshop titles obtained through Azahar will become inaccessible until the same console is linked again (save data will not be lost).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;Continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Dadurch wird die Verknüpfung zwischen Azahar und deiner echten Konsole getrennt, was folgendes mitsichbringt:&lt;br&gt;&lt;ul&gt;&lt;li&gt;Dein OTP, SecureInfo und LocalFriendCodeSeed  werden von Azahar entfernt.&lt;/li&gt;&lt;li&gt;Deine Freundesliste wird zurückgesetzt und du wirst aus deinem NNID/PNID Account abgemeldet.&lt;/li&gt;&lt;li&gt;Systemdateien und eShop-Titel, die durch Azahar erhalten wurden, werden unzugänglich, bis die Konsole wieder verknüpft wird (Speicherdaten gehen nicht verloren).&lt;/li&gt;&lt;/ul&gt;&lt;br&gt;Forfahren?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="632"/>
@@ -3624,12 +3624,12 @@ Online-Funktionen (sofern installiert)</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="673"/>
         <source>Status: Invalid</source>
-        <translation type="unfinished"></translation>
+        <translation>Status: Ungültig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="675"/>
         <source>Status: IO Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Status: I/O-Fehler</translation>
     </message>
 </context>
 <context>
@@ -4161,12 +4161,12 @@ Bitte überprüfe deine FFmpeg-Installation, die für die Kompilierung verwendet
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1622"/>
         <source>Quick Load</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellladen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1623"/>
         <source>Quick Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellspeichern</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1625"/>
@@ -4177,17 +4177,17 @@ Bitte überprüfe deine FFmpeg-Installation, die für die Kompilierung verwendet
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1638"/>
         <source>%2 %3</source>
-        <translation type="unfinished"></translation>
+        <translation>%2 %3</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1644"/>
         <source>Quick Save - %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellspeichern - %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1645"/>
         <source>Quick Load - %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellladen - %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1649"/>
@@ -4324,7 +4324,7 @@ Schau im Protokoll für weitere Informationen nach.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2150"/>
         <source>&lt;p&gt;Azahar needs console unique data and firmware files from a real console to be able to use some of its features.&lt;br&gt;Such files and data can be set up with the &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Setup Tool&lt;/a&gt;&lt;br&gt;Notes:&lt;ul&gt;&lt;li&gt;&lt;b&gt;This operation will install console unique data to Azahar, do not share your user or nand folders&lt;br&gt;after performing the setup process!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;While doing the setup process, Azahar will link to the console running the setup tool. You can unlink the&lt;br&gt;console later from the System tab in the emulator configuration menu.&lt;/li&gt;&lt;li&gt;Do not go online with both Azahar and your 3DS console at the same time after setting up system files,&lt;br&gt;as it could cause issues.&lt;/li&gt;&lt;li&gt;Old 3DS setup is needed for the New 3DS setup to work (doing both setup modes is recommended).&lt;/li&gt;&lt;li&gt;Both setup modes will work regardless of the model of the console running the setup tool.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;p&gt;Azahar benötigt Dateien von einer echten Konsole, um einige seiner Funktionen nutzen zu können. &lt;br&gt;Du kannst diese Dateien mit dem &lt;a href=https://github.com/azahar-emu/ArticSetupTool&gt;Azahar Artic Einrichtung-Tool&lt;/a&gt; bekommen.&lt;br&gt;Hinweise:&lt;ul&gt;&lt;li&gt;&lt;b&gt;Bei diesem Vorgang werden konsolenspezifische Dateien in Azahar installiert. Gib deine Benutzer- oder NAND-Ordner nicht frei, &lt;br&gt;nachdem der Einrichtungsvorgang durchgeführt wurde!&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Während des Einrichtungsvorgangs, verknüpft Azahar deine Konsole mit dem Einrichtungstool. Du kannst die Verknüpfung &lt;br&gt;jederzeit im „Systemdateien“-Reiter in den Emulatoreinstellungen trennen.&lt;/li&gt;&lt;li&gt;Gehe nicht zeitgleich mit deinem eigenen 3DS und Azahr online, &lt;br&gt;da dies sonst zu Probleme führen könnte.&lt;/li&gt;&lt;li&gt;Damit die New 3DS-Einrichtung funktioniert, ist zuerst eine Old 3DS-Einrichtung erforderlich (Es wird empfohlen beides einzurichten).&lt;/li&gt;&lt;li&gt;Beide Setup-Modi funktionieren unabhängig vom Modell der Konsole, auf dem das Setup-Tool ausgeführt wird.&lt;/li&gt;&lt;/ul&gt;&lt;hr&gt;&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2169"/>
@@ -6181,7 +6181,7 @@ Debug-Meldung: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="350"/>
         <source>Quick Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellspeichern</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="355"/>
@@ -6191,7 +6191,7 @@ Debug-Meldung: </translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="360"/>
         <source>Quick Load</source>
-        <translation type="unfinished"></translation>
+        <translation>Schnellladen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="365"/>
