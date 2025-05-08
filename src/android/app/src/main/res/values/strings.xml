@@ -540,7 +540,7 @@
     <string name="stats_overlay_items">Visibility</string>
     <string name="stats_overlay_options">Performance Overlay</string>
     <string name="enable_stats_overlay_">Enable Performance Overlay</string>
-    <string name="stats_overlay_options_description">Configure what information is shown in the performance overlay</string>
+    <string name="stats_overlay_options_description">Configure whether the performance overlay is shown and what information is displayed.</string>
     <string name="overlay_show_fps">Show FPS</string>
     <string name="show_fps_description">Display current frames per second</string>
     <string name="show_frametime">Show Frametime</string>
