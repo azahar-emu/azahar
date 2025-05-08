@@ -1240,7 +1240,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                     binding.performanceOverlayShowText.text = sb.toString()
                 }
-                    perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
+                perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
             }
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
             binding.performanceOverlayShowText.visibility = View.VISIBLE
@@ -1248,7 +1248,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             binding.performanceOverlayShowText.visibility = View.GONE
         }
     }
-
 
     private fun updateStatsPosition(position: Int) {
         val params = binding.performanceOverlayShowText.layoutParams as CoordinatorLayout.LayoutParams
@@ -1295,6 +1294,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             return 0.0f
         }
     }
+
     private fun celsiusToFahrenheit(celsius: Float): Float {
         return (celsius * 9 / 5) + 32
     }
