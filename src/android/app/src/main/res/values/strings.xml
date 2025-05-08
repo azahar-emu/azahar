@@ -535,12 +535,12 @@
     <string name="game_context_uninstall_updates">Uninstall Updates</string>
 
     <!-- Stats Overlay settings -->
-    <string name="show_stats_overlay">ShoW Performance Stats Overlay</string>
+    <string name="show_stats_overlay">Show Performance Overlay</string>
     <string name="stats_overlay_customization">Customization</string>
     <string name="stats_overlay_items">Visibility</string>
-    <string name="stats_overlay_options">Performance Stats Overlay</string>
-    <string name="enable_stats_overlay_">Enable Performance Stats Overlay</string>
-    <string name="stats_overlay_options_description">Configure what information is shown in the performance stats overlay</string>
+    <string name="stats_overlay_options">Performance Overlay</string>
+    <string name="enable_stats_overlay_">Enable Performance Overlay</string>
+    <string name="stats_overlay_options_description">Configure what information is shown in the performance overlay</string>
     <string name="overlay_show_fps">Show FPS</string>
     <string name="show_fps_description">Display current frames per second</string>
     <string name="show_frametime">Show Frametime</string>
@@ -554,7 +554,7 @@
     <string name="overlay_show_battery_temp">Show Battery Temperature</string>
     <string name="show_bat_temperature_description">Display current Battery temperature in Celsius and Fahrenheit</string>
     <string name="overlay_position">Overlay Position</string>
-    <string name="overlay_position_description">Choose where the performance stats overlay is displayed on the screen</string>
+    <string name="overlay_position_description">Choose where the performance overlay is displayed on the screen</string>
     <string name="overlay_position_top_left">Top Left</string>
     <string name="overlay_position_top_right">Top Right</string>
     <string name="overlay_position_bottom_left">Bottom Left</string>
