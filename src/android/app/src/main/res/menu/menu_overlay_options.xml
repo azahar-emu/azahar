@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/menu_show_overlay"
-        android:title="@string/emulation_show_overlay"
+        android:title="@string/emulation_show_controller_overlay"
         android:checkable="true" />
 
     <item
