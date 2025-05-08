@@ -1122,7 +1122,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SubmenuSetting(
                     R.string.stats_overlay_options,
                     R.string.stats_overlay_options_description,
-                    R.drawable.ic_frames,
+                    R.drawable.ic_stats,
                     Settings.SECTION_STATS_OVERLAY
                 )
             )
