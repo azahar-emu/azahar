@@ -737,7 +737,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="123"/>
         <source>Flush log output on every message</source>
-        <translation type="unfinished"></translation>
+        <translation>Her mesajda günlük çıktısını temizle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="126"/>
@@ -845,7 +845,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="6"/>
         <source>Azahar Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar Yapılandırması</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="48"/>
@@ -1089,12 +1089,12 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="249"/>
         <source>Interlaced</source>
-        <translation type="unfinished"></translation>
+        <translation>Geçmeli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="254"/>
         <source>Reverse Interlaced</source>
-        <translation type="unfinished"></translation>
+        <translation>Ters Geçmeli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="266"/>
@@ -1169,7 +1169,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="365"/>
         <source>Preload Custom Textures</source>
-        <translation type="unfinished"></translation>
+        <translation>Özel Dokuları Önceden Yükle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="372"/>
@@ -1179,7 +1179,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="375"/>
         <source>Async Custom Texture Loading</source>
-        <translation type="unfinished"></translation>
+        <translation>Asenkron Özel Doku Yükleme</translation>
     </message>
 </context>
 <context>
@@ -1301,7 +1301,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="152"/>
         <source>Are you sure you want to &lt;b&gt;reset your settings&lt;/b&gt; and close Azahar?</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Ayarlarınızı sıfırlamak&lt;/b&gt; ve Azahar&apos;ı kapatmak istediğinizden emin misiniz?</translation>
     </message>
 </context>
 <context>
@@ -1364,7 +1364,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="166"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the selected graphics API to accelerate shader emulation.&lt;/p&gt;&lt;p&gt;Requires a relatively powerful GPU for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gölgelendirici emülasyonunu hızlandırmak için seçilen grafik API&apos;ını kullanın.&lt;/p&gt;&lt;p&gt;Daha iyi performans için nispeten güçlü bir GPU gerektirir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="169"/>
@@ -1374,7 +1374,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="191"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some applications requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gölgelendiricilerdeki çarpma işleminde tüm uç durumları doğru şekilde işleyin. &lt;/p&gt;&lt;p&gt;Bazı uygulamalar, donanım gölgelendiricisinin düzgün şekilde işlenmesi için bunun etkinleştirilmesini gerektirir.&lt;/p&gt;&lt;p&gt; Ancak bu, çoğu uygulamada performansı düşürecektir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="194"/>
@@ -1394,7 +1394,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="217"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compile shaders using background threads to avoid shader compilation stutter. Expect temporary graphical glitches&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gölgelendirici derleme takılmalarını önlemek için gölgelendiricileri arka plan iş parçacıkları kullanarak derleyin. Geçici grafiksel hatalar oluşabilir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="220"/>
@@ -1404,12 +1404,12 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="227"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Perform presentation on separate threads. Improves performance when using Vulkan in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sunumu ayrı iş parçacıkları üzerinde gerçekleştirin. Çoğu uygulamada Vulkan kullanırken performansı artırır.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="230"/>
         <source>Enable Async Presentation</source>
-        <translation type="unfinished"></translation>
+        <translation>Asenkron Sunumu Etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="240"/>
@@ -1419,7 +1419,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="261"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Overrides the sampling filter used by applications. This can be useful in certain cases with poorly behaved applications when upscaling. If unsure, set this to Application Controlled&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Uygulamalar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, görüntü yükseltme sırasında hatalı davranan uygulamaların olduğu bazı durumlarda faydalı olabilir. Emin değilseniz, bunu Uygulama Kontrollü olarak ayarlayın&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="264"/>
@@ -1429,7 +1429,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="272"/>
         <source>Application Controlled</source>
-        <translation type="unfinished"></translation>
+        <translation>Uygulama Kontrollü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="277"/>
@@ -1444,7 +1444,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="293"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oluşturulan gölgelendiricileri diske depolayıp yükleyerek takılmaları azaltın.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="296"/>
@@ -1790,7 +1790,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1056"/>
         <source>Use Artic Controller when connected to Artic Base Server</source>
-        <translation type="unfinished"></translation>
+        <translation>Artic Base Sunucusundayken Artic Oyun Kolunu kullan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="240"/>
@@ -1915,203 +1915,203 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="29"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="65"/>
         <source>Screens</source>
         <translation>Ekranlar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="50"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="86"/>
         <source>Screen Layout</source>
         <translation>Ekran Düzeni</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="58"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="94"/>
         <source>Default</source>
         <translation>Varsayılan</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="63"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
         <source>Single Screen</source>
         <translation>Tek Ekran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="68"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="104"/>
         <source>Large Screen</source>
         <translation>Büyük Ekran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="73"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="109"/>
         <source>Side by Side</source>
         <translation>Yan Yana</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="78"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="114"/>
         <source>Separate Windows</source>
         <translation>Ayrı Pencereler</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="83"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="119"/>
         <source>Hybrid Screen</source>
         <translation>Hibrit Ekran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="88"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="302"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="124"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="338"/>
         <source>Custom Layout</source>
         <translation>Özel Düzen</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="135"/>
         <source>Swap Screens</source>
         <translation>Ekranları Değiştir</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="106"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="142"/>
         <source>Rotate Screens Upright</source>
         <translation>Ekranları Yukarı Döndür</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="128"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="164"/>
         <source>Screen Gap</source>
         <translation>Ekran boşluğu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="166"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="202"/>
         <source>Large Screen Proportion</source>
         <translation>Büyük Ekran Oranı</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="204"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="240"/>
         <source>Small Screen Position</source>
         <translation>Küçük Ekran Konumu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="212"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="248"/>
         <source>Upper Right</source>
         <translation>Sağ Üst</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="217"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="253"/>
         <source>Middle Right</source>
         <translation>Orta Üst</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="222"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="258"/>
         <source>Bottom Right (default)</source>
         <translation>Sağ Alt (varsayılan)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="227"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="263"/>
         <source>Upper Left</source>
         <translation>Sol Üst</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="232"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="268"/>
         <source>Middle Left</source>
         <translation>Orta Sol</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="237"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
         <source>Bottom Left</source>
         <translation>Sol Alt</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="242"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="278"/>
         <source>Above large screen</source>
         <translation>Büyük ekranın üzerinde</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="247"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="283"/>
         <source>Below large screen</source>
         <translation>Büyük ekranın altında</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="273"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="309"/>
         <source>Background Color</source>
         <translation>Arkaplan Rengi</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="310"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="537"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="573"/>
         <source>Top Screen</source>
         <translation>Üst Ekran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="316"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="411"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="352"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="447"/>
         <source>X Position</source>
         <translation>X Konumu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="326"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="346"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="366"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="386"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="421"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="461"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="481"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="553"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="580"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="629"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="362"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="382"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="402"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="422"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="457"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="477"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="497"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="517"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="589"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="616"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="665"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="678"/>
         <source>px</source>
         <translation>pk</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="336"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="431"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="372"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="467"/>
         <source>Y Position</source>
         <translation>Y Konumu</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="356"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="451"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="392"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="487"/>
         <source>Width</source>
         <translation>Genişlik</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="376"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="471"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="412"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="507"/>
         <source>Height</source>
         <translation>Yükseklik</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="405"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="441"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="642"/>
         <source>Bottom Screen</source>
         <translation>Alt Ekran</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="498"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="534"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom Screen Opacity % (OpenGL Only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Alt Ekran Opaklığı % (Sadece OpenGL İçin&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="529"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="565"/>
         <source>Single Screen Layout</source>
         <translation>Tek Ekran Düzeni</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="543"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="652"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="579"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="688"/>
         <source>Stretch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="563"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="612"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="599"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="648"/>
         <source>Left/Right Padding</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="570"/>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="619"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="606"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="655"/>
         <source>Top/Bottom Padding</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="673"/>
+        <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="709"/>
         <source>Note: These settings affect the Single Screen and Separate Windows layouts</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2247,7 +2247,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="81"/>
         <source>SDL</source>
-        <translation type="unfinished"></translation>
+        <translation>SDL</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="85"/>
@@ -2380,7 +2380,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="57"/>
         <source>Layout</source>
-        <translation type="unfinished">Düzen</translation>
+        <translation>Düzen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="58"/>
@@ -2395,7 +2395,7 @@ Hataya aldırmayıp devam etmek ister misiniz?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="60"/>
         <source>Debug</source>
-        <translation type="unfinished">Hata Ayıklama</translation>
+        <translation>Hata ayıklama</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="61"/>
@@ -2760,7 +2760,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="482"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps per hour reported by the pedometer. Range from 0 to 65,535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Adımsayar tarafından bildirilen saat başına adım sayısı. 0 ile 65,535 arasında değişir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="485"/>
@@ -2770,7 +2770,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="499"/>
         <source>Run System Setup when Home Menu is launched</source>
-        <translation type="unfinished"></translation>
+        <translation>Home menüsü açıldığında sistem kurulumunu başlat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="506"/>
@@ -2801,7 +2801,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="566"/>
         <source>Allow applications to change plugin loader state</source>
-        <translation type="unfinished"></translation>
+        <translation>Uygulamaların eklenti yükleyici durumunu değiştirmesine izin verin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="576"/>
@@ -3583,7 +3583,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="585"/>
         <source>This will replace your current MAC address with a new one. It is not recommended to do this if you got the MAC address from your real console using the setup tool. Continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Bu, mevcut MAC adresinizi yenisiyle değiştirecektir. MAC adresini kurulum aracını kullanarak gerçek konsolunuzdan aldıysanız bunu yapmanız önerilmez. Yine de devam etmek ister misiniz?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="604"/>
@@ -5216,7 +5216,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1132"/>
         <source>Double-click to add a new folder to the application list</source>
-        <translation type="unfinished"></translation>
+        <translation>Uygulama listesine yeni bir klasör eklemek için çift tıklayın</translation>
     </message>
 </context>
 <context>
@@ -5685,7 +5685,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open room)</source>
-        <translation type="unfinished"></translation>
+        <translation>(Açık oda için boş bırakın)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
@@ -6074,7 +6074,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="242"/>
         <source>Connect to Artic Base...</source>
-        <translation type="unfinished"></translation>
+        <translation>Artic Base&apos;e Bağlan...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="247"/>
@@ -6663,17 +6663,17 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kullanıcı adı geçerli değil. 4 ila 20 alfanümerik karakter olmalı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oda adı geçerli değil. 4 ila 20 alfanümerik karakter olmalı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use or not valid. Please choose another.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kullanıcı adı hali hazırda kullanılıyor veya geçerli değil. Lütfen başka bir kullanıcı adı seçin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
@@ -6703,22 +6703,22 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="32"/>
         <source>Unable to connect to the room because it is already full.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oda zaten dolu olduğundan bağlanılamıyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="34"/>
         <source>Creating a room failed. Please retry. Restarting Azahar might be necessary.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oda oluşturma başarısız oldu. Lütfen tekrar deneyin. Azahar&apos;ı yeniden başlatmanız gerekebilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oda sahibi sizi engelledi. Engelinizi kaldırması için oda sahibi ile konuşun veya farklı bir oda deneyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="39"/>
         <source>Version mismatch! Please update to the latest version of Azahar. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sürüm uyuşmazlığı! Lütfen Azahar&apos; ı en son sürüme güncelleyin. Sorun devam ederse, oda sahibiyle iletişime geçin ve sunucuyu güncellemelerini isteyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="41"/>
@@ -6738,12 +6738,12 @@ Ayıklama Mesajı:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <source>You have been kicked by the room host.</source>
-        <translation type="unfinished"></translation>
+        <translation>Oda sahibi tarafından atıldınız.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="49"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC adresi zaten kullanımda. Lütfen başka bir tane seçin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="50"/>
@@ -6761,7 +6761,8 @@ Please go to Emulation &gt; Configure &gt; System to regenerate your Console ID.
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="55"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
-        <translation type="unfinished"></translation>
+        <translation>Atmaya/engellemeye çalıştığınız kullanıcı bulunamadı.
+Odayı terk etmiş olabilirler.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>
@@ -6965,7 +6966,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="188"/>
         <source>Unsupported encrypted application</source>
-        <translation type="unfinished"></translation>
+        <translation>Desteklenmeyen şifreli uygulama</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="306"/>
@@ -7238,14 +7239,18 @@ They may have left the room.</source>
         <source>Azahar has detected user data for Citra.
 
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar, Citra için kullanıcı verileri tespit etti.
+
+</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="77"/>
         <source>Azahar has detected user data for Lime3DS.
 
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar, Lime3DS için kullanıcı verileri tespit etti.
+
+</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/user_data_migration.cpp" line="97"/>
@@ -7412,7 +7417,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="271"/>
         <source>process = %1 (%2)</source>
-        <translation type="unfinished"></translation>
+        <translation>işlem = %1 (%2)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="275"/>
