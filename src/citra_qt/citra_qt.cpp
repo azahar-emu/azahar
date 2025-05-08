@@ -776,13 +776,20 @@ void GMainWindow::InitializeHotkeys() {
     };
 
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
-    connect_shortcut(QStringLiteral("Use Layout 0 (Default)"), &GMainWindow::UseDefaultLayout);
-    connect_shortcut(QStringLiteral("Use Layout 1 (SingleScreen)"), &GMainWindow::UseSingleScreenLayout);
-    connect_shortcut(QStringLiteral("Use Layout 2 (LargeScreen)"), &GMainWindow::UseLargeScreenLayout);
-    connect_shortcut(QStringLiteral("Use Layout 3 (HybridScreen)"), &GMainWindow::UseHybridScreenLayout);
-    connect_shortcut(QStringLiteral("Use Layout 4 (SideScreen)"), &GMainWindow::UseSideScreenLayout);
-    connect_shortcut(QStringLiteral("Use Layout 5 (SeparateWindows)"), &GMainWindow::UseSeparateWindowsLayout);
-    connect_shortcut(QStringLiteral("Use Layout 6 (CustomLayout)"), &GMainWindow::UseCustomLayout);
+    connect_shortcut(QStringLiteral("Use Layout 0 (Default)"),
+                    &GMainWindow::UseDefaultLayout);
+    connect_shortcut(QStringLiteral("Use Layout 1 (SingleScreen)"),
+                    &GMainWindow::UseSingleScreenLayout);
+    connect_shortcut(QStringLiteral("Use Layout 2 (LargeScreen)"),
+                    &GMainWindow::UseLargeScreenLayout);
+    connect_shortcut(QStringLiteral("Use Layout 3 (HybridScreen)"),
+                    &GMainWindow::UseHybridScreenLayout);
+    connect_shortcut(QStringLiteral("Use Layout 4 (SideScreen)"),
+                    &GMainWindow::UseSideScreenLayout);
+    connect_shortcut(QStringLiteral("Use Layout 5 (SeparateWindows)"),
+                    &GMainWindow::UseSeparateWindowsLayout);
+    connect_shortcut(QStringLiteral("Use Layout 6 (CustomLayout)"),
+                    &GMainWindow::UseCustomLayout);
     connect_shortcut(QStringLiteral("Exit Fullscreen"), [&] {
         if (emulation_running) {
             ui->action_Fullscreen->setChecked(false);
@@ -2608,7 +2615,6 @@ void GMainWindow::ToggleScreenLayout() {
     UpdateSecondaryWindowVisibility();
 }
 
-
 void GMainWindow::UseDefaultLayout() {
     Settings::values.layout_option = Settings::LayoutOption::Default;
     SyncMenuUISettings();
@@ -2657,7 +2663,6 @@ void GMainWindow::UseCustomLayout() {
     system.ApplySettings();
     UpdateSecondaryWindowVisibility();
 }
-
 
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screen = ui->action_Screen_Layout_Swap_Screens->isChecked();

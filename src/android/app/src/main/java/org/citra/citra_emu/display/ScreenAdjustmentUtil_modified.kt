@@ -47,7 +47,7 @@ class ScreenAdjustmentUtil(
             changeScreenOrientation(layoutOption)
         }
     }
-
+    
     fun useLayout(selectIndex: Int = 0) {
         val landscapeValues = context.resources.getIntArray(R.array.landscapeValues)
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
