@@ -1233,25 +1233,25 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     }
 
                     if (BooleanSetting.OVERLAY_BACKGROUND.boolean) {
-                        binding.showPerformanceOverlayText.setBackgroundResource(R.color.citra_transparent_black)
+                        binding.performanceOverlayShowText.setBackgroundResource(R.color.citra_transparent_black)
                     } else {
-                        binding.showPerformanceOverlayText.setBackgroundResource(0)
+                        binding.performanceOverlayShowText.setBackgroundResource(0)
                     }
 
-                    binding.showPerformanceOverlayText.text = sb.toString()
+                    binding.performanceOverlayShowText.text = sb.toString()
                 }
                     perfStatsUpdateHandler.postDelayed(perfStatsUpdater!!, 1000)
             }
             perfStatsUpdateHandler.post(perfStatsUpdater!!)
-            binding.showPerformanceOverlayText.visibility = View.VISIBLE
+            binding.performanceOverlayShowText.visibility = View.VISIBLE
         } else {
-            binding.showPerformanceOverlayText.visibility = View.GONE
+            binding.performanceOverlayShowText.visibility = View.GONE
         }
     }
 
 
     private fun updateStatsPosition(position: Int) {
-        val params = binding.showPerformanceOverlayText.layoutParams as CoordinatorLayout.LayoutParams
+        val params = binding.performanceOverlayShowText.layoutParams as CoordinatorLayout.LayoutParams
         val padding = (20 * resources.displayMetrics.density).toInt() // 20dp
         params.setMargins(padding, 0, padding, 0)
 
@@ -1281,7 +1281,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             }
         }
 
-        binding.showPerformanceOverlayText.layoutParams = params
+        binding.performanceOverlayShowText.layoutParams = params
     }
 
     private fun getBatteryTemperature(): Float {
