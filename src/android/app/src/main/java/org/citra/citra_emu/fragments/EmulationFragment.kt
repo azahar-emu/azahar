@@ -186,7 +186,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // Show/hide the "Stats" overlay
         updateShowStatsOverlay()
 
-        val position = IntSetting.PERF_OVERLAY_POSITION.int
+        val position = IntSetting.OVERLAY_POSITION.int
         updateStatsPosition(position)
 
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -468,7 +468,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             NativeLibrary.unPauseEmulation()
 
             // If the overlay is enabled, we need to update the position if changed
-            val position = IntSetting.PERF_OVERLAY_POSITION.int
+            val position = IntSetting.OVERLAY_POSITION.int
             updateStatsPosition(position)
 
             binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
@@ -1181,11 +1181,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 val perfStats = NativeLibrary.getPerfStats()
                 val dividerString = "\u00A0\u2502 "
                 if (perfStats[FPS] > 0) {
-                    if (BooleanSetting.SHOW_FPS.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_FPS.boolean) {
                         sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
                     }
 
-                    if (BooleanSetting.SHOW_FRAMETIME.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_FRAMETIME.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1195,7 +1195,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.SHOW_SPEED.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_SPEED.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1205,14 +1205,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.SHOW_APP_RAM_USAGE.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val appRamUsage =
                             File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
                         sb.append("Process\u00A0RAM:\u00A0$appRamUsage\u00A0MB")
                     }
 
-                    if (BooleanSetting.SHOW_AVAILABLE_RAM.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         context?.let { ctx ->
                             val activityManager =
@@ -1225,7 +1225,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         }
                     }
 
-                    if (BooleanSetting.SHOW_BAT_TEMPERATURE.boolean) {
+                    if (BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP.boolean) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val batteryTemp = getBatteryTemperature()
                         val tempF = celsiusToFahrenheit(batteryTemp)

@@ -1182,7 +1182,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SingleChoiceSetting(
-                    IntSetting.PERF_OVERLAY_POSITION,
+                    IntSetting.OVERLAY_POSITION,
                     R.string.overlay_position,
                     R.string.overlay_position_description,
                     R.array.statsPosition,
@@ -1195,60 +1195,60 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_FPS,
-                    R.string.show_fps,
+                    BooleanSetting.OVERLAY_SHOW_FPS,
+                    R.string.overlay_show_fps,
                     R.string.show_fps_description,
-                    "show_fps",
+                    "overlay_show_fps",
                     true
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_FRAMETIME,
+                    BooleanSetting.OVERLAY_SHOW_FRAMETIME,
                     R.string.show_frametime,
                     R.string.show_frametime_description,
-                    "show_frame_time",
+                    "overlay_show_frame_time",
                     true
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_SPEED,
-                    R.string.show_speed,
+                    BooleanSetting.OVERLAY_SHOW_SPEED,
+                    R.string.overlay_show_speed,
                     R.string.show_speed_description,
-                    "show_speed",
+                    "overlay_show_speed",
                     false
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_APP_RAM_USAGE,
-                    R.string.show_app_ram_usage,
+                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
+                    R.string.overlay_show_app_ram_usage,
                     R.string.show_app_ram_usage_description,
-                    "show_app_ram_usage",
+                    "overlay_show_app_ram_usage",
                     false
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_AVAILABLE_RAM,
-                    R.string.show_available_ram,
+                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
+                    R.string.overlay_show_available_ram,
                     R.string.show_available_ram_description,
-                    "show_available_ram",
+                    "overlay_show_available_ram",
                     false
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.SHOW_BAT_TEMPERATURE,
-                    R.string.show_bat_temperature,
+                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
+                    R.string.overlay_show_battery_temp,
                     R.string.show_bat_temperature_description,
-                    "show_bat_temperature",
+                    "overlay_show_battery_temp",
                     false
                 )
             )

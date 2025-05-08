@@ -68,7 +68,7 @@ enum class IntSetting(
     ORIENTATION_OPTION("screen_orientation", Settings.SECTION_LAYOUT, 2),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, 0),
     TURBO_LIMIT("turbo_limit", Settings.SECTION_CORE, 200),
-    PERF_OVERLAY_POSITION("perf_overlay_position", Settings.SECTION_LAYOUT, 0);
+    OVERLAY_POSITION("perf_overlay_position", Settings.SECTION_LAYOUT, 0);
 
     override var int: Int = defaultValue
 
