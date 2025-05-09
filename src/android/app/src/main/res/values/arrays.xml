@@ -63,6 +63,24 @@
         <item>7</item>
     </integer-array>
 
+    <string-array name="aspectRatioNames">
+        <item>@string/aspect_ratio_default</item>
+        <item>@string/aspect_ratio_16_9</item>
+        <item>@string/aspect_ratio_4_3</item>
+        <item>@string/aspect_ratio_21_9_fullscreen</item>
+        <item>@string/aspect_ratio_16_10_fullscreen_stretched</item>
+        <item>@string/aspect_ratio_stretch</item>
+    </string-array>
+    <integer-array name="aspectRatioValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </integer-array>
+
+
     <string-array name="regionNames">
         <item>@string/auto_select</item>
         <item>@string/system_region_jpn</item>

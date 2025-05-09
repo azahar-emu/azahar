@@ -1085,6 +1085,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SingleChoiceSetting(
+                    IntSetting.ASPECT_RATIO,
+                    R.string.emulation_aspect_ratio,
+                    0,
+                    R.array.aspectRatioNames,
+                    R.array.aspectRatioValues,
+                    IntSetting.ASPECT_RATIO.key,
+                    IntSetting.ASPECT_RATIO.defaultValue,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 1,
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.SMALL_SCREEN_POSITION,
                     R.string.emulation_small_screen_position,
                     R.string.small_screen_position_description,
