@@ -22,8 +22,11 @@
 #include "citra_qt/configuration/configure_layout.h"
 #include "citra_qt/configuration/configure_per_game.h"
 #include "citra_qt/configuration/configure_system.h"
+#include "citra_qt/configuration/configuration_shared.h"
+#include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
 #include "common/file_util.h"
+#include "common/per_game_config.h"
 #include "core/core.h"
 #include "core/loader/loader.h"
 #include "core/loader/smdh.h"
@@ -148,6 +151,14 @@ void ConfigurePerGame::LoadConfiguration() {
 
     ui->display_title_id->setText(
         QStringLiteral("%1").arg(title_id, 16, 16, QLatin1Char{'0'}).toUpper());
+
+    // Apply default settings from per_game_config.h
+    const auto& default_settings = PerGameConfig::GetDefaultSettings(title_id);
+    for (const auto& [setting_name, value] : default_settings) {
+        if (setting_name == "delay_game_render_thread_us") {
+            Settings::values.delay_game_render_thread_us = value;
+        }
+    }
 
     std::unique_ptr<Loader::AppLoader> loader_ptr;
     Loader::AppLoader* loader;
