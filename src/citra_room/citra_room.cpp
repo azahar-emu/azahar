@@ -183,7 +183,6 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
     u64 preferred_game_id = 0;
     u16 port = Network::DefaultRoomPort;
     u32 max_members = 16;
-    bool enable_citra_mods = false;
 
     static struct option long_options[] = {
         {"room-name", required_argument, 0, 'n'},
@@ -249,9 +248,6 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
                 break;
             case 'l':
                 log_file.assign(optarg);
-                break;
-            case 'e':
-                enable_citra_mods = true;
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -324,10 +320,6 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
             NetSettings::values.citra_token = token;
         }
     }
-    if (!announce && enable_citra_mods) {
-        enable_citra_mods = false;
-        std::cout << "Can not enable Citra Moderators for private rooms\n\n";
-    }
 
     InitializeLogging(log_file);
 
@@ -354,8 +346,7 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
     Network::Init();
     if (std::shared_ptr<Network::Room> room = Network::GetRoom().lock()) {
         if (!room->Create(room_name, room_description, "", port, password, max_members, username,
-                          preferred_game, preferred_game_id, std::move(verify_backend), ban_list,
-                          enable_citra_mods)) {
+                          preferred_game, preferred_game_id, std::move(verify_backend), ban_list)) {
             std::cout << "Failed to create room: \n\n";
             exit(-1);
         }
