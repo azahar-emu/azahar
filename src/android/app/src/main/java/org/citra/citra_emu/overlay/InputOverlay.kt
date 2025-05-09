@@ -107,7 +107,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
 
             if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-                TurboHelper.setTurboEnabled((!TurboHelper.isTurboSpeedEnabled()))
+                TurboHelper.toggleTurbo(true)
             }
 
             NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.id, button.status)

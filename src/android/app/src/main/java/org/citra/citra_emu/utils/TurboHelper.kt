@@ -17,12 +17,7 @@ object TurboHelper {
         return turboSpeedEnabled
     }
 
-    fun setTurboEnabled(state: Boolean) {
-        turboSpeedEnabled = state
-        reloadTurbo()
-    }
-
-    fun reloadTurbo() {
+    fun reloadTurbo(showToast: Boolean) {
         val context = CitraApplication.appContext
         val toastMessage: String
 
@@ -34,6 +29,17 @@ object TurboHelper {
             toastMessage = context.getString(R.string.turbo_disabled_toast)
         }
 
-        Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+        if (showToast) {
+            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun setTurboEnabled(state: Boolean, showToast: Boolean) {
+        turboSpeedEnabled = state
+        reloadTurbo(showToast)
+    }
+
+    fun toggleTurbo(showToast: Boolean) {
+        setTurboEnabled(!TurboHelper.isTurboSpeedEnabled(), showToast)
     }
 }
