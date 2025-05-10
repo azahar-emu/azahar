@@ -632,49 +632,33 @@ void FragmentModule::WriteLighting() {
 void FragmentModule::WriteTevStage(s32 index) {
     const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
 
-    // Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
-    const auto is_passthrough_tev_stage = [](const TevStageConfig& stage) {
-        return (stage.color_op == TevStageConfig::Operation::Replace &&
-                stage.alpha_op == TevStageConfig::Operation::Replace &&
-                stage.color_source1 == TevStageConfig::Source::Previous &&
-                stage.alpha_source1 == TevStageConfig::Source::Previous &&
-                stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-                stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-                stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
-    };
+    color_results_1 = AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
+    color_results_2 = AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
+    color_results_3 = AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
 
-    if (!is_passthrough_tev_stage(stage)) {
-        color_results_1 = AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
-        color_results_2 = AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
-        color_results_3 = AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
+    // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
+    Id color_output{Byteround(AppendColorCombiner(stage.color_op), 3)};
+    Id alpha_output{};
 
-        // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
-        Id color_output{Byteround(AppendColorCombiner(stage.color_op), 3)};
-        Id alpha_output{};
+    if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+        // result of Dot3_RGBA operation is also placed to the alpha component
+        alpha_output = OpCompositeExtract(f32_id, color_output, 0);
+    } else {
+        alpha_results_1 = AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
+        alpha_results_2 = AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
+        alpha_results_3 = AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
 
-        if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
-            // result of Dot3_RGBA operation is also placed to the alpha component
-            alpha_output = OpCompositeExtract(f32_id, color_output, 0);
-        } else {
-            alpha_results_1 =
-                AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
-            alpha_results_2 =
-                AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
-            alpha_results_3 =
-                AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
-
-            alpha_output = Byteround(AppendAlphaCombiner(stage.alpha_op));
-        }
-
-        color_output = OpVectorTimesScalar(
-            vec_ids.Get(3), color_output, ConstF32(static_cast<float>(stage.GetColorMultiplier())));
-        color_output = OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f),
-                                ConstF32(1.f, 1.f, 1.f));
-        alpha_output =
-            OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
-        alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
-        combiner_output = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
+        alpha_output = Byteround(AppendAlphaCombiner(stage.alpha_op));
     }
+
+    color_output = OpVectorTimesScalar(
+        vec_ids.Get(3), color_output, ConstF32(static_cast<float>(stage.GetColorMultiplier())));
+    color_output = OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f),
+                            ConstF32(1.f, 1.f, 1.f));
+    alpha_output =
+        OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
+    alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
+    combiner_output = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
 
     combiner_buffer = next_combiner_buffer;
     if (config.TevStageUpdatesCombinerBufferColor(index)) {

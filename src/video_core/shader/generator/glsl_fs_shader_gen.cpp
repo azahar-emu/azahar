@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "video_core/shader/generator/glsl_fs_shader_gen.h"
+#include "video_core/pica/regs_texturing.h"
+#include "common/common_types.h"
 
 namespace Pica::Shader::Generator::GLSL {
 
@@ -24,17 +26,6 @@ enum class Semantic : u32 {
     Normquat,
     View,
 };
-
-static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage) {
-    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
-    return (stage.color_op == TevStageConfig::Operation::Replace &&
-            stage.alpha_op == TevStageConfig::Operation::Replace &&
-            stage.color_source1 == TevStageConfig::Source::Previous &&
-            stage.alpha_source1 == TevStageConfig::Source::Previous &&
-            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
-}
 
 // High precision may or may not be supported in GLES3. If it isn't, use medium precision instead.
 static constexpr char fragment_shader_precision_OES[] = R"(
@@ -433,42 +424,57 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
     out += fmt::format("if ({}) discard;\n", get_cond());
 }
 
+// Helper to detect passthrough TEV stages for optimization
+static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage) {
+    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
+    return (stage.color_op == TevStageConfig::Operation::Replace &&
+            stage.alpha_op == TevStageConfig::Operation::Replace &&
+            stage.color_source1 == TevStageConfig::Source::Previous &&
+            stage.alpha_source1 == TevStageConfig::Source::Previous &&
+            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
+            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
+            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
+}
+
 void FragmentModule::WriteTevStage(u32 index) {
     const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
-    if (!IsPassThroughTevStage(stage)) {
-        out += "color_results_1 = ";
-        AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
-        out += ";\ncolor_results_2 = ";
-        AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
-        out += ";\ncolor_results_3 = ";
-        AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
-
-        // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
-        out += fmt::format(";\nvec3 color_output_{} = byteround(", index);
-        AppendColorCombiner(stage.color_op);
-        out += ");\n";
-
-        if (stage.color_op == Pica::TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
-            // result of Dot3_RGBA operation is also placed to the alpha component
-            out += fmt::format("float alpha_output_{0} = color_output_{0}[0];\n", index);
-        } else {
-            out += "alpha_results_1 = ";
-            AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
-            out += ";\nalpha_results_2 = ";
-            AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
-            out += ";\nalpha_results_3 = ";
-            AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
-
-            out += fmt::format(";\nfloat alpha_output_{} = byteround(", index);
-            AppendAlphaCombiner(stage.alpha_op);
-            out += ");\n";
-        }
-
-        out += fmt::format("combiner_output = vec4("
-                           "clamp(color_output_{} * {}.0, vec3(0.0), vec3(1.0)), "
-                           "clamp(alpha_output_{} * {}.0, 0.0, 1.0));\n",
-                           index, stage.GetColorMultiplier(), index, stage.GetAlphaMultiplier());
+    if (IsPassThroughTevStage(stage)) {
+        // Skip passthrough stage for optimization
+        return;
     }
+    
+    out += "color_results_1 = ";
+    AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
+    out += ";\ncolor_results_2 = ";
+    AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
+    out += ";\ncolor_results_3 = ";
+    AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
+
+    // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
+    out += fmt::format(";\nvec3 color_output_{} = byteround(", index);
+    AppendColorCombiner(stage.color_op);
+    out += ");\n";
+
+    if (stage.color_op == Pica::TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
+        // result of Dot3_RGBA operation is also placed to the alpha component
+        out += fmt::format("float alpha_output_{0} = color_output_{0}[0];\n", index);
+    } else {
+        out += "alpha_results_1 = ";
+        AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
+        out += ";\nalpha_results_2 = ";
+        AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
+        out += ";\nalpha_results_3 = ";
+        AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
+
+        out += fmt::format(";\nfloat alpha_output_{} = byteround(", index);
+        AppendAlphaCombiner(stage.alpha_op);
+        out += ");\n";
+    }
+
+    out += fmt::format("combiner_output = vec4("
+                       "clamp(color_output_{} * {}.0, vec3(0.0), vec3(1.0)), "
+                       "clamp(alpha_output_{} * {}.0, 0.0, 1.0));\n",
+                       index, stage.GetColorMultiplier(), index, stage.GetAlphaMultiplier());
 
     out += "combiner_buffer = next_combiner_buffer;\n";
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
