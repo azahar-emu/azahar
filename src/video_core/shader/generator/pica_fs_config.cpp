@@ -61,13 +61,16 @@ TextureConfig::TextureConfig(const Pica::TexturingRegs& regs, const Profile& pro
     }
 
     const auto& stages = regs.GetTevStages();
+    using Op = Pica::TexturingRegs::TevStageConfig::Operation;
+    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
     for (std::size_t i = 0; i < tev_stages.size(); i++) {
         const auto& tev_stage = stages[i];
         tev_stages[i].sources_raw = tev_stage.sources_raw;
         tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
         tev_stages[i].ops_raw = tev_stage.ops_raw;
         tev_stages[i].scales_raw = tev_stage.scales_raw;
-        if (tev_stage.color_op == Pica::TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
+        // Special handling for Dot3_RGBA operation
+        if (tev_stage.color_op == Op::Dot3_RGBA) {
             tev_stages[i].sources_raw &= 0xFFF;
             tev_stages[i].modifiers_raw &= 0xFFF;
             tev_stages[i].ops_raw &= 0xF;
