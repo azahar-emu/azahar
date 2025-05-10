@@ -651,10 +651,10 @@ void FragmentModule::WriteTevStage(s32 index) {
         alpha_output = Byteround(AppendAlphaCombiner(stage.alpha_op));
     }
 
-    color_output = OpVectorTimesScalar(
-        vec_ids.Get(3), color_output, ConstF32(static_cast<float>(stage.GetColorMultiplier())));
-    color_output = OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f),
-                            ConstF32(1.f, 1.f, 1.f));
+    color_output = OpVectorTimesScalar(vec_ids.Get(3), color_output,
+                                       ConstF32(static_cast<float>(stage.GetColorMultiplier())));
+    color_output =
+        OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f), ConstF32(1.f, 1.f, 1.f));
     alpha_output =
         OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
     alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));

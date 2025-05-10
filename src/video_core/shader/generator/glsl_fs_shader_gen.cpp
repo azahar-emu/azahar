@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/shader/generator/glsl_fs_shader_gen.h"
-#include "video_core/pica/regs_texturing.h"
 #include "common/common_types.h"
+#include "video_core/pica/regs_texturing.h"
+#include "video_core/shader/generator/glsl_fs_shader_gen.h"
 
 namespace Pica::Shader::Generator::GLSL {
 
@@ -442,7 +442,7 @@ void FragmentModule::WriteTevStage(u32 index) {
         // Skip passthrough stage for optimization
         return;
     }
-    
+
     out += "color_results_1 = ";
     AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
     out += ";\ncolor_results_2 = ";

@@ -62,7 +62,6 @@ TextureConfig::TextureConfig(const Pica::TexturingRegs& regs, const Profile& pro
 
     const auto& stages = regs.GetTevStages();
     using Op = Pica::TexturingRegs::TevStageConfig::Operation;
-    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
     for (std::size_t i = 0; i < tev_stages.size(); i++) {
         const auto& tev_stage = stages[i];
         tev_stages[i].sources_raw = tev_stage.sources_raw;
