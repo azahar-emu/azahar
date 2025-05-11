@@ -17,6 +17,9 @@ using TextureType = TexturingRegs::TextureConfig::TextureType;
 
 constexpr u32 SPIRV_VERSION_1_3 = 0x00010300;
 
+// Forward declaration
+static bool IsPassThroughTevStage(const TexturingRegs::TevStageConfig& stage);
+
 FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
     : Sirit::Module{SPIRV_VERSION_1_3}, config{config_}, profile{profile_},
       use_fragment_shader_barycentric{profile.has_fragment_shader_barycentric &&
@@ -58,8 +61,17 @@ void FragmentModule::Generate() {
     combiner_output = ConstF32(0.f, 0.f, 0.f, 0.f);
 
     // Write shader bytecode to emulate PICA TEV stages
+    bool tev_stage_processed = false;
     for (u32 index = 0; index < config.texture.tev_stages.size(); ++index) {
+        const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
+        if (IsPassThroughTevStage(stage)) {
+            continue;
+        }
+        tev_stage_processed = true;
         WriteTevStage(index);
+    }
+    if (!tev_stage_processed) {
+        combiner_output = ConstF32(1.f, 0.f, 1.f, 1.f); // Debug color: magenta
     }
 
     WriteAlphaTestCondition(config.framebuffer.alpha_test_func);
@@ -320,10 +332,19 @@ void FragmentModule::WriteLighting() {
 
     Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
-        shadow = OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
+        const Id shadow_texture = OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
         if (lighting.shadow_invert) {
-            shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow);
+            shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow_texture);
+        } else {
+            shadow = shadow_texture;
         }
+        // Debug: Output shadow value directly
+        OpStore(color_id, shadow);
+        OpReturn();
+        OpFunctionEnd();
+        return;
+    } else {
+        shadow = ConstF32(1.f, 1.f, 1.f, 1.f);
     }
 
     const auto lookup_lighting_lut_unsigned = [this](Id lut_index, Id pos) -> Id {
@@ -1596,6 +1617,29 @@ std::vector<u32> GenerateFragmentShader(const FSConfig& config, const Profile& p
     FragmentModule module{config, profile};
     module.Generate();
     return module.Assemble();
+}
+
+// Helper to detect passthrough TEV stages for optimization
+static bool IsPassThroughTevStage(const TexturingRegs::TevStageConfig& stage) {
+    using TevStageConfig = TexturingRegs::TevStageConfig;
+
+    // Never skip Dot3_RGBA stages
+    if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+        return false;
+    }
+
+    // Only consider it passthrough if it's a simple replace operation with no modifications
+    return (stage.color_op == TevStageConfig::Operation::Replace &&
+            stage.alpha_op == TevStageConfig::Operation::Replace &&
+            stage.color_source1 == TevStageConfig::Source::Previous &&
+            stage.alpha_source1 == TevStageConfig::Source::Previous &&
+            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
+            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
+            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1 &&
+            stage.color_source2 == TevStageConfig::Source::Previous &&
+            stage.alpha_source2 == TevStageConfig::Source::Previous &&
+            stage.color_source3 == TevStageConfig::Source::Previous &&
+            stage.alpha_source3 == TevStageConfig::Source::Previous);
 }
 
 } // namespace Pica::Shader::Generator::SPIRV
