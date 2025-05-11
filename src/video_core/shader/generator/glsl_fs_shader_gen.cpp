@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fstream>
+#include <iomanip>
 #include "common/common_types.h"
 #include "video_core/pica/regs_texturing.h"
 #include "video_core/shader/generator/glsl_fs_shader_gen.h"
@@ -13,6 +15,8 @@ using ProcTexShift = TexturingRegs::ProcTexShift;
 using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
 using ProcTexFilter = TexturingRegs::ProcTexFilter;
 using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
+
+static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage);
 
 constexpr static std::size_t RESERVE_SIZE = 8 * 1024 * 1024;
 
@@ -113,6 +117,8 @@ FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
 
 FragmentModule::~FragmentModule() = default;
 
+static int debug_frame_counter = 0;
+
 std::string FragmentModule::Generate() {
     // We round the interpolated primary color to the nearest 1/255th
     // This maintains the PICA's 8 bits of precision
@@ -149,8 +155,17 @@ vec4 secondary_fragment_color = vec4(0.0);
            "float alpha_results_3 = 0.0;\n";
 
     // Write shader source to emulate PICA TEV stages
+    bool tev_stage_processed = false;
     for (u32 index = 0; index < config.texture.tev_stages.size(); index++) {
+        const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
+        if (IsPassThroughTevStage(stage)) {
+            continue;
+        }
+        tev_stage_processed = true;
         WriteTevStage(index);
+    }
+    if (!tev_stage_processed) {
+        out += "combiner_output = rounded_primary_color;\n";
     }
 
     // Append the alpha test condition
@@ -175,12 +190,35 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Round the final fragment color to maintain the PICA's 8 bits of precision
         out += "combiner_output = byteround(combiner_output);\n";
         WriteBlending();
-        out += "color = combiner_output;\n";
+        out += "color = combiner_output;\n return;\n";
     }
 
     WriteLogicOp();
 
     out += '}';
+
+    // Debug logging: only for the first 10 frames
+    if (debug_frame_counter < 10) {
+        std::ofstream log("azahar_tev_debug.txt", std::ios::app);
+        log << "Frame " << debug_frame_counter << ":\n";
+        for (u32 index = 0; index < config.texture.tev_stages.size(); index++) {
+            const TexturingRegs::TevStageConfig& stage = config.texture.tev_stages[index];
+            log << "  TEV Stage " << index << ": ";
+            log << "color_op=" << static_cast<int>(stage.color_op.Value()) << ", ";
+            log << "alpha_op=" << static_cast<int>(stage.alpha_op.Value()) << ", ";
+            log << "color_source1=" << static_cast<int>(stage.color_source1.Value()) << ", ";
+            log << "alpha_source1=" << static_cast<int>(stage.alpha_source1.Value()) << ", ";
+            log << "color_modifier1=" << static_cast<int>(stage.color_modifier1.Value()) << ", ";
+            log << "alpha_modifier1=" << static_cast<int>(stage.alpha_modifier1.Value()) << ", ";
+            log << "GetColorMultiplier=" << stage.GetColorMultiplier() << ", ";
+            log << "GetAlphaMultiplier=" << stage.GetAlphaMultiplier() << std::endl;
+        }
+        log << std::setprecision(3) << std::fixed;
+        log << "  combiner_output: (unknown at this point, see shader output)\n";
+        log.close();
+        debug_frame_counter++;
+    }
+
     return out;
 }
 
@@ -427,13 +465,24 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
 // Helper to detect passthrough TEV stages for optimization
 static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage) {
     using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
+
+    // Never skip Dot3_RGBA stages
+    if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+        return false;
+    }
+
+    // Only consider it passthrough if it's a simple replace operation with no modifications
     return (stage.color_op == TevStageConfig::Operation::Replace &&
             stage.alpha_op == TevStageConfig::Operation::Replace &&
             stage.color_source1 == TevStageConfig::Source::Previous &&
             stage.alpha_source1 == TevStageConfig::Source::Previous &&
             stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
             stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
+            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1 &&
+            stage.color_source2 == TevStageConfig::Source::Previous &&
+            stage.alpha_source2 == TevStageConfig::Source::Previous &&
+            stage.color_source3 == TevStageConfig::Source::Previous &&
+            stage.alpha_source3 == TevStageConfig::Source::Previous);
 }
 
 void FragmentModule::WriteTevStage(u32 index) {
