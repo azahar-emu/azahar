@@ -332,7 +332,8 @@ void FragmentModule::WriteLighting() {
 
     Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
-        const Id shadow_texture = OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
+        const Id shadow_texture =
+            OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
         if (lighting.shadow_invert) {
             shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow_texture);
         } else {
