@@ -43,7 +43,8 @@ void JitEngine::StopThreadPool() {
     }
     queue_cv.notify_all();
     for (auto& t : thread_pool) {
-        if (t.joinable()) t.join();
+        if (t.joinable())
+            t.join();
     }
     thread_pool.clear();
 }
@@ -54,7 +55,8 @@ void JitEngine::ThreadWorker() {
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             queue_cv.wait(lock, [this]() { return stop_threads || !compile_queue.empty(); });
-            if (stop_threads && compile_queue.empty()) return;
+            if (stop_threads && compile_queue.empty())
+                return;
             job = std::move(compile_queue.front());
             compile_queue.pop();
         }
@@ -63,8 +65,8 @@ void JitEngine::ThreadWorker() {
 }
 
 void JitEngine::EnqueueCompilation(u64 cache_key, ShaderSetup setup_copy) {
-    // WARNING: Copying ShaderSetup across threads may be unsafe if it contains raw pointers or non-trivial resources.
-    // Consider refactoring to only copy the necessary data for compilation.
+    // WARNING: Copying ShaderSetup across threads may be unsafe if it contains raw pointers or
+    // non-trivial resources. Consider refactoring to only copy the necessary data for compilation.
     {
         std::lock_guard<std::mutex> lock(queue_mutex);
         compile_queue.emplace([this, cache_key, setup_copy]() mutable {
