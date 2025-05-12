@@ -661,13 +661,18 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
     user_config = {};
 
     const auto pica_textures = regs.texturing.GetTextures();
+    static std::array<GLuint, 3> last_bound_texture = {0, 0, 0};
+    static std::array<GLuint, 3> last_bound_sampler = {0, 0, 0};
     for (u32 texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
         const auto& texture = pica_textures[texture_index];
 
         // If the texture unit is disabled unbind the corresponding gl unit
         if (!texture.enabled) {
             const Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
-            state.texture_units[texture_index].texture_2d = null_surface.Handle();
+            if (last_bound_texture[texture_index] != null_surface.Handle()) {
+                state.texture_units[texture_index].texture_2d = null_surface.Handle();
+                last_bound_texture[texture_index] = null_surface.Handle();
+            }
             continue;
         }
 
@@ -677,7 +682,10 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
             case TextureType::Shadow2D: {
                 Surface& surface = res_cache.GetTextureSurface(texture);
                 surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
-                state.image_shadow_texture_px = surface.Handle();
+                if (last_bound_texture[texture_index] != surface.Handle()) {
+                    state.image_shadow_texture_px = surface.Handle();
+                    last_bound_texture[texture_index] = surface.Handle();
+                }
                 continue;
             }
             case TextureType::ShadowCube: {
@@ -695,13 +703,19 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
 
         // Sync texture unit sampler
         Sampler& sampler = res_cache.GetSampler(texture.config);
-        state.texture_units[texture_index].sampler = sampler.Handle();
+        if (last_bound_sampler[texture_index] != sampler.Handle()) {
+            state.texture_units[texture_index].sampler = sampler.Handle();
+            last_bound_sampler[texture_index] = sampler.Handle();
+        }
 
         // Bind the texture provided by the rasterizer cache
         Surface& surface = res_cache.GetTextureSurface(texture);
         if (!IsFeedbackLoop(texture_index, framebuffer, surface)) {
-            BindMaterial(texture_index, surface);
-            state.texture_units[texture_index].texture_2d = surface.Handle();
+            if (last_bound_texture[texture_index] != surface.Handle()) {
+                BindMaterial(texture_index, surface);
+                state.texture_units[texture_index].texture_2d = surface.Handle();
+                last_bound_texture[texture_index] = surface.Handle();
+            }
         }
     }
 
