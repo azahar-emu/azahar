@@ -336,13 +336,6 @@ void FragmentModule::WriteLighting() {
         } else {
             shadow = shadow_texture;
         }
-        // Debug: Output shadow value directly
-        OpStore(color_id, shadow);
-        OpReturn();
-        OpFunctionEnd();
-        return;
-    } else {
-        shadow = ConstF32(1.f, 1.f, 1.f, 1.f);
     }
 
     const auto lookup_lighting_lut_unsigned = [this](Id lut_index, Id pos) -> Id {
