@@ -306,6 +306,7 @@ private:
     PrimitiveAssembler primitive_assembler;
     CommandList cmd_list;
     std::unique_ptr<ShaderEngine> shader_engine;
+    u64 last_vs_hash = 0xDEADBEEFDEADBEEF; // Track last used VS hash
 };
 
 #define GPU_REG_INDEX(field_name) (offsetof(Pica::PicaCore::Regs, field_name) / sizeof(u32))
