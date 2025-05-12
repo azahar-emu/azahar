@@ -307,6 +307,8 @@ private:
     CommandList cmd_list;
     std::unique_ptr<ShaderEngine> shader_engine;
     u64 last_vs_hash = 0xDEADBEEFDEADBEEF; // Track last used VS hash
+    u64 last_gs_hash = 0xDEADBEEFDEADBEEF; // Track last used GS hash
+    u64 last_fs_hash = 0xDEADBEEFDEADBEEF; // Track last used FS hash
 };
 
 #define GPU_REG_INDEX(field_name) (offsetof(Pica::PicaCore::Regs, field_name) / sizeof(u32))
