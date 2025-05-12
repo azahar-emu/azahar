@@ -1629,18 +1629,42 @@ static bool IsPassThroughTevStage(const TexturingRegs::TevStageConfig& stage) {
         return false;
     }
 
-    // Only consider it passthrough if it's a simple replace operation with no modifications
-    return (stage.color_op == TevStageConfig::Operation::Replace &&
-            stage.alpha_op == TevStageConfig::Operation::Replace &&
-            stage.color_source1 == TevStageConfig::Source::Previous &&
-            stage.alpha_source1 == TevStageConfig::Source::Previous &&
-            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1 &&
-            stage.color_source2 == TevStageConfig::Source::Previous &&
-            stage.alpha_source2 == TevStageConfig::Source::Previous &&
-            stage.color_source3 == TevStageConfig::Source::Previous &&
-            stage.alpha_source3 == TevStageConfig::Source::Previous);
+    // Check if both color and alpha operations are Replace
+    if (stage.color_op != TevStageConfig::Operation::Replace ||
+        stage.alpha_op != TevStageConfig::Operation::Replace) {
+        return false;
+    }
+
+    // Check if source1 is Previous for both color and alpha
+    if (stage.color_source1 != TevStageConfig::Source::Previous ||
+        stage.alpha_source1 != TevStageConfig::Source::Previous) {
+        return false;
+    }
+
+    // Check if modifiers are default for both color and alpha
+    if (stage.color_modifier1 != TevStageConfig::ColorModifier::SourceColor ||
+        stage.alpha_modifier1 != TevStageConfig::AlphaModifier::SourceAlpha) {
+        return false;
+    }
+
+    // Check if multipliers are 1
+    if (stage.GetColorMultiplier() != 1 || stage.GetAlphaMultiplier() != 1) {
+        return false;
+    }
+
+    // For sources 2 and 3, we can be more lenient - if they're Previous or Constant(0),
+    // they won't affect the output
+    const bool source2_ok = (stage.color_source2 == TevStageConfig::Source::Previous ||
+                             stage.color_source2 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source2 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source2 == TevStageConfig::Source::Constant);
+
+    const bool source3_ok = (stage.color_source3 == TevStageConfig::Source::Previous ||
+                             stage.color_source3 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source3 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source3 == TevStageConfig::Source::Constant);
+
+    return source2_ok && source3_ok;
 }
 
 } // namespace Pica::Shader::Generator::SPIRV
