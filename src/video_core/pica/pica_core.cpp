@@ -493,6 +493,12 @@ void PicaCore::DrawImmediate() {
         shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
         last_vs_hash = vs_hash;
     }
+    // Compute current GS config hash
+    u64 gs_hash = gs_setup.GetProgramCodeHash() ^ gs_setup.GetSwizzleDataHash();
+    if (gs_hash != last_gs_hash) {
+        shader_engine->SetupBatch(gs_setup, regs.internal.gs.main_offset);
+        last_gs_hash = gs_hash;
+    }
 
     // Track vertex in the debug recorder.
     if (debug_context) {
@@ -599,6 +605,12 @@ void PicaCore::LoadVertices(bool is_indexed) {
     if (vs_hash != last_vs_hash) {
         shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
         last_vs_hash = vs_hash;
+    }
+    // Compute current GS config hash
+    u64 gs_hash = gs_setup.GetProgramCodeHash() ^ gs_setup.GetSwizzleDataHash();
+    if (gs_hash != last_gs_hash) {
+        shader_engine->SetupBatch(gs_setup, regs.internal.gs.main_offset);
+        last_gs_hash = gs_hash;
     }
 
     // Compile the vertex shader for this batch.
