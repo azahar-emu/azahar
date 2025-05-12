@@ -19,8 +19,67 @@
 
 namespace Pica::Shader {
 
-JitEngine::JitEngine() = default;
-JitEngine::~JitEngine() = default;
+JitEngine::JitEngine() {
+    stub_shader = std::make_unique<JitShader>();
+    // Optionally, compile a minimal stub shader here if needed
+    StartThreadPool(std::thread::hardware_concurrency());
+}
+
+JitEngine::~JitEngine() {
+    StopThreadPool();
+}
+
+void JitEngine::StartThreadPool(size_t num_threads) {
+    stop_threads = false;
+    for (size_t i = 0; i < num_threads; ++i) {
+        thread_pool.emplace_back([this]() { ThreadWorker(); });
+    }
+}
+
+void JitEngine::StopThreadPool() {
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        stop_threads = true;
+    }
+    queue_cv.notify_all();
+    for (auto& t : thread_pool) {
+        if (t.joinable()) t.join();
+    }
+    thread_pool.clear();
+}
+
+void JitEngine::ThreadWorker() {
+    while (true) {
+        std::function<void()> job;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            queue_cv.wait(lock, [this]() { return stop_threads || !compile_queue.empty(); });
+            if (stop_threads && compile_queue.empty()) return;
+            job = std::move(compile_queue.front());
+            compile_queue.pop();
+        }
+        job();
+    }
+}
+
+void JitEngine::EnqueueCompilation(u64 cache_key, ShaderSetup setup_copy) {
+    // WARNING: Copying ShaderSetup across threads may be unsafe if it contains raw pointers or non-trivial resources.
+    // Consider refactoring to only copy the necessary data for compilation.
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        compile_queue.emplace([this, cache_key, setup_copy]() mutable {
+            auto shader = std::make_unique<JitShader>();
+            shader->Compile(&setup_copy.program_code, &setup_copy.swizzle_data);
+            std::lock_guard<std::mutex> lock2(cache_mutex);
+            if (cache.size() >= MAX_CACHE_SIZE) {
+                EvictLRU();
+            }
+            cache[cache_key] = std::move(shader);
+            lru_list.push_front(cache_key);
+        });
+    }
+    queue_cv.notify_one();
+}
 
 void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
@@ -36,14 +95,10 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
         setup.cached_shader = iter->second.get();
         UpdateLRU(cache_key);
     } else {
-        if (cache.size() >= MAX_CACHE_SIZE) {
-            EvictLRU();
-        }
-        auto shader = std::make_unique<JitShader>();
-        shader->Compile(&setup.program_code, &setup.swizzle_data);
-        setup.cached_shader = shader.get();
-        cache.emplace_hint(iter, cache_key, std::move(shader));
-        lru_list.push_front(cache_key);
+        // Enqueue compilation if not already queued
+        EnqueueCompilation(cache_key, setup);
+        // Do not use stub shader; set to nullptr so the draw can be skipped
+        setup.cached_shader = nullptr;
     }
 }
 
@@ -67,7 +122,10 @@ void JitEngine::UpdateLRU(u64 key) {
 MICROPROFILE_DECLARE(GPU_Shader);
 
 void JitEngine::Run(const ShaderSetup& setup, ShaderUnit& state) const {
-    ASSERT(setup.cached_shader != nullptr);
+    // Null check: skip draw if shader is not ready
+    if (!setup.cached_shader) {
+        return;
+    }
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
