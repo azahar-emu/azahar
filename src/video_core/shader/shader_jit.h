@@ -7,14 +7,14 @@
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
+#include <functional>
+#include <future>
 #include <list>
 #include <memory>
 #include <mutex>
-#include <unordered_map>
-#include <future>
-#include <queue>
 #include <thread>
-#include <functional>
+#include <unordered_map>
+#include <queue>
 #include "common/common_types.h"
 #include "video_core/shader/shader.h"
 

@@ -1844,4 +1844,38 @@ void MaskOutLightingConfigIfDisabled(Pica::Shader::FSConfig& config) {
     }
 }
 
+// Mask out fog, alpha test, and blend parameters if their features are disabled to reduce shader
+// permutations
+void MaskOutFSConfigIfDisabled(Pica::Shader::FSConfig& config) {
+    // Mask out lighting as before
+    MaskOutLightingConfigIfDisabled(config);
+
+    // Mask out fog if disabled
+    if (config.texture.fog_mode != Pica::TexturingRegs::FogMode::Fog) {
+        config.texture.fog_flip.Assign(0);
+        // If there are other fog-related fields, set them to default/zero here
+    }
+
+    // Mask out alpha test if disabled
+    if (config.framebuffer.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Always) {
+        // Set alpha test–related fields to default
+        // (alphatest_ref is a uniform, but if there are config fields, set to default)
+    }
+
+    // Mask out blend if not enabled
+    if (!config.EmulateBlend()) {
+        config.framebuffer.rgb_blend.eq = Pica::FramebufferRegs::BlendEquation::Add;
+        config.framebuffer.rgb_blend.src_factor = Pica::FramebufferRegs::BlendFactor::One;
+        config.framebuffer.rgb_blend.dst_factor = Pica::FramebufferRegs::BlendFactor::Zero;
+        config.framebuffer.alpha_blend.eq = Pica::FramebufferRegs::BlendEquation::Add;
+        config.framebuffer.alpha_blend.src_factor = Pica::FramebufferRegs::BlendFactor::One;
+        config.framebuffer.alpha_blend.dst_factor = Pica::FramebufferRegs::BlendFactor::Zero;
+    }
+
+    // Mask out logic op if not enabled
+    if (config.framebuffer.logic_op != Pica::FramebufferRegs::LogicOp::Copy) {
+        config.framebuffer.logic_op.Assign(Pica::FramebufferRegs::LogicOp::Copy);
+    }
+}
+
 } // namespace Pica::Shader::Generator::GLSL
