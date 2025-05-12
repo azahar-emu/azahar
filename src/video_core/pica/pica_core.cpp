@@ -487,8 +487,12 @@ void PicaCore::SubmitImmediate(u32 value) {
 }
 
 void PicaCore::DrawImmediate() {
-    // Compile the vertex shader.
-    shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
+    // Compute current VS config hash
+    u64 vs_hash = vs_setup.GetProgramCodeHash() ^ vs_setup.GetSwizzleDataHash();
+    if (vs_hash != last_vs_hash) {
+        shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
+        last_vs_hash = vs_hash;
+    }
 
     // Track vertex in the debug recorder.
     if (debug_context) {
@@ -589,6 +593,13 @@ void PicaCore::LoadVertices(bool is_indexed) {
     std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
     std::array<AttributeBuffer, VERTEX_CACHE_SIZE> vertex_cache;
     u32 vertex_cache_pos = 0;
+
+    // Compute current VS config hash
+    u64 vs_hash = vs_setup.GetProgramCodeHash() ^ vs_setup.GetSwizzleDataHash();
+    if (vs_hash != last_vs_hash) {
+        shader_engine->SetupBatch(vs_setup, regs.internal.vs.main_offset);
+        last_vs_hash = vs_hash;
+    }
 
     // Compile the vertex shader for this batch.
     ShaderUnit shader_unit;
