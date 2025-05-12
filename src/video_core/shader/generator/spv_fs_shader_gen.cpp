@@ -218,6 +218,11 @@ void FragmentModule::WriteLighting() {
 
     const auto& lighting = config.lighting;
 
+    // Early exit if no lights are enabled
+    if (lighting.src_num == 0) {
+        return;
+    }
+
     // Define lighting globals
     Id diffuse_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
     Id specular_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
@@ -243,7 +248,6 @@ void FragmentModule::WriteLighting() {
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map
         surface_normal = perturbation();
-
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
         if (lighting.bump_renorm) {
@@ -254,18 +258,11 @@ void FragmentModule::WriteLighting() {
             const Id normal_z{OpSqrt(f32_id, OpFMax(f32_id, val, ConstF32(0.f)))};
             surface_normal = OpCompositeConstruct(vec_ids.Get(3), normal_x, normal_y, normal_z);
         }
-
         // The tangent vector is not perturbed by the normal map and is just a unit vector.
         surface_tangent = ConstF32(1.f, 0.f, 0.f);
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
         surface_tangent = perturbation();
-
-        // Mathematically, recomputing Z-component of the tangent vector won't affect the relevant
-        // computation below, which is also confirmed on 3DS. So we don't bother recomputing here
-        // even if 'renorm' is enabled.
-
-        // The normal vector is not perturbed by the tangent map and is just a unit vector.
         surface_normal = ConstF32(0.f, 0.f, 1.f);
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors
@@ -324,12 +321,12 @@ void FragmentModule::WriteLighting() {
         normquat = OpLoad(vec_ids.Get(4), normquat_id);
     }
 
-    // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
-    // eyespace.
+    // Always declare and assign normal and tangent
     const Id normalized_normquat{OpNormalize(vec_ids.Get(4), normquat)};
     const Id normal{quaternion_rotate(normalized_normquat, surface_normal)};
     const Id tangent{quaternion_rotate(normalized_normquat, surface_tangent)};
 
+    // Early exit if no shadow is used
     Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
         const Id shadow_texture =

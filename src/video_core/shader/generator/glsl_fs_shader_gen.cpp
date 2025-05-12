@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include "common/common_types.h"
+#include "video_core/pica/regs_lighting.h"
 #include "video_core/pica/regs_texturing.h"
 #include "video_core/shader/generator/glsl_fs_shader_gen.h"
 
@@ -472,17 +473,26 @@ static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& sta
     }
 
     // Only consider it passthrough if it's a simple replace operation with no modifications
-    return (stage.color_op == TevStageConfig::Operation::Replace &&
-            stage.alpha_op == TevStageConfig::Operation::Replace &&
-            stage.color_source1 == TevStageConfig::Source::Previous &&
-            stage.alpha_source1 == TevStageConfig::Source::Previous &&
-            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1 &&
-            stage.color_source2 == TevStageConfig::Source::Previous &&
-            stage.alpha_source2 == TevStageConfig::Source::Previous &&
-            stage.color_source3 == TevStageConfig::Source::Previous &&
-            stage.alpha_source3 == TevStageConfig::Source::Previous);
+    if (stage.color_op != TevStageConfig::Operation::Replace ||
+        stage.alpha_op != TevStageConfig::Operation::Replace ||
+        stage.color_source1 != TevStageConfig::Source::Previous ||
+        stage.alpha_source1 != TevStageConfig::Source::Previous ||
+        stage.color_modifier1 != TevStageConfig::ColorModifier::SourceColor ||
+        stage.alpha_modifier1 != TevStageConfig::AlphaModifier::SourceAlpha ||
+        stage.GetColorMultiplier() != 1 || stage.GetAlphaMultiplier() != 1) {
+        return false;
+    }
+
+    // For sources 2 and 3, allow Previous or Constant
+    const bool source2_ok = (stage.color_source2 == TevStageConfig::Source::Previous ||
+                             stage.color_source2 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source2 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source2 == TevStageConfig::Source::Constant);
+    const bool source3_ok = (stage.color_source3 == TevStageConfig::Source::Previous ||
+                             stage.color_source3 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source3 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source3 == TevStageConfig::Source::Constant);
+    return source2_ok && source3_ok;
 }
 
 void FragmentModule::WriteTevStage(u32 index) {
@@ -1806,6 +1816,32 @@ void FragmentModule::DefineTexUnitSampler(u32 texture_unit) {
 std::string GenerateFragmentShader(const FSConfig& config, const Profile& profile) {
     FragmentModule module{config, profile};
     return module.Generate();
+}
+
+// Mask out lighting parameters if lighting is disabled to reduce shader permutations
+void MaskOutLightingConfigIfDisabled(Pica::Shader::FSConfig& config) {
+    if (!config.lighting.enable) {
+        config.lighting.bump_mode.Assign(Pica::LightingRegs::LightingBumpMode::None);
+        config.lighting.bump_selector.Assign(0);
+        config.lighting.bump_renorm.Assign(false);
+        config.lighting.clamp_highlights.Assign(false);
+        config.lighting.enable_shadow.Assign(false);
+        config.lighting.shadow_primary.Assign(false);
+        config.lighting.shadow_secondary.Assign(false);
+        config.lighting.shadow_invert.Assign(false);
+        config.lighting.shadow_alpha.Assign(false);
+        config.lighting.shadow_selector.Assign(0);
+        config.lighting.lut_d0.raw = 0;
+        config.lighting.lut_d1.raw = 0;
+        config.lighting.lut_sp.raw = 0;
+        config.lighting.lut_fr.raw = 0;
+        config.lighting.lut_rr.raw = 0;
+        config.lighting.lut_rg.raw = 0;
+        config.lighting.lut_rb.raw = 0;
+        for (auto& light : config.lighting.lights) {
+            light.raw = 0;
+        }
+    }
 }
 
 } // namespace Pica::Shader::Generator::GLSL
