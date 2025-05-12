@@ -118,8 +118,6 @@ FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
 
 FragmentModule::~FragmentModule() = default;
 
-static int debug_frame_counter = 0;
-
 std::string FragmentModule::Generate() {
     // We round the interpolated primary color to the nearest 1/255th
     // This maintains the PICA's 8 bits of precision
@@ -197,28 +195,6 @@ vec4 secondary_fragment_color = vec4(0.0);
     WriteLogicOp();
 
     out += '}';
-
-    // Debug logging: only for the first 10 frames
-    if (debug_frame_counter < 10) {
-        std::ofstream log("azahar_tev_debug.txt", std::ios::app);
-        log << "Frame " << debug_frame_counter << ":\n";
-        for (u32 index = 0; index < config.texture.tev_stages.size(); index++) {
-            const TexturingRegs::TevStageConfig& stage = config.texture.tev_stages[index];
-            log << "  TEV Stage " << index << ": ";
-            log << "color_op=" << static_cast<int>(stage.color_op.Value()) << ", ";
-            log << "alpha_op=" << static_cast<int>(stage.alpha_op.Value()) << ", ";
-            log << "color_source1=" << static_cast<int>(stage.color_source1.Value()) << ", ";
-            log << "alpha_source1=" << static_cast<int>(stage.alpha_source1.Value()) << ", ";
-            log << "color_modifier1=" << static_cast<int>(stage.color_modifier1.Value()) << ", ";
-            log << "alpha_modifier1=" << static_cast<int>(stage.alpha_modifier1.Value()) << ", ";
-            log << "GetColorMultiplier=" << stage.GetColorMultiplier() << ", ";
-            log << "GetAlphaMultiplier=" << stage.GetAlphaMultiplier() << std::endl;
-        }
-        log << std::setprecision(3) << std::fixed;
-        log << "  combiner_output: (unknown at this point, see shader output)\n";
-        log.close();
-        debug_frame_counter++;
-    }
 
     return out;
 }
@@ -502,6 +478,7 @@ void FragmentModule::WriteTevStage(u32 index) {
         return;
     }
 
+    // Batch static appends for color_results
     out += "color_results_1 = ";
     AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
     out += ";\ncolor_results_2 = ";
@@ -509,14 +486,19 @@ void FragmentModule::WriteTevStage(u32 index) {
     out += ";\ncolor_results_3 = ";
     AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
 
-    // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
-    out += fmt::format(";\nvec3 color_output_{} = byteround(", index);
+    // Use direct string concat for color_output
+    out += ";\nvec3 color_output_";
+    out += std::to_string(index);
+    out += " = byteround(";
     AppendColorCombiner(stage.color_op);
     out += ");\n";
 
     if (stage.color_op == Pica::TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
-        // result of Dot3_RGBA operation is also placed to the alpha component
-        out += fmt::format("float alpha_output_{0} = color_output_{0}[0];\n", index);
+        out += "float alpha_output_";
+        out += std::to_string(index);
+        out += " = color_output_";
+        out += std::to_string(index);
+        out += "[0];\n";
     } else {
         out += "alpha_results_1 = ";
         AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
@@ -524,16 +506,23 @@ void FragmentModule::WriteTevStage(u32 index) {
         AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
         out += ";\nalpha_results_3 = ";
         AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
-
-        out += fmt::format(";\nfloat alpha_output_{} = byteround(", index);
+        out += ";\nfloat alpha_output_";
+        out += std::to_string(index);
+        out += " = byteround(";
         AppendAlphaCombiner(stage.alpha_op);
         out += ");\n";
     }
 
-    out += fmt::format("combiner_output = vec4("
-                       "clamp(color_output_{} * {}.0, vec3(0.0), vec3(1.0)), "
-                       "clamp(alpha_output_{} * {}.0, 0.0, 1.0));\n",
-                       index, stage.GetColorMultiplier(), index, stage.GetAlphaMultiplier());
+    // Use direct string concat for combiner_output
+    out += "combiner_output = vec4(clamp(color_output_";
+    out += std::to_string(index);
+    out += " * ";
+    out += std::to_string(stage.GetColorMultiplier());
+    out += ".0, vec3(0.0), vec3(1.0)), clamp(alpha_output_";
+    out += std::to_string(index);
+    out += " * ";
+    out += std::to_string(stage.GetAlphaMultiplier());
+    out += ".0, 0.0, 1.0));\n";
 
     out += "combiner_buffer = next_combiner_buffer;\n";
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
