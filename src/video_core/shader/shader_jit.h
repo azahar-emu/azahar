@@ -32,7 +32,7 @@ public:
 
 private:
     static constexpr size_t MAX_CACHE_SIZE = 1000; // Maximum number of shaders to cache
-    std::unordered_map<u64, std::unique_ptr<JitShader>> cache;
+    std::unordered_map<u64, std::shared_future<std::unique_ptr<JitShader>>> cache;
     std::list<u64> lru_list; // Track LRU order of shaders
     mutable std::mutex cache_mutex;
 

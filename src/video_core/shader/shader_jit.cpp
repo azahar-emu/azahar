@@ -16,6 +16,7 @@
 #if CITRA_ARCH(x86_64)
 #include "video_core/shader/shader_jit_x64_compiler.h"
 #endif
+#include <future>
 
 namespace Pica::Shader {
 
@@ -67,18 +68,24 @@ void JitEngine::ThreadWorker() {
 void JitEngine::EnqueueCompilation(u64 cache_key, ShaderSetup setup_copy) {
     // WARNING: Copying ShaderSetup across threads may be unsafe if it contains raw pointers or
     // non-trivial resources. Consider refactoring to only copy the necessary data for compilation.
+    auto promise = std::make_shared<std::promise<std::unique_ptr<JitShader>>>();
     {
         std::lock_guard<std::mutex> lock(queue_mutex);
-        compile_queue.emplace([this, cache_key, setup_copy]() mutable {
+        compile_queue.emplace([this, cache_key, setup_copy, promise]() mutable {
             auto shader = std::make_unique<JitShader>();
             shader->Compile(&setup_copy.program_code, &setup_copy.swizzle_data);
-            std::lock_guard<std::mutex> lock2(cache_mutex);
-            if (cache.size() >= MAX_CACHE_SIZE) {
-                EvictLRU();
+            {
+                std::lock_guard<std::mutex> lock2(cache_mutex);
+                if (cache.size() >= MAX_CACHE_SIZE) {
+                    EvictLRU();
+                }
+                promise->set_value(std::move(shader));
+                cache[cache_key] = promise->get_future().share();
+                lru_list.push_front(cache_key);
             }
-            cache[cache_key] = std::move(shader);
-            lru_list.push_front(cache_key);
         });
+        // Store the future in the cache immediately so SetupBatch can wait on it
+        cache[cache_key] = promise->get_future().share();
     }
     queue_cv.notify_one();
 }
@@ -91,17 +98,26 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     const u64 swizzle_hash = setup.GetSwizzleDataHash();
     const u64 cache_key = Common::HashCombine(code_hash, swizzle_hash);
 
-    std::lock_guard<std::mutex> lock(cache_mutex);
-    auto iter = cache.find(cache_key);
-    if (iter != cache.end()) {
-        setup.cached_shader = iter->second.get();
-        UpdateLRU(cache_key);
-    } else {
-        // Enqueue compilation if not already queued
-        EnqueueCompilation(cache_key, setup);
-        // Do not use stub shader; set to nullptr so the draw can be skipped
-        setup.cached_shader = nullptr;
+    std::shared_future<std::unique_ptr<JitShader>> shader_future;
+    {
+        std::lock_guard<std::mutex> lock(cache_mutex);
+        auto iter = cache.find(cache_key);
+        if (iter != cache.end()) {
+            shader_future = iter->second;
+            UpdateLRU(cache_key);
+        } else {
+            // Compile synchronously and store the result
+            auto shader = std::make_unique<JitShader>();
+            shader->Compile(&setup.program_code, &setup.swizzle_data);
+            auto ready_future = std::make_shared<std::promise<std::unique_ptr<JitShader>>>();
+            ready_future->set_value(std::move(shader));
+            shader_future = ready_future->get_future().share();
+            cache[cache_key] = shader_future;
+            lru_list.push_front(cache_key);
+        }
     }
+    // Wait for the shader to be ready (if compiling in background)
+    setup.cached_shader = shader_future.get().get();
 }
 
 void JitEngine::EvictLRU() {
