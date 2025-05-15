@@ -56,7 +56,6 @@ static void PrintHelp(const char* argv0) {
                  "--web-api-url       Citra Web API url\n"
                  "--ban-list-file     The file for storing the room ban list\n"
                  "--log-file          The file for storing the room log\n"
-                 "--enable-citra-mods Allow Citra Community Moderators to moderate on your room\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -197,10 +196,10 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
         {"web-api-url", required_argument, 0, 'a'},
         {"ban-list-file", required_argument, 0, 'b'},
         {"log-file", required_argument, 0, 'l'},
-        {"enable-citra-mods", no_argument, 0, 'e'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         // Removed options
+        {"enable-citra-mods", no_argument, 0, 'e'},
         {"preferred-game", optional_argument, 0, 'g'},
         {"preferred-game-id", optional_argument, 0, 0},
         // Entry option
@@ -210,7 +209,8 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
     };
 
     while (optind < argc) {
-        int arg = getopt_long(argc, argv, "n:d:p:m:w:s:u:t:a:i:l:hvg", long_options, &option_index);
+        int arg =
+            getopt_long(argc, argv, "n:d:p:m:w:s:u:t:a:i:l:hveg", long_options, &option_index);
         if (arg != -1) {
             switch (static_cast<char>(arg)) {
             case 'n':
@@ -255,6 +255,9 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
             case 'v':
                 PrintVersion();
                 exit(0);
+            case 'e':
+                PrintRemovedOptionWarning(argv[0], "--enable-citra-mods/-e");
+                exit(255);
             case 'g':
                 PrintRemovedOptionWarning(argv[0], "--preferred-game/-g");
                 exit(255);
