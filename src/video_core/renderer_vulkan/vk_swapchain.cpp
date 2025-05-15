@@ -183,9 +183,12 @@ void Swapchain::SetPresentMode() {
             has_immediate ? vk::PresentModeKHR::eImmediate : vk::PresentModeKHR::eMailbox;
         return;
     }
+
+    const auto frame_limit = Settings::GetFrameLimit();
+
     // If vsync is enabled attempt to use mailbox mode in case the user wants to speedup/slowdown
     // the game. If mailbox is not available use immediate and warn about it.
-    if (use_vsync && Settings::GetFrameLimit() > 100) {
+    if (use_vsync && (frame_limit > 100 || frame_limit == 0)) { // 0 = unthrottled
         present_mode = has_mailbox ? vk::PresentModeKHR::eMailbox : vk::PresentModeKHR::eImmediate;
         if (!has_mailbox) {
             LOG_WARNING(
