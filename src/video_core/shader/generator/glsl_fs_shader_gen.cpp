@@ -459,15 +459,11 @@ static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& sta
         return false;
     }
 
-    // For sources 2 and 3, allow Previous or Constant
-    const bool source2_ok = (stage.color_source2 == TevStageConfig::Source::Previous ||
-                             stage.color_source2 == TevStageConfig::Source::Constant) &&
-                            (stage.alpha_source2 == TevStageConfig::Source::Previous ||
-                             stage.alpha_source2 == TevStageConfig::Source::Constant);
-    const bool source3_ok = (stage.color_source3 == TevStageConfig::Source::Previous ||
-                             stage.color_source3 == TevStageConfig::Source::Constant) &&
-                            (stage.alpha_source3 == TevStageConfig::Source::Previous ||
-                             stage.alpha_source3 == TevStageConfig::Source::Constant);
+    // For sources 2 and 3, allow Previous only
+    const bool source2_ok = stage.color_source2 == TevStageConfig::Source::Previous &&
+                            stage.alpha_source2 == TevStageConfig::Source::Previous;
+    const bool source3_ok = stage.color_source3 == TevStageConfig::Source::Previous &&
+                            stage.alpha_source3 == TevStageConfig::Source::Previous;
     return source2_ok && source3_ok;
 }
 
