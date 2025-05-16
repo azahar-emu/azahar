@@ -119,7 +119,7 @@ bool Exists(const std::string& filename) {
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
-    struct stat file_info;
+    struct _stat64 file_info;
     // Windows needs a slash to identify a driver root
     if (copy.size() != 0 && copy.back() == ':')
         copy += DIR_SEP_CHR;
@@ -140,18 +140,18 @@ bool IsDirectory(const std::string& filename) {
     return AndroidStorage::IsDirectory(filename);
 #endif
 
-    struct stat file_info;
-
     std::string copy(filename);
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
+    struct _stat64 file_info;
     // Windows needs a slash to identify a driver root
     if (copy.size() != 0 && copy.back() == ':')
         copy += DIR_SEP_CHR;
 
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
+    struct stat file_info;
     int result = stat(copy.c_str(), &file_info);
 #endif
 
@@ -397,9 +397,11 @@ u64 GetSize(const std::string& filename) {
         LOG_ERROR(Common_Filesystem, "failed {}: is a directory", filename);
         return 0;
     }
-
+#ifndef _WIN32
     struct stat buf;
+#endif
 #ifdef _WIN32
+    struct _stat64 buf;
     if (_wstat64(Common::UTF8ToUTF16W(filename).c_str(), &buf) == 0)
 #elif ANDROID
     u64 result = AndroidStorage::GetSize(filename);
