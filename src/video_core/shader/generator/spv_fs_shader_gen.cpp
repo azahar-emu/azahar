@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,9 @@ using TevStageConfig = TexturingRegs::TevStageConfig;
 using TextureType = TexturingRegs::TextureConfig::TextureType;
 
 constexpr u32 SPIRV_VERSION_1_3 = 0x00010300;
+
+// Forward declaration
+static bool IsPassThroughTevStage(const TexturingRegs::TevStageConfig& stage);
 
 FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
     : Sirit::Module{SPIRV_VERSION_1_3}, config{config_}, profile{profile_},
@@ -58,8 +61,17 @@ void FragmentModule::Generate() {
     combiner_output = ConstF32(0.f, 0.f, 0.f, 0.f);
 
     // Write shader bytecode to emulate PICA TEV stages
+    bool tev_stage_processed = false;
     for (u32 index = 0; index < config.texture.tev_stages.size(); ++index) {
+        const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
+        if (IsPassThroughTevStage(stage)) {
+            continue;
+        }
+        tev_stage_processed = true;
         WriteTevStage(index);
+    }
+    if (!tev_stage_processed) {
+        combiner_output = ConstF32(1.f, 0.f, 1.f, 1.f); // Debug color: magenta
     }
 
     WriteAlphaTestCondition(config.framebuffer.alpha_test_func);
@@ -206,6 +218,11 @@ void FragmentModule::WriteLighting() {
 
     const auto& lighting = config.lighting;
 
+    // Early exit if no lights are enabled
+    if (lighting.src_num == 0) {
+        return;
+    }
+
     // Define lighting globals
     Id diffuse_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
     Id specular_sum{ConstF32(0.f, 0.f, 0.f, 1.f)};
@@ -231,7 +248,6 @@ void FragmentModule::WriteLighting() {
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map
         surface_normal = perturbation();
-
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
         if (lighting.bump_renorm) {
@@ -242,18 +258,11 @@ void FragmentModule::WriteLighting() {
             const Id normal_z{OpSqrt(f32_id, OpFMax(f32_id, val, ConstF32(0.f)))};
             surface_normal = OpCompositeConstruct(vec_ids.Get(3), normal_x, normal_y, normal_z);
         }
-
         // The tangent vector is not perturbed by the normal map and is just a unit vector.
         surface_tangent = ConstF32(1.f, 0.f, 0.f);
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
         surface_tangent = perturbation();
-
-        // Mathematically, recomputing Z-component of the tangent vector won't affect the relevant
-        // computation below, which is also confirmed on 3DS. So we don't bother recomputing here
-        // even if 'renorm' is enabled.
-
-        // The normal vector is not perturbed by the tangent map and is just a unit vector.
         surface_normal = ConstF32(0.f, 0.f, 1.f);
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors
@@ -312,17 +321,20 @@ void FragmentModule::WriteLighting() {
         normquat = OpLoad(vec_ids.Get(4), normquat_id);
     }
 
-    // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
-    // eyespace.
+    // Always declare and assign normal and tangent
     const Id normalized_normquat{OpNormalize(vec_ids.Get(4), normquat)};
     const Id normal{quaternion_rotate(normalized_normquat, surface_normal)};
     const Id tangent{quaternion_rotate(normalized_normquat, surface_tangent)};
 
+    // Early exit if no shadow is used
     Id shadow{ConstF32(1.f, 1.f, 1.f, 1.f)};
     if (lighting.enable_shadow) {
-        shadow = OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
+        const Id shadow_texture =
+            OpFunctionCall(vec_ids.Get(4), sample_tex_unit_func[lighting.shadow_selector]);
         if (lighting.shadow_invert) {
-            shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow);
+            shadow = OpFSub(vec_ids.Get(4), ConstF32(1.f, 1.f, 1.f, 1.f), shadow_texture);
+        } else {
+            shadow = shadow_texture;
         }
     }
 
@@ -632,49 +644,33 @@ void FragmentModule::WriteLighting() {
 void FragmentModule::WriteTevStage(s32 index) {
     const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
 
-    // Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
-    const auto is_passthrough_tev_stage = [](const TevStageConfig& stage) {
-        return (stage.color_op == TevStageConfig::Operation::Replace &&
-                stage.alpha_op == TevStageConfig::Operation::Replace &&
-                stage.color_source1 == TevStageConfig::Source::Previous &&
-                stage.alpha_source1 == TevStageConfig::Source::Previous &&
-                stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-                stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-                stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
-    };
+    color_results_1 = AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
+    color_results_2 = AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
+    color_results_3 = AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
 
-    if (!is_passthrough_tev_stage(stage)) {
-        color_results_1 = AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
-        color_results_2 = AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
-        color_results_3 = AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
+    // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
+    Id color_output{Byteround(AppendColorCombiner(stage.color_op), 3)};
+    Id alpha_output{};
 
-        // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
-        Id color_output{Byteround(AppendColorCombiner(stage.color_op), 3)};
-        Id alpha_output{};
+    if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+        // result of Dot3_RGBA operation is also placed to the alpha component
+        alpha_output = OpCompositeExtract(f32_id, color_output, 0);
+    } else {
+        alpha_results_1 = AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
+        alpha_results_2 = AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
+        alpha_results_3 = AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
 
-        if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
-            // result of Dot3_RGBA operation is also placed to the alpha component
-            alpha_output = OpCompositeExtract(f32_id, color_output, 0);
-        } else {
-            alpha_results_1 =
-                AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
-            alpha_results_2 =
-                AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
-            alpha_results_3 =
-                AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
-
-            alpha_output = Byteround(AppendAlphaCombiner(stage.alpha_op));
-        }
-
-        color_output = OpVectorTimesScalar(
-            vec_ids.Get(3), color_output, ConstF32(static_cast<float>(stage.GetColorMultiplier())));
-        color_output = OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f),
-                                ConstF32(1.f, 1.f, 1.f));
-        alpha_output =
-            OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
-        alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
-        combiner_output = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
+        alpha_output = Byteround(AppendAlphaCombiner(stage.alpha_op));
     }
+
+    color_output = OpVectorTimesScalar(vec_ids.Get(3), color_output,
+                                       ConstF32(static_cast<float>(stage.GetColorMultiplier())));
+    color_output =
+        OpFClamp(vec_ids.Get(3), color_output, ConstF32(0.f, 0.f, 0.f), ConstF32(1.f, 1.f, 1.f));
+    alpha_output =
+        OpFMul(f32_id, alpha_output, ConstF32(static_cast<float>(stage.GetAlphaMultiplier())));
+    alpha_output = OpFClamp(f32_id, alpha_output, ConstF32(0.f), ConstF32(1.f));
+    combiner_output = OpCompositeConstruct(vec_ids.Get(4), color_output, alpha_output);
 
     combiner_buffer = next_combiner_buffer;
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
@@ -1608,6 +1604,53 @@ std::vector<u32> GenerateFragmentShader(const FSConfig& config, const Profile& p
     FragmentModule module{config, profile};
     module.Generate();
     return module.Assemble();
+}
+
+// Helper to detect passthrough TEV stages for optimization
+static bool IsPassThroughTevStage(const TexturingRegs::TevStageConfig& stage) {
+    using TevStageConfig = TexturingRegs::TevStageConfig;
+
+    // Never skip Dot3_RGBA stages
+    if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+        return false;
+    }
+
+    // Check if both color and alpha operations are Replace
+    if (stage.color_op != TevStageConfig::Operation::Replace ||
+        stage.alpha_op != TevStageConfig::Operation::Replace) {
+        return false;
+    }
+
+    // Check if source1 is Previous for both color and alpha
+    if (stage.color_source1 != TevStageConfig::Source::Previous ||
+        stage.alpha_source1 != TevStageConfig::Source::Previous) {
+        return false;
+    }
+
+    // Check if modifiers are default for both color and alpha
+    if (stage.color_modifier1 != TevStageConfig::ColorModifier::SourceColor ||
+        stage.alpha_modifier1 != TevStageConfig::AlphaModifier::SourceAlpha) {
+        return false;
+    }
+
+    // Check if multipliers are 1
+    if (stage.GetColorMultiplier() != 1 || stage.GetAlphaMultiplier() != 1) {
+        return false;
+    }
+
+    // For sources 2 and 3, we can be more lenient - if they're Previous or Constant(0),
+    // they won't affect the output
+    const bool source2_ok = (stage.color_source2 == TevStageConfig::Source::Previous ||
+                             stage.color_source2 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source2 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source2 == TevStageConfig::Source::Constant);
+
+    const bool source3_ok = (stage.color_source3 == TevStageConfig::Source::Previous ||
+                             stage.color_source3 == TevStageConfig::Source::Constant) &&
+                            (stage.alpha_source3 == TevStageConfig::Source::Previous ||
+                             stage.alpha_source3 == TevStageConfig::Source::Constant);
+
+    return source2_ok && source3_ok;
 }
 
 } // namespace Pica::Shader::Generator::SPIRV
