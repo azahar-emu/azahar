@@ -62,7 +62,7 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
         if (setting.isActive) {
             adapter.onDateTimeClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
     }
 
@@ -70,7 +70,7 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting)
         }
         return false
     }

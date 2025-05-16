@@ -28,7 +28,9 @@ abstract class SettingsItem(
             return setting?.isRuntimeEditable ?: false
         }
 
-    open var isEnabled: Boolean = true
+    open val isEnabled: Boolean = true
+
+    open val requiredSettingName: String? = null
 
     val isActive: Boolean
         get() {
