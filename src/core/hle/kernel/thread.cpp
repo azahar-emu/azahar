@@ -528,8 +528,20 @@ ThreadManager::~ThreadManager() {
     }
 }
 
-std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() {
+std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() const {
     return thread_list;
+}
+
+std::shared_ptr<Thread> KernelSystem::GetThreadByID(u32 thread_id) const {
+    for (u32 core_id = 0; core_id < Core::System::GetInstance().GetNumCores(); core_id++) {
+        const auto thread_list = GetThreadManager(core_id).GetThreadList();
+        for (auto& thread : thread_list) {
+            if (thread->thread_id == thread_id) {
+                return thread;
+            }
+        }
+    }
+    return nullptr;
 }
 
 } // namespace Kernel

@@ -21,6 +21,7 @@
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/pica/regs_lcd.h"
+#include "video_core/renderer_base.h"
 #include "video_core/right_eye_disabler.h"
 
 SERIALIZE_EXPORT_IMPL(Service::GSP::SessionData)
@@ -613,6 +614,8 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
                 ErrorLevel::Success};
     }
 
+    gpu.Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
+
     if (blocking) {
         // TODO: The thread should be put to sleep until acquired.
         ASSERT_MSG(active_thread_id == std::numeric_limits<u32>::max(),
@@ -623,6 +626,7 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
     }
 
     active_thread_id = session_data->thread_id;
+    active_client_thread_id = ctx.ClientThread()->thread_id;
     return ResultSuccess;
 }
 
@@ -651,6 +655,7 @@ void GSP_GPU::ReleaseRight(const SessionData* session_data) {
     ASSERT_MSG(active_thread_id == session_data->thread_id,
                "Wrong thread tried to release GPU right");
     active_thread_id = std::numeric_limits<u32>::max();
+    active_client_thread_id = std::numeric_limits<u32>::max();
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
@@ -720,6 +725,7 @@ void GSP_GPU::serialize(Archive& ar, const unsigned int) {
     ar& boost::serialization::base_object<Kernel::SessionRequestHandler>(*this);
     ar & shared_memory;
     ar & active_thread_id;
+    ar & active_client_thread_id;
     ar & first_initialization;
     ar & used_thread_ids;
     ar & saved_vram;

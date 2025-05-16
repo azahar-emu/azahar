@@ -103,10 +103,11 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     const QString current_action =
         model->data(model->index(index.row(), 0, index.parent())).toString();
     const bool is_turbo = current_action == tr("Toggle Turbo Mode");
-    const bool is_per_game = current_action == tr("Toggle Per-Game Speed");
+    const bool is_per_game = current_action == tr("Toggle Per-Application Speed");
 
     if (is_turbo || is_per_game) {
-        QString other_action = is_turbo ? tr("Toggle Per-Game Speed") : tr("Toggle Turbo Mode");
+        QString other_action =
+            is_turbo ? tr("Toggle Per-Application Speed") : tr("Toggle Turbo Mode");
         QKeySequence other_sequence;
 
         for (int r = 0; r < model->rowCount(); ++r) {
@@ -122,9 +123,9 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
 
         // Show warning if either hotkey is already set
         if (!key_sequence.isEmpty() && !other_sequence.isEmpty()) {
-            QMessageBox::warning(
-                this, tr("Conflicting Key Sequence"),
-                tr("The per-game speed and turbo speed hotkeys cannot be bound at the same time."));
+            QMessageBox::warning(this, tr("Conflicting Key Sequence"),
+                                 tr("The per-application speed and turbo speed hotkeys cannot be "
+                                    "bound at the same time."));
             return;
         }
     }

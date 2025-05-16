@@ -5,10 +5,6 @@
     <string name="app_notification_channel_description">Notificacions de l\'emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar s\'està executant</string>
     <string name="app_game_install_description">A continuació, haureu de seleccionar una carpeta d\'aplicacions. Azahar mostrarà totes les aplicacions de 3DS dins de la carpeta seleccionada a l\'aplicació.\n\nLes aplicacions, actualitzacions i DLC CIA s\'hauran d\'instal·lar per separat fent clic a la icona de la carpeta i seleccionant Instal·la CIA.</string>
-    <string name="start">Iniciar</string>
-    <string name="cancelling">Cancel·lant</string>
-    <string name="important">Important</string>
-    <string name="dont_show_again">No tornar a mostrar</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Configuració</string>
@@ -83,9 +79,13 @@
     <string name="warning_cancel">Cancel·lar</string>
     <string name="select_citra_user_folder">Seleccionar carpeta d\'usuari.</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecciona el vostre directori de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dades d\'usuari</a> amb el següent botó.]]></string>
+    <string name="select_which_user_directory_to_use">Sembla que tens directoris d\'usuari configurats tant per a Lime3DS com per a Azahar. Probablement es deu al fet que vas actualitzar a Azahar i, quan se\'t va demanar, vas triar un directori d\'usuari diferent del qual usaves per a Lime3DS.\n\nAixó pot haver-te fet pensar que vas perdre partides guardades o altres configuracions; et demanem disculpes si això va ocórrer.\n\nPreferixes tornar a usar el teu directori d\'usuari original de Lime3DS, restaurant la configuració i les partides guardades de Lime3DS, o conservar el teu directori d\'usuari actual d\'Azahar?\n\nCap dels directoris s\'eliminarà, independentment de la teua elecció, i pots canviar lliurement entre ells usant l\'opció \"Seleccionar carpeta d\'usuari\".</string>
+    <string name="keep_current_azahar_directory">Mantindre el directori Azahar actual</string>
+    <string name="use_prior_lime3ds_directory">Usar el directori de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No pots saltar aquest pas</string>
     <string name="cannot_skip_directory_description">Aquest pas és necessari perquè Azahar funcione. Selecciona un directori i després podràs continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdut els permisos d\'escriptura en el teu  <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directori de dades d\'usuari</a>, on es guarden les partides guardades i altra informació. Això pot ocórrer després d\'algunes actualitzacions d\'aplicacions o d\'Android. Torna a seleccionar el directori per a recuperar els permisos i poder continuar.</string>
     <string name="set_up_theme_settings">Configuració de tema</string>
     <string name="setup_theme_settings_description">Configura les teues preferències de temes per a Azahar.</string>
     <string name="setup_set_theme">Establir tema</string>
@@ -122,8 +122,12 @@
     <string name="input_binding_description_horizontal_axis">Mou el joystick a esquerra o dreta.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercanviar Pantalles</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Aquest control s\'ha d\'assignar a un estic analògic del comandament o a un eix del Pad de Control!</string>
     <string name="input_message_button_only">Aquest control s\'ha d\'assignar a un botó del comandament!</string>
+    <string name="turbo_limit_hotkey">Velocitat Turbo</string>
+    <string name="turbo_enabled_toast">Velocitat Turbo Activada</string>
+    <string name="turbo_disabled_toast">Velocitat Turbo Desactivada</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">Fitxers del sistema</string>
@@ -149,20 +153,20 @@
     <string name="generic_buttons">Botons</string>
     <string name="button">Botó</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">Usa el compilador Just-In-Time (JIT) per a l\'emulació de la CPU. Quan s\'active, el rendiment millorarà notablement.</string>
-    <string name="init_clock">Rellotge</string>
-    <string name="init_clock_description">Configura el rellotge emulat de la 3DS perquè tinga la mateixa data i hora del teu dispositiu o per a configurar una data i hora distinta.</string>
-    <string name="cpu_clock_speed">Velocitat de rellotge de la CPU</string>
-
     <!-- System settings strings -->
+    <string name="emulation_settings">Configuració d\'emulació</string>
     <string name="username">Nom d\'usuari/a</string>
     <string name="new_3ds">Mode New 3DS</string>
     <string name="lle_applets">Usar Applets LLE (si están instal·lades)</string>
+    <string name="enable_required_online_lle_modules">Habilite els mòduls LLE necessaris per a les funcions en línia (si estan instal·lats)</string>
+    <string name="enable_required_online_lle_modules_desc">Habilita els mòduls LLE necessaris per al mode multijugador en línia, accés a la eShop, etc.</string>
     <string name="clock">Rellotge</string>
-    <string name="init_time">Temps de compensació</string>
-    <string name="init_time_description">Si el rellotge està en \"Rellotge emulat\", es canvia la data i l\'hora d\'inici.</string>
+    <string name="init_clock">Rellotge</string>
+    <string name="init_clock_description">Configura el rellotge emulat de la 3DS perquè tinga la mateixa data i hora del teu dispositiu o per a configurar una data i hora distinta.</string>
+    <string name="device_clock">Rellotge del Sistema</string>
+    <string name="simulated_clock">Rellotge Simulat</string>
+    <string name="simulated_clock_description">Si el rellotge està en \"Rellotge emulat\", es canvia la data i l\'hora d\'inici.</string>
+    <string name="profile_settings">Configuració de perfil</string>
     <string name="emulated_region">Regió</string>
     <string name="emulated_language">Idioma</string>
     <string name="birthday">Aniversari</string>
@@ -175,6 +179,9 @@
     <string name="console_id">ID de Consola</string>
     <string name="regenerate_console_id">Regenerar ID de Consola</string>
     <string name="regenerate_console_id_description">Substituirà la teua ID de consola 3DS actual per una nova. La teua ID actual no es podrà recuperar. Pot tenir efectes inesperats dins de les aplicacions. Podria fallar si utilitzes un fitxer de configuració obsolet. Continuar?</string>
+    <string name="mac_address">Adreça MAC</string>
+    <string name="regenerate_mac_address">Regenerar adreça MAC</string>
+    <string name="regenerate_mac_address_description">Això reemplaçarà la teua adreça MAC actual per una nova. No es recomana fer-ho si vas obtindre la direcció MAC de la teua consola real amb la ferramenta de configuració. Continuar?</string>
     <string name="plugin_loader">Carregador de complements 3GX</string>
     <string name="plugin_loader_description">Carrega els plugins 3GX de la SD emulada si estan disponibles.</string>
     <string name="allow_plugin_loader">Permetre que les aplicacions canvien l\'estat del carregador de plugins</string>
@@ -204,29 +211,30 @@
     <string name="async_shaders">Activar compilació de ombrejadors asíncrona</string>
     <string name="async_shaders_description">Compila els ombrejats en segón pla per a reduir les aturades durant la partida.
 S\'esperen errors gràfics temporals quan estigue activat.</string>
-    <string name="renderer_debug">Renderitzador de depuració</string>
-    <string name="renderer_debug_description">Arxiva informació addicional gràfica relacionada amb la depuració. Quan està activada, el rendiment dels jocs serà reduït considerablement</string>
-    <string name="vsync">Activar Sincronització Vertical</string>
-    <string name="vsync_description">Sincronitza els quadres per segon del joc amb la taxa de refresc del teu dispositiu.</string>
     <string name="linear_filtering">Filtre Linear</string>
     <string name="linear_filtering_description">Activa el filtre linear, que fa que els gràfics del joc es vegen més suaus.</string>
     <string name="texture_filter_name">Filtre de Textures</string>
     <string name="texture_filter_description">Millora l\'aspecte visual de les aplicacions aplicant un filtre a les textures. Els filtres compatibles són Anime4K, Ultrafast, Bicubic, ScaleForce, xBRZ Freescale i MMPX.</string>
+    <string name="delay_render_thread">Endarrerir fil de renderitzat del joc</string>
+    <string name="delay_render_thread_description">Retarda el fil de renderitzat del joc en enviar dades a la GPU. Ajuda a solucionar problemes de rendiment en les (poques) aplicacions amb velocitats de fotogrames dinàmiques.</string>
     <string name="advanced">Avançat</string>
     <string name="texture_sampling_name">Mostreig de Textures</string>
     <string name="texture_sampling_description">Sobreescriu el filtre de mostreig usat en jocs. Pot ser útil en uns certs casos de jocs amb baix rendiment en pujar la resolució. Si no estàs segur, possa\'l en Controlat per Joc.</string>
-    <string name="hw_shaders">Activar Ombrejador de Hardware</string>
-    <string name="hw_shaders_description">Usa el hardware per a emular els ombrejadors de 3DS. Quan s\'active, el rendiment millorarà notablement.</string>
     <string name="shaders_accurate_mul">Multiplicació Precisa</string>
     <string name="shaders_accurate_mul_description">Usa multiplicacions més precises en els ombrejos de Hardware, que podrien arreglar uns certs problemes gràfics. Quan s\'active, el rendiment es reduirà.</string>
     <string name="asynchronous_gpu">Activar Emulació Asíncrona de la GPU</string>
     <string name="asynchronous_gpu_description">Usa un fil separat per a emular la GPU de manera asíncrona. Quan s\'active, el rendiment millorarà.</string>
     <string name="frame_limit_enable">Límit de velocitat</string>
-    <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal.</string>
+    <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal. Quan es desactive, la velocitat d\'emulació no tindrà límit i la tecla d\'accés ràpid de velocitat turbo no funcionarà.</string>
     <string name="frame_limit_slider">Limitar percentatge de velocitat</string>
     <string name="frame_limit_slider_description">Especifica el valor al qual es limita la velocitat d\'emulació. Amb el valor per defecte del 100%, l\'emulació es limitarà a la velocitat normal. Els valors alts o baixos incrementaran o reduiran el límit de velocitat.</string>
+    <string name="turbo_limit">Límit de Velocitat Turbo</string>
+    <string name="turbo_limit_description">Límit de velocitat d\'emulació utilitzat mentres la tecla d\'accés ràpid turbo està activa.</string>
+    <string name="expand_to_cutout_area">Expandir a l\'àrea de retallada</string>
+    <string name="expand_to_cutout_area_description">Amplia l\'àrea de visualització per a incloure l\'àrea de retallada (o osca).</string>
     <string name="internal_resolution">Resolució interna</string>
     <string name="internal_resolution_description">Especifica la resolució utilitzada per a renderitzar. Una resolució alta millora considerablement la qualitat visual, però també afecta bastant al rendiment i pot causar problemes en unes certes aplicacions.</string>
+    <string name="internal_resolution_setting_auto">Auto (Grandària Pantalla)</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -243,6 +251,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="render3d">Mode 3D Estereoscòpic</string>
     <string name="factor3d">Profunditat</string>
     <string name="factor3d_description">Especifica el valor del regulador 3D. Hauria d\'estar posat a més enllà del 0% quan el Mode 3D Estereoscòpic està activat.\nNota: Els valors de profunditat superiors al 100% no són possibles en hardware real i poden causar problemes gràfics.</string>
+    <string name="disable_right_eye_render">Desactivar Renderitzat d\'Ull Dret</string>
+    <string name="disable_right_eye_render_description">Millora enormement el rendiment en algunes aplicacions, però pot provocar parpellejos en unes altres.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Grandària de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un percentatge de la seua grandària original.</string>
@@ -272,6 +282,23 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="audio_input_type">Dispositiu d\'entrada d\'àudio</string>
     <string name="sound_output_mode">Mode d\'eixida de l\'àudio</string>
 
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Usa el compilador Just-In-Time (JIT) per a l\'emulació de la CPU. Quan s\'active, el rendiment millorarà notablement.</string>
+    <string name="hw_shaders">Activar Ombrejador de Hardware</string>
+    <string name="hw_shaders_description">Usa el hardware per a emular els ombrejadors de 3DS. Quan s\'active, el rendiment millorarà notablement.</string>
+    <string name="cpu_clock_speed">Velocitat de rellotge de la CPU</string>
+    <string name="vsync">Activar Sincronització Vertical</string>
+    <string name="vsync_description">Sincronitza els quadres per segon del joc amb la taxa de refresc del teu dispositiu.</string>
+    <string name="renderer_debug">Renderitzador de depuració</string>
+    <string name="renderer_debug_description">Arxiva informació addicional gràfica relacionada amb la depuració. Quan està activada, el rendiment dels jocs serà reduït considerablement</string>
+    <string name="instant_debug_log">Guardar l\'eixida del registre en cada missatge</string>
+    <string name="instant_debug_log_description">Envia immediatament el registre de depuració a un arxiu. Usa-ho si Azahar falla i es talla l\'eixida del registre.</string>
+    <string name="delay_start_lle_modules">Inici diferit amb mòduls LLE</string>
+    <string name="delay_start_lle_modules_description">Retarda l\'inici de l\'aplicació quan els mòduls LLE estan habilitats.</string>
+    <string name="deterministic_async_operations">Operacions asíncrones deterministes</string>
+    <string name="deterministic_async_operations_description">Fa que les operacions asíncrones siguen deterministes per a la depuració. Habilitar esta opció pot causar bloquejos.</string>
+
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientació de pantalla</string>
     <string name="layout_screen_orientation_auto_sensor">Automàtica</string>
@@ -286,6 +313,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="ini_saved">Configuració guardada</string>
     <string name="gameid_saved">Configuració guardada per a %1$s</string>
     <string name="error_saving">Error guardant %1$s.ini: %2$s</string>
+    <string name="saving">Guardant...</string>
     <string name="loading">Carregant...</string>
     <string name="next">Següent</string>
     <string name="back">Arrere</string>
@@ -306,8 +334,14 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="select_rtc_time">Seleccionar hora RTC</string>
     <string name="reset_setting_confirmation">Vols reiniciar esta configuració al seu valor per defecte?</string>
     <string name="setting_not_editable">No pots editar-ho ara</string>
+    <string name="setting_disabled">Configuració deshabilitada</string>
+    <string name="setting_disabled_description">Esta configuració està actualment deshabilitada perquè una altra configuració no té el valor apropiat.</string>
     <string name="setting_not_editable_description">Esta opció no pot canviar-se mentres s\'està executant un joc.</string>
     <string name="auto_select">Auto-elegir</string>
+    <string name="start">Iniciar</string>
+    <string name="cancelling">Cancel·lant</string>
+    <string name="important">Important</string>
+    <string name="dont_show_again">No tornar a mostrar</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directori de Joc</string>
@@ -375,6 +409,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="small_screen_position_bottom_left">Abaix a l\'esquerra</string>
     <string name="small_screen_position_above">Damunt</string>
     <string name="small_screen_position_below">Davall</string>
+    <string name="screen_gap">Separació de Pantalla</string>
+    <string name="screen_gap_description">Espai entre pantalles en tots els modes de dos pantalles. Mesurat en píxels respecte a l\'altura de 240 píxels de la pantalla més gran.</string>
     <string name="large_screen_proportion">Proporció de Pantalla Gran</string>
     <string name="large_screen_proportion_description">Quantes vegades més gran és la pantalla gran que la pantalla xicoteta en Proporció de Pantalla Gran?</string>
     <string name="emulation_adjust_custom_layout">Ajusta l\'estil personalitzat en Configuració</string>
@@ -392,6 +428,9 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_show_overlay">Mostrar Estil</string>
     <string name="emulation_close_game">Tancar Joc</string>
     <string name="emulation_toggle_pause">Activar pausa</string>
+    <string name="miscellaneous">Miscel·lanis</string>
+    <string name="use_artic_base_controller">Usar Artic Controller en estar connectat al servidor de Artic Base</string>
+    <string name="use_artic_base_controller_description">Utilitza els controls proporcionats per Artic Base Server quan estiga connectat a ell en lloc del dispositiu d\'entrada configurat.</string>
     <string name="emulation_close_game_message">Estàs segur que vols tancar el joc?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Carregar</string>
@@ -463,6 +502,17 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
     <string name="shortcut">Drecera</string>
+    <string name="uninstall_cia">Desinstal·lar Aplicació</string>
+    <string name="uninstalling">Desinstal·lant...</string>
+    <string name="game_context_open_save_dir">Obrir Carpeta de Guardat</string>
+    <string name="game_context_open_app">Obrir Carpeta d\'Aplicació</string>
+    <string name="game_context_open_mods">Obrir Carpeta de Mods</string>
+    <string name="game_context_open_textures">Obrir Carpeta de Textures</string>
+    <string name="game_context_open_dlc">Obrir Carpeta de DLC</string>
+    <string name="game_context_open_updates">Obrir Carpeta d\'Actualitzacions</string>
+    <string name="game_context_open_extra">Obrir Carpeta Extra</string>
+    <string name="game_context_uninstall_dlc">Desinstal·lar DLC</string>
+    <string name="game_context_uninstall_updates">Desinstal·lar Actualitzacions</string>
 
     <!-- Cheats -->
     <string name="cheats">Trucs</string>
@@ -521,10 +571,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Fons foscos</string>
     <string name="use_black_backgrounds_description">Quan uses el tema fosc, s\'aplicaran fons foscos.</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">Rellotge del Sistema</string>
-    <string name="simulated_clock">Rellotge Simulat</string>
 
     <!-- Region names -->
     <string name="system_region_jpn">JPN</string>
@@ -751,33 +797,12 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="artic_base_connect_description">Connectar amb una consola real que estiga executant un servidor Artic Base</string>
     <string name="artic_base_connect">Connectar amb Artic Base</string>
     <string name="artic_base_enter_address">Introduïx la direcció del servidor Artic Base</string>
-    <string name="delay_render_thread">Endarrerir fil de renderitzat del joc</string>
-    <string name="delay_render_thread_description">Retarda el fil de renderitzat del joc en enviar dades a la GPU. Ajuda a solucionar problemes de rendiment en les (poques) aplicacions amb velocitats de fotogrames dinàmiques.</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Guardat ràpid</string>
     <string name="emulation_quicksave">Guardat ràpid</string>
     <string name="emulation_quickload">Carregament ràpid</string>
     <string name="emulation_occupied_quicksave_slot">Guardat ràpid - %1$tF %1$tR</string>
-    <string name="quicksave_saving">Guardant...</string>
-    <string name="quickload_loading">Carregant...</string>
     <string name="quickload_not_found">Guardat ràpid no disponible.</string>
-    <string name="miscellaneous">Miscel·lanis</string>
-    <string name="use_artic_base_controller">Usar Artic Controller en estar connectat al servidor de Artic Base</string>
-    <string name="use_artic_base_controller_description">Utilitza els controls proporcionats per Artic Base Server quan estiga connectat a ell en lloc del dispositiu d\'entrada configurat.</string>
-    <string name="instant_debug_log">Guardar l\'eixida del registre en cada missatge</string>
-    <string name="instant_debug_log_description">Envia immediatament el registre de depuració a un arxiu. Usa-ho si Azahar falla i es talla l\'eixida del registre.</string>
-    <string name="disable_right_eye_render">Desactivar Renderitzat d\'Ull Dret</string>
-    <string name="disable_right_eye_render_description">Millora enormement el rendiment en algunes aplicacions, però pot provocar parpellejos en unes altres.</string>
-    <string name="delay_start_lle_modules">Inici diferit amb mòduls LLE</string>
-    <string name="delay_start_lle_modules_description">Retarda l\'inici de l\'aplicació quan els mòduls LLE estan habilitats.</string>
-    <string name="deterministic_async_operations">Operacions asíncrones deterministes</string>
-    <string name="deterministic_async_operations_description">Fa que les operacions asíncrones siguen deterministes per a la depuració. Habilitar esta opció pot causar bloquejos.</string>
-    <string name="enable_required_online_lle_modules">Habilite els mòduls LLE necessaris per a les funcions en línia (si estan instal·lats)</string>
-    <string name="enable_required_online_lle_modules_desc">Habilita els mòduls LLE necessaris per al mode multijugador en línia, accés a la eShop, etc.</string>
-    <string name="emulation_settings">Configuració d\'emulació</string>
-    <string name="profile_settings">Configuració de perfil</string>
-    <string name="mac_address">Adreça MAC</string>
-    <string name="regenerate_mac_address">Regenerar adreça MAC</string>
-    <string name="regenerate_mac_address_description">Això reemplaçarà la teua adreça MAC actual per una nova. No es recomana fer-ho si vas obtindre la direcció MAC de la teua consola real amb la ferramenta de configuració. Continuar?</string>
+
 </resources>

@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -40,8 +40,9 @@ public:
     ~RasterizerOpenGL() override;
 
     void TickFrame();
-    void LoadDiskResources(const std::atomic_bool& stop_loading,
-                           const VideoCore::DiskResourceLoadCallback& callback) override;
+    void LoadDefaultDiskResources(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) override;
+    void SwitchDiskResources(u64 title_id) override;
 
     void DrawTriangles() override;
     void FlushAll() override;
@@ -137,7 +138,9 @@ private:
 private:
     Driver& driver;
     OpenGLState state;
-    ShaderProgramManager shader_manager;
+    Frontend::EmuWindow& render_window;
+    std::vector<std::shared_ptr<ShaderProgramManager>> shader_managers;
+    std::shared_ptr<ShaderProgramManager> curr_shader_manager{};
     TextureRuntime runtime;
     RasterizerCache res_cache;
 

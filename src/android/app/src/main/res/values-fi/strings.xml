@@ -12,12 +12,8 @@
     <string name="input_binding_description_horizontal_axis">Liikuta tattia vasemmalle tai oikealle.</string>
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Nappulat</string>
-    <!-- Core settings strings -->
-    <string name="cpu_jit">Aktivoi CPU JIT</string>
-    <string name="cpu_jit_description">Käyttää Just-in-Time (JIT) kääntäjää prosessorin emulointiin. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="init_clock">Järjestelmän kellotyyppi</string>
     <string name="init_clock_description">Aseta emuloidun 3DS:n kello samaksi kuin laitteesi kello, tai aloita kello simuloidusta päivämäärästä ja ajasta.</string>
-    <string name="init_time">Järjestelmän kellon aloitusajan yliajo.</string>
     <string name="emulated_region">Emuloitu alue</string>
     <string name="emulated_language">Emuloitu kieli</string>
     <!-- Camera settings strings -->
@@ -33,14 +29,16 @@
     <string name="camera_facing_external">Ulkoinen</string>
     <string name="image_flip">Kuvan kääntö</string>
 
-    <string name="vsync">Aktivoi V-Sync</string>
-    <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
-    <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
-    <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="frame_limit_enable">Aktivoi nopeuden rajoitus</string>
-    <string name="frame_limit_enable_description">Kun aktivoitu, emulaation nopeus on rajoitettu asetettuun prosenttiin normaalista nopeudesta.</string>
     <string name="frame_limit_slider">Rajoita nopeusprosenttia</string>
     <string name="audio_stretch">Aktivoi äänen venytys</string>
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">Aktivoi CPU JIT</string>
+    <string name="cpu_jit_description">Käyttää Just-in-Time (JIT) kääntäjää prosessorin emulointiin. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
+    <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
+    <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
+    <string name="vsync">Aktivoi V-Sync</string>
+    <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
     <!-- Miscellaneous -->
     <string name="clear">Tyhjennä</string>
     <string name="slider_default">Oletus</string>

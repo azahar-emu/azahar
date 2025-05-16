@@ -27,11 +27,11 @@ u32 FramebufferLayout::GetScalingRatio() const {
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
 template <class T>
 static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> window_area,
-                                         float screen_aspect_ratio) {
+                                         float window_aspect_ratio) {
     float scale = std::min(static_cast<float>(window_area.GetWidth()),
-                           window_area.GetHeight() / screen_aspect_ratio);
+                           window_area.GetHeight() / window_aspect_ratio);
     return Common::Rectangle<T>{0, 0, static_cast<T>(std::round(scale)),
-                                static_cast<T>(std::round(scale * screen_aspect_ratio))};
+                                static_cast<T>(std::round(scale * window_aspect_ratio))};
 }
 
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
@@ -76,15 +76,41 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bot_screen;
-    float emulation_aspect_ratio;
+
+    // TODO: This is kind of gross, make it platform agnostic. -OS
+#ifdef ANDROID
+    const float window_aspect_ratio = static_cast<float>(height) / width;
+    const auto aspect_ratio_setting = Settings::values.aspect_ratio.GetValue();
+
+    float emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
+    switch (aspect_ratio_setting) {
+    case Settings::AspectRatio::Default:
+        break;
+    case Settings::AspectRatio::Stretch:
+        emulation_aspect_ratio = window_aspect_ratio;
+        break;
+    default:
+        emulation_aspect_ratio = res.GetAspectRatioValue(aspect_ratio_setting);
+    }
+
+    top_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
+    bot_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
+
+    if (window_aspect_ratio < emulation_aspect_ratio) {
+        top_screen =
+            top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
+        bot_screen =
+            bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
+    } else {
+        top_screen = top_screen.TranslateY((height - top_screen.GetHeight()) / 2);
+        bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
+    }
+#else
     top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
     bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
-    emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
                            (Settings::values.screen_bottom_stretch.GetValue() && swapped);
-    const float window_aspect_ratio = static_cast<float>(height) / width;
-
     if (stretched) {
         top_screen = {Settings::values.screen_top_leftright_padding.GetValue(),
                       Settings::values.screen_top_topbottom_padding.GetValue(),
@@ -94,15 +120,12 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
                       Settings::values.screen_bottom_topbottom_padding.GetValue(),
                       width - Settings::values.screen_bottom_leftright_padding.GetValue(),
                       height - Settings::values.screen_bottom_topbottom_padding.GetValue()};
-    } else if (window_aspect_ratio < emulation_aspect_ratio) {
-        top_screen =
-            top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
-        bot_screen =
-            bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
     } else {
         top_screen = top_screen.TranslateY((height - top_screen.GetHeight()) / 2);
         bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
     }
+#endif
+
     res.top_screen = top_screen;
     res.bottom_screen = bot_screen;
     if (upright) {
@@ -125,8 +148,7 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     FramebufferLayout res{width, height, true, true, {}, {}, !upright};
     // Split the window into two parts. Give proportional width to the smaller screen
     // To do that, find the total emulation box and maximize that based on window size
-    const float window_aspect_ratio = static_cast<float>(height) / width;
-    float emulation_aspect_ratio;
+    u32 gap = (u32)(Settings::values.screen_gap.GetValue() * scale_factor);
 
     float large_height =
         swapped ? Core::kScreenBottomHeight * scale_factor : Core::kScreenTopHeight * scale_factor;
@@ -137,21 +159,26 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     float small_width =
         static_cast<float>(swapped ? Core::kScreenTopWidth : Core::kScreenBottomWidth);
 
-    float emulation_width, emulation_height;
+    float emulation_width;
+    float emulation_height;
     if (vertical) {
         // width is just the larger size at this point
         emulation_width = std::max(large_width, small_width);
-        emulation_height = large_height + small_height;
+        emulation_height = large_height + small_height + gap;
     } else {
-        emulation_width = large_width + small_width;
+        emulation_width = large_width + small_width + gap;
         emulation_height = std::max(large_height, small_height);
     }
 
-    emulation_aspect_ratio = emulation_height / emulation_width;
+    const float window_aspect_ratio = static_cast<float>(height) / width;
+    const float emulation_aspect_ratio = emulation_height / emulation_width;
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-    const float scale_amount = total_rect.GetHeight() * 1.f / emulation_height * 1.f;
+    // TODO: Wtf does this `scale_amount` value represent? -OS
+    const float scale_amount = static_cast<float>(total_rect.GetHeight()) / emulation_height;
+    gap = static_cast<u32>(static_cast<float>(gap) * scale_amount);
+
     Common::Rectangle<u32> large_screen =
         Common::Rectangle<u32>{total_rect.left, total_rect.top,
                                static_cast<u32>(large_width * scale_amount + total_rect.left),
@@ -172,43 +199,43 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     switch (small_screen_position) {
     case Settings::SmallScreenPosition::TopRight:
         // Shift the small screen to the top right corner
-        small_screen = small_screen.TranslateX(large_screen.right);
+        small_screen = small_screen.TranslateX(large_screen.right + gap);
         small_screen = small_screen.TranslateY(large_screen.top);
         break;
     case Settings::SmallScreenPosition::MiddleRight:
         // Shift the small screen to the center right
-        small_screen = small_screen.TranslateX(large_screen.right);
+        small_screen = small_screen.TranslateX(large_screen.right + gap);
         small_screen = small_screen.TranslateY(
             ((large_screen.GetHeight() - small_screen.GetHeight()) / 2) + large_screen.top);
         break;
     case Settings::SmallScreenPosition::BottomRight:
         // Shift the small screen to the bottom right corner
-        small_screen = small_screen.TranslateX(large_screen.right);
+        small_screen = small_screen.TranslateX(large_screen.right + gap);
         small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.GetHeight());
         break;
     case Settings::SmallScreenPosition::TopLeft:
         // shift the small screen to the upper left then shift the large screen to its right
         small_screen = small_screen.TranslateX(large_screen.left);
-        large_screen = large_screen.TranslateX(small_screen.GetWidth());
+        large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
         small_screen = small_screen.TranslateY(large_screen.top);
         break;
     case Settings::SmallScreenPosition::MiddleLeft:
         // shift the small screen to the middle left and shift the large screen to its right
         small_screen = small_screen.TranslateX(large_screen.left);
-        large_screen = large_screen.TranslateX(small_screen.GetWidth());
+        large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
         small_screen = small_screen.TranslateY(
             ((large_screen.GetHeight() - small_screen.GetHeight()) / 2) + large_screen.top);
         break;
     case Settings::SmallScreenPosition::BottomLeft:
         // shift the small screen to the bottom left and shift the large screen to its right
         small_screen = small_screen.TranslateX(large_screen.left);
-        large_screen = large_screen.TranslateX(small_screen.GetWidth());
+        large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
         small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.GetHeight());
         break;
     case Settings::SmallScreenPosition::AboveLarge:
         // shift the large screen down and the bottom screen above it
         small_screen = small_screen.TranslateY(large_screen.top);
-        large_screen = large_screen.TranslateY(small_screen.GetHeight());
+        large_screen = large_screen.TranslateY(small_screen.GetHeight() + gap);
         // If the "large screen" is actually smaller, center it
         if (large_screen.GetWidth() < total_rect.GetWidth()) {
             large_screen =
@@ -224,7 +251,7 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
             large_screen =
                 large_screen.TranslateX((total_rect.GetWidth() - large_screen.GetWidth()) / 2);
         }
-        small_screen = small_screen.TranslateY(large_screen.bottom);
+        small_screen = small_screen.TranslateY(large_screen.bottom + gap);
         small_screen = small_screen.TranslateX(large_screen.left + large_screen.GetWidth() / 2 -
                                                small_screen.GetWidth() / 2);
         break;
@@ -358,7 +385,8 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
 
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary,
                                                  bool is_portrait) {
-    u32 width, height;
+    u32 width, height, gap;
+    gap = (int)(Settings::values.screen_gap.GetValue()) * res_scale;
     if (is_portrait) {
         auto layout_option = Settings::values.portrait_layout_option.GetValue();
         switch (layout_option) {
@@ -375,8 +403,10 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 Settings::values.swap_screen.GetValue(), is_portrait);
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
             width = Core::kScreenTopWidth * res_scale;
-            height = static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
-                     res_scale;
+            // clang-format off
+            height = (static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
+                     res_scale) + gap;
+            // clang-format on
             return PortraitTopFullFrameLayout(width, height,
                                               Settings::values.swap_screen.GetValue());
         case Settings::PortraitLayoutOption::PortraitOriginal:
@@ -435,9 +465,9 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                     Settings::SmallScreenPosition::BelowLarge) {
                 // vertical, so height is sum of heights, width is larger of widths
                 width = std::max(largeWidth, smallWidth) * res_scale;
-                height = (largeHeight + smallHeight) * res_scale;
+                height = (largeHeight + smallHeight) * res_scale + gap;
             } else {
-                width = (largeWidth + smallWidth) * res_scale;
+                width = (largeWidth + smallWidth) * res_scale + gap;
                 height = std::max(largeHeight, smallHeight) * res_scale;
             }
 
@@ -450,7 +480,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                     Settings::values.small_screen_position.GetValue());
         }
         case Settings::LayoutOption::SideScreen:
-            width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale;
+            width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale + gap;
             height = Core::kScreenTopHeight * res_scale;
 
             if (Settings::values.upright_screen.GetValue()) {
@@ -481,7 +511,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
         case Settings::LayoutOption::Default:
         default:
             width = Core::kScreenTopWidth * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale + gap;
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
@@ -669,6 +699,23 @@ std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption la
         return std::make_pair(min_height, min_width);
     } else {
         return std::make_pair(min_width, min_height);
+    }
+}
+
+float FramebufferLayout::GetAspectRatioValue(Settings::AspectRatio aspect_ratio) {
+    switch (aspect_ratio) {
+    case Settings::AspectRatio::R16_9:
+        return 9.0f / 16.0f;
+    case Settings::AspectRatio::R4_3:
+        return 3.0f / 4.0f;
+    case Settings::AspectRatio::R21_9:
+        return 9.0f / 21.0f;
+    case Settings::AspectRatio::R16_10:
+        return 10.0f / 16.0f;
+    default:
+        LOG_ERROR(Frontend, "Unknown aspect ratio enum value: {}",
+                  static_cast<std::underlying_type<Settings::AspectRatio>::type>(aspect_ratio));
+        return 1.0f; // Arbitrary fallback value
     }
 }
 

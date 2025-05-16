@@ -24,6 +24,7 @@
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
+#include "video_core/rasterizer_interface.h"
 
 // Needs to be included at the end due to https://bugreports.qt.io/browse/QTBUG-73263
 #include <filesystem>
@@ -222,7 +223,6 @@ private:
 
 private slots:
     void OnStartGame();
-    void GetInitialFrameLimit();
     void OnRestartGame();
     void OnPauseGame();
     void OnPauseContinueGame();
@@ -261,7 +261,9 @@ private slots:
     void ToggleSecondaryFullscreen();
     void ChangeScreenLayout();
     void ChangeSmallScreenPosition();
-    void ToggleEmulationSpeed();
+    bool IsTurboEnabled();
+    void SetTurboEnabled(bool);
+    void ReloadTurbo();
     void AdjustSpeedLimit(bool increase);
     void UpdateSecondaryWindowVisibility();
     void ToggleScreenLayout();
@@ -298,6 +300,8 @@ private slots:
 #ifdef ENABLE_QT_UPDATE_CHECKER
     void OnEmulatorUpdateAvailable();
 #endif
+    void OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
+                               std::size_t total);
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
@@ -333,6 +337,7 @@ private:
     QProgressBar* progress_bar = nullptr;
     QLabel* message_label = nullptr;
     bool show_artic_label = false;
+    QLabel* loading_shaders_label = nullptr;
     QLabel* artic_traffic_label = nullptr;
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
@@ -410,8 +415,6 @@ private:
     u64 oldest_slot_time;
     u32 newest_slot;
     u64 newest_slot_time;
-
-    int initial_frame_limit;
 
     // Secondary window actions
     QAction* action_secondary_fullscreen;

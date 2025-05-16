@@ -270,6 +270,9 @@ public:
     /// Retrieves a process from the current list of processes.
     std::shared_ptr<Process> GetProcessById(u32 process_id) const;
 
+    /// Retrieves a thread from the current list of threads.
+    std::shared_ptr<Thread> GetThreadByID(u32 thread_id) const;
+
     std::span<const std::shared_ptr<Process>> GetProcessList() const {
         return process_list;
     }

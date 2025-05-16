@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -34,7 +34,8 @@ enum UniformBindings {
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {
 public:
-    ShaderProgramManager(Frontend::EmuWindow& emu_window, const Driver& driver, bool separable);
+    ShaderProgramManager(Frontend::EmuWindow& emu_window, const Driver& driver, u64 title_id,
+                         bool separable);
     ~ShaderProgramManager();
 
     void LoadDiskCache(const std::atomic_bool& stop_loading,
@@ -52,6 +53,8 @@ public:
     void UseFragmentShader(const Pica::RegsInternal& config, const Pica::Shader::UserConfig& user);
 
     void ApplyTo(OpenGLState& state, bool accurate_mul);
+
+    u64 GetProgramID() const;
 
 private:
     Frontend::EmuWindow& emu_window;

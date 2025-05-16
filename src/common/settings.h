@@ -106,6 +106,15 @@ enum class TextureSampling : u32 {
     Linear = 2,
 };
 
+enum class AspectRatio : u32 {
+    Default = 0,
+    R16_9 = 1,
+    R4_3 = 2,
+    R21_9 = 3,
+    R16_10 = 4,
+    Stretch = 5,
+};
+
 namespace NativeButton {
 
 enum Values {
@@ -498,7 +507,7 @@ struct Values {
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
-    SwitchableSetting<int, true> turbo_speed{200, 0, 1000, "turbo_speed"};
+    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
@@ -510,6 +519,7 @@ struct Values {
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
                                                            "large_screen_proportion"};
+    SwitchableSetting<int> screen_gap{0, "screen_gap"};
     SwitchableSetting<SmallScreenPosition> small_screen_position{SmallScreenPosition::BottomRight,
                                                                  "small_screen_position"};
     Setting<u16> custom_top_x{0, "custom_top_x"};
@@ -521,7 +531,7 @@ struct Values {
     Setting<u16> custom_bottom_width{640, "custom_bottom_width"};
     Setting<u16> custom_bottom_height{480, "custom_bottom_height"};
     Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
-
+    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, "aspect_ratio"};
     SwitchableSetting<bool> screen_top_stretch{false, "screen_top_stretch"};
     Setting<u16> screen_top_leftright_padding{0, "screen_top_leftright_padding"};
     Setting<u16> screen_top_topbottom_padding{0, "screen_top_topbottom_padding"};

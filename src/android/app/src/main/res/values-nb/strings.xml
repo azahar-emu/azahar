@@ -16,16 +16,10 @@
     <string name="input_binding_description_horizontal_axis">Beveg Joystick venstre eller høyre</string>
     <string name="input_message_analog_only">Denne kontrollen må være bundet til en håndkontroller\'s analog spak eller kontrollpluss akse!</string>
     <string name="input_message_button_only">Denne kontrollen må være bundet til en håndkontroller knapp!</string>
-
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Taster</string>
-    <!-- Core settings strings -->
-    <string name="cpu_jit">Aktiver CPU JIT</string>
-    <string name="cpu_jit_description">Bruker Just-in-Time (JIT) kompilator til CPU emulering. Når dette er aktivert, vil spill ytelsen bli betydelig forbedret.</string>
     <string name="init_clock">Systemklokketype</string>
     <string name="init_clock_description">Sett den emulerte 3DS-klokken til enten å gjenspeile den på enheten din, eller start på en simulert dato og tid.</string>
-    <string name="init_time">Overstyring av starttid på systemklokken</string>
-    <string name="init_time_description">Hvis \"Systemklokketypen\" innstillingen er satt til \"Simulert Klokke\" Endrer dette startpunktet til den datoen og klokkeslettet.</string>
     <string name="emulated_region">Emulert region</string>
     <string name="emulated_language">Emulert Språk</string>
     <!-- Camera settings strings -->
@@ -41,19 +35,14 @@
     <string name="camera_facing_external">Ekstern</string>
     <string name="image_flip">Vend Bilde</string>
 
-    <string name="vsync">Aktiver V-Sync</string>
-    <string name="vsync_description">Synkroniserer spillrammefrekvensen med oppdateringsfrekvensen på enheten din.</string>
     <string name="linear_filtering">Aktiver lineær filtrering</string>
     <string name="linear_filtering_description">Aktiverer lineær filtrering, noe som får spillvisualer til å vises jevnere.</string>
     <string name="texture_filter_name">Tekstur Filter</string>
-    <string name="hw_shaders">Aktiver maskinvare shader</string>
-    <string name="hw_shaders_description">Bruker maskinvare for å etterligne 3DS shaders. Når dette er aktivert, vil spillytelsen bli betydelig forbedret.</string>
     <string name="shaders_accurate_mul">Aktiver nøyaktig shader-multiplikasjon</string>
     <string name="shaders_accurate_mul_description">Bruker mer nøyaktig multiplikasjon i maskinvare shaders, som kan fikse noen grafiske feil. Når dette er aktivert, reduseres ytelsen.</string>
     <string name="asynchronous_gpu">Aktiver asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Bruker en egen tråd for å emulere GPU asynkront. Når dette er aktivert, forbedres ytelsen.</string>
     <string name="frame_limit_enable">Aktiver fartsbegrensning</string>
-    <string name="frame_limit_enable_description">Når dette er aktivert, vil emuleringshastigheten være begrenset til en spesifisert prosentandel av normal hastighet.</string>
     <string name="frame_limit_slider">Begrens fartsprosent </string>
     <string name="frame_limit_slider_description">Angir prosentandelen som skal begrense emuleringshastighet. Med standard 100% emulering vil være begrenset til normal hastighet. Verdier høyere eller lavere vil øke eller redusere fartsgrensen.</string>
     <string name="internal_resolution">Intern oppløsning</string>
@@ -61,6 +50,13 @@
     <string name="debug_warning">Advarsel: Endring av disse innstillingene reduserer emuleringen</string>
     <string name="audio_stretch">Aktiver lydstrekking</string>
     <string name="audio_stretch_description">Strekker lyd for å redusere stamming. Når dette er aktivert, øker lydforsinkelsen og reduserer ytelsen litt.</string>
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">Aktiver CPU JIT</string>
+    <string name="cpu_jit_description">Bruker Just-in-Time (JIT) kompilator til CPU emulering. Når dette er aktivert, vil spill ytelsen bli betydelig forbedret.</string>
+    <string name="hw_shaders">Aktiver maskinvare shader</string>
+    <string name="hw_shaders_description">Bruker maskinvare for å etterligne 3DS shaders. Når dette er aktivert, vil spillytelsen bli betydelig forbedret.</string>
+    <string name="vsync">Aktiver V-Sync</string>
+    <string name="vsync_description">Synkroniserer spillrammefrekvensen med oppdateringsfrekvensen på enheten din.</string>
     <!-- Miscellaneous -->
     <string name="clear">Tøm</string>
     <string name="slider_default">Standard</string>

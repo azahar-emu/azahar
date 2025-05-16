@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,9 +22,10 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
         mainActivity = requireActivity() as MainActivity
 
         isCancelable = false
+
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_citra_user_folder)
-            .setMessage(R.string.cannot_skip_directory_description)
+            .setMessage(R.string.selecting_user_directory_without_write_permissions)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 mainActivity?.openCitraDirectory?.launch(null)
             }

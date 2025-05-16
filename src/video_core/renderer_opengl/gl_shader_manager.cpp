@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -259,10 +259,10 @@ using FragmentShaders = ShaderCache<FSConfig, &GLSL::GenerateFragmentShader, GL_
 
 class ShaderProgramManager::Impl {
 public:
-    explicit Impl(const Driver& driver, bool separable)
+    explicit Impl(const Driver& driver, u64 title_id, bool separable)
         : separable(separable), programmable_vertex_shaders(separable),
           trivial_vertex_shader(driver, separable), fixed_geometry_shaders(separable),
-          fragment_shaders(separable), disk_cache(separable) {
+          fragment_shaders(separable), disk_cache(title_id, separable) {
         if (separable) {
             pipeline.Create();
         }
@@ -329,10 +329,10 @@ public:
 };
 
 ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, const Driver& driver_,
-                                           bool separable)
+                                           u64 title_id, bool separable)
     : emu_window{emu_window_}, driver{driver_},
       strict_context_required{emu_window.StrictContextRequired()},
-      impl{std::make_unique<Impl>(driver_, separable)} {}
+      impl{std::make_unique<Impl>(driver_, title_id, separable)} {}
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
@@ -423,6 +423,10 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state, bool accurate_mul) {
         }
         state.draw.shader_program = cached_program.handle;
     }
+}
+
+u64 ShaderProgramManager::GetProgramID() const {
+    return impl->disk_cache.GetProgramID();
 }
 
 void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,

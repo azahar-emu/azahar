@@ -186,16 +186,9 @@ object NativeLibrary {
 
     external fun unlinkConsole()
 
+    external fun setTemporaryFrameLimit(speed: Double)
 
-    /**
-     * Turbo speed.
-     */
-    external fun toggleTurboSpeed(enabled: Boolean)
-
-    external fun getTurboSpeedSlider(): Int
-
-    external fun setTurboSpeedSlider(value: Int)
-
+    external fun disableTemporaryFrameLimit()
 
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
@@ -784,6 +777,7 @@ object NativeLibrary {
         const val BUTTON_DEBUG = 781
         const val BUTTON_GPIO14 = 782
         const val BUTTON_SWAP = 800
+        const val BUTTON_TURBO = 801
     }
 
     /**

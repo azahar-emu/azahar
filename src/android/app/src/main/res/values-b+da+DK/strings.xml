@@ -5,10 +5,6 @@
     <string name="app_notification_channel_description">Azahar 3DS emulator meddelelser</string>
     <string name="app_notification_running">Azahar kører</string>
     <string name="app_game_install_description">Dernæst skal du vælge en applikationsmappe. Azahar vil vise alle 3DS ROM\'erne inde i den valgte mappe i appen.\n\nCIA ROM\'er, opdateringer og DLC ​​skal installeres separat ved at klikke på mappeikonet og vælge installer CIA.</string>
-    <string name="start">Start</string>
-    <string name="cancelling">Annullerer...</string>
-    <string name="important">Vigtig</string>
-    <string name="dont_show_again">Vis ikke igen</string>
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Indstillinger</string>
@@ -32,7 +28,7 @@
     <string name="about">Om</string>
     <string name="citra_description">En open source 3DS-emulator</string>
     <string name="about_description">Version, krediteringer og mere</string>
-    <string name="games_dir_selected">Applikationsbiblioteket er valgt</string>
+    <string name="games_dir_selected">Applikationsmappen er valgt</string>
     <string name="select_citra_user_folder_home_description">Ændrer de filer, som Azahar bruger til at indlæse applikationer</string>
     <string name="theme_and_color_description">Rediger appens udseende</string>
     <string name="install_cia_title">Installer CIA</string>
@@ -83,9 +79,13 @@
     <string name="warning_cancel">Annuller</string>
     <string name="select_citra_user_folder">Vælg brugermappe</string>
     <string name="select_citra_user_folder_description"><![CDATA[Vælg din <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">brugerdata</a> mappe med knappen nedenfor.]]></string>
+    <string name="select_which_user_directory_to_use">Du ser ud til at have indstillet brugermapper til både Lime3DS og Azahar. Dette skyldes sandsynligvis, at du har opgraderet til Azahar, og da du bliver bedt om det, valgte du en anden brugermappe end den, der blev brugt til Lime3DS.\n\nDette kan have resulteret i, at du troede, at du havde mistet gemte tilstande eller andre indstillinger - vi beklager, hvis det skete.\n\nVil du gå tilbage til at bruge din oprindelige Lime3DS-brugermappe, gendanne indstillinger og gemte Lime3DS-spiltilstande, eller beholde dine nuværende Azahar brugermappe?\n\nIngen af ​​mapperne slettes, uanset dit valg, og du kan frit skifte mellem dem ved at bruge valgmuligheden Vælg brugermappe.</string>
+    <string name="keep_current_azahar_directory">Behold den aktuelle Azahar-mappe</string>
+    <string name="use_prior_lime3ds_directory">Brug tidligere Lime3DS mappe</string>
     <string name="select">Vælg</string>
     <string name="cannot_skip">Du kan ikke springe dette trin over</string>
     <string name="cannot_skip_directory_description">Dette trin er påkrævet for at Azahar kan fungere. Vælg en mappe og så kan du fortsætte.</string>
+    <string name="selecting_user_directory_without_write_permissions">Du har mistet skrivetilladelse i din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">brugerdata</a> mappe, hvor gemte tilstande og anden information er gemt. Dette kan ske efter en app- eller Android-opdatering. Vælg venligst mappen for at give tilladelse igen, så du kan fortsætte.</string>
     <string name="set_up_theme_settings">Temaindstillinger</string>
     <string name="setup_theme_settings_description">Konfigurer dine temaindstillinger for Azahar.</string>
     <string name="setup_set_theme">Indstil tema</string>
@@ -122,14 +122,17 @@
     <string name="input_binding_description_horizontal_axis">Bevæg joysticket til venstre eller højre</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Byt skærme</string>
+    <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Denne kontrol skal være bundet til et gamepad analogt greb eller akse D-Pad!</string>
     <string name="input_message_button_only">Denne kontrol skal være bundet til en gamepad knap!</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Systemfiler</string>
     <string name="setup_system_files_description">Udfør handlinger som installation af systemfiler eller opstart af startmenu</string>
     <string name="setup_tool_connect">Opret forbindelse til Artic opsætningsværktøj</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar har brug for unikke konsoldata og firmwarefiler fra en rigtig konsol for at kunne bruge nogle af dens funktioner. Disse filer og data kan sættes op med <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br>Bemærk:<ul><li><b>Denne handling vil installere unikke konsoldata til Azahar, del ikke dine bruger- eller nand-mapper efter at have udført opsætningsprocessen!</b></li><li>Mens du udfører opsætningsprocessen, vil Azahar forbinde til konsollen, der kører opsætningsværktøjet. Du kan fjerne forbindelsen til konsollen senere fra fanen Systemfiler i emulatorindstillingsmenuen.</li><li>Gå ikke online med både Azahar og din 3DS-konsol på samme tid efter opsætning af systemfiler, da dette kan medføre problemer.</li><li>Gammel 3DS-opsætning er nødvendig for at den nye 3DS-opsætning kan fungere (det anbefales at opsætte begge dele).</li><li>Begge opsætningstilstande fungerer uanset hvilken model af konsollen, der kører opsætningsværktøjet.</li></ul>]]></string>
     <string name="setup_system_files_detect">Henter den aktuelle status for systemfiler, vent venligst...</string>
+    <string name="delete_system_files">Fjern linket til de unikke konsoldata</string>
+    <string name="delete_system_files_description"><![CDATA[Denne handling vil fjerne forbindelsen mellem din rigtige konsol og Azahar, med følgende konsekvenser:<br><ul><li>Din OTP, SecureInfo og LocalFriendCodeSeed vil blive fjernet fra Azahar.</li><li>Din venneliste nulstilles, og du bliver logget ud af din NNID/PNID-konto.</li><li>Systemfiler og eshop-titler opnået gennem Azahar bliver utilgængelige, indtil den samme konsol er linket igen ved hjælp af opsætningsværktøjet (gemte data går ikke tabt).</li></ul><br>Fortsætte?]]></string>
     <string name="setup_system_files_o3ds">Gammel 3DS opsætning</string>
     <string name="setup_system_files_n3ds">Ny 3DS-opsætning</string>
     <string name="setup_system_files_possible">Opsætning er mulig.</string>
@@ -138,7 +141,7 @@
     <string name="setup_system_files_enter_address">Indtast adressen til Artic opsætningsværktøj</string>
     <string name="setup_system_files_preparing">Forbereder opsætning, vent venligst...</string>
     <string name="boot_home_menu">Start HOME-menuen</string>
-    <string name="show_home_apps">Vi apps i HOME menu i listen over applikationer</string>
+    <string name="show_home_apps">Vi apps i HOME menu i applikationslisten</string>
     <string name="run_system_setup">Kør systemopsætning, når HOME-menuen startes.</string>
     <string name="home_menu">HOME menu</string>
 
@@ -146,20 +149,20 @@
     <string name="generic_buttons">Knapper</string>
     <string name="button">Knap</string>
 
-    <!-- Core settings strings -->
-    <string name="cpu_jit">CPU JIT</string>
-    <string name="cpu_jit_description">Bruger JIT-kompileren (Just-in-Time) til CPU-emulering. Når den er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
-    <string name="init_clock">Ur</string>
-    <string name="init_clock_description">Indstil det emulerede 3DS ur til enten at afspejle det på din enhed eller anvende en simuleret dato og klokkeslæt.</string>
-    <string name="cpu_clock_speed">CPU Clock hastighed</string>
-
     <!-- System settings strings -->
+    <string name="emulation_settings">Emuleringsindstillinger</string>
     <string name="username">Brugernavn</string>
     <string name="new_3ds">Ny 3DS tilstand</string>
     <string name="lle_applets">Brug LLE Applets (hvis installeret)</string>
+    <string name="enable_required_online_lle_modules">Aktiver nødvendige LLE moduler til onlinefunktioner (hvis installeret)</string>
+    <string name="enable_required_online_lle_modules_desc">Aktiverer de LLE moduler, der kræves til online multiplayer, eShop-adgang osv.</string>
     <string name="clock">Ur</string>
-    <string name="init_time">Forskudt tid</string>
-    <string name="init_time_description">Hvis uret er indstillet til \"Simuleret ur\", ændrer dette den faste startdato og klokkeslæt.</string>
+    <string name="init_clock">Ur</string>
+    <string name="init_clock_description">Indstil det emulerede 3DS ur til enten at afspejle det på din enhed eller anvende en simuleret dato og klokkeslæt.</string>
+    <string name="device_clock">Enhedens ur</string>
+    <string name="simulated_clock">Simuleret ur</string>
+    <string name="simulated_clock_description">Hvis uret er indstillet til \"Simuleret ur\", ændrer dette den faste startdato og klokkeslæt.</string>
+    <string name="profile_settings">Profilindstillinger</string>
     <string name="emulated_region">Region</string>
     <string name="emulated_language">Sprog</string>
     <string name="birthday">Fødselsdag</string>
@@ -172,10 +175,17 @@
     <string name="console_id">Konsol ID</string>
     <string name="regenerate_console_id">Udtag nyt konsol ID</string>
     <string name="regenerate_console_id_description">Dette vil erstatte dit nuværende virtuelle 3DS konsol ID med et nyt. Dit nuværende virtuelle 3DS konsol ID vil ikke kunne gendannes. Dette kan have uventede virkninger inde i applikationer. Dette kan mislykkes, hvis du bruger en forældet gemt konfiguration. Fortsætte?</string>
+    <string name="mac_address">MAC-adresse</string>
+    <string name="regenerate_mac_address">Udtag ny MAC-adresse</string>
+    <string name="regenerate_mac_address_description">Dette vil erstatte din nuværende MAC-adresse med en ny. Det anbefales ikke at gøre dette, hvis du har fået MAC-adressen fra din rigtige konsol ved hjælp af opsætningsværktøjet. Fortsætte?</string>
     <string name="plugin_loader">Indlæsning af 3GX Plugins</string>
     <string name="plugin_loader_description">Indlæser 3GX plugins fra det emulerede SD-kort, hvis de er tilgængelige.</string>
     <string name="allow_plugin_loader">Tillad applikationer at ændre plugin-indlæserens tilstand</string>
     <string name="allow_plugin_loader_description">Tillader at homebrew applikationer kan aktivere plugin-indlæseren, selv når den er deaktiveret.</string>
+    <string name="region_mismatch">Advarsel om uoverensstemmelse i region</string>
+    <string name="region_mismatch_emulated">Landeindstillingen er ikke gyldig for det valgte emulerede område.</string>
+    <string name="region_mismatch_console">Landeindstillingen er ikke gyldig for den aktuelle forbundne konsol.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -183,7 +193,7 @@
     <string name="image_source">Kameraets billedkilde</string>
     <string name="image_source_description">Indstiller billedkilden for det virtuelle kamera. Du kan bruge en billedfil eller et enhedskamera, hvis dette understøttes.</string>
     <string name="camera_device">Kamera</string>
-    <string name="camera_device_description">Hvis indstillingen \"Billedkilde\" er sat til \"Enhedskamera\", bruges det fysiske kamera.</string>
+    <string name="camera_device_description">Hvis indstillingen \"Billedkilde\" er sat til \"Enhedens kamera\", bruges det fysiske kamera.</string>
     <string name="camera_facing_front">Front</string>
     <string name="camera_facing_back">Bagside</string>
     <string name="camera_facing_external">Ekstern</string>
@@ -196,26 +206,28 @@
     <string name="spirv_shader_gen_description">Udsender den fragment shader, der bruges til at emulere PICA med SPIR-V i stedet for GLSL</string>
     <string name="async_shaders">Aktiver asynkron shader kompilering</string>
     <string name="async_shaders_description">Kompilerer shaders i baggrunden for at reducere hakken under spilet. Når det er aktiveret, skal du forvente tilfældige grafiske fejl</string>
-    <string name="renderer_debug">Fejlsøg renderingen</string>
-    <string name="renderer_debug_description">Log yderligere grafikrelaterede fejlfindingsoplysninger. Når det er aktiveret, vil spillets ydeevne blive væsentligt reduceret.</string>
-    <string name="vsync">Aktiver V-Sync</string>
-    <string name="vsync_description">Synkroniserer spillets frame rate med opdateringshastigheden på din enhed.</string>
     <string name="linear_filtering">Lineær filtrering</string>
     <string name="linear_filtering_description">Aktiverer lineær filtrering, hvilket får spillets grafik til at se mere jævnt ud.</string>
     <string name="texture_filter_name">Teksturfilter</string>
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
-    <string name="hw_shaders">Aktiver hardware shader</string>
-    <string name="hw_shaders_description">Bruger hardware til at efterligne 3DS shaders. Når det er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
+    <string name="delay_render_thread">Forsinket spillets renderingstråd</string>
+    <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
+    <string name="advanced">Avanceret\"</string>
+    <string name="texture_sampling_name">Tekstur sampling</string>
+    <string name="texture_sampling_description">Tilsidesætter det samplingsfilter, der bruges af spillene. Dette kan i nogle tilfælde være nyttigt for spil, der ikke håndterer opskalering godt. Hvis du er usikker, skal du indstille dette til Styret af spillene.</string>
     <string name="shaders_accurate_mul">Nøjagtig multiplikation</string>
     <string name="shaders_accurate_mul_description">Bruger mere nøjagtig multiplikation i hardware shaders, som kan rette nogle grafiske fejl. Når den er aktiveret, reduceres ydeevnen.</string>
     <string name="asynchronous_gpu">Aktiver asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Bruger en separat tråd til at emulere GPU\'en asynkront. Når den er aktiveret, vil ydeevnen blive forbedret.</string>
     <string name="frame_limit_enable">Begræns hastighed</string>
-    <string name="frame_limit_enable_description">Når den er aktiveret, vil emuleringshastigheden være begrænset til en specificeret procentdel af normal hastighed.</string>
+    <string name="frame_limit_enable_description">Når aktiveret, vil emuleringshastigheden være begrænset til en specificeret procentdel af normal hastighed. Hvis deaktiveret, vil emuleringshastigheden være ubegrænset, og genvejstasten for turbohastighed vil ikke fungere.</string>
     <string name="frame_limit_slider">Begræns hastighedsprocent</string>
     <string name="frame_limit_slider_description">Angiver procentdelen emuleringshastigheden skal begrænses til. Med standardværdien på 100% vil emulering være begrænset til normal hastighed. Værdier højere eller lavere vil øge eller mindske hastighedsgrænsen.</string>
+    <string name="expand_to_cutout_area">Anvend området ved frontkamera</string>
+    <string name="expand_to_cutout_area_description">Udvider visningsområdet til at omfatte området ved frontkameraet (eller indhakket).</string>
     <string name="internal_resolution">Intern opløsning</string>
     <string name="internal_resolution_description">Angiver den opløsning, der bruges til renderingen. En høj opløsning vil forbedre den visuelle kvalitet meget, men kræver også stor ydelse og kan forårsage fejl i visse applikationer.</string>
+    <string name="internal_resolution_setting_auto">Auto (skærmstørrelse)</string>
     <string name="internal_resolution_setting_1x">Indbygget (400x240)</string>
     <string name="internal_resolution_setting_2x">2x indbygget (800 x 480)</string>
     <string name="internal_resolution_setting_3x">3x indbygget (1200 x 720)</string>
@@ -227,11 +239,13 @@
     <string name="internal_resolution_setting_9x">9x indbygget (3600x2160)</string>
     <string name="internal_resolution_setting_10x">10x indbygget (4000x2400)</string>
     <string name="performance_warning">Hvis du slår denne indstilling fra vil emuleringsydelsen reduceres betydeligt! For den bedste oplevelse anbefales det, at du lader denne indstilling være aktiveret.</string>
-    <string name="debug_warning">Advarsel: Ændringer i disse indstillinger vil gør emuleringen langsommere</string>
+    <string name="debug_warning">Advarsel: Ændringer i disse indstillinger vil gøre emuleringen langsommere</string>
     <string name="stereoscopy">Stereoskopi</string>
     <string name="render3d">Stereoskopisk 3D-tilstand</string>
     <string name="factor3d">Dybde</string>
     <string name="factor3d_description">Angiver værdien af ​​3D-skyderen. Denne bør sættes højere end 0 %, når stereoskopisk 3D-tilstand er aktiveret.\nBemærk: Dybdeværdier over 100 % er ikke muligt på rigtig hardware og kan forårsage grafiske problemer</string>
+    <string name="disable_right_eye_render">Deaktiver rendering af højre øje</string>
+    <string name="disable_right_eye_render_description">Forbedrer ydeevnen betydeligt i nogle applikationer, men kan forårsage flimren i andre.</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard skærmstørrelse</string>
     <string name="cardboard_screen_size_description">Skalerer skærmen til en procentdel af dens oprindelige størrelse.</string>
@@ -261,6 +275,23 @@
     <string name="audio_input_type">Lydindgangsenhed</string>
     <string name="sound_output_mode">Lydudgangstilstand</string>
 
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Bruger JIT-kompileren (Just-in-Time) til CPU-emulering. Når den er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
+    <string name="hw_shaders">Aktiver hardware shader</string>
+    <string name="hw_shaders_description">Bruger hardware til at efterligne 3DS shaders. Når det er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
+    <string name="cpu_clock_speed">CPU Clock hastighed</string>
+    <string name="vsync">Aktiver V-Sync</string>
+    <string name="vsync_description">Synkroniserer spillets frame rate med opdateringshastigheden på din enhed.</string>
+    <string name="renderer_debug">Fejlsøg renderingen</string>
+    <string name="renderer_debug_description">Log yderligere grafikrelaterede fejlfindingsoplysninger. Når det er aktiveret, vil spillets ydeevne blive væsentligt reduceret.</string>
+    <string name="instant_debug_log">Tøm loggen for alle beskeder</string>
+    <string name="instant_debug_log_description">Overfør øjeblikkeligt fejlretningsloggen til fil. Brug dette, hvis Azahar går ned, og logoutputtet afbrydes.</string>
+    <string name="delay_start_lle_modules">Forsinket start med LLE moduler</string>
+    <string name="delay_start_lle_modules_description">Forsinker starten af ​​appen, når LLE moduler er aktiveret.</string>
+    <string name="deterministic_async_operations">Deterministiske asynkrone operationer</string>
+    <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
+
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Skærmorientering</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisk</string>
@@ -275,6 +306,7 @@
     <string name="ini_saved">Gemte indstillinger</string>
     <string name="gameid_saved">Gemte indstillinger for %1$s</string>
     <string name="error_saving">Fejl ved lagring af %1$s.ini: %2$s</string>
+    <string name="saving">Gemmer...</string>
     <string name="loading">Indlæser...</string>
     <string name="next">Næste</string>
     <string name="back">Tilbage</string>
@@ -295,8 +327,14 @@
     <string name="select_rtc_time">Vælg RTC tid</string>
     <string name="reset_setting_confirmation">Vil du nulstille denne indstilling til standardværdien?</string>
     <string name="setting_not_editable">Du kan ikke redigere dette nu</string>
+    <string name="setting_disabled">Indstillinger deaktiveret</string>
+    <string name="setting_disabled_description">Indstillingen er i øjeblikket deaktiveret, fordi en anden indstilling ikke har en passende værdi.</string>
     <string name="setting_not_editable_description">Denne indstilling kan ikke ændres, mens et spil kører.</string>
     <string name="auto_select">Automatisk valg</string>
+    <string name="start">Start</string>
+    <string name="cancelling">Annullerer...</string>
+    <string name="important">Vigtig</string>
+    <string name="dont_show_again">Vis ikke igen</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Vælg spilmappe</string>
@@ -364,6 +402,8 @@
     <string name="small_screen_position_bottom_left">Nederst til venstre</string>
     <string name="small_screen_position_above">Over</string>
     <string name="small_screen_position_below">Under</string>
+    <string name="screen_gap">Mellemrum imellem skærme</string>
+    <string name="screen_gap_description">Mellemrum imellem skærme i alle to-skærmstilstande. Målt i px i forhold til 240 px højden på den større skærm.</string>
     <string name="large_screen_proportion">Forhold for stor skærm</string>
     <string name="large_screen_proportion_description">Hvor mange gange større er den store skærm end den lille skærm i storskærmslayout?</string>
     <string name="emulation_adjust_custom_layout">Juster brugerdefineret layout i indstillinger</string>
@@ -381,6 +421,9 @@
     <string name="emulation_show_overlay">Vis overlejring</string>
     <string name="emulation_close_game">Luk spil</string>
     <string name="emulation_toggle_pause">Slå Pause til/fra</string>
+    <string name="miscellaneous">Diverse</string>
+    <string name="use_artic_base_controller">Brug Artic kontroller, når du er tilsluttet Artic base server</string>
+    <string name="use_artic_base_controller_description">Brug kontrollerne fra Artic base server, når forbundet til den i stedet for den konfigurerede inputenhed.</string>
     <string name="emulation_close_game_message">Er du sikker på, at du vil lukke det aktuelle spil?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Indlæs</string>
@@ -452,6 +495,17 @@
     <!-- About Game Dialog -->
     <string name="play">Spil</string>
     <string name="shortcut">Genvej</string>
+    <string name="uninstall_cia">Afinstaller applikation</string>
+    <string name="uninstalling">Afinstallerer...</string>
+    <string name="game_context_open_save_dir">Åbn mappen med gemt data</string>
+    <string name="game_context_open_app">Åbn applikationsmappe</string>
+    <string name="game_context_open_mods">Åbn mappen med Mods</string>
+    <string name="game_context_open_textures">Åbn mappen med teksturer</string>
+    <string name="game_context_open_dlc">Åbn mappen med DLC</string>
+    <string name="game_context_open_updates">Åbn mappen med opdateringer</string>
+    <string name="game_context_open_extra">Åbn mappen med ekstra</string>
+    <string name="game_context_uninstall_dlc">Afinstaller DLC</string>
+    <string name="game_context_uninstall_updates">Afinstaller opdateringer</string>
 
     <!-- Cheats -->
     <string name="cheats">Snyd</string>
@@ -510,10 +564,6 @@
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Sorte baggrunde</string>
     <string name="use_black_backgrounds_description">Når du bruger det mørke tema, skal du anvende sorte baggrunde.</string>
-
-    <!-- Clock types -->
-    <string name="device_clock">Enhedens ur</string>
-    <string name="simulated_clock">Simuleret ur</string>
 
     <!-- Region names -->
     <string name="system_region_jpn">JPN</string>
@@ -575,7 +625,11 @@
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
 
+    <!-- Texture Sampling names -->
+    <string name="game_controlled">Styret af spillene</string>
     <string name="nearest_neighbor">Nærmeste nabo</string>
+    <string name="linear">Lineær</string>
+
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>
@@ -736,33 +790,12 @@
     <string name="artic_base_connect_description">Opret forbindelse til en rigtig konsol, der kører en Artic base server</string>
     <string name="artic_base_connect">Opret forbindelse til Artic base</string>
     <string name="artic_base_enter_address">Indtast Artic base serveradressen</string>
-    <string name="delay_render_thread">Forsinket spillets renderingstråd</string>
-    <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
 
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">Hurtig lagring</string>
     <string name="emulation_quicksave">Hurtig lagring</string>
     <string name="emulation_quickload">Hurtig indlæsning</string>
     <string name="emulation_occupied_quicksave_slot">Hurtig lagring - %1$tF %1$tR</string>
-    <string name="quicksave_saving">Gemmer...</string>
-    <string name="quickload_loading">Indlæser...</string>
     <string name="quickload_not_found">Ingen hurtig lagring tilgængelig.</string>
-    <string name="miscellaneous">Diverse</string>
-    <string name="use_artic_base_controller">Brug Artic kontroller, når du er tilsluttet Artic base server</string>
-    <string name="use_artic_base_controller_description">Brug kontrollerne fra Artic base server, når forbundet til den i stedet for den konfigurerede inputenhed.</string>
-    <string name="instant_debug_log">Tøm loggen for alle beskeder</string>
-    <string name="instant_debug_log_description">Overfør øjeblikkeligt fejlretningsloggen til fil. Brug dette, hvis Azahar går ned, og logoutputtet afbrydes.</string>
-    <string name="disable_right_eye_render">Deaktiver rendering af højre øje</string>
-    <string name="disable_right_eye_render_description">Forbedrer ydeevnen betydeligt i nogle applikationer, men kan forårsage flimren i andre.</string>
-    <string name="delay_start_lle_modules">Forsinket start med LLE moduler</string>
-    <string name="delay_start_lle_modules_description">Forsinker starten af ​​appen, når LLE moduler er aktiveret.</string>
-    <string name="deterministic_async_operations">Deterministiske asynkrone operationer</string>
-    <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
-    <string name="enable_required_online_lle_modules">Aktiver nødvendige LLE moduler til onlinefunktioner (hvis installeret)</string>
-    <string name="enable_required_online_lle_modules_desc">Aktiverer de LLE moduler, der kræves til online multiplayer, eShop-adgang osv.</string>
-    <string name="emulation_settings">Emuleringsindstillinger</string>
-    <string name="profile_settings">Profilindstillinger</string>
-    <string name="mac_address">MAC-adresse</string>
-    <string name="regenerate_mac_address">Udtag ny MAC-adresse</string>
-    <string name="regenerate_mac_address_description">Dette vil erstatte din nuværende MAC-adresse med en ny. Det anbefales ikke at gøre dette, hvis du har fået MAC-adressen fra din rigtige konsol ved hjælp af opsætningsværktøjet. Fortsætte?</string>
+
 </resources>

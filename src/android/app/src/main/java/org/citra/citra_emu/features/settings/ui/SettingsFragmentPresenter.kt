@@ -47,6 +47,7 @@ import org.citra.citra_emu.utils.BirthdayMonth
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
+import org.citra.citra_emu.utils.EmulationMenuSettings
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
     private var menuTag: String? = null
@@ -102,6 +103,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_THEME -> addThemeSettings(sl)
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
+            Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -239,14 +241,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SliderSetting(
-                    IntSetting.TURBO_SPEED,
-                    R.string.turbo_speed,
-                    R.string.turbo_speed_description,
+                    IntSetting.TURBO_LIMIT,
+                    R.string.turbo_limit,
+                    R.string.turbo_limit_description,
                     100,
                     400,
                     "%",
-                    IntSetting.TURBO_SPEED.key,
-                    IntSetting.TURBO_SPEED.defaultValue.toFloat()
+                    IntSetting.TURBO_LIMIT.key,
+                    IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
         }
@@ -538,7 +540,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 DateTimeSetting(
                     StringSetting.INIT_TIME,
                     R.string.simulated_clock,
-                    R.string.init_time_description,
+                    R.string.simulated_clock_description,
                     StringSetting.INIT_TIME.key,
                     StringSetting.INIT_TIME.defaultValue
                 )
@@ -1076,6 +1078,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SingleChoiceSetting(
+                    IntSetting.ASPECT_RATIO,
+                    R.string.emulation_aspect_ratio,
+                    0,
+                    R.array.aspectRatioNames,
+                    R.array.aspectRatioValues,
+                    IntSetting.ASPECT_RATIO.key,
+                    IntSetting.ASPECT_RATIO.defaultValue,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 1,
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.SMALL_SCREEN_POSITION,
                     R.string.emulation_small_screen_position,
                     R.string.small_screen_position_description,
@@ -1083,6 +1097,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.smallScreenPositionValues,
                     IntSetting.SMALL_SCREEN_POSITION.key,
                     IntSetting.SMALL_SCREEN_POSITION.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    IntSetting.SCREEN_GAP,
+                    R.string.screen_gap,
+                    R.string.screen_gap_description,
+                    0,
+                    480,
+                    "px",
+                    IntSetting.SCREEN_GAP.key,
+                    IntSetting.SCREEN_GAP.defaultValue.toFloat()
                 )
             )
             add(
@@ -1099,6 +1125,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SubmenuSetting(
+                    R.string.performance_overlay_options,
+                    R.string.performance_overlay_options_description,
+                    R.drawable.ic_stats,
+                    Settings.SECTION_PERFORMANCE_OVERLAY
+                )
+            )
+            add(
+                SubmenuSetting(
                     R.string.emulation_landscape_custom_layout,
                     0,
                     R.drawable.ic_fit_screen,
@@ -1111,6 +1145,116 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     R.drawable.ic_portrait_fit_screen,
                     Settings.SECTION_CUSTOM_PORTRAIT
+                )
+            )
+        }
+    }
+
+    private fun addPerformanceOverlaySettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.performance_overlay_options))
+        sl.apply {
+
+            add(HeaderSetting(R.string.visibility))
+
+            add(
+                SwitchSetting(
+                    object : AbstractBooleanSetting {
+                        override val key = "EmulationMenuSettings_showPerfPerformanceOverlay"
+                        override val section = Settings.SECTION_LAYOUT
+                        override val defaultValue = false
+                        override var boolean: Boolean
+                            get() = EmulationMenuSettings.showPerformanceOverlay
+                            set(value) { EmulationMenuSettings.showPerformanceOverlay = value }
+                        override val isRuntimeEditable = true
+                        override val valueAsString: String get() = boolean.toString()
+                    },
+                    R.string.performance_overlay_enable,
+                    0,
+                    "EmulationMenuSettings_showPerfPerformanceOverlay",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_BACKGROUND,
+                    R.string.overlay_background,
+                    R.string.overlay_background_description,
+                    "overlay_background",
+                    false
+                )
+            )
+
+            add(
+                SingleChoiceSetting(
+                    IntSetting.PERFORMANCE_OVERLAY_POSITION,
+                    R.string.overlay_position,
+                    R.string.overlay_position_description,
+                    R.array.statsPosition,
+                    R.array.statsPositionValues,
+                )
+            )
+
+
+            add(HeaderSetting(R.string.information))
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_FPS,
+                    R.string.overlay_show_fps,
+                    R.string.overlay_show_fps_description,
+                    "overlay_show_fps",
+                    true
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_FRAMETIME,
+                    R.string.overlay_show_frametime,
+                    R.string.overlay_show_frametime_description,
+                    "overlay_show_frame_time",
+                    true
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_SPEED,
+                    R.string.overlay_show_speed,
+                    R.string.overlay_show_speed_description,
+                    "overlay_show_speed",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
+                    R.string.overlay_show_app_ram_usage,
+                    R.string.overlay_show_app_ram_usage_description,
+                    "overlay_show_app_ram_usage",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
+                    R.string.overlay_show_available_ram,
+                    R.string.overlay_show_available_ram_description,
+                    "overlay_show_available_ram",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
+                    R.string.overlay_show_battery_temp,
+                    R.string.overlay_show_battery_temp_description,
+                    "overlay_show_battery_temp",
+                    false
                 )
             )
         }

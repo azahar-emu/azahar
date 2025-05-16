@@ -124,7 +124,7 @@ public:
     /**
      * Get a const reference to the thread list for debug use
      */
-    std::span<const std::shared_ptr<Thread>> GetThreadList();
+    std::span<const std::shared_ptr<Thread>> GetThreadList() const;
 
     void SetCPU(Core::ARM_Interface& cpu_) {
         cpu = &cpu_;

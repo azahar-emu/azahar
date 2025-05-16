@@ -17,6 +17,19 @@ class OTP;
 
 namespace HW::UniqueData {
 
+struct Region {
+    enum : u8 {
+        JPN,
+        USA,
+        EUR,
+        AUS,
+        CHN,
+        KOR,
+        TWN,
+    };
+    static constexpr u8 COUNT = TWN + 1;
+};
+
 struct SecureInfoA {
     std::array<u8, 0x100> signature;
     struct {
@@ -122,6 +135,7 @@ static_assert(sizeof(MovableSedFull) == 0x140);
 enum class SecureDataLoadStatus {
     Loaded = 0,
     InvalidSignature = 1,
+    RegionChanged = 2,
 
     NotFound = -1,
     Invalid = -2,

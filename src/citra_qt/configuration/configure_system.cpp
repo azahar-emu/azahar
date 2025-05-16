@@ -662,29 +662,27 @@ void ConfigureSystem::RefreshSecureDataStatus() {
     auto status_to_str = [](HW::UniqueData::SecureDataLoadStatus status) {
         switch (status) {
         case HW::UniqueData::SecureDataLoadStatus::Loaded:
-            return "Loaded";
+            return tr("Status: Loaded");
         case HW::UniqueData::SecureDataLoadStatus::InvalidSignature:
-            return "Loaded (Invalid Signature)";
+            return tr("Status: Loaded (Invalid Signature)");
+        case HW::UniqueData::SecureDataLoadStatus::RegionChanged:
+            return tr("Status: Loaded (Region Changed)");
         case HW::UniqueData::SecureDataLoadStatus::NotFound:
-            return "Not Found";
+            return tr("Status: Not Found");
         case HW::UniqueData::SecureDataLoadStatus::Invalid:
-            return "Invalid";
+            return tr("Status: Invalid");
         case HW::UniqueData::SecureDataLoadStatus::IOError:
-            return "IO Error";
+            return tr("Status: IO Error");
         default:
-            return "";
+            return QString();
         }
     };
 
-    ui->label_secure_info_status->setText(
-        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadSecureInfoA())).c_str()));
+    ui->label_secure_info_status->setText(status_to_str(HW::UniqueData::LoadSecureInfoA()));
     ui->label_friend_code_seed_status->setText(
-        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadLocalFriendCodeSeedB()))
-               .c_str()));
-    ui->label_otp_status->setText(
-        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadOTP())).c_str()));
-    ui->label_movable_status->setText(
-        tr((std::string("Status: ") + status_to_str(HW::UniqueData::LoadMovable())).c_str()));
+        status_to_str(HW::UniqueData::LoadLocalFriendCodeSeedB()));
+    ui->label_otp_status->setText(status_to_str(HW::UniqueData::LoadOTP()));
+    ui->label_movable_status->setText(status_to_str(HW::UniqueData::LoadMovable()));
 
     if (HW::UniqueData::IsFullConsoleLinked()) {
         ui->linked_console->setVisible(true);
