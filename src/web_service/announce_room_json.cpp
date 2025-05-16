@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -114,7 +114,7 @@ Common::WebResult RoomJson::Update() {
         return Common::WebResult{Common::WebResult::Code::LibError, "Room is not registered"};
     }
     nlohmann::json json{{"players", room.members}};
-    return client.PostJson(fmt::format("/lobby/{}", room_id), json.dump(), false);
+    return client.PatchJson(fmt::format("/lobby/{}", room_id), json.dump(), false);
 }
 
 Common::WebResult RoomJson::Register() {
