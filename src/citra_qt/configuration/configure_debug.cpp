@@ -104,6 +104,11 @@ void ConfigureDebug::SetConfiguration() {
         Settings::values.delay_start_for_lle_modules.GetValue());
     ui->deterministic_async_operations->setChecked(
         Settings::values.deterministic_async_operations.GetValue());
+    ui->enable_rpc_server->setChecked(Settings::values.enable_rpc_server.GetValue());
+#ifndef ENABLE_SCRIPTING
+    ui->enable_rpc_server->setVisible(false);
+#endif // !ENABLE_SCRIPTING
+
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
@@ -141,6 +146,7 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.delay_start_for_lle_modules = ui->delay_start_for_lle_modules->isChecked();
     Settings::values.deterministic_async_operations =
         ui->deterministic_async_operations->isChecked();
+    Settings::values.enable_rpc_server = ui->enable_rpc_server->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
@@ -164,6 +170,7 @@ void ConfigureDebug::SetupPerGameUI() {
 
     ui->groupBox->setVisible(false);
     ui->groupBox_2->setVisible(false);
+    ui->enable_rpc_server->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
 }
 

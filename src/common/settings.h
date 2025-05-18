@@ -596,6 +596,7 @@ struct Values {
     Setting<bool> use_gdbstub{false, "use_gdbstub"};
     Setting<u16> gdbstub_port{24689, "gdbstub_port"};
     Setting<bool> instant_debug_log{false, "instant_debug_log"};
+    Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", "log_filter"};

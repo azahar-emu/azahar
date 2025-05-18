@@ -318,8 +318,10 @@
     <string name="delay_start_lle_modules_description">Delays the start of the app when LLE modules are enabled.</string>
     <string name="deterministic_async_operations">Deterministic Async Operations</string>
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
+    <string name="enable_rpc_server">Enable RPC Server</string>
+    <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
 
-    <!-- Layout settings strings -->
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Screen Orientation</string>
     <string name="layout_screen_orientation_auto_sensor">Automatic</string>
     <string name="layout_screen_orientation_landscape">Landscape</string>

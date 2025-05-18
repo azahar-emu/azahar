@@ -503,7 +503,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
 
 #ifdef ENABLE_SCRIPTING
-    rpc_server = std::make_unique<RPC::Server>(*this);
+    if (Settings::values.enable_rpc_server.GetValue()) {
+        rpc_server = std::make_unique<RPC::Server>(*this);
+    }
 #endif
 
     service_manager = std::make_unique<Service::SM::ServiceManager>(*this);

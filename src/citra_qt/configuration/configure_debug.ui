@@ -279,6 +279,16 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="0">
+        <widget class="QCheckBox" name="enable_rpc_server">
+          <property name="text">
+            <string>Enable RPC server</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server on port 45987. This allows remotely reading/writing guest memory, do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>

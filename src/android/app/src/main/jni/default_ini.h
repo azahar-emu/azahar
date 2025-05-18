@@ -445,6 +445,10 @@ gdbstub_port=24689
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =
 
+# Enable RPC server for scripting purposes. Allows accessing guest memory remotely.
+# 0 (default): Off, 1: On
+enable_rpc_server =
+
 # Delay the start of apps when LLE modules are enabled
 # 0: Off, 1 (default): On
 delay_start_for_lle_modules =

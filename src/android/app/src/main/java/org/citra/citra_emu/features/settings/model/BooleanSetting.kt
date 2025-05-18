@@ -16,6 +16,7 @@ enum class BooleanSetting(
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
+    ENABLE_RPC_SERVER("enable_rpc_server", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
     OVERLAY_SHOW_FPS("overlay_show_fps", Settings.SECTION_LAYOUT, true),
     OVERLAY_SHOW_FRAMETIME("overlay_show_frame_time", Settings.SECTION_LAYOUT, false),

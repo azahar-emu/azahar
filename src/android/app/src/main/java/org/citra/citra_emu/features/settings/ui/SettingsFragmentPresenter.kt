@@ -1607,6 +1607,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.ENABLE_RPC_SERVER,
+                    R.string.enable_rpc_server,
+                    R.string.enable_rpc_server_desc,
+                    BooleanSetting.ENABLE_RPC_SERVER.key,
+                    BooleanSetting.ENABLE_RPC_SERVER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.DELAY_START_LLE_MODULES,
                     R.string.delay_start_lle_modules,
                     R.string.delay_start_lle_modules_description,
