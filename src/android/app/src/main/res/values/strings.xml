@@ -321,7 +321,7 @@
     <string name="enable_rpc_server">Enable RPC Server</string>
     <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
 
-  <!-- Layout settings strings -->
+    <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Screen Orientation</string>
     <string name="layout_screen_orientation_auto_sensor">Automatic</string>
     <string name="layout_screen_orientation_landscape">Landscape</string>
