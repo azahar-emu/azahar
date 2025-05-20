@@ -121,16 +121,16 @@ FragmentModule::~FragmentModule() = default;
 std::string FragmentModule::Generate() {
     // We round the interpolated primary color to the nearest 1/255th
     // This maintains the PICA's 8 bits of precision
-    out += R"(
+    Append(R"(
 void main() {
 vec4 rounded_primary_color = byteround(primary_color);
 vec4 primary_fragment_color = vec4(0.0);
 vec4 secondary_fragment_color = vec4(0.0);
-)";
+)");
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.framebuffer.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
-        out += "discard; }";
+        Append("discard; }");
         return out;
     }
 
@@ -141,19 +141,17 @@ vec4 secondary_fragment_color = vec4(0.0);
     // Write shader source to emulate all enabled PICA lights
     WriteLighting();
 
-    out += "vec4 combiner_buffer = vec4(0.0);\n"
+    Append("vec4 combiner_buffer = vec4(0.0);\n"
            "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n"
-           "vec4 combiner_output = vec4(0.0);\n";
+           "vec4 combiner_output = vec4(0.0);\n");
 
-    out += "vec3 color_results_1 = vec3(0.0);\n"
+    Append("vec3 color_results_1 = vec3(0.0);\n"
            "vec3 color_results_2 = vec3(0.0);\n"
-           "vec3 color_results_3 = vec3(0.0);\n";
+           "vec3 color_results_3 = vec3(0.0);\n");
 
-    out += "float alpha_results_1 = 0.0;\n"
+    Append("float alpha_results_1 = 0.0;\n"
            "float alpha_results_2 = 0.0;\n"
-           "float alpha_results_3 = 0.0;\n";
-
-    // Write shader source to emulate PICA TEV stages
+           "float alpha_results_3 = 0.0;\n"); // Write shader source to emulate PICA TEV stages
     bool tev_stage_processed = false;
     for (u32 index = 0; index < config.texture.tev_stages.size(); index++) {
         const TexturingRegs::TevStageConfig stage = config.texture.tev_stages[index];
@@ -164,7 +162,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         WriteTevStage(index);
     }
     if (!tev_stage_processed) {
-        out += "combiner_output = rounded_primary_color;\n";
+        Append("combiner_output = rounded_primary_color;\n");
     }
 
     // Append the alpha test condition
@@ -185,16 +183,16 @@ vec4 secondary_fragment_color = vec4(0.0);
     if (config.framebuffer.shadow_rendering) {
         WriteShadow();
     } else {
-        out += "gl_FragDepth = depth;\n";
+        Append("gl_FragDepth = depth;\n");
         // Round the final fragment color to maintain the PICA's 8 bits of precision
-        out += "combiner_output = byteround(combiner_output);\n";
+        Append("combiner_output = byteround(combiner_output);\n");
         WriteBlending();
-        out += "color = combiner_output;\n return;\n";
+        Append("color = combiner_output;\n return;\n");
     }
 
     WriteLogicOp();
 
-    out += '}';
+    Append('}');
 
     return out;
 }
@@ -208,13 +206,13 @@ void FragmentModule::WriteDepth() {
     // un-negate the value to range [-1, 0]. Once we have z_over_w, we can do our own transformation
     // according to PICA specification.
     if (profile.has_minus_one_to_one_range) {
-        out += "float z_over_w = -2.0 * gl_FragCoord.z + 1.0;\n";
+        Append("float z_over_w = -2.0 * gl_FragCoord.z + 1.0;\n");
     } else {
-        out += "float z_over_w = -gl_FragCoord.z;\n";
+        Append("float z_over_w = -gl_FragCoord.z;\n");
     }
-    out += "float depth = z_over_w * depth_scale + depth_offset;\n";
+    Append("float depth = z_over_w * depth_scale + depth_offset;\n");
     if (config.framebuffer.depthmap_enable == RasterizerRegs::DepthBuffering::WBuffering) {
-        out += "depth /= gl_FragCoord.w;\n";
+        Append("depth /= gl_FragCoord.w;\n");
     }
 }
 
@@ -224,15 +222,15 @@ void FragmentModule::WriteScissor() {
         return;
     }
 
-    out += "if (";
+    Append("if (");
     // Negate the condition if we have to keep only the pixels outside the scissor box
     if (scissor_mode == RasterizerRegs::ScissorMode::Include) {
-        out += '!';
+        Append('!');
     }
-    out += "(gl_FragCoord.x >= float(scissor_x1) && "
+    Append("(gl_FragCoord.x >= float(scissor_x1) && "
            "gl_FragCoord.y >= float(scissor_y1) && "
            "gl_FragCoord.x < float(scissor_x2) && "
-           "gl_FragCoord.y < float(scissor_y2))) discard;\n";
+           "gl_FragCoord.y < float(scissor_y2))) discard;\n");
 }
 
 std::string FragmentModule::GetSource(Pica::TexturingRegs::TevStageConfig::Source source,
@@ -276,37 +274,37 @@ void FragmentModule::AppendColorModifier(
         GetSource(force_source3 ? stage.color_source3.Value() : source, tev_index);
     switch (modifier) {
     case ColorModifier::SourceColor:
-        out += fmt::format("{}.rgb", color_source);
+        Append("{}.rgb", color_source);
         break;
     case ColorModifier::OneMinusSourceColor:
-        out += fmt::format("vec3(1.0) - {}.rgb", color_source);
+        Append("vec3(1.0) - {}.rgb", color_source);
         break;
     case ColorModifier::SourceAlpha:
-        out += fmt::format("{}.aaa", color_source);
+        Append("{}.aaa", color_source);
         break;
     case ColorModifier::OneMinusSourceAlpha:
-        out += fmt::format("vec3(1.0) - {}.aaa", color_source);
+        Append("vec3(1.0) - {}.aaa", color_source);
         break;
     case ColorModifier::SourceRed:
-        out += fmt::format("{}.rrr", color_source);
+        Append("{}.rrr", color_source);
         break;
     case ColorModifier::OneMinusSourceRed:
-        out += fmt::format("vec3(1.0) - {}.rrr", color_source);
+        Append("vec3(1.0) - {}.rrr", color_source);
         break;
     case ColorModifier::SourceGreen:
-        out += fmt::format("{}.ggg", color_source);
+        Append("{}.ggg", color_source);
         break;
     case ColorModifier::OneMinusSourceGreen:
-        out += fmt::format("vec3(1.0) - {}.ggg", color_source);
+        Append("vec3(1.0) - {}.ggg", color_source);
         break;
     case ColorModifier::SourceBlue:
-        out += fmt::format("{}.bbb", color_source);
+        Append("{}.bbb", color_source);
         break;
     case ColorModifier::OneMinusSourceBlue:
-        out += fmt::format("vec3(1.0) - {}.bbb", color_source);
+        Append("vec3(1.0) - {}.bbb", color_source);
         break;
     default:
-        out += "vec3(0.0)";
+        Append("vec3(0.0)");
         LOG_CRITICAL(Render, "Unknown color modifier op {}", modifier);
         break;
     }
@@ -323,31 +321,31 @@ void FragmentModule::AppendAlphaModifier(
         GetSource(force_source3 ? stage.alpha_source3.Value() : source, tev_index);
     switch (modifier) {
     case AlphaModifier::SourceAlpha:
-        out += fmt::format("{}.a", alpha_source);
+        Append("{}.a", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceAlpha:
-        out += fmt::format("1.0 - {}.a", alpha_source);
+        Append("1.0 - {}.a", alpha_source);
         break;
     case AlphaModifier::SourceRed:
-        out += fmt::format("{}.r", alpha_source);
+        Append("{}.r", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceRed:
-        out += fmt::format("1.0 - {}.r", alpha_source);
+        Append("1.0 - {}.r", alpha_source);
         break;
     case AlphaModifier::SourceGreen:
-        out += fmt::format("{}.g", alpha_source);
+        Append("{}.g", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceGreen:
-        out += fmt::format("1.0 - {}.g", alpha_source);
+        Append("1.0 - {}.g", alpha_source);
         break;
     case AlphaModifier::SourceBlue:
-        out += fmt::format("{}.b", alpha_source);
+        Append("{}.b", alpha_source);
         break;
     case AlphaModifier::OneMinusSourceBlue:
-        out += fmt::format("1.0 - {}.b", alpha_source);
+        Append("1.0 - {}.b", alpha_source);
         break;
     default:
-        out += "0.0";
+        Append("0.0");
         LOG_CRITICAL(Render, "Unknown alpha modifier op {}", modifier);
         break;
     }
@@ -381,7 +379,7 @@ void FragmentModule::AppendColorCombiner(Pica::TexturingRegs::TevStageConfig::Op
             return "vec3(0.0)";
         }
     };
-    out += fmt::format("clamp({}, vec3(0.0), vec3(1.0))", get_combiner());
+    Append("clamp({}, vec3(0.0), vec3(1.0))", get_combiner());
 }
 
 void FragmentModule::AppendAlphaCombiner(Pica::TexturingRegs::TevStageConfig::Operation operation) {
@@ -409,7 +407,7 @@ void FragmentModule::AppendAlphaCombiner(Pica::TexturingRegs::TevStageConfig::Op
             return "0.0";
         }
     };
-    out += fmt::format("clamp({}, 0.0, 1.0)", get_combiner());
+    Append("clamp({}, 0.0, 1.0)", get_combiner());
 }
 
 void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) {
@@ -436,7 +434,7 @@ void FragmentModule::WriteAlphaTestCondition(FramebufferRegs::CompareFunc func) 
             break;
         }
     };
-    out += fmt::format("if ({}) discard;\n", get_cond());
+    Append("if ({}) discard;\n", get_cond());
 }
 
 // Helper to detect passthrough TEV stages for optimization
@@ -475,57 +473,43 @@ void FragmentModule::WriteTevStage(u32 index) {
     }
 
     // Batch static appends for color_results
-    out += "color_results_1 = ";
+    Append("color_results_1 = ");
     AppendColorModifier(stage.color_modifier1, stage.color_source1, index);
-    out += ";\ncolor_results_2 = ";
+    Append(";\ncolor_results_2 = ");
     AppendColorModifier(stage.color_modifier2, stage.color_source2, index);
-    out += ";\ncolor_results_3 = ";
+    Append(";\ncolor_results_3 = ");
     AppendColorModifier(stage.color_modifier3, stage.color_source3, index);
 
-    // Use direct string concat for color_output
-    out += ";\nvec3 color_output_";
-    out += std::to_string(index);
-    out += " = byteround(";
+    // Use the Append helper for color_output
+    Append(";\nvec3 color_output_{} = byteround(", index);
     AppendColorCombiner(stage.color_op);
-    out += ");\n";
+    Append(");\n");
 
     if (stage.color_op == Pica::TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
-        out += "float alpha_output_";
-        out += std::to_string(index);
-        out += " = color_output_";
-        out += std::to_string(index);
-        out += "[0];\n";
+        Append("float alpha_output_{0} = color_output_{0}[0];\n", index);
     } else {
-        out += "alpha_results_1 = ";
+        Append("alpha_results_1 = ");
         AppendAlphaModifier(stage.alpha_modifier1, stage.alpha_source1, index);
-        out += ";\nalpha_results_2 = ";
+        Append(";\nalpha_results_2 = ");
         AppendAlphaModifier(stage.alpha_modifier2, stage.alpha_source2, index);
-        out += ";\nalpha_results_3 = ";
+        Append(";\nalpha_results_3 = ");
         AppendAlphaModifier(stage.alpha_modifier3, stage.alpha_source3, index);
-        out += ";\nfloat alpha_output_";
-        out += std::to_string(index);
-        out += " = byteround(";
+        Append(";\nfloat alpha_output_{} = byteround(", index);
         AppendAlphaCombiner(stage.alpha_op);
-        out += ");\n";
+        Append(");\n");
     }
 
-    // Use direct string concat for combiner_output
-    out += "combiner_output = vec4(clamp(color_output_";
-    out += std::to_string(index);
-    out += " * ";
-    out += std::to_string(stage.GetColorMultiplier());
-    out += ".0, vec3(0.0), vec3(1.0)), clamp(alpha_output_";
-    out += std::to_string(index);
-    out += " * ";
-    out += std::to_string(stage.GetAlphaMultiplier());
-    out += ".0, 0.0, 1.0));\n";
+    // Use Append helper for combiner_output
+    Append("combiner_output = vec4(clamp(color_output_{0} * {1}.0, vec3(0.0), vec3(1.0)), "
+           "clamp(alpha_output_{0} * {2}.0, 0.0, 1.0));\n",
+           index, stage.GetColorMultiplier(), stage.GetAlphaMultiplier());
 
-    out += "combiner_buffer = next_combiner_buffer;\n";
+    Append("combiner_buffer = next_combiner_buffer;\n");
     if (config.TevStageUpdatesCombinerBufferColor(index)) {
-        out += "next_combiner_buffer.rgb = combiner_output.rgb;\n";
+        Append("next_combiner_buffer.rgb = combiner_output.rgb;\n");
     }
     if (config.TevStageUpdatesCombinerBufferAlpha(index)) {
-        out += "next_combiner_buffer.a = combiner_output.a;\n";
+        Append("next_combiner_buffer.a = combiner_output.a;\n");
     }
 }
 
@@ -537,7 +521,7 @@ void FragmentModule::WriteLighting() {
     const auto& lighting = config.lighting;
 
     // Define lighting globals
-    out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
+    Append("vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec3 light_vector = vec3(0.0);\n"
            "float light_distance = 0.0;\n"
@@ -546,7 +530,7 @@ void FragmentModule::WriteLighting() {
            "vec3 half_vector = vec3(0.0);\n"
            "float dot_product = 0.0;\n"
            "float clamp_highlights = 1.0;\n"
-           "float geo_factor = 1.0;\n";
+           "float geo_factor = 1.0;\n");
 
     // Compute fragment normals and tangents
     const auto perturbation = [&] {
@@ -555,71 +539,69 @@ void FragmentModule::WriteLighting() {
 
     if (config.user.use_custom_normal) {
         const auto texel = fmt::format("2.0 * (texture(tex_normal, texcoord0)).rgb - 1.0");
-        out += fmt::format("vec3 surface_normal = {};\n", texel);
-        out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
+        Append("vec3 surface_normal = {};\n", texel);
+        Append("vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n");
     } else {
         switch (lighting.bump_mode) {
         case LightingRegs::LightingBumpMode::NormalMap: {
             // Bump mapping is enabled using a normal map
-            out += fmt::format("vec3 surface_normal = {};\n", perturbation());
+            Append("vec3 surface_normal = {};\n", perturbation());
 
             // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
             // precision result
             if (lighting.bump_renorm) {
                 constexpr std::string_view val = "(1.0 - (surface_normal.x*surface_normal.x + "
                                                  "surface_normal.y*surface_normal.y))";
-                out += fmt::format("surface_normal.z = sqrt(max({}, 0.0));\n", val);
+                Append("surface_normal.z = sqrt(max({}, 0.0));\n", val);
             }
 
             // The tangent vector is not perturbed by the normal map and is just a unit vector.
-            out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
+            Append("vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n");
             break;
         }
         case LightingRegs::LightingBumpMode::TangentMap: {
             // Bump mapping is enabled using a tangent map
-            out += fmt::format("vec3 surface_tangent = {};\n", perturbation());
+            Append("vec3 surface_tangent = {};\n", perturbation());
             // Mathematically, recomputing Z-component of the tangent vector won't affect the
             // relevant computation below, which is also confirmed on 3DS. So we don't bother
             // recomputing here even if 'renorm' is enabled.
 
             // The normal vector is not perturbed by the tangent map and is just a unit vector.
-            out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
+            Append("vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n");
             break;
         }
         default:
             // No bump mapping - surface local normal and tangent are just unit vectors
-            out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n"
-                   "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
+            Append("vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n"
+                   "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n");
         }
-    }
-
-    // If the barycentric extension is enabled, perform quaternion correction here.
+    } // If the barycentric extension is enabled, perform quaternion correction here.
     if (use_fragment_shader_barycentric) {
-        out += "vec4 normquat_0 = normquats[0];\n"
+        Append("vec4 normquat_0 = normquats[0];\n"
                "vec4 normquat_1 = mix(normquats[1], -normquats[1], "
                "bvec4(AreQuaternionsOpposite(normquats[0], normquats[1])));\n"
                "vec4 normquat_2 = mix(normquats[2], -normquats[2], "
                "bvec4(AreQuaternionsOpposite(normquats[0], normquats[2])));\n"
                "vec4 normquat = gl_BaryCoord.x * normquat_0 + gl_BaryCoord.y * normquat_1 + "
-               "gl_BaryCoord.z * normquat_2;\n";
+               "gl_BaryCoord.z * normquat_2;\n");
     }
 
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
     // eyespace.
-    out += "vec4 normalized_normquat = normalize(normquat);\n"
+    Append("vec4 normalized_normquat = normalize(normquat);\n"
            "vec3 normal = quaternion_rotate(normalized_normquat, surface_normal);\n"
-           "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n";
+           "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n");
 
     if (lighting.enable_shadow) {
         std::string shadow_texture =
             fmt::format("sampleTexUnit{}()", lighting.shadow_selector.Value());
         if (lighting.shadow_invert) {
-            out += fmt::format("vec4 shadow = vec4(1.0) - {};\n", shadow_texture);
+            Append("vec4 shadow = vec4(1.0) - {};\n", shadow_texture);
         } else {
-            out += fmt::format("vec4 shadow = {};\n", shadow_texture);
+            Append("vec4 shadow = {};\n", shadow_texture);
         }
     } else {
-        out += "vec4 shadow = vec4(1.0);\n";
+        Append("vec4 shadow = vec4(1.0);\n");
     }
 
     // Samples the specified lookup table for specular lighting
@@ -681,29 +663,30 @@ void FragmentModule::WriteLighting() {
     // Write the code to emulate each enabled light
     for (u32 light_index = 0; light_index < lighting.src_num; ++light_index) {
         const auto& light_config = lighting.lights[light_index];
-        const std::string light_src = fmt::format("light_src[{}]", light_config.num.Value());
-
-        // Compute light vector (directional or positional)
+        const std::string light_src = fmt::format(
+            "light_src[{}]",
+            light_config.num.Value()); // Compute light vector (directional or positional)
         if (light_config.directional) {
-            out += fmt::format("light_vector = {}.position;\n", light_src);
+            Append("light_vector = {}.position;\n", light_src);
         } else {
-            out += fmt::format("light_vector = {}.position + view;\n", light_src);
+            Append("light_vector = {}.position + view;\n", light_src);
         }
-        out += fmt::format("light_distance = length(light_vector);\n", light_src);
-        out += fmt::format("light_vector = normalize(light_vector);\n", light_src);
+        Append("light_distance = length(light_vector);\n");
+        Append("light_vector = normalize(light_vector);\n");
 
-        out += fmt::format("spot_dir = {}.spot_direction;\n", light_src);
-        out += "half_vector = normalize(view) + light_vector;\n";
+        Append("spot_dir = {}.spot_direction;\n", light_src);
+        Append("half_vector = normalize(view) + light_vector;\n");
 
         // Compute dot product of light_vector and normal, adjust if lighting is one-sided or
         // two-sided
-        out += "dot_product = ";
-        out += light_config.two_sided_diffuse ? "abs(dot(light_vector, normal));\n"
-                                              : "max(dot(light_vector, normal), 0.0);\n";
-
-        // If enabled, clamp specular component if lighting result is zero
+        Append("dot_product = ");
+        Append(
+            light_config.two_sided_diffuse
+                ? "abs(dot(light_vector, normal));\n"
+                : "max(dot(light_vector, normal), 0.0);\n"); // If enabled, clamp specular component
+                                                             // if lighting result is zero
         if (lighting.clamp_highlights) {
-            out += "clamp_highlights = sign(dot_product);\n";
+            Append("clamp_highlights = sign(dot_product);\n");
         }
 
         // If enabled, compute spot light attenuation value
@@ -726,11 +709,10 @@ void FragmentModule::WriteLighting() {
             const auto sampler = LightingRegs::DistanceAttenuationSampler(light_config.num);
             dist_atten = fmt::format("LookupLightingLUTUnsigned({}, {})", sampler, index);
         }
-
         if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
-            out += "geo_factor = dot(half_vector, half_vector);\n"
+            Append("geo_factor = dot(half_vector, half_vector);\n"
                    "geo_factor = geo_factor == 0.0 ? 0.0 : min("
-                   "dot_product / geo_factor, 1.0);\n";
+                   "dot_product / geo_factor, 1.0);\n");
         }
 
         // Specular 0 component
@@ -747,9 +729,7 @@ void FragmentModule::WriteLighting() {
         std::string specular_0 = fmt::format("({} * {}.specular_0)", d0_lut_value, light_src);
         if (light_config.geometric_factor_0) {
             specular_0 = fmt::format("({} * geo_factor)", specular_0);
-        }
-
-        // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
+        } // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
         if (lighting.lut_rr.enable &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::ReflectRed)) {
@@ -757,9 +737,9 @@ void FragmentModule::WriteLighting() {
                 get_lut_value(LightingRegs::LightingSampler::ReflectRed, light_config.num,
                               lighting.lut_rr.type, lighting.lut_rr.abs_input);
             value = fmt::format("({:#} * {})", lighting.lut_rr.scale, value);
-            out += fmt::format("refl_value.r = {};\n", value);
+            Append("refl_value.r = {};\n", value);
         } else {
-            out += "refl_value.r = 1.0;\n";
+            Append("refl_value.r = 1.0;\n");
         }
 
         // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
@@ -770,9 +750,9 @@ void FragmentModule::WriteLighting() {
                 get_lut_value(LightingRegs::LightingSampler::ReflectGreen, light_config.num,
                               lighting.lut_rg.type, lighting.lut_rg.abs_input);
             value = fmt::format("({:#} * {})", lighting.lut_rg.scale, value);
-            out += fmt::format("refl_value.g = {};\n", value);
+            Append("refl_value.g = {};\n", value);
         } else {
-            out += "refl_value.g = refl_value.r;\n";
+            Append("refl_value.g = refl_value.r;\n");
         }
 
         // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
@@ -783,9 +763,9 @@ void FragmentModule::WriteLighting() {
                 get_lut_value(LightingRegs::LightingSampler::ReflectBlue, light_config.num,
                               lighting.lut_rb.type, lighting.lut_rb.abs_input);
             value = fmt::format("({:#} * {})", lighting.lut_rb.scale, value);
-            out += fmt::format("refl_value.b = {};\n", value);
+            Append("refl_value.b = {};\n", value);
         } else {
-            out += "refl_value.b = refl_value.r;\n";
+            Append("refl_value.b = refl_value.r;\n");
         }
 
         // Specular 1 component
@@ -803,9 +783,7 @@ void FragmentModule::WriteLighting() {
             fmt::format("({} * refl_value * {}.specular_1)", d1_lut_value, light_src);
         if (light_config.geometric_factor_1) {
             specular_1 = fmt::format("({} * geo_factor)", specular_1);
-        }
-
-        // Fresnel
+        } // Fresnel
         // Note: only the last entry in the light slots applies the Fresnel factor
         if (light_index == lighting.src_num - 1 && lighting.lut_fr.enable &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
@@ -818,12 +796,12 @@ void FragmentModule::WriteLighting() {
 
             // Enabled for diffuse lighting alpha component
             if (lighting.enable_primary_alpha) {
-                out += fmt::format("diffuse_sum.a = {};\n", value);
+                Append("diffuse_sum.a = {};\n", value);
             }
 
             // Enabled for the specular lighting alpha component
             if (lighting.enable_secondary_alpha) {
-                out += fmt::format("specular_sum.a = {};\n", value);
+                Append("specular_sum.a = {};\n", value);
             }
         }
 
@@ -831,77 +809,75 @@ void FragmentModule::WriteLighting() {
         const bool shadow_secondary_enable =
             lighting.shadow_secondary && light_config.shadow_enable;
         const auto shadow_primary = shadow_primary_enable ? " * shadow.rgb" : "";
-        const auto shadow_secondary = shadow_secondary_enable ? " * shadow.rgb" : "";
-
-        // Compute primary fragment color (diffuse lighting) function
-        out += fmt::format(
-            "diffuse_sum.rgb += (({}.diffuse * dot_product{}) + {}.ambient) * {} * {};\n",
-            light_src, shadow_primary, light_src, dist_atten, spot_atten);
+        const auto shadow_secondary =
+            shadow_secondary_enable
+                ? " * shadow.rgb"
+                : ""; // Compute primary fragment color (diffuse lighting) function
+        Append("diffuse_sum.rgb += (({}.diffuse * dot_product{}) + {}.ambient) * {} * {};\n",
+               light_src, shadow_primary, light_src, dist_atten, spot_atten);
 
         // Compute secondary fragment color (specular lighting) function
-        out += fmt::format("specular_sum.rgb += ({} + {}) * clamp_highlights * {} * {}{};\n",
-                           specular_0, specular_1, dist_atten, spot_atten, shadow_secondary);
-    }
-
-    // Apply shadow attenuation to alpha components if enabled
+        Append("specular_sum.rgb += ({} + {}) * clamp_highlights * {} * {}{};\n", specular_0,
+               specular_1, dist_atten, spot_atten, shadow_secondary);
+    } // Apply shadow attenuation to alpha components if enabled
     if (lighting.shadow_alpha) {
         if (lighting.enable_primary_alpha) {
-            out += "diffuse_sum.a *= shadow.a;\n";
+            Append("diffuse_sum.a *= shadow.a;\n");
         }
         if (lighting.enable_secondary_alpha) {
-            out += "specular_sum.a *= shadow.a;\n";
+            Append("specular_sum.a *= shadow.a;\n");
         }
     }
 
     // Sum final lighting result
-    out += "diffuse_sum.rgb += lighting_global_ambient;\n"
+    Append("diffuse_sum.rgb += lighting_global_ambient;\n"
            "primary_fragment_color = clamp(diffuse_sum, vec4(0.0), vec4(1.0));\n"
-           "secondary_fragment_color = clamp(specular_sum, vec4(0.0), vec4(1.0));\n";
+           "secondary_fragment_color = clamp(specular_sum, vec4(0.0), vec4(1.0));\n");
 }
 
 void FragmentModule::WriteFog() {
     // Get index into fog LUT
     if (config.texture.fog_flip) {
-        out += "float fog_index = (1.0 - float(depth)) * 128.0;\n";
+        Append("float fog_index = (1.0 - float(depth)) * 128.0;\n");
     } else {
-        out += "float fog_index = depth * 128.0;\n";
+        Append("float fog_index = depth * 128.0;\n");
     }
 
     // Generate clamped fog factor from LUT for given fog index
-    out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n"
+    Append("float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n"
            "float fog_f = fog_index - fog_i;\n"
            "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_lf, int(fog_i) + "
            "fog_lut_offset).rg;\n"
            "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n"
-           "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";
+           "fog_factor = clamp(fog_factor, 0.0, 1.0);\n");
 
     // Blend the fog
-    out += "combiner_output.rgb = mix(fog_color.rgb, combiner_output.rgb, fog_factor);\n";
+    Append("combiner_output.rgb = mix(fog_color.rgb, combiner_output.rgb, fog_factor);\n");
 }
 
 void FragmentModule::WriteGas() {
     // TODO: Implement me
     LOG_CRITICAL(Render, "Unimplemented gas mode");
-    out += "discard; }";
+    Append("discard; }");
 }
 
 void FragmentModule::WriteShadow() {
-    out += R"(
+    Append(R"(
 uint d = uint(clamp(depth, 0.0, 1.0) * float(0xFFFFFF));
 uint s = uint(combiner_output.g * float(0xFF));
 ivec2 image_coord = ivec2(gl_FragCoord.xy);
-)";
+)");
 
     if (use_fragment_shader_interlock) {
-        out += R"(
+        Append(R"(
 beginInvocationInterlock();
 uint old_shadow = imageLoad(shadow_buffer, image_coord).x;
 uint new_shadow = UpdateShadow(old_shadow, d, s);
 imageStore(shadow_buffer, image_coord, uvec4(new_shadow));
 endInvocationInterlock();
-)";
+)");
     } else {
-        out += R"(
+        Append(R"(
 uint old = imageLoad(shadow_buffer, image_coord).x;
 uint new1;
 uint old2;
@@ -909,7 +885,7 @@ do {
     old2 = old;
     new1 = UpdateShadow(old, d, s);
 } while ((old = imageAtomicCompSwap(shadow_buffer, image_coord, old, new1)) != old2);
-)";
+)");
     }
 }
 
@@ -917,16 +893,16 @@ void FragmentModule::WriteLogicOp() {
     const auto logic_op = config.framebuffer.logic_op.Value();
     switch (logic_op) {
     case FramebufferRegs::LogicOp::Clear:
-        out += "color = vec4(0);\n";
+        Append("color = vec4(0);\n");
         break;
     case FramebufferRegs::LogicOp::Set:
-        out += "color = vec4(1);\n";
+        Append("color = vec4(1);\n");
         break;
     case FramebufferRegs::LogicOp::Copy:
         // Take the color output as-is
         break;
     case FramebufferRegs::LogicOp::CopyInverted:
-        out += "color = ~color;\n";
+        Append("color = ~color;\n");
         break;
     case FramebufferRegs::LogicOp::NoOp:
         // We need to discard the color, but not necessarily the depth. This is not possible
@@ -944,8 +920,8 @@ void FragmentModule::WriteBlending() {
     }
 
     using BlendFactor = Pica::FramebufferRegs::BlendFactor;
-    out += "vec4 source_color = combiner_output;\n";
-    out += "vec4 dest_color = destFactor;\n";
+    Append("vec4 source_color = combiner_output;\n");
+    Append("vec4 dest_color = destFactor;\n");
     const auto get_factor = [&](BlendFactor factor) -> std::string {
         switch (factor) {
         case BlendFactor::Zero:
@@ -986,18 +962,17 @@ void FragmentModule::WriteBlending() {
     };
 
     if (config.framebuffer.rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Add) {
-        out += fmt::format(
+        Append(
             "combiner_output.rgb = {}(source_color.rgb * ({}).rgb, dest_color.rgb * ({}).rgb);\n",
             get_func(config.framebuffer.rgb_blend.eq),
             get_factor(config.framebuffer.rgb_blend.src_factor),
             get_factor(config.framebuffer.rgb_blend.dst_factor));
     }
     if (config.framebuffer.alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Add) {
-        out +=
-            fmt::format("combiner_output.a = {}(source_color.a * ({}).a, dest_color.a * ({}).a);\n",
-                        get_func(config.framebuffer.alpha_blend.eq),
-                        get_factor(config.framebuffer.alpha_blend.src_factor),
-                        get_factor(config.framebuffer.alpha_blend.dst_factor));
+        Append("combiner_output.a = {}(source_color.a * ({}).a, dest_color.a * ({}).a);\n",
+               get_func(config.framebuffer.alpha_blend.eq),
+               get_factor(config.framebuffer.alpha_blend.src_factor),
+               get_factor(config.framebuffer.alpha_blend.dst_factor));
     }
 }
 
@@ -1006,17 +981,17 @@ void FragmentModule::AppendProcTexShiftOffset(std::string_view v, ProcTexShift m
     const auto offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? "1.0" : "0.5";
     switch (mode) {
     case ProcTexShift::None:
-        out += "0.0";
+        Append("0.0");
         break;
     case ProcTexShift::Odd:
-        out += fmt::format("{} * float((int({}) / 2) % 2)", offset, v);
+        Append("{} * float((int({}) / 2) % 2)", offset, v);
         break;
     case ProcTexShift::Even:
-        out += fmt::format("{} * float(((int({}) + 1) / 2) % 2)", offset, v);
+        Append("{} * float(((int({}) + 1) / 2) % 2)", offset, v);
         break;
     default:
         LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", mode);
-        out += "0.0";
+        Append("0.0");
         break;
     }
 }
@@ -1024,23 +999,23 @@ void FragmentModule::AppendProcTexShiftOffset(std::string_view v, ProcTexShift m
 void FragmentModule::AppendProcTexClamp(std::string_view var, ProcTexClamp mode) {
     switch (mode) {
     case ProcTexClamp::ToZero:
-        out += fmt::format("{0} = {0} > 1.0 ? 0 : {0};\n", var);
+        Append("{0} = {0} > 1.0 ? 0 : {0};\n", var);
         break;
     case ProcTexClamp::ToEdge:
-        out += fmt::format("{0} = min({0}, 1.0);\n", var);
+        Append("{0} = min({0}, 1.0);\n", var);
         break;
     case ProcTexClamp::SymmetricalRepeat:
-        out += fmt::format("{0} = fract({0});\n", var);
+        Append("{0} = fract({0});\n", var);
         break;
     case ProcTexClamp::MirroredRepeat:
-        out += fmt::format("{0} = int({0}) % 2 == 0 ? fract({0}) : 1.0 - fract({0});\n", var);
+        Append("{0} = int({0}) % 2 == 0 ? fract({0}) : 1.0 - fract({0});\n", var);
         break;
     case ProcTexClamp::Pulse:
-        out += fmt::format("{0} = {0} > 0.5 ? 1.0 : 0.0;\n", var);
+        Append("{0} = {0} > 0.5 ? 1.0 : 0.0;\n", var);
         break;
     default:
         LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", mode);
-        out += fmt::format("{0} = min({0}, 1.0);\n", var);
+        Append("{0} = min({0}, 1.0);\n", var);
         break;
     }
 }
@@ -1073,7 +1048,7 @@ void FragmentModule::AppendProcTexCombineAndMap(ProcTexCombiner combiner, std::s
             return "0.0";
         }
     }();
-    out += fmt::format("ProcTexLookupLUT({}, {})", offset, combined);
+    Append("ProcTexLookupLUT({}, {})", offset, combined);
 }
 
 void FragmentModule::DefineProcTexSampler() {
@@ -1085,7 +1060,7 @@ void FragmentModule::DefineProcTexSampler() {
     // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
     // value entries and difference entries.
-    out += R"(
+    Append(R"(
 float ProcTexLookupLUT(int offset, float coord) {
     coord *= 128.0;
     float index_i = clamp(floor(coord), 0.0, 127.0);
@@ -1094,12 +1069,12 @@ float ProcTexLookupLUT(int offset, float coord) {
     vec2 entry = texelFetch(texture_buffer_lut_rg, int(index_i) + offset).rg;
     return clamp(entry.r + entry.g * index_f, 0.0, 1.0);
 }
-    )";
+    )");
 
     // Noise utility
     if (config.proctex.noise_enable) {
         // See swrasterizer/proctex.cpp for more information about these functions
-        out += R"(
+        Append(R"(
 int ProcTexNoiseRand1D(int v) {
     const int table[] = int[](0,4,10,8,4,9,7,12,5,15,13,14,11,15,2,11);
     return ((v % 9 + 2) * 3 & 0xF) ^ table[(v / 9) & 0xF];
@@ -1133,138 +1108,138 @@ float ProcTexNoiseCoef(vec2 x) {
     float x1 = mix(g2, g3, x_noise);
     return mix(x0, x1, y_noise);
 }
-        )";
+        )");
     }
 
-    out += "vec4 SampleProcTexColor(float lut_coord, int level) {\n";
-    out += fmt::format("int lut_width = {} >> level;\n", config.proctex.lut_width);
+    Append("vec4 SampleProcTexColor(float lut_coord, int level) {\n");
+    Append("int lut_width = {} >> level;\n", config.proctex.lut_width);
     // Offsets for level 4-7 seem to be hardcoded
-    out += fmt::format("int lut_offsets[8] = int[]({}, {}, {}, {}, 0xF0, 0xF8, 0xFC, 0xFE);\n",
-                       config.proctex.lut_offset0, config.proctex.lut_offset1,
-                       config.proctex.lut_offset2, config.proctex.lut_offset3);
-    out += "int lut_offset = lut_offsets[level];\n";
+    Append("int lut_offsets[8] = int[]({}, {}, {}, {}, 0xF0, 0xF8, 0xFC, 0xFE);\n",
+           config.proctex.lut_offset0, config.proctex.lut_offset1, config.proctex.lut_offset2,
+           config.proctex.lut_offset3);
+    Append("int lut_offset = lut_offsets[level];\n");
     // For the color lut, coord=0.0 is lut[offset] and coord=1.0 is lut[offset+width-1]
-    out += "lut_coord *= float(lut_width - 1);\n";
+    Append("lut_coord *= float(lut_width - 1);\n");
 
     switch (config.proctex.lut_filter) {
     case ProcTexFilter::Linear:
     case ProcTexFilter::LinearMipmapLinear:
     case ProcTexFilter::LinearMipmapNearest:
-        out += "int lut_index_i = int(lut_coord) + lut_offset;\n";
-        out += "float lut_index_f = fract(lut_coord);\n";
-        out += "return texelFetch(texture_buffer_lut_rgba, lut_index_i + "
+        Append("int lut_index_i = int(lut_coord) + lut_offset;\n");
+        Append("float lut_index_f = fract(lut_coord);\n");
+        Append("return texelFetch(texture_buffer_lut_rgba, lut_index_i + "
                "proctex_lut_offset) + "
                "lut_index_f * "
-               "texelFetch(texture_buffer_lut_rgba, lut_index_i + proctex_diff_lut_offset);\n";
+               "texelFetch(texture_buffer_lut_rgba, lut_index_i + proctex_diff_lut_offset);\n");
         break;
     case ProcTexFilter::Nearest:
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
-        out += "lut_coord += float(lut_offset);\n";
-        out += "return texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
-               "proctex_lut_offset);\n";
+        Append("lut_coord += float(lut_offset);\n");
+        Append("return texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
+               "proctex_lut_offset);\n");
         break;
     }
 
-    out += "}\n";
+    Append("}\n");
 
-    out += "vec4 ProcTex() {\n";
+    Append("vec4 ProcTex() {\n");
     if (config.proctex.coord < 3) {
-        out += fmt::format("vec2 uv = abs(texcoord{});\n", config.proctex.coord.Value());
+        Append("vec2 uv = abs(texcoord{});\n", config.proctex.coord.Value());
     } else {
         LOG_CRITICAL(Render, "Unexpected proctex.coord >= 3");
-        out += "vec2 uv = abs(texcoord0);\n";
+        Append("vec2 uv = abs(texcoord0);\n");
     }
 
     // This LOD formula is the same as the LOD upper limit defined in OpenGL.
     // f(x, y) <= m_u + m_v + m_w
     // (See OpenGL 4.6 spec, 8.14.1 - Scale Factor and Level-of-Detail)
     // Note: this is different from the one normal 2D textures use.
-    out += "vec2 duv = max(abs(dFdx(uv)), abs(dFdy(uv)));\n";
+    Append("vec2 duv = max(abs(dFdx(uv)), abs(dFdy(uv)));\n");
     // unlike normal texture, the bias is inside the log2
-    out += fmt::format("float lod = log2(abs(float({}) * proctex_bias) * (duv.x + duv.y));\n",
-                       config.proctex.lut_width);
-    out += "if (proctex_bias == 0.0) lod = 0.0;\n";
-    out += fmt::format("lod = clamp(lod, {:#}, {:#});\n",
-                       std::max(0.0f, static_cast<f32>(config.proctex.lod_min)),
-                       std::min(7.0f, static_cast<f32>(config.proctex.lod_max)));
+    Append("float lod = log2(abs(float({}) * proctex_bias) * (duv.x + duv.y));\n",
+           config.proctex.lut_width);
+    Append("if (proctex_bias == 0.0) lod = 0.0;\n");
+    Append("lod = clamp(lod, {:#}, {:#});\n",
+           std::max(0.0f, static_cast<f32>(config.proctex.lod_min)),
+           std::min(7.0f, static_cast<f32>(config.proctex.lod_max)));
 
     // Get shift offset before noise generation
-    out += "float u_shift = ";
+    Append("float u_shift = ");
     AppendProcTexShiftOffset("uv.y", config.proctex.u_shift, config.proctex.u_clamp);
-    out += ";\n";
-    out += "float v_shift = ";
+    Append(";\n");
+    Append("float v_shift = ");
     AppendProcTexShiftOffset("uv.x", config.proctex.v_shift, config.proctex.v_clamp);
-    out += ";\n";
+    Append(";\n");
 
     // Generate noise
     if (config.proctex.noise_enable) {
-        out += "uv += proctex_noise_a * ProcTexNoiseCoef(uv);\n"
-               "uv = abs(uv);\n";
+        Append("uv += proctex_noise_a * ProcTexNoiseCoef(uv);\n"
+               "uv = abs(uv);\n");
     }
 
     // Shift
-    out += "float u = uv.x + u_shift;\n"
-           "float v = uv.y + v_shift;\n";
+    Append("float u = uv.x + u_shift;\n"
+           "float v = uv.y + v_shift;\n");
 
     // Clamp
     AppendProcTexClamp("u", config.proctex.u_clamp);
     AppendProcTexClamp("v", config.proctex.v_clamp);
 
     // Combine and map
-    out += "float lut_coord = ";
+    Append("float lut_coord = ");
     AppendProcTexCombineAndMap(config.proctex.color_combiner, "proctex_color_map_offset");
-    out += ";\n";
+    Append(";\n");
 
     switch (config.proctex.lut_filter) {
     case ProcTexFilter::Linear:
     case ProcTexFilter::Nearest:
-        out += "vec4 final_color = SampleProcTexColor(lut_coord, 0);\n";
+        Append("vec4 final_color = SampleProcTexColor(lut_coord, 0);\n");
         break;
     case ProcTexFilter::NearestMipmapNearest:
     case ProcTexFilter::LinearMipmapNearest:
-        out += "vec4 final_color = SampleProcTexColor(lut_coord, int(round(lod)));\n";
+        Append("vec4 final_color = SampleProcTexColor(lut_coord, int(round(lod)));\n");
         break;
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::LinearMipmapLinear:
-        out += "int lod_i = int(lod);\n"
+        Append("int lod_i = int(lod);\n"
                "float lod_f = fract(lod);\n"
                "vec4 final_color = mix(SampleProcTexColor(lut_coord, lod_i), "
-               "SampleProcTexColor(lut_coord, lod_i + 1), lod_f);\n";
+               "SampleProcTexColor(lut_coord, lod_i + 1), lod_f);\n");
         break;
     }
 
     if (config.proctex.separate_alpha) {
         // Note: in separate alpha mode, the alpha channel skips the color LUT look up stage. It
         // uses the output of CombineAndMap directly instead.
-        out += "float final_alpha = ";
+        Append("float final_alpha = ");
         AppendProcTexCombineAndMap(config.proctex.alpha_combiner, "proctex_alpha_map_offset");
-        out += ";\n";
-        out += "return vec4(final_color.xyz, final_alpha);\n}\n";
+        Append(";\n");
+        Append("return vec4(final_color.xyz, final_alpha);\n}\n");
     } else {
-        out += "return final_color;\n}\n";
+        Append("return final_color;\n}\n");
     }
 }
 
 void FragmentModule::DefineExtensions() {
     if (profile.has_separable_shaders) {
-        out += "#extension GL_ARB_separate_shader_objects : enable\n";
+        Append("#extension GL_ARB_separate_shader_objects : enable\n");
     }
     if (config.framebuffer.shadow_rendering) {
         use_fragment_shader_interlock = true;
         if (profile.has_fragment_shader_interlock) {
-            out += "#extension GL_ARB_fragment_shader_interlock : enable\n";
-            out += "#define beginInvocationInterlock beginInvocationInterlockARB\n";
-            out += "#define endInvocationInterlock endInvocationInterlockARB\n";
+            Append("#extension GL_ARB_fragment_shader_interlock : enable\n");
+            Append("#define beginInvocationInterlock beginInvocationInterlockARB\n");
+            Append("#define endInvocationInterlock endInvocationInterlockARB\n");
         } else if (profile.has_gl_nv_fragment_shader_interlock) {
-            out += "#extension GL_NV_fragment_shader_interlock : enable\n";
-            out += "#define beginInvocationInterlock beginInvocationInterlockNV\n";
-            out += "#define endInvocationInterlock endInvocationInterlockNV\n";
+            Append("#extension GL_NV_fragment_shader_interlock : enable\n");
+            Append("#define beginInvocationInterlock beginInvocationInterlockNV\n");
+            Append("#define endInvocationInterlock endInvocationInterlockNV\n");
         } else if (profile.has_gl_intel_fragment_shader_ordering) {
             // NOTE: Intel does not have an end function for this.
-            out += "#extension GL_INTEL_fragment_shader_ordering : enable\n";
-            out += "#define beginInvocationInterlock beginFragmentShaderOrderingINTEL\n";
-            out += "#define endInvocationInterlock()\n";
+            Append("#extension GL_INTEL_fragment_shader_ordering : enable\n");
+            Append("#define beginInvocationInterlock beginFragmentShaderOrderingINTEL\n");
+            Append("#define endInvocationInterlock()\n");
         } else {
             use_fragment_shader_interlock = false;
         }
@@ -1272,41 +1247,41 @@ void FragmentModule::DefineExtensions() {
     if (config.lighting.enable) {
         use_fragment_shader_barycentric = true;
         if (profile.has_fragment_shader_barycentric) {
-            out += "#extension GL_EXT_fragment_shader_barycentric : enable\n";
-            out += "#define pervertex pervertexEXT\n";
-            out += "#define gl_BaryCoord gl_BaryCoordEXT\n";
+            Append("#extension GL_EXT_fragment_shader_barycentric : enable\n");
+            Append("#define pervertex pervertexEXT\n");
+            Append("#define gl_BaryCoord gl_BaryCoordEXT\n");
         } else if (profile.has_gl_nv_fragment_shader_barycentric) {
-            out += "#extension GL_NV_fragment_shader_barycentric : enable\n";
-            out += "#define pervertex pervertexNV\n";
-            out += "#define gl_BaryCoord gl_BaryCoordNV\n";
+            Append("#extension GL_NV_fragment_shader_barycentric : enable\n");
+            Append("#define pervertex pervertexNV\n");
+            Append("#define gl_BaryCoord gl_BaryCoordNV\n");
         } else {
             use_fragment_shader_barycentric = false;
         }
     }
     if (config.EmulateBlend() && !profile.is_vulkan) {
         if (profile.has_gl_ext_framebuffer_fetch) {
-            out += "#extension GL_EXT_shader_framebuffer_fetch : enable\n";
-            out += "#define destFactor color\n";
+            Append("#extension GL_EXT_shader_framebuffer_fetch : enable\n");
+            Append("#define destFactor color\n");
         } else if (profile.has_gl_arm_framebuffer_fetch) {
-            out += "#extension GL_ARM_shader_framebuffer_fetch : enable\n";
-            out += "#define destFactor gl_LastFragColorARM\n";
+            Append("#extension GL_ARM_shader_framebuffer_fetch : enable\n");
+            Append("#define destFactor gl_LastFragColorARM\n");
         } else {
-            out += "#define destFactor texelFetch(tex_color, ivec2(gl_FragCoord.xy), 0)\n";
+            Append("#define destFactor texelFetch(tex_color, ivec2(gl_FragCoord.xy), 0)\n");
             use_blend_fallback = true;
         }
     }
 
     if (!profile.is_vulkan) {
-        out += fragment_shader_precision_OES;
+        Append(fragment_shader_precision_OES);
     }
 }
 
 void FragmentModule::DefineInterface() {
     const auto define_input = [&](std::string_view var, Semantic location) {
         if (profile.has_separable_shaders) {
-            out += fmt::format("layout (location = {}) ", location);
+            Append("layout (location = {}) ", location);
         }
-        out += fmt::format("in {};\n", var);
+        Append("in {};\n", var);
     };
 
     // Input attributes
@@ -1323,15 +1298,15 @@ void FragmentModule::DefineInterface() {
     define_input("vec3 view", Semantic::View);
 
     // Output attributes
-    out += "layout (location = 0) out vec4 color;\n\n";
+    Append("layout (location = 0) out vec4 color;\n\n");
 }
 
 void FragmentModule::DefineBindingsVK() {
     // Uniform and texture buffers
-    out += FSUniformBlockDef;
-    out += "layout(set = 0, binding = 3) uniform samplerBuffer texture_buffer_lut_lf;\n";
-    out += "layout(set = 0, binding = 4) uniform samplerBuffer texture_buffer_lut_rg;\n";
-    out += "layout(set = 0, binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;\n\n";
+    Append(FSUniformBlockDef);
+    Append("layout(set = 0, binding = 3) uniform samplerBuffer texture_buffer_lut_lf;\n");
+    Append("layout(set = 0, binding = 4) uniform samplerBuffer texture_buffer_lut_rg;\n");
+    Append("layout(set = 0, binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;\n\n");
 
     // Texture samplers
     const auto texture_type = config.texture.texture0_type.Value();
@@ -1349,58 +1324,57 @@ void FragmentModule::DefineBindingsVK() {
     for (u32 i = 0; i < 3; i++) {
         const auto sampler = i == 0 ? sampler_tex0 : "sampler2D";
         const auto num_descriptors = i == 0 && texture_type == TextureType::ShadowCube ? "[6]" : "";
-        out += fmt::format("layout(set = 1, binding = {0}) uniform {1} tex{0}{2};\n", i, sampler,
-                           num_descriptors);
+        Append("layout(set = 1, binding = {0}) uniform {1} tex{0}{2};\n", i, sampler,
+               num_descriptors);
     }
 
     // Utility textures
     if (config.framebuffer.shadow_rendering) {
-        out += "layout(set = 2, binding = 0, r32ui) uniform uimage2D shadow_buffer;\n\n";
+        Append("layout(set = 2, binding = 0, r32ui) uniform uimage2D shadow_buffer;\n\n");
     }
     if (config.user.use_custom_normal) {
-        out += "layout(set = 2, binding = 1) uniform sampler2D tex_normal;\n";
+        Append("layout(set = 2, binding = 1) uniform sampler2D tex_normal;\n");
     }
 }
 
 void FragmentModule::DefineBindingsGL() {
     // Uniform and texture buffers
-    out += FSUniformBlockDef;
-    out += "layout(binding = 3) uniform samplerBuffer texture_buffer_lut_lf;\n";
-    out += "layout(binding = 4) uniform samplerBuffer texture_buffer_lut_rg;\n";
-    out += "layout(binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;\n\n";
+    Append(FSUniformBlockDef);
+    Append("layout(binding = 3) uniform samplerBuffer texture_buffer_lut_lf;\n");
+    Append("layout(binding = 4) uniform samplerBuffer texture_buffer_lut_rg;\n");
+    Append("layout(binding = 5) uniform samplerBuffer texture_buffer_lut_rgba;\n\n");
 
     // Texture samplers
     const auto texture_type = config.texture.texture0_type.Value();
     for (u32 i = 0; i < 3; i++) {
         const auto sampler =
             i == 0 && texture_type == TextureType::TextureCube ? "samplerCube" : "sampler2D";
-        out += fmt::format("layout(binding = {0}) uniform {1} tex{0};\n", i, sampler);
+        Append("layout(binding = {0}) uniform {1} tex{0};\n", i, sampler);
     }
 
     // Utility textures
     if (config.user.use_custom_normal) {
-        out += "layout(binding = 6) uniform sampler2D tex_normal;\n";
+        Append("layout(binding = 6) uniform sampler2D tex_normal;\n");
     }
     if (use_blend_fallback) {
-        out += "layout(location = 7) uniform sampler2D tex_color;\n";
+        Append("layout(location = 7) uniform sampler2D tex_color;\n");
     }
 
     // Shadow textures
     if (texture_type == TextureType::Shadow2D || texture_type == TextureType::ShadowCube) {
         static constexpr std::array postfixes = {"px", "nx", "py", "ny", "pz", "nz"};
         for (u32 i = 0; i < postfixes.size(); i++) {
-            out += fmt::format(
-                "layout(binding = {}, r32ui) uniform readonly uimage2D shadow_texture_{};\n", i,
-                postfixes[i]);
+            Append("layout(binding = {}, r32ui) uniform readonly uimage2D shadow_texture_{};\n", i,
+                   postfixes[i]);
         }
     }
     if (config.framebuffer.shadow_rendering) {
-        out += "layout(binding = 6, r32ui) uniform uimage2D shadow_buffer;\n\n";
+        Append("layout(binding = 6, r32ui) uniform uimage2D shadow_buffer;\n\n");
     }
 }
 
 void FragmentModule::DefineHelpers() {
-    out += R"(
+    Append(R"(
 vec3 quaternion_rotate(vec4 q, vec3 v) {
     return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
 }
@@ -1429,7 +1403,7 @@ float getLod(vec2 coord) {
 uvec2 DecodeShadow(uint pixel) {
     return uvec2(pixel >> 8, pixel & 0xFFu);
 }
-)";
+)");
 }
 
 void FragmentModule::DefineLightingHelpers() {
@@ -1437,7 +1411,7 @@ void FragmentModule::DefineLightingHelpers() {
         return;
     }
 
-    out += R"(
+    Append(R"(
 float LookupLightingLUT(int lut_index, int index, float delta) {
     vec2 entry = texelFetch(texture_buffer_lut_lf, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
     return entry.r + entry.g * delta;
@@ -1455,20 +1429,20 @@ float LookupLightingLUTSigned(int lut_index, float pos) {
     if (index < 0) index += 256;
     return LookupLightingLUT(lut_index, index, delta);
 }
-)";
+)");
 
     if (use_fragment_shader_barycentric) {
-        out += R"(
+        Append(R"(
 bool AreQuaternionsOpposite(vec4 qa, vec4 qb) {
     return (dot(qa, qb) < 0.0);
 }
-)";
+)");
     }
 }
 
 void FragmentModule::DefineShadowHelpers() {
     if (config.framebuffer.shadow_rendering) {
-        out += R"(
+        Append(R"(
 uint EncodeShadow(uvec2 pixel) {
     return (pixel.x << 8) | pixel.y;
 }
@@ -1485,12 +1459,12 @@ uint UpdateShadow(uint pixel, uint d, uint s) {
     }
     return EncodeShadow(ref);
 }
-)";
+)");
     }
 
     if (config.texture.texture0_type == TexturingRegs::TextureConfig::Shadow2D ||
         config.texture.texture0_type == TexturingRegs::TextureConfig::ShadowCube) {
-        out += R"(
+        Append(R"(
 float CompareShadow(uint pixel, uint z) {
     uvec2 p = DecodeShadow(pixel);
     return mix(float(p.y) * (1.0 / 255.0), 0.0, p.x <= z);
@@ -1500,11 +1474,11 @@ float mix2(vec4 s, vec2 a) {
     vec2 t = mix(s.xy, s.zw, a.yy);
     return mix(t.x, t.y, a.x);
 }
-)";
+)");
 
         if (config.texture.texture0_type == TexturingRegs::TextureConfig::Shadow2D) {
             if (profile.is_vulkan) {
-                out += R"(
+                Append(R"(
 float SampleShadow2D(ivec2 uv, uint z) {
     if (any(bvec4(lessThan(uv, ivec2(0)), greaterThanEqual(uv, textureSize(tex0, 0)))))
         return 1.0;
@@ -1512,11 +1486,11 @@ float SampleShadow2D(ivec2 uv, uint z) {
 }
 
 vec4 shadowTexture(vec2 uv, float w) {
-)";
+)");
                 if (!config.texture.shadow_texture_orthographic) {
-                    out += "uv /= w;";
+                    Append("uv /= w;");
                 }
-                out += R"(
+                Append(R"(
     uint z = uint(max(0, int(min(abs(w), 1.0) * float(0xFFFFFF)) - shadow_texture_bias));
     vec2 coord = vec2(textureSize(tex0, 0)) * uv - vec2(0.5);
     vec2 coord_floor = floor(coord);
@@ -1529,10 +1503,10 @@ vec4 shadowTexture(vec2 uv, float w) {
         SampleShadow2D(i + ivec2(1, 1), z));
     return vec4(mix2(s, f));
 }
-)";
+)");
 
             } else {
-                out += R"(
+                Append(R"(
 float SampleShadow2D(ivec2 uv, uint z) {
     if (any(bvec4(lessThan(uv, ivec2(0)), greaterThanEqual(uv, imageSize(shadow_texture_px)))))
         return 1.0;
@@ -1540,11 +1514,11 @@ float SampleShadow2D(ivec2 uv, uint z) {
 }
 
 vec4 shadowTexture(vec2 uv, float w) {
-)";
+)");
                 if (!config.texture.shadow_texture_orthographic) {
-                    out += "uv /= w;";
+                    Append("uv /= w;");
                 }
-                out += R"(
+                Append(R"(
     uint z = uint(max(0, int(min(abs(w), 1.0) * float(0xFFFFFF)) - shadow_texture_bias));
     vec2 coord = vec2(imageSize(shadow_texture_px)) * uv - vec2(0.5);
     vec2 coord_floor = floor(coord);
@@ -1557,11 +1531,11 @@ vec4 shadowTexture(vec2 uv, float w) {
         SampleShadow2D(i + ivec2(1, 1), z));
     return vec4(mix2(s, f));
 }
-)";
+)");
             }
         } else if (config.texture.texture0_type == TexturingRegs::TextureConfig::ShadowCube) {
             if (profile.is_vulkan) {
-                out += R"(
+                Append(R"(
 uvec4 SampleShadowCube(int face, ivec2 i00, ivec2 i10, ivec2 i01, ivec2 i11) {
     return uvec4(
         texelFetch(tex0[face], i00, 0).r,
@@ -1624,9 +1598,9 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         CompareShadow(pixels.w, z));
     return vec4(mix2(s, f));
 }
-    )";
+    )");
             } else {
-                out += R"(
+                Append(R"(
 vec4 shadowTextureCube(vec2 uv, float w) {
     ivec2 size = imageSize(shadow_texture_px);
     vec3 c = vec3(uv, w);
@@ -1707,7 +1681,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         CompareShadow(pixels.w, z));
     return vec4(mix2(s, f));
 }
-    )";
+    )");
             }
         }
     }
@@ -1835,32 +1809,5 @@ void MaskOutFSConfigIfDisabled(Pica::Shader::FSConfig& config) {
     // Mask out lighting as before
     MaskOutLightingConfigIfDisabled(config);
 
-    // Mask out fog if disabled
-    if (config.texture.fog_mode != Pica::TexturingRegs::FogMode::Fog) {
-        config.texture.fog_flip.Assign(0);
-        // If there are other fog-related fields, set them to default/zero here
-    }
-
-    // Mask out alpha test if disabled
-    if (config.framebuffer.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Always) {
-        // Set alpha test–related fields to default
-        // (alphatest_ref is a uniform, but if there are config fields, set to default)
-    }
-
-    // Mask out blend if not enabled
-    if (!config.EmulateBlend()) {
-        config.framebuffer.rgb_blend.eq = Pica::FramebufferRegs::BlendEquation::Add;
-        config.framebuffer.rgb_blend.src_factor = Pica::FramebufferRegs::BlendFactor::One;
-        config.framebuffer.rgb_blend.dst_factor = Pica::FramebufferRegs::BlendFactor::Zero;
-        config.framebuffer.alpha_blend.eq = Pica::FramebufferRegs::BlendEquation::Add;
-        config.framebuffer.alpha_blend.src_factor = Pica::FramebufferRegs::BlendFactor::One;
-        config.framebuffer.alpha_blend.dst_factor = Pica::FramebufferRegs::BlendFactor::Zero;
-    }
-
-    // Mask out logic op if not enabled
-    if (config.framebuffer.logic_op != Pica::FramebufferRegs::LogicOp::Copy) {
-        config.framebuffer.logic_op.Assign(Pica::FramebufferRegs::LogicOp::Copy);
-    }
-}
-
+} // Mask out
 } // namespace Pica::Shader::Generator::GLSL
