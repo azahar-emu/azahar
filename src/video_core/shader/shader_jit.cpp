@@ -65,31 +65,6 @@ void JitEngine::ThreadWorker() {
     }
 }
 
-void JitEngine::EnqueueCompilation(u64 cache_key, ShaderSetup setup_copy) {
-    // WARNING: Copying ShaderSetup across threads may be unsafe if it contains raw pointers or
-    // non-trivial resources. Consider refactoring to only copy the necessary data for compilation.
-    auto promise = std::make_shared<std::promise<std::unique_ptr<JitShader>>>();
-    {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        compile_queue.emplace([this, cache_key, setup_copy, promise]() mutable {
-            auto shader = std::make_unique<JitShader>();
-            shader->Compile(&setup_copy.program_code, &setup_copy.swizzle_data);
-            {
-                std::lock_guard<std::mutex> lock2(cache_mutex);
-                if (cache.size() >= MAX_CACHE_SIZE) {
-                    EvictLRU();
-                }
-                promise->set_value(std::move(shader));
-                cache[cache_key] = promise->get_future().share();
-                lru_list.push_front(cache_key);
-            }
-        });
-        // Store the future in the cache immediately so SetupBatch can wait on it
-        cache[cache_key] = promise->get_future().share();
-    }
-    queue_cv.notify_one();
-}
-
 void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.entry_point = entry_point;

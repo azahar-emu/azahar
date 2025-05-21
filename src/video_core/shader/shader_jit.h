@@ -47,7 +47,6 @@ private:
     void EvictLRU();
     void UpdateLRU(u64 key);
     void ThreadWorker();
-    void EnqueueCompilation(u64 cache_key, ShaderSetup setup_copy);
     void StartThreadPool(size_t num_threads);
     void StopThreadPool();
 };
