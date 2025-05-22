@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -255,7 +255,7 @@ struct PipelineRegs {
         BitField<0, 8, GSMode> mode;
         BitField<8, 4, u32> fixed_vertex_num_minus_1;
         BitField<12, 4, u32> stride_minus_1;
-        BitField<16, 4, u32> start_index;
+        BitField<16, 8, u32> start_index;
     } gs_config;
 
     INSERT_PADDING_WORDS(0x1);
