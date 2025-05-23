@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -80,6 +80,7 @@ public:
     SwizzleData swizzle_data{};
     u32 entry_point{};
     const void* cached_shader{};
+    bool uniforms_dirty = true;
 
 private:
     bool program_code_hash_dirty{true};

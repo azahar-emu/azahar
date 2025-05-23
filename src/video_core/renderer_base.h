@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -59,9 +59,6 @@ public:
 
     /// Cleans up after video dumping is ended
     virtual void CleanupVideoDumping() {}
-
-    /// Synchronizes fixed function renderer state
-    virtual void Sync() {}
 
     /// This is called to notify the rendering backend of a surface change
     virtual void NotifySurfaceChanged() {}
