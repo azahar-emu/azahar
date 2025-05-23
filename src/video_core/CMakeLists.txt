@@ -20,6 +20,7 @@ add_library(video_core STATIC
     rasterizer_interface.h
     renderer_base.cpp
     renderer_base.h
+    pica/dirty_regs.h
     pica/geometry_pipeline.cpp
     pica/geometry_pipeline.h
     pica/pica_core.cpp

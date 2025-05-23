@@ -61,40 +61,9 @@ public:
                            u32 pixel_stride, ScreenInfo& screen_info);
     bool AccelerateDrawBatch(bool is_indexed) override;
 
-    void SyncFixedState() override;
-
 private:
-    void NotifyFixedFunctionPicaRegisterChanged(u32 id) override;
-
-    /// Syncs the cull mode to match the PICA register
-    void SyncCullMode();
-
-    /// Syncs the blend enabled status to match the PICA register
-    void SyncBlendEnabled();
-
-    /// Syncs the blend functions to match the PICA register
-    void SyncBlendFuncs();
-
-    /// Syncs the blend color to match the PICA register
-    void SyncBlendColor();
-
-    /// Syncs the logic op states to match the PICA register
-    void SyncLogicOp();
-
-    /// Syncs the color write mask to match the PICA register state
-    void SyncColorWriteMask();
-
-    /// Syncs the stencil write mask to match the PICA register state
-    void SyncStencilWriteMask();
-
-    /// Syncs the depth write mask to match the PICA register state
-    void SyncDepthWriteMask();
-
-    /// Syncs the stencil test states to match the PICA register
-    void SyncStencilTest();
-
-    /// Syncs the depth test states to match the PICA register
-    void SyncDepthTest();
+    /// Syncs pipeline state from PICA registers
+    void SyncDrawState();
 
     /// Syncs and uploads the lighting, fog and proctex LUTs
     void SyncAndUploadLUTs();

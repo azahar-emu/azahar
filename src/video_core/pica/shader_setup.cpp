@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,13 +18,15 @@ ShaderSetup::~ShaderSetup() = default;
 void ShaderSetup::WriteUniformBoolReg(u32 value) {
     const auto bits = BitSet32(value);
     for (u32 i = 0; i < uniforms.b.size(); ++i) {
-        uniforms.b[i] = bits[i];
+        const bool prev = std::exchange(uniforms.b[i], bits[i]);
+        uniforms_dirty |= prev != bits[i];
     }
 }
 
 void ShaderSetup::WriteUniformIntReg(u32 index, const Common::Vec4<u8> values) {
     ASSERT(index < uniforms.i.size());
-    uniforms.i[index] = values;
+    const auto prev = std::exchange(uniforms.i[index], values);
+    uniforms_dirty |= prev != values;
 }
 
 std::optional<u32> ShaderSetup::WriteUniformFloatReg(ShaderRegs& config, u32 value) {
@@ -41,7 +43,8 @@ std::optional<u32> ShaderSetup::WriteUniformFloatReg(ShaderRegs& config, u32 val
     }
 
     const u32 index = uniform_setup.index.Value();
-    uniforms.f[index] = uniform;
+    const auto prev = std::exchange(uniforms.f[index], uniform);
+    uniforms_dirty |= prev != uniform;
     uniform_setup.index.Assign(index + 1);
     return index;
 }

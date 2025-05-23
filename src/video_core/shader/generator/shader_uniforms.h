@@ -8,7 +8,6 @@
 #include "video_core/pica/regs_lighting.h"
 
 namespace Pica {
-struct ShaderRegs;
 struct ShaderSetup;
 } // namespace Pica
 
@@ -69,22 +68,6 @@ static_assert(sizeof(FSUniformData) == 0x530,
 static_assert(sizeof(FSUniformData) < 16384,
               "UniformData structure must be less than 16kb as per the OpenGL spec");
 
-/**
- * Uniform struct for the Uniform Buffer Object that contains PICA vertex/geometry shader uniforms.
- * NOTE: the same rule from UniformData also applies here.
- */
-struct PicaUniformsData {
-    void SetFromRegs(const ShaderRegs& regs, const ShaderSetup& setup);
-
-    struct BoolAligned {
-        alignas(16) int b;
-    };
-
-    std::array<BoolAligned, 16> bools;
-    alignas(16) std::array<Common::Vec4u, 4> i;
-    alignas(16) std::array<Common::Vec4f, 96> f;
-};
-
 struct VSUniformData {
     u32 enable_clip1;
     u32 flip_viewport;
@@ -95,10 +78,18 @@ static_assert(sizeof(VSUniformData) == 32,
 static_assert(sizeof(VSUniformData) < 16384,
               "VSUniformData structure must be less than 16kb as per the OpenGL spec");
 
+/**
+ * Uniform struct for the Uniform Buffer Object that contains PICA vertex/geometry shader uniforms.
+ * NOTE: the same rule from UniformData also applies here.
+ */
 struct VSPicaUniformData {
-    alignas(16) PicaUniformsData uniforms;
+    void SetFromRegs(const ShaderSetup& setup);
+
+    u32 b;
+    alignas(16) std::array<Common::Vec4u, 4> i;
+    alignas(16) std::array<Common::Vec4f, 96> f;
 };
-static_assert(sizeof(VSPicaUniformData) == 1856,
+static_assert(sizeof(VSPicaUniformData) == 1616,
               "The size of the VSPicaUniformData does not match the structure in the shader");
 static_assert(sizeof(VSPicaUniformData) < 16384,
               "VSPicaUniformData structure must be less than 16kb as per the OpenGL spec");

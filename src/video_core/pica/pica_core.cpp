@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -149,7 +149,6 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
     // Track events.
     if (debug_context) {
         debug_context->OnEvent(DebugContext::Event::PicaCommandLoaded, &id);
-        SCOPE_EXIT({ debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, &id); });
     }
 
     switch (id) {
@@ -363,7 +362,8 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
         auto& lut_config = regs.internal.lighting.lut_config;
         ASSERT_MSG(lut_config.index < 256, "lut_config.index exceeded maximum value of 255!");
 
-        lighting.luts[lut_config.type][lut_config.index].raw = value;
+        const u32 prev = std::exchange(lighting.luts[lut_config.type][lut_config.index].raw, value);
+        lighting.lut_dirty |= (prev != value) << lut_config.type;
         lut_config.index.Assign(lut_config.index + 1);
         break;
     }
@@ -376,7 +376,9 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX(texturing.fog_lut_data[5]):
     case PICA_REG_INDEX(texturing.fog_lut_data[6]):
     case PICA_REG_INDEX(texturing.fog_lut_data[7]): {
-        fog.lut[regs.internal.texturing.fog_lut_offset % 128].raw = value;
+        const u32 prev =
+            std::exchange(fog.lut[regs.internal.texturing.fog_lut_offset % 128].raw, value);
+        fog.lut_dirty |= prev != value;
         regs.internal.texturing.fog_lut_offset.Assign(regs.internal.texturing.fog_lut_offset + 1);
         break;
     }
@@ -390,22 +392,28 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX(texturing.proctex_lut_data[6]):
     case PICA_REG_INDEX(texturing.proctex_lut_data[7]): {
         auto& index = regs.internal.texturing.proctex_lut_config.index;
+        const auto lut_table = regs.internal.texturing.proctex_lut_config.ref_table.Value();
 
-        switch (regs.internal.texturing.proctex_lut_config.ref_table.Value()) {
+        const auto sync_lut = [&](auto& proctex_table) {
+            const u32 prev = std::exchange(proctex_table[index % proctex_table.size()].raw, value);
+            proctex.table_dirty |= (prev != value) << u32(lut_table);
+        };
+
+        switch (lut_table) {
         case TexturingRegs::ProcTexLutTable::Noise:
-            proctex.noise_table[index % proctex.noise_table.size()].raw = value;
+            sync_lut(proctex.noise_table);
             break;
         case TexturingRegs::ProcTexLutTable::ColorMap:
-            proctex.color_map_table[index % proctex.color_map_table.size()].raw = value;
+            sync_lut(proctex.color_map_table);
             break;
         case TexturingRegs::ProcTexLutTable::AlphaMap:
-            proctex.alpha_map_table[index % proctex.alpha_map_table.size()].raw = value;
+            sync_lut(proctex.alpha_map_table);
             break;
         case TexturingRegs::ProcTexLutTable::Color:
-            proctex.color_table[index % proctex.color_table.size()].raw = value;
+            sync_lut(proctex.color_table);
             break;
         case TexturingRegs::ProcTexLutTable::ColorDiff:
-            proctex.color_diff_table[index % proctex.color_diff_table.size()].raw = value;
+            sync_lut(proctex.color_diff_table);
             break;
         }
         index.Assign(index + 1);
@@ -415,8 +423,11 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    // Notify the rasterizer an internal register was updated.
-    rasterizer->NotifyPicaRegisterChanged(id);
+    dirty_regs.Set(id);
+
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, &id);
+    }
 }
 
 void PicaCore::SubmitImmediate(u32 value) {
@@ -460,8 +471,6 @@ void PicaCore::DrawImmediate() {
     if (debug_context) {
         debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                std::addressof(immediate.input_vertex));
-        SCOPE_EXIT(
-            { debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
     }
 
     ShaderUnit shader_unit;
@@ -486,6 +495,10 @@ void PicaCore::DrawImmediate() {
     // Flush the immediate triangle.
     rasterizer->DrawTriangles();
     immediate.current_attribute = 0;
+
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+    }
 }
 
 void PicaCore::DrawArrays(bool is_indexed) {
@@ -494,8 +507,6 @@ void PicaCore::DrawArrays(bool is_indexed) {
     // Track vertex in the debug recorder.
     if (debug_context) {
         debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
-        SCOPE_EXIT(
-            { debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr); });
     }
 
     const bool accelerate_draw = [this] {
@@ -530,6 +541,10 @@ void PicaCore::DrawArrays(bool is_indexed) {
 
     // Draw emitted triangles.
     rasterizer->DrawTriangles();
+
+    if (debug_context) {
+        debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+    }
 }
 
 void PicaCore::LoadVertices(bool is_indexed) {

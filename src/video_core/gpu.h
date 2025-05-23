@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -74,9 +74,6 @@ public:
 
     /// Writes the provided value to the GPU virtual address.
     void WriteReg(VAddr addr, u32 data);
-
-    /// Synchronizes fixed function renderer state with PICA registers.
-    void Sync();
 
     /// Returns a mutable reference to the renderer.
     [[nodiscard]] VideoCore::RendererBase& Renderer();

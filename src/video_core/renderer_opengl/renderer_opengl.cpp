@@ -901,8 +901,4 @@ void RendererOpenGL::CleanupVideoDumping() {
     mailbox->free_cv.notify_one();
 }
 
-void RendererOpenGL::Sync() {
-    rasterizer.SyncEntireState();
-}
-
 } // namespace OpenGL

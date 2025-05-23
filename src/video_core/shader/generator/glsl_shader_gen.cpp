@@ -15,19 +15,15 @@ using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
 namespace Pica::Shader::Generator::GLSL {
 
 constexpr std::string_view VSPicaUniformBlockDef = R"(
-struct pica_uniforms {
-    bool b[16];
-    uvec4 i[4];
-    vec4 f[96];
-};
-
 #ifdef VULKAN
 layout (set = 0, binding = 0, std140) uniform vs_pica_data {
 #else
 layout (binding = 0, std140) uniform vs_pica_data {
 #endif
-    pica_uniforms uniforms;
-};
+    uint b;
+    uvec4 i[4];
+    vec4 f[96];
+} uniforms;
 )";
 
 constexpr std::string_view VSUniformBlockDef = R"(
