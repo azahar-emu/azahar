@@ -547,10 +547,15 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
-    fs_data.scissor_x1 = scissor_x1;
-    fs_data.scissor_x2 = scissor_x2;
-    fs_data.scissor_y1 = scissor_y1;
-    fs_data.scissor_y2 = scissor_y2;
+    if (fs_data.scissor_x1 != scissor_x1 || fs_data.scissor_x2 != scissor_x2 ||
+        fs_data.scissor_y1 != scissor_y1 || fs_data.scissor_y2 != scissor_y2) {
+
+        fs_data.scissor_x1 = scissor_x1;
+        fs_data.scissor_x2 = scissor_x2;
+        fs_data.scissor_y1 = scissor_y1;
+        fs_data.scissor_y2 = scissor_y2;
+        fs_data_dirty = true;
+    }
 
     // Sync and bind the texture surfaces
     SyncTextureUnits(framebuffer);
@@ -957,8 +962,9 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
     }
 
     if (sync_vs_pica || invalidate) {
-        auto* vs_uniforms = reinterpret_cast<VSPicaUniformData*>(uniforms + used_bytes);
-        vs_uniforms->SetFromRegs(pica.vs_setup);
+        VSPicaUniformData vs_uniforms;
+        vs_uniforms.SetFromRegs(pica.vs_setup);
+        std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
         pipeline_cache.UpdateRange(0, offset + used_bytes);
         pica.vs_setup.uniforms_dirty = false;
         used_bytes += uniform_size_aligned_vs_pica;

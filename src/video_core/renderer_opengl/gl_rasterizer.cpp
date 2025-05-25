@@ -592,10 +592,15 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
-    fs_data.scissor_x1 = scissor_x1;
-    fs_data.scissor_x2 = scissor_x2;
-    fs_data.scissor_y1 = scissor_y1;
-    fs_data.scissor_y2 = scissor_y2;
+    if (fs_data.scissor_x1 != scissor_x1 || fs_data.scissor_x2 != scissor_x2 ||
+        fs_data.scissor_y1 != scissor_y1 || fs_data.scissor_y2 != scissor_y2) {
+
+        fs_data.scissor_x1 = scissor_x1;
+        fs_data.scissor_x2 = scissor_x2;
+        fs_data.scissor_y1 = scissor_y1;
+        fs_data.scissor_y2 = scissor_y2;
+        fs_data_dirty = true;
+    }
 
     // Sync and bind the texture surfaces
     SyncTextureUnits(framebuffer);
@@ -1019,9 +1024,10 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
         used_bytes += uniform_size_aligned_fs;
     }
 
-    if (sync_vs_pica) {
-        auto* vs_uniforms = reinterpret_cast<VSPicaUniformData*>(uniforms + used_bytes);
-        vs_uniforms->SetFromRegs(pica.vs_setup);
+    if (sync_vs_pica || invalidate) {
+        VSPicaUniformData vs_uniforms;
+        vs_uniforms.SetFromRegs(pica.vs_setup);
+        std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::VSPicaData,
                           uniform_buffer.GetHandle(), offset + used_bytes, sizeof(vs_uniforms));
         pica.vs_setup.uniforms_dirty = false;
