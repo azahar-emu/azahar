@@ -18,7 +18,7 @@
     <normaloff>dist/azahar.png</normaloff>dist/azahar.png</iconset>
   </property>
   <property name="tabShape">
-   <enum>QTabWidget::Rounded</enum>
+   <enum>QTabWidget::TabShape::Rounded</enum>
   </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
@@ -136,20 +136,10 @@
      <property name="title">
       <string>Screen Layout</string>
      </property>
-     <addaction name="action_Screen_Layout_Default"/>
-     <addaction name="action_Screen_Layout_Single_Screen"/>
-     <addaction name="action_Screen_Layout_Large_Screen"/>
-     <addaction name="action_Screen_Layout_Side_by_Side"/>
-     <addaction name="action_Screen_Layout_Separate_Windows"/>
-     <addaction name="action_Screen_Layout_Hybrid_Screen"/>
-     <addaction name="action_Screen_Layout_Custom_Layout"/>
-     <addaction name="separator"/>
-     <addaction name="action_Screen_Layout_Upright_Screens"/>
-     <addaction name="action_Screen_Layout_Swap_Screens"/>
      <widget class="QMenu" name="menu_Small_Screen_Position">
       <property name="enabled">
-     <bool>true</bool>
-    </property>
+       <bool>true</bool>
+      </property>
       <property name="title">
        <string>Small Screen Position</string>
       </property>
@@ -162,6 +152,16 @@
       <addaction name="action_Small_Screen_Above"/>
       <addaction name="action_Small_Screen_Below"/>
      </widget>
+     <addaction name="action_Screen_Layout_Default"/>
+     <addaction name="action_Screen_Layout_Single_Screen"/>
+     <addaction name="action_Screen_Layout_Large_Screen"/>
+     <addaction name="action_Screen_Layout_Side_by_Side"/>
+     <addaction name="action_Screen_Layout_Separate_Windows"/>
+     <addaction name="action_Screen_Layout_Hybrid_Screen"/>
+     <addaction name="action_Screen_Layout_Custom_Layout"/>
+     <addaction name="separator"/>
+     <addaction name="action_Screen_Layout_Upright_Screens"/>
+     <addaction name="action_Screen_Layout_Swap_Screens"/>
      <addaction name="menu_Small_Screen_Position"/>
     </widget>
     <addaction name="action_Fullscreen"/>
@@ -238,14 +238,14 @@
    </property>
   </action>
   <action name="action_Connect_Artic">
-    <property name="text">
-      <string>Connect to Artic Base...</string>
-    </property>
+   <property name="text">
+    <string>Connect to Artic Base...</string>
+   </property>
   </action>
   <action name="action_Setup_System_Files">
-    <property name="text">
-      <string>Set Up System Files...</string>
-    </property>
+   <property name="text">
+    <string>Set Up System Files...</string>
+   </property>
   </action>
   <action name="action_Boot_Home_Menu_JPN">
    <property name="text">
@@ -329,7 +329,7 @@
     <string>About Azahar</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::AboutRole</enum>
+    <enum>QAction::MenuRole::AboutRole</enum>
    </property>
   </action>
   <action name="action_Single_Window_Mode">
@@ -365,7 +365,7 @@
     <string>Configure...</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::PreferencesRole</enum>
+    <enum>QAction::MenuRole::PreferencesRole</enum>
    </property>
   </action>
   <action name="action_Display_Dock_Widget_Headers">
@@ -408,11 +408,11 @@
    </property>
   </action>
   <action name="action_Close_Movie">
-   <property name="text">
-    <string>Close</string>
-   </property>
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Close</string>
    </property>
   </action>
   <action name="action_Save_Movie">
@@ -689,7 +689,7 @@
     <string>Configure Current Application...</string>
    </property>
    <property name="menuRole">
-    <enum>QAction::NoRole</enum>
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

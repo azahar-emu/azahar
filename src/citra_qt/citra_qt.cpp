@@ -793,6 +793,10 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Show_Room, QStringLiteral("Multiplayer Show Current Room"));
     link_action_shortcut(ui->action_Leave_Room, QStringLiteral("Multiplayer Leave Room"));
 
+    link_action_shortcut(ui->action_Configure, QStringLiteral("Configure"));
+    link_action_shortcut(ui->action_Configure_Current_Game,
+                         QStringLiteral("Configure Current Application"));
+
     // QShortcut Hotkeys
     const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
         const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
