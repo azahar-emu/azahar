@@ -232,6 +232,7 @@ class SetupFragment : Fragment() {
                     }
                 }
             )
+
             add(
                 SetupPage(
                     R.drawable.ic_folder,
@@ -292,10 +293,9 @@ class SetupFragment : Fragment() {
 
                     },
                 ) {
-                    if (PermissionsHandler.hasWriteAccess(requireContext()) && preferences.getString(
-                            GameHelper.KEY_GAME_PATH,
-                            ""
-                        )!!.isNotEmpty()
+                    if (
+                        PermissionsHandler.hasWriteAccess(requireContext()) &&
+                        preferences.getString(GameHelper.KEY_GAME_PATH, "")!!.isNotEmpty()
                     ) {
                         PageState.PAGE_STEPS_COMPLETE
 
@@ -304,6 +304,7 @@ class SetupFragment : Fragment() {
                     }
                 }
             )
+
             add(
                 SetupPage(
                     R.drawable.ic_check,
@@ -324,7 +325,6 @@ class SetupFragment : Fragment() {
                                 buttonState = {
                                     ButtonState.BUTTON_ACTION_UNDEFINED
                                 }
-
                             )
                         )
                     }
@@ -364,7 +364,7 @@ class SetupFragment : Fragment() {
             val index = binding.viewPager2.currentItem
             val currentPage = pages[index]
 
-            // This allows multiple sets of warning messages to be displayed om the same dialog if necessary
+            // This allows multiple sets of warning messages to be displayed on the same dialog if necessary
             val warningMessages =
                 mutableListOf<Triple<Int, Int, Int>>() // title, description, helpLink
 
