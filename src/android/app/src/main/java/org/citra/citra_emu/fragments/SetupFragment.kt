@@ -425,25 +425,6 @@ class SetupFragment : Fragment() {
         }
 
         setInsets()
-
-        binding.buttonBack.setOnClickListener { pageBackward() }
-
-        if (savedInstanceState != null) {
-            val nextIsVisible = savedInstanceState.getBoolean(KEY_NEXT_VISIBILITY)
-            val backIsVisible = savedInstanceState.getBoolean(KEY_BACK_VISIBILITY)
-            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED)!!
-
-            if (nextIsVisible) {
-                binding.buttonNext.visibility = View.VISIBLE
-            }
-            if (backIsVisible) {
-                binding.buttonBack.visibility = View.VISIBLE
-            }
-        } else {
-            hasBeenWarned = BooleanArray(pages.size)
-        }
-
-        setInsets()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
