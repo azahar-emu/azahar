@@ -235,8 +235,8 @@ class SetupFragment : Fragment() {
             add(
                 SetupPage(
                     R.drawable.ic_folder,
-                    R.string.select_emulalator_data_folder,
-                    R.string.select_emulalator_data_folder_description,
+                    R.string.select_emulator_data_folder,
+                    R.string.select_emulator_data_folder_description,
                     0,
                     true,
                     R.string.select,
