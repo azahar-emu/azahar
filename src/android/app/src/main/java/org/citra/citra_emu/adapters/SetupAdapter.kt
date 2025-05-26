@@ -15,12 +15,12 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import org.citra.citra_emu.databinding.PageSetupBinding
+import org.citra.citra_emu.model.ButtonState
 import org.citra.citra_emu.model.PageState
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
-import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.R
-import org.citra.citra_emu.model.ButtonState
+import org.citra.citra_emu.utils.ViewUtils
 
 class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) :
     RecyclerView.Adapter<SetupAdapter.SetupPageViewHolder>() {
@@ -49,12 +49,12 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
                 onStepCompleted(0, pageFullyCompleted = true)
             }
 
-            if (page.pageButton != null && page.pageSteps.invoke() != PageState.PAGE_STEPS_COMPLETE) {
-                for (pageButton in page.pageButton) {
+            if (page.pageButtons != null && page.pageSteps.invoke() != PageState.PAGE_STEPS_COMPLETE) {
+                for (pageButton in page.pageButtons) {
                     val pageButtonView = LayoutInflater.from(activity)
                         .inflate(
                             R.layout.page_button,
-                            binding.pegeButtonContainer,
+                            binding.pageButtonContainer,
                             false
                         ) as MaterialButton
 
@@ -72,7 +72,7 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
                         pageButton.buttonAction.invoke(this@SetupPageViewHolder)
                     }
 
-                    binding.pegeButtonContainer.addView(pageButtonView)
+                    binding.pageButtonContainer.addView(pageButtonView)
 
                     // Disable buton add if its already completed
                     if (pageButton.buttonState.invoke() == ButtonState.BUTTON_ACTION_COMPLETE) {
@@ -94,23 +94,23 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
             binding.textDescription.movementMethod = LinkMovementMethod.getInstance()
         }
 
-    override fun onStepCompleted(pageButtonId: Int, pageFullyCompleted: Boolean) {
-        val button = binding.pegeButtonContainer.findViewById<MaterialButton>(pageButtonId)
+        override fun onStepCompleted(pageButtonId: Int, pageFullyCompleted: Boolean) {
+            val button = binding.pageButtonContainer.findViewById<MaterialButton>(pageButtonId)
 
-        if (pageFullyCompleted) {
-            ViewUtils.hideView(binding.pegeButtonContainer, 200)
-            ViewUtils.showView(binding.textConfirmation, 200)
-        }
+            if (pageFullyCompleted) {
+                ViewUtils.hideView(binding.pageButtonContainer, 200)
+                ViewUtils.showView(binding.textConfirmation, 200)
+            }
 
-        if (button != null) {
-            button.isEnabled = false
-            button.animate()
-                .alpha(0.38f)
-                .setDuration(200)
-                .start()
-            button.setTextColor(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
-            button.iconTint =
-                ColorStateList.valueOf(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+            if (button != null) {
+                button.isEnabled = false
+                button.animate()
+                    .alpha(0.38f)
+                    .setDuration(200)
+                    .start()
+                button.setTextColor(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+                button.iconTint =
+                    ColorStateList.valueOf(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
             }
         }
     }

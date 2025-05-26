@@ -39,7 +39,7 @@ class SetupWarningDialogFragment : DialogFragment() {
             }
             .setNegativeButton(R.string.warning_cancel, null)
 
-        // Message builder  to build multiple strings into one
+        // Message builder to build multiple strings into one
         val messageBuilder = StringBuilder()
         for (i in titleIds.indices) {
             if (titleIds[i] != 0) {

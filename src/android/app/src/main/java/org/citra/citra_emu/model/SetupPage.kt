@@ -11,9 +11,9 @@ data class SetupPage(
     val buttonIconId: Int,
     val leftAlignedIcon: Boolean,
     val buttonTextId: Int,
-    val pageButton: List<PageButton>? = null,
+    val pageButtons: List<PageButton>? = null,
     val pageSteps: () -> PageState = { PageState.PAGE_STEPS_UNDEFINED },
-    )
+)
 
 data class PageButton(
     val iconId: Int,

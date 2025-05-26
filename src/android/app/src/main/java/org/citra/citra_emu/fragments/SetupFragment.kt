@@ -115,7 +115,7 @@ class SetupFragment : Fragment() {
                     0,
                     true,
                     R.string.get_started,
-                    pageButton = mutableListOf<PageButton>().apply {
+                    pageButtons = mutableListOf<PageButton>().apply {
                         add(
                             PageButton(
                                 R.drawable.ic_arrow_forward,
@@ -141,7 +141,7 @@ class SetupFragment : Fragment() {
                     0,
                     false,
                     0,
-                    pageButton = mutableListOf<PageButton>().apply {
+                    pageButtons = mutableListOf<PageButton>().apply {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             add(
                                 PageButton(
@@ -240,7 +240,7 @@ class SetupFragment : Fragment() {
                     0,
                     true,
                     R.string.select,
-                    pageButton = mutableListOf<PageButton>().apply {
+                    pageButtons = mutableListOf<PageButton>().apply {
                         add(
                             PageButton(
                                 R.drawable.ic_home,
@@ -312,7 +312,7 @@ class SetupFragment : Fragment() {
                     R.drawable.ic_arrow_forward,
                     false,
                     R.string.text_continue,
-                    pageButton = mutableListOf<PageButton>().apply {
+                    pageButtons = mutableListOf<PageButton>().apply {
                         add(
                             PageButton(
                                 R.drawable.ic_arrow_forward,
@@ -368,7 +368,7 @@ class SetupFragment : Fragment() {
             val warningMessages =
                 mutableListOf<Triple<Int, Int, Int>>() // title, description, helpLink
 
-            currentPage.pageButton?.forEach { button ->
+            currentPage.pageButtons?.forEach { button ->
                 if (button.hasWarning || button.isUnskippable) {
                     val buttonState = button.buttonState()
                     if (buttonState == ButtonState.BUTTON_ACTION_COMPLETE) {
@@ -461,7 +461,7 @@ class SetupFragment : Fragment() {
     private lateinit var pageButtonCallback: SetupCallback
     private val checkForButtonState: () -> Unit = {
         val page = pages[binding.viewPager2.currentItem]
-        page.pageButton?.forEach {
+        page.pageButtons?.forEach {
             if (it.buttonState() == ButtonState.BUTTON_ACTION_COMPLETE) {
                 pageButtonCallback.onStepCompleted(it.titleId, pageFullyCompleted = false)
             }
