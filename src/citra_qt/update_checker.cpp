@@ -50,20 +50,41 @@ std::optional<std::string> GetResponse(std::string url, std::string path) {
 
 std::optional<std::string> UpdateChecker::GetLatestRelease(bool include_prereleases) {
     constexpr auto update_check_url = "http://api.github.com";
-    std::string update_check_path = "/repos/azahar-emu/azahar/releases";
+    std::string update_check_path = "/repos/azahar-emu/azahar";
     try {
-        if (include_prereleases) {
-            // This can return either a prerelease or a normal release, whichever is more recent
+        if (include_prereleases) { // This can return either a prerelease or a stable release,
+                                   // whichever is more recent.
+            const auto update_check_tags_path = update_check_path + "/tags";
+            const auto update_check_releases_path = update_check_path + "/releases";
+
+            const auto tags_response = GetResponse(update_check_url, update_check_tags_path);
+            const auto releases_response =
+                GetResponse(update_check_url, update_check_releases_path);
+
+            if (!tags_response || !releases_response)
+                return {};
+
+            const std::string latest_tag =
+                nlohmann::json::parse(tags_response.value()).at(0).at("name");
+            const bool latest_tag_has_release =
+                releases_response.value().find(std::format("\"{}\"", latest_tag)) !=
+                std::string::npos;
+
+            // If there is a newer tag, but that tag has no associated release, don't prompt the
+            // user to update.
+            if (!latest_tag_has_release)
+                return {};
+
+            return latest_tag;
+        } else { // This is a stable release, only check for other stable releases.
+            update_check_path += "/releases/latest";
             const auto response = GetResponse(update_check_url, update_check_path);
+
             if (!response)
                 return {};
-            return nlohmann::json::parse(response.value()).at(0).at("tag_name");
-        } else {
-            update_check_path += "/latest";
-            const auto response = GetResponse(update_check_url, update_check_path);
-            if (!response)
-                return {};
-            return nlohmann::json::parse(response.value()).at("tag_name");
+
+            const std::string latest_tag = nlohmann::json::parse(response.value()).at("tag_name");
+            return latest_tag;
         }
 
     } catch (nlohmann::detail::out_of_range&) {
