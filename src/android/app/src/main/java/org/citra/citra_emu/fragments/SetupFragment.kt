@@ -290,7 +290,6 @@ class SetupFragment : Fragment() {
                                 R.string.add_games_warning_description,
                             )
                         )
-
                     },
                 ) {
                     if (
@@ -502,7 +501,6 @@ class SetupFragment : Fragment() {
             homeViewModel.setGamesDir(requireActivity(), result.path!!)
 
             checkForButtonState.invoke()
-
         }
 
     private fun finishSetup() {
