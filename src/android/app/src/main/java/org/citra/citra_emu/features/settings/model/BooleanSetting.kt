@@ -27,7 +27,25 @@ enum class BooleanSetting(
     OVERLAY_BACKGROUND("overlay_background", Settings.SECTION_LAYOUT, false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),
     DETERMINISTIC_ASYNC_OPERATIONS("deterministic_async_operations", Settings.SECTION_DEBUG, false),
-    REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false);
+    REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false),
+    LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, false),
+    NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, true),
+    LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, true),
+    SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, false),
+    DISK_SHADER_CACHE("use_disk_shader_cache", Settings.SECTION_RENDERER, true),
+    DUMP_TEXTURES("dump_textures", Settings.SECTION_UTILITY, false),
+    CUSTOM_TEXTURES("custom_textures", Settings.SECTION_UTILITY, false),
+    ASYNC_CUSTOM_LOADING("async_custom_loading", Settings.SECTION_UTILITY, true),
+    PRELOAD_TEXTURES("preload_textures", Settings.SECTION_UTILITY, false),
+    ENABLE_AUDIO_STRETCHING("enable_audio_stretching", Settings.SECTION_AUDIO, true),
+    ENABLE_REALTIME_AUDIO("enable_realtime_audio", Settings.SECTION_AUDIO, false),
+    CPU_JIT("use_cpu_jit", Settings.SECTION_CORE, true),
+    HW_SHADER("use_hw_shader", Settings.SECTION_RENDERER, true),
+    VSYNC("use_vsync_new", Settings.SECTION_RENDERER, true),
+    USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, true),
+    DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
+    DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
+    USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false);
 
     override var boolean: Boolean = defaultValue
 
@@ -52,6 +70,14 @@ enum class BooleanSetting(
             DELAY_START_LLE_MODULES,
             DETERMINISTIC_ASYNC_OPERATIONS,
             REQUIRED_ONLINE_LLE_MODULES,
+            NEW_3DS,
+            LLE_APPLETS,
+            VSYNC,
+            DEBUG_RENDERER,
+            CPU_JIT,
+            ASYNC_CUSTOM_LOADING,
+            SHADERS_ACCURATE_MUL,
+            USE_ARTIC_BASE_CONTROLLER
         )
 
         fun from(key: String): BooleanSetting? =
