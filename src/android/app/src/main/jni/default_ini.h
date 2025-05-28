@@ -113,6 +113,10 @@ async_shader_compilation =
 # 0: GLSL, 1: SPIR-V (default)
 spirv_shader_gen =
 
+# Whether to disable the SPIRV optimizer. Disabling it reduces stutter, but may slightly worsen performance
+# 0: Enabled, 1: Disabled (default)
+disable_spirv_optimization =
+
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware
 use_hw_shader =

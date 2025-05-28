@@ -870,5 +870,7 @@
     <string name="emulation_quickload">Quickload</string>
     <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
     <string name="quickload_not_found">No Quicksave available.</string>
+    <string name="disable_spirv_optimizer">Disable SPIR-V Optimizer</string>
+    <string name="disable_spirv_optimizer_description">Disables the SPIR-V optimization pass, reducing stuttering considerably while barely affecting performance.</string>
 
 </resources>

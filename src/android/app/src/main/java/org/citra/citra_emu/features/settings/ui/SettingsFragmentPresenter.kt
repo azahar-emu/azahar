@@ -841,6 +841,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER,
+                    R.string.disable_spirv_optimizer,
+                    R.string.disable_spirv_optimizer_description,
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER.key,
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER.defaultValue,
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.ASYNC_SHADERS,
                     R.string.async_shaders,
                     R.string.async_shaders_description,
