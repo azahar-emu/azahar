@@ -204,7 +204,7 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
     spv::SpvBuildLogger logger;
     glslang::SpvOptions options;
 
-    // Optimizations on the generated SPIR-V code.
+    // Controls optimizations on the generated SPIR-V code.
     options.disableOptimizer = Settings::values.disable_spirv_optimization.GetValue();
     options.validate = false;
     options.optimizeSize = true;
