@@ -12,7 +12,7 @@ enum class BooleanSetting(
     EXPAND_TO_CUTOUT_AREA("expand_to_cutout_area", Settings.SECTION_LAYOUT, false),
     SPIRV_SHADER_GEN("spirv_shader_gen", Settings.SECTION_RENDERER, true),
     ASYNC_SHADERS("async_shader_compilation", Settings.SECTION_RENDERER, false),
-    DISABLE_SPIRV_OPTIMIZER("disable_spirv_optimization", Settings.SECTION_RENDERER, true),
+    DISABLE_SPIRV_OPTIMIZER("disable_spirv_optimizer", Settings.SECTION_RENDERER, true),
     PLUGIN_LOADER("plugin_loader", Settings.SECTION_SYSTEM, false),
     ALLOW_PLUGIN_LOADER("allow_plugin_loader", Settings.SECTION_SYSTEM, true),
     SWAP_SCREEN("swap_screen", Settings.SECTION_LAYOUT, false),

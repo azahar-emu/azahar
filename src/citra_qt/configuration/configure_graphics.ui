@@ -137,7 +137,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="disable_spirv_optimizations">
+       <widget class="QCheckBox" name="disable_spirv_optimizer">
         <property name="text">
          <string>Disable GLSL -> SPIR-V Optimizer</string>
         </property>
