@@ -21,7 +21,60 @@ __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
 }
 #endif
 
+#if CITRA_HAS_SSE42
+#if defined(_WIN32)
+#include <windows.h>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
+#include <cpuid.h>
+#endif // _MSC_VER
+#else
+#include <cpuid.h>
+#endif // _WIN32
+
+static bool CpuSupportsSSE42() {
+    uint32_t ecx;
+
+#if defined(_MSC_VER)
+    int cpu_info[4];
+    __cpuid(cpu_info, 1);
+    ecx = static_cast<uint32_t>(cpu_info[2]);
+#elif defined(__GNUC__) || defined(__clang__)
+    uint32_t eax, ebx, edx;
+    if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
+        return false;
+    }
+#else
+#error "Unsupported compiler"
+#endif
+
+    // Bit 20 of ECX indicates SSE4.2
+    return (ecx & (1 << 20)) != 0;
+}
+
+static bool CheckAndReportSSE42() {
+    if (!CpuSupportsSSE42()) {
+        const std::string error_msg =
+            "This application requires a CPU with SSE4.2 support or higher.\nTo run on unsupported "
+            "systems, recompile the application with the ENABLE_SSE42 option disabled.";
+#if defined(_WIN32)
+        MessageBoxA(nullptr, error_msg.c_str(), "Incompatible CPU", MB_OK | MB_ICONERROR);
+#endif
+        std::cerr << "Error: " << error_msg << std::endl;
+        return false;
+    }
+    return true;
+}
+#endif
+
 int main(int argc, char* argv[]) {
+#if CITRA_HAS_SSE42
+    if (!CheckAndReportSSE42()) {
+        return 1;
+    }
+#endif
+
 #if ENABLE_ROOM
     bool launch_room = false;
     for (int i = 1; i < argc; i++) {
