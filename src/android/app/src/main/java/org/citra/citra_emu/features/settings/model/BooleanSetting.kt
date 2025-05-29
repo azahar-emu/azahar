@@ -42,6 +42,7 @@ enum class BooleanSetting(
     ENABLE_REALTIME_AUDIO("enable_realtime_audio", Settings.SECTION_AUDIO, false),
     CPU_JIT("use_cpu_jit", Settings.SECTION_CORE, true),
     HW_SHADER("use_hw_shader", Settings.SECTION_RENDERER, true),
+    SHADER_JIT("use_shader_jit", Settings.SECTION_RENDERER, true),
     VSYNC("use_vsync_new", Settings.SECTION_RENDERER, true),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, true),
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),

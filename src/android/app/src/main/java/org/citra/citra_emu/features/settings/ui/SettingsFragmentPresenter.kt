@@ -1598,6 +1598,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.SHADER_JIT,
+                    R.string.shader_jit,
+                    R.string.shader_jit_description,
+                    BooleanSetting.SHADER_JIT.key,
+                    BooleanSetting.SHADER_JIT.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.VSYNC,
                     R.string.vsync,
                     R.string.vsync_description,
