@@ -657,7 +657,18 @@ Result SVC::SendSyncRequest(Handle handle) {
         kernel.GetIPCRecorder().RegisterRequest(session, thread);
     }
 
-    return session->SendSyncRequest(thread);
+    const bool is_hle =
+        session->parent->server != nullptr && session->parent->server->hle_handler != nullptr;
+
+    if (is_hle) {
+        system.perf_stats->BeginIPCProcessing();
+    }
+    const auto res = session->SendSyncRequest(thread);
+    if (is_hle) {
+        system.perf_stats->EndIPCProcessing();
+    }
+
+    return res;
 }
 
 Result SVC::OpenProcess(Handle* out_handle, u32 process_id) {
@@ -2364,6 +2375,7 @@ MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
 
 void SVC::CallSVC(u32 immediate) {
     MICROPROFILE_SCOPE(Kernel_SVC);
+    system.perf_stats->BeginSVCProcessing();
 
     // Lock the kernel mutex when we enter the kernel HLE.
     std::scoped_lock lock{kernel.GetHLELock()};
@@ -2380,6 +2392,7 @@ void SVC::CallSVC(u32 immediate) {
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function {:02X} {}(..)", info->id, info->name);
         }
     }
+    system.perf_stats->EndSVCProcessing();
 }
 
 SVC::SVC(Core::System& system) : system(system), kernel(system.Kernel()), memory(system.Memory()) {}

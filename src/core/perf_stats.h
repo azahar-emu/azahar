@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -54,8 +54,16 @@ public:
         double system_fps;
         /// Game FPS (GSP frame submissions) in Hz
         double game_fps;
-        /// Walltime per system frame, in seconds, excluding any waits
-        double frametime;
+        /// Walltime in seconds, between guest vblank events
+        double time_vblank_interval;
+        // Walltime in seconds of the vblank interval spent in SVC processing, excluding GPU and IPC
+        double time_hle_svc;
+        // Walltime in seconds of the vblank interval spent in IPC processing, excluding GPU
+        double time_hle_ipc;
+        // Walltime in seconds of the vblank interval spent in GPU command processing
+        double time_gpu;
+        // Walltime in seconds of teh vblank interval spent in other operations
+        double time_remaining;
         /// Ratio of walltime / emulated time elapsed
         double emulation_speed;
         /// Artic base bytes per second
@@ -64,6 +72,12 @@ public:
         PerfArticEvents artic_events{};
     };
 
+    void BeginSVCProcessing();
+    void EndSVCProcessing();
+    void BeginIPCProcessing();
+    void EndIPCProcessing();
+    void BeginGPUProcessing();
+    void EndGPUProcessing();
     void BeginSystemFrame();
     void EndSystemFrame();
     void EndGameFrame();
@@ -139,6 +153,21 @@ private:
     Clock::duration previous_frame_length = Clock::duration::zero();
     /// Visible duration for the frame prior to previous_frame_length
     Clock::duration previous_previous_frame_length = Clock::duration::zero();
+
+    Clock::time_point start_svc_time = reset_point;
+
+    Clock::duration accumulated_svc_time = Clock::duration::zero();
+    u32 svc_processing_times = 0;
+
+    Clock::time_point start_ipc_time = reset_point;
+
+    Clock::duration accumulated_ipc_time = Clock::duration::zero();
+    u32 ipc_processing_times = 0;
+
+    Clock::time_point start_gpu_time = reset_point;
+
+    Clock::duration accumulated_gpu_time = Clock::duration::zero();
+    u32 gpu_processing_times = 0;
 
     /// Last recorded performance statistics.
     Results last_stats;

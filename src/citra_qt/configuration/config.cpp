@@ -812,6 +812,7 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.display_titlebar);
         ReadBasicSetting(UISettings::values.show_filter_bar);
         ReadBasicSetting(UISettings::values.show_status_bar);
+        ReadBasicSetting(UISettings::values.show_advanced_frametime_info);
         ReadBasicSetting(UISettings::values.confirm_before_closing);
         ReadBasicSetting(UISettings::values.save_state_warning);
         ReadBasicSetting(UISettings::values.first_start);
@@ -1322,6 +1323,7 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.display_titlebar);
         WriteBasicSetting(UISettings::values.show_filter_bar);
         WriteBasicSetting(UISettings::values.show_status_bar);
+        WriteBasicSetting(UISettings::values.show_advanced_frametime_info);
         WriteBasicSetting(UISettings::values.confirm_before_closing);
         WriteBasicSetting(UISettings::values.save_state_warning);
         WriteBasicSetting(UISettings::values.first_start);

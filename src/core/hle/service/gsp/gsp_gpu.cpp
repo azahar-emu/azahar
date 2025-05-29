@@ -439,7 +439,9 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         gpu.Debugger().GXCommandProcessed(command);
 
         // Decode and execute command
+        system.perf_stats->BeginGPUProcessing();
         gpu.Execute(command);
+        system.perf_stats->EndGPUProcessing();
 
         if (command.stop) {
             command_buffer->should_stop.Assign(1);

@@ -60,6 +60,8 @@ void ConfigureUi::SetConfiguration() {
     ui->toggle_hide_no_icon->setChecked(UISettings::values.game_list_hide_no_icon.GetValue());
     ui->toggle_single_line_mode->setChecked(
         UISettings::values.game_list_single_line_mode.GetValue());
+    ui->show_advanced_frametime_info->setChecked(
+        UISettings::values.show_advanced_frametime_info.GetValue());
 }
 
 void ConfigureUi::ApplyConfiguration() {
@@ -73,6 +75,7 @@ void ConfigureUi::ApplyConfiguration() {
         static_cast<UISettings::GameListText>(ui->row_2_text_combobox->currentIndex() - 1);
     UISettings::values.game_list_hide_no_icon = ui->toggle_hide_no_icon->isChecked();
     UISettings::values.game_list_single_line_mode = ui->toggle_single_line_mode->isChecked();
+    UISettings::values.show_advanced_frametime_info = ui->show_advanced_frametime_info->isChecked();
 }
 
 void ConfigureUi::OnLanguageChanged(int index) {

@@ -1178,8 +1178,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (EmulationMenuSettings.showPerformanceOverlay) {
             val SYSTEM_FPS = 0
             val FPS = 1
-            val FRAMETIME = 2
-            val SPEED = 3
+            val SPEED = 2
+            val FRAMETIME = 3
+            val TIME_SVC = 4
+            val TIME_IPC = 5
+            val TIME_GPU = 6
+            val TIME_REM = 7
             perfStatsUpdater = Runnable {
                 val sb = StringBuilder()
                 val perfStats = NativeLibrary.getPerfStats()
@@ -1193,8 +1197,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
-                                "Frametime:\u00A0%.1fms",
-                                (perfStats[FRAMETIME] * 1000.0f).toFloat()
+                                "Frame:\u00A0%.1fms (GPU:\u00A0%.1fms IPC:\u00A0%.1fms SVC:\u00A0%.1fms Rem:\u00A0%.1fms)",
+                                (perfStats[FRAMETIME] * 1000.0f).toFloat(),
+                                (perfStats[TIME_GPU] * 1000.0f).toFloat(),
+                                (perfStats[TIME_IPC] * 1000.0f).toFloat(),
+                                (perfStats[TIME_SVC] * 1000.0f).toFloat(),
+                                (perfStats[TIME_REM] * 1000.0f).toFloat(),
                             )
                         )
                     }
