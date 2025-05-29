@@ -50,8 +50,6 @@ import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
 import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
-import org.citra.citra_emu.features.settings.ui.SettingsActivity
-import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.FileUtil
@@ -417,7 +415,6 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             bottomSheetDialog.dismiss()
         }
 
-
         bottomSheetView.findViewById<MaterialButton>(R.id.cheats).setOnClickListener {
             val action = CheatsFragmentDirections.actionGlobalCheatsFragment(holder.game.titleId)
             view.findNavController().navigate(action)
@@ -476,10 +473,9 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
                     }
                 }
             }()
-                dialogShortcutBinding!!.shortcutIcon.setImageBitmap(scaledBitmap)
-            }
+            dialogShortcutBinding!!.shortcutIcon.setImageBitmap(scaledBitmap)
         }
-
+    }
 
     private fun isValidGame(extension: String): Boolean {
         return Game.badExtensions.stream()
