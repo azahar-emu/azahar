@@ -105,6 +105,8 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
+option(ENABLE_SSE42 "Enable SSE4.2 optimizations on x86_64" ON)
+
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
@@ -124,6 +126,18 @@ if (ENABLE_ROOM)
 endif()
 if (ENABLE_SDL2_FRONTEND)
     add_definitions(-DENABLE_SDL2_FRONTEND)
+endif()
+
+if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
+    message(STATUS "SSE4.2 enabled for x86_64")
+
+    add_compile_definitions(CITRA_HAS_SSE42)
+
+    if(MSVC)
+        add_compile_options(/arch:SSE4.2)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        add_compile_options(-msse4.2)
+    endif()
 endif()
 
 include(CitraHandleSystemLibs)

@@ -138,6 +138,7 @@ jobs:
       CCACHE_SLOPPINESS: time_macros
       OS: windows
       TARGET: ${{ matrix.target }}
+      CITRA_SKIP_SSE42_CHECK: "1"
     steps:
       - uses: actions/checkout@v4
         with:
