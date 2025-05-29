@@ -9,7 +9,10 @@
 #pragma once
 
 #include <cstdlib>
+#include <span>
 #include <type_traits>
+#include <utility>
+#include "common_types.h"
 
 namespace Common {
 
@@ -72,5 +75,8 @@ struct Rectangle {
 
 template <typename T>
 Rectangle(T, T, T, T) -> Rectangle<T>;
+
+std::pair<u8, u8> FindMinMax(const std::span<const u8>& data);
+std::pair<u16, u16> FindMinMax(const std::span<const u16>& data);
 
 } // namespace Common

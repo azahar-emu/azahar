@@ -103,6 +103,7 @@ add_library(citra_common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     logging/types.h
+    math_util.cpp
     math_util.h
     memory_detect.cpp
     memory_detect.h
