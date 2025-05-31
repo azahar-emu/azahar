@@ -244,7 +244,13 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig
         return false;
     }
 
-    ASSERT(src_rect.GetWidth() == dst_rect.GetWidth());
+    if (src_rect.GetWidth() != dst_rect.GetWidth()) {
+        LOG_ERROR(
+            HW_GPU,
+            "Surface source and destination width mismatch, skipping... src_width={}, dst_width={}",
+            src_rect.GetWidth(), dst_rect.GetHeight());
+        return false;
+    }
 
     const TextureCopy texture_copy = {
         .src_level = src_surface.LevelOf(src_params.addr),
