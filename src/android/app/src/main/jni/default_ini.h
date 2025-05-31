@@ -196,6 +196,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Set to 0 for no delay, only useful in dynamic-fps games to simulate GPU delay.
 )") DECLARE_KEY(delay_game_render_thread_us) BOOST_HANA_STRING(R"(
 
+# Delays GPU completion events based on measurements taken from real hardware
+# 0: No delay, 1 (default): Enable delay
+)") DECLARE_KEY(simulate_3ds_gpu_timings) BOOST_HANA_STRING(R"(
+
 # Disables rendering the right eye image
 # Greatly improves performance in some games, but can cause flickering in others.
 # 0 : Enable right eye rendering, 1: Disable right eye rendering

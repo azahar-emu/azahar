@@ -1792,6 +1792,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS,
+                    R.string.simulate_3ds_gpu_timings,
+                    R.string.simulate_3ds_gpu_timings_description,
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS.key,
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.DEBUG_RENDERER,
                     R.string.renderer_debug,
                     R.string.renderer_debug_description,

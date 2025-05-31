@@ -581,8 +581,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
     gpu = std::make_unique<VideoCore::GPU>(*this, emu_window, secondary_window);
-    gpu->SetInterruptHandler(
-        [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+    gpu->SetInterruptHandler([gsp](Service::GSP::InterruptId interrupt_id, u64 wait_delay_ns) {
+        gsp->SignalInterrupt(interrupt_id, wait_delay_ns);
+    });
 
     auto plg_ldr = Service::PLGLDR::GetService(*this);
     if (plg_ldr) {
@@ -902,8 +903,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         // Re-register gpu callback, because gsp service changed after service_manager got
         // serialized
         auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
-        gpu->SetInterruptHandler(
-            [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+        gpu->SetInterruptHandler([gsp](Service::GSP::InterruptId interrupt_id, u64 wait_delay_ns) {
+            gsp->SignalInterrupt(interrupt_id, wait_delay_ns);
+        });
 
         // Apply per program settings and switch the shader cache to the title running when the
         // savestate was created.

@@ -45,6 +45,7 @@ object SettingKeys {
     external fun texture_filter(): String
     external fun texture_sampling(): String
     external fun delay_game_render_thread_us(): String
+    external fun simulate_3ds_gpu_timings(): String
     external fun layout_option(): String
     external fun swap_screen(): String
     external fun upright_screen(): String

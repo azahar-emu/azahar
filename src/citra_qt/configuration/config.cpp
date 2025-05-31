@@ -722,6 +722,8 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.delay_game_render_thread_us);
     ReadGlobalSetting(Settings::values.disable_right_eye_render);
 
+    ReadGlobalSetting(Settings::values.simulate_3ds_gpu_timings);
+
     if (global) {
         ReadBasicSetting(Settings::values.use_shader_jit);
     }
@@ -1265,6 +1267,8 @@ void QtConfig::SaveRendererValues() {
 
     WriteGlobalSetting(Settings::values.delay_game_render_thread_us);
     WriteGlobalSetting(Settings::values.disable_right_eye_render);
+
+    WriteGlobalSetting(Settings::values.simulate_3ds_gpu_timings);
 
     if (global) {
         WriteSetting(Settings::QKeys::use_shader_jit, Settings::values.use_shader_jit.GetValue(),

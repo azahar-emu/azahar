@@ -48,6 +48,7 @@ foreach(KEY IN ITEMS
     "texture_filter"
     "texture_sampling"
     "delay_game_render_thread_us"
+    "simulate_3ds_gpu_timings"
     "layout_option"
     "swap_screen"
     "upright_screen"
