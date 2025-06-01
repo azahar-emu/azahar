@@ -254,6 +254,8 @@
     <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed. If disabled, emulation speed will be uncapped and the turbo speed hotkey will not work.</string>
     <string name="frame_limit_slider">Limit Speed Percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
+    <string name="hide_images">Hide All 3DS Images from Android</string>Add commentMore actions
+    <string name="hide_images_description">Prevent 3DS camera, screenshot, and custom texture images from being indexed by Android and being automatically displayed in the Android Gallery. Device may need to be rebooted after setting in order to take effect.</string>
     <string name="turbo_limit">Turbo Speed Limit</string>
     <string name="turbo_limit_description">Emulation speed limit used while the turbo hotkey is active.</string>
     <string name="expand_to_cutout_area">Expand to Cutout Area</string>
