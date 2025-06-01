@@ -170,6 +170,9 @@ bg_red =
 bg_blue =
 bg_green =
 
+# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer. OpenGL only.Add commentMore actions
+custom_second_layer_opacity =
+
 # Whether and how Stereoscopic 3D should be rendered
 # 0 (default): Off, 1: Side by Side, 2: Reverse Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
 render_3d =
