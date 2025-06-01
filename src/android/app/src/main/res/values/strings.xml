@@ -300,6 +300,11 @@
     <string name="async_custom_loading_description">Load custom textures asynchronously with background threads to reduce loading stutter.</string>
 
     <!-- Audio settings strings -->
+    <string name="audio_emulation">Audio Emulation</string>Add commentMore actions
+    <string name="audio_emulation_description">Choose whether to enable Audio DSP in HLE or LLE mode (Note: LLE mode has a heavy performance impact).</string>
+    <string name="audio_hle">HLE (default)</string>
+    <string name="audio_lle">LLE</string>
+    <string name="audio_lle_multithread">LLE (Multithreaded)</string>
     <string name="audio_volume">Volume</string>
     <string name="audio_stretch">Audio Stretching</string>
     <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
