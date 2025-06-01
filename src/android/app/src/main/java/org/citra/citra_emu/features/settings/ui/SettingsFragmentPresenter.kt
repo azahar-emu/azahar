@@ -248,6 +248,31 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
+
+            val hideImages: AbstractBooleanSetting = object : AbstractBooleanSetting {
+                override var boolean: Boolean
+                    get() = preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)
+                    set(value) {
+                        preferences.edit()
+                            .putBoolean(Settings.PREF_HIDE_IMAGES, value)
+                            .apply()
+                        settingsActivity.recreate()
+                    }
+                override val key: String? = null
+                override val section: String? = null
+                override val isRuntimeEditable: Boolean = false
+                override val valueAsString: String
+                    get() = preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)
+                        .toString()
+                override val defaultValue: Any = false
+            }
+            add(
+                SwitchSetting(
+                    hideImages,
+                    R.string.hide_images,
+                    R.string.hide_images_description,
+                )
+            )
         }
     }
 
