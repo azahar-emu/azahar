@@ -225,6 +225,8 @@ class Settings {
         const val PREF_BLACK_BACKGROUNDS = "BlackBackgrounds"
         const val PREF_SHOW_HOME_APPS = "ShowHomeApps"
         const val PREF_STATIC_THEME_COLOR = "StaticThemeColor"
+        const val PREF_HIDE_IMAGES = "HideImages"
+
 
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
