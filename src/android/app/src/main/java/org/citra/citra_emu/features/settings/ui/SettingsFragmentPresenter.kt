@@ -1148,6 +1148,19 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     FloatSetting.LARGE_SCREEN_PROPORTION.defaultValue
                 )
             )
+            add(
+                SliderSetting(
+                    FloatSetting.SECOND_SCREEN_OPACITY,
+                    R.string.second_screen_opacity,
+                    R.string.second_screen_opacity_description,
+                    0,
+                    100,
+                    "%",
+                    FloatSetting.SECOND_SCREEN_OPACITY.key,
+                    FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 5 && IntSetting.GRAPHICS_API.int == 1
+                )
+            )
             add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
             add(
                 SliderSetting(
