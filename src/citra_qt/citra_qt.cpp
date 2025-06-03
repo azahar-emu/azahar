@@ -996,7 +996,9 @@ void GMainWindow::ConnectWidgetEvents() {
 }
 
 void GMainWindow::ConnectMenuEvents() {
-    const auto connect_menu = [&](QAction* action, const auto& event_fn) {
+    const auto connect_menu = [&](QAction* action, const auto& event_fn,
+                                  QAction::MenuRole role = QAction::NoRole) {
+        action->setMenuRole(role);
         connect(action, &QAction::triggered, this, event_fn);
         // Add actions to this window so that hiding menus in fullscreen won't disable them
         addAction(action);
@@ -1008,14 +1010,12 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Load_File, &GMainWindow::OnMenuLoadFile);
     connect_menu(ui->action_Install_CIA, &GMainWindow::OnMenuInstallCIA);
     connect_menu(ui->action_Connect_Artic, &GMainWindow::OnMenuConnectArticBase);
-    ui->action_Setup_System_Files->setMenuRole(QAction::NoRole);
     connect_menu(ui->action_Setup_System_Files, &GMainWindow::OnMenuSetUpSystemFiles);
     for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
         connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
                      [this, region] { OnMenuBootHomeMenu(region); });
     }
-    ui->action_Exit->setMenuRole(QAction::QuitRole);
-    connect_menu(ui->action_Exit, &QMainWindow::close);
+    connect_menu(ui->action_Exit, &QMainWindow::close, QAction::QuitRole);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
 
@@ -1027,7 +1027,7 @@ void GMainWindow::ConnectMenuEvents() {
         QDesktopServices::openUrl(QUrl(QStringLiteral(
             "https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md")));
     });
-    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure);
+    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure, QAction::PreferencesRole);
     connect_menu(ui->action_Configure_Current_Game, &GMainWindow::OnConfigurePerGame);
 
     // View
@@ -1091,7 +1091,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_FAQ, []() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://azahar-emu.org/pages/faq/")));
     });
-    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
+    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra, QAction::AboutRole);
 }
 
 void GMainWindow::UpdateMenuState() {
