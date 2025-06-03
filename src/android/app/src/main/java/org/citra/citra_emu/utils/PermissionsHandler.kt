@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -34,7 +34,8 @@ object PermissionsHandler {
 
             context.contentResolver.releasePersistableUriPermission(uri, takeFlags)
         } catch (e: Exception) {
-            Log.error("[PermissionsHandler]: Cannot check citra data directory permission, error: " + e.message)
+            // Do not use native library logging, as the native library may not be loaded yet
+            android.util.Log.e("PermissionsHandler", "Cannot check citra data directory permission, error: ${e.message}")
         }
         return false
     }

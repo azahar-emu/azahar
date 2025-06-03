@@ -16,7 +16,7 @@ import org.citra.citra_emu.viewmodel.HomeViewModel
 /**
  * Citra directory initialization ui flow controller.
  */
-class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
+class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity, private val lostPermission: Boolean) {
     fun showCitraDirectoryDialog(result: Uri, callback: SetupCallback? = null, buttonState: () -> Unit) {
         val citraDirectoryDialog = CitraDirectoryDialogFragment.newInstance(
             fragmentActivity,
@@ -24,7 +24,7 @@ class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
             CitraDirectoryDialogFragment.Listener { moveData: Boolean, path: Uri ->
                 val previous = PermissionsHandler.citraDirectory
                 // Do noting if user select the previous path.
-                if (path == previous) {
+                if (path == previous && !lostPermission) {
                     return@Listener
                 }
 

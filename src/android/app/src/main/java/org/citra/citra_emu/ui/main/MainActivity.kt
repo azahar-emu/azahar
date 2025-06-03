@@ -12,6 +12,7 @@ import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
 import android.view.animation.PathInterpolator
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -307,15 +308,22 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             windowInsets
         }
 
-    val openCitraDirectory = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { result: Uri? ->
-        if (result == null) {
-            return@registerForActivityResult
-        }
+    private fun createOpenCitraDirectoryLauncher(
+        permissionsLost: Boolean
+    ): ActivityResultLauncher<Uri?> {
+        return registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { result: Uri? ->
+            if (result == null) {
+                return@registerForActivityResult
+            }
 
-        CitraDirectoryHelper(this@MainActivity).showCitraDirectoryDialog(result, buttonState = {})
+            CitraDirectoryHelper(this@MainActivity, permissionsLost)
+                .showCitraDirectoryDialog(result, buttonState = {})
+        }
     }
+
+    val openCitraDirectory = createOpenCitraDirectoryLauncher(permissionsLost = false)
+
+    val openCitraDirectoryLostPermission = createOpenCitraDirectoryLauncher(permissionsLost = true)
 
     val ciaFileInstaller = registerForActivityResult(
         OpenFileResultContract()

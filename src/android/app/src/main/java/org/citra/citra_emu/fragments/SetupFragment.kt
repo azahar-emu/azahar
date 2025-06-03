@@ -478,7 +478,7 @@ class SetupFragment : Fragment() {
             return@registerForActivityResult
         }
 
-        CitraDirectoryHelper(requireActivity()).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)
+        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)
     }
 
     private val getGamesDirectory =
