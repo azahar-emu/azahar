@@ -389,11 +389,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
 
-#ifdef __APPLE__
-    // Workaround for https://github.com/azahar-emu/azahar/issues/933
-    ui->menubar->setNativeMenuBar(false);
-#endif
-
     show();
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -1013,11 +1008,13 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Load_File, &GMainWindow::OnMenuLoadFile);
     connect_menu(ui->action_Install_CIA, &GMainWindow::OnMenuInstallCIA);
     connect_menu(ui->action_Connect_Artic, &GMainWindow::OnMenuConnectArticBase);
+    ui->action_Setup_System_Files->setMenuRole(QAction::NoRole);
     connect_menu(ui->action_Setup_System_Files, &GMainWindow::OnMenuSetUpSystemFiles);
     for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
         connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
                      [this, region] { OnMenuBootHomeMenu(region); });
     }
+    ui->action_Exit->setMenuRole(QAction::QuitRole);
     connect_menu(ui->action_Exit, &QMainWindow::close);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
