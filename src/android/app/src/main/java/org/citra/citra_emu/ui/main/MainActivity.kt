@@ -322,7 +322,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     }
 
     val openCitraDirectory = createOpenCitraDirectoryLauncher(permissionsLost = false)
-
     val openCitraDirectoryLostPermission = createOpenCitraDirectoryLauncher(permissionsLost = true)
 
     val ciaFileInstaller = registerForActivityResult(
