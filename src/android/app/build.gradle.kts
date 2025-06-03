@@ -125,7 +125,6 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = true
             isJniDebuggable = true
