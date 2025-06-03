@@ -1183,6 +1183,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     FloatSetting.SECOND_SCREEN_OPACITY.key,
                     FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
+                    // TODO: Remove graphics API check when #895 is merged
                     isEnabled = IntSetting.SCREEN_LAYOUT.int == 5 && IntSetting.GRAPHICS_API.int == 1
                 )
             )
