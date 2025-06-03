@@ -228,7 +228,6 @@ class Settings {
         const val PREF_STATIC_THEME_COLOR = "StaticThemeColor"
         const val PREF_HIDE_IMAGES = "HideImages"
 
-
         private val configFileSectionsMap: MutableMap<String, List<String>> = HashMap()
 
         init {
