@@ -22,7 +22,7 @@ plugins {
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
 val abiFilter = listOf("arm64-v8a", "x86_64")
 
-val downloadedJniLibsPath = "${buildDir}/downloadedJniLibs"
+val downloadedJniLibsPath = "${layout.buildDirectory}/downloadedJniLibs"
 
 @Suppress("UnstableApiUsage")
 android {
@@ -188,7 +188,7 @@ dependencies {
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
     src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.304.1/android-binaries-1.4.304.1.zip")
-    dest(file("${buildDir}/tmp/Vulkan-ValidationLayers.zip"))
+    dest(file("${layout.buildDirectory}/tmp/Vulkan-ValidationLayers.zip"))
     onlyIfModified(true)
 }
 
