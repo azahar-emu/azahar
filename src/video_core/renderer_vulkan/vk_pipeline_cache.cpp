@@ -10,12 +10,16 @@
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
+#include "core/core.h"
+#include "core/loader/loader.h"
+#include "video_core/pica/shader_setup.h"
 #include "video_core/renderer_vulkan/pica_to_vk.h"
 #include "video_core/renderer_vulkan/vk_descriptor_update_queue.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
 #include "video_core/renderer_vulkan/vk_render_manager.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
+#include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 #include "video_core/shader/generator/glsl_fs_shader_gen.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
@@ -82,7 +86,7 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
     : instance{instance_}, scheduler{scheduler_}, renderpass_cache{renderpass_cache_},
       update_queue{update_queue_},
       num_worker_threads{std::max(std::thread::hardware_concurrency(), 2U) >> 1},
-      workers{num_worker_threads, "Pipeline workers"},
+      workers{num_worker_threads, "Pipeline workers"}, shader_cache{nullptr},
       descriptor_heaps{
           DescriptorHeap{instance, scheduler.GetMasterSemaphore(), BUFFER_BINDINGS, 32},
           DescriptorHeap{instance, scheduler.GetMasterSemaphore(), TEXTURE_BINDINGS<1>},
@@ -125,11 +129,194 @@ PipelineCache::~PipelineCache() {
     SaveDiskCache();
 }
 
-void PipelineCache::LoadDiskCache() {
+void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+    // Initialize the Vulkan pipeline cache
     if (!Settings::values.use_disk_shader_cache || !EnsureDirectories()) {
+        // Create an empty pipeline cache if disk cache is disabled
+        const vk::Device device = instance.GetDevice();
+        vk::PipelineCacheCreateInfo cache_info{};
+        pipeline_cache = device.createPipelineCacheUnique(cache_info);
         return;
     }
 
+    // Initialize program ID if not set
+    u64 program_id = 0;
+    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
+        Loader::ResultStatus::Success) {
+        program_id = 0;
+    }
+
+    // Initialize the shader disk cache
+    shader_cache = std::make_unique<ShaderDiskCache>(program_id); // Load shaders from disk
+    auto transferable = shader_cache->LoadTransferable();
+    if (transferable) {
+        LOG_INFO(Render_Vulkan, "Loaded {} transferable shaders", transferable->size());
+
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Decompile, 0, transferable->size());
+        }
+
+        // Load precompiled shaders once
+        ShaderDecompiledMap precompiled;
+        if (!transferable->empty()) {
+            precompiled = shader_cache->LoadPrecompiled();
+        }
+
+        // Process the loaded shader entries and compile them
+        std::size_t shader_index = 0;
+        for (const auto& raw : *transferable) {
+            if (stop_loading) {
+                return;
+            }
+
+            const u64 unique_identifier = raw.GetUniqueIdentifier();
+            const auto config = raw.GetRawShaderConfig();
+
+            // Find precompiled shader if available
+            auto precompiled_it = precompiled.find(unique_identifier);
+            bool has_precompiled = precompiled_it != precompiled.end();
+
+            // Handle each shader type
+            switch (raw.GetProgramType()) {
+            case ProgramType::VS: {
+                // For vertex shaders, we need to reconstruct the shader setup
+                const auto& code = raw.GetProgramCode();
+                if (code.empty()) {
+                    continue;
+                }
+
+                if (has_precompiled) {
+                    const auto& shader_info = precompiled_it->second;
+
+                    // Create a shader entry using the precompiled code
+                    std::string decompiled_code = shader_info.code;
+                    if (!decompiled_code.empty()) {
+                        auto [iter, new_program] =
+                            programmable_vertex_cache.try_emplace(decompiled_code, instance);
+                        auto& shader = iter->second;
+
+                        // Compile the shader if it's new
+                        if (new_program) {
+                            shader.program = decompiled_code; // Make a copy for the worker
+                            const vk::Device device = instance.GetDevice();
+                            workers.QueueWork([device, program = shader.program, &shader,
+                                               unique_identifier] {
+                                try {
+                                    shader.module =
+                                        Compile(program, vk::ShaderStageFlagBits::eVertex, device);
+                                    shader.MarkDone();
+                                } catch (const std::exception& e) {
+                                    LOG_ERROR(Render_Vulkan,
+                                              "Failed to compile vertex shader {}: {}",
+                                              unique_identifier, e.what());
+                                    // Mark as done even if it failed to avoid hangs
+                                    shader.MarkDone();
+                                }
+                            });
+                        }
+                    }
+                }
+                break;
+            }
+            case ProgramType::GS: {
+                if (has_precompiled) {
+                    const auto& shader_info = precompiled_it->second;
+
+                    // Create a PicaFixedGSConfig that would hash to the same value
+                    PicaFixedGSConfig gs_config{config, instance.IsShaderClipDistanceSupported()};
+
+                    // Create a shader entry using the precompiled code
+                    auto [iter, new_shader] =
+                        fixed_geometry_shaders.try_emplace(gs_config, instance);
+                    if (new_shader) {
+                        auto& shader = iter->second;
+                        const vk::Device device = instance.GetDevice();
+                        std::string decompiled_code = shader_info.code;
+
+                        if (!decompiled_code.empty()) {
+                            if (!decompiled_code.empty()) {
+                                workers.QueueWork([device, program = decompiled_code, &shader,
+                                                   unique_identifier] {
+                                    try {
+                                        shader.module = Compile(
+                                            program, vk::ShaderStageFlagBits::eGeometry, device);
+                                        shader.MarkDone();
+                                    } catch (const std::exception& e) {
+                                        LOG_ERROR(Render_Vulkan,
+                                                  "Failed to compile geometry shader {}: {}",
+                                                  unique_identifier, e.what());
+                                        // Mark as done even if it failed to avoid hangs
+                                        shader.MarkDone();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    break;
+                }
+            case ProgramType::FS: {
+                if (has_precompiled) {
+                    const auto& shader_info = precompiled_it->second;
+
+                    // This is an approximation since we don't have the full UserConfig
+                    Pica::Shader::UserConfig user{};
+                    const FSConfig fs_config{config, user, profile};
+
+                    // Create a shader entry using the precompiled code
+                    auto [iter, new_shader] = fragment_shaders.try_emplace(fs_config, instance);
+                    if (new_shader) {
+                        auto& shader = iter->second;
+                        const vk::Device device = instance.GetDevice();
+                        std::string decompiled_code = shader_info.code;
+                        if (!decompiled_code.empty()) {
+                            workers.QueueWork(
+                                [device, program = decompiled_code, &shader, unique_identifier] {
+                                    try {
+                                        shader.module = Compile(
+                                            program, vk::ShaderStageFlagBits::eFragment, device);
+                                        shader.MarkDone();
+                                    } catch (const std::exception& e) {
+                                        LOG_ERROR(Render_Vulkan,
+                                                  "Failed to compile fragment shader {}: {}",
+                                                  unique_identifier, e.what());
+                                        // Mark as done even if it failed to avoid hangs
+                                        shader.MarkDone();
+                                    }
+                                });
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                LOG_ERROR(Render_Vulkan, "Unknown shader program type {}", raw.GetProgramType());
+                break;
+            }
+                // Update progress
+                if (callback) {
+                    callback(VideoCore::LoadCallbackStage::Decompile, ++shader_index,
+                             transferable->size());
+                }
+            } // Wait for all shader compilations to complete
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Build, 0, transferable->size());
+            }
+
+            // This will ensure all worker threads finish their current tasks
+            workers.WaitForRequests();
+
+            // Final callback
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Build, transferable->size(),
+                         transferable->size());
+                LOG_INFO(Render_Vulkan, "Finished loading and building {} shaders",
+                         transferable->size());
+            }
+        }
+    }
+
+    // Also load the Vulkan pipeline cache
     const auto cache_dir = GetPipelineCacheDir();
     const u32 vendor_id = instance.GetVendorID();
     const u32 device_id = instance.GetDeviceID();
@@ -169,6 +356,13 @@ void PipelineCache::LoadDiskCache() {
 }
 
 void PipelineCache::SaveDiskCache() {
+    // Save shader disk cache
+    if (shader_cache) {
+        // This will be handled internally by the shader cache based on
+        // Settings::values.use_disk_shader_cache
+    }
+
+    // Save Vulkan pipeline cache
     if (!Settings::values.use_disk_shader_cache || !EnsureDirectories() || !pipeline_cache) {
         return;
     }
@@ -361,6 +555,9 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
         }
     }
 
+    // Generate the unique identifier for this shader
+    const u64 unique_identifier = setup.GetProgramCodeHash();
+
     const auto [it, new_config] = programmable_vertex_map.try_emplace(config);
     if (new_config) {
         auto program = GLSL::GenerateVertexShader(setup, config, true);
@@ -370,6 +567,23 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
             return false;
         }
 
+        // Save to the disk cache if it's initialized
+        if (shader_cache) {
+            // Create a raw shader entry
+            ProgramCode program_code(setup.program_code.begin(), setup.program_code.end());
+            program_code.insert(program_code.end(), setup.swizzle_data.begin(),
+                                setup.swizzle_data.end());
+
+            const auto config_raw = regs;
+            ShaderDiskCacheRaw raw{unique_identifier, ProgramType::VS, config_raw, program_code};
+
+            // Save raw shader to disk
+            shader_cache->SaveRaw(raw);
+
+            // Also save the decompiled shader
+            shader_cache->SaveDecompiled(unique_identifier, program, accurate_mul);
+        }
+
         auto [iter, new_program] = programmable_vertex_cache.try_emplace(program, instance);
         auto& shader = iter->second;
 
@@ -377,8 +591,15 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
             shader.program = std::move(program);
             const vk::Device device = instance.GetDevice();
             workers.QueueWork([device, &shader] {
-                shader.module = Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
-                shader.MarkDone();
+                try {
+                    shader.module =
+                        Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
+                    shader.MarkDone();
+                } catch (const std::exception& e) {
+                    LOG_ERROR(Render_Vulkan, "Failed to compile vertex shader: {}", e.what());
+                    // Mark as done even if it failed to avoid hangs
+                    shader.MarkDone();
+                }
             });
         }
 
@@ -413,10 +634,35 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     auto& shader = it->second;
 
     if (new_shader) {
-        workers.QueueWork([gs_config, device = instance.GetDevice(), &shader]() {
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
-            shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
-            shader.MarkDone();
+        // Generate shader code
+        const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
+
+        // Save to disk cache if available
+        if (shader_cache) {
+            const u64 unique_identifier = gs_config.Hash();
+
+            // Create a raw shader entry with empty program code (geometry shaders are generated
+            // from config)
+            ProgramCode program_code;
+            ShaderDiskCacheRaw raw{unique_identifier, ProgramType::GS, regs, program_code};
+
+            // Save raw shader to disk
+            shader_cache->SaveRaw(raw);
+
+            // Also save the decompiled shader
+            shader_cache->SaveDecompiled(unique_identifier, code, false);
+        }
+        workers.QueueWork([device = instance.GetDevice(), &shader, code = code,
+                           unique_identifier = gs_config.Hash()]() {
+            try {
+                shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
+                shader.MarkDone();
+            } catch (const std::exception& e) {
+                LOG_ERROR(Render_Vulkan, "Failed to compile geometry shader {}: {}",
+                          unique_identifier, e.what());
+                // Mark as done even if it failed to avoid hangs
+                shader.MarkDone();
+            }
         });
     }
 
@@ -438,17 +684,45 @@ void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
     auto& shader = it->second;
 
     if (new_shader) {
-        workers.QueueWork([fs_config, this, &shader]() {
-            const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-            if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
-                const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
-                shader.module = CompileSPV(code, instance.GetDevice());
-            } else {
-                const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
-                shader.module =
-                    Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
+        // Get unique identifier
+        const u64 unique_identifier = fs_config.Hash();
+
+        // Save to disk cache if available
+        if (shader_cache) {
+            // Create a raw shader entry with empty program code (fragment shaders are generated
+            // from config)
+            ProgramCode program_code;
+            ShaderDiskCacheRaw raw{unique_identifier, ProgramType::FS, regs, program_code};
+
+            // Save raw shader to disk
+            shader_cache->SaveRaw(raw);
+        }
+        workers.QueueWork([fs_config, this, &shader, unique_identifier]() {
+            try {
+                const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
+                std::string glsl_code;
+
+                if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
+                    const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
+                    shader.module = CompileSPV(code, instance.GetDevice());
+                } else {
+                    glsl_code = GLSL::GenerateFragmentShader(fs_config, profile);
+                    shader.module = Compile(glsl_code, vk::ShaderStageFlagBits::eFragment,
+                                            instance.GetDevice());
+                }
+
+                // If we generated GLSL code, save it to disk cache
+                if (shader_cache && !glsl_code.empty()) {
+                    shader_cache->SaveDecompiled(unique_identifier, glsl_code, false);
+                }
+
+                shader.MarkDone();
+            } catch (const std::exception& e) {
+                LOG_ERROR(Render_Vulkan, "Failed to compile fragment shader {}: {}",
+                          unique_identifier, e.what());
+                // Mark as done even if it failed to avoid hangs
+                shader.MarkDone();
             }
-            shader.MarkDone();
         });
     }
 
