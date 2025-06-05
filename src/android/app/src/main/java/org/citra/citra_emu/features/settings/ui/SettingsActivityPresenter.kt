@@ -67,7 +67,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         loadSettingsUI()
     }
 
-    private fun hideImages() {
+    private fun updateImageVisibility() {
         val dataPath = PermissionsHandler.citraDirectory.toString()
         val noMedia = FileUtil.createFile(dataPath, ".nomedia")
             if (!preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)) {
@@ -83,7 +83,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
-            hideImages()
+            updateImageVisibility()
             TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }
         NativeLibrary.reloadSettings()
