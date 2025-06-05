@@ -1605,17 +1605,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
-                SingleChoiceSetting(
-                    IntSetting.AUDIO_EMULATION,
-                    R.string.audio_emulation,
-                    R.string.audio_emulation_description,
-                    R.array.audioEmulationNames,
-                    R.array.audioEmulationValues,
-                    IntSetting.AUDIO_EMULATION.key,
-                    IntSetting.AUDIO_EMULATION.defaultValue
-                )
-            )
-            add(
                 SwitchSetting(
                     BooleanSetting.ENABLE_AUDIO_STRETCHING,
                     R.string.audio_stretch,
