@@ -170,7 +170,7 @@ bg_red =
 bg_blue =
 bg_green =
 
-# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer. OpenGL only.Add commentMore actions
+# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer. OpenGL only.
 custom_second_layer_opacity =
 
 # Whether and how Stereoscopic 3D should be rendered
@@ -326,7 +326,7 @@ preload_textures =
 async_custom_loading =
 
 [Audio]
-# Whether to enable Audio DSP in HLE or LLE mode (Note: LLE mode has a heavy performance impact)Add commentMore actions
+# Whether to enable Audio DSP in HLE or LLE mode (Note: LLE mode has a heavy performance impact)
 # 0 (default): HLE, 1: LLE, 2: LLE Multithreaded
 audio_emulation =
 
