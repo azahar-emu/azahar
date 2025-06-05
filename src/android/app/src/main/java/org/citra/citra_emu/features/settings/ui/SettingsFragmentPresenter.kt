@@ -1208,38 +1208,38 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
             add(
                 SliderSetting(
-                    FloatSetting.BG_RED,
+                    FloatSetting.BACKGROUND_RED,
                     R.string.bg_red,
                     R.string.bg_description,
                     0,
                     1,
                     "x",
-                    FloatSetting.BG_RED.key,
-                    FloatSetting.BG_RED.defaultValue
+                    FloatSetting.BACKGROUND_RED.key,
+                    FloatSetting.BACKGROUND_RED.defaultValue
                 )
             )
             add(
                 SliderSetting(
-                    FloatSetting.BG_BLUE,
+                    FloatSetting.BACKGROUND_BLUE,
                     R.string.bg_blue,
                     R.string.bg_description,
                     0,
                     1,
                     "x",
-                    FloatSetting.BG_BLUE.key,
-                    FloatSetting.BG_BLUE.defaultValue
+                    FloatSetting.BACKGROUND_BLUE.key,
+                    FloatSetting.BACKGROUND_BLUE.defaultValue
                 )
             )
             add(
                 SliderSetting(
-                    FloatSetting.BG_GREEN,
+                    FloatSetting.BACKGROUND_GREEN,
                     R.string.bg_green,
                     R.string.bg_description,
                     0,
                     1,
                     "x",
-                    FloatSetting.BG_GREEN.key,
-                    FloatSetting.BG_GREEN.defaultValue
+                    FloatSetting.BACKGROUND_GREEN.key,
+                    FloatSetting.BACKGROUND_GREEN.defaultValue
                 )
             )
             add(
