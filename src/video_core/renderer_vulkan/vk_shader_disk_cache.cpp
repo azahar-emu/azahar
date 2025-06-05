@@ -253,7 +253,6 @@ std::optional<ShaderDecompiledMap> ShaderDiskCache::LoadPrecompiledFile(FileUtil
     } // Version is valid, load the shaders
     ShaderDecompiledMap decompiled;
     u32 entry_index = 0;
-    u32 invalid_entries = 0;
 
     while (file.Tell() < file.GetSize()) {
         PrecompiledEntryKind kind{};
@@ -277,7 +276,6 @@ std::optional<ShaderDecompiledMap> ShaderDiskCache::LoadPrecompiledFile(FileUtil
             if (unique_identifier == 0) {
                 LOG_WARNING(Render_Vulkan, "Invalid shader ID (0) at index {} - skipping",
                             entry_index);
-                invalid_entries++;
 
                 // Try to read past this entry by skipping the rest of its data
                 bool dummy_bool;
@@ -321,7 +319,6 @@ std::optional<ShaderDecompiledMap> ShaderDiskCache::LoadPrecompiledFile(FileUtil
             if (code_size == 0 || code_size > 1024 * 1024) { // Arbitrary 1MB limit
                 LOG_ERROR(Render_Vulkan, "Invalid shader code size {} at index {} - skipping",
                           code_size, entry_index);
-                invalid_entries++;
                 // Skip the code data
                 file.Seek(code_size, SEEK_CUR);
                 entry_index++;
@@ -338,7 +335,6 @@ std::optional<ShaderDecompiledMap> ShaderDiskCache::LoadPrecompiledFile(FileUtil
             // Validate that the code appears to be valid GLSL
             if (code.empty() || code.size() < 10) { // Basic sanity check
                 LOG_WARNING(Render_Vulkan, "Skipping invalid shader with empty or very small code");
-                invalid_entries++;
                 entry_index++;
                 continue; // Skip this entry but continue processing the file
             }
@@ -348,7 +344,6 @@ std::optional<ShaderDecompiledMap> ShaderDiskCache::LoadPrecompiledFile(FileUtil
                 LOG_WARNING(Render_Vulkan,
                             "Shader at index {} doesn't look like valid GLSL - skipping",
                             entry_index);
-                invalid_entries++;
                 entry_index++;
                 continue;
             }
