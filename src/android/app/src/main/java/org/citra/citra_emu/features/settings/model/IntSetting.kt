@@ -44,7 +44,6 @@ enum class IntSetting(
     PORTRAIT_BOTTOM_WIDTH("custom_portrait_bottom_width",Settings.SECTION_LAYOUT,640),
     PORTRAIT_BOTTOM_HEIGHT("custom_portrait_bottom_height",Settings.SECTION_LAYOUT,480),
     AUDIO_INPUT_TYPE("input_type", Settings.SECTION_AUDIO, 0),
-    AUDIO_EMULATION("audio_emulation", Settings.SECTION_AUDIO, 0),
     CPU_CLOCK_SPEED("cpu_clock_percentage", Settings.SECTION_CORE, 100),
     TEXTURE_FILTER("texture_filter", Settings.SECTION_RENDERER, 0),
     TEXTURE_SAMPLING("texture_sampling", Settings.SECTION_RENDERER, 0),
@@ -76,7 +75,6 @@ enum class IntSetting(
             INIT_CLOCK,
             GRAPHICS_API,
             AUDIO_INPUT_TYPE,
-            AUDIO_EMULATION,
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }
