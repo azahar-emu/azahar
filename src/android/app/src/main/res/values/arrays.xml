@@ -207,7 +207,7 @@
         <item>3</item>
     </integer-array>
 
-    <string-array name="audioEmulationNames">Add commentMore actions
+    <string-array name="audioEmulationNames">
         <item>@string/audio_hle</item>
         <item>@string/audio_lle</item>
         <item>@string/audio_lle_multithread</item>
