@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,8 +7,10 @@
 #include <bitset>
 #include <tsl/robin_map.h>
 
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
+#include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/profile.h"
 #include "video_core/shader/generator/shader_gen.h"
@@ -58,7 +60,8 @@ public:
     }
 
     /// Loads the pipeline cache stored to disk
-    void LoadDiskCache();
+    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                       const VideoCore::DiskResourceLoadCallback& callback = {});
 
     /// Stores the generated pipeline cache to disk
     void SaveDiskCache();
@@ -111,6 +114,7 @@ private:
     tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
         graphics_pipelines;
 
+    std::unique_ptr<ShaderDiskCache> shader_cache;
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;
     std::array<vk::DescriptorSet, NumRasterizerSets> bound_descriptor_sets{};
     std::array<u32, NumDynamicOffsets> offsets{};
