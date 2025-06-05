@@ -8,6 +8,8 @@
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/settings.h"
+#include "core/core.h"
+#include "core/loader/loader.h"
 #include "core/memory.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/renderer_vulkan/renderer_vulkan.h"
@@ -143,7 +145,15 @@ void RasterizerVulkan::TickFrame() {
 
 void RasterizerVulkan::LoadDefaultDiskResources(
     const std::atomic_bool& stop_loading, const VideoCore::DiskResourceLoadCallback& callback) {
-    pipeline_cache.LoadDiskCache();
+
+    u64 program_id;
+    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
+        Loader::ResultStatus::Success) {
+        program_id = 0;
+    }
+
+    pipeline_cache.SetProgramID(program_id);
+    pipeline_cache.LoadDiskCache(stop_loading, callback);
 }
 
 void RasterizerVulkan::SyncDrawState() {
@@ -971,6 +981,11 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
     }
 
     uniform_buffer.Commit(used_bytes);
+}
+
+void RasterizerVulkan::SwitchDiskResources(u64 title_id) {
+    std::atomic_bool stop_loading = false;
+    pipeline_cache.SwitchPipelineCache(title_id, stop_loading, switch_disk_resources_callback);
 }
 
 } // namespace Vulkan

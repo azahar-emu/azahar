@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,6 +7,7 @@
 #include <bitset>
 #include <tsl/robin_map.h>
 
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
 #include "video_core/shader/generator/pica_fs_config.h"
@@ -58,7 +59,8 @@ public:
     }
 
     /// Loads the pipeline cache stored to disk
-    void LoadDiskCache();
+    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                       const VideoCore::DiskResourceLoadCallback& callback = {});
 
     /// Stores the generated pipeline cache to disk
     void SaveDiskCache();
@@ -82,6 +84,20 @@ public:
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
+    /// Switches the shader disk cache to the specified title
+    void SwitchPipelineCache(u64 title_id,
+                             const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                             const VideoCore::DiskResourceLoadCallback& callback = {});
+
+    /// Gets the current program ID
+    u64 GetProgramID() const {
+        return current_program_id;
+    }
+
+    void SetProgramID(u64 program_id) {
+        current_program_id = program_id;
+    }
+
 private:
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
@@ -89,7 +105,7 @@ private:
     /// Returns true when the disk data can be used by the current driver
     bool IsCacheValid(std::span<const u8> cache_data) const;
 
-    /// Create shader disk cache directories. Returns true on success.
+    /// Create pipeline cache directories. Returns true on success.
     bool EnsureDirectories() const;
 
     /// Returns the pipeline cache storage dir
@@ -110,7 +126,6 @@ private:
     GraphicsPipeline* current_pipeline{};
     tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
         graphics_pipelines;
-
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;
     std::array<vk::DescriptorSet, NumRasterizerSets> bound_descriptor_sets{};
     std::array<u32, NumDynamicOffsets> offsets{};
@@ -122,6 +137,8 @@ private:
     std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
     std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
+
+    u64 current_program_id{0};
 };
 
 } // namespace Vulkan
