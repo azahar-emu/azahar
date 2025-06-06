@@ -615,8 +615,13 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
                 ErrorLevel::Success};
     }
+    u64 program_id = 0;
+    if (process->codeset) {
+        program_id = process->codeset->program_id;
+    }
 
-    gpu.Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
+    // Switch the shader cache and other disk resources to the new program ID
+    gpu.Renderer().Rasterizer()->SwitchDiskResources(program_id);
 
     if (blocking) {
         // TODO: The thread should be put to sleep until acquired.

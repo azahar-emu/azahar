@@ -93,7 +93,8 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
           DescriptorHeap{instance, scheduler.GetMasterSemaphore(), UTILITY_BINDINGS, 32}},
       trivial_vertex_shader{
           instance, vk::ShaderStageFlagBits::eVertex,
-          GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)} {
+          GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)},
+      current_program_id{0} {
     scheduler.RegisterOnDispatch([this] { update_queue.Flush(); });
     profile = Pica::Shader::Profile{
         .has_separable_shaders = true,
@@ -138,14 +139,8 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
         vk::PipelineCacheCreateInfo cache_info{};
         pipeline_cache = device.createPipelineCacheUnique(cache_info);
         return;
-    }
-
-    // Initialize program ID if not set
-    u64 program_id = 0;
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
-        Loader::ResultStatus::Success) {
-        program_id = 0;
-    }
+    } // No need to initialize program ID here - it will be set when a process acquires GPU right
+    const u64 program_id = 0;
 
     // Initialize the shader disk cache
     shader_cache = std::make_unique<ShaderDiskCache>(program_id); // Load shaders from disk
@@ -356,12 +351,6 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
 }
 
 void PipelineCache::SaveDiskCache() {
-    // Save shader disk cache
-    if (shader_cache) {
-        // This will be handled internally by the shader cache based on
-        // Settings::values.use_disk_shader_cache
-    }
-
     // Save Vulkan pipeline cache
     if (!Settings::values.use_disk_shader_cache || !EnsureDirectories() || !pipeline_cache) {
         return;
@@ -370,18 +359,20 @@ void PipelineCache::SaveDiskCache() {
     const auto cache_dir = GetPipelineCacheDir();
     const u32 vendor_id = instance.GetVendorID();
     const u32 device_id = instance.GetDeviceID();
-    const auto cache_file_path = fmt::format("{}{:x}{:x}.bin", cache_dir, vendor_id, device_id);
+    const u64 program_id = current_program_id; // Use our stored program ID instead
+    const auto cache_file_path =
+        fmt::format("{}{:x}{:x}_{:016x}.bin", cache_dir, vendor_id, device_id, program_id);
 
     FileUtil::IOFile cache_file{cache_file_path, "wb"};
     if (!cache_file.IsOpen()) {
-        LOG_ERROR(Render_Vulkan, "Unable to open pipeline cache for writing");
+        LOG_ERROR(Render_Vulkan, "Unable to open pipeline cache {} for writing", cache_file_path);
         return;
     }
 
     const vk::Device device = instance.GetDevice();
     const auto cache_data = device.getPipelineCacheData(*pipeline_cache);
     if (cache_file.WriteBytes(cache_data.data(), cache_data.size()) != cache_data.size()) {
-        LOG_ERROR(Render_Vulkan, "Error during pipeline cache write");
+        LOG_ERROR(Render_Vulkan, "Error during pipeline cache write to {}", cache_file_path);
         return;
     }
 }
@@ -788,6 +779,56 @@ bool PipelineCache::EnsureDirectories() const {
 
 std::string PipelineCache::GetPipelineCacheDir() const {
     return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + "vulkan" + DIR_SEP;
+}
+
+void PipelineCache::SwitchProgramID(u64 program_id) {
+    SaveDiskCache();
+
+    // Store the program ID locally
+    current_program_id = program_id;
+
+    // Create a new shader cache for the new program
+    shader_cache = std::make_unique<ShaderDiskCache>(program_id);
+    auto transferable = shader_cache->LoadTransferable();
+    if (transferable) {
+        LOG_INFO(Render_Vulkan, "Loaded {} transferable shaders for program {}",
+                 transferable->size(), program_id);
+    }
+
+    // Create a new Vulkan pipeline cache for the new program
+    const vk::Device device = instance.GetDevice();
+    vk::PipelineCacheCreateInfo cache_info{};
+
+    if (Settings::values.use_disk_shader_cache && EnsureDirectories()) {
+        const auto cache_dir = GetPipelineCacheDir();
+        const u32 vendor_id = instance.GetVendorID();
+        const u32 device_id = instance.GetDeviceID();
+        const auto cache_file_path =
+            fmt::format("{}{:x}{:x}_{:016x}.bin", cache_dir, vendor_id, device_id, program_id);
+
+        // Try to load existing cache file
+        FileUtil::IOFile cache_file{cache_file_path, "rb"};
+        if (cache_file.IsOpen()) {
+            const u64 cache_file_size = cache_file.GetSize();
+            std::vector<u8> cache_data(cache_file_size);
+
+            if (cache_file.ReadBytes(cache_data.data(), cache_file_size) == cache_file_size &&
+                IsCacheValid(cache_data)) {
+                LOG_INFO(Render_Vulkan, "Loading pipeline cache for program {} with size {} KB",
+                         program_id, cache_file_size / 1024);
+                cache_info.initialDataSize = cache_file_size;
+                cache_info.pInitialData = cache_data.data();
+            }
+        }
+    }
+
+    pipeline_cache = device.createPipelineCacheUnique(cache_info);
+
+    // Clear existing pipeline entries
+    graphics_pipelines.clear();
+    fixed_geometry_shaders.clear();
+    fragment_shaders.clear();
+    programmable_vertex_cache.clear();
 }
 
 } // namespace Vulkan
