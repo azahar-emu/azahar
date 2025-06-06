@@ -143,7 +143,12 @@ void RasterizerVulkan::TickFrame() {
 
 void RasterizerVulkan::LoadDefaultDiskResources(
     const std::atomic_bool& stop_loading, const VideoCore::DiskResourceLoadCallback& callback) {
-    pipeline_cache.LoadDiskCache();
+    // Save the callback for later use in SwitchDiskResources
+    disk_resource_load_callback = callback;
+
+    callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+    pipeline_cache.LoadDiskCache(stop_loading, callback);
+    callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
 }
 
 void RasterizerVulkan::SyncDrawState() {
@@ -971,6 +976,20 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
     }
 
     uniform_buffer.Commit(used_bytes);
+}
+
+void RasterizerVulkan::SwitchDiskResources(u64 title_id) {
+    // Only proceed if we have a valid callback (should have been set in LoadDefaultDiskResources)
+    if (!disk_resource_load_callback) {
+        LOG_WARNING(Render_Vulkan,
+                    "No disk resource load callback available for progress reporting");
+        pipeline_cache.SwitchPipelineCache(title_id);
+        return;
+    }
+
+    // Pass the callback to show loading progress
+    std::atomic_bool stop_loading = false;
+    pipeline_cache.SwitchPipelineCache(title_id, stop_loading, disk_resource_load_callback);
 }
 
 } // namespace Vulkan
