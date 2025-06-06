@@ -230,6 +230,7 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
     // If the applet is being HLEd, send directly to the applet.
     const auto applet = hle_applets[parameter.destination_id];
     if (applet != nullptr) {
+        LOG_DEBUG(Service_APT, "hle");
         applet->ReceiveParameter(parameter);
     } else {
         // Otherwise, send the parameter the LLE way.
@@ -258,6 +259,7 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
         }
 
         // Signal the event to let the receiver know that a new parameter is ready to be read
+        LOG_WARNING(Service_APT, "signal");
         auto slot = GetAppletSlotFromId(next_parameter->destination_id);
         if (slot != AppletSlot::Error) {
             GetAppletSlot(slot)->parameter_event->Signal();
@@ -287,9 +289,10 @@ ResultVal<MessageParameter> AppletManager::GlanceParameter(AppletId app_id) {
                       ErrorLevel::Status);
     }
 
+    LOG_CRITICAL(Service_APT, "dest={:X} == app_id={:X}", next_parameter->destination_id, app_id);
     if (next_parameter->destination_id != app_id) {
-        return Result(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
-                      ErrorLevel::Status);
+        // return Result(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                      // ErrorLevel::Status);
     }
 
     auto parameter = *next_parameter;
@@ -1020,15 +1023,19 @@ Result AppletManager::OrderToCloseApplication() {
     }
 
     auto active_slot_data = GetAppletSlot(active_slot);
+    auto id = active_slot_data->applet_id;
+    auto pos = active_slot_data->attributes.applet_pos.Value();
+    LOG_DEBUG(Service_APT, "test id={:X}, pos={}  ", id, pos);
     if (active_slot_data->applet_id == AppletId::None ||
         active_slot_data->attributes.applet_pos != AppletPos::System) {
-        return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
-                ErrorLevel::Status};
+        // return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
+                // ErrorLevel::Status};
     }
 
     ordered_to_close_application = true;
     active_slot = AppletSlot::Application;
 
+    LOG_CRITICAL(Service_APT, "sending parameters  ");
     SendParameter({
         .sender_id = AppletId::HomeMenu,
         .destination_id = AppletId::Application,
@@ -1086,6 +1093,7 @@ Result AppletManager::PrepareToCloseApplication(bool return_to_sys) {
         // EnsureHomeMenuLoaded();
     }
 
+    LOG_DEBUG(Service_APT, "target={:03X}", application_close_target);
     return ResultSuccess;
 }
 
@@ -1115,6 +1123,7 @@ Result AppletManager::CloseApplication(std::shared_ptr<Kernel::Object> object,
     }
 
     // TODO: Terminate the application process.
+    LOG_DEBUG(Service_APT, "target={:03X}", application_close_target);
     return ResultSuccess;
 }
 
