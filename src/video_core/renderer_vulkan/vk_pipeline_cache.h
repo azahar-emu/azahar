@@ -10,7 +10,6 @@
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
-#include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/profile.h"
 #include "video_core/shader/generator/shader_gen.h"
@@ -83,7 +82,17 @@ public:
     void UseTrivialGeometryShader();
 
     /// Binds a fragment shader generated from PICA state
-    void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
+    void UseFragmentShader(const Pica::RegsInternal& regs,
+                           const Pica::Shader::UserConfig&
+                               user); /// Switches the shader disk cache to the specified title
+    void SwitchPipelineCache(u64 title_id,
+                             const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                             const VideoCore::DiskResourceLoadCallback& callback = {});
+
+    /// Gets the current program ID
+    u64 GetProgramID() const {
+        return current_program_id;
+    }
 
 private:
     /// Builds the rasterizer pipeline layout
@@ -92,7 +101,7 @@ private:
     /// Returns true when the disk data can be used by the current driver
     bool IsCacheValid(std::span<const u8> cache_data) const;
 
-    /// Create shader disk cache directories. Returns true on success.
+    /// Create pipeline cache directories. Returns true on success.
     bool EnsureDirectories() const;
 
     /// Returns the pipeline cache storage dir
@@ -113,8 +122,6 @@ private:
     GraphicsPipeline* current_pipeline{};
     tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
         graphics_pipelines;
-
-    std::unique_ptr<ShaderDiskCache> shader_cache;
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;
     std::array<vk::DescriptorSet, NumRasterizerSets> bound_descriptor_sets{};
     std::array<u32, NumDynamicOffsets> offsets{};
@@ -126,6 +133,8 @@ private:
     std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
     std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
+
+    u64 current_program_id{0};
 };
 
 } // namespace Vulkan
