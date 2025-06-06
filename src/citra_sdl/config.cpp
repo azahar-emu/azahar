@@ -17,7 +17,6 @@
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
-#include "network/network_settings.h"
 
 SdlConfig::SdlConfig() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -353,10 +352,9 @@ void SdlConfig::ReadValues() {
     }
 
     // Web Service
-    NetSettings::values.web_api_url =
-        sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+    ReadSetting("WebService", Settings::values.web_api_url);
+    ReadSetting("WebService", Settings::values.citra_username);
+    ReadSetting("WebService", Settings::values.citra_token);
 
     // Video Dumping
     Settings::values.output_format =
