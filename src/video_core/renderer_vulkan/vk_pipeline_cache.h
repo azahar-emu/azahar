@@ -85,9 +85,6 @@ public:
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
-    /// Switches to using a shader cache for a different program ID
-    void SwitchProgramID(u64 program_id);
-
 private:
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
@@ -129,8 +126,6 @@ private:
     std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
     std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
-
-    u64 current_program_id = 0;
 };
 
 } // namespace Vulkan
