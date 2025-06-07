@@ -1,5 +1,6 @@
 # CMake 3.12 required for 20 to be a valid value for CXX_STANDARD
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0167 NEW)
 
 # Don't override the warning flags in MSVC:
 cmake_policy(SET CMP0092 NEW)

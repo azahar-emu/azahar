@@ -477,7 +477,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
     });
 
     std::atomic_bool stop_run;
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             LOG_DEBUG(Frontend, "Loading stage {} progress {} {}", static_cast<u32>(stage), value,
                       total);
