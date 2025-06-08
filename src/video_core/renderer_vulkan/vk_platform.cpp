@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -128,6 +128,7 @@ std::shared_ptr<Common::DynamicLibrary> OpenLibrary(
 vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& emu_window) {
     const auto& window_info = emu_window.GetWindowInfo();
     vk::SurfaceKHR surface{};
+    vk::Result res;
 
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     if (window_info.type == Frontend::WindowSystemType::Windows) {
@@ -136,8 +137,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .hwnd = static_cast<HWND>(window_info.render_surface),
         };
 
-        if (instance.createWin32SurfaceKHR(&win32_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Win32 surface");
+        if ((res = instance.createWin32SurfaceKHR(&win32_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Win32 surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -148,8 +151,9 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .window = reinterpret_cast<Window>(window_info.render_surface),
         };
 
-        if (instance.createXlibSurfaceKHR(&xlib_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_ERROR(Render_Vulkan, "Failed to initialize Xlib surface");
+        if ((res = instance.createXlibSurfaceKHR(&xlib_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_ERROR(Render_Vulkan, "Failed to initialize Xlib surface: {}", vk::to_string(res));
             UNREACHABLE();
         }
     } else if (window_info.type == Frontend::WindowSystemType::Wayland) {
@@ -158,9 +162,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .surface = static_cast<wl_surface*>(window_info.render_surface),
         };
 
-        if (instance.createWaylandSurfaceKHR(&wayland_ci, nullptr, &surface) !=
+        if ((res = instance.createWaylandSurfaceKHR(&wayland_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
-            LOG_ERROR(Render_Vulkan, "Failed to initialize Wayland surface");
+            LOG_ERROR(Render_Vulkan, "Failed to initialize Wayland surface: {}",
+                      vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -170,8 +175,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .pLayer = static_cast<const CAMetalLayer*>(window_info.render_surface),
         };
 
-        if (instance.createMetalSurfaceEXT(&macos_ci, nullptr, &surface) != vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize MacOS surface");
+        if ((res = instance.createMetalSurfaceEXT(&macos_ci, nullptr, &surface)) !=
+            vk::Result::eSuccess) {
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize MacOS surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }
@@ -181,9 +188,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .window = reinterpret_cast<ANativeWindow*>(window_info.render_surface),
         };
 
-        if (instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface) !=
+        if ((res = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
-            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface");
+            LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface: {}",
+                         vk::to_string(res));
             UNREACHABLE();
         }
     }
