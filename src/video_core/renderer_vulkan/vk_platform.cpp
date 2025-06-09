@@ -188,7 +188,6 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
             .window = reinterpret_cast<ANativeWindow*>(window_info.render_surface),
         };
 
-        vk::Result result = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface);
         if ((res = instance.createAndroidSurfaceKHR(&android_ci, nullptr, &surface)) !=
             vk::Result::eSuccess) {
             LOG_CRITICAL(Render_Vulkan, "Failed to initialize Android surface: {}",
