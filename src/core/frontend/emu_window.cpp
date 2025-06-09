@@ -272,7 +272,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
         }
     }
 #ifdef ANDROID
-    if (is_secondary) layout = Layout::AndroidSecondaryLayout(width,height);
+    if (is_secondary)
+        layout = Layout::AndroidSecondaryLayout(width, height);
 #endif
     UpdateMinimumWindowSize(min_size);
 

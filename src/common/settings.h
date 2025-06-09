@@ -54,12 +54,7 @@ enum class PortraitLayoutOption : u32 {
     PortraitOriginal
 };
 
-enum class SecondaryScreenLayout : u32 {
-    None,
-    TopScreenOnly,
-    BottomScreenOnly,
-    SideBySide
-};
+enum class SecondaryScreenLayout : u32 { None, TopScreenOnly, BottomScreenOnly, SideBySide };
 /** Defines where the small screen will appear relative to the large screen
  * when in Large Screen mode
  */
@@ -524,7 +519,8 @@ struct Values {
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
-    SwitchableSetting<SecondaryScreenLayout> secondary_screen_layout{SecondaryScreenLayout::None, "secondary_screen_layout"};
+    SwitchableSetting<SecondaryScreenLayout> secondary_screen_layout{SecondaryScreenLayout::None,
+                                                                     "secondary_screen_layout"};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
                                                            "large_screen_proportion"};
     SwitchableSetting<int> screen_gap{0, "screen_gap"};

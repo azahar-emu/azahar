@@ -114,7 +114,7 @@ void LogSettings() {
     }
     log_setting("Layout_LayoutOption", values.layout_option.GetValue());
     log_setting("Layout_PortraitLayoutOption", values.portrait_layout_option.GetValue());
-    log_setting("Layout_SecondScreenLayout",values.secondary_screen_layout.GetValue());
+    log_setting("Layout_SecondScreenLayout", values.secondary_screen_layout.GetValue());
     log_setting("Layout_SwapScreen", values.swap_screen.GetValue());
     log_setting("Layout_UprightScreen", values.upright_screen.GetValue());
     log_setting("Layout_ScreenGap", values.screen_gap.GetValue());

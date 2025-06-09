@@ -72,8 +72,9 @@ private:
     EGLContext egl_context{};
 };
 
-EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(Core::System& system_, ANativeWindow* surface, bool is_secondary, EGLContext* sharedContext)
-    : EmuWindow_Android{surface,is_secondary}, system{system_} {
+EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(Core::System& system_, ANativeWindow* surface,
+                                                   bool is_secondary, EGLContext* sharedContext)
+    : EmuWindow_Android{surface, is_secondary}, system{system_} {
     if (egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY); egl_display == EGL_NO_DISPLAY) {
         LOG_CRITICAL(Frontend, "eglGetDisplay() failed");
         return;
@@ -98,8 +99,9 @@ EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(Core::System& system_, ANativ
     }
     if (sharedContext) {
         egl_context = *sharedContext;
-    }else if (egl_context = eglCreateContext(egl_display, egl_config, 0, egl_context_attribs.data());
-        egl_context == EGL_NO_CONTEXT) {
+    } else if (egl_context =
+                   eglCreateContext(egl_display, egl_config, 0, egl_context_attribs.data());
+               egl_context == EGL_NO_CONTEXT) {
         LOG_CRITICAL(Frontend, "eglCreateContext() failed");
         return;
     }
@@ -211,13 +213,12 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
     if (presenting_state == PresentingState::Initial) [[unlikely]] {
         presenting_state = PresentingState::Running;
     }
-//    if (presenting_state != PresentingState::Running) [[unlikely]] {
-//        return;
-//    }
+    //    if (presenting_state != PresentingState::Running) [[unlikely]] {
+    //        return;
+    //    }
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0);
-    system.GPU().Renderer().TryPresent(100,is_secondary);
+    system.GPU().Renderer().TryPresent(100, is_secondary);
     eglSwapBuffers(egl_display, egl_surface);
-
 }

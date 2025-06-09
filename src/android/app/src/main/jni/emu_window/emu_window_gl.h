@@ -19,7 +19,8 @@ struct ANativeWindow;
 
 class EmuWindow_Android_OpenGL : public EmuWindow_Android {
 public:
-    EmuWindow_Android_OpenGL(Core::System& system, ANativeWindow* surface, bool is_secondary, EGLContext* sharedContext = NULL);
+    EmuWindow_Android_OpenGL(Core::System& system, ANativeWindow* surface, bool is_secondary,
+                             EGLContext* sharedContext = NULL);
     ~EmuWindow_Android_OpenGL() override = default;
 
     void TryPresenting() override;
