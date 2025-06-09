@@ -63,7 +63,6 @@ public:
         return swapchain.GetImageCount();
     }
 
-
 private:
     void PresentThread(std::stop_token token);
 
