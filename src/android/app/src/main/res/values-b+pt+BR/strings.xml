@@ -83,7 +83,6 @@
     <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
     <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
-    <string name="cannot_skip">Você não pode pular esta etapa</string>
     <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
     <string name="selecting_user_directory_without_write_permissions">Você perdeu suas permissões de escrita no seu diretório de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">dados de usuário</a>, onde dados salvos e outras informações são guardadas.  Isso pode acontecer depois que algum app ou Android atualiza. Re-selecione o diretório para reobter as permissões para que você possa continuar.</string>
     <string name="set_up_theme_settings">Configurações de Tema</string>
@@ -211,7 +210,6 @@
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
     <string name="delay_render_thread">Atrasar thread de renderização do aplicativo</string>
     <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
-    <string name="advanced">Avançado\"</string>
     <string name="texture_sampling_name">Amostragem de Texturas</string>
     <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
     <string name="shaders_accurate_mul">Multiplicação precisa</string>
@@ -290,7 +288,6 @@
     <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>
     <string name="deterministic_async_operations">Operações Assíncronas Determinísticas</string>
     <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientação da Tela</string>
     <string name="layout_screen_orientation_auto_sensor">Automático</string>
@@ -298,7 +295,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Paisagem Reversa</string>
     <string name="layout_screen_orientation_portrait">Retrato</string>
     <string name="layout_screen_orientation_portrait_reverse">Retrato Reverso</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Limpar</string>
     <string name="slider_default">Padrão</string>
@@ -333,7 +329,6 @@
     <string name="cancelling">Cancelando...</string>
     <string name="important">Importante</string>
     <string name="dont_show_again">Não mostrar novamente</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Escolher pasta de jogos</string>
 
@@ -414,7 +409,6 @@
     <string name="emulation_cycle_landscape_layouts">Trocar Disposições</string>
     <string name="emulation_swap_screens">Trocar telas</string>
     <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>
-    <string name="emulation_show_overlay">Mostrar sobreposição</string>
     <string name="emulation_close_game">Fechar jogo</string>
     <string name="emulation_toggle_pause">Alternar Pausa</string>
     <string name="miscellaneous">Diversos</string>
@@ -490,7 +484,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Jogar</string>
-    <string name="shortcut">Atalho</string>
     <string name="uninstall_cia">Desinstalar Aplicativo</string>
     <string name="uninstalling">Desinstalando...</string>
     <string name="game_context_open_save_dir">Abrir pasta de dados salvos</string>
@@ -502,7 +495,7 @@
     <string name="game_context_open_extra">Abrir pasta extra</string>
     <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
     <string name="game_context_uninstall_updates">Desinstalar atualizações</string>
-
+    <string name="shortcut">Atalho</string>
     <!-- Cheats -->
     <string name="cheats">Truques</string>
     <string name="cheats_add">Adicionar Trapaça</string>

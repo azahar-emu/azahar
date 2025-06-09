@@ -64,7 +64,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="warning_cancel">Annuleren</string>
     <string name="select_citra_user_folder">Selecteer Gebruiker map</string>
     <string name="select">Selecteer</string>
-    <string name="cannot_skip">Je kunt deze stap niet overslaan</string>
     <string name="cannot_skip_directory_description">Deze stap is vereist om Azahar te laten werken. Selecteer een map en u kunt doorgaan</string>
     <string name="set_up_theme_settings">Thema instellingen</string>
     <string name="setup_set_theme">Thema instellen</string>

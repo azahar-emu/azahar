@@ -389,18 +389,15 @@ GMainWindow::GMainWindow(Core::System& system_)
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
 
-#ifdef __APPLE__
-    // Workaround for https://github.com/azahar-emu/azahar/issues/933
-    ui->menubar->setNativeMenuBar(false);
-#endif
-
     show();
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
     if (UISettings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
             const bool is_prerelease = // TODO: This can be done better -OS
-                (strstr(Common::g_build_fullname, "rc") != NULL);
+                ((strstr(Common::g_build_fullname, "alpha") != NULL) ||
+                 (strstr(Common::g_build_fullname, "beta") != NULL) ||
+                 (strstr(Common::g_build_fullname, "rc") != NULL));
             const std::optional<std::string> latest_release_tag =
                 UpdateChecker::GetLatestRelease(is_prerelease);
             if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
@@ -999,7 +996,9 @@ void GMainWindow::ConnectWidgetEvents() {
 }
 
 void GMainWindow::ConnectMenuEvents() {
-    const auto connect_menu = [&](QAction* action, const auto& event_fn) {
+    const auto connect_menu = [&](QAction* action, const auto& event_fn,
+                                  QAction::MenuRole role = QAction::NoRole) {
+        action->setMenuRole(role);
         connect(action, &QAction::triggered, this, event_fn);
         // Add actions to this window so that hiding menus in fullscreen won't disable them
         addAction(action);
@@ -1016,7 +1015,7 @@ void GMainWindow::ConnectMenuEvents() {
         connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
                      [this, region] { OnMenuBootHomeMenu(region); });
     }
-    connect_menu(ui->action_Exit, &QMainWindow::close);
+    connect_menu(ui->action_Exit, &QMainWindow::close, QAction::QuitRole);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
 
@@ -1028,7 +1027,7 @@ void GMainWindow::ConnectMenuEvents() {
         QDesktopServices::openUrl(QUrl(QStringLiteral(
             "https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md")));
     });
-    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure);
+    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure, QAction::PreferencesRole);
     connect_menu(ui->action_Configure_Current_Game, &GMainWindow::OnConfigurePerGame);
 
     // View
@@ -1092,7 +1091,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_FAQ, []() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://azahar-emu.org/pages/faq/")));
     });
-    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
+    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra, QAction::AboutRole);
 }
 
 void GMainWindow::UpdateMenuState() {
@@ -3231,7 +3230,18 @@ void GMainWindow::UpdateStatusBar() {
                                      .arg(Settings::GetFrameLimit()));
     }
     game_fps_label->setText(tr("App: %1 FPS").arg(results.game_fps, 0, 'f', 0));
-    emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
+    if (UISettings::values.show_advanced_frametime_info) {
+        emu_frametime_label->setText(
+            tr("Frame: %1 ms (GPU: %2 ms, IPC: %3 ms, SVC: %4 ms, Rem: %5 ms)")
+                .arg(results.time_vblank_interval * 1000.0, 2, 'f', 2)
+                .arg(results.time_gpu * 1000.0, 2, 'f', 2)
+                .arg(results.time_hle_ipc * 1000.0, 2, 'f', 2)
+                .arg(results.time_hle_svc * 1000.0, 2, 'f', 2)
+                .arg(results.time_remaining * 1000.0, 2, 'f', 2));
+    } else {
+        emu_frametime_label->setText(
+            tr("Frame: %1 ms").arg(results.time_vblank_interval * 1000.0, 2, 'f', 2));
+    }
 
     if (show_artic_label) {
         artic_traffic_label->setVisible(true);

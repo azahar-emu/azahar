@@ -74,6 +74,10 @@
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
     <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
+    <string name="permissions">Permisos</string>
+    <string name="select_emulator_data_folders">Carpetas de datos</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Seleccionar carpetas de datos<br/>(Carpeta de usuario es necesaria)]]></string>
+    <string name="permissions_description">Concede permisos opcionales para usar funciones  específicas del emulador</string>
     <string name="warning_help">Ayuda</string>
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancelar</string>
@@ -83,7 +87,7 @@
     <string name="keep_current_azahar_directory">Mantener el directorio Azahar actual</string>
     <string name="use_prior_lime3ds_directory">Usar el directorio de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
-    <string name="cannot_skip">No puedes saltarte este paso</string>
+    <string name="cannot_skip">No puedes saltarte el configuración de la carpeta de usuario</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
     <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de algunas actualizaciones de aplicaciones o de Android. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
@@ -208,6 +212,8 @@
     <string name="graphics_api">API gráfica</string>
     <string name="spirv_shader_gen">Activar Generación de Sombreados SPIR-V</string>
     <string name="spirv_shader_gen_description">Usa SPIR-V en vez de GLSL para emitir el fragmento de sombreador usado para emular PICA.</string>
+    <string name="disable_spirv_optimizer">Desactivar el optimizador SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Desactiva el pase de optimización SPIR-V reduciendo considerablemente el tartamudeo sin afectar apenas el rendimiento.</string>
     <string name="async_shaders">Activar compilación de sombreados asíncrona</string>
     <string name="async_shaders_description">Compila los sombreados en el fondo para reducir los parones durante la partida.
 Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
@@ -298,14 +304,24 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="delay_start_lle_modules_description">Retrasa el inicio de la aplicación cuando los módulos LLE están habilitados.</string>
     <string name="deterministic_async_operations">Operaciones asíncronas deterministas</string>
     <string name="deterministic_async_operations_description">Hace que las operaciones asíncronas sean deterministas para la depuración. Habilitar esta opción puede causar bloqueos.</string>
+    <string name="enable_rpc_server">Activar servidor RPC</string>
+    <string name="enable_rpc_server_desc">Activa el servidor RPC en el puerto 45987. Esto permite leer/escribir de manera remota la memoria emulada.</string>
+    <string name="shader_jit">Activar Sombreador JIT</string>
+    <string name="shader_jit_description">Usar el motor JIT en lugar del intérprete para la emulación del sombreador de software.</string>
 
-    <!-- Layout settings strings -->
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientación de pantalla</string>
     <string name="layout_screen_orientation_auto_sensor">Automática</string>
     <string name="layout_screen_orientation_landscape">Horizontal</string>
     <string name="layout_screen_orientation_landscape_reverse">Horizontal invertida</string>
     <string name="layout_screen_orientation_portrait">Retrato</string>
     <string name="layout_screen_orientation_portrait_reverse">Retrato invertido</string>
+    <string name="aspect_ratio_default">Por defecto</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Alargar</string>
 
     <!-- Miscellaneous -->
     <string name="clear">Reiniciar</string>
@@ -342,6 +358,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cancelling">Cancelando...</string>
     <string name="important">Importante</string>
     <string name="dont_show_again">No volver a mostrar</string>
+    <string name="visibility">Visibilidad</string>
+    <string name="information">Información</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directorio de Juego</string>
@@ -389,6 +407,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_control_dpad_slide_enable">Deslizamiento de la Cruceta</string>
     <string name="emulation_open_settings">Abrir Configuración</string>
     <string name="emulation_open_cheats">Abrir Trucos</string>
+    <string name="emulation_aspect_ratio">Relación de Aspecto</string>
     <string name="emulation_switch_screen_layout">Estilo de Pantalla Apaisada</string>
     <string name="emulation_switch_portrait_layout">Estilo de Pantalla de Perfil</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
@@ -424,8 +443,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_custom_layout_height">Alto</string>
     <string name="emulation_cycle_landscape_layouts">Alternar estilos</string>
     <string name="emulation_swap_screens">Intercambiar Pantallas</string>
+    <string name="emulation_rotate_upright">Rotar pantalla en vertical</string>
     <string name="emulation_touch_overlay_reset">Reiniciar Estilo</string>
-    <string name="emulation_show_overlay">Mostrar Estilo</string>
+    <string name="emulation_show_controller_overlay">Mostrar superposición de controles</string>
     <string name="emulation_close_game">Cerrar Juego</string>
     <string name="emulation_toggle_pause">Activar pausa</string>
     <string name="miscellaneous">Misceláneos</string>
@@ -501,7 +521,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
-    <string name="shortcut">Atajo</string>
     <string name="uninstall_cia">Desinstalar Aplicación</string>
     <string name="uninstalling">Desinstalando...</string>
     <string name="game_context_open_save_dir">Abrir Carpeta de Guardado</string>
@@ -513,6 +532,40 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="game_context_open_extra">Abrir Carpeta Extra</string>
     <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
     <string name="game_context_uninstall_updates">Desinstalar Actualizaciones</string>
+    <string name="shortcut">Atajo</string>
+    <string name="shortcut_name">Nombre de Atajo</string>
+    <string name="edit_icon">Editar icono</string>
+    <string name="create_shortcut">Crear atajo</string>
+    <string name="shortcut_name_empty">El nombre del atajo no puede estar vacío</string>
+    <string name="shortcut_image_stretch_toggle">Alargar para ajustar la imagen</string>
+
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">Mostrar información de rendimiento</string>
+    <string name="performance_overlay_options">Información de rendimiento</string>
+    <string name="performance_overlay_enable">Activar información de rendimiento</string>
+    <string name="performance_overlay_options_description">Configura la información de rendimiento</string>
+    <string name="overlay_show_fps">Mostrar FPS</string>
+    <string name="overlay_show_fps_description">Muestra los fotogramas por segundo actuales.</string>
+    <string name="overlay_show_frametime">Mostrar duración de fotogramas</string>
+    <string name="overlay_show_frametime_description">Muestra la duración actual de cada fotograma.</string>
+    <string name="overlay_show_speed">Mostrar velocidad</string>
+    <string name="overlay_show_speed_description">Muestra el porcentaje de velocidad de emulación actual.</string>
+    <string name="overlay_show_app_ram_usage">Mostrar el uso de memoria de la aplicación</string>
+    <string name="overlay_show_app_ram_usage_description">Muestra la cantidad de memoria RAM que esta usando el emulador.</string>
+    <string name="overlay_show_available_ram">Mostrar memoria disponible</string>
+    <string name="overlay_show_available_ram_description">Muestra la cantidad de memoria RAM que esta disponible.</string>
+    <string name="overlay_show_battery_temp">Mostrar la temperatura de la batería</string>
+    <string name="overlay_show_battery_temp_description">Muestra la temperatura actual de la batería en Celsius y Fahrenheit.</string>
+    <string name="overlay_position">Posición de la información</string>
+    <string name="overlay_position_description">Elige donde la información de rendimiento será mostrada en la pantalla.</string>
+    <string name="overlay_position_top_left">Arriba a la izquierda</string>
+    <string name="overlay_position_top_right">Arriba a la derecha</string>
+    <string name="overlay_position_bottom_left">Abajo a la izquierda</string>
+    <string name="overlay_position_bottom_right">Abajo a la derecha</string>
+    <string name="overlay_position_center_top">Centro superior</string>
+    <string name="overlay_position_center_bottom">Centro inferior </string>
+    <string name="overlay_background">Fondo de la información</string>
+    <string name="overlay_background_description">Agrega un fondo detrás de la información para hacerla más legible.</string>
 
     <!-- Cheats -->
     <string name="cheats">Trucos</string>

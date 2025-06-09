@@ -83,7 +83,6 @@
     <string name="keep_current_azahar_directory">Şimdiki Azahar Dizinini Koru</string>
     <string name="use_prior_lime3ds_directory">Eski Lime3DS Dizinini Kullan</string>
     <string name="select">Seç</string>
-    <string name="cannot_skip">Bu adımı geçemezsiniz</string>
     <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
     <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
@@ -210,7 +209,6 @@
     <string name="texture_filter_description">Dokulara bir filtre uygulayarak uygulamaların görsellerini geliştirir. Desteklenen filtreler Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale ve MMPX\'tir.</string>
     <string name="delay_render_thread">Oyun işleme iş parçacığını geciktir</string>
     <string name="delay_render_thread_description">GPU\'ya veri gönderirken oyun işleme iş parçacığını geciktirin. Dinamik kare hızlarına sahip (çok az sayıda) uygulamada performans sorunlarına yardımcı olur.</string>
-    <string name="advanced">Gelişmiş\"</string>
     <string name="texture_sampling_name">Doku Örnekleme</string>
     <string name="texture_sampling_description">Uygulamalar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, görüntü yükseltme sırasında hatalı davranan uygulamaların olduğu bazı durumlarda faydalı olabilir. Emin değilseniz, bunu Uygulama Kontrollü olarak ayarlayın.</string>
     <string name="shaders_accurate_mul">İsabetli Çoğaltma</string>
@@ -242,7 +240,7 @@
     <string name="render3d">Stereoskopik 3B Modu</string>
     <string name="factor3d">Derinlik</string>
     <string name="factor3d_description">3D kaydıracının değerini belirtir. Stereoskopik 3D etkinleştirildiğinde bu değer %0\'dan daha yüksek bir değere ayarlanmalıdır.\nNot: %100\'ün üzerindeki derinlik değerleri gerçek donanımda mümkün değildir ve grafik sorunlarına neden olabilir</string>
-    <string name="disable_right_eye_render">Sağ Göz Render\'ını Devre Dışı Bırak</string>
+    <string name="disable_right_eye_render">Sağ Göz İşlemesini Devre Dışı Bırak</string>
     <string name="disable_right_eye_render_description">Bazı uygulamalarda performansı büyük ölçüde artırır, ancak diğerlerinde titremeye neden olabilir.</string>
     <string name="cardboard_vr">Karton VR</string>
     <string name="cardboard_screen_size">Karton Ekran Boyutu</string>
@@ -275,6 +273,7 @@
     <string name="cpu_clock_speed">CPU Saat Hızı</string>
     <string name="vsync">V-Sync\'i Etkinleştir</string>
     <string name="vsync_description">Oyun kare hızını cihazınızın yenileme hızına senkronize eder.</string>
+    <string name="renderer_debug">Hata Ayıklama İşleyicisi</string>
     <string name="renderer_debug_description">Grafiklerle ilgili ek hata ayıklama bilgilerini günlüğe kaydedin. Etkinleştirildiğinde, oyun performansı önemli ölçüde azalacaktır.</string>
     <string name="instant_debug_log">Her mesajda günlük çıktısını temizle</string>
     <string name="instant_debug_log_description">Hata ayıklama günlüğünü hemen dosyaya işler. Azahar çöküyor ve günlük çıktısı kesiliyorsa bunu kullanın.</string>
@@ -282,7 +281,6 @@
     <string name="delay_start_lle_modules_description">LLE modülleri etkinken uygulamanın başlamasını geciktirir</string>
     <string name="deterministic_async_operations">Deterministik Asenkron İşlemler</string>
     <string name="deterministic_async_operations_description">Hata ayıklama için asenkron işlemleri deterministik hale getirir. Bunu etkinleştirmek donmalara neden olabilir.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Ekran Yönelimi</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
@@ -290,7 +288,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Ters Yatay</string>
     <string name="layout_screen_orientation_portrait">Portre</string>
     <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Temizle</string>
     <string name="slider_default">Varsayılan</string>
@@ -324,7 +321,6 @@
     <string name="cancelling">İptal ediliyor...</string>
     <string name="important">Önemli</string>
     <string name="dont_show_again">Tekrar gösterme</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Oyun Dosyası Seç</string>
 
@@ -403,7 +399,6 @@
     <string name="emulation_custom_layout_height">Yükseklik</string>
     <string name="emulation_swap_screens">Ekranları Değiştir</string>
     <string name="emulation_touch_overlay_reset">Yerleşimi Sıfırla</string>
-    <string name="emulation_show_overlay">Yerleşimi Göster</string>
     <string name="emulation_close_game">Oyunu Kapat</string>
     <string name="emulation_toggle_pause">Duraklatmayı Aç / Kapat</string>
     <string name="miscellaneous">Çeşitli</string>
@@ -476,7 +471,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Oyna</string>
-    <string name="shortcut">Kısayol</string>
     <string name="uninstall_cia">Uygulamayı Sil</string>
     <string name="uninstalling">Siliniyor...</string>
     <string name="game_context_open_save_dir">Kayıt Verileri Klasörünü Aç</string>
@@ -488,7 +482,7 @@
     <string name="game_context_open_extra">Ekstra Klasörünü Aç</string>
     <string name="game_context_uninstall_dlc">DLC\'leri Sil</string>
     <string name="game_context_uninstall_updates">Güncellemeleri Sil</string>
-
+    <string name="shortcut">Kısayol</string>
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>

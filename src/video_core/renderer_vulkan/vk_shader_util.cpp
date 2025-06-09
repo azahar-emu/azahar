@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,7 @@
 #include "common/assert.h"
 #include "common/literals.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
 namespace Vulkan {
@@ -203,8 +204,8 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
     spv::SpvBuildLogger logger;
     glslang::SpvOptions options;
 
-    // Enable optimizations on the generated SPIR-V code.
-    options.disableOptimizer = false;
+    // Controls optimizations on the generated SPIR-V code.
+    options.disableOptimizer = Settings::values.disable_spirv_optimizer.GetValue();
     options.validate = false;
     options.optimizeSize = true;
 

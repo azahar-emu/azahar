@@ -113,6 +113,10 @@ async_shader_compilation =
 # 0: GLSL, 1: SPIR-V (default)
 spirv_shader_gen =
 
+# Whether to disable the SPIRV optimizer. Disabling it reduces stutter, but may slightly worsen performance
+# 0: Enabled, 1: Disabled (default)
+disable_spirv_optimizer =
+
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware
 use_hw_shader =
@@ -444,6 +448,10 @@ gdbstub_port=24689
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =
+
+# Enable RPC server for scripting purposes. Allows accessing guest memory remotely.
+# 0 (default): Off, 1: On
+enable_rpc_server =
 
 # Delay the start of apps when LLE modules are enabled
 # 0: Off, 1 (default): On

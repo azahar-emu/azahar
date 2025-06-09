@@ -85,7 +85,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="select_citra_user_folder">Seleziona cartella utente</string>
     <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">utente</a> usando il bottone sottostante.]]></string>
     <string name="select">Seleziona</string>
-    <string name="cannot_skip">Non puoi saltare questo passaggio</string>
     <string name="cannot_skip_directory_description">Questo passaggio è richiesto per permettere che Azahar funzioni. Quando la cartella verrà selezionata potrai continuare.</string>
     <string name="set_up_theme_settings">Impostazioni tema</string>
     <string name="setup_theme_settings_description">Configura le impostazioni del tema di Azahar.</string>
@@ -275,7 +274,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="delay_start_lle_modules_description">Ritarda l\'avvio dell\'app quando i moduli LLE sono abilitati.</string>
     <string name="deterministic_async_operations">Operazioni Deterministiche desincronizzate</string>
     <string name="deterministic_async_operations_description">Rende le operazioni asincrone deterministiche per il debug. Abilitare questa opzione potrebbe causare blocchi.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientamento schermo</string>
     <string name="layout_screen_orientation_auto_sensor">Automatico</string>
@@ -283,7 +281,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="layout_screen_orientation_landscape_reverse">Orizzontale rovesciato</string>
     <string name="layout_screen_orientation_portrait">Verticale</string>
     <string name="layout_screen_orientation_portrait_reverse">Verticale rovesciato</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Ripristina</string>
     <string name="slider_default">Standard</string>
@@ -316,7 +313,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="cancelling">Cancellazione...</string>
     <string name="important">Importante</string>
     <string name="dont_show_again">Non mostrare più</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleziona cartella dei giochi</string>
 
@@ -397,7 +393,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_cycle_landscape_layouts">Rotazione Layout</string>
     <string name="emulation_swap_screens">Inverti Schermi</string>
     <string name="emulation_touch_overlay_reset">Ripristina Disposizione</string>
-    <string name="emulation_show_overlay">Mostra Controlli di gioco</string>
     <string name="emulation_close_game">Chiudi il Gioco</string>
     <string name="emulation_toggle_pause">Abilita/disabilita Pausa</string>
     <string name="miscellaneous">Miscellanea</string>

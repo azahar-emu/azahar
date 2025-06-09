@@ -27,7 +27,7 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
             .setTitle(R.string.select_citra_user_folder)
             .setMessage(R.string.selecting_user_directory_without_write_permissions)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                mainActivity?.openCitraDirectory?.launch(null)
+                mainActivity?.openCitraDirectoryLostPermission?.launch(null)
             }
             .show()
     }

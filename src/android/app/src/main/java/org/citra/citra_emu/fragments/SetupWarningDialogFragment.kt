@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,18 +14,18 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.R
 
 class SetupWarningDialogFragment : DialogFragment() {
-    private var titleId: Int = 0
-    private var descriptionId: Int = 0
-    private var helpLinkId: Int = 0
+    private var titleIds: IntArray = intArrayOf()
+    private var descriptionIds: IntArray = intArrayOf()
+    private var helpLinkIds: IntArray = intArrayOf()
     private var page: Int = 0
 
     private lateinit var setupFragment: SetupFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        titleId = requireArguments().getInt(TITLE)
-        descriptionId = requireArguments().getInt(DESCRIPTION)
-        helpLinkId = requireArguments().getInt(HELP_LINK)
+        titleIds = requireArguments().getIntArray(TITLES) ?: intArrayOf()
+        descriptionIds = requireArguments().getIntArray(DESCRIPTIONS) ?: intArrayOf()
+        helpLinkIds = requireArguments().getIntArray(HELP_LINKS) ?: intArrayOf()
         page = requireArguments().getInt(PAGE)
 
         setupFragment = requireParentFragment() as SetupFragment
@@ -39,16 +39,23 @@ class SetupWarningDialogFragment : DialogFragment() {
             }
             .setNegativeButton(R.string.warning_cancel, null)
 
-        if (titleId != 0) {
-            builder.setTitle(titleId)
-        } else {
-            builder.setTitle("")
+        // Message builder to build multiple strings into one
+        val messageBuilder = StringBuilder()
+        for (i in titleIds.indices) {
+            if (titleIds[i] != 0) {
+                messageBuilder.append(getString(titleIds[i])).append("\n\n")
+            }
+            if (descriptionIds[i] != 0) {
+                messageBuilder.append(getString(descriptionIds[i])).append("\n\n")
+            }
         }
-        if (descriptionId != 0) {
-            builder.setMessage(descriptionId)
-        }
-        if (helpLinkId != 0) {
+
+        builder.setTitle("Warning")
+        builder.setMessage(messageBuilder.toString().trim())
+
+        if (helpLinkIds.any { it != 0 }) {
             builder.setNeutralButton(R.string.warning_help) { _: DialogInterface?, _: Int ->
+                val helpLinkId = helpLinkIds.first { it != 0 }
                 val helpLink = resources.getString(helpLinkId)
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(helpLink))
                 startActivity(intent)
@@ -61,23 +68,23 @@ class SetupWarningDialogFragment : DialogFragment() {
     companion object {
         const val TAG = "SetupWarningDialogFragment"
 
-        private const val TITLE = "Title"
-        private const val DESCRIPTION = "Description"
-        private const val HELP_LINK = "HelpLink"
+        private const val TITLES = "Titles"
+        private const val DESCRIPTIONS = "Descriptions"
+        private const val HELP_LINKS = "HelpLinks"
         private const val PAGE = "Page"
 
         fun newInstance(
-            titleId: Int,
-            descriptionId: Int,
-            helpLinkId: Int,
+            titleIds: IntArray,
+            descriptionIds: IntArray,
+            helpLinkIds: IntArray,
             page: Int
         ): SetupWarningDialogFragment {
             val dialog = SetupWarningDialogFragment()
             val bundle = Bundle()
             bundle.apply {
-                putInt(TITLE, titleId)
-                putInt(DESCRIPTION, descriptionId)
-                putInt(HELP_LINK, helpLinkId)
+                putIntArray(TITLES, titleIds)
+                putIntArray(DESCRIPTIONS, descriptionIds)
+                putIntArray(HELP_LINKS, helpLinkIds)
                 putInt(PAGE, page)
             }
             dialog.arguments = bundle

@@ -83,7 +83,6 @@
     <string name="keep_current_azahar_directory">Aktuelles Azahar-Verzeichnis behalten</string>
     <string name="use_prior_lime3ds_directory">Vorheriges Lime3DS-Verzeichnis nutzen</string>
     <string name="select">Auswählen</string>
-    <string name="cannot_skip">Du kannst diesen Schritt nicht überspringen</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
     <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
@@ -216,7 +215,6 @@
     <string name="texture_filter_description">Verbessert die Optik von Anwendungen durch Anwenden eines Filters auf Texturen. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale und MMPX.</string>
     <string name="delay_render_thread">Game-Render-Thread verzögern</string>
     <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
-    <string name="advanced">Fortgeschritten\"</string>
     <string name="texture_sampling_name">Textur-Sampling</string>
     <string name="texture_sampling_description">Setzt den von Spielen verwendeten Sampling-Filter außer Kraft. Dies kann in bestimmten Fällen nützlich sein, wenn sich die Spiele beim Hochskalieren schlecht verhalten. Wenn du dir unsicher bist, setze diese Einstellung auf „Spielgesteuert“</string>
     <string name="shaders_accurate_mul">Genaue Multiplikation</string>
@@ -297,7 +295,6 @@
     <string name="delay_start_lle_modules_description">Verzögert den Start der App, wenn die LLE-Module aktiviert sind.</string>
     <string name="deterministic_async_operations">Deterministische asynchrone Operationen</string>
     <string name="deterministic_async_operations_description">Asynchrone Operationen werden für Debug-Zwecke deterministisch. Die Aktivierung dieser Funktion kann zum Einfrieren führen.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Bildschirmausrichtung</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisch</string>
@@ -305,7 +302,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Umgekehrtes Querformat</string>
     <string name="layout_screen_orientation_portrait">Hochformat</string>
     <string name="layout_screen_orientation_portrait_reverse">Umgekehrtes Hochformat</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Zurücksetzen</string>
     <string name="slider_default">Standard</string>
@@ -341,7 +337,6 @@
     <string name="cancelling">Wird abgebrochen...</string>
     <string name="important">Wichtig</string>
     <string name="dont_show_again">Nicht noch einmal anzeigen</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
@@ -424,7 +419,6 @@
     <string name="emulation_cycle_landscape_layouts">Anordnung wechseln</string>
     <string name="emulation_swap_screens">Bildschirme tauschen</string>
     <string name="emulation_touch_overlay_reset">Overlay zurücksetzen</string>
-    <string name="emulation_show_overlay">Overlay anzeigen</string>
     <string name="emulation_close_game">Spiel schließen</string>
     <string name="emulation_toggle_pause">Pause umschalten</string>
     <string name="miscellaneous">Weiteres</string>
@@ -500,7 +494,6 @@
 
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
-    <string name="shortcut">Verknüpfung</string>
     <string name="uninstall_cia">Anwendung deinstallieren</string>
     <string name="uninstalling">Deinstallationsvorgang...</string>
     <string name="game_context_open_save_dir">Speicherdateienverzeichnis öffnen</string>
@@ -512,7 +505,7 @@
     <string name="game_context_open_extra">Extraverzeichnis öffnen</string>
     <string name="game_context_uninstall_dlc">DLC deinstallieren</string>
     <string name="game_context_uninstall_updates">Updates deinstallieren</string>
-
+    <string name="shortcut">Verknüpfung</string>
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>

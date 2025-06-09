@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -755,8 +755,12 @@ Id FragmentModule::CompareShadow(Id pixel, Id z) {
 }
 
 Id FragmentModule::SampleShadow() {
-    const Id texcoord0{OpLoad(vec_ids.Get(2), texcoord_id[0])};
+    Id texcoord0{OpLoad(vec_ids.Get(2), texcoord_id[0])};
     const Id texcoord0_w{OpLoad(f32_id, texcoord0_w_id)};
+    if (!config.texture.shadow_texture_orthographic) {
+        const Id div{OpCompositeConstruct(vec_ids.Get(2), texcoord0_w, texcoord0_w)};
+        texcoord0 = OpFDiv(vec_ids.Get(2), texcoord0, div);
+    }
     const Id abs_min_w{OpFMul(f32_id, OpFMin(f32_id, OpFAbs(f32_id, texcoord0_w), ConstF32(1.f)),
                               ConstF32(16777215.f))};
     const Id shadow_texture_bias{GetShaderDataMember(i32_id, ConstS32(17))};

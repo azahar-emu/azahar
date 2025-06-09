@@ -91,7 +91,6 @@
     <string name="emulation_screen_layout_sidebyside">Side ved Side Skjermer</string>
     <string name="emulation_swap_screens">Bytt Skjerm</string>
     <string name="emulation_touch_overlay_reset">Tilbakestill Overlegg</string>
-    <string name="emulation_show_overlay">Vis Overlegg</string>
     <string name="emulation_close_game">Lukk Spill</string>
     <string name="emulation_close_game_message">Er du sikker på at du vil lukke det nåværende spillet?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>

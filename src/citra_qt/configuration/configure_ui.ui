@@ -208,6 +208,26 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="status_bar_groupBox">
+     <property name="title">
+      <string>Status Bar</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_14">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_13">
+        <item>
+         <widget class="QCheckBox" name="show_advanced_frametime_info">
+          <property name="text">
+           <string>Show Advanced Frame Time Info</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+    <item>
     <spacer>
      <property name="orientation">
       <enum>Qt::Vertical</enum>

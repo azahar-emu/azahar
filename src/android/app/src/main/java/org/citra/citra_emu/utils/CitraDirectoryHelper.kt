@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,15 +16,15 @@ import org.citra.citra_emu.viewmodel.HomeViewModel
 /**
  * Citra directory initialization ui flow controller.
  */
-class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
-    fun showCitraDirectoryDialog(result: Uri, callback: SetupCallback? = null) {
+class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity, private val lostPermission: Boolean) {
+    fun showCitraDirectoryDialog(result: Uri, callback: SetupCallback? = null, buttonState: () -> Unit) {
         val citraDirectoryDialog = CitraDirectoryDialogFragment.newInstance(
             fragmentActivity,
             result.toString(),
             CitraDirectoryDialogFragment.Listener { moveData: Boolean, path: Uri ->
                 val previous = PermissionsHandler.citraDirectory
                 // Do noting if user select the previous path.
-                if (path == previous) {
+                if (path == previous && !lostPermission) {
                     return@Listener
                 }
 
@@ -36,7 +36,7 @@ class CitraDirectoryHelper(private val fragmentActivity: FragmentActivity) {
                 )
                 if (!moveData || previous.toString().isEmpty()) {
                     initializeCitraDirectory(path)
-                    callback?.onStepCompleted()
+                    buttonState()
                     val viewModel = ViewModelProvider(fragmentActivity)[HomeViewModel::class.java]
                     viewModel.setUserDir(fragmentActivity, path.path!!)
                     viewModel.setPickingUserDir(false)

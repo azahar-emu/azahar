@@ -30,7 +30,6 @@
     <string name="warning_cancel">Atšaukti</string>
     <string name="select_citra_user_folder">Pasirinkti vartotojo aplanką</string>
     <string name="select">Pasirinkti</string>
-    <string name="cannot_skip">Tu negali praleisti šio žingsnio</string>
     <string name="search_recently_played">Nesenai žaista</string>
     <string name="search_recently_added">Nesenai pridėta</string>
     <string name="button_swap">Apkeisti ekranus</string>
@@ -71,7 +70,6 @@
     <string name="cancelling">Atšaukiama...</string>
     <string name="important">Svarbu</string>
     <string name="dont_show_again">Daugiau niekada nerodyti</string>
-
     <!-- Preferences Screen -->
     <string name="preferences_settings">Nustatymai</string>
     <string name="preferences_system">Sistema</string>

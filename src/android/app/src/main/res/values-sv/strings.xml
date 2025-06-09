@@ -78,7 +78,6 @@
     <string name="select_citra_user_folder">Välj användarmapp</string>
     <string name="select_citra_user_folder_description"><![CDATA[Välj din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">användardatakatalog</a> med knappen nedan.]]></string>
     <string name="select">Välj</string>
-    <string name="cannot_skip">Du kan inte hoppa över det här steget</string>
     <string name="cannot_skip_directory_description">Detta steg krävs för att Azahar ska fungera. Välj en katalog och sedan kan du fortsätta.</string>
     <string name="set_up_theme_settings">Temainställningar</string>
     <string name="setup_theme_settings_description">Konfigurera dina temapreferenser för Azahar.</string>
@@ -268,7 +267,6 @@
     <string name="delay_start_lle_modules_description">Fördröjer starten av appen när LLE-moduler är aktiverade.</string>
     <string name="deterministic_async_operations">Deterministiska asynkrona operationer</string>
     <string name="deterministic_async_operations_description">Gör asynkrona operationer deterministiska för felsökning. Om du aktiverar detta kan det orsaka frysningar.</string>
-
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Skärmorientering</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisk</string>
@@ -276,7 +274,6 @@
     <string name="layout_screen_orientation_landscape_reverse">Omvänd liggande</string>
     <string name="layout_screen_orientation_portrait">Stående</string>
     <string name="layout_screen_orientation_portrait_reverse">Omvänd stående</string>
-
     <!-- Miscellaneous -->
     <string name="clear">Töm</string>
     <string name="slider_default">Standard</string>
@@ -387,7 +384,6 @@
     <string name="emulation_cycle_landscape_layouts">Växla layouter</string>
     <string name="emulation_swap_screens">Skärmbyte</string>
     <string name="emulation_touch_overlay_reset">Återställ överlägg</string>
-    <string name="emulation_show_overlay">Visa överlägg</string>
     <string name="emulation_close_game">Stäng spelet</string>
     <string name="emulation_toggle_pause">Växla paus</string>
     <string name="miscellaneous">Diverse</string>

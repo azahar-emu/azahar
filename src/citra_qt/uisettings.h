@@ -75,6 +75,7 @@ struct Values {
     Settings::Setting<bool> display_titlebar{true, "displayTitleBars"};
     Settings::Setting<bool> show_filter_bar{true, "showFilterBar"};
     Settings::Setting<bool> show_status_bar{true, "showStatusBar"};
+    Settings::Setting<bool> show_advanced_frametime_info{false, "show_advanced_frametime_info"};
 
     Settings::Setting<bool> confirm_before_closing{true, "confirmClose"};
     Settings::Setting<bool> save_state_warning{true, "saveStateWarning"};

@@ -77,6 +77,10 @@ if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_meta PRIVATE precompiled_headers.h)
 endif()
 
+if (SSE42_COMPILE_OPTION)
+    target_compile_definitions(citra_meta PRIVATE CITRA_HAS_SSE42)
+endif()
+
 # Bundle in-place on MSVC so dependencies can be resolved by builds.
 if (ENABLE_QT AND MSVC)
     include(BundleTarget)

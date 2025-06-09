@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -36,6 +36,8 @@ import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
 import java.time.temporal.ChronoField
 import java.util.Locale
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 
 class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
@@ -43,6 +45,13 @@ class SearchFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
+    private lateinit var gameAdapter: GameAdapter
+
+    private val openImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        gameAdapter.handleShortcutImageResult(uri)
+    }
 
     private lateinit var preferences: SharedPreferences
 
@@ -73,12 +82,18 @@ class SearchFragment : Fragment() {
 
         val inflater = LayoutInflater.from(requireContext())
 
+        gameAdapter = GameAdapter(
+            requireActivity() as AppCompatActivity,
+            inflater,
+            openImageLauncher
+        )
+
         binding.gridGamesSearch.apply {
             layoutManager = GridLayoutManager(
                 requireContext(),
                 resources.getInteger(R.integer.game_grid_columns)
             )
-            adapter = GameAdapter(requireActivity() as AppCompatActivity, inflater)
+            adapter = this@SearchFragment.gameAdapter
         }
 
         binding.chipGroup.setOnCheckedStateChangeListener { _, _ -> filterAndSearch() }

@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -53,7 +53,6 @@ public:
     void TryPresent(int timeout_ms, bool is_secondary) override;
     void PrepareVideoDumping() override;
     void CleanupVideoDumping() override;
-    void Sync() override;
 
 private:
     void InitOpenGLObjects();

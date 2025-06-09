@@ -53,7 +53,6 @@
     <string name="warning_skip">Пропустить</string>
     <string name="warning_cancel">Отмена</string>
     <string name="select">Выбрать</string>
-    <string name="cannot_skip">Вы не можете пропустить данное действие</string>
     <string name="search_recently_played">Запущенные недавно</string>
     <string name="search_recently_added">Добавленные недавно</string>
     <string name="search_installed">Установленные</string>
@@ -152,7 +151,7 @@
     <string name="utility">Инструменты</string>
     <string name="dump_textures">Снимать дамп текстур</string>
     <string name="dump_textures_description">Текстуры сохраняются в dump/textures/[ID игры]/.</string>
-    <string name="custom_textures">Внешние текстуры</string>
+    <string name="custom_textures">Пользовательские текстуры</string>
     <string name="custom_textures_description">Текстуры загружаются из load/textures/[ID игры]/.</string>
     <string name="preload_textures">Предзагрузка внешних текстур</string>
     <string name="preload_textures_description">Загружать все внешние текстуры в память. Может существенно повышать использование памяти.</string>
@@ -252,7 +251,6 @@
     <string name="emulation_screen_layout_hybrid">Совмещённый экран</string>
     <string name="emulation_swap_screens">Поменять экраны</string>
     <string name="emulation_touch_overlay_reset">Сбросить оверлей</string>
-    <string name="emulation_show_overlay">Показывать оверлей</string>
     <string name="emulation_close_game">Закрыть игру</string>
     <string name="emulation_toggle_pause">Вкл/выкл паузу</string>
     <string name="emulation_close_game_message">Вы действительно хотите закрыть игру?</string>
