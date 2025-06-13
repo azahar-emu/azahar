@@ -180,7 +180,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     std::shared_ptr<Kernel::ClientSession> session;
     result = client_port->Connect(std::addressof(session));
     if (result.IsSuccess()) {
-        LOG_DEBUG(Service_SRV, "called service={} -> session={}", name, session->GetObjectId());
+        LOG_TRACE(Service_SRV, "called service={} -> session={}", name, session->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(result);
         rb.PushMoveObjects(std::move(session));

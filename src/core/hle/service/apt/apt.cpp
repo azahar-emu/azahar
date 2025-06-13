@@ -428,7 +428,7 @@ void Module::APTInterface::IsRegistered(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess); // No error
     rb.Push(apt->applet_manager->IsRegistered(app_id));
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}", app_id);
+    LOG_TRACE(Service_APT, "called app_id={:#010X}", app_id);
 }
 
 void Module::APTInterface::GetAttribute(Kernel::HLERequestContext& ctx) {
@@ -527,6 +527,7 @@ void Module::APTInterface::GlanceParameter(Kernel::HLERequestContext& ctx) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(next_parameter.Code());
     } else {
+    LOG_CRITICAL(Service_APT, "glance success ");
         const auto size = std::min(static_cast<u32>(next_parameter->buffer.size()), buffer_size);
         next_parameter->buffer.resize(
             buffer_size); // APT always push a buffer with the maximum size
@@ -611,6 +612,7 @@ void Module::APTInterface::SendDeliverArg(Kernel::HLERequestContext& ctx) {
     const auto hmac = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called param_size={:08X}, hmac_size={:08X}", param_size, hmac_size);
+    // LOG_DEBUG(Service_APT, "param={}", param);
 
     apt->applet_manager->SetDeliverArg(DeliverArg{param, hmac});
 
@@ -626,6 +628,8 @@ void Module::APTInterface::ReceiveDeliverArg(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called param_size={:08X}, hmac_size={:08X}", param_size, hmac_size);
 
     auto arg = apt->applet_manager->ReceiveDeliverArg().value_or(DeliverArg{});
+    // auto a = std::copy(0, 8, arg.param);
+    // LOG_DEBUG(Service_APT, "param={}", a);
     arg.param.resize(param_size);
     arg.hmac.resize(std::min<std::size_t>(hmac_size, 0x20));
 

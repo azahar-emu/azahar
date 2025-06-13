@@ -402,7 +402,7 @@ public:
     TargetPlatform GetTargetPlatform();
     ApplicationRunningMode GetApplicationRunningMode();
 
-private:
+// private:
     /// APT lock retrieved via GetLockHandle.
     std::shared_ptr<Kernel::Mutex> lock;
 
