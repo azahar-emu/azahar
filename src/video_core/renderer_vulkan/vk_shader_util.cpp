@@ -163,7 +163,11 @@ bool InitializeCompiler() {
 vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device,
                          std::string_view premable) {
     if (!InitializeCompiler()) {
-        return {};
+        throw std::runtime_error("Failed to initialize shader compiler");
+    }
+
+    if (code.empty()) {
+        throw std::runtime_error("Cannot compile empty shader code");
     }
 
     EProfile profile = ECoreProfile;
@@ -184,19 +188,23 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
     glslang::TShader::ForbidIncluder includer;
     if (!shader->parse(&DefaultTBuiltInResource, default_version, profile, false, true, messages,
                        includer)) [[unlikely]] {
-        LOG_INFO(Render_Vulkan, "Shader Info Log:\n{}\n{}", shader->getInfoLog(),
-                 shader->getInfoDebugLog());
-        LOG_INFO(Render_Vulkan, "Shader Source:\n{}", code);
-        return {};
+        const std::string error_msg =
+            std::string("Shader compilation failed: ") + shader->getInfoLog();
+        LOG_ERROR(Render_Vulkan, "Shader Info Log:\n{}\n{}", shader->getInfoLog(),
+                  shader->getInfoDebugLog());
+        LOG_ERROR(Render_Vulkan, "Shader Source:\n{}", code);
+        throw std::runtime_error(error_msg);
     }
 
     // Even though there's only a single shader, we still need to link it to generate SPV
     auto program = std::make_unique<glslang::TProgram>();
     program->addShader(shader.get());
     if (!program->link(messages)) {
-        LOG_INFO(Render_Vulkan, "Program Info Log:\n{}\n{}", program->getInfoLog(),
-                 program->getInfoDebugLog());
-        return {};
+        const std::string error_msg =
+            std::string("Shader linking failed: ") + program->getInfoLog();
+        LOG_ERROR(Render_Vulkan, "Program Info Log:\n{}\n{}", program->getInfoLog(),
+                  program->getInfoDebugLog());
+        throw std::runtime_error(error_msg);
     }
 
     glslang::TIntermediate* intermediate = program->getIntermediate(lang);
@@ -221,6 +229,10 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
 }
 
 vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device) {
+    if (code.empty()) {
+        throw std::runtime_error("Cannot compile empty SPIRV code");
+    }
+
     const vk::ShaderModuleCreateInfo shader_info = {
         .codeSize = code.size() * sizeof(u32),
         .pCode = code.data(),
@@ -229,7 +241,8 @@ vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device) {
     try {
         return device.createShaderModule(shader_info);
     } catch (vk::SystemError& err) {
-        UNREACHABLE_MSG("{}", err.what());
+        LOG_ERROR(Render_Vulkan, "Failed to create shader module: {}", err.what());
+        throw std::runtime_error(std::string("Failed to create shader module: ") + err.what());
     }
 
     return {};

@@ -10,6 +10,9 @@
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
+#include "core/core.h"
+#include "core/loader/loader.h"
+#include "video_core/pica/shader_setup.h"
 #include "video_core/renderer_vulkan/pica_to_vk.h"
 #include "video_core/renderer_vulkan/vk_descriptor_update_queue.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -125,50 +128,93 @@ PipelineCache::~PipelineCache() {
     SaveDiskCache();
 }
 
-void PipelineCache::LoadDiskCache() {
+void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+    const vk::Device device = instance.GetDevice();
+    vk::PipelineCacheCreateInfo cache_info{};
+
+    // Try to load existing pipeline cache if disk cache is enabled and directories exist
     if (!Settings::values.use_disk_shader_cache || !EnsureDirectories()) {
+        // Create an empty pipeline cache if disk cache is disabled
+        try {
+            pipeline_cache = device.createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+        }
         return;
     }
 
+    // Try to load existing pipeline cache for this game/device combination
     const auto cache_dir = GetPipelineCacheDir();
     const u32 vendor_id = instance.GetVendorID();
     const u32 device_id = instance.GetDeviceID();
-    const auto cache_file_path = fmt::format("{}{:x}{:x}.bin", cache_dir, vendor_id, device_id);
+    const u64 program_id = GetProgramID();
+    const auto cache_file_path =
+        fmt::format("{}{:016x}-{:x}{:x}.bin", cache_dir, program_id, vendor_id, device_id);
 
-    vk::PipelineCacheCreateInfo cache_info{};
     std::vector<u8> cache_data;
-
-    SCOPE_EXIT({
-        const vk::Device device = instance.GetDevice();
-        pipeline_cache = device.createPipelineCacheUnique(cache_info);
-    });
-
     FileUtil::IOFile cache_file{cache_file_path, "rb"};
+
     if (!cache_file.IsOpen()) {
-        LOG_INFO(Render_Vulkan, "No pipeline cache found for device");
+        LOG_INFO(Render_Vulkan, "No pipeline cache found for title_id={:016X}", program_id);
+        // Create a new empty pipeline cache
+        try {
+            pipeline_cache = device.createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+        }
         return;
     }
 
     const u64 cache_file_size = cache_file.GetSize();
     cache_data.resize(cache_file_size);
+
     if (cache_file.ReadBytes(cache_data.data(), cache_file_size) != cache_file_size) {
-        LOG_ERROR(Render_Vulkan, "Error during pipeline cache read");
+        LOG_ERROR(Render_Vulkan, "Error reading pipeline cache");
+        try {
+            pipeline_cache = device.createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+        }
         return;
     }
 
     if (!IsCacheValid(cache_data)) {
-        LOG_WARNING(Render_Vulkan, "Pipeline cache provided invalid, removing");
+        LOG_WARNING(Render_Vulkan, "Pipeline cache invalid, removing");
         cache_file.Close();
         FileUtil::Delete(cache_file_path);
+        try {
+            pipeline_cache = device.createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+        }
         return;
     }
 
-    LOG_INFO(Render_Vulkan, "Loading pipeline cache with size {} KB", cache_file_size / 1024);
+    LOG_INFO(Render_Vulkan, "Loading pipeline cache for title_id={:016X} with size {} KB",
+             program_id, cache_file_size / 1024);
+
     cache_info.initialDataSize = cache_file_size;
     cache_info.pInitialData = cache_data.data();
+
+    try {
+        pipeline_cache = device.createPipelineCacheUnique(cache_info);
+    } catch (const vk::SystemError& err) {
+        LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache with data: {}", err.what());
+        // Fall back to empty cache
+        cache_info.initialDataSize = 0;
+        cache_info.pInitialData = nullptr;
+        pipeline_cache = device.createPipelineCacheUnique(cache_info);
+    }
+
+    // Provide callback completion if requested
+    if (callback) {
+        callback(VideoCore::LoadCallbackStage::Complete, 1, 1);
+    }
 }
 
 void PipelineCache::SaveDiskCache() {
+    // Save Vulkan pipeline cache
     if (!Settings::values.use_disk_shader_cache || !EnsureDirectories() || !pipeline_cache) {
         return;
     }
@@ -176,7 +222,11 @@ void PipelineCache::SaveDiskCache() {
     const auto cache_dir = GetPipelineCacheDir();
     const u32 vendor_id = instance.GetVendorID();
     const u32 device_id = instance.GetDeviceID();
-    const auto cache_file_path = fmt::format("{}{:x}{:x}.bin", cache_dir, vendor_id, device_id);
+    const u64 program_id = GetProgramID();
+    // Include both device info and program id in cache path to handle both GPU changes and
+    // different games
+    const auto cache_file_path =
+        fmt::format("{}{:016x}-{:x}{:x}.bin", cache_dir, program_id, vendor_id, device_id);
 
     FileUtil::IOFile cache_file{cache_file_path, "wb"};
     if (!cache_file.IsOpen()) {
@@ -368,7 +418,7 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
             LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
             programmable_vertex_map[config] = nullptr;
             return false;
-        }
+        } // Note: Shader disk cache functionality has been removed in favor of pipeline cache
 
         auto [iter, new_program] = programmable_vertex_cache.try_emplace(program, instance);
         auto& shader = iter->second;
@@ -377,8 +427,15 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
             shader.program = std::move(program);
             const vk::Device device = instance.GetDevice();
             workers.QueueWork([device, &shader] {
-                shader.module = Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
-                shader.MarkDone();
+                try {
+                    shader.module =
+                        Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
+                    shader.MarkDone();
+                } catch (const std::exception& e) {
+                    LOG_ERROR(Render_Vulkan, "Failed to compile vertex shader: {}", e.what());
+                    // Mark as done even if it failed to avoid hangs
+                    shader.MarkDone();
+                }
             });
         }
 
@@ -413,10 +470,20 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     auto& shader = it->second;
 
     if (new_shader) {
-        workers.QueueWork([gs_config, device = instance.GetDevice(), &shader]() {
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
-            shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
-            shader.MarkDone();
+        // Generate shader code
+        const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
+
+        workers.QueueWork([device = instance.GetDevice(), &shader, code = code,
+                           unique_identifier = gs_config.Hash()]() {
+            try {
+                shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
+                shader.MarkDone();
+            } catch (const std::exception& e) {
+                LOG_ERROR(Render_Vulkan, "Failed to compile geometry shader {}: {}",
+                          unique_identifier, e.what());
+                // Mark as done even if it failed to avoid hangs
+                shader.MarkDone();
+            }
         });
     }
 
@@ -438,17 +505,29 @@ void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
     auto& shader = it->second;
 
     if (new_shader) {
-        workers.QueueWork([fs_config, this, &shader]() {
-            const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-            if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
-                const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
-                shader.module = CompileSPV(code, instance.GetDevice());
-            } else {
-                const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
-                shader.module =
-                    Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
+        // Get unique identifier
+        const u64 unique_identifier = fs_config.Hash();
+
+        workers.QueueWork([fs_config, this, &shader, unique_identifier]() {
+            try {
+                const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
+
+                if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
+                    const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
+                    shader.module = CompileSPV(code, instance.GetDevice());
+                } else {
+                    const std::string glsl_code = GLSL::GenerateFragmentShader(fs_config, profile);
+                    shader.module = Compile(glsl_code, vk::ShaderStageFlagBits::eFragment,
+                                            instance.GetDevice());
+                }
+
+                shader.MarkDone();
+            } catch (const std::exception& e) {
+                LOG_ERROR(Render_Vulkan, "Failed to compile fragment shader {}: {}",
+                          unique_identifier, e.what());
+                // Mark as done even if it failed to avoid hangs
+                shader.MarkDone();
             }
-            shader.MarkDone();
         });
     }
 
@@ -514,6 +593,36 @@ bool PipelineCache::EnsureDirectories() const {
 
 std::string PipelineCache::GetPipelineCacheDir() const {
     return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + "vulkan" + DIR_SEP;
+}
+
+void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& stop_loading,
+                                        const VideoCore::DiskResourceLoadCallback& callback) {
+    if (!Settings::values.use_disk_shader_cache || GetProgramID() == title_id) {
+        LOG_DEBUG(Render_Vulkan,
+                  "Skipping pipeline cache switch - already using cache for title_id={:016X}",
+                  title_id);
+        return;
+    }
+
+    // Make sure we have a valid pipeline cache before switching
+    if (!pipeline_cache) {
+        vk::PipelineCacheCreateInfo cache_info{};
+        try {
+            pipeline_cache = instance.GetDevice().createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+            return;
+        }
+    }
+
+    LOG_INFO(Render_Vulkan, "Switching pipeline cache to title_id={:016X}", title_id);
+
+    // Save current cache before switching
+    SaveDiskCache();
+
+    // Update program ID and load the new pipeline cache
+    current_program_id = title_id;
+    LoadDiskCache(stop_loading, callback);
 }
 
 } // namespace Vulkan
