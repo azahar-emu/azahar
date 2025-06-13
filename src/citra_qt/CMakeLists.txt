@@ -82,9 +82,9 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     configuration/configure_ui.cpp
     configuration/configure_ui.h
     configuration/configure_ui.ui
-    configuration/configure_web.cpp
-    configuration/configure_web.h
-    configuration/configure_web.ui
+    configuration/configure_network.cpp
+    configuration/configure_network.h
+    configuration/configure_network.ui
     configuration/configure_cheats.cpp
     configuration/configure_cheats.h
     configuration/configure_cheats.ui
