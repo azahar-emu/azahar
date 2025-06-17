@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Projec
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,6 +48,7 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
 import org.citra.citra_emu.viewmodel.HomeViewModel
+import java.io.File
 
 class SetupFragment : Fragment() {
     private var _binding: FragmentSetupBinding? = null
@@ -60,6 +62,8 @@ class SetupFragment : Fragment() {
     private lateinit var hasBeenWarned: BooleanArray
 
     private lateinit var pages: MutableList<SetupPage>
+
+    private var isDataFoldersSetupComplete = false
 
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
@@ -255,7 +259,26 @@ class SetupFragment : Fragment() {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {
                                         ButtonState.BUTTON_ACTION_COMPLETE
                                     } else {
-                                        ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        // Check if proper storage permission is granted
+                                        val hasStoragePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                            android.os.Environment.isExternalStorageManager()
+                                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                                        } else {
+                                            true
+                                        }
+
+                                        if (hasStoragePermission) {
+                                            // Check if Azahar directory was created automatically
+                                            val azaharDir = File(Environment.getExternalStorageDirectory(), "Azahar")
+                                            if (azaharDir.exists()) {
+                                                ButtonState.BUTTON_ACTION_COMPLETE
+                                            } else {
+                                                ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            }
+                                        } else {
+                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        }
                                     }
                                 },
                                 isUnskippable = true,
@@ -266,38 +289,23 @@ class SetupFragment : Fragment() {
 
                             )
                         )
-                        add(
-                            PageButton(
-                                R.drawable.ic_controller,
-                                R.string.games,
-                                R.string.games_description,
-                                buttonAction =  {
-                                    pageButtonCallback = it
-                                    getGamesDirectory.launch(
-                                        Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data
-                                    )
-                                },
-                                buttonState = {
-                                    if (preferences.getString(GameHelper.KEY_GAME_PATH, "")!!.isNotEmpty()) {
-                                        ButtonState.BUTTON_ACTION_COMPLETE
-                                    } else {
-                                        ButtonState.BUTTON_ACTION_INCOMPLETE
-                                    }
-                                },
-                                isUnskippable = false,
-                                hasWarning = true,
-                                R.string.add_games_warning,
-                                R.string.add_games_warning_description,
-                            )
-                        )
+
                     },
                 ) {
-                    if (
-                        PermissionsHandler.hasWriteAccess(requireContext()) &&
-                        preferences.getString(GameHelper.KEY_GAME_PATH, "")!!.isNotEmpty()
-                    ) {
-                        PageState.PAGE_STEPS_COMPLETE
+                    // Check if proper storage permission is granted
+                    val hasStoragePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        android.os.Environment.isExternalStorageManager()
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                    } else {
+                        true
+                    }
 
+                    val hasValidDirectory = PermissionsHandler.hasWriteAccess(requireContext()) ||
+                        (hasStoragePermission && File(Environment.getExternalStorageDirectory(), "Azahar").exists())
+
+                    if (hasValidDirectory) {
+                        PageState.PAGE_STEPS_COMPLETE
                     } else {
                         PageState.PAGE_STEPS_INCOMPLETE
                     }
@@ -355,6 +363,11 @@ class SetupFragment : Fragment() {
                     ViewUtils.showView(binding.buttonNext)
                 }
 
+                // Check for storage permission when entering data folders page (index 2)
+                if (position == 2) {
+                    checkAndCreateAzaharDirectory()
+                }
+
                 previousPosition = position
             }
         })
@@ -362,6 +375,15 @@ class SetupFragment : Fragment() {
         binding.buttonNext.setOnClickListener {
             val index = binding.viewPager2.currentItem
             val currentPage = pages[index]
+
+            // Special check for data folders page (index 2) - ensure setup is complete
+            if (index == 2) {
+                updateDataFoldersSetupState()
+                if (!isDataFoldersSetupComplete) {
+                    Snackbar.make(binding.root, "Please wait for folder setup to complete", Snackbar.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
 
             // This allows multiple sets of warning messages to be displayed on the same dialog if necessary
             val warningMessages =
@@ -438,6 +460,16 @@ class SetupFragment : Fragment() {
         _binding = null
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // Check if we're on the data folders page and refresh state
+        if (_binding != null && binding.viewPager2.currentItem == 2) {
+            // User might have returned from granting MANAGE_EXTERNAL_STORAGE permission
+            checkAndCreateAzaharDirectory()
+        }
+    }
+
     private lateinit var pageButtonCallback: SetupCallback
     private val checkForButtonState: () -> Unit = {
         val page = pages[binding.viewPager2.currentItem]
@@ -455,7 +487,8 @@ class SetupFragment : Fragment() {
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                checkForButtonState.invoke()
+                // Create Azahar directory when permission granted
+                createAzaharDirectory()
                 return@registerForActivityResult
             }
 
@@ -551,4 +584,91 @@ class SetupFragment : Fragment() {
             }
             windowInsets
         }
+
+    private fun checkAndCreateAzaharDirectory() {
+        // Check if directory already exists
+        if (PermissionsHandler.hasWriteAccess(requireContext())) {
+            updateDataFoldersSetupState()
+            return
+        }
+
+        // Check storage permission based on Android version
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+ requires MANAGE_EXTERNAL_STORAGE for external storage root access
+            if (!Environment.isExternalStorageManager()) {
+                // Request MANAGE_EXTERNAL_STORAGE permission
+                val intent = Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.data = Uri.fromParts("package", requireActivity().packageName, null)
+                startActivity(intent)
+                return
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Android 6-10 requires WRITE_EXTERNAL_STORAGE
+            if (requireContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                return
+            }
+        }
+        // Permission granted, create directory
+        createAzaharDirectory()
+    }
+
+    private fun updateDataFoldersSetupState() {
+        // Check if proper storage permission is granted
+        val hasStoragePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
+        // Check if Azahar directory exists
+        val azaharDir = File(Environment.getExternalStorageDirectory(), "Azahar")
+        val hasValidDirectory = PermissionsHandler.hasWriteAccess(requireContext()) ||
+            (hasStoragePermission && azaharDir.exists())
+
+        isDataFoldersSetupComplete = hasValidDirectory
+    }
+
+    private fun createAzaharDirectory() {
+        try {
+            val externalStorageDir = Environment.getExternalStorageDirectory()
+            val azaharDir = File(externalStorageDir, "Azahar")
+
+            if (!azaharDir.exists()) {
+                val created = azaharDir.mkdirs()
+                if (!created) {
+                    android.util.Log.e("SetupFragment", "Failed to create Azahar directory")
+                    return
+                }
+            }
+
+            // Set the directory directly in preferences (avoid persistent permission issues on file:// URIs)
+            val azaharUri = Uri.fromFile(azaharDir)
+            PermissionsHandler.setCitraDirectory(azaharUri.toString())
+
+            // Set up home view model
+            homeViewModel.setUserDir(requireActivity(), azaharUri.path!!)
+            homeViewModel.setPickingUserDir(false)
+
+            // Create Games subdirectory
+            val gamesDir = File(azaharDir, "Games")
+            if (!gamesDir.exists()) {
+                gamesDir.mkdirs()
+            }
+
+            preferences.edit()
+                .putString(GameHelper.KEY_GAME_PATH, Uri.fromFile(gamesDir).toString())
+                .apply()
+            homeViewModel.setGamesDir(requireActivity(), gamesDir.absolutePath)
+
+            // Update setup state after successful creation
+            updateDataFoldersSetupState()
+
+        } catch (e: Exception) {
+            android.util.Log.e("SetupFragment", "Error creating Azahar directory: ${e.message}", e)
+        }
+    }
 }
