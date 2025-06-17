@@ -170,13 +170,26 @@ void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ct
 // A file handled returned for CIAs to be written into and subsequently installed.
 class CIAFile final : public FileSys::FileBackend {
 public:
+    class InstallResult {
+    public:
+        enum class Type {
+            NONE,
+            TIK,
+            TMD,
+            APP,
+        };
+        Type type{Type::NONE};
+        std::string install_full_path{};
+        Result result{0};
+    };
+
     explicit CIAFile(Core::System& system_, Service::FS::MediaType media_type,
                      bool from_cdn = false);
     ~CIAFile();
 
     ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
-    Result WriteTicket();
-    Result WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t offset);
+    InstallResult WriteTicket();
+    InstallResult WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t offset);
     ResultVal<std::size_t> WriteContentData(u64 offset, std::size_t length, const u8* buffer);
     ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush, bool update_timestamp,
                                  const u8* buffer) override;
@@ -200,6 +213,10 @@ public:
 
     void SetDone() {
         is_done = true;
+    }
+
+    const std::vector<InstallResult>& GetInstallResults() const {
+        return install_results;
     }
 
 private:
@@ -227,6 +244,8 @@ private:
     std::vector<std::string> content_file_paths;
     u16 current_content_index = -1;
     std::unique_ptr<NCCHCryptoFile> current_content_file;
+    InstallResult current_content_install_result{};
+    std::vector<InstallResult> install_results;
     Service::FS::MediaType media_type;
 
     class DecryptionState;

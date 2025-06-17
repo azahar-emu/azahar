@@ -448,13 +448,16 @@ ResultVal<std::size_t> CIAFile::Read(u64 offset, std::size_t length, u8* buffer)
     return length;
 }
 
-Result CIAFile::WriteTicket() {
+CIAFile::InstallResult CIAFile::WriteTicket() {
+    InstallResult res{};
+    res.type = InstallResult::Type::TIK;
     auto load_result = container.LoadTicket(data, container.GetTicketOffset());
     if (load_result != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Could not read ticket from CIA.");
         // TODO: Correct result code.
-        return {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
-                ErrorLevel::Permanent};
+        res.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Permanent};
+        return res;
     }
 
     const auto& ticket = container.GetTicket();
@@ -466,23 +469,30 @@ Result CIAFile::WriteTicket() {
     FileUtil::CreateFullPath(ticket_folder);
 
     // Save ticket
+    res.install_full_path = ticket_path;
     if (ticket.Save(ticket_path) != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Failed to install ticket file from CIA.");
         // TODO: Correct result code.
-        return FileSys::ResultFileNotFound;
+        res.result = FileSys::ResultFileNotFound;
+        return res;
     }
 
     install_state = CIAInstallState::TicketLoaded;
-    return ResultSuccess;
+    res.result = ResultSuccess;
+    return res;
 }
 
-Result CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t offset) {
+CIAFile::InstallResult CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data,
+                                                   std::size_t offset) {
+    InstallResult res{};
+    res.type = InstallResult::Type::TMD;
     auto load_result = container.LoadTitleMetadata(tmd_data, offset);
     if (load_result != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Could not read title metadata.");
         // TODO: Correct result code.
-        return {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
-                ErrorLevel::Permanent};
+        res.result = {ErrCodes::InvalidCIAHeader, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                      ErrorLevel::Permanent};
+        return res;
     }
 
     FileSys::TitleMetadata tmd = container.GetTitleMetadata();
@@ -503,13 +513,16 @@ Result CIAFile::WriteTitleMetadata(std::span<const u8> tmd_data, std::size_t off
     FileUtil::CreateFullPath(tmd_folder);
 
     // Save TMD so that we can start getting new .app paths
+    res.install_full_path = tmd_path;
     if (tmd.Save(tmd_path) != Loader::ResultStatus::Success) {
         LOG_ERROR(Service_AM, "Failed to install title metadata file from CIA.");
         // TODO: Correct result code.
-        return FileSys::ResultFileNotFound;
+        res.result = FileSys::ResultFileNotFound;
+        return res;
     }
 
-    return PrepareToImportContent(tmd);
+    res.result = PrepareToImportContent(tmd);
+    return res;
 }
 
 ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length, const u8* buffer) {
@@ -537,10 +550,18 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             // to get the content paths to write to.
             const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
             if (i != current_content_index) {
+                // A previous content file was being installed, save it first
+                if (current_content_install_result.type == InstallResult::Type::APP) {
+                    install_results.push_back(current_content_install_result);
+                }
                 current_content_index = static_cast<u16>(i);
                 current_content_file =
                     std::make_unique<NCCHCryptoFile>(content_file_paths[i], decryption_authorized);
                 current_content_file->decryption_authorized = decryption_authorized;
+
+                current_content_install_result.type = InstallResult::Type::APP;
+                current_content_install_result.install_full_path = content_file_paths[i];
+                current_content_install_result.result = ResultSuccess;
             }
             auto& file = *current_content_file;
 
@@ -550,8 +571,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             if ((tmd.GetContentTypeByIndex(i) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
                 if (!decryption_authorized) {
                     LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
-                    return Result(ErrorDescription::NotAuthorized, ErrorModule::AM,
-                                  ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                    current_content_install_result.result =
+                        Result(ErrorDescription::NotAuthorized, ErrorModule::AM,
+                               ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                    install_results.push_back(current_content_install_result);
+                    return current_content_install_result.result;
                 }
                 decryption_state->content[i].ProcessData(temp.data(), temp.data(), temp.size());
             }
@@ -559,8 +583,11 @@ ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length,
             file.Write(temp.data(), temp.size());
             if (file.IsError()) {
                 // This can never happen in real HW
-                return Result(ErrCodes::InvalidImportState, ErrorModule::AM,
-                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                current_content_install_result.result =
+                    Result(ErrCodes::InvalidImportState, ErrorModule::AM,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent);
+                install_results.push_back(current_content_install_result);
+                return current_content_install_result.result;
             }
 
             // Keep tabs on how much of this content ID has been written so new range_min
@@ -623,14 +650,16 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     // The end of our TMD is at the beginning of Content data, so ensure we have that much
     // buffered before trying to parse.
     if (written >= container.GetContentOffset() && install_state != CIAInstallState::TMDLoaded) {
-        auto result = WriteTicket();
-        if (result.IsError()) {
-            return result;
+        InstallResult result = WriteTicket();
+        install_results.push_back(result);
+        if (result.result.IsError()) {
+            return result.result;
         }
 
         result = WriteTitleMetadata(data, container.GetTitleMetadataOffset());
-        if (result.IsError()) {
-            return result;
+        install_results.push_back(result);
+        if (result.result.IsError()) {
+            return result.result;
         }
     }
 
@@ -642,6 +671,7 @@ ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush
     // From this point forward, data will no longer be buffered in data
     auto result = WriteContentData(offset, length, buffer);
     if (result.Failed()) {
+        current_content_install_result.type = InstallResult::Type::NONE;
         return result;
     }
 
@@ -756,10 +786,19 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
         tmd.GetContentSizeByIndex(content_index) - content_written[content_index];
 
     if (content_index != current_content_index) {
+        // A previous content file was being installed, save it first
+        if (current_content_install_result.type == InstallResult::Type::APP) {
+            install_results.push_back(current_content_install_result);
+        }
+
         current_content_index = content_index;
         current_content_file = std::make_unique<NCCHCryptoFile>(content_file_paths[content_index],
                                                                 decryption_authorized);
         current_content_file->decryption_authorized = decryption_authorized;
+
+        current_content_install_result.type = InstallResult::Type::APP;
+        current_content_install_result.install_full_path = content_file_paths[content_index];
+        current_content_install_result.result = ResultSuccess;
     }
     auto& file = *current_content_file;
 
@@ -768,8 +807,11 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
     if ((tmd.GetContentTypeByIndex(content_index) & FileSys::TMDContentTypeFlag::Encrypted) != 0) {
         if (!decryption_authorized) {
             LOG_ERROR(Service_AM, "Blocked unauthorized encrypted CIA installation.");
-            return Result(ErrorDescription::NotAuthorized, ErrorModule::AM,
-                          ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            current_content_install_result.result =
+                Result(ErrorDescription::NotAuthorized, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent);
+            install_results.push_back(current_content_install_result);
+            return current_content_install_result.result;
         }
         decryption_state->content[content_index].ProcessData(temp.data(), temp.data(), temp.size());
     }
@@ -777,8 +819,11 @@ ResultVal<std::size_t> CIAFile::WriteContentDataIndexed(u16 content_index, u64 o
     file.Write(temp.data(), temp.size());
     if (file.IsError()) {
         // This can never happen in real HW
-        return Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
-                      ErrorLevel::Permanent);
+        current_content_install_result.result =
+            Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                   ErrorLevel::Permanent);
+        install_results.push_back(current_content_install_result);
+        return current_content_install_result.result;
     }
 
     content_written[content_index] += temp.size();
@@ -800,6 +845,12 @@ bool CIAFile::Close() {
     if (is_closed)
         return true;
     is_closed = true;
+
+    // Commit last pending install result
+    if (current_content_install_result.type != InstallResult::Type::NONE) {
+        install_results.push_back(current_content_install_result);
+        current_content_install_result.type = InstallResult::Type::NONE;
+    }
 
     bool complete =
         from_cdn ? is_done
@@ -824,8 +875,15 @@ bool CIAFile::Close() {
     // Clean up older content data if we installed newer content on top
     std::string old_tmd_path =
         GetTitleMetadataPath(media_type, container.GetTitleMetadata().GetTitleID(), false);
-    std::string new_tmd_path =
-        GetTitleMetadataPath(media_type, container.GetTitleMetadata().GetTitleID(), true);
+    std::string new_tmd_path = old_tmd_path;
+
+    for (auto result : install_results) {
+        if (result.type == InstallResult::Type::TMD && result.result.IsSuccess()) {
+            new_tmd_path = result.install_full_path;
+            break;
+        }
+    }
+
     if (FileUtil::Exists(new_tmd_path) && old_tmd_path != new_tmd_path) {
         FileSys::TitleMetadata old_tmd;
         FileSys::TitleMetadata new_tmd;
@@ -954,7 +1012,7 @@ bool TMDFile::Close() {
 void TMDFile::Flush() const {}
 
 Result TMDFile::Commit() {
-    return importing_title->cia_file.WriteTitleMetadata(data, 0);
+    return importing_title->cia_file.WriteTitleMetadata(data, 0).result;
 }
 
 ContentFile::~ContentFile() {
@@ -1041,39 +1099,29 @@ InstallStatus InstallCIA(const std::string& path,
         }
         installFile.Close();
 
-        LOG_INFO(Service_AM, "Installed {} successfully.", path);
-
-        const FileUtil::DirectoryEntryCallable callback =
-            [&callback](u64* num_entries_out, const std::string& directory,
-                        const std::string& virtual_name) -> bool {
-            const std::string physical_name = directory + DIR_SEP + virtual_name;
-            const bool is_dir = FileUtil::IsDirectory(physical_name);
-            if (!is_dir) {
-                std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
-                if (!loader) {
-                    return true;
-                }
-
-                bool executable = false;
-                const auto res = loader->IsExecutable(executable);
-                if (res == Loader::ResultStatus::ErrorEncrypted) {
-                    return false;
-                }
-                return true;
-            } else {
-                return FileUtil::ForeachDirectoryEntry(nullptr, physical_name, callback);
+        InstallStatus install_res = InstallStatus::Success;
+        for (auto result : installFile.GetInstallResults()) {
+            if (result.type != CIAFile::InstallResult::Type::APP || result.result.IsError()) {
+                continue;
             }
-        };
-        if (!FileUtil::ForeachDirectoryEntry(
-                nullptr,
-                GetTitlePath(
-                    Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()),
-                    container.GetTitleMetadata().GetTitleID()),
-                callback)) {
-            LOG_ERROR(Service_AM, "CIA {} contained encrypted files.", path);
-            return InstallStatus::ErrorEncrypted;
+
+            std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(result.install_full_path);
+            if (!loader) {
+                continue;
+            }
+
+            bool executable = false;
+            const auto res = loader->IsExecutable(executable);
+            if (res == Loader::ResultStatus::ErrorEncrypted) {
+                LOG_ERROR(Service_AM, "CIA contains encrypted content: {}", path,
+                          result.install_full_path);
+                install_res = InstallStatus::ErrorEncrypted;
+            }
         }
-        return InstallStatus::Success;
+        if (install_res == InstallStatus::Success) {
+            LOG_INFO(Service_AM, "Installed {} successfully.", path);
+        }
+        return install_res;
     }
 
     LOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
