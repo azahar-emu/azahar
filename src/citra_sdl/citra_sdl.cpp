@@ -170,8 +170,126 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
         std::cout << std::endl << "* " << message << std::endl << std::endl;
 }
 
+// #include <ncurses.h>
+#include "core/hle/service/apt/apt.h"
+#include "core/hle/service/apt/applet_manager.h"
+#include "input_common/keyboard.h"
+#include <SDL2/SDL.h>
+
+void send(int s) {
+
+    auto& system = Core::System::GetInstance();
+using namespace Service::APT;
+auto apt = GetModule(system);
+    auto am = apt->GetAppletManager();
+
+     am->SendParameter({
+    .sender_id = AppletId(0),
+    .destination_id = AppletId(0x300),
+    .signal = SignalType(s),
+    // .signal = SignalType::WakeupByCancel,
+});
+
+// auto id = AppletId(0x300);
+// auto id = AppletId::Application;
+}
+
+void sendarg(int a) {
+
+// Set deliver arg so that System Settings goes to the update screen directly
+Service::APT::DeliverArg arg;
+// arg.param.push_back(0x7a);
+arg.param.push_back(a);
+
+    auto& system = Core::System::GetInstance();
+using namespace Service::APT;
+auto apt = GetModule(system);
+    auto am = apt->GetAppletManager();
+am->SetDeliverArg(arg);
+ 
+}
+
+void input (){
+    // if (fork() > 0) return;
+    int c;
+    auto& system = Core::System::GetInstance();
+    // auto& svm = system.ServiceManager();
+    // auto apt = svm.GetService<Service::APT::Module::APTInterface>("APT:A");
+    // while ((c=getch()) != ERR) {
+    // while ((c=getchar()) != "\n") {
+    while ((c=getchar())) {
+        if (c == '\n') continue;
+        printf("pressed %c\n", c); 
+        if (c == 'r')
+            system.RequestReset();
+            // system.Reset();
+        if (c == 'p')
+            system.frame_limiter.SetFrameAdvancing(true);
+        if (c == 'q') {
+            // emu_window->RequestClose();
+            system.RequestShutdown();
+            break;
+        }
+
+            auto* kb = InputCommon::GetKeyboard();
+        if (c == 'a') {
+            // int a = Settings::NativeButton::A;
+            int a = SDL_SCANCODE_A;
+            kb->PressKey(a);
+            sleep(1);
+            kb->ReleaseKey(a);
+        }
+
+        if (c == 'b') {
+            int a = SDL_SCANCODE_B;
+            kb->PressKey(a);
+            sleep(1);
+            kb->ReleaseKey(a);
+        }
+
+        if (c == 'z') {
+            int a = SDL_SCANCODE_Z;
+            kb->PressKey(a);
+            sleep(1);
+            kb->ReleaseKey(a);
+        }
+            
+using namespace Service::APT;
+auto apt = GetModule(system);
+    auto am = apt->GetAppletManager();
+
+    // jump to home 
+// send parameters 0x10
+// receive parameters 3
+        if (c == 'j') {
+            send(0x10);
+        }
+
+        if (c == 'c') {
+            // am->PrepareToCloseApplication(true);
+            am->OrderToCloseApplication();
+            // Result r = am->OrderToCloseApplication();
+            // am->GlanceParameter(AppletId(0x300));
+            // am->GlanceParameter(AppletId::Application);
+            sleep(2);
+            am->ReceiveParameter(AppletId(0x300));
+        }
+
+        if (c == 'u') {
+        // auto id = am->GetAppletSlot(AppletSlot::Application)->applet_id;
+        auto slot = am->GetAppletSlotFromId(AppletId::Application);
+        printf("app slot=%d\n", slot); 
+        }
+
+        if (c == 's') {
+            send(0xc);
+        }
+    }
+}
+
 /// Application entry point
 void LaunchSdlFrontend(int argc, char** argv) {
+    std::thread i(input);
     Common::Log::Initialize();
     Common::Log::SetColorConsoleBackendEnabled(true);
     Common::Log::Start();
@@ -477,7 +595,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
     });
 
     std::atomic_bool stop_run;
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             LOG_DEBUG(Frontend, "Loading stage {} progress {} {}", static_cast<u32>(stage), value,
                       total);
