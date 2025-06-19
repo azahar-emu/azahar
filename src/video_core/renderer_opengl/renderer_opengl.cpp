@@ -107,6 +107,15 @@ void RendererOpenGL::SwapBuffers() {
         secondary_window->PollEvents();
     }
 #endif
+#ifdef ANDROID
+    // on android, if secondary_window is defined at all
+    // it means we have a second display
+    if (secondary_window) {
+        const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
+        secondary_window->PollEvents();
+    }
+#endif
     if (frame_dumper.IsDumping()) {
         try {
             RenderToMailbox(frame_dumper.GetLayout(), frame_dumper.mailbox, true);
