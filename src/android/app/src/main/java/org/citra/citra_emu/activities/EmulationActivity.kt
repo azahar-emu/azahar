@@ -245,9 +245,7 @@ class EmulationActivity : AppCompatActivity() {
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                     // If the hotkey is pressed, we don't want to open the drawer
-                    if (hotkeyUtility.HotkeyIsPressed) {
-                        return true
-                    } else {
+                    if (!hotkeyUtility.HotkeyIsPressed) {
                         onBackPressed()
                     }
                 }
