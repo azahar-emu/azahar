@@ -52,6 +52,26 @@ BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
     case DecoderCommand::Init: {
         BinaryMessage response = request;
         response.header.result = ResultStatus::Success;
+        if (decoder) {
+            NeAACDecClose(decoder);
+            decoder = nullptr;
+        }
+
+        decoder = NeAACDecOpen();
+        if (decoder == nullptr) {
+            LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
+            response.header.result = ResultStatus::Error;
+        }
+        auto config = NeAACDecGetCurrentConfiguration(decoder);
+        config->defObjectType = LC;
+        config->outputFormat = FAAD_FMT_16BIT;
+        if (!NeAACDecSetConfiguration(decoder, config)) {
+            LOG_CRITICAL(Audio_DSP, "Could not configure FAAD2 decoder.");
+            NeAACDecClose(decoder);
+            decoder = nullptr;
+            response.header.result = ResultStatus::Error;
+        }
+        decoderInitialized = false;
         return response;
     }
     case DecoderCommand::EncodeDecode: {
@@ -102,17 +122,22 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
     u32 data_len = request.decode_aac_request.size;
 
-    unsigned long sample_rate;
-    u8 num_channels;
-    auto init_result = NeAACDecInit(decoder, data, data_len, &sample_rate, &num_channels);
-    if (init_result < 0) {
-        LOG_ERROR(Audio_DSP, "Could not initialize FAAD2 AAC decoder for request: {}", init_result);
-        return response;
-    }
+    if (!decoderInitialized) {
+        unsigned long sample_rate;
+        u8 num_channels;
+        auto init_result = NeAACDecInit(decoder, data, data_len, &sample_rate, &num_channels);
+        if (init_result < 0) {
+            LOG_ERROR(Audio_DSP, "Could not initialize FAAD2 AAC decoder for request: {}",
+                      init_result);
+            return response;
+        }
 
-    // Advance past the frame header if needed.
-    data += init_result;
-    data_len -= init_result;
+        decoderInitialized = true;
+
+        // Advance past the frame header if needed.
+        data += init_result;
+        data_len -= init_result;
+    }
 
     std::array<std::vector<s16>, 2> out_streams;
 
@@ -124,6 +149,10 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
             LOG_ERROR(Audio_DSP, "Failed to decode AAC buffer using FAAD2: {}", frame_info.error);
             return response;
         }
+
+        // Set the output frame info.
+        response.decode_aac_response.sample_rate = GetSampleRateEnum(frame_info.samplerate);
+        response.decode_aac_response.num_channels = frame_info.channels;
 
         // Split the decode result into channels.
         u32 num_samples = frame_info.samples / frame_info.channels;
@@ -155,8 +184,6 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     }
 
     // Set the output frame info.
-    response.decode_aac_response.sample_rate = GetSampleRateEnum(sample_rate);
-    response.decode_aac_response.num_channels = num_channels;
     response.decode_aac_response.num_samples = static_cast<u32_le>(out_streams[0].size());
 
     return response;
