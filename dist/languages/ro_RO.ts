@@ -720,8 +720,8 @@ Doriți să ignorați eroarea și să continuați?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
-        <source>Show Log Console (Windows Only)</source>
-        <translation>Afișează Consola de Registru (Numai pentru Windows)</translation>
+        <source>Show log output in console</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>

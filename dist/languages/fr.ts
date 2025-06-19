@@ -726,8 +726,8 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
-        <source>Show Log Console (Windows Only)</source>
-        <translation>Afficher la console des logs (Windows uniquement)</translation>
+        <source>Show log output in console</source>
+        <translation>Afficher la sortie du log dans la console</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>

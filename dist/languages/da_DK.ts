@@ -726,8 +726,8 @@ Vil du ignorere fejlen og fortsætte?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
-        <source>Show Log Console (Windows Only)</source>
-        <translation>Vis logningskonsol (kun på Windows)</translation>
+        <source>Show log output in console</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>

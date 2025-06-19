@@ -726,8 +726,8 @@ Would you like to ignore the error and continue?</source>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
-        <source>Show Log Console (Windows Only)</source>
-        <translation>显示日志窗口（仅限 Windows）</translation>
+        <source>Show log output in console</source>
+        <translation>在控制台窗口显示日志输出</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>

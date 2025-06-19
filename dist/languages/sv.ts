@@ -726,8 +726,8 @@ Vill du ignorera felet och fortsätta?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
-        <source>Show Log Console (Windows Only)</source>
-        <translation>Visa loggkonsol (endast Windows)</translation>
+        <source>Show log output in console</source>
+        <translation>Visa loggutdata i konsolen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>
