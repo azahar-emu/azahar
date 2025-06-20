@@ -8,31 +8,12 @@
 namespace AudioCore::HLE {
 
 AACDecoder::AACDecoder(Memory::MemorySystem& memory) : memory(memory) {
-    decoder = NeAACDecOpen();
-    if (decoder == nullptr) {
-        LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
-        return;
-    }
-
-    auto config = NeAACDecGetCurrentConfiguration(decoder);
-    config->defObjectType = LC;
-    config->outputFormat = FAAD_FMT_16BIT;
-    if (!NeAACDecSetConfiguration(decoder, config)) {
-        LOG_CRITICAL(Audio_DSP, "Could not configure FAAD2 decoder.");
-        NeAACDecClose(decoder);
-        decoder = nullptr;
-        return;
-    }
-
-    LOG_INFO(Audio_DSP, "Created FAAD2 AAC decoder.");
 }
 
 AACDecoder::~AACDecoder() {
     if (decoder) {
         NeAACDecClose(decoder);
         decoder = nullptr;
-
-        LOG_INFO(Audio_DSP, "Destroyed FAAD2 AAC decoder.");
     }
 }
 
@@ -52,28 +33,8 @@ BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
     case DecoderCommand::Init: {
         BinaryMessage response = request;
         response.header.result = ResultStatus::Success;
-        if (decoder) {
-            NeAACDecClose(decoder);
-            decoder = nullptr;
-        }
-        decoderInitialized = false;
-
-        decoder = NeAACDecOpen();
-        if (decoder == nullptr) {
-            LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
+        if (!OpenNewDecoder()) {
             response.header.result = ResultStatus::Error;
-            return response;
-        }
-
-        auto config = NeAACDecGetCurrentConfiguration(decoder);
-        config->defObjectType = LC;
-        config->outputFormat = FAAD_FMT_16BIT;
-        if (!NeAACDecSetConfiguration(decoder, config)) {
-            LOG_CRITICAL(Audio_DSP, "Could not configure FAAD2 decoder.");
-            NeAACDecClose(decoder);
-            decoder = nullptr;
-            response.header.result = ResultStatus::Error;
-            return response;
         }
         return response;
     }
@@ -112,6 +73,7 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     response.decode_aac_response.num_samples = 1024;
 
     if (decoder == nullptr) {
+        LOG_ERROR(Audio_DSP, "Failed to handle decode request: FAAD2 AAC decoder not open.");
         return response;
     }
 
@@ -125,7 +87,7 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     u8* data = memory.GetFCRAMPointer(request.decode_aac_request.src_addr - Memory::FCRAM_PADDR);
     u32 data_len = request.decode_aac_request.size;
 
-    if (!decoderInitialized) {
+    if (!decoder_initialized) {
         unsigned long sample_rate;
         u8 num_channels;
         auto init_result = NeAACDecInit(decoder, data, data_len, &sample_rate, &num_channels);
@@ -135,7 +97,7 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
             return response;
         }
 
-        decoderInitialized = true;
+        decoder_initialized = true;
 
         // Advance past the frame header if needed.
         data += init_result;
@@ -190,6 +152,31 @@ BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {
     response.decode_aac_response.num_samples = static_cast<u32_le>(out_streams[0].size());
 
     return response;
+}
+
+bool AACDecoder::OpenNewDecoder() {
+    if (decoder) {
+        NeAACDecClose(decoder);
+    }
+    decoder_initialized = false;
+
+    decoder = NeAACDecOpen();
+    if (decoder == nullptr) {
+        LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
+        return false;
+    }
+
+    auto config = NeAACDecGetCurrentConfiguration(decoder);
+    config->defObjectType = LC;
+    config->outputFormat = FAAD_FMT_16BIT;
+    if (!NeAACDecSetConfiguration(decoder, config)) {
+        LOG_CRITICAL(Audio_DSP, "Could not configure FAAD2 decoder.");
+        NeAACDecClose(decoder);
+        decoder = nullptr;
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace AudioCore::HLE

@@ -18,10 +18,11 @@ public:
 
 private:
     BinaryMessage Decode(const BinaryMessage& request);
+    bool OpenNewDecoder();
 
     Memory::MemorySystem& memory;
     NeAACDecHandle decoder = nullptr;
-    bool decoderInitialized = false;
+    bool decoder_initialized = false;
 };
 
 } // namespace AudioCore::HLE
