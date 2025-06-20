@@ -832,6 +832,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
 }
 
 void RendererVulkan::SwapBuffers() {
+    system.perf_stats->StartSwap();
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
@@ -847,6 +848,7 @@ void RendererVulkan::SwapBuffers() {
         secondary_window->PollEvents();
     }
 #endif
+    system.perf_stats->EndSwap();
     rasterizer.TickFrame();
     EndFrame();
 }

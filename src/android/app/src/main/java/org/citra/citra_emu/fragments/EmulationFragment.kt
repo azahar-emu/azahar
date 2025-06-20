@@ -1183,7 +1183,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             val TIME_SVC = 4
             val TIME_IPC = 5
             val TIME_GPU = 6
-            val TIME_REM = 7
+            val TIME_SWAP = 7
+            val TIME_REM = 8
             perfStatsUpdater = Runnable {
                 val sb = StringBuilder()
                 val perfStats = NativeLibrary.getPerfStats()
@@ -1197,9 +1198,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
-                                "Frame:\u00A0%.1fms (GPU:\u00A0%.1fms IPC:\u00A0%.1fms SVC:\u00A0%.1fms Rem:\u00A0%.1fms)",
+                                "Frame:\u00A0%.1fms (GPU: [CMD:\u00A0%.1fms SWP:\u00A0%.1fms] IPC:\u00A0%.1fms SVC:\u00A0%.1fms Rem:\u00A0%.1fms)",
                                 (perfStats[FRAMETIME] * 1000.0f).toFloat(),
                                 (perfStats[TIME_GPU] * 1000.0f).toFloat(),
+                                (perfStats[TIME_SWAP] * 1000.0f).toFloat(),
                                 (perfStats[TIME_IPC] * 1000.0f).toFloat(),
                                 (perfStats[TIME_SVC] * 1000.0f).toFloat(),
                                 (perfStats[TIME_REM] * 1000.0f).toFloat(),

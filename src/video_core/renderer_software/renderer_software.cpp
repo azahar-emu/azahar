@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,7 +18,9 @@ RendererSoftware::RendererSoftware(Core::System& system, Pica::PicaCore& pica_,
 RendererSoftware::~RendererSoftware() = default;
 
 void RendererSoftware::SwapBuffers() {
+    system.perf_stats->StartSwap();
     PrepareRenderTarget();
+    system.perf_stats->EndSwap();
     EndFrame();
 }
 

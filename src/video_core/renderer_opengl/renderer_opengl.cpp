@@ -89,6 +89,7 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 RendererOpenGL::~RendererOpenGL() = default;
 
 void RendererOpenGL::SwapBuffers() {
+    system.perf_stats->StartSwap();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
@@ -115,6 +116,7 @@ void RendererOpenGL::SwapBuffers() {
         }
     }
 
+    system.perf_stats->EndSwap();
     EndFrame();
     prev_state.Apply();
     rasterizer.TickFrame();
