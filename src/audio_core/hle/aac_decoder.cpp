@@ -56,12 +56,15 @@ BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
             NeAACDecClose(decoder);
             decoder = nullptr;
         }
+        decoderInitialized = false;
 
         decoder = NeAACDecOpen();
         if (decoder == nullptr) {
             LOG_CRITICAL(Audio_DSP, "Could not open FAAD2 decoder.");
             response.header.result = ResultStatus::Error;
+            return response;
         }
+
         auto config = NeAACDecGetCurrentConfiguration(decoder);
         config->defObjectType = LC;
         config->outputFormat = FAAD_FMT_16BIT;
@@ -70,8 +73,8 @@ BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
             NeAACDecClose(decoder);
             decoder = nullptr;
             response.header.result = ResultStatus::Error;
+            return response;
         }
-        decoderInitialized = false;
         return response;
     }
     case DecoderCommand::EncodeDecode: {
