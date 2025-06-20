@@ -7,8 +7,7 @@
 
 namespace AudioCore::HLE {
 
-AACDecoder::AACDecoder(Memory::MemorySystem& memory) : memory(memory) {
-}
+AACDecoder::AACDecoder(Memory::MemorySystem& memory) : memory(memory) {}
 
 AACDecoder::~AACDecoder() {
     if (decoder) {
