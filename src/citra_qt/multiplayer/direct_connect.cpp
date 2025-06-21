@@ -15,7 +15,6 @@
 #include "citra_qt/uisettings.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 #include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
@@ -32,9 +31,9 @@ DirectConnectWindow::DirectConnectWindow(Core::System& system_, QWidget* parent)
 
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
+    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.GetValue().empty()) {
         // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(NetSettings::values.citra_username));
+        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username.GetValue()));
     }
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
