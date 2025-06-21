@@ -170,6 +170,9 @@ bg_red =
 bg_blue =
 bg_green =
 
+# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer. OpenGL only.
+custom_second_layer_opacity =
+
 # Whether and how Stereoscopic 3D should be rendered
 # 0 (default): Off, 1: Side by Side, 2: Reverse Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
 render_3d =
@@ -309,13 +312,9 @@ preload_textures =
 async_custom_loading =
 
 [Audio]
-# Whether or not to enable DSP LLE
-# 0 (default): No, 1: Yes
-enable_dsp_lle =
-
-# Whether or not to run DSP LLE on a different thread
-# 0 (default): No, 1: Yes
-enable_dsp_lle_thread =
+# Whether to enable Audio DSP in HLE or LLE mode (Note: LLE mode has a heavy performance impact)
+# 0 (default): HLE, 1: LLE, 2: LLE Multithreaded
+audio_emulation =
 
 # Whether or not to enable the audio-stretching post-processing effect.
 # This effect adjusts audio speed to match emulation speed and helps prevent audio stutter,

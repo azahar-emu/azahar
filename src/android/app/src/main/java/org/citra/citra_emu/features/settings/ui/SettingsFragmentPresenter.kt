@@ -251,6 +251,31 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
+
+            val hideImages: AbstractBooleanSetting = object : AbstractBooleanSetting {
+                override var boolean: Boolean
+                    get() = preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)
+                    set(value) {
+                        preferences.edit()
+                            .putBoolean(Settings.PREF_HIDE_IMAGES, value)
+                            .apply()
+                        settingsActivity.recreate()
+                    }
+                override val key: String? = null
+                override val section: String? = null
+                override val isRuntimeEditable: Boolean = false
+                override val valueAsString: String
+                    get() = preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)
+                        .toString()
+                override val defaultValue: Any = false
+            }
+            add(
+                SwitchSetting(
+                    hideImages,
+                    R.string.hide_images,
+                    R.string.hide_images_description,
+                )
+            )
         }
     }
 
@@ -1146,6 +1171,57 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "",
                     FloatSetting.LARGE_SCREEN_PROPORTION.key,
                     FloatSetting.LARGE_SCREEN_PROPORTION.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    FloatSetting.SECOND_SCREEN_OPACITY,
+                    R.string.second_screen_opacity,
+                    R.string.second_screen_opacity_description,
+                    0,
+                    100,
+                    "%",
+                    FloatSetting.SECOND_SCREEN_OPACITY.key,
+                    FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
+                    // TODO: Remove graphics API check when #895 is merged
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 5 && IntSetting.GRAPHICS_API.int == 1
+                )
+            )
+            add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
+            add(
+                SliderSetting(
+                    FloatSetting.BACKGROUND_RED,
+                    R.string.bg_red,
+                    R.string.bg_description,
+                    0,
+                    1,
+                    "x",
+                    FloatSetting.BACKGROUND_RED.key,
+                    FloatSetting.BACKGROUND_RED.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    FloatSetting.BACKGROUND_BLUE,
+                    R.string.bg_blue,
+                    R.string.bg_description,
+                    0,
+                    1,
+                    "x",
+                    FloatSetting.BACKGROUND_BLUE.key,
+                    FloatSetting.BACKGROUND_BLUE.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    FloatSetting.BACKGROUND_GREEN,
+                    R.string.bg_green,
+                    R.string.bg_description,
+                    0,
+                    1,
+                    "x",
+                    FloatSetting.BACKGROUND_GREEN.key,
+                    FloatSetting.BACKGROUND_GREEN.defaultValue
                 )
             )
             add(
