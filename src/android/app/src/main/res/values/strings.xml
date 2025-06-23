@@ -254,6 +254,8 @@
     <string name="frame_limit_enable_description">When enabled, emulation speed will be limited to a specified percentage of normal speed. If disabled, emulation speed will be uncapped and the turbo speed hotkey will not work.</string>
     <string name="frame_limit_slider">Limit Speed Percent</string>
     <string name="frame_limit_slider_description">Specifies the percentage to limit emulation speed. With the default of 100% emulation will be limited to normal speed. Values higher or lower will increase or decrease the speed limit.</string>
+    <string name="hide_images">Hide 3DS Images from Android</string>
+    <string name="hide_images_description">Prevent 3DS camera, screenshot, and custom texture images from being indexed by Android and displayed in the gallery. Your device may need to be rebooted after changing this setting to take effect.</string>
     <string name="turbo_limit">Turbo Speed Limit</string>
     <string name="turbo_limit_description">Emulation speed limit used while the turbo hotkey is active.</string>
     <string name="expand_to_cutout_area">Expand to Cutout Area</string>
@@ -438,6 +440,14 @@
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Default</string>
     <string name="emulation_screen_layout_custom">Custom Layout</string>
+    <string name="bg_color">Background Color</string>
+    <string name="bg_color_description">The clear color for the renderer. What shows up on the sides of the bottom screen.</string>
+    <string name="bg_red">Red</string>
+    <string name="bg_blue">Blue</string>
+    <string name="bg_green">Green</string>
+    <string name="bg_description">Range from 0.0 to 1.0.</string>
+    <string name="second_screen_opacity">Second Screen Opacity (OpenGL Only)</string>
+    <string name="second_screen_opacity_description">How opaque or transparent the second 3DS screen should be in <b>Custom Layout</b> mode. Useful if the second screen is to be positioned on top of the first screen. Experimental; may not work on all GPUs.</string>
     <string name="emulation_small_screen_position">Small Screen Position</string>
     <string name="small_screen_position_description">Where should the small screen appear relative to the large one in Large Screen Layout?</string>
     <string name="small_screen_position_top_right">Top Right</string>

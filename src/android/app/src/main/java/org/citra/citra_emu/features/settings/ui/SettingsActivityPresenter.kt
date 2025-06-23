@@ -4,14 +4,19 @@
 
 package org.citra.citra_emu.features.settings.ui
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.TextUtils
+import androidx.preference.PreferenceManager
+import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
+import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.TurboHelper
 
 class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
@@ -20,6 +25,8 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     private var shouldSave = false
     private lateinit var menuTag: String
     private lateinit var gameId: String
+    private val preferences: SharedPreferences get() =
+        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
         this.menuTag = menuTag
@@ -60,6 +67,15 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         loadSettingsUI()
     }
 
+    private fun updateImageVisibility() {
+        val dataPath = PermissionsHandler.citraDirectory.toString()
+        val noMedia = FileUtil.createFile(dataPath, ".nomedia")
+            if (!preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)) {
+                Log.info("[SettingsActivityPresenter]: Trying to delete .nomedia in $dataPath")
+                noMedia?.delete()
+        }
+    }
+
     fun onStop(finishing: Boolean) {
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
@@ -67,6 +83,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+            updateImageVisibility()
             TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }
         NativeLibrary.reloadSettings()
