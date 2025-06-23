@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -45,6 +45,16 @@ public:
      */
     Common::WebResult DeleteJson(const std::string& path, const std::string& data,
                                  bool allow_anonymous);
+
+    /**
+     * Patches JSON to the specified path.
+     * @param path the URL segment after the host address.
+     * @param data String of JSON data to use for the body of the PATCH request.
+     * @param allow_anonymous If true, allow anonymous unauthenticated requests.
+     * @return the result of the request.
+     */
+    Common::WebResult PatchJson(const std::string& path, const std::string& data,
+                                bool allow_anonymous);
 
     /**
      * Gets a plain string from the specified path.

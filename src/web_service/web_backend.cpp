@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -32,7 +32,7 @@ struct Client::Impl {
         }
     }
 
-    /// A generic function handles POST, GET and DELETE request together
+    /// A generic function handles POST, PATCH, GET and DELETE request together
     Common::WebResult GenericRequest(const std::string& method, const std::string& path,
                                      const std::string& data, bool allow_anonymous,
                                      const std::string& accept) {
@@ -181,6 +181,11 @@ Common::WebResult Client::GetJson(const std::string& path, bool allow_anonymous)
 Common::WebResult Client::DeleteJson(const std::string& path, const std::string& data,
                                      bool allow_anonymous) {
     return impl->GenericRequest("DELETE", path, data, allow_anonymous, "application/json");
+}
+
+Common::WebResult Client::PatchJson(const std::string& path, const std::string& data,
+                                    bool allow_anonymous) {
+    return impl->GenericRequest("PATCH", path, data, allow_anonymous, "application/json");
 }
 
 Common::WebResult Client::GetPlain(const std::string& path, bool allow_anonymous) {
