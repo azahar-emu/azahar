@@ -16,6 +16,8 @@ The goal of this project is to be the de-facto platform for future development.
 
 Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases).
 
+Both an installer and a portable version are available.
+
 If you are unsure of whether you want to use MSYS2 or MSVC, use MSYS2.
 
 ---

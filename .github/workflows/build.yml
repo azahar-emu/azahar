@@ -1,4 +1,4 @@
-name: citra-build
+name: azahar-build
 
 on:
   push:
