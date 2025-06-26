@@ -15,11 +15,12 @@ MICROPROFILE_DEFINE(Vulkan_Present, "Vulkan", "Swapchain Present", MP_RGB(66, 18
 
 namespace Vulkan {
 
-Swapchain::Swapchain(const Instance& instance_, u32 width, u32 height, vk::SurfaceKHR surface_)
+Swapchain::Swapchain(const Instance& instance_, u32 width, u32 height, vk::SurfaceKHR surface_,
+                     bool low_refresh_rate)
     : instance{instance_}, surface{surface_} {
     FindPresentFormat();
     SetPresentMode();
-    Create(width, height, surface);
+    Create(width, height, surface, low_refresh_rate);
 }
 
 Swapchain::~Swapchain() {
@@ -27,10 +28,11 @@ Swapchain::~Swapchain() {
     instance.GetInstance().destroySurfaceKHR(surface);
 }
 
-void Swapchain::Create(u32 width_, u32 height_, vk::SurfaceKHR surface_) {
+void Swapchain::Create(u32 width_, u32 height_, vk::SurfaceKHR surface_, bool low_refresh_rate_) {
     width = width_;
     height = height_;
     surface = surface_;
+    low_refresh_rate = low_refresh_rate_;
     needs_recreation = false;
 
     Destroy();
@@ -188,7 +190,8 @@ void Swapchain::SetPresentMode() {
 
     // If vsync is enabled attempt to use mailbox mode in case the user wants to speedup/slowdown
     // the game. If mailbox is not available use immediate and warn about it.
-    if (use_vsync && (frame_limit > 100 || frame_limit == 0)) { // 0 = unthrottled
+    if (use_vsync &&
+        (frame_limit > 100 || frame_limit == 0 || low_refresh_rate)) { // 0 = unthrottled
         present_mode = has_mailbox ? vk::PresentModeKHR::eMailbox : vk::PresentModeKHR::eImmediate;
         if (!has_mailbox) {
             LOG_WARNING(
