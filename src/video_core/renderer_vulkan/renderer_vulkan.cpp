@@ -58,7 +58,8 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
     {0, vk::DescriptorType::eCombinedImageSampler, 3, vk::ShaderStageFlagBits::eFragment},
 }};
 
-bool IsLowRefreshRate() {
+namespace {
+static bool IsLowRefreshRate() {
 #ifdef ENABLE_SDL2
     const auto sdl_init_status = SDL_Init(SDL_INIT_VIDEO);
     if (sdl_init_status < 0) {
@@ -91,6 +92,7 @@ bool IsLowRefreshRate() {
 
     return false;
 }
+} // Anonymous namespace
 
 RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
                                Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
