@@ -455,7 +455,6 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
 }
 
 void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& texture) {
-    return;
     const vk::ClearColorValue clear_color = {
         .float32 =
             std::array{

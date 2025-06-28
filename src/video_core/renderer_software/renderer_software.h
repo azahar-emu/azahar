@@ -38,7 +38,7 @@ public:
 
 private:
     void PrepareRenderTarget();
-    void LoadFBToScreenInfo(int i);
+    void LoadFBToScreenInfo(int i, const Pica::ColorFill& color_fill);
 
 private:
     Memory::MemorySystem& memory;

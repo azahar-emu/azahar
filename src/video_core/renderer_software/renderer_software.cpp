@@ -30,13 +30,11 @@ void RendererSoftware::PrepareRenderTarget() {
         const u32 fb_id = i == 2 ? 1 : 0;
 
         const auto color_fill = fb_id == 0 ? regs_lcd.color_fill_top : regs_lcd.color_fill_bottom;
-        if (!color_fill.is_enabled) {
-            LoadFBToScreenInfo(i);
-        }
+        LoadFBToScreenInfo(i, color_fill);
     }
 }
 
-void RendererSoftware::LoadFBToScreenInfo(int i) {
+void RendererSoftware::LoadFBToScreenInfo(int i, const Pica::ColorFill& color_fill) {
     const u32 fb_id = i == 2 ? 1 : 0;
     const auto& framebuffer = pica.regs.framebuffer_config[fb_id];
     auto& info = screen_infos[i];
@@ -54,7 +52,12 @@ void RendererSoftware::LoadFBToScreenInfo(int i) {
     for (u32 y = 0; y < info.height; y++) {
         for (u32 x = 0; x < info.width; x++) {
             const u8* pixel = framebuffer_data + (y * pixel_stride + pixel_stride - x) * bpp;
-            const Common::Vec4 color = [&] {
+            Common::Vec4 color = [&] {
+                if (color_fill.is_enabled) {
+                    return Common::Vec4<u8>(color_fill.color_r, color_fill.color_g,
+                                            color_fill.color_b, 255);
+                }
+
                 switch (framebuffer.color_format) {
                 case Pica::PixelFormat::RGBA8:
                     return Common::Color::DecodeRGBA8(pixel);
