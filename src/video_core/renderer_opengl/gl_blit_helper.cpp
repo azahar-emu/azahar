@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -43,8 +43,9 @@ OGLSampler CreateSampler(GLenum filter) {
     return sampler;
 }
 
-OGLProgram CreateProgram(std::string_view frag) {
+OGLProgram CreateProgram(std::string_view frag, std::string_view debug_name) {
     OGLProgram program;
+    program.SetDebugName(debug_name);
     program.Create(HostShaders::FULL_SCREEN_TRIANGLE_VERT, frag);
     glProgramUniform2f(program.handle, 0, 1.f, 1.f);
     glProgramUniform2f(program.handle, 1, 0.f, 0.f);
@@ -56,15 +57,15 @@ OGLProgram CreateProgram(std::string_view frag) {
 BlitHelper::BlitHelper(const Driver& driver_)
     : driver{driver_}, linear_sampler{CreateSampler(GL_LINEAR)},
       nearest_sampler{CreateSampler(GL_NEAREST)},
-      bicubic_program{CreateProgram(HostShaders::BICUBIC_FRAG)},
-      scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG)},
-      xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG)},
-      mmpx_program{CreateProgram(HostShaders::MMPX_FRAG)},
-      gradient_x_program{CreateProgram(HostShaders::X_GRADIENT_FRAG)},
-      gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG)},
-      refine_program{CreateProgram(HostShaders::REFINE_FRAG)},
-      d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG)},
-      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG)} {
+      bicubic_program{CreateProgram(HostShaders::BICUBIC_FRAG, "BICUBIC_FRAG")},
+      scale_force_program{CreateProgram(HostShaders::SCALE_FORCE_FRAG, "SCALE_FORCE_FRAG")},
+      xbrz_program{CreateProgram(HostShaders::XBRZ_FREESCALE_FRAG, "XBRZ_FREESCALE_FRAG")},
+      mmpx_program{CreateProgram(HostShaders::MMPX_FRAG, "MMPX_FRAG")},
+      gradient_x_program{CreateProgram(HostShaders::X_GRADIENT_FRAG, "X_GRADIENT_FRAG")},
+      gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG, "Y_GRADIENT_FRAG")},
+      refine_program{CreateProgram(HostShaders::REFINE_FRAG, "REFINE_FRAG")},
+      d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG, "D24S8_TO_RGBA8_FRAG")},
+      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG, "RGBA4_TO_RGB5A1_FRAG")} {
     vao.Create();
     draw_fbo.Create();
     state.draw.vertex_array = vao.handle;

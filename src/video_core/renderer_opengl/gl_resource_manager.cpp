@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -110,7 +110,7 @@ void OGLShader::Create(std::string_view source, GLenum type) {
         return;
 
     MICROPROFILE_SCOPE(OpenGL_ResourceCreation);
-    handle = LoadShader(source, type);
+    handle = LoadShader(source, type, debug_name);
 }
 
 void OGLShader::Release() {
@@ -127,11 +127,13 @@ void OGLProgram::Create(bool separable_program, std::span<const GLuint> shaders)
         return;
 
     MICROPROFILE_SCOPE(OpenGL_ResourceCreation);
-    handle = LoadProgram(separable_program, shaders);
+    handle = LoadProgram(separable_program, shaders, debug_name);
 }
 
 void OGLProgram::Create(std::string_view vert_shader, std::string_view frag_shader) {
     OGLShader vert, frag;
+    vert.SetDebugName(debug_name + "_vert");
+    frag.SetDebugName(debug_name + "_frag");
     vert.Create(vert_shader, GL_VERTEX_SHADER);
     frag.Create(frag_shader, GL_FRAGMENT_SHADER);
 
