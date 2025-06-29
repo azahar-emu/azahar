@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,7 +13,7 @@
 
 namespace OpenGL {
 
-GLuint LoadShader(std::string_view source, GLenum type) {
+GLuint LoadShader(std::string_view source, GLenum type, const std::string& debug_name) {
     std::string preamble;
     if (GLES) {
         preamble = R"(#version 320 es
@@ -49,8 +49,15 @@ GLuint LoadShader(std::string_view source, GLenum type) {
     std::array<GLint, 2> lengths{static_cast<GLint>(preamble.size()),
                                  static_cast<GLint>(source.size())};
     GLuint shader_id = glCreateShader(type);
+    if (shader_id == 0) {
+        GLenum err = glGetError();
+        LOG_ERROR(Render_OpenGL, "glCreateShader failed for {} shader {} (err {})", debug_type,
+                  debug_name, err);
+        return shader_id;
+    }
+
     glShaderSource(shader_id, static_cast<GLsizei>(src_arr.size()), src_arr.data(), lengths.data());
-    LOG_DEBUG(Render_OpenGL, "Compiling {} shader...", debug_type);
+    LOG_DEBUG(Render_OpenGL, "Compiling {} shader {}...", debug_type, debug_name);
     glCompileShader(shader_id);
 
     GLint result = GL_FALSE;
@@ -62,17 +69,22 @@ GLuint LoadShader(std::string_view source, GLenum type) {
         std::vector<char> shader_error(info_log_length);
         glGetShaderInfoLog(shader_id, info_log_length, nullptr, &shader_error[0]);
         if (result == GL_TRUE) {
-            LOG_DEBUG(Render_OpenGL, "{}", &shader_error[0]);
+            LOG_DEBUG(Render_OpenGL, "Compile message for {} shader {}:\n{}", debug_type,
+                      debug_name, &shader_error[0]);
         } else {
-            LOG_ERROR(Render_OpenGL, "Error compiling {} shader:\n{}", debug_type,
+            LOG_ERROR(Render_OpenGL, "Error compiling {} shader {}:\n{}", debug_type, debug_name,
                       &shader_error[0]);
             LOG_ERROR(Render_OpenGL, "Shader source code:\n{}{}", src_arr[0], src_arr[1]);
         }
+    } else if (result == GL_FALSE) {
+        LOG_ERROR(Render_OpenGL, "Error compiling {} shader {}:\nNo log produced.", debug_type,
+                  debug_name);
     }
     return shader_id;
 }
 
-GLuint LoadProgram(bool separable_program, std::span<const GLuint> shaders) {
+GLuint LoadProgram(bool separable_program, std::span<const GLuint> shaders,
+                   const std::string& debug_name) {
     // Link the program
     LOG_DEBUG(Render_OpenGL, "Linking program...");
 
@@ -101,13 +113,14 @@ GLuint LoadProgram(bool separable_program, std::span<const GLuint> shaders) {
         std::vector<char> program_error(info_log_length);
         glGetProgramInfoLog(program_id, info_log_length, nullptr, &program_error[0]);
         if (result == GL_TRUE) {
-            LOG_DEBUG(Render_OpenGL, "{}", &program_error[0]);
+            LOG_DEBUG(Render_OpenGL, "Link message for shader {}:\n{}", debug_name,
+                      &program_error[0]);
         } else {
-            LOG_ERROR(Render_OpenGL, "Error linking shader:\n{}", &program_error[0]);
+            LOG_ERROR(Render_OpenGL, "Error linking shader {}:\n{}", debug_name, &program_error[0]);
         }
+    } else if (result == GL_FALSE) {
+        LOG_ERROR(Render_OpenGL, "Error linking shader {}: No log produced.", debug_name);
     }
-
-    ASSERT_MSG(result == GL_TRUE, "Shader not linked");
 
     for (GLuint shader : shaders) {
         if (shader != 0) {
