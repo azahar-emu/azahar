@@ -18,10 +18,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modul
 include(DownloadExternals)
 include(CMakeDependentOption)
 
-if (APPLE)
-    project(citra LANGUAGES C CXX OBJC OBJCXX ASM)
-else()
-    project(citra LANGUAGES C CXX ASM)
+project(citra LANGUAGES C CXX ASM)
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    enable_language(OBJC OBJCXX)
 endif()
 
 # Some submodules like to pick their own default build type if not specified.
