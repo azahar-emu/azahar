@@ -360,6 +360,14 @@ InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback = nullptr);
 
 /**
+ * Checks if the provided path is a valid CIA file
+ * that can be installed.
+ * @param path file path of the CIA file to check to install
+ */
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
+                                bool check_encryption);
+
+/**
  * Get the update title ID for a title
  * @param titleId the title ID
  * @returns The update title ID

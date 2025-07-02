@@ -301,7 +301,7 @@ public:
 
     void Swap(IOFile& other) noexcept;
 
-    bool Close();
+    virtual bool Close();
 
     template <typename T>
     std::size_t ReadArray(T* data, std::size_t length) {
@@ -412,15 +412,15 @@ public:
         return WriteImpl(data.data(), data.size(), sizeof(T));
     }
 
-    [[nodiscard]] bool IsOpen() const {
+    [[nodiscard]] virtual bool IsOpen() const {
         return nullptr != m_file;
     }
 
     // m_good is set to false when a read, write or other function fails
-    [[nodiscard]] bool IsGood() const {
+    [[nodiscard]] virtual bool IsGood() const {
         return m_good;
     }
-    [[nodiscard]] int GetFd() const {
+    [[nodiscard]] virtual int GetFd() const {
 #ifdef ANDROID
         return m_fd;
 #else
@@ -436,13 +436,15 @@ public:
     bool Seek(s64 off, int origin) {
         return SeekImpl(off, origin);
     }
-    [[nodiscard]] u64 Tell() const;
-    [[nodiscard]] u64 GetSize() const;
-    bool Resize(u64 size);
-    bool Flush();
+    u64 Tell() const {
+        return TellImpl();
+    }
+    virtual u64 GetSize() const;
+    virtual bool Resize(u64 size);
+    virtual bool Flush();
 
     // clear error state
-    void Clear() {
+    virtual void Clear() {
         m_good = true;
         std::clearerr(m_file);
     }
@@ -451,29 +453,35 @@ public:
         return false;
     }
 
-    const std::string& Filename() const {
+    virtual bool IsCompressed() {
+        return false;
+    }
+
+    virtual const std::string& Filename() const {
         return filename;
     }
 
 protected:
     friend struct CryptoIOFileImpl;
+
+    virtual bool Open();
+
     virtual std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size);
     virtual std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
                                    std::size_t offset);
     virtual std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size);
 
     virtual bool SeekImpl(s64 off, int origin);
+    virtual u64 TellImpl() const;
 
 private:
-    bool Open();
-
     std::FILE* m_file = nullptr;
     int m_fd = -1;
     bool m_good = true;
 
     std::string filename;
     std::string openmode;
-    u32 flags;
+    u32 flags = 0;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {

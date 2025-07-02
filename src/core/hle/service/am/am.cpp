@@ -16,6 +16,7 @@
 #include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/errors.h"
@@ -105,6 +106,12 @@ NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file, bool encrypted_conte
         file = std::make_unique<FileUtil::IOFile>(out_file, "wb");
     }
 
+    if (Settings::values.compress_cia_installs) {
+        std::array<u8, 4> magic = {'N', 'C', 'C', 'H'};
+        file = std::make_unique<FileUtil::Z3DSWriteIOFile>(
+            std::move(file), magic, FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE);
+    }
+
     if (!file->IsOpen()) {
         is_error = true;
     }
@@ -116,6 +123,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
 
     if (is_not_ncch) {
         file->WriteBytes(buffer, length);
+        return;
     }
 
     const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
@@ -1061,8 +1069,16 @@ InstallStatus InstallCIA(const std::string& path,
         return InstallStatus::ErrorFileNotFound;
     }
 
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    bool is_compressed =
+        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
+    if (is_compressed) {
+        in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+    }
+
     FileSys::CIAContainer container;
-    if (container.Load(path) == Loader::ResultStatus::Success) {
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
         Service::AM::CIAFile installFile(
             Core::System::GetInstance(),
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
@@ -1072,18 +1088,12 @@ InstallStatus InstallCIA(const std::string& path,
             return InstallStatus::ErrorEncrypted;
         }
 
-        FileUtil::IOFile file(path, "rb");
-        if (!file.IsOpen()) {
-            LOG_ERROR(Service_AM, "Could not open CIA file '{}'.", path);
-            return InstallStatus::ErrorFailedToOpenFile;
-        }
-
         std::vector<u8> buffer;
         buffer.resize(0x10000);
-        auto file_size = file.GetSize();
+        auto file_size = in_file->GetSize();
         std::size_t total_bytes_read = 0;
         while (total_bytes_read != file_size) {
-            std::size_t bytes_read = file.ReadBytes(buffer.data(), buffer.size());
+            std::size_t bytes_read = in_file->ReadBytes(buffer.data(), buffer.size());
             auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
                                             false, static_cast<u8*>(buffer.data()));
 
@@ -1125,6 +1135,51 @@ InstallStatus InstallCIA(const std::string& path,
     }
 
     LOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
+    return InstallStatus::ErrorInvalid;
+}
+
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
+                                bool check_encryption) {
+    if (!FileUtil::Exists(path)) {
+        LOG_ERROR(Service_AM, "File {} does not exist!", path);
+        return InstallStatus::ErrorFileNotFound;
+    }
+
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    is_compressed = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
+    if (is_compressed) {
+        in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+    }
+
+    FileSys::CIAContainer container;
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
+        const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+
+        if (check_encryption) {
+            if (tmd.HasEncryptedContent(container.GetHeader())) {
+                return InstallStatus::ErrorEncrypted;
+            }
+
+            for (size_t i = 0; i < tmd.GetContentCount(); i++) {
+                u64 offset = container.GetContentOffset(i);
+                NCCH_Header ncch;
+                const auto read = in_file->ReadAtBytes(&ncch, sizeof(ncch), offset);
+                if (read != sizeof(ncch)) {
+                    return InstallStatus::ErrorInvalid;
+                }
+                if (ncch.magic != Loader::MakeMagic('N', 'C', 'C', 'H')) {
+                    return InstallStatus::ErrorInvalid;
+                }
+                if (!ncch.no_crypto) {
+                    return InstallStatus::ErrorEncrypted;
+                }
+            }
+        }
+
+        return InstallStatus::Success;
+    }
+
     return InstallStatus::ErrorInvalid;
 }
 

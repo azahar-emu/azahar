@@ -208,6 +208,9 @@
     <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
     <addaction name="action_Dump_Video"/>
+    <addaction name="separator"/>
+    <addaction name="action_Compress_ROM_File"/>
+    <addaction name="action_Decompress_ROM_File"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -456,6 +459,16 @@
    </property>
    <property name="text">
     <string>Dump Video</string>
+   </property>
+  </action>
+  <action name="action_Compress_ROM_File">
+   <property name="text">
+    <string>Compress ROM File...</string>
+   </property>
+  </action>
+  <action name="action_Decompress_ROM_File">
+   <property name="text">
+    <string>Decompress ROM File...</string>
    </property>
   </action>
   <action name="action_View_Lobby">

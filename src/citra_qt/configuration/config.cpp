@@ -475,6 +475,7 @@ void QtConfig::ReadDataStorageValues() {
 
     ReadBasicSetting(Settings::values.use_virtual_sd);
     ReadBasicSetting(Settings::values.use_custom_storage);
+    ReadBasicSetting(Settings::values.compress_cia_installs);
 
     const std::string nand_dir =
         ReadSetting(QStringLiteral("nand_directory"), QStringLiteral("")).toString().toStdString();
@@ -1045,6 +1046,7 @@ void QtConfig::SaveDataStorageValues() {
 
     WriteBasicSetting(Settings::values.use_virtual_sd);
     WriteBasicSetting(Settings::values.use_custom_storage);
+    WriteBasicSetting(Settings::values.compress_cia_installs);
     WriteSetting(QStringLiteral("nand_directory"),
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
                  QStringLiteral(""));

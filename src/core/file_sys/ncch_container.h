@@ -333,16 +333,28 @@ public:
      */
     bool HasExHeader();
 
+    bool IsNCSD() {
+        return is_ncsd;
+    }
+
+    bool IsFileCompressed() {
+        return file->IsCompressed();
+    }
+
     NCCH_Header ncch_header;
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 
 private:
+    std::unique_ptr<FileUtil::IOFile> Reopen(const std::unique_ptr<FileUtil::IOFile>& orig_file,
+                                             const std::string& new_filename = "");
+
     bool has_header = false;
     bool has_exheader = false;
     bool has_exefs = false;
     bool has_romfs = false;
 
+    bool is_ncsd = false;
     bool is_proto = false;
     bool is_tainted = false; // Are there parts of this container being overridden?
     bool is_loaded = false;

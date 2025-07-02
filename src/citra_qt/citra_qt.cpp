@@ -92,6 +92,7 @@
 #endif
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -991,6 +992,7 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
+    connect(this, &GMainWindow::CompressFinished, this, &GMainWindow::OnCompressFinished);
     connect(this, &GMainWindow::UpdateThemedIcons, multiplayer_state,
             &MultiplayerState::UpdateThemedIcons);
 }
@@ -1081,6 +1083,10 @@ void GMainWindow::ConnectMenuEvents() {
     });
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
+
+    // Tools
+    connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
+    connect_menu(ui->action_Decompress_ROM_File, &GMainWindow::OnDecompressFile);
 
     // Help
     connect_menu(ui->action_Open_Citra_Folder, &GMainWindow::OnOpenCitraFolder);
@@ -2236,7 +2242,7 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File (*.CIA*)") + QStringLiteral(";;") + tr("All Files (*.*)"));
+        tr("3DS Installation File (*.cia *.zcia)") + QStringLiteral(";;") + tr("All Files (*.*)"));
 
     if (filepaths.isEmpty()) {
         return;
@@ -2315,6 +2321,21 @@ void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString 
         QMessageBox::critical(this, tr("Unable to find File"),
                               tr("Could not find %1").arg(filename));
         break;
+    }
+}
+
+void GMainWindow::OnCompressFinished(bool is_compress, bool success) {
+    progress_bar->hide();
+    progress_bar->setValue(0);
+
+    if (!success) {
+        if (is_compress) {
+            QMessageBox::critical(this, tr("Error compressing file"),
+                                  tr("File compress operation failed, check log for details."));
+        } else {
+            QMessageBox::critical(this, tr("Error decompressing file"),
+                                  tr("File decompress operation failed, check log for details."));
+        }
     }
 }
 
@@ -3025,6 +3046,163 @@ void GMainWindow::OnDumpVideo() {
     }
 }
 
+void GMainWindow::OnCompressFile() {
+    // NOTE: Encrypted files SHOULD NEVER be compressed, otherwise the resulting
+    // compressed file will have very poor compression ratios, due to the high
+    // entropy caused by encryption. This may cause confusion to the user as they
+    // will see the files do not compress well and blame the emulator.
+    //
+    // This is enforced using the loaders as they already return an error on encryption.
+
+    QString filepath = QFileDialog::getOpenFileName(
+        this, tr("Load 3DS ROM File"), UISettings::values.roms_path,
+        tr("3DS ROM Files (*.cia *cci *3dsx *cxi)") + QStringLiteral(";;") + tr("All Files (*.*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+    std::string in_path = filepath.toStdString();
+
+    // Identify file type
+    Loader::AppLoader::CompressFileInfo compress_info{};
+    compress_info.is_supported = false;
+    size_t frame_size{};
+    {
+        auto loader = Loader::GetLoader(in_path);
+        if (loader) {
+            compress_info = loader->GetCompressFileInfo();
+            frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
+        } else {
+            bool is_compressed = false;
+            if (Service::AM::CheckCIAToInstall(in_path, is_compressed, true) ==
+                Service::AM::InstallStatus::Success) {
+                compress_info.is_supported = true;
+                compress_info.is_compressed = is_compressed;
+                compress_info.recommended_compressed_extension = "zcia";
+                compress_info.recommended_uncompressed_extension = "cia";
+                compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
+                frame_size = FileUtil::Z3DSWriteIOFile::MAX_FRAME_SIZE;
+            }
+        }
+    }
+    if (!compress_info.is_supported) {
+        QMessageBox::critical(
+            this, tr("Error compressing file"),
+            tr("The selected file is not a compatible 3DS ROM format. Make sure you have "
+               "chosen the right file, and that it is not encrypted."));
+        return;
+    }
+    if (compress_info.is_compressed) {
+        QMessageBox::warning(this, tr("Error compressing file"),
+                             tr("The selected file is already compressed."));
+        return;
+    }
+
+    QString out_filter =
+        tr("3DS Compressed ROM File (*.%1)")
+            .arg(QString::fromStdString(compress_info.recommended_compressed_extension));
+
+    QFileInfo fileinfo(filepath);
+    QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                         QStringLiteral(".") +
+                         QString::fromStdString(compress_info.recommended_compressed_extension);
+
+    filepath = QFileDialog::getSaveFileName(this, tr("Save 3DS Compressed ROM File"), final_path,
+                                            out_filter);
+    if (filepath.isEmpty()) {
+        return;
+    }
+    std::string out_path = filepath.toStdString();
+
+    progress_bar->show();
+    progress_bar->setMaximum(INT_MAX);
+
+    (void)QtConcurrent::run([&, in_path, out_path, compress_info, frame_size] {
+        const auto progress = [&](std::size_t written, std::size_t total) {
+            emit UpdateProgress(written, total);
+        };
+        bool success = FileUtil::CompressZ3DSFile(in_path, out_path, compress_info.underlying_magic,
+                                                  frame_size, progress);
+        if (!success) {
+            FileUtil::Delete(out_path);
+        }
+        emit OnCompressFinished(true, success);
+    });
+}
+void GMainWindow::OnDecompressFile() {
+    QString filepath = QFileDialog::getOpenFileName(
+        this, tr("Load 3DS Compressed ROM File"), UISettings::values.roms_path,
+        tr("3DS Compressed ROM Files (*.zcia *zcci *z3dsx *zcxi)") + QStringLiteral(";;") +
+            tr("All Files (*.*)"));
+
+    if (filepath.isEmpty()) {
+        return;
+    }
+    std::string in_path = filepath.toStdString();
+
+    // Identify file type
+    Loader::AppLoader::CompressFileInfo compress_info{};
+    compress_info.is_supported = false;
+    {
+        auto loader = Loader::GetLoader(in_path);
+        if (loader) {
+            compress_info = loader->GetCompressFileInfo();
+        } else {
+            bool is_compressed = false;
+            if (Service::AM::CheckCIAToInstall(in_path, is_compressed, false) ==
+                Service::AM::InstallStatus::Success) {
+                compress_info.is_supported = true;
+                compress_info.is_compressed = is_compressed;
+                compress_info.recommended_compressed_extension = "zcia";
+                compress_info.recommended_uncompressed_extension = "cia";
+                compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
+            }
+        }
+    }
+    if (!compress_info.is_supported) {
+        QMessageBox::critical(this, tr("Error decompressing file"),
+                              tr("The selected file is not a compatible compressed 3DS ROM format. "
+                                 "Make sure you have "
+                                 "chosen the right file."));
+        return;
+    }
+    if (!compress_info.is_compressed) {
+        QMessageBox::warning(this, tr("Error decompressing file"),
+                             tr("The selected file is already decompressed."));
+        return;
+    }
+
+    QString out_filter =
+        tr("3DS ROM File (*.%1)")
+            .arg(QString::fromStdString(compress_info.recommended_uncompressed_extension));
+
+    QFileInfo fileinfo(filepath);
+    QString final_path = fileinfo.path() + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                         QStringLiteral(".") +
+                         QString::fromStdString(compress_info.recommended_uncompressed_extension);
+
+    filepath = QFileDialog::getSaveFileName(this, tr("Save 3DS ROM File"), final_path, out_filter);
+    if (filepath.isEmpty()) {
+        return;
+    }
+    std::string out_path = filepath.toStdString();
+
+    progress_bar->show();
+    progress_bar->setMaximum(INT_MAX);
+
+    (void)QtConcurrent::run([&, in_path, out_path, compress_info] {
+        const auto progress = [&](std::size_t written, std::size_t total) {
+            emit UpdateProgress(written, total);
+        };
+        // TODO(PabloMK7): What should we do with the metadata?
+        bool success = FileUtil::DeCompressZ3DSFile(in_path, out_path, progress);
+        if (!success) {
+            FileUtil::Delete(out_path);
+        }
+        emit OnCompressFinished(false, success);
+    });
+}
+
 #ifdef _WIN32
 void GMainWindow::OnOpenFFmpeg() {
     auto filename =
@@ -3514,8 +3692,8 @@ static bool IsSingleFileDropEvent(const QMimeData* mime) {
     return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-static const std::array<std::string, 8> AcceptedExtensions = {"cci", "cxi", "bin", "3dsx",
-                                                              "app", "elf", "axf"};
+static const std::array<std::string, 10> AcceptedExtensions = {
+    "cci", "cxi", "bin", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx"};
 
 static bool IsCorrectFileExtension(const QMimeData* mime) {
     const QString& filename = mime->urls().at(0).toLocalFile();

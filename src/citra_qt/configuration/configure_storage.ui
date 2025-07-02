@@ -179,6 +179,20 @@
           </layout>
          </widget>
         </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="toggle_compress_cia">
+            <property name="text">
+             <string>Compress installed CIA contents</string>
+            </property>
+            <property name="toolTip">
+              <string>Enables compressing the contents of CIA files when they are installed to the emulated SD.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
        </layout>
       </widget>
      </item>
