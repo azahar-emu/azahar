@@ -213,6 +213,7 @@ void SdlConfig::ReadValues() {
     // Data Storage
     ReadSetting("Data Storage", Settings::values.use_virtual_sd);
     ReadSetting("Data Storage", Settings::values.use_custom_storage);
+    ReadSetting("Data Storage", Settings::values.compress_cia_installs);
 
     if (Settings::values.use_custom_storage) {
         FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir,

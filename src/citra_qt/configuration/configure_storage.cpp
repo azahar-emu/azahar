@@ -77,6 +77,7 @@ void ConfigureStorage::SetConfiguration() {
 
     ui->toggle_virtual_sd->setChecked(Settings::values.use_virtual_sd.GetValue());
     ui->toggle_custom_storage->setChecked(Settings::values.use_custom_storage.GetValue());
+    ui->toggle_compress_cia->setChecked(Settings::values.compress_cia_installs.GetValue());
 
     ui->storage_group->setEnabled(!is_powered_on);
 }
@@ -84,6 +85,7 @@ void ConfigureStorage::SetConfiguration() {
 void ConfigureStorage::ApplyConfiguration() {
     Settings::values.use_virtual_sd = ui->toggle_virtual_sd->isChecked();
     Settings::values.use_custom_storage = ui->toggle_custom_storage->isChecked();
+    Settings::values.compress_cia_installs = ui->toggle_compress_cia->isChecked();
 
     if (!Settings::values.use_custom_storage) {
         FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir,

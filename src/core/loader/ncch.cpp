@@ -12,6 +12,7 @@
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/swap.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
@@ -34,10 +35,10 @@ namespace Loader {
 using namespace Common::Literals;
 static constexpr u64 UPDATE_TID_HIGH = 0x0004000e00000000;
 
-FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
+FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile* file) {
     u32 magic;
-    file.Seek(0x100, SEEK_SET);
-    if (1 != file.ReadArray<u32>(&magic, 1))
+    file->Seek(0x100, SEEK_SET);
+    if (1 != file->ReadArray<u32>(&magic, 1))
         return FileType::Error;
 
     if (MakeMagic('N', 'C', 'S', 'D') == magic)
@@ -47,7 +48,7 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
         return FileType::CXI;
 
     std::unique_ptr<FileUtil::IOFile> file_crypto = HW::UniqueData::OpenUniqueCryptoFile(
-        file.Filename(), "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+        file->Filename(), "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
 
     file_crypto->Seek(0x100, SEEK_SET);
     if (1 != file_crypto->ReadArray<u32>(&magic, 1))
@@ -58,6 +59,16 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
 
     if (MakeMagic('N', 'C', 'C', 'H') == magic)
         return FileType::CXI;
+
+    std::optional<u32> magic_zstd;
+    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) != std::nullopt ||
+        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file_crypto.get()) != std::nullopt) {
+        if (MakeMagic('N', 'C', 'S', 'D') == magic_zstd)
+            return FileType::CCI;
+
+        if (MakeMagic('N', 'C', 'C', 'H') == magic_zstd)
+            return FileType::CXI;
+    }
 
     return FileType::Error;
 }
@@ -394,6 +405,26 @@ ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
     title = Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
 
     return ResultStatus::Success;
+}
+
+AppLoader::CompressFileInfo AppLoader_NCCH::GetCompressFileInfo() {
+    CompressFileInfo info{};
+    if (base_ncch.LoadHeader() != ResultStatus::Success) {
+        info.is_supported = false;
+        return info;
+    }
+    info.is_supported = true;
+    info.is_compressed = base_ncch.IsFileCompressed();
+    if (base_ncch.IsNCSD()) {
+        info.underlying_magic = std::array<u8, 4>({'N', 'C', 'S', 'D'});
+        info.recommended_compressed_extension = "zcci";
+        info.recommended_uncompressed_extension = "cci";
+    } else {
+        info.underlying_magic = std::array<u8, 4>({'N', 'C', 'C', 'H'});
+        info.recommended_compressed_extension = "zcxi";
+        info.recommended_uncompressed_extension = "cxi";
+    }
+    return info;
 }
 
 } // namespace Loader

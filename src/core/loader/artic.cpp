@@ -80,7 +80,7 @@ Apploader_Artic::~Apploader_Artic() {
     client->Stop();
 }
 
-FileType Apploader_Artic::IdentifyType(FileUtil::IOFile& file) {
+FileType Apploader_Artic::IdentifyType(FileUtil::IOFile* file) {
     return FileType::ARTIC;
 }
 
