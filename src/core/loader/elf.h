@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -22,10 +26,10 @@ public:
      * @param file FileUtil::IOFile open file
      * @return FileType found, or FileType::Error if this loader doesn't know it
      */
-    static FileType IdentifyType(FileUtil::IOFile& file);
+    static FileType IdentifyType(FileUtil::IOFile* file);
 
     FileType GetFileType() override {
-        return IdentifyType(file);
+        return IdentifyType(file.get());
     }
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;

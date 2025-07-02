@@ -1187,7 +1187,7 @@ bool IOFile::SeekImpl(s64 off, int origin) {
     return m_good;
 }
 
-u64 IOFile::Tell() const {
+u64 IOFile::TellImpl() const {
     if (IsOpen())
         return ftello(m_file);
 
@@ -1224,11 +1224,18 @@ static std::size_t pread(int fd, void* buf, std::size_t count, uint64_t offset) 
 
     overlapped.OffsetHigh = static_cast<uint32_t>(offset >> 32);
     overlapped.Offset = static_cast<uint32_t>(offset & 0xFFFF'FFFFLL);
+    LARGE_INTEGER orig, dummy;
+    // TODO(PabloMK7): This is not fully async, windows being messy again...
+    // The file pos pointer will be undefined if ReadAt is used in multiple
+    // threads. Normally not problematic, but worth remembering.
+    SetFilePointerEx(file, {}, &orig, FILE_CURRENT);
     SetLastError(0);
     bool ret = ReadFile(file, buf, static_cast<uint32_t>(count), &read_bytes, &overlapped);
+    DWORD last_error = GetLastError();
+    SetFilePointerEx(file, orig, &dummy, FILE_BEGIN);
 
-    if (!ret && GetLastError() != ERROR_HANDLE_EOF) {
-        errno = GetLastError();
+    if (!ret && last_error != ERROR_HANDLE_EOF) {
+        errno = last_error;
         return std::numeric_limits<std::size_t>::max();
     }
     return read_bytes;

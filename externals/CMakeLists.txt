@@ -214,8 +214,29 @@ else()
     set(ZSTD_BUILD_PROGRAMS OFF)
     set(ZSTD_BUILD_SHARED OFF)
     add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
-    target_include_directories(libzstd_static INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>)
+
+    target_include_directories(libzstd_static INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib/common>
+    )
+
+    add_library(zstd_seekable STATIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_compress.c>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_decompress.c>
+    )
+    target_include_directories(zstd_seekable PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common>
+    )
+    target_link_libraries(zstd_seekable PUBLIC libzstd_static)
+
+    target_link_libraries(libzstd_static INTERFACE zstd_seekable)
+
     add_library(zstd ALIAS libzstd_static)
+
+    install(TARGETS zstd_seekable
+        EXPORT zstdExports
+    )
 endif()
 
 # ENet

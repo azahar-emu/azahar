@@ -10,6 +10,7 @@
 #include <cryptopp/sha.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/layered_fs.h"
 #include "core/file_sys/ncch_container.h"
@@ -137,6 +138,15 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
         return Loader::ResultStatus::Success;
     }
 
+    if (!file->IsOpen()) {
+        return Loader::ResultStatus::Error;
+    }
+
+    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+        // The file is compressed
+        file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
+    }
+
     for (int i = 0; i < 2; i++) {
         if (!file->IsOpen()) {
             return Loader::ResultStatus::Error;
@@ -151,6 +161,7 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
 
         // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
         if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+            is_ncsd = true;
             NCSD_Header ncsd_header;
             file->Seek(ncch_offset, SEEK_SET);
             file->ReadBytes(&ncsd_header, sizeof(NCSD_Header));
@@ -166,9 +177,12 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
         if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
             // We may be loading a crypto file, try again
             if (i == 0) {
-                file.reset();
                 file = HW::UniqueData::OpenUniqueCryptoFile(
                     filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+                if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+                    // The file is compressed
+                    file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
+                }
             } else {
                 return Loader::ResultStatus::ErrorInvalidFormat;
             }
@@ -177,6 +191,11 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
 
     if (file->IsCrypto()) {
         LOG_DEBUG(Service_FS, "NCCH file has console unique crypto");
+    }
+
+    if (!ncch_header.no_crypto) {
+        // Encrypted NCCH are not supported
+        return Loader::ResultStatus::ErrorEncrypted;
     }
 
     has_header = true;
@@ -190,9 +209,18 @@ Loader::ResultStatus NCCHContainer::Load() {
     int block_size = kBlockSize;
 
     if (file->IsOpen()) {
-        size_t file_size;
 
+        if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
+            // The file is compressed
+            file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
+        }
+
+        size_t file_size;
         for (int i = 0; i < 2; i++) {
+            if (!file->IsOpen()) {
+                return Loader::ResultStatus::Error;
+            }
+
             file_size = file->GetSize();
 
             // Reset read pointer in case this file has been read before.
@@ -203,6 +231,7 @@ Loader::ResultStatus NCCHContainer::Load() {
 
             // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
             if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+                is_ncsd = true;
                 NCSD_Header ncsd_header;
                 file->Seek(ncch_offset, SEEK_SET);
                 file->ReadBytes(&ncsd_header, sizeof(NCSD_Header));
@@ -219,14 +248,24 @@ Loader::ResultStatus NCCHContainer::Load() {
                 if (i == 0) {
                     file = HW::UniqueData::OpenUniqueCryptoFile(
                         filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+                    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) !=
+                        std::nullopt) {
+                        // The file is compressed
+                        file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
+                    }
                 } else {
                     return Loader::ResultStatus::ErrorInvalidFormat;
                 }
+            } else {
+                break;
             }
         }
 
         if (file->IsCrypto()) {
             LOG_DEBUG(Service_FS, "NCCH file has console unique crypto");
+        }
+        if (file->IsCompressed()) {
+            LOG_DEBUG(Service_FS, "NCCH file is compressed");
         }
 
         has_header = true;
@@ -323,12 +362,7 @@ Loader::ResultStatus NCCHContainer::Load() {
             if (file->ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
                 return Loader::ResultStatus::Error;
 
-            if (file->IsCrypto()) {
-                exefs_file = HW::UniqueData::OpenUniqueCryptoFile(
-                    filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
-            } else {
-                exefs_file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
-            }
+            exefs_file = Reopen(file, filepath);
 
             has_exefs = true;
         }
@@ -366,12 +400,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
             is_tainted = true;
             has_exefs = true;
         } else {
-            if (file->IsCrypto()) {
-                exefs_file = HW::UniqueData::OpenUniqueCryptoFile(
-                    filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
-            } else {
-                exefs_file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
-            }
+            exefs_file = Reopen(file, filepath);
         }
     } else if (FileUtil::Exists(exefsdir_override) && FileUtil::IsDirectory(exefsdir_override)) {
         is_tainted = true;
@@ -607,12 +636,7 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
 
     // We reopen the file, to allow its position to be independent from file's
     std::unique_ptr<FileUtil::IOFile> romfs_file_inner;
-    if (file->IsCrypto()) {
-        romfs_file_inner = HW::UniqueData::OpenUniqueCryptoFile(
-            filepath, "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
-    } else {
-        romfs_file_inner = std::make_unique<FileUtil::IOFile>(filepath, "rb");
-    }
+    romfs_file_inner = Reopen(file, filepath);
 
     if (!romfs_file_inner->IsOpen())
         return Loader::ResultStatus::Error;
@@ -740,6 +764,26 @@ bool NCCHContainer::HasExHeader() {
         return false;
 
     return has_exheader;
+}
+
+std::unique_ptr<FileUtil::IOFile> NCCHContainer::Reopen(
+    const std::unique_ptr<FileUtil::IOFile>& orig_file, const std::string& new_filename) {
+    const bool is_compressed = orig_file->IsCompressed();
+    const bool is_crypto = orig_file->IsCrypto();
+    const std::string filename = new_filename.empty() ? orig_file->Filename() : new_filename;
+
+    std::unique_ptr<FileUtil::IOFile> out_file;
+    if (is_crypto) {
+        out_file = HW::UniqueData::OpenUniqueCryptoFile(filename, "rb",
+                                                        HW::UniqueData::UniqueCryptoFileID::NCCH);
+    } else {
+        out_file = std::make_unique<FileUtil::IOFile>(filename, "rb");
+    }
+    if (is_compressed) {
+        out_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(out_file));
+    }
+
+    return out_file;
 }
 
 } // namespace FileSys
