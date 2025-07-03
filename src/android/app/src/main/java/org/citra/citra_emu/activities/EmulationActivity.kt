@@ -4,9 +4,9 @@
 
 package org.citra.citra_emu.activities
 
+import SecondScreen
 import android.Manifest.permission
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -58,6 +58,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
+    private lateinit var secondScreen: SecondScreen;
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -72,10 +73,10 @@ class EmulationActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         ThemeUtil.setTheme(this)
-
         settingsViewModel.settings.loadSettings()
-
         super.onCreate(savedInstanceState)
+        secondScreen = SecondScreen(this);
+        secondScreen.updateDisplay();
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -121,6 +122,11 @@ class EmulationActivity : AppCompatActivity() {
         applyOrientationSettings() // Check for orientation settings changes on runtime
     }
 
+    override fun onStop() {
+        secondScreen.releasePresentation()
+        super.onStop()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         enableFullscreenImmersive()
@@ -128,6 +134,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
+        secondScreen.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -145,6 +152,9 @@ class EmulationActivity : AppCompatActivity() {
         EmulationLifecycleUtil.clear()
         isEmulationRunning = false
         instance = null
+        secondScreen.releasePresentation()
+        secondScreen.releaseVD();
+
         super.onDestroy()
     }
 

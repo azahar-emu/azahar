@@ -254,6 +254,9 @@ public:
                                         bool is_portrait_mode = {});
 
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
+    bool isSecondary() const {
+        return is_secondary;
+    }
 
 protected:
     EmuWindow();
