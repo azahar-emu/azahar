@@ -59,7 +59,9 @@ class SecondScreen(val context: Context) {
 
     private fun getCustomerDisplay(): Display? {
         val displays = displayManager.displays
-        return displayManager.displays?.firstOrNull { it.isValid && it.displayId != Display.DEFAULT_DISPLAY && it.name != "HiddenDisplay" }
+        // code taken from MelonDS dual screen - should fix odin 2 detection bug
+        return displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+            .firstOrNull { it.displayId != Display.DEFAULT_DISPLAY && it.name != "Built-in Screen" && it.name != "HiddenDisplay"}
     }
 
     fun releasePresentation() {
@@ -71,7 +73,6 @@ class SecondScreen(val context: Context) {
         vd.release()
     }
 }
-
 class SecondScreenPresentation(
     context: Context, display: Display, val parent: SecondScreen
 ) : Presentation(context, display) {
