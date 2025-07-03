@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,10 +30,11 @@ public:
     void AdjustSampleRate(u32 sample_rate) override {}
 
     Samples Read() override {
-        return {};
+        return GenerateSilentSamples(parameters);
     }
 
 private:
+    InputParameters parameters;
     bool is_sampling = false;
 };
 

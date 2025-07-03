@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -53,7 +53,6 @@ public:
     void TryPresent(int timeout_ms, bool is_secondary) override;
     void PrepareVideoDumping() override;
     void CleanupVideoDumping() override;
-    void Sync() override;
 
 private:
     void InitOpenGLObjects();
@@ -63,7 +62,8 @@ private:
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
                          std::unique_ptr<Frontend::TextureMailbox>& mailbox, bool flipped);
     void ConfigureFramebufferTexture(TextureInfo& texture,
-                                     const Pica::FramebufferConfig& framebuffer);
+                                     const Pica::FramebufferConfig& framebuffer,
+                                     const Pica::ColorFill& color_fill);
     void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
     void ApplySecondLayerOpacity(bool isPortrait = false);
     void ResetSecondLayerOpacity(bool isPortrait = false);
@@ -79,8 +79,7 @@ private:
 
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
-                            bool right_eye);
-    void FillScreen(Common::Vec3<u8> color, TextureInfo& texture);
+                            bool right_eye, const Pica::ColorFill& color_fill);
 
 private:
     Pica::PicaCore& pica;

@@ -1,5 +1,6 @@
-# CMake 3.12 required for 20 to be a valid value for CXX_STANDARD
-cmake_minimum_required(VERSION 3.15)
+# CMake >=3.12 required for 20 to be a valid value for CXX_STANDARD,
+# and >=3.25 required to make LTO work on Android.
+cmake_minimum_required(VERSION 3.25)
 
 # Don't override the warning flags in MSVC:
 cmake_policy(SET CMP0092 NEW)
@@ -17,7 +18,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modul
 include(DownloadExternals)
 include(CMakeDependentOption)
 
-project(citra LANGUAGES C CXX ASM)
+if (APPLE)
+    project(citra LANGUAGES C CXX OBJC OBJCXX ASM)
+else()
+    project(citra LANGUAGES C CXX ASM)
+endif()
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -41,8 +46,8 @@ if (APPLE)
         set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
         set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
     else()
-        # Minimum macOS 11
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+        # Minimum macOS 13
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "13.4")
     endif()
 endif()
 
@@ -54,11 +59,26 @@ else()
     set(IS_RELEASE_BUILD ON)
 endif()
 
+if (MSVC)
+    add_compile_options(
+        /wd4711 # Suppresses `function 'xxxxx' selected for automatic inline expansion` messages
+        /wd5045 # Suppresses `Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified` messages
+    )
+endif()
+
 # LTO takes too much memory and time using MSVC.
 if (NOT MSVC AND IS_RELEASE_BUILD)
     set(DEFAULT_ENABLE_LTO ON)
 else()
     set(DEFAULT_ENABLE_LTO OFF)
+endif()
+
+# Disable OpenGL by default on Linux aarch64.
+# Some aarch64 devices running Linux don't support OpenGL, and users may encounter issues.
+if (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+    set(DEFAULT_ENABLE_OPENGL OFF)
+else()
+    set(DEFAULT_ENABLE_OPENGL ON)
 endif()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
@@ -68,10 +88,11 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_QT_UPDATER "Enable built-in updater for the Qt frontend" ON "NOT IOS" OFF)
+option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_ROOM "Enable generating dedicated room executable" ON "NOT ANDROID AND NOT IOS" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_ROOM "Enable dedicated room functionality" ON "NOT ANDROID AND NOT IOS" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_ROOM_STANDALONE "Enable generating a standalone dedicated room executable" ON "ENABLE_ROOM" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
@@ -82,10 +103,14 @@ option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_LIBUSB "Enable libusb for GameCube Adapter support" ON "NOT IOS" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_SOFTWARE_RENDERER "Enables the software renderer" ON "NOT ANDROID" OFF)
-CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ON "NOT APPLE AND NOT (LINUX AND CMAKE_SYSTEM_PROCESSOR STREQUAL \"aarch64\")" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENABLE_OPENGL} "NOT APPLE" OFF)
 option(ENABLE_VULKAN "Enables the Vulkan renderer" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+
+option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
+
+option(ENABLE_SSE42 "Enable SSE4.2 optimizations on x86_64" ON)
 
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
@@ -101,8 +126,23 @@ endif()
 if (ENABLE_QT_TRANSLATION)
     add_definitions(-DENABLE_QT_TRANSLATION)
 endif()
+if (ENABLE_ROOM)
+    add_definitions(-DENABLE_ROOM)
+endif()
+if (ENABLE_SDL2)
+    add_definitions(-DENABLE_SDL2)
+endif()
 if (ENABLE_SDL2_FRONTEND)
     add_definitions(-DENABLE_SDL2_FRONTEND)
+endif()
+
+if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
+    message(STATUS "SSE4.2 enabled for x86_64")
+    if(MSVC)
+        SET(SSE42_COMPILE_OPTION /arch:SSE4.2)
+    else()
+        SET(SSE42_COMPILE_OPTION -msse4.1 -msse4.2)
+    endif()
 endif()
 
 include(CitraHandleSystemLibs)
@@ -467,9 +507,8 @@ if (NOT ANDROID AND NOT IOS)
     elseif (ENABLE_SDL2_FRONTEND)
         bundle_target(citra_meta)
     endif()
-
-    if (ENABLE_ROOM)
-        bundle_target(citra_room)
+    if (ENABLE_ROOM_STANDALONE)
+        bundle_target(citra_room_standalone)
     endif()
 endif()
 
@@ -482,9 +521,14 @@ endif()
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
 if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.desktop"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.svg"
-            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps")
-    install(FILES "${PROJECT_SOURCE_DIR}/dist/citra.xml"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
+            RENAME "org.azahar_emu.Azahar.desktop")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.svg"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps"
+            RENAME "org.azahar_emu.Azahar.svg")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/azahar.png"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/512x512/apps"
+            RENAME "org.azahar_emu.Azahar.png")
+    install(FILES "${PROJECT_SOURCE_DIR}/dist/org.azahar_emu.Azahar.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()

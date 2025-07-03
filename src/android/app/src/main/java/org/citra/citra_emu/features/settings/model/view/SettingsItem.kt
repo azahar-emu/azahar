@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,6 +26,13 @@ abstract class SettingsItem(
         get() {
             if (!EmulationActivity.isRunning()) return true
             return setting?.isRuntimeEditable ?: false
+        }
+
+    open var isEnabled: Boolean = true
+
+    val isActive: Boolean
+        get() {
+            return this.isEditable && this.isEnabled
         }
 
     companion object {

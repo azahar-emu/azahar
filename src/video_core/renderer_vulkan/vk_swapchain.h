@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,11 +16,12 @@ class Scheduler;
 
 class Swapchain {
 public:
-    explicit Swapchain(const Instance& instance, u32 width, u32 height, vk::SurfaceKHR surface);
+    explicit Swapchain(const Instance& instance, u32 width, u32 height, vk::SurfaceKHR surface,
+                       bool low_refresh_rate);
     ~Swapchain();
 
     /// Creates (or recreates) the swapchain with a given size.
-    void Create(u32 width, u32 height, vk::SurfaceKHR surface);
+    void Create(u32 width, u32 height, vk::SurfaceKHR surface, bool low_refresh_rate);
 
     /// Acquires the next image in the swapchain.
     bool AcquireNextImage();
@@ -105,6 +106,7 @@ private:
     u32 image_index = 0;
     u32 frame_index = 0;
     bool needs_recreation = true;
+    bool low_refresh_rate;
 };
 
 } // namespace Vulkan

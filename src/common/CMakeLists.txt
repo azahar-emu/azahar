@@ -103,6 +103,7 @@ add_library(citra_common STATIC
     logging/text_formatter.cpp
     logging/text_formatter.h
     logging/types.h
+    math_util.cpp
     math_util.h
     memory_detect.cpp
     memory_detect.h
@@ -164,10 +165,12 @@ if (UNIX AND NOT APPLE)
 endif()
 
 if (APPLE)
-    target_sources(citra_common PUBLIC
-        apple_authorization.h
-        apple_authorization.cpp
-    )
+  target_sources(citra_common PUBLIC
+    apple_authorization.h
+    apple_authorization.cpp
+    apple_utils.h
+    apple_utils.mm
+  )
 endif()
 
 if (MSVC)
@@ -205,4 +208,9 @@ find_library(BACKTRACE_LIBRARY backtrace)
 if (BACKTRACE_LIBRARY AND ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID STREQUAL GNU)
     target_link_libraries(citra_common PRIVATE ${BACKTRACE_LIBRARY} dl)
     target_compile_definitions(citra_common PRIVATE CITRA_LINUX_GCC_BACKTRACE)
+endif()
+
+if (SSE42_COMPILE_OPTION)
+    target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
+    target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
 endif()

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -142,6 +142,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
     ReadSetting("Renderer", Settings::values.spirv_shader_gen);
+    ReadSetting("Renderer", Settings::values.disable_spirv_optimizer);
     ReadSetting("Renderer", Settings::values.use_hw_shader);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);
@@ -149,8 +150,8 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.use_vsync_new);
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
-
-    // Work around to map Android setting for enabling the frame limiter to the format Citra expects
+    ReadSetting("Renderer", Settings::values.turbo_limit);
+    // Workaround to map Android setting for enabling the frame limiter to the format Citra expects
     if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
@@ -184,11 +185,13 @@ void Config::ReadValues() {
         layoutInt = static_cast<int>(Settings::LayoutOption::LargeScreen);
     }
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layoutInt);
+    Settings::values.screen_gap = static_cast<int>(sdl2_config->GetReal("Layout", "screen_gap", 0));
     Settings::values.large_screen_proportion =
         static_cast<float>(sdl2_config->GetReal("Layout", "large_screen_proportion", 2.25));
     Settings::values.small_screen_position = static_cast<Settings::SmallScreenPosition>(
         sdl2_config->GetInteger("Layout", "small_screen_position",
                                 static_cast<int>(Settings::SmallScreenPosition::TopRight)));
+    ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
     ReadSetting("Layout", Settings::values.custom_top_width);
@@ -196,10 +199,12 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.custom_bottom_x);
     ReadSetting("Layout", Settings::values.custom_bottom_y);
     ReadSetting("Layout", Settings::values.custom_bottom_width);
+    ReadSetting("Layout", Settings::values.aspect_ratio);
     ReadSetting("Layout", Settings::values.custom_bottom_height);
     ReadSetting("Layout", Settings::values.cardboard_screen_size);
     ReadSetting("Layout", Settings::values.cardboard_x_shift);
     ReadSetting("Layout", Settings::values.cardboard_y_shift);
+    ReadSetting("Layout", Settings::values.upright_screen);
 
     Settings::values.portrait_layout_option =
         static_cast<Settings::PortraitLayoutOption>(sdl2_config->GetInteger(
@@ -236,6 +241,7 @@ void Config::ReadValues() {
     // System
     ReadSetting("System", Settings::values.is_new_3ds);
     ReadSetting("System", Settings::values.lle_applets);
+    ReadSetting("System", Settings::values.enable_required_online_lle_modules);
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
@@ -290,6 +296,7 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
     ReadSetting("Debugging", Settings::values.instant_debug_log);
+    ReadSetting("Debugging", Settings::values.enable_rpc_server);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle = sdl2_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,6 +45,7 @@ import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
+import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
 class EmulationActivity : AppCompatActivity() {
@@ -51,7 +53,7 @@ class EmulationActivity : AppCompatActivity() {
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
     var isActivityRecreated = false
     private val emulationViewModel: EmulationViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    val settingsViewModel: SettingsViewModel by viewModels()
 
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
@@ -67,6 +69,8 @@ class EmulationActivity : AppCompatActivity() {
     private var isEmulationRunning: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+
         ThemeUtil.setTheme(this)
 
         settingsViewModel.settings.loadSettings()
@@ -192,9 +196,16 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun enableFullscreenImmersive() {
-        // TODO: Remove this once we properly account for display insets in the input overlay
-        window.attributes.layoutInDisplayCutoutMode =
-            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+        val attributes = window.attributes
+
+        attributes.layoutInDisplayCutoutMode =
+            if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            } else {
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+            }
+
+        window.attributes = attributes
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -227,20 +238,26 @@ class EmulationActivity : AppCompatActivity() {
             preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
+                hotkeyUtility.handleHotkey(button)
+
                 // On some devices, the back gesture / button press is not intercepted by androidx
                 // and fails to open the emulation menu. So we're stuck running deprecated code to
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                    onBackPressed()
+                    // If the hotkey is pressed, we don't want to open the drawer
+                    if (!hotkeyUtility.HotkeyIsPressed) {
+                        onBackPressed()
+                    }
                 }
-
-                hotkeyUtility.handleHotkey(button)
 
                 // Normal key events.
                 NativeLibrary.ButtonState.PRESSED
             }
 
-            KeyEvent.ACTION_UP -> NativeLibrary.ButtonState.RELEASED
+            KeyEvent.ACTION_UP -> {
+                hotkeyUtility.HotkeyIsPressed = false
+                NativeLibrary.ButtonState.RELEASED
+            }
             else -> return false
         }
         val input = event.device

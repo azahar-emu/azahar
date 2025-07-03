@@ -57,26 +57,10 @@
           </property>
          </widget>
         </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="updateBox">
-       <property name="title">
-        <string>Updates</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
-         <widget class="QCheckBox" name="toggle_update_check">
+         <widget class="QCheckBox" name="toggle_update_checker">
           <property name="text">
-           <string>Check for updates on start</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="toggle_auto_update">
-          <property name="text">
-           <string>Silently auto update after closing</string>
+           <string>Check for updates</string>
           </property>
          </widget>
         </item>
@@ -89,75 +73,6 @@
         <string>Emulation</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QWidget" name="widget_region" native="true">
-          <layout class="QHBoxLayout" name="region_layout">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="region_label">
-             <property name="text">
-              <string>Region:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="region_combobox">
-             <item>
-              <property name="text">
-               <string>Auto-select</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">JPN</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">USA</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">EUR</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">AUS</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">CHN</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">KOR</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string notr="true">TWN</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
         <item>
          <widget class="QWidget" name="emulation_speed_layout" native="true">
           <layout class="QHBoxLayout" name="emulation_speed_layout_inner">
@@ -221,6 +136,82 @@
            </item>
            <item>
             <widget class="QLabel" name="emulation_speed_display_label">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="turbo_limit_layout" native="true">
+          <layout class="QHBoxLayout" name="turbo_limit_layout_inner">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="turbo_limit_label">
+             <property name="text">
+              <string>Turbo Speed Limit:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="turbo_limit">
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>198</number>
+             </property>
+             <property name="singleStep">
+              <number>5</number>
+             </property>
+             <property name="pageStep">
+              <number>15</number>
+             </property>
+             <property name="value">
+              <number>19</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>32</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="turbo_limit_display_label">
              <property name="text">
               <string/>
              </property>
@@ -324,8 +315,7 @@
   <tabstop>toggle_check_exit</tabstop>
   <tabstop>toggle_background_pause</tabstop>
   <tabstop>toggle_hide_mouse</tabstop>
-  <tabstop>toggle_update_check</tabstop>
-  <tabstop>toggle_auto_update</tabstop>
+  <tabstop>toggle_update_checker</tabstop>
   <tabstop>button_reset_defaults</tabstop>
  </tabstops>
  <resources/>

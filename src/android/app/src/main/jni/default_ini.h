@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -113,6 +113,10 @@ async_shader_compilation =
 # 0: GLSL, 1: SPIR-V (default)
 spirv_shader_gen =
 
+# Whether to disable the SPIRV optimizer. Disabling it reduces stutter, but may slightly worsen performance
+# 0: Enabled, 1: Disabled (default)
+disable_spirv_optimizer =
+
 # Whether to use hardware shaders to emulate 3DS shaders
 # 0: Software, 1 (default): Hardware
 use_hw_shader =
@@ -124,6 +128,11 @@ shaders_accurate_mul =
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_shader_jit =
+
+# Overrides the sampling filter used by games. This can be useful in certain
+# cases with poorly behaved games when upscaling.
+# 0 (default): Game Controlled, 1: Nearest Neighbor, 2: Linear
+texture_sampling =
 
 # Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
 # so only turn this off if you notice a speed difference.
@@ -151,6 +160,10 @@ use_frame_limit =
 # 1 - 9999: Speed limit as a percentage of target game speed. 100 (default)
 frame_limit =
 
+# Alternative frame limit which can be triggered by the user
+# 1 - 9999: Speed limit as a percentage of target game speed. 100 (default)
+turbo_limit =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 0.0 for all.
 bg_red =
@@ -162,7 +175,7 @@ bg_green =
 render_3d =
 
 # Change 3D Intensity
-# 0 - 100: Intensity. 0 (default)
+# 0 - 255: Intensity. 0 (default)
 factor_3d =
 
 # Swap Eyes in 3d
@@ -200,6 +213,21 @@ disable_right_eye_render =
 # 4: Hybrid
 # 5: Custom Layout
 layout_option =
+
+# Position of the performance overlay
+# 0: Top Left
+# 1: Center Top
+# 2: Top Right
+# 3: Bottom Left
+# 4: Center Bottom
+# 5: Bottom Right
+performance_overlay_position =
+
+# Screen Gap - adds a gap between screens in all two-screen modes
+# Measured in pixels relative to the 240px default height of the screens
+# Scales with the larger screen (so 24 is 10% of the larger screen height)
+# Default value is 0.0
+screen_gap =
 
 # Large Screen Proportion - Relative size of large:small in large screen mode
 # Default value is 2.25
@@ -254,6 +282,10 @@ custom_portrait_bottom_height =
 # For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
 swap_screen =
+
+# Expands the display area to include the cutout (or notch) area
+# 0 (default): Off, 1: On
+expand_to_cutout_area =
 
 # Screen placement settings when using Cardboard VR (render3d = 4)
 # 30 - 100: Screen size as a percentage of the viewport. 85 (default)
@@ -330,8 +362,12 @@ use_virtual_sd =
 is_new_3ds =
 
 # Whether to use LLE system applets, if installed
-# 0 (default): No, 1: Yes
+# 0: No, 1 (default): Yes
 lle_applets =
+
+# Whether to enable LLE modules for online play
+# 0 (default): No, 1: Yes
+enable_required_online_lle_modules =
 
 # The system region that Citra will use during emulation
 # -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
@@ -416,6 +452,19 @@ gdbstub_port=24689
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
 instant_debug_log =
+
+# Enable RPC server for scripting purposes. Allows accessing guest memory remotely.
+# 0 (default): Off, 1: On
+enable_rpc_server =
+
+# Delay the start of apps when LLE modules are enabled
+# 0: Off, 1 (default): On
+delay_start_for_lle_modules =
+
+# Force deterministic async operations
+# Only needed for debugging, makes performance worse if enabled
+# 0: Off (default), 1: On
+deterministic_async_operations =
 
 # To LLE a service module add "LLE\<module name>=true"
 

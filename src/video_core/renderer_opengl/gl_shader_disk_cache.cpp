@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2019 yuzu Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -12,8 +16,6 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "common/zstd_compression.h"
-#include "core/core.h"
-#include "core/loader/loader.h"
 #include "video_core/renderer_opengl/gl_shader_disk_cache.h"
 
 namespace OpenGL {
@@ -103,8 +105,8 @@ bool ShaderDiskCacheRaw::Save(FileUtil::IOFile& file) const {
     return true;
 }
 
-ShaderDiskCache::ShaderDiskCache(bool separable)
-    : separable{separable}, transferable_file(AppendTransferableFile()),
+ShaderDiskCache::ShaderDiskCache(u64 program_id, bool separable)
+    : separable{separable}, program_id{program_id}, transferable_file(AppendTransferableFile()),
       // seperable shaders use the virtual precompile file, that already has a header.
       precompiled_file(AppendPrecompiledFile(!separable)) {}
 
@@ -568,15 +570,7 @@ std::string ShaderDiskCache::GetBaseDir() const {
     return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + DIR_SEP "opengl";
 }
 
-u64 ShaderDiskCache::GetProgramID() {
-    // Skip games without title id
-    if (program_id != 0) {
-        return program_id;
-    }
-    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
-        Loader::ResultStatus::Success) {
-        return 0;
-    }
+u64 ShaderDiskCache::GetProgramID() const {
     return program_id;
 }
 

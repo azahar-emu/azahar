@@ -20,6 +20,7 @@ add_library(video_core STATIC
     rasterizer_interface.h
     renderer_base.cpp
     renderer_base.h
+    pica/dirty_regs.h
     pica/geometry_pipeline.cpp
     pica/geometry_pipeline.h
     pica/pica_core.cpp
@@ -200,6 +201,10 @@ if (ENABLE_VULKAN)
         shader/generator/spv_fs_shader_gen.h
     )
     target_link_libraries(video_core PRIVATE vulkan-headers vma sirit SPIRV glslang)
+endif()
+
+if(ENABLE_SDL2)
+    target_link_libraries(video_core PRIVATE SDL2::SDL2)
 endif()
 
 add_dependencies(video_core host_shaders)

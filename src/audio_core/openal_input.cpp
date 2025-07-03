@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -106,6 +106,10 @@ Samples OpenALInput::Read() {
     if (error != ALC_NO_ERROR) {
         LOG_WARNING(Audio, "alcCaptureSamples failed: {}", error);
         return {};
+    }
+
+    if (samples.empty()) {
+        samples = GenerateSilentSamples(parameters);
     }
 
     return samples;

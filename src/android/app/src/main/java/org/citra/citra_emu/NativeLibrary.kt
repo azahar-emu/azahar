@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -178,7 +178,17 @@ object NativeLibrary {
 
     external fun getSystemTitleIds(systemType: Int, region: Int): LongArray
 
-    external fun downloadTitleFromNus(title: Long): InstallStatus
+    external fun areSystemTitlesInstalled(): BooleanArray
+
+    external fun uninstallSystemFiles(old3DS: Boolean)
+
+    external fun isFullConsoleLinked(): Boolean
+
+    external fun unlinkConsole()
+
+    external fun setTemporaryFrameLimit(speed: Double)
+
+    external fun disableTemporaryFrameLimit()
 
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
@@ -565,7 +575,11 @@ object NativeLibrary {
     @JvmStatic
     fun createDir(directory: String, directoryName: String): Boolean =
         if (FileUtil.isNativePath(directory)) {
-            CitraApplication.documentsTree.createDir(directory, directoryName)
+            try {
+                CitraApplication.documentsTree.createDir(directory, directoryName)
+            } catch (e: Exception) {
+                false
+            }
         } else {
             FileUtil.createDir(directory, directoryName) != null
         }
@@ -639,7 +653,11 @@ object NativeLibrary {
     @JvmStatic
     fun renameFile(path: String, destinationFilename: String): Boolean =
         if (FileUtil.isNativePath(path)) {
-            CitraApplication.documentsTree.renameFile(path, destinationFilename)
+            try {
+                CitraApplication.documentsTree.renameFile(path, destinationFilename)
+            } catch (e: Exception) {
+                false
+            }
         } else {
             FileUtil.renameFile(path, destinationFilename)
         }
@@ -759,6 +777,7 @@ object NativeLibrary {
         const val BUTTON_DEBUG = 781
         const val BUTTON_GPIO14 = 782
         const val BUTTON_SWAP = 800
+        const val BUTTON_TURBO = 801
     }
 
     /**

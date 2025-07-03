@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -174,10 +174,9 @@ struct FSConfig {
                framebuffer.alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Add;
     }
 
-    [[nodiscard]] bool UsesShadowPipeline() const {
+    [[nodiscard]] bool UsesSpirvIncompatibleConfig() const {
         const auto texture0_type = texture.texture0_type.Value();
-        return texture0_type == Pica::TexturingRegs::TextureConfig::Shadow2D ||
-               texture0_type == Pica::TexturingRegs::TextureConfig::ShadowCube ||
+        return texture0_type == Pica::TexturingRegs::TextureConfig::ShadowCube ||
                framebuffer.shadow_rendering.Value();
     }
 

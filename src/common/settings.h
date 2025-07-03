@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -51,6 +51,7 @@ enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
     PortraitTopFullWidth,
     PortraitCustomLayout,
+    PortraitOriginal
 };
 
 /** Defines where the small screen will appear relative to the large screen
@@ -103,6 +104,15 @@ enum class TextureSampling : u32 {
     GameControlled = 0,
     NearestNeighbor = 1,
     Linear = 2,
+};
+
+enum class AspectRatio : u32 {
+    Default = 0,
+    R16_9 = 1,
+    R4_3 = 2,
+    R21_9 = 3,
+    R16_10 = 4,
+    Stretch = 5,
 };
 
 namespace NativeButton {
@@ -450,7 +460,10 @@ struct Values {
     Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
     SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
-    SwitchableSetting<bool> lle_applets{false, "lle_applets"};
+    SwitchableSetting<bool> lle_applets{true, "lle_applets"};
+    SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
+    SwitchableSetting<bool> enable_required_online_lle_modules{
+        false, "enable_required_online_lle_modules"};
 
     // Data Storage
     Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
@@ -485,6 +498,7 @@ struct Values {
     Setting<bool> renderer_debug{false, "renderer_debug"};
     Setting<bool> dump_command_buffers{false, "dump_command_buffers"};
     SwitchableSetting<bool> spirv_shader_gen{true, "spirv_shader_gen"};
+    SwitchableSetting<bool> disable_spirv_optimizer{true, "disable_spirv_optimizer"};
     SwitchableSetting<bool> async_shader_compilation{false, "async_shader_compilation"};
     SwitchableSetting<bool> async_presentation{true, "async_presentation"};
     SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
@@ -494,6 +508,7 @@ struct Values {
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
+    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
@@ -505,6 +520,7 @@ struct Values {
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
                                                            "large_screen_proportion"};
+    SwitchableSetting<int> screen_gap{0, "screen_gap"};
     SwitchableSetting<SmallScreenPosition> small_screen_position{SmallScreenPosition::BottomRight,
                                                                  "small_screen_position"};
     Setting<u16> custom_top_x{0, "custom_top_x"};
@@ -516,7 +532,7 @@ struct Values {
     Setting<u16> custom_bottom_width{640, "custom_bottom_width"};
     Setting<u16> custom_bottom_height{480, "custom_bottom_height"};
     Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
-
+    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, "aspect_ratio"};
     SwitchableSetting<bool> screen_top_stretch{false, "screen_top_stretch"};
     Setting<u16> screen_top_leftright_padding{0, "screen_top_leftright_padding"};
     Setting<u16> screen_top_topbottom_padding{0, "screen_top_topbottom_padding"};
@@ -582,6 +598,7 @@ struct Values {
     Setting<bool> use_gdbstub{false, "use_gdbstub"};
     Setting<u16> gdbstub_port{24689, "gdbstub_port"};
     Setting<bool> instant_debug_log{false, "instant_debug_log"};
+    Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", "log_filter"};
@@ -618,5 +635,15 @@ void SaveProfile(int index);
 void CreateProfile(std::string name);
 void DeleteProfile(int index);
 void RenameCurrentProfile(std::string new_name);
+
+extern bool is_temporary_frame_limit;
+extern double temporary_frame_limit;
+static inline void ResetTemporaryFrameLimit() {
+    is_temporary_frame_limit = false;
+    temporary_frame_limit = 0;
+}
+static inline double GetFrameLimit() {
+    return is_temporary_frame_limit ? temporary_frame_limit : values.frame_limit.GetValue();
+}
 
 } // namespace Settings

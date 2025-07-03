@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "core/hle/service/gsp/gsp_interrupt.h"
+#include "video_core/pica/dirty_regs.h"
 #include "video_core/pica/geometry_pipeline.h"
 #include "video_core/pica/packed_attribute.h"
 #include "video_core/pica/primitive_assembly.h"
@@ -118,6 +119,8 @@ public:
     };
 
     struct ProcTex {
+        static constexpr u8 TableAllDirty = 0xFF;
+
         union ValueEntry {
             u32 raw;
 
@@ -168,6 +171,14 @@ public:
         std::array<ValueEntry, 128> alpha_map_table;
         std::array<ColorEntry, 256> color_table;
         std::array<ColorDifferenceEntry, 256> color_diff_table;
+        union {
+            u8 table_dirty = TableAllDirty;
+            BitField<0, 1, u8> noise_lut_dirty;
+            BitField<2, 1, u8> color_map_dirty;
+            BitField<3, 1, u8> alpha_map_dirty;
+            BitField<4, 1, u8> lut_dirty;
+            BitField<5, 1, u8> diff_lut_dirty;
+        };
 
     private:
         friend class boost::serialization::access;
@@ -178,6 +189,8 @@ public:
     };
 
     struct Lighting {
+        static constexpr u32 LutAllDirty = 0xFFFFFF;
+
         union LutEntry {
             // Used for raw access
             u32 raw;
@@ -205,6 +218,7 @@ public:
         };
 
         std::array<std::array<LutEntry, 256>, 24> luts;
+        u32 lut_dirty = LutAllDirty;
 
     private:
         friend class boost::serialization::access;
@@ -232,6 +246,7 @@ public:
         };
 
         std::array<LutEntry, 128> lut;
+        bool lut_dirty = true;
 
     private:
         friend class boost::serialization::access;
@@ -243,7 +258,7 @@ public:
 
     RegsLcd regs_lcd{};
     Regs regs{};
-    // TODO: Move these to a separate shader scheduler class
+    DirtyRegs dirty_regs{};
     GeometryShaderUnit gs_unit;
     ShaderSetup vs_setup;
     ShaderSetup gs_setup;

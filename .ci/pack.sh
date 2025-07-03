@@ -14,7 +14,7 @@ else
 fi
 
 # Archive and upload the artifacts.
-mkdir artifacts
+mkdir -p artifacts
 
 function pack_artifacts() {
     ARTIFACTS_PATH="$1"
@@ -49,11 +49,6 @@ function pack_artifacts() {
      # Clean up created rev artifacts directory.
     rm -rf "$REV_NAME"
 }
-
-if [ "$OS" = "windows" ] && [ "$GITHUB_REF_TYPE" = "tag" ]; then
-    # Move the installer to the artifacts directory
-    mv src/installer/bin/*.exe artifacts/
-fi
 
 if [ -n "$UNPACKED" ]; then
     # Copy the artifacts to be uploaded unpacked.

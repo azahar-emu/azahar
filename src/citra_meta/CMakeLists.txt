@@ -9,7 +9,7 @@ set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "azahar")
 if (APPLE)
     set(DIST_DIR "../../dist/apple")
     set(APPLE_RESOURCES
-        "${DIST_DIR}/citra.icns"
+        "${DIST_DIR}/azahar.icns"
         "${DIST_DIR}/LaunchScreen.storyboard"
         "${DIST_DIR}/launch_logo.png"
     )
@@ -25,7 +25,7 @@ if (APPLE)
         MACOSX_BUNDLE_BUNDLE_VERSION "${BUILD_VERSION}"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${BUILD_FULLNAME}"
         MACOSX_BUNDLE_LONG_VERSION_STRING "${BUILD_FULLNAME}"
-        MACOSX_BUNDLE_ICON_FILE "citra.icns"
+        MACOSX_BUNDLE_ICON_FILE "azahar.icns"
         RESOURCE "${APPLE_RESOURCES}"
     )
 
@@ -52,6 +52,10 @@ if (ENABLE_QT)
     target_link_libraries(citra_meta PRIVATE Boost::boost Qt6::Widgets)
 endif()
 
+if (ENABLE_ROOM)
+    target_link_libraries(citra_meta PRIVATE citra_room)
+endif()
+
 if (ENABLE_QT AND UNIX AND NOT APPLE)
     target_link_libraries(citra_meta PRIVATE Qt6::DBus gamemode)
 endif()
@@ -71,6 +75,10 @@ endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_meta PRIVATE precompiled_headers.h)
+endif()
+
+if (SSE42_COMPILE_OPTION)
+    target_compile_definitions(citra_meta PRIVATE CITRA_HAS_SSE42)
 endif()
 
 # Bundle in-place on MSVC so dependencies can be resolved by builds.

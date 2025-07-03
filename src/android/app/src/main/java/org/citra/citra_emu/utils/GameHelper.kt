@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.R
 import org.citra.citra_emu.model.CheapDocument
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.model.GameInfo
@@ -69,10 +70,16 @@ object GameHelper {
 
     fun getGame(uri: Uri, isInstalled: Boolean, addedToLibrary: Boolean): Game {
         val filePath = uri.toString()
-        val gameInfo: GameInfo? = try {
+        var gameInfo: GameInfo? = try {
             GameInfo(filePath)
         } catch (e: IOException) {
             null
+        }
+
+        var isEncrypted = false
+        if (gameInfo?.isEncrypted() == true) {
+            gameInfo = null
+            isEncrypted = true
         }
 
         val newGame = Game(
@@ -81,7 +88,7 @@ object GameHelper {
             filePath,
             NativeLibrary.getTitleId(filePath),
             gameInfo?.getCompany() ?: "",
-            gameInfo?.getRegions() ?: "Invalid region",
+            gameInfo?.getRegions() ?: (if (isEncrypted) { CitraApplication.appContext.getString(R.string.unsupported_encrypted) } else { CitraApplication.appContext.getString(R.string.invalid_region) }),
             isInstalled,
             NativeLibrary.getIsSystemTitle(filePath),
             gameInfo?.getIsVisibleSystemTitle() ?: false,

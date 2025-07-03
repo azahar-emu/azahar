@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,6 +41,7 @@ namespace Service::APT {
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
+    DEBUG_SERIALIZATION_POINT;
     ar & shared_font_mem;
     ar & shared_font_loaded;
     ar & shared_font_relocated;
@@ -195,7 +196,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 bool Module::LoadSharedFont() {
     auto cfg = Service::CFG::GetModule(system);
     u8 font_region_code;
-    switch (cfg->GetRegionValue()) {
+    switch (cfg->GetRegionValue(false)) {
     case 4: // CHN
         font_region_code = 2;
         break;
@@ -228,10 +229,18 @@ bool Module::LoadSharedFont() {
 
     const char16_t* file_name[4] = {u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
                                     u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
-    const RomFS::RomFSFile font_file =
+    RomFS::RomFSFile font_file =
         RomFS::GetFile(romfs_buffer.data(), {file_name[font_region_code - 1]});
-    if (font_file.Data() == nullptr)
-        return false;
+    if (font_file.Data() == nullptr) {
+        if (font_region_code != 1) {
+            font_file = RomFS::GetFile(romfs_buffer.data(), {file_name[0]});
+            if (font_file.Data() == nullptr) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
 
     struct {
         u32_le status;

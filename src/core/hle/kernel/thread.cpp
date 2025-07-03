@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -59,6 +59,19 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar & wait_objects;
     ar & wait_address;
     ar & name;
+    if (Archive::is_loading::value) {
+        bool serialize_blocked;
+        ar & serialize_blocked;
+        if (!serialize_blocked) {
+            ar & wakeup_callback;
+        }
+    } else {
+        bool serialize_blocked = wakeup_callback.get() && !wakeup_callback->SupportsSerialization();
+        ar & serialize_blocked;
+        if (!serialize_blocked) {
+            ar & wakeup_callback;
+        }
+    }
     ar & wakeup_callback;
 }
 SERIALIZE_IMPL(Thread)
@@ -515,8 +528,20 @@ ThreadManager::~ThreadManager() {
     }
 }
 
-std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() {
+std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() const {
     return thread_list;
+}
+
+std::shared_ptr<Thread> KernelSystem::GetThreadByID(u32 thread_id) const {
+    for (u32 core_id = 0; core_id < Core::System::GetInstance().GetNumCores(); core_id++) {
+        const auto thread_list = GetThreadManager(core_id).GetThreadList();
+        for (auto& thread : thread_list) {
+            if (thread->thread_id == thread_id) {
+                return thread;
+            }
+        }
+    }
+    return nullptr;
 }
 
 } // namespace Kernel

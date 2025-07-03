@@ -5,6 +5,7 @@
 #include <cryptopp/sha.h>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/otp.h"
 #include "core/hw/aes/key.h"
@@ -17,6 +18,7 @@ namespace HW::UniqueData {
 
 static SecureInfoA secure_info_a;
 static bool secure_info_a_signature_valid = false;
+static bool secure_info_a_region_changed = false;
 static LocalFriendCodeSeedB local_friend_code_seed_b;
 static bool local_friend_code_seed_b_signature_valid = false;
 static FileSys::OTP otp;
@@ -40,8 +42,10 @@ bool MovableSed::VerifySignature() const {
 
 SecureDataLoadStatus LoadSecureInfoA() {
     if (secure_info_a.IsValid()) {
-        return secure_info_a_signature_valid ? SecureDataLoadStatus::Loaded
-                                             : SecureDataLoadStatus::InvalidSignature;
+        return secure_info_a_signature_valid
+                   ? SecureDataLoadStatus::Loaded
+                   : (secure_info_a_region_changed ? SecureDataLoadStatus::RegionChanged
+                                                   : SecureDataLoadStatus::InvalidSignature);
     }
     std::string file_path = GetSecureInfoAPath();
     if (!FileUtil::Exists(file_path)) {
@@ -59,13 +63,32 @@ SecureDataLoadStatus LoadSecureInfoA() {
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
+    secure_info_a_region_changed = false;
     secure_info_a_signature_valid = secure_info_a.VerifySignature();
     if (!secure_info_a_signature_valid) {
-        LOG_WARNING(HW, "SecureInfo_A signature check failed");
+        // Check if the file has been region changed
+        SecureInfoA copy = secure_info_a;
+        for (u8 orig_reg = 0; orig_reg < Region::COUNT; orig_reg++) {
+            if (orig_reg == secure_info_a.body.region) {
+                continue;
+            }
+            copy.body.region = orig_reg;
+            if (copy.VerifySignature()) {
+                secure_info_a_region_changed = true;
+                LOG_WARNING(HW, "SecureInfo_A is region changed and its signature invalid");
+                break;
+            }
+        }
+        if (!secure_info_a_region_changed) {
+            LOG_WARNING(HW, "SecureInfo_A signature check failed");
+        }
     }
 
-    return secure_info_a_signature_valid ? SecureDataLoadStatus::Loaded
-                                         : SecureDataLoadStatus::InvalidSignature;
+    return secure_info_a_signature_valid
+               ? SecureDataLoadStatus::Loaded
+               : (secure_info_a_region_changed ? SecureDataLoadStatus::RegionChanged
+                                               : SecureDataLoadStatus::InvalidSignature);
 }
 
 SecureDataLoadStatus LoadLocalFriendCodeSeedB() {
@@ -90,6 +113,7 @@ SecureDataLoadStatus LoadLocalFriendCodeSeedB() {
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
     local_friend_code_seed_b_signature_valid = local_friend_code_seed_b.VerifySignature();
     if (!local_friend_code_seed_b_signature_valid) {
         LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");
@@ -156,20 +180,22 @@ SecureDataLoadStatus LoadMovable() {
     if (!file.IsOpen()) {
         return SecureDataLoadStatus::IOError;
     }
-    if (file.GetSize() != sizeof(MovableSedFull)) {
-        if (file.GetSize() == sizeof(MovableSed)) {
-            LOG_WARNING(HW, "Uninitialized movable.sed files are not supported");
-        }
+
+    std::size_t size = file.GetSize();
+    if (size != sizeof(MovableSedFull) && size != sizeof(MovableSed)) {
         return SecureDataLoadStatus::Invalid;
     }
-    if (file.ReadBytes(&movable, sizeof(MovableSedFull)) != sizeof(MovableSedFull)) {
+
+    std::memset(&movable, 0, sizeof(movable));
+    if (file.ReadBytes(&movable, size) != size) {
         movable.Invalidate();
         return SecureDataLoadStatus::IOError;
     }
 
+    HW::AES::InitKeys();
     movable_signature_valid = movable.VerifySignature();
     if (!movable_signature_valid) {
-        LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");
+        LOG_WARNING(HW, "movable.sed signature check failed");
     }
 
     return movable_signature_valid ? SecureDataLoadStatus::Loaded
@@ -256,6 +282,32 @@ std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filena
     memcpy(ctr.data(), digest + 0x10, 12);
 
     return std::make_unique<FileUtil::CryptoIOFile>(filename, openmode, key, ctr, flags);
+}
+
+bool IsFullConsoleLinked() {
+    return GetOTP().Valid() && GetSecureInfoA().IsValid() && GetLocalFriendCodeSeedB().IsValid();
+}
+
+void UnlinkConsole() {
+    // Remove all console unique data, as well as the act, nim and frd savefiles
+    const std::string system_save_data_path =
+        FileSys::GetSystemSaveDataContainerPath(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
+    constexpr std::array<std::array<u8, 8>, 3> save_data_ids{{
+        {0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x01, 0x00},
+        {0x00, 0x00, 0x00, 0x00, 0x32, 0x00, 0x01, 0x00},
+        {0x00, 0x00, 0x00, 0x00, 0x38, 0x00, 0x01, 0x00},
+    }};
+
+    for (auto& id : save_data_ids) {
+        const std::string final_path = FileSys::GetSystemSaveDataPath(system_save_data_path, id);
+        FileUtil::DeleteDirRecursively(final_path, 2);
+    }
+
+    FileUtil::Delete(GetOTPPath());
+    FileUtil::Delete(GetSecureInfoAPath());
+    FileUtil::Delete(GetLocalFriendCodeSeedBPath());
+
+    InvalidateSecureData();
 }
 
 } // namespace HW::UniqueData

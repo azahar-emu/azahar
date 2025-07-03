@@ -3,12 +3,12 @@
 
     <item
         android:id="@+id/menu_show_overlay"
-        android:title="@string/emulation_show_overlay"
+        android:title="@string/emulation_show_controller_overlay"
         android:checkable="true" />
 
     <item
-        android:id="@+id/menu_show_fps"
-        android:title="@string/emulation_show_fps"
+        android:id="@+id/menu_performance_overlay_show"
+        android:title="@string/performance_overlay_show"
         android:checkable="true" />
 
     <item

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -67,5 +67,14 @@ class ScreenAdjustmentUtil(
         IntSetting.ORIENTATION_OPTION.int = orientationOption
         settings.saveSetting(IntSetting.ORIENTATION_OPTION, SettingsFile.FILE_NAME_CONFIG)
         activity.requestedOrientation = orientationOption
+    }
+
+    fun toggleScreenUpright() {
+        val uprightBoolean = BooleanSetting.UPRIGHT_SCREEN.boolean
+        BooleanSetting.UPRIGHT_SCREEN.boolean = !uprightBoolean
+        settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        NativeLibrary.reloadSettings()
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+
     }
 }

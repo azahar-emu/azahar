@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -74,6 +74,8 @@ std::string_view GetTextureSamplingName(TextureSampling sampling) {
 
 Values values = {};
 static bool configuring_global = true;
+bool is_temporary_frame_limit;
+double temporary_frame_limit;
 
 void LogSettings() {
     const auto log_setting = [](std::string_view name, const auto& value) {
@@ -89,6 +91,7 @@ void LogSettings() {
     log_setting("Renderer_AsyncShaders", values.async_shader_compilation.GetValue());
     log_setting("Renderer_AsyncPresentation", values.async_presentation.GetValue());
     log_setting("Renderer_SpirvShaderGen", values.spirv_shader_gen.GetValue());
+    log_setting("Renderer_DisableSpirvOptimizer", values.disable_spirv_optimizer.GetValue());
     log_setting("Renderer_Debug", values.renderer_debug.GetValue());
     log_setting("Renderer_UseHwShader", values.use_hw_shader.GetValue());
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
@@ -114,6 +117,7 @@ void LogSettings() {
     log_setting("Layout_PortraitLayoutOption", values.portrait_layout_option.GetValue());
     log_setting("Layout_SwapScreen", values.swap_screen.GetValue());
     log_setting("Layout_UprightScreen", values.upright_screen.GetValue());
+    log_setting("Layout_ScreenGap", values.screen_gap.GetValue());
     log_setting("Layout_LargeScreenProportion", values.large_screen_proportion.GetValue());
     log_setting("Layout_SmallScreenPosition", values.small_screen_position.GetValue());
     log_setting("Utility_DumpTextures", values.dump_textures.GetValue());
@@ -207,6 +211,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.swap_screen.SetGlobal(true);
     values.upright_screen.SetGlobal(true);
     values.large_screen_proportion.SetGlobal(true);
+    values.screen_gap.SetGlobal(true);
     values.small_screen_position.SetGlobal(true);
     values.bg_red.SetGlobal(true);
     values.bg_green.SetGlobal(true);
@@ -249,5 +254,4 @@ void DeleteProfile(int index) {
 void RenameCurrentProfile(std::string new_name) {
     Settings::values.current_input_profile.name = std::move(new_name);
 }
-
 } // namespace Settings

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -54,7 +54,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 35> QtConfig::default_hotkeys {{
+const std::array<UISettings::Shortcut, 38> QtConfig::default_hotkeys {{
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
@@ -70,26 +70,29 @@ const std::array<UISettings::Shortcut, 35> QtConfig::default_hotkeys {{
      {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      Qt::ApplicationShortcut}},
      {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Load from Newest Slot"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), Qt::WindowShortcut}},
-     {QStringLiteral("Multiplayer Browse Public Lobby"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), Qt::WindowShortcut}},
+     {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
+     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     Qt::ApplicationShortcut}},
      {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     Qt::WindowShortcut}},
      {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     Qt::WindowShortcut}},
-     {QStringLiteral("Save to Oldest Slot"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), Qt::WindowShortcut}},
+     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), Qt::WindowShortcut}},
      {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     Qt::WindowShortcut}},
      {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     Qt::WindowShortcut}},
      {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Per-Application Speed"),    QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    Qt::WindowShortcut}},
      {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      Qt::ApplicationShortcut}},
     }};
 // clang-format on
 
@@ -497,6 +500,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.renderer_debug);
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
+    ReadBasicSetting(Settings::values.enable_rpc_server);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -520,6 +524,7 @@ void QtConfig::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.swap_screen);
     ReadGlobalSetting(Settings::values.upright_screen);
     ReadGlobalSetting(Settings::values.large_screen_proportion);
+    ReadGlobalSetting(Settings::values.screen_gap);
     ReadGlobalSetting(Settings::values.small_screen_position);
 
     if (global) {
@@ -560,6 +565,7 @@ void QtConfig::ReadMiscellaneousValues() {
     ReadBasicSetting(Settings::values.log_filter);
     ReadBasicSetting(Settings::values.log_regex_filter);
     ReadBasicSetting(Settings::values.enable_gamemode);
+    ReadBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -673,6 +679,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.graphics_api);
     ReadGlobalSetting(Settings::values.physical_device);
     ReadGlobalSetting(Settings::values.spirv_shader_gen);
+    ReadGlobalSetting(Settings::values.disable_spirv_optimizer);
     ReadGlobalSetting(Settings::values.async_shader_compilation);
     ReadGlobalSetting(Settings::values.async_presentation);
     ReadGlobalSetting(Settings::values.use_hw_shader);
@@ -681,6 +688,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.use_vsync_new);
     ReadGlobalSetting(Settings::values.resolution_factor);
     ReadGlobalSetting(Settings::values.frame_limit);
+    ReadGlobalSetting(Settings::values.turbo_limit);
 
     ReadGlobalSetting(Settings::values.bg_red);
     ReadGlobalSetting(Settings::values.bg_green);
@@ -725,6 +733,7 @@ void QtConfig::ReadSystemValues() {
 
     ReadGlobalSetting(Settings::values.is_new_3ds);
     ReadGlobalSetting(Settings::values.lle_applets);
+    ReadGlobalSetting(Settings::values.enable_required_online_lle_modules);
     ReadGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -796,7 +805,6 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.enable_discord_presence);
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        ReadUpdaterValues();
         ReadUILayoutValues();
         ReadUIGameListValues();
         ReadShortcutValues();
@@ -807,6 +815,7 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.display_titlebar);
         ReadBasicSetting(UISettings::values.show_filter_bar);
         ReadBasicSetting(UISettings::values.show_status_bar);
+        ReadBasicSetting(UISettings::values.show_advanced_frametime_info);
         ReadBasicSetting(UISettings::values.confirm_before_closing);
         ReadBasicSetting(UISettings::values.save_state_warning);
         ReadBasicSetting(UISettings::values.first_start);
@@ -828,6 +837,7 @@ void QtConfig::ReadUIGameListValues() {
     ReadBasicSetting(UISettings::values.game_list_row_2);
     ReadBasicSetting(UISettings::values.game_list_hide_no_icon);
     ReadBasicSetting(UISettings::values.game_list_single_line_mode);
+    ReadBasicSetting(UISettings::values.show_3ds_files_warning);
 
     ReadBasicSetting(UISettings::values.show_compat_column);
     ReadBasicSetting(UISettings::values.show_region_column);
@@ -858,15 +868,6 @@ void QtConfig::ReadUILayoutValues() {
     UISettings::values.microprofile_geometry =
         ReadSetting(QStringLiteral("microProfileDialogGeometry")).toByteArray();
     ReadBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::ReadUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    ReadBasicSetting(UISettings::values.check_for_update_on_start);
-    ReadBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }
@@ -1064,6 +1065,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.gdbstub_port);
     WriteBasicSetting(Settings::values.renderer_debug);
     WriteBasicSetting(Settings::values.instant_debug_log);
+    WriteBasicSetting(Settings::values.enable_rpc_server);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {
@@ -1087,6 +1089,7 @@ void QtConfig::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.swap_screen);
     WriteGlobalSetting(Settings::values.upright_screen);
     WriteGlobalSetting(Settings::values.large_screen_proportion);
+    WriteGlobalSetting(Settings::values.screen_gap);
     WriteGlobalSetting(Settings::values.small_screen_position);
     if (global) {
         WriteBasicSetting(Settings::values.mono_render_option);
@@ -1125,6 +1128,7 @@ void QtConfig::SaveMiscellaneousValues() {
     WriteBasicSetting(Settings::values.log_filter);
     WriteBasicSetting(Settings::values.log_regex_filter);
     WriteBasicSetting(Settings::values.enable_gamemode);
+    WriteBasicSetting(UISettings::values.check_for_update_on_start);
 
     qt_config->endGroup();
 }
@@ -1206,6 +1210,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.graphics_api);
     WriteGlobalSetting(Settings::values.physical_device);
     WriteGlobalSetting(Settings::values.spirv_shader_gen);
+    WriteGlobalSetting(Settings::values.disable_spirv_optimizer);
     WriteGlobalSetting(Settings::values.async_shader_compilation);
     WriteGlobalSetting(Settings::values.async_presentation);
     WriteGlobalSetting(Settings::values.use_hw_shader);
@@ -1214,6 +1219,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.use_vsync_new);
     WriteGlobalSetting(Settings::values.resolution_factor);
     WriteGlobalSetting(Settings::values.frame_limit);
+    WriteGlobalSetting(Settings::values.turbo_limit);
 
     WriteGlobalSetting(Settings::values.bg_red);
     WriteGlobalSetting(Settings::values.bg_green);
@@ -1258,6 +1264,7 @@ void QtConfig::SaveSystemValues() {
 
     WriteGlobalSetting(Settings::values.is_new_3ds);
     WriteGlobalSetting(Settings::values.lle_applets);
+    WriteGlobalSetting(Settings::values.enable_required_online_lle_modules);
     WriteGlobalSetting(Settings::values.region_value);
 
     if (global) {
@@ -1312,7 +1319,6 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.enable_discord_presence);
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
 
-        SaveUpdaterValues();
         SaveUILayoutValues();
         SaveUIGameListValues();
         SaveShortcutValues();
@@ -1323,6 +1329,7 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.display_titlebar);
         WriteBasicSetting(UISettings::values.show_filter_bar);
         WriteBasicSetting(UISettings::values.show_status_bar);
+        WriteBasicSetting(UISettings::values.show_advanced_frametime_info);
         WriteBasicSetting(UISettings::values.confirm_before_closing);
         WriteBasicSetting(UISettings::values.save_state_warning);
         WriteBasicSetting(UISettings::values.first_start);
@@ -1344,6 +1351,7 @@ void QtConfig::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.game_list_row_2);
     WriteBasicSetting(UISettings::values.game_list_hide_no_icon);
     WriteBasicSetting(UISettings::values.game_list_single_line_mode);
+    WriteBasicSetting(UISettings::values.show_3ds_files_warning);
 
     WriteBasicSetting(UISettings::values.show_compat_column);
     WriteBasicSetting(UISettings::values.show_region_column);
@@ -1372,15 +1380,6 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(QStringLiteral("microProfileDialogGeometry"),
                  UISettings::values.microprofile_geometry);
     WriteBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::SaveUpdaterValues() {
-    qt_config->beginGroup(QStringLiteral("Updater"));
-
-    WriteBasicSetting(UISettings::values.check_for_update_on_start);
-    WriteBasicSetting(UISettings::values.update_on_close);
 
     qt_config->endGroup();
 }

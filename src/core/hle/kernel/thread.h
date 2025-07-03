@@ -1,4 +1,8 @@
-// Copyright 2014 Citra Emulator Project / PPSSPP Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+// PPSSPP Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -67,6 +71,10 @@ public:
     virtual void WakeUp(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
                         std::shared_ptr<WaitObject> object) = 0;
 
+    virtual bool SupportsSerialization() {
+        return true;
+    }
+
 private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -116,7 +124,7 @@ public:
     /**
      * Get a const reference to the thread list for debug use
      */
-    std::span<const std::shared_ptr<Thread>> GetThreadList();
+    std::span<const std::shared_ptr<Thread>> GetThreadList() const;
 
     void SetCPU(Core::ARM_Interface& cpu_) {
         cpu = &cpu_;

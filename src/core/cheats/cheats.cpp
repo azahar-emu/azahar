@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,7 +25,8 @@ CheatEngine::~CheatEngine() {
     }
 }
 
-void CheatEngine::Connect() {
+void CheatEngine::Connect(u32 process_id) {
+    this->process_id = process_id;
     event = system.CoreTiming().RegisterEvent(
         "CheatCore::run_event",
         [this](u64 thread_id, s64 cycle_late) { RunCallback(thread_id, cycle_late); });
@@ -107,7 +108,7 @@ void CheatEngine::RunCallback([[maybe_unused]] std::uintptr_t user_data, s64 cyc
         std::shared_lock lock{cheats_list_mutex};
         for (const auto& cheat : cheats_list) {
             if (cheat->IsEnabled()) {
-                cheat->Execute(system);
+                cheat->Execute(system, process_id);
             }
         }
     }

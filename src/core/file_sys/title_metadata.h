@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,8 @@ enum class ResultStatus;
 }
 
 namespace FileSys {
+
+struct CIAHeader;
 
 enum TMDContentTypeFlag : u16 {
     Encrypted = 1 << 0,
@@ -97,8 +99,9 @@ public:
     u32 GetContentIDByIndex(std::size_t index) const;
     u16 GetContentTypeByIndex(std::size_t index) const;
     u64 GetContentSizeByIndex(std::size_t index) const;
+    bool GetContentOptional(std::size_t index) const;
     std::array<u8, 16> GetContentCTRByIndex(std::size_t index) const;
-    bool HasEncryptedContent() const;
+    bool HasEncryptedContent(const CIAHeader* header = nullptr) const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);

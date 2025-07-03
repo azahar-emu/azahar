@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -111,6 +111,7 @@ class Settings {
         const val SECTION_THEME = "Theme"
         const val SECTION_CUSTOM_LANDSCAPE = "Custom Landscape Layout"
         const val SECTION_CUSTOM_PORTRAIT = "Custom Portrait Layout"
+        const val SECTION_PERFORMANCE_OVERLAY = "Performance Overlay"
 
         const val KEY_BUTTON_A = "button_a"
         const val KEY_BUTTON_B = "button_b"
@@ -139,6 +140,7 @@ class Settings {
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
+        const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -204,7 +206,8 @@ class Settings {
             HOTKEY_CLOSE_GAME,
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
-            HOTKEY_QUICKlOAD
+            HOTKEY_QUICKlOAD,
+            HOTKEY_TURBO_LIMIT
         )
         val hotkeyTitles = listOf(
             R.string.emulation_swap_screens,
@@ -213,6 +216,7 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
+            R.string.turbo_limit_hotkey
         )
 
         const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"

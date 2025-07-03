@@ -17,6 +17,19 @@ class OTP;
 
 namespace HW::UniqueData {
 
+struct Region {
+    enum : u8 {
+        JPN,
+        USA,
+        EUR,
+        AUS,
+        CHN,
+        KOR,
+        TWN,
+    };
+    static constexpr u8 COUNT = TWN + 1;
+};
+
 struct SecureInfoA {
     std::array<u8, 0x100> signature;
     struct {
@@ -66,7 +79,10 @@ struct MovableSed {
     static constexpr std::array<u8, 0x4> seed_magic{0x53, 0x45, 0x45, 0x44};
 
     std::array<u8, 0x4> magic;
-    u32 seed_info;
+    u8 unk0;
+    u8 is_full;
+    u8 unk1;
+    u8 unk2;
     LocalFriendCodeSeedB lfcs;
     std::array<u8, 0x8> key_y;
 
@@ -79,6 +95,10 @@ struct MovableSed {
     }
 
     bool VerifySignature() const;
+
+    bool IsFull() {
+        return is_full != 0;
+    }
 };
 static_assert(sizeof(MovableSed) == 0x120);
 
@@ -101,12 +121,21 @@ struct MovableSedFull {
         // TODO(PabloMK7): Implement AES MAC verification
         return body.sed.VerifySignature();
     }
+
+    bool IsFull() {
+        return body.sed.IsFull();
+    }
+
+    size_t GetRealSize() {
+        return IsFull() ? sizeof(MovableSedFull) : sizeof(MovableSed);
+    }
 };
 static_assert(sizeof(MovableSedFull) == 0x140);
 
 enum class SecureDataLoadStatus {
     Loaded = 0,
     InvalidSignature = 1,
+    RegionChanged = 2,
 
     NotFound = -1,
     Invalid = -2,
@@ -139,4 +168,7 @@ void InvalidateSecureData();
 std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
                                                        const char openmode[], UniqueCryptoFileID id,
                                                        int flags = 0);
+
+bool IsFullConsoleLinked();
+void UnlinkConsole();
 } // namespace HW::UniqueData

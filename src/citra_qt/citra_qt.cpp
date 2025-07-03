@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,6 +11,7 @@
 #include <QFutureWatcher>
 #include <QLabel>
 #include <QMessageBox>
+#include <QPalette>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
@@ -69,7 +70,9 @@
 #include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
-#include "citra_qt/updater/updater.h"
+#ifdef ENABLE_QT_UPDATE_CHECKER
+#include "citra_qt/update_checker.h"
+#endif
 #include "citra_qt/util/clickable_label.h"
 #include "citra_qt/util/graphics_device_info.h"
 #include "citra_qt/util/util.h"
@@ -167,7 +170,7 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{system.Movie()},
-      config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
+      user_data_migrator{this}, config{std::make_unique<QtConfig>()}, emu_thread{nullptr} {
     Common::Log::Initialize();
     Common::Log::Start();
 
@@ -288,8 +291,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         if (args[i] == QStringLiteral("--version") || args[i] == QStringLiteral("-v")) {
-            const std::string version_string =
-                std::string("Azahar ") + Common::g_scm_branch + " " + Common::g_scm_desc;
+            const std::string version_string = std::string("Azahar ") + Common::g_build_fullname;
             ShowCommandOutput("Version", version_string);
             exit(0);
         }
@@ -327,6 +329,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     ui->setupUi(this);
     statusBar()->hide();
 
+    setWindowIcon(QIcon(QString::fromStdString(":/icons/azahar.png")));
+
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
@@ -346,12 +350,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     InitializeRecentFileMenuActions();
     InitializeSaveStateMenuActions();
     InitializeHotkeys();
-#if ENABLE_QT_UPDATER
-    ShowUpdaterWidgets();
-#else
-    ui->action_Check_For_Updates->setVisible(false);
-    ui->action_Open_Maintenance_Tool->setVisible(false);
-#endif
 
     SetDefaultUIGeometry();
     RestoreUIState();
@@ -393,6 +391,26 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     show();
 
+#ifdef ENABLE_QT_UPDATE_CHECKER
+    if (UISettings::values.check_for_update_on_start) {
+        update_future = QtConcurrent::run([]() -> QString {
+            const bool is_prerelease = // TODO: This can be done better -OS
+                ((strstr(Common::g_build_fullname, "alpha") != NULL) ||
+                 (strstr(Common::g_build_fullname, "beta") != NULL) ||
+                 (strstr(Common::g_build_fullname, "rc") != NULL));
+            const std::optional<std::string> latest_release_tag =
+                UpdateChecker::GetLatestRelease(is_prerelease);
+            if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
+                return QString::fromStdString(latest_release_tag.value());
+            }
+            return QString{};
+        });
+        QObject::connect(&update_watcher, &QFutureWatcher<QString>::finished, this,
+                         &GMainWindow::OnEmulatorUpdateAvailable);
+        update_watcher.setFuture(update_future);
+    }
+#endif
+
     game_list->LoadCompatibilityList();
     game_list->PopulateAsync(UISettings::values.game_dirs);
 
@@ -419,12 +437,6 @@ GMainWindow::GMainWindow(Core::System& system_)
                              tr("Vulkan initialization failed during boot.<br/>"
                                 "Your GPU may not support Vulkan 1.1, or you do not "
                                 "have the latest graphics driver."));
-    }
-#endif
-
-#if ENABLE_QT_UPDATER
-    if (UISettings::values.check_for_update_on_start) {
-        CheckForUpdates();
     }
 #endif
 
@@ -479,12 +491,6 @@ void GMainWindow::InitializeWidgets() {
                                              ui->action_Leave_Room, ui->action_Show_Room);
     multiplayer_state->setVisible(false);
 
-#if ENABLE_QT_UPDATER
-    // Setup updater
-    updater = new Updater(this);
-    UISettings::values.updater_found = updater->HasUpdater();
-#endif
-
     UpdateBootHomeMenuState();
 
     // Create status bar
@@ -499,9 +505,11 @@ void GMainWindow::InitializeWidgets() {
     progress_bar->hide();
     statusBar()->addPermanentWidget(progress_bar);
 
+    loading_shaders_label = new QLabel();
+
     artic_traffic_label = new QLabel();
     artic_traffic_label->setToolTip(
-        tr("Current Artic Base traffic speed. Higher values indicate bigger transfer loads."));
+        tr("Current Artic traffic speed. Higher values indicate bigger transfer loads."));
 
     emu_speed_label = new QLabel();
     emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
@@ -514,8 +522,8 @@ void GMainWindow::InitializeWidgets() {
         tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
            "full-speed emulation this should be at most 16.67 ms."));
 
-    for (auto& label :
-         {artic_traffic_label, emu_speed_label, game_fps_label, emu_frametime_label}) {
+    for (auto& label : {loading_shaders_label, artic_traffic_label, emu_speed_label, game_fps_label,
+                        emu_frametime_label}) {
         label->setVisible(false);
         label->setFrameStyle(QFrame::NoFrame);
         label->setContentsMargins(4, 0, 4, 0);
@@ -602,6 +610,11 @@ void GMainWindow::InitializeDebugWidgets() {
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();
     debug_menu->addAction(microProfileDialog->toggleViewAction());
+#else
+    auto micro_profile_stub = new QAction(tr("MicroProfile (unavailable)"), this);
+    micro_profile_stub->setEnabled(false);
+    micro_profile_stub->setChecked(false);
+    debug_menu->addAction(micro_profile_stub);
 #endif
 
     registersWidget = new RegistersWidget(system, this);
@@ -692,25 +705,36 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 void GMainWindow::InitializeSaveStateMenuActions() {
     for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
         actions_load_state[i] = new QAction(this);
-        actions_load_state[i]->setData(i + 1);
+        actions_load_state[i]->setData(i);
         connect(actions_load_state[i], &QAction::triggered, this, &GMainWindow::OnLoadState);
-        ui->menu_Load_State->addAction(actions_load_state[i]);
-
+        if (i > 0)
+            ui->menu_Load_State->addAction(actions_load_state[i]);
         actions_save_state[i] = new QAction(this);
-        actions_save_state[i]->setData(i + 1);
+        actions_save_state[i]->setData(i);
         connect(actions_save_state[i], &QAction::triggered, this, &GMainWindow::OnSaveState);
-        ui->menu_Save_State->addAction(actions_save_state[i]);
+        if (i > 0)
+            ui->menu_Save_State->addAction(actions_save_state[i]);
     }
 
     connect(ui->action_Load_from_Newest_Slot, &QAction::triggered, this, [this] {
         UpdateSaveStates();
         if (newest_slot != 0) {
-            actions_load_state[newest_slot - 1]->trigger();
+            actions_load_state[newest_slot]->trigger();
         }
     });
     connect(ui->action_Save_to_Oldest_Slot, &QAction::triggered, this, [this] {
         UpdateSaveStates();
-        actions_save_state[oldest_slot - 1]->trigger();
+        actions_save_state[oldest_slot]->trigger();
+    });
+
+    // Quick save / load uses slot
+    connect(ui->action_Quick_Save, &QAction::triggered, this, [this] {
+        UpdateSaveStates();
+        actions_save_state[0]->trigger();
+    });
+    connect(ui->action_Quick_Load, &QAction::triggered, this, [this] {
+        UpdateSaveStates();
+        actions_load_state[0]->trigger();
     });
 
     connect(ui->menu_Load_State->menuAction(), &QAction::hovered, this,
@@ -753,8 +777,12 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Screen_Layout_Upright_Screens,
                          QStringLiteral("Rotate Screens Upright"));
     link_action_shortcut(ui->action_Advance_Frame, QStringLiteral("Advance Frame"));
-    link_action_shortcut(ui->action_Load_from_Newest_Slot, QStringLiteral("Load from Newest Slot"));
-    link_action_shortcut(ui->action_Save_to_Oldest_Slot, QStringLiteral("Save to Oldest Slot"));
+    link_action_shortcut(ui->action_Load_from_Newest_Slot,
+                         QStringLiteral("Load from Newest Non-Quicksave Slot"));
+    link_action_shortcut(ui->action_Save_to_Oldest_Slot,
+                         QStringLiteral("Save to Oldest Non-Quicksave Slot"));
+    link_action_shortcut(ui->action_Quick_Save, QStringLiteral("Quick Save"));
+    link_action_shortcut(ui->action_Quick_Load, QStringLiteral("Quick Load"));
     link_action_shortcut(ui->action_View_Lobby, QStringLiteral("Multiplayer Browse Public Rooms"));
     link_action_shortcut(ui->action_Start_Room, QStringLiteral("Multiplayer Create Room"));
     link_action_shortcut(ui->action_Connect_To_Room,
@@ -779,6 +807,11 @@ void GMainWindow::InitializeHotkeys() {
         }
     });
     connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
+        if (!hotkey_registry
+                 .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
+                 .isEmpty()) {
+            return;
+        }
         Settings::values.frame_limit.SetGlobal(!Settings::values.frame_limit.UsingGlobal());
         UpdateStatusBar();
     });
@@ -786,31 +819,12 @@ void GMainWindow::InitializeHotkeys() {
                      [&] { Settings::values.dump_textures = !Settings::values.dump_textures; });
     connect_shortcut(QStringLiteral("Toggle Custom Textures"),
                      [&] { Settings::values.custom_textures = !Settings::values.custom_textures; });
-    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes
-    // the variable hold a garbage value after this function exits
-    static constexpr u16 SPEED_LIMIT_STEP = 5;
-    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] {
-        if (Settings::values.frame_limit.GetValue() == 0) {
-            return;
-        }
-        if (Settings::values.frame_limit.GetValue() < 995 - SPEED_LIMIT_STEP) {
-            Settings::values.frame_limit.SetValue(Settings::values.frame_limit.GetValue() +
-                                                  SPEED_LIMIT_STEP);
-        } else {
-            Settings::values.frame_limit = 0;
-        }
-        UpdateStatusBar();
-    });
-    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] {
-        if (Settings::values.frame_limit.GetValue() == 0) {
-            Settings::values.frame_limit = 995;
-        } else if (Settings::values.frame_limit.GetValue() > SPEED_LIMIT_STEP) {
-            Settings::values.frame_limit.SetValue(Settings::values.frame_limit.GetValue() -
-                                                  SPEED_LIMIT_STEP);
-            UpdateStatusBar();
-        }
-        UpdateStatusBar();
-    });
+
+    connect_shortcut(QStringLiteral("Toggle Turbo Mode"),
+                     [&] { GMainWindow::SetTurboEnabled(!GMainWindow::IsTurboEnabled()); });
+
+    connect_shortcut(QStringLiteral("Increase Speed Limit"), [&] { AdjustSpeedLimit(true); });
+    connect_shortcut(QStringLiteral("Decrease Speed Limit"), [&] { AdjustSpeedLimit(false); });
 
     connect_shortcut(QStringLiteral("Audio Mute/Unmute"), &GMainWindow::OnMute);
     connect_shortcut(QStringLiteral("Audio Volume Down"), &GMainWindow::OnDecreaseVolume);
@@ -832,7 +846,7 @@ void GMainWindow::InitializeHotkeys() {
     });
     connect_shortcut(QStringLiteral("Increase 3D Factor"), [this] {
         const auto factor_3d = Settings::values.factor_3d.GetValue();
-        if (factor_3d < 100) {
+        if (factor_3d < 255) {
             if (factor_3d % FACTOR_3D_STEP != 0) {
                 Settings::values.factor_3d =
                     factor_3d + FACTOR_3D_STEP - (factor_3d % FACTOR_3D_STEP);
@@ -982,7 +996,9 @@ void GMainWindow::ConnectWidgetEvents() {
 }
 
 void GMainWindow::ConnectMenuEvents() {
-    const auto connect_menu = [&](QAction* action, const auto& event_fn) {
+    const auto connect_menu = [&](QAction* action, const auto& event_fn,
+                                  QAction::MenuRole role = QAction::NoRole) {
+        action->setMenuRole(role);
         connect(action, &QAction::triggered, this, event_fn);
         // Add actions to this window so that hiding menus in fullscreen won't disable them
         addAction(action);
@@ -994,11 +1010,12 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Load_File, &GMainWindow::OnMenuLoadFile);
     connect_menu(ui->action_Install_CIA, &GMainWindow::OnMenuInstallCIA);
     connect_menu(ui->action_Connect_Artic, &GMainWindow::OnMenuConnectArticBase);
+    connect_menu(ui->action_Setup_System_Files, &GMainWindow::OnMenuSetUpSystemFiles);
     for (u32 region = 0; region < Core::NUM_SYSTEM_TITLE_REGIONS; region++) {
         connect_menu(ui->menu_Boot_Home_Menu->actions().at(region),
                      [this, region] { OnMenuBootHomeMenu(region); });
     }
-    connect_menu(ui->action_Exit, &QMainWindow::close);
+    connect_menu(ui->action_Exit, &QMainWindow::close, QAction::QuitRole);
     connect_menu(ui->action_Load_Amiibo, &GMainWindow::OnLoadAmiibo);
     connect_menu(ui->action_Remove_Amiibo, &GMainWindow::OnRemoveAmiibo);
 
@@ -1006,8 +1023,11 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Pause, &GMainWindow::OnPauseContinueGame);
     connect_menu(ui->action_Stop, &GMainWindow::OnStopGame);
     connect_menu(ui->action_Restart, [this] { BootGame(QString(game_path)); });
-    connect_menu(ui->action_Report_Compatibility, &GMainWindow::OnMenuReportCompatibility);
-    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure);
+    connect_menu(ui->action_Report_Compatibility, []() {
+        QDesktopServices::openUrl(QUrl(QStringLiteral(
+            "https://github.com/azahar-emu/compatibility-list/blob/master/CONTRIBUTING.md")));
+    });
+    connect_menu(ui->action_Configure, &GMainWindow::OnConfigure, QAction::PreferencesRole);
     connect_menu(ui->action_Configure_Current_Game, &GMainWindow::OnConfigurePerGame);
 
     // View
@@ -1071,12 +1091,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_FAQ, []() {
         QDesktopServices::openUrl(QUrl(QStringLiteral("https://azahar-emu.org/pages/faq/")));
     });
-    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra);
-
-#if ENABLE_QT_UPDATER
-    connect_menu(ui->action_Check_For_Updates, &GMainWindow::OnCheckForUpdates);
-    connect_menu(ui->action_Open_Maintenance_Tool, &GMainWindow::OnOpenUpdater);
-#endif
+    connect_menu(ui->action_About, &GMainWindow::OnMenuAboutCitra, QAction::AboutRole);
 }
 
 void GMainWindow::UpdateMenuState() {
@@ -1129,81 +1144,6 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
         }
     }
 }
-
-#if ENABLE_QT_UPDATER
-void GMainWindow::OnCheckForUpdates() {
-    explicit_update_check = true;
-    CheckForUpdates();
-}
-
-void GMainWindow::CheckForUpdates() {
-    if (updater->CheckForUpdates()) {
-        LOG_INFO(Frontend, "Update check started");
-    } else {
-        LOG_WARNING(Frontend, "Unable to start check for updates");
-    }
-}
-
-void GMainWindow::OnUpdateFound(bool found, bool error) {
-    if (error) {
-        LOG_WARNING(Frontend, "Update check failed");
-        return;
-    }
-
-    if (!found) {
-        LOG_INFO(Frontend, "No updates found");
-
-        // If the user explicitly clicked the "Check for Updates" button, we are
-        //  going to want to show them a prompt anyway.
-        if (explicit_update_check) {
-            explicit_update_check = false;
-            ShowNoUpdatePrompt();
-        }
-        return;
-    }
-
-    if (emulation_running && !explicit_update_check) {
-        LOG_INFO(Frontend, "Update found, deferring as application is running");
-        defer_update_prompt = true;
-        return;
-    }
-
-    LOG_INFO(Frontend, "Update found!");
-    explicit_update_check = false;
-
-    ShowUpdatePrompt();
-}
-
-void GMainWindow::ShowUpdatePrompt() {
-    defer_update_prompt = false;
-
-    auto result =
-        QMessageBox::question(this, tr("Update Available"),
-                              tr("An update is available. Would you like to install it now?"),
-                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-
-    if (result == QMessageBox::Yes) {
-        updater->LaunchUIOnExit();
-        close();
-    }
-}
-
-void GMainWindow::ShowNoUpdatePrompt() {
-    QMessageBox::information(this, tr("No Update Found"), tr("No update is found."),
-                             QMessageBox::Ok, QMessageBox::Ok);
-}
-
-void GMainWindow::OnOpenUpdater() {
-    updater->LaunchUI();
-}
-
-void GMainWindow::ShowUpdaterWidgets() {
-    ui->action_Check_For_Updates->setVisible(UISettings::values.updater_found);
-    ui->action_Open_Maintenance_Tool->setVisible(UISettings::values.updater_found);
-
-    connect(updater, &Updater::CheckUpdatesDone, this, &GMainWindow::OnUpdateFound);
-}
-#endif
 
 #if defined(HAVE_SDL2) && defined(__unix__) && !defined(__APPLE__)
 static std::optional<QDBusObjectPath> HoldWakeLockLinux(u32 window_id = 0) {
@@ -1350,9 +1290,9 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
         case Core::System::ResultStatus::ErrorArticDisconnected:
             QMessageBox::critical(
-                this, tr("Artic Base Server"),
+                this, tr("Artic Server"),
                 tr(fmt::format(
-                       "An error has occurred whilst communicating with the Artic Base Server.\n{}",
+                       "An error has occurred whilst communicating with the Artic Server.\n{}",
                        system.GetStatusDetails())
                        .c_str()));
             break;
@@ -1384,7 +1324,9 @@ void GMainWindow::BootGame(const QString& filename) {
         ShutdownGame();
     }
 
-    const bool is_artic = filename.startsWith(QString::fromStdString("articbase://"));
+    const bool is_artic = filename.startsWith(QString::fromStdString("articbase:/")) ||
+                          filename.startsWith(QString::fromStdString("articinio:/")) ||
+                          filename.startsWith(QString::fromStdString("articinin:/"));
 
     if (!is_artic && filename.endsWith(QStringLiteral(".cia"))) {
         const auto answer = QMessageBox::question(
@@ -1427,7 +1369,7 @@ void GMainWindow::BootGame(const QString& filename) {
         QtConfig per_game_config(config_file_name, QtConfig::ConfigType::PerGameConfig);
     }
 
-    // Artic Base Server cannot accept a client multiple times, so multiple loaders are not
+    // Artic Server cannot accept a client multiple times, so multiple loaders are not
     // possible. Instead register the app loader early and do not create it again on system load.
     if (!loader->SupportsMultipleInstancesForSameFile()) {
         system.RegisterAppLoaderEarly(loader);
@@ -1497,6 +1439,8 @@ void GMainWindow::BootGame(const QString& filename) {
 
     connect(emu_thread.get(), &EmuThread::LoadProgress, loading_screen,
             &LoadingScreen::OnLoadProgress, Qt::QueuedConnection);
+    connect(emu_thread.get(), &EmuThread::SwitchDiskResources, this,
+            &GMainWindow::OnSwitchDiskResources, Qt::QueuedConnection);
     connect(emu_thread.get(), &EmuThread::HideLoadingScreen, loading_screen,
             &LoadingScreen::OnLoadComplete);
 
@@ -1596,6 +1540,7 @@ void GMainWindow::ShutdownGame() {
     status_bar_update_timer.stop();
     message_label_used_for_movie = false;
     show_artic_label = false;
+    loading_shaders_label->setVisible(false);
     artic_traffic_label->setVisible(false);
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
@@ -1604,12 +1549,6 @@ void GMainWindow::ShutdownGame() {
     UpdateSaveStates();
 
     emulation_running = false;
-
-#if ENABLE_QT_UDPATER
-    if (defer_update_prompt) {
-        ShowUpdatePrompt();
-    }
-#endif
 
     game_title.clear();
     UpdateWindowTitle();
@@ -1667,7 +1606,7 @@ void GMainWindow::UpdateSaveStates() {
     ui->menu_Save_State->setEnabled(true);
     ui->action_Load_from_Newest_Slot->setEnabled(false);
 
-    oldest_slot = newest_slot = 0;
+    oldest_slot = newest_slot = 1;
     oldest_slot_time = std::numeric_limits<u64>::max();
     newest_slot_time = 0;
 
@@ -1678,13 +1617,33 @@ void GMainWindow::UpdateSaveStates() {
     auto savestates = Core::ListSaveStates(title_id, movie.GetCurrentMovieID());
     for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
         actions_load_state[i]->setEnabled(false);
-        actions_load_state[i]->setText(tr("Slot %1").arg(i + 1));
-        actions_save_state[i]->setText(tr("Slot %1").arg(i + 1));
+        if (i == 0) {
+            actions_load_state[i]->setText(tr("Quick Load"));
+            actions_save_state[i]->setText(tr("Quick Save"));
+        } else {
+            actions_load_state[i]->setText(tr("Slot %1").arg(i));
+            actions_save_state[i]->setText(tr("Slot %1").arg(i));
+        }
     }
     for (const auto& savestate : savestates) {
+        if (savestate.slot >= Core::SaveStateSlotCount) {
+            continue;
+        }
         const bool display_name =
             savestate.status == Core::SaveStateInfo::ValidationStatus::RevisionDismatch &&
             !savestate.build_name.empty();
+        actions_load_state[savestate.slot]->setEnabled(true);
+        if (savestate.slot == 0) {
+            const auto text = tr("%2 %3")
+                                  .arg(QDateTime::fromSecsSinceEpoch(savestate.time)
+                                           .toString(QStringLiteral("yyyy-MM-dd hh:mm:ss")))
+                                  .arg(display_name ? QString::fromStdString(savestate.build_name)
+                                                    : QLatin1String())
+                                  .trimmed();
+            ui->action_Quick_Save->setText(tr("Quick Save - %1").arg(text).trimmed());
+            ui->action_Quick_Load->setText(tr("Quick Load - %1").arg(text).trimmed());
+            continue;
+        }
         const auto text =
             tr("Slot %1 - %2 %3")
                 .arg(savestate.slot)
@@ -1693,12 +1652,10 @@ void GMainWindow::UpdateSaveStates() {
                 .arg(display_name ? QString::fromStdString(savestate.build_name) : QLatin1String())
                 .trimmed();
 
-        actions_load_state[savestate.slot - 1]->setEnabled(true);
-        actions_load_state[savestate.slot - 1]->setText(text);
-        actions_save_state[savestate.slot - 1]->setText(text);
+        actions_load_state[savestate.slot]->setText(text);
+        actions_save_state[savestate.slot]->setText(text);
 
         ui->action_Load_from_Newest_Slot->setEnabled(true);
-
         if (savestate.time > newest_slot_time) {
             newest_slot = savestate.slot;
             newest_slot_time = savestate.time;
@@ -1708,10 +1665,11 @@ void GMainWindow::UpdateSaveStates() {
             oldest_slot_time = savestate.time;
         }
     }
-    for (u32 i = 0; i < Core::SaveStateSlotCount; ++i) {
+    // Value as 1 because quicksave slot is not used for this calculation
+    for (u32 i = 1; i < Core::SaveStateSlotCount; ++i) {
         if (!actions_load_state[i]->isEnabled()) {
             // Prefer empty slot
-            oldest_slot = i + 1;
+            oldest_slot = i;
             oldest_slot_time = 0;
             break;
         }
@@ -2181,6 +2139,100 @@ void GMainWindow::OnMenuLoadFile() {
     BootGame(filename);
 }
 
+void GMainWindow::OnMenuSetUpSystemFiles() {
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Set Up System Files"));
+
+    QVBoxLayout layout(&dialog);
+
+    QLabel label_description(
+        tr("<p>Azahar needs console unique data and firmware files from a real console to be "
+           "able to use some of its features.<br>Such files and data can be set up with the <a "
+           "href=https://github.com/azahar-emu/ArticSetupTool>Azahar "
+           "Artic Setup Tool</a><br>Notes:<ul><li><b>This operation will install console unique "
+           "data to Azahar, do not share your user or nand folders<br>after performing the setup "
+           "process!</b></li><li>While doing the setup process, Azahar will link to the console "
+           "running the setup tool. You can unlink the<br>console later from the System tab in the "
+           "emulator configuration menu.</li><li>Do not go online with both Azahar and your 3DS "
+           "console at the same time after setting up system files,<br>as it could cause "
+           "issues.</li><li>Old 3DS setup is needed for the New 3DS setup to work (doing both "
+           "setup modes is recommended).</li><li>Both setup modes will work regardless of the "
+           "model of the console running the setup tool.</li></ul><hr></p>"),
+        &dialog);
+    label_description.setOpenExternalLinks(true);
+    layout.addWidget(&label_description);
+
+    QHBoxLayout layout_h(&dialog);
+    layout.addLayout(&layout_h);
+
+    QLabel label_enter(tr("Enter Azahar Artic Setup Tool address:"), &dialog);
+
+    layout_h.addWidget(&label_enter);
+
+    QLineEdit textInput(UISettings::values.last_artic_base_addr, &dialog);
+    layout_h.addWidget(&textInput);
+
+    QLabel label_select(tr("<br>Choose setup mode:"), &dialog);
+    layout.addWidget(&label_select);
+
+    std::pair<bool, bool> install_state = Core::AreSystemTitlesInstalled();
+
+    QRadioButton radio1(&dialog);
+    QRadioButton radio2(&dialog);
+    if (!install_state.first) {
+        radio1.setChecked(true);
+
+        radio1.setText(tr("(\u2139\uFE0F) Old 3DS setup"));
+        radio1.setToolTip(tr("Setup is possible."));
+
+        radio2.setText(tr("(\u26A0) New 3DS setup"));
+        radio2.setToolTip(tr("Old 3DS setup is required first."));
+        radio2.setEnabled(false);
+    } else {
+        radio1.setText(tr("(\u2705) Old 3DS setup"));
+        radio1.setToolTip(tr("Setup completed."));
+
+        if (!install_state.second) {
+            radio2.setChecked(true);
+
+            radio2.setText(tr("(\u2139\uFE0F) New 3DS setup"));
+            radio2.setToolTip(tr("Setup is possible."));
+        } else {
+            radio1.setChecked(true);
+
+            radio2.setText(tr("(\u2705) New 3DS setup"));
+            radio2.setToolTip(tr("Setup completed."));
+        }
+    }
+    layout.addWidget(&radio1);
+    layout.addWidget(&radio2);
+
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    connect(&buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(&buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout.addWidget(&buttonBox);
+
+    int res = dialog.exec();
+    if (res == QDialog::Accepted) {
+        bool is_o3ds = radio1.isChecked();
+        if ((is_o3ds && install_state.first) || (!is_o3ds && install_state.second)) {
+            QMessageBox::StandardButton answer =
+                QMessageBox::question(this, tr("Set Up System Files"),
+                                      tr("The system files for the selected mode are already set "
+                                         "up.\nReinstall the files anyway?"),
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+            if (answer != QMessageBox::Yes) {
+                return;
+            }
+        }
+        Core::UninstallSystemFiles(is_o3ds ? Core::SystemTitleSet::Old3ds
+                                           : Core::SystemTitleSet::New3ds);
+        QString addr = textInput.text();
+        UISettings::values.last_artic_base_addr = addr;
+        BootGame(QString::fromStdString(is_o3ds ? "articinio://" : "articinin://").append(addr));
+    }
+}
+
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
@@ -2402,6 +2454,8 @@ void GMainWindow::OnPauseContinueGame() {
 }
 
 void GMainWindow::OnStopGame() {
+    SetTurboEnabled(false);
+
     play_time_manager->Stop();
     // Update game list to show new play time
     game_list->PopulateAsync(UISettings::values.game_dirs);
@@ -2415,10 +2469,6 @@ void GMainWindow::OnStopGame() {
 void GMainWindow::OnLoadComplete() {
     loading_screen->OnLoadComplete();
     UpdateSecondaryWindowVisibility();
-}
-
-void GMainWindow::OnMenuReportCompatibility() {
-    // NoOp
 }
 
 void GMainWindow::ToggleFullscreen() {
@@ -2557,6 +2607,50 @@ void GMainWindow::ChangeSmallScreenPosition() {
     UpdateSecondaryWindowVisibility();
 }
 
+bool GMainWindow::IsTurboEnabled() {
+    return turbo_mode_active;
+}
+
+void GMainWindow::SetTurboEnabled(bool state) {
+    turbo_mode_active = state;
+    GMainWindow::ReloadTurbo();
+}
+
+void GMainWindow::ReloadTurbo() {
+    if (IsTurboEnabled()) {
+        Settings::temporary_frame_limit = Settings::values.turbo_limit.GetValue();
+        Settings::is_temporary_frame_limit = true;
+    } else {
+        Settings::is_temporary_frame_limit = false;
+    }
+
+    UpdateStatusBar();
+}
+
+// TODO: This should probably take in something more descriptive than a bool. -OS
+void GMainWindow::AdjustSpeedLimit(bool increase) {
+    const int SPEED_LIMIT_STEP = 5;
+    auto active_limit =
+        IsTurboEnabled() ? &Settings::values.turbo_limit : &Settings::values.frame_limit;
+    const auto active_limit_value = active_limit->GetValue();
+
+    if (increase) {
+        if (active_limit_value < 995) {
+            active_limit->SetValue(active_limit_value + SPEED_LIMIT_STEP);
+        }
+    } else {
+        if (active_limit_value > SPEED_LIMIT_STEP) {
+            active_limit->SetValue(active_limit_value - SPEED_LIMIT_STEP);
+        }
+    }
+
+    if (IsTurboEnabled()) {
+        ReloadTurbo();
+    }
+
+    UpdateStatusBar();
+}
+
 void GMainWindow::ToggleScreenLayout() {
     const Settings::LayoutOption new_layout = []() {
         switch (Settings::values.layout_option.GetValue()) {
@@ -2674,6 +2768,7 @@ void GMainWindow::OnConfigure() {
         } else {
             setMouseTracking(false);
         }
+        ReloadTurbo();
         UpdateSecondaryWindowVisibility();
         UpdateBootHomeMenuState();
         UpdateStatusButtons();
@@ -2897,7 +2992,7 @@ void GMainWindow::ShowFFmpegErrorMessage() {
     message_box.setText(
         tr("FFmpeg could not be loaded. Make sure you have a compatible version installed."
 #ifdef _WIN32
-           "\n\nTo install FFmpeg to Lime, press Open and select your FFmpeg directory."
+           "\n\nTo install FFmpeg to Azahar, press Open and select your FFmpeg directory."
 #endif
            "\n\nTo view a guide on how to install FFmpeg, press Help."));
     message_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Help
@@ -3104,7 +3199,7 @@ void GMainWindow::UpdateStatusBar() {
             }
         }
 
-        static const std::array label_color = {QStringLiteral("#ffffff"), QStringLiteral("#eed202"),
+        static const std::array label_color = {QStringLiteral(""), QStringLiteral("#eed202"),
                                                QStringLiteral("#ff3333")};
 
         int style_index;
@@ -3116,23 +3211,38 @@ void GMainWindow::UpdateStatusBar() {
         } else {
             style_index = 0;
         }
-        const QString style_sheet =
-            QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+
+        QString style_sheet;
+        if (!label_color[style_index].isEmpty()) {
+            style_sheet = QStringLiteral("QLabel { color: %0; }").arg(label_color[style_index]);
+        }
 
         artic_traffic_label->setText(
-            tr("Artic Base Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
+            tr("Artic Traffic: %1 %2%3").arg(value, 0, 'f', 0).arg(unit).arg(event));
         artic_traffic_label->setStyleSheet(style_sheet);
     }
 
-    if (Settings::values.frame_limit.GetValue() == 0) {
+    if (Settings::GetFrameLimit() == 0) {
         emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
     } else {
         emu_speed_label->setText(tr("Speed: %1% / %2%")
                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                     .arg(Settings::values.frame_limit.GetValue()));
+                                     .arg(Settings::GetFrameLimit()));
     }
     game_fps_label->setText(tr("App: %1 FPS").arg(results.game_fps, 0, 'f', 0));
-    emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
+    if (UISettings::values.show_advanced_frametime_info) {
+        emu_frametime_label->setText(
+            tr("Frame: %1 ms (GPU: [CMD: %2 ms, SWP: %3 ms], IPC: %4 ms, SVC: %5 ms, Rem: %6 ms)")
+                .arg(results.time_vblank_interval * 1000.0, 2, 'f', 2)
+                .arg(results.time_gpu * 1000.0, 2, 'f', 2)
+                .arg(results.time_swap * 1000.0, 2, 'f', 2)
+                .arg(results.time_hle_ipc * 1000.0, 2, 'f', 2)
+                .arg(results.time_hle_svc * 1000.0, 2, 'f', 2)
+                .arg(results.time_remaining * 1000.0, 2, 'f', 2));
+    } else {
+        emu_frametime_label->setText(
+            tr("Frame: %1 ms").arg(results.time_vblank_interval * 1000.0, 2, 'f', 2));
+    }
 
     if (show_artic_label) {
         artic_traffic_label->setVisible(true);
@@ -3310,7 +3420,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
         message = QString::fromStdString(details);
         error_severity_icon = QMessageBox::Icon::Warning;
     } else if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
-        title = tr("Artic Base Server");
+        title = tr("Artic Server");
         message =
             tr(fmt::format("A communication error has occurred. The game will quit.\n{}", details)
                    .c_str());
@@ -3477,9 +3587,27 @@ void GMainWindow::filterBarSetChecked(bool state) {
     emit(OnToggleFilterBar());
 }
 
+inline bool isDarkMode() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    // Use colorScheme for Qt 6.5 and later
+    const auto scheme = QGuiApplication::styleHints()->colorScheme();
+    return scheme == Qt::ColorScheme::Dark;
+#else
+    // Fallback for Qt 6.4: Check the window palette
+    QPalette palette = QGuiApplication::palette();
+    return palette.color(QPalette::Window).lightness() < 128; // Rough check for dark mode
+#endif
+}
+
 void GMainWindow::UpdateUITheme() {
     const QString icons_base_path = QStringLiteral(":/icons/");
-    const QString default_theme = QStringLiteral("default");
+    QString default_theme;
+    if (!isDarkMode()) {
+        default_theme = QStringLiteral("default");
+    } else {
+        default_theme = QStringLiteral("default_with_light_icons");
+    }
+
     const QString default_theme_path = icons_base_path + default_theme;
 
     const QString& current_theme = UISettings::values.theme;
@@ -3587,6 +3715,39 @@ void GMainWindow::OpenPerGameConfiguration(u64 title_id, const QString& file_nam
 void GMainWindow::OnMoviePlaybackCompleted() {
     OnPauseGame();
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
+}
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+void GMainWindow::OnEmulatorUpdateAvailable() {
+    QString version_string = update_future.result();
+    if (version_string.isEmpty())
+        return;
+
+    QMessageBox update_prompt(this);
+    update_prompt.setWindowTitle(tr("Update Available"));
+    update_prompt.setIcon(QMessageBox::Information);
+    update_prompt.addButton(QMessageBox::Yes);
+    update_prompt.addButton(QMessageBox::Ignore);
+    update_prompt.setText(tr("Update %1 for Azahar is available.\nWould you like to download it?")
+                              .arg(version_string));
+    update_prompt.exec();
+    if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
+        QDesktopServices::openUrl(
+            QUrl(QString::fromStdString("https://azahar-emu.org/pages/download/")));
+    }
+}
+#endif
+
+void GMainWindow::OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
+                                        std::size_t total) {
+    if (stage == VideoCore::LoadCallbackStage::Prepare) {
+        loading_shaders_label->setText(QString());
+        loading_shaders_label->setVisible(true);
+    } else if (stage == VideoCore::LoadCallbackStage::Complete) {
+        loading_shaders_label->setVisible(false);
+    } else {
+        loading_shaders_label->setText(loading_screen->GetStageTranslation(stage, value, total));
+    }
 }
 
 void GMainWindow::UpdateWindowTitle() {
@@ -3751,12 +3912,17 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 
 void LaunchQtFrontend(int argc, char* argv[]) {
     Common::DetachedTasks detached_tasks;
+
+#if MICROPROFILE_ENABLED
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
+#endif
 
     // Init settings params
     QCoreApplication::setOrganizationName(QStringLiteral("Azahar Developers"));
+    QCoreApplication::setOrganizationDomain(QStringLiteral("azahar_emu.org"));
     QCoreApplication::setApplicationName(QStringLiteral("Azahar"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("org.azahar_emu.Azahar"));
 
     auto rounding_policy = GetHighDpiRoundingPolicy();
     QApplication::setHighDpiScaleFactorRoundingPolicy(rounding_policy);

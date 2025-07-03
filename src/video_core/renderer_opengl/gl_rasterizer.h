@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -40,8 +40,9 @@ public:
     ~RasterizerOpenGL() override;
 
     void TickFrame();
-    void LoadDiskResources(const std::atomic_bool& stop_loading,
-                           const VideoCore::DiskResourceLoadCallback& callback) override;
+    void LoadDefaultDiskResources(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) override;
+    void SwitchDiskResources(u64 title_id) override;
 
     void DrawTriangles() override;
     void FlushAll() override;
@@ -57,41 +58,8 @@ public:
     bool AccelerateDrawBatch(bool is_indexed) override;
 
 private:
-    void SyncFixedState() override;
-    void NotifyFixedFunctionPicaRegisterChanged(u32 id) override;
-
-    /// Syncs the clip enabled status to match the PICA register
-    void SyncClipEnabled();
-
-    /// Syncs the cull mode to match the PICA register
-    void SyncCullMode();
-
-    /// Syncs the blend enabled status to match the PICA register
-    void SyncBlendEnabled();
-
-    /// Syncs the blend functions to match the PICA register
-    void SyncBlendFuncs();
-
-    /// Syncs the blend color to match the PICA register
-    void SyncBlendColor();
-
-    /// Syncs the logic op states to match the PICA register
-    void SyncLogicOp();
-
-    /// Syncs the color write mask to match the PICA register state
-    void SyncColorWriteMask();
-
-    /// Syncs the stencil write mask to match the PICA register state
-    void SyncStencilWriteMask();
-
-    /// Syncs the depth write mask to match the PICA register state
-    void SyncDepthWriteMask();
-
-    /// Syncs the stencil test states to match the PICA register
-    void SyncStencilTest();
-
-    /// Syncs the depth test states to match the PICA register
-    void SyncDepthTest();
+    /// Syncs pipeline state from PICA registers
+    void SyncDrawState();
 
     /// Syncs and uploads the lighting, fog and proctex LUTs
     void SyncAndUploadLUTs();
@@ -137,7 +105,9 @@ private:
 private:
     Driver& driver;
     OpenGLState state;
-    ShaderProgramManager shader_manager;
+    Frontend::EmuWindow& render_window;
+    std::vector<std::shared_ptr<ShaderProgramManager>> shader_managers;
+    std::shared_ptr<ShaderProgramManager> curr_shader_manager{};
     TextureRuntime runtime;
     RasterizerCache res_cache;
 

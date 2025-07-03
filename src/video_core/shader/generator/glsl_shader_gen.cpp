@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,19 +15,15 @@ using VSOutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
 namespace Pica::Shader::Generator::GLSL {
 
 constexpr std::string_view VSPicaUniformBlockDef = R"(
-struct pica_uniforms {
-    bool b[16];
-    uvec4 i[4];
-    vec4 f[96];
-};
-
 #ifdef VULKAN
 layout (set = 0, binding = 0, std140) uniform vs_pica_data {
 #else
 layout (binding = 0, std140) uniform vs_pica_data {
 #endif
-    pica_uniforms uniforms;
-};
+    uint b;
+    uvec4 i[4];
+    vec4 f[96];
+} uniforms;
 )";
 
 constexpr std::string_view VSUniformBlockDef = R"(
@@ -37,6 +33,7 @@ layout (set = 0, binding = 1, std140) uniform vs_data {
 layout (binding = 1, std140) uniform vs_data {
 #endif
     bool enable_clip1;
+    bool flip_viewport;
     vec4 clip_coef;
 };
 
@@ -123,6 +120,9 @@ void main() {
     normquat = vert_normquat;
     view = vert_view;
     vec4 vtx_pos = SanitizeVertex(vert_position);
+    if (flip_viewport) {
+        vtx_pos.y = -vtx_pos.y;
+    }
     gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);
 )";
     if (use_clip_planes) {
@@ -238,6 +238,9 @@ std::string GenerateVertexShader(const ShaderSetup& setup, const PicaVSConfig& c
                semantic(VSOutputAttributes::POSITION_Z) + ", " +
                semantic(VSOutputAttributes::POSITION_W) + ");\n";
         out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+        out += "    if (flip_viewport) {\n";
+        out += "        vtx_pos.y = -vtx_pos.y;\n";
+        out += "    }\n";
         out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
         if (config.state.use_clip_planes) {
             out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
@@ -332,6 +335,9 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
     out += "    vtx_pos = SanitizeVertex(vtx_pos);\n";
+    out += "    if (flip_viewport) {\n";
+    out += "        vtx_pos.y = -vtx_pos.y;\n";
+    out += "    }\n";
     out += "    gl_Position = vec4(vtx_pos.x, vtx_pos.y, -vtx_pos.z, vtx_pos.w);\n";
     if (state.use_clip_planes) {
         out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0

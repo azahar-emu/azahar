@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -89,6 +89,7 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 RendererOpenGL::~RendererOpenGL() = default;
 
 void RendererOpenGL::SwapBuffers() {
+    system.perf_stats->StartSwap();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
@@ -115,6 +116,7 @@ void RendererOpenGL::SwapBuffers() {
         }
     }
 
+    system.perf_stats->EndSwap();
     EndFrame();
     prev_state.Apply();
     rasterizer.TickFrame();
@@ -163,15 +165,16 @@ void RendererOpenGL::PrepareRendertarget() {
 
         const auto color_fill = fb_id == 0 ? regs_lcd.color_fill_top : regs_lcd.color_fill_bottom;
         if (color_fill.is_enabled) {
-            FillScreen(color_fill.AsVector(), texture);
-            continue;
+            // Resize the texture to let it be reconfigured
+            texture.width = 1;
+            texture.height = 1;
         }
 
         if (texture.width != framebuffer.width || texture.height != framebuffer.height ||
             texture.format != framebuffer.color_format) {
-            ConfigureFramebufferTexture(texture, framebuffer);
+            ConfigureFramebufferTexture(texture, framebuffer, color_fill);
         }
-        LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1);
+        LoadFBToScreenInfo(framebuffer, screen_infos[i], i == 1, color_fill);
     }
 }
 
@@ -229,7 +232,8 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
  * Loads framebuffer from emulated memory into the active OpenGL texture.
  */
 void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer,
-                                        ScreenInfo& screen_info, bool right_eye) {
+                                        ScreenInfo& screen_info, bool right_eye,
+                                        const Pica::ColorFill& color_fill) {
 
     if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0)
         right_eye = false;
@@ -253,15 +257,27 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
 
-    if (!rasterizer.AccelerateDisplay(framebuffer, framebuffer_addr, static_cast<u32>(pixel_stride),
+    if (color_fill.is_enabled ||
+        !rasterizer.AccelerateDisplay(framebuffer, framebuffer_addr, static_cast<u32>(pixel_stride),
                                       screen_info)) {
+        u32 width = framebuffer.width;
+        u32 height = framebuffer.height;
+        u8 fill_pixel[3];
         // Reset the screen info's display texture to its own permanent texture
         screen_info.display_texture = screen_info.texture.resource.handle;
         screen_info.display_texcoords = Common::Rectangle<f32>(0.f, 0.f, 1.f, 1.f);
 
         rasterizer.FlushRegion(framebuffer_addr, framebuffer.stride * framebuffer.height);
 
-        const u8* framebuffer_data = system.Memory().GetPhysicalPointer(framebuffer_addr);
+        u8* framebuffer_data = system.Memory().GetPhysicalPointer(framebuffer_addr);
+
+        if (color_fill.is_enabled) {
+            memcpy(fill_pixel, color_fill.AsVector().AsArray(), sizeof(fill_pixel));
+            framebuffer_data = fill_pixel;
+            width = 1;
+            height = 1;
+            pixel_stride = 0;
+        }
 
         state.texture_units[0].texture_2d = screen_info.texture.resource.handle;
         state.Apply();
@@ -274,9 +290,8 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
         //       they differ from the LCD resolution.
         // TODO: Applications could theoretically crash Citra here by specifying too large
         //       framebuffer sizes. We should make sure that this cannot happen.
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
-                        screen_info.texture.gl_format, screen_info.texture.gl_type,
-                        framebuffer_data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, screen_info.texture.gl_format,
+                        screen_info.texture.gl_type, framebuffer_data);
 
         glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
@@ -285,29 +300,12 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     }
 }
 
-void RendererOpenGL::FillScreen(Common::Vec3<u8> color, TextureInfo& texture) {
-    state.texture_units[0].texture_2d = texture.resource.handle;
-    state.Apply();
-
-    glActiveTexture(GL_TEXTURE0);
-
-    // Update existing texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, color.AsArray());
-
-    state.texture_units[0].texture_2d = 0;
-    state.Apply();
-
-    // Resize the texture in case the framebuffer size has changed
-    texture.width = 1;
-    texture.height = 1;
-}
-
 /**
  * Initializes the OpenGL state and creates persistent objects.
  */
 void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                 Settings::values.bg_blue.GetValue(), 0.0f);
+                 Settings::values.bg_blue.GetValue(), 1.0f);
 
     for (std::size_t i = 0; i < samplers.size(); i++) {
         samplers[i].Create();
@@ -427,13 +425,20 @@ void RendererOpenGL::ReloadShader() {
 }
 
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
-                                                 const Pica::FramebufferConfig& framebuffer) {
+                                                 const Pica::FramebufferConfig& framebuffer,
+                                                 const Pica::ColorFill& color_fill) {
     Pica::PixelFormat format = framebuffer.color_format;
     GLint internal_format{};
+    u32 width, height;
 
     texture.format = format;
-    texture.width = framebuffer.width;
-    texture.height = framebuffer.height;
+    width = texture.width = framebuffer.width;
+    height = texture.height = framebuffer.height;
+    if (color_fill.is_enabled) {
+        width = 1;
+        height = 1;
+        format = Pica::PixelFormat::RGB8;
+    }
 
     switch (format) {
     case Pica::PixelFormat::RGBA8:
@@ -480,8 +485,8 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
     state.Apply();
 
     glActiveTexture(GL_TEXTURE0);
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
-                 texture.gl_format, texture.gl_type, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, texture.gl_format,
+                 texture.gl_type, nullptr);
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
@@ -637,7 +642,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                     Settings::values.bg_blue.GetValue(), 0.0f);
+                     Settings::values.bg_blue.GetValue(), 1.0f);
     }
 
     if (settings.shader_update_requested.exchange(false)) {
@@ -796,6 +801,17 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
 
+    bool separate_win = false;
+#ifndef ANDROID
+    separate_win =
+        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
+#endif
+
+    if (separate_win) {
+        DrawSingleScreen(screen_infos[2], DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                                                           bottom_screen_width, bottom_screen_height, orientation);
+    }else {
+
     switch (Settings::values.render_3d.GetValue()) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
@@ -804,6 +820,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     }
     case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
     {
+
         DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
                          bottom_screen_width / 2, bottom_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
@@ -813,6 +830,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         break;
     }
     case Settings::StereoRenderOption::SideBySideFull: {
+        if (separate_win)
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
                          bottom_screen_width, bottom_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
@@ -837,6 +855,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
                                bottom_screen_top, bottom_screen_width, bottom_screen_height,
                                orientation);
         break;
+    }
     }
     }
 }
@@ -899,10 +918,6 @@ void RendererOpenGL::CleanupVideoDumping() {
         mailbox->quit = true;
     }
     mailbox->free_cv.notify_one();
-}
-
-void RendererOpenGL::Sync() {
-    rasterizer.SyncEntireState();
 }
 
 } // namespace OpenGL

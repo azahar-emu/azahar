@@ -176,6 +176,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     uisettings.cpp
     uisettings.h
+    user_data_migration.cpp
+    user_data_migration.h
     qt_image_interface.cpp
     qt_image_interface.h
     util/clickable_label.cpp
@@ -196,13 +198,10 @@ file(GLOB COMPAT_LIST
 file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${PROJECT_SOURCE_DIR}/dist/qt_themes/*)
 
-if (ENABLE_QT_UPDATER)
-    target_sources(citra_qt PRIVATE
-        updater/updater.cpp
-        updater/updater.h
-        updater/updater_p.h
-    )
-    target_compile_definitions(citra_qt PUBLIC ENABLE_QT_UPDATER)
+if (ENABLE_QT_UPDATE_CHECKER)
+    target_link_libraries(citra_qt PRIVATE httplib json-headers)
+    target_sources(citra_qt PRIVATE update_checker.cpp)
+    target_compile_definitions(citra_qt PUBLIC ENABLE_QT_UPDATE_CHECKER)
 endif()
 
 if (ENABLE_QT_TRANSLATION)

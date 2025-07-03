@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,7 @@
 #include <QWindow>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/citra_qt.h"
+#include "citra_qt/util/util.h"
 #include "common/color.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
@@ -71,9 +72,14 @@ void EmuThread::run() {
                              std::size_t total) { emit LoadProgress(stage, value, total); });
     }
 
+    system.GPU().Renderer().Rasterizer()->SetSwitchDiskResourcesCallback(
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
+            emit SwitchDiskResources(stage, value, total);
+        });
+
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
 
-    system.GPU().Renderer().Rasterizer()->LoadDiskResources(
+    system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
             emit LoadProgress(stage, value, total);
         });
@@ -714,7 +720,7 @@ void GRenderWindow::CaptureScreenshot(u32 res_scale, const QString& screenshot_p
         screenshot_image.bits(),
         [this, screenshot_path](bool invert_y) {
             const std::string std_screenshot_path = screenshot_path.toStdString();
-            if (screenshot_image.mirrored(false, invert_y).save(screenshot_path)) {
+            if (GetMirroredImage(screenshot_image, false, invert_y).save(screenshot_path)) {
                 LOG_INFO(Frontend, "Screenshot saved to \"{}\"", std_screenshot_path);
             } else {
                 LOG_ERROR(Frontend, "Failed to save screenshot to \"{}\"", std_screenshot_path);

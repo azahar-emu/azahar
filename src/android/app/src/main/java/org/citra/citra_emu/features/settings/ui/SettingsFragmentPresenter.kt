@@ -13,6 +13,7 @@ import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
@@ -46,6 +47,7 @@ import org.citra.citra_emu.utils.BirthdayMonth
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
+import org.citra.citra_emu.utils.EmulationMenuSettings
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
     private var menuTag: String? = null
@@ -101,6 +103,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_THEME -> addThemeSettings(sl)
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
+            Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -217,11 +220,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         sl.apply {
             add(
                 SwitchSetting(
-                    IntSetting.USE_FRAME_LIMIT,
+                    BooleanSetting.USE_FRAME_LIMIT,
                     R.string.frame_limit_enable,
                     R.string.frame_limit_enable_description,
-                    IntSetting.USE_FRAME_LIMIT.key,
-                    IntSetting.USE_FRAME_LIMIT.defaultValue
+                    BooleanSetting.USE_FRAME_LIMIT.key,
+                    BooleanSetting.USE_FRAME_LIMIT.defaultValue
                 )
             )
             add(
@@ -236,6 +239,42 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.FRAME_LIMIT.defaultValue.toFloat()
                 )
             )
+            add(
+                SliderSetting(
+                    IntSetting.TURBO_LIMIT,
+                    R.string.turbo_limit,
+                    R.string.turbo_limit_description,
+                    100,
+                    400,
+                    "%",
+                    IntSetting.TURBO_LIMIT.key,
+                    IntSetting.TURBO_LIMIT.defaultValue.toFloat()
+                )
+            )
+        }
+    }
+
+    private var countryCompatibilityChanged = true
+
+    private fun checkCountryCompatibility() {
+        if (countryCompatibilityChanged) {
+            countryCompatibilityChanged = false
+            val compatFlags = SystemSaveGame.getCountryCompatibility(IntSetting.EMULATED_REGION.int)
+            if (compatFlags != 0) {
+                var message = ""
+                if (compatFlags and 1 != 0) {
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_emulated)
+                }
+                if (compatFlags and 2 != 0) {
+                    if (message.isNotEmpty()) message += "\n\n"
+                    message += settingsAdapter.context.getString(R.string.region_mismatch_console)
+                }
+                MaterialAlertDialogBuilder(settingsAdapter.context)
+                    .setTitle(R.string.region_mismatch)
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
         }
     }
 
@@ -253,51 +292,74 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val valueAsString get() = string
                 override val defaultValue = "AZAHAR"
             }
+            add(HeaderSetting(R.string.emulation_settings))
             add(
-                StringInputSetting(
-                    usernameSetting,
-                    R.string.username,
+                SwitchSetting(
+                    BooleanSetting.NEW_3DS,
+                    R.string.new_3ds,
                     0,
-                    "AZAHAR",
-                    10
+                    BooleanSetting.NEW_3DS.key,
+                    BooleanSetting.NEW_3DS.defaultValue
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.LLE_APPLETS,
+                    R.string.lle_applets,
+                    0,
+                    BooleanSetting.LLE_APPLETS.key,
+                    BooleanSetting.LLE_APPLETS.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES,
+                    R.string.enable_required_online_lle_modules,
+                    R.string.enable_required_online_lle_modules_desc,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.key,
+                    BooleanSetting.REQUIRED_ONLINE_LLE_MODULES.defaultValue
+                )
+            )
+            add(HeaderSetting(R.string.profile_settings))
+            val regionSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() {
+                        val ret = IntSetting.EMULATED_REGION.int
+                        checkCountryCompatibility()
+                        return ret
+                    }
+                    set(value) {
+                        IntSetting.EMULATED_REGION.int = value
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
+                override val key = IntSetting.EMULATED_REGION.key
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = IntSetting.EMULATED_REGION.defaultValue
+            }
+            add(
                 SingleChoiceSetting(
-                    IntSetting.EMULATED_REGION,
+                    regionSetting,
                     R.string.emulated_region,
                     0,
                     R.array.regionNames,
                     R.array.regionValues,
-                    IntSetting.EMULATED_REGION.key,
-                    IntSetting.EMULATED_REGION.defaultValue
                 )
             )
-
-            val systemLanguageSetting = object : AbstractIntSetting {
-                override var int: Int
-                    get() = SystemSaveGame.getSystemLanguage()
-                    set(value) = SystemSaveGame.setSystemLanguage(value)
-                override val key = null
-                override val section = null
-                override val isRuntimeEditable = false
-                override val valueAsString get() = int.toString()
-                override val defaultValue = 1
-            }
-            add(
-                SingleChoiceSetting(
-                    systemLanguageSetting,
-                    R.string.emulated_language,
-                    0,
-                    R.array.languageNames,
-                    R.array.languageValues
-                )
-            )
-
             val systemCountrySetting = object : AbstractShortSetting {
                 override var short: Short
-                    get() = SystemSaveGame.getCountryCode()
-                    set(value) = SystemSaveGame.setCountryCode(value)
+                    get() {
+                        val ret = SystemSaveGame.getCountryCode()
+                        checkCountryCompatibility()
+                        return ret;
+                    }
+                    set(value) {
+                        SystemSaveGame.setCountryCode(value)
+                        countryCompatibilityChanged = true
+                        checkCountryCompatibility()
+                    }
                 override val key = null
                 override val section = null
                 override val isRuntimeEditable = false
@@ -319,7 +381,34 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     countries.map { it.second }.toTypedArray()
                 )
             )
-
+            val systemLanguageSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = SystemSaveGame.getSystemLanguage()
+                    set(value) = SystemSaveGame.setSystemLanguage(value)
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString get() = int.toString()
+                override val defaultValue = 1
+            }
+            add(
+                SingleChoiceSetting(
+                    systemLanguageSetting,
+                    R.string.emulated_language,
+                    0,
+                    R.array.languageNames,
+                    R.array.languageValues
+                )
+            )
+            add(
+                StringInputSetting(
+                    usernameSetting,
+                    R.string.username,
+                    0,
+                    "AZAHAR",
+                    10
+                )
+            )
             val playCoinSettings = object : AbstractIntSetting {
                 override var int: Int
                     get() = SystemSaveGame.getPlayCoins()
@@ -360,6 +449,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     { settingsAdapter.onClickRegenerateConsoleId() },
                     { "0x${SystemSaveGame.getConsoleId().toHexString().uppercase()}" }
+                )
+            )
+            add(
+                RunnableSetting(
+                    R.string.mac_address,
+                    0,
+                    false,
+                    0,
+                    { settingsAdapter.onClickRegenerateMAC() },
+                    { SystemSaveGame.getMac() }
                 )
             )
 
@@ -441,7 +540,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 DateTimeSetting(
                     StringSetting.INIT_TIME,
                     R.string.simulated_clock,
-                    R.string.init_time_description,
+                    R.string.simulated_clock_description,
                     StringSetting.INIT_TIME.key,
                     StringSetting.INIT_TIME.defaultValue
                 )
@@ -689,11 +788,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(
-                    IntSetting.USE_ARTIC_BASE_CONTROLLER,
+                    BooleanSetting.USE_ARTIC_BASE_CONTROLLER,
                     R.string.use_artic_base_controller,
-                    R.string.use_artic_base_controller_desc,
-                    IntSetting.USE_ARTIC_BASE_CONTROLLER.key,
-                    IntSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
+                    R.string.use_artic_base_controller_description,
+                    BooleanSetting.USE_ARTIC_BASE_CONTROLLER.key,
+                    BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
         }
@@ -742,6 +841,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER,
+                    R.string.disable_spirv_optimizer,
+                    R.string.disable_spirv_optimizer_description,
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER.key,
+                    BooleanSetting.DISABLE_SPIRV_OPTIMIZER.defaultValue,
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.ASYNC_SHADERS,
                     R.string.async_shaders,
                     R.string.async_shaders_description,
@@ -762,29 +870,29 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    IntSetting.LINEAR_FILTERING,
+                    BooleanSetting.LINEAR_FILTERING,
                     R.string.linear_filtering,
                     R.string.linear_filtering_description,
-                    IntSetting.LINEAR_FILTERING.key,
-                    IntSetting.LINEAR_FILTERING.defaultValue
+                    BooleanSetting.LINEAR_FILTERING.key,
+                    BooleanSetting.LINEAR_FILTERING.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.SHADERS_ACCURATE_MUL,
+                    BooleanSetting.SHADERS_ACCURATE_MUL,
                     R.string.shaders_accurate_mul,
                     R.string.shaders_accurate_mul_description,
-                    IntSetting.SHADERS_ACCURATE_MUL.key,
-                    IntSetting.SHADERS_ACCURATE_MUL.defaultValue
+                    BooleanSetting.SHADERS_ACCURATE_MUL.key,
+                    BooleanSetting.SHADERS_ACCURATE_MUL.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.DISK_SHADER_CACHE,
+                    BooleanSetting.DISK_SHADER_CACHE,
                     R.string.use_disk_shader_cache,
                     R.string.use_disk_shader_cache_description,
-                    IntSetting.DISK_SHADER_CACHE.key,
-                    IntSetting.DISK_SHADER_CACHE.defaultValue
+                    BooleanSetting.DISK_SHADER_CACHE.key,
+                    BooleanSetting.DISK_SHADER_CACHE.defaultValue
                 )
             )
             add(
@@ -829,7 +937,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.factor3d,
                     R.string.factor3d_description,
                     0,
-                    100,
+                    255,
                     "%",
                     IntSetting.STEREOSCOPIC_3D_DEPTH.key,
                     IntSetting.STEREOSCOPIC_3D_DEPTH.defaultValue.toFloat()
@@ -837,11 +945,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    IntSetting.DISABLE_RIGHT_EYE_RENDER,
+                    BooleanSetting.DISABLE_RIGHT_EYE_RENDER,
                     R.string.disable_right_eye_render,
                     R.string.disable_right_eye_render_description,
-                    IntSetting.DISABLE_RIGHT_EYE_RENDER.key,
-                    IntSetting.DISABLE_RIGHT_EYE_RENDER.defaultValue
+                    BooleanSetting.DISABLE_RIGHT_EYE_RENDER.key,
+                    BooleanSetting.DISABLE_RIGHT_EYE_RENDER.defaultValue
                 )
             )
 
@@ -896,29 +1004,42 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.utility))
             add(
                 SwitchSetting(
-                    IntSetting.DUMP_TEXTURES,
+                    BooleanSetting.DUMP_TEXTURES,
                     R.string.dump_textures,
                     R.string.dump_textures_description,
-                    IntSetting.DUMP_TEXTURES.key,
-                    IntSetting.DUMP_TEXTURES.defaultValue
+                    BooleanSetting.DUMP_TEXTURES.key,
+                    BooleanSetting.DUMP_TEXTURES.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.CUSTOM_TEXTURES,
+                    BooleanSetting.CUSTOM_TEXTURES,
                     R.string.custom_textures,
                     R.string.custom_textures_description,
-                    IntSetting.CUSTOM_TEXTURES.key,
-                    IntSetting.CUSTOM_TEXTURES.defaultValue
+                    BooleanSetting.CUSTOM_TEXTURES.key,
+                    BooleanSetting.CUSTOM_TEXTURES.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.ASYNC_CUSTOM_LOADING,
+                    BooleanSetting.ASYNC_CUSTOM_LOADING,
                     R.string.async_custom_loading,
                     R.string.async_custom_loading_description,
-                    IntSetting.ASYNC_CUSTOM_LOADING.key,
-                    IntSetting.ASYNC_CUSTOM_LOADING.defaultValue
+                    BooleanSetting.ASYNC_CUSTOM_LOADING.key,
+                    BooleanSetting.ASYNC_CUSTOM_LOADING.defaultValue
+                )
+            )
+
+            add(HeaderSetting(R.string.advanced))
+            add(
+                SingleChoiceSetting(
+                    IntSetting.TEXTURE_SAMPLING,
+                    R.string.texture_sampling_name,
+                    R.string.texture_sampling_description,
+                    R.array.textureSamplingNames,
+                    R.array.textureSamplingValues,
+                    IntSetting.TEXTURE_SAMPLING.key,
+                    IntSetting.TEXTURE_SAMPLING.defaultValue
                 )
             )
 
@@ -951,6 +1072,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA,
+                    R.string.expand_to_cutout_area,
+                    R.string.expand_to_cutout_area_description,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.key,
+                    BooleanSetting.EXPAND_TO_CUTOUT_AREA.defaultValue
+                )
+            )
+            add(
                 SingleChoiceSetting(
                     IntSetting.SCREEN_LAYOUT,
                     R.string.emulation_switch_screen_layout,
@@ -959,6 +1089,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.landscapeLayoutValues,
                     IntSetting.SCREEN_LAYOUT.key,
                     IntSetting.SCREEN_LAYOUT.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.UPRIGHT_SCREEN,
+                    R.string.emulation_rotate_upright,
+                    0,
+                    BooleanSetting.UPRIGHT_SCREEN.key,
+                    BooleanSetting.UPRIGHT_SCREEN.defaultValue
                 )
             )
             add(
@@ -974,6 +1113,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SingleChoiceSetting(
+                    IntSetting.ASPECT_RATIO,
+                    R.string.emulation_aspect_ratio,
+                    0,
+                    R.array.aspectRatioNames,
+                    R.array.aspectRatioValues,
+                    IntSetting.ASPECT_RATIO.key,
+                    IntSetting.ASPECT_RATIO.defaultValue,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 1,
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.SMALL_SCREEN_POSITION,
                     R.string.emulation_small_screen_position,
                     R.string.small_screen_position_description,
@@ -981,6 +1132,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.smallScreenPositionValues,
                     IntSetting.SMALL_SCREEN_POSITION.key,
                     IntSetting.SMALL_SCREEN_POSITION.defaultValue
+                )
+            )
+            add(
+                SliderSetting(
+                    IntSetting.SCREEN_GAP,
+                    R.string.screen_gap,
+                    R.string.screen_gap_description,
+                    0,
+                    480,
+                    "px",
+                    IntSetting.SCREEN_GAP.key,
+                    IntSetting.SCREEN_GAP.defaultValue.toFloat()
                 )
             )
             add(
@@ -997,6 +1160,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SubmenuSetting(
+                    R.string.performance_overlay_options,
+                    R.string.performance_overlay_options_description,
+                    R.drawable.ic_stats,
+                    Settings.SECTION_PERFORMANCE_OVERLAY
+                )
+            )
+            add(
+                SubmenuSetting(
                     R.string.emulation_landscape_custom_layout,
                     0,
                     R.drawable.ic_fit_screen,
@@ -1009,6 +1180,116 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     R.drawable.ic_portrait_fit_screen,
                     Settings.SECTION_CUSTOM_PORTRAIT
+                )
+            )
+        }
+    }
+
+    private fun addPerformanceOverlaySettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.performance_overlay_options))
+        sl.apply {
+
+            add(HeaderSetting(R.string.visibility))
+
+            add(
+                SwitchSetting(
+                    object : AbstractBooleanSetting {
+                        override val key = "EmulationMenuSettings_showPerfPerformanceOverlay"
+                        override val section = Settings.SECTION_LAYOUT
+                        override val defaultValue = false
+                        override var boolean: Boolean
+                            get() = EmulationMenuSettings.showPerformanceOverlay
+                            set(value) { EmulationMenuSettings.showPerformanceOverlay = value }
+                        override val isRuntimeEditable = true
+                        override val valueAsString: String get() = boolean.toString()
+                    },
+                    R.string.performance_overlay_enable,
+                    0,
+                    "EmulationMenuSettings_showPerfPerformanceOverlay",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_BACKGROUND,
+                    R.string.overlay_background,
+                    R.string.overlay_background_description,
+                    "overlay_background",
+                    false
+                )
+            )
+
+            add(
+                SingleChoiceSetting(
+                    IntSetting.PERFORMANCE_OVERLAY_POSITION,
+                    R.string.overlay_position,
+                    R.string.overlay_position_description,
+                    R.array.statsPosition,
+                    R.array.statsPositionValues,
+                )
+            )
+
+
+            add(HeaderSetting(R.string.information))
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_FPS,
+                    R.string.overlay_show_fps,
+                    R.string.overlay_show_fps_description,
+                    "overlay_show_fps",
+                    true
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_FRAMETIME,
+                    R.string.overlay_show_frametime,
+                    R.string.overlay_show_frametime_description,
+                    "overlay_show_frame_time",
+                    true
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_SPEED,
+                    R.string.overlay_show_speed,
+                    R.string.overlay_show_speed_description,
+                    "overlay_show_speed",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
+                    R.string.overlay_show_app_ram_usage,
+                    R.string.overlay_show_app_ram_usage_description,
+                    "overlay_show_app_ram_usage",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
+                    R.string.overlay_show_available_ram,
+                    R.string.overlay_show_available_ram_description,
+                    "overlay_show_available_ram",
+                    false
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
+                    R.string.overlay_show_battery_temp,
+                    R.string.overlay_show_battery_temp_description,
+                    "overlay_show_battery_temp",
+                    false
                 )
             )
         }
@@ -1241,20 +1522,20 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    IntSetting.ENABLE_AUDIO_STRETCHING,
+                    BooleanSetting.ENABLE_AUDIO_STRETCHING,
                     R.string.audio_stretch,
                     R.string.audio_stretch_description,
-                    IntSetting.ENABLE_AUDIO_STRETCHING.key,
-                    IntSetting.ENABLE_AUDIO_STRETCHING.defaultValue
+                    BooleanSetting.ENABLE_AUDIO_STRETCHING.key,
+                    BooleanSetting.ENABLE_AUDIO_STRETCHING.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.ENABLE_REALTIME_AUDIO,
+                    BooleanSetting.ENABLE_REALTIME_AUDIO,
                     R.string.realtime_audio,
                     R.string.realtime_audio_description,
-                    IntSetting.ENABLE_REALTIME_AUDIO.key,
-                    IntSetting.ENABLE_REALTIME_AUDIO.defaultValue
+                    BooleanSetting.ENABLE_REALTIME_AUDIO.key,
+                    BooleanSetting.ENABLE_REALTIME_AUDIO.defaultValue
                 )
             )
             add(
@@ -1296,24 +1577,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
             add(
-                SwitchSetting(
-                    IntSetting.NEW_3DS,
-                    R.string.new_3ds,
-                    0,
-                    IntSetting.NEW_3DS.key,
-                    IntSetting.NEW_3DS.defaultValue
-                )
-            )
-            add(
-                SwitchSetting(
-                    IntSetting.LLE_APPLETS,
-                    R.string.lle_applets,
-                    0,
-                    IntSetting.LLE_APPLETS.key,
-                    IntSetting.LLE_APPLETS.defaultValue
-                )
-            )
-            add(
                 SliderSetting(
                     IntSetting.CPU_CLOCK_SPEED,
                     R.string.cpu_clock_speed,
@@ -1327,49 +1590,86 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    IntSetting.CPU_JIT,
+                    BooleanSetting.CPU_JIT,
                     R.string.cpu_jit,
                     R.string.cpu_jit_description,
-                    IntSetting.CPU_JIT.key,
-                    IntSetting.CPU_JIT.defaultValue
+                    BooleanSetting.CPU_JIT.key,
+                    BooleanSetting.CPU_JIT.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.HW_SHADER,
+                    BooleanSetting.HW_SHADER,
                     R.string.hw_shaders,
                     R.string.hw_shaders_description,
-                    IntSetting.HW_SHADER.key,
-                    IntSetting.HW_SHADER.defaultValue
+                    BooleanSetting.HW_SHADER.key,
+                    BooleanSetting.HW_SHADER.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.VSYNC,
+                    BooleanSetting.SHADER_JIT,
+                    R.string.shader_jit,
+                    R.string.shader_jit_description,
+                    BooleanSetting.SHADER_JIT.key,
+                    BooleanSetting.SHADER_JIT.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.VSYNC,
                     R.string.vsync,
                     R.string.vsync_description,
-                    IntSetting.VSYNC.key,
-                    IntSetting.VSYNC.defaultValue
+                    BooleanSetting.VSYNC.key,
+                    BooleanSetting.VSYNC.defaultValue
                 )
             )
             add(
                 SwitchSetting(
-                    IntSetting.DEBUG_RENDERER,
+                    BooleanSetting.DEBUG_RENDERER,
                     R.string.renderer_debug,
                     R.string.renderer_debug_description,
-                    IntSetting.DEBUG_RENDERER.key,
-                    IntSetting.DEBUG_RENDERER.defaultValue
+                    BooleanSetting.DEBUG_RENDERER.key,
+                    BooleanSetting.DEBUG_RENDERER.defaultValue
                 )
             )
             add(
                 SwitchSetting(
                     BooleanSetting.INSTANT_DEBUG_LOG,
                     R.string.instant_debug_log,
-                    R.string.instant_debug_log_desc,
+                    R.string.instant_debug_log_description,
                     BooleanSetting.INSTANT_DEBUG_LOG.key,
                     BooleanSetting.INSTANT_DEBUG_LOG.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.ENABLE_RPC_SERVER,
+                    R.string.enable_rpc_server,
+                    R.string.enable_rpc_server_desc,
+                    BooleanSetting.ENABLE_RPC_SERVER.key,
+                    BooleanSetting.ENABLE_RPC_SERVER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DELAY_START_LLE_MODULES,
+                    R.string.delay_start_lle_modules,
+                    R.string.delay_start_lle_modules_description,
+                    BooleanSetting.DELAY_START_LLE_MODULES.key,
+                    BooleanSetting.DELAY_START_LLE_MODULES.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS,
+                    R.string.deterministic_async_operations,
+                    R.string.deterministic_async_operations_description,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.key,
+                    BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
+                )
+            )
+
         }
     }
 

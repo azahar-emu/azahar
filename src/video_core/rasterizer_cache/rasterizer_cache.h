@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -244,7 +244,13 @@ bool RasterizerCache<T>::AccelerateTextureCopy(const Pica::DisplayTransferConfig
         return false;
     }
 
-    ASSERT(src_rect.GetWidth() == dst_rect.GetWidth());
+    if (src_rect.GetWidth() != dst_rect.GetWidth()) {
+        LOG_ERROR(
+            HW_GPU,
+            "Surface source and destination width mismatch, skipping... src_width={}, dst_width={}",
+            src_rect.GetWidth(), dst_rect.GetHeight());
+        return false;
+    }
 
     const TextureCopy texture_copy = {
         .src_level = src_surface.LevelOf(src_params.addr),
@@ -765,7 +771,8 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         it->second = slot_framebuffers.insert(runtime, fb_params, color_surface, depth_surface);
     }
 
-    return FramebufferHelper<T>{this, &slot_framebuffers[it->second], regs.rasterizer, fb_rect};
+    return FramebufferHelper<T>{this, &slot_framebuffers[it->second],
+                                regs.framebuffer.framebuffer.IsFlipped(), regs.rasterizer, fb_rect};
 }
 
 template <class T>

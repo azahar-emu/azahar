@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -35,11 +35,10 @@ public:
 
     void SwapBuffers() override;
     void TryPresent(int timeout_ms, bool is_secondary) override {}
-    void Sync() override {}
 
 private:
     void PrepareRenderTarget();
-    void LoadFBToScreenInfo(int i);
+    void LoadFBToScreenInfo(int i, const Pica::ColorFill& color_fill);
 
 private:
     Memory::MemorySystem& memory;

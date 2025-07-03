@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
+#include "core/loader/loader.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
@@ -31,7 +32,7 @@ using namespace Pica::Shader::Generator;
 
 constexpr std::size_t VERTEX_BUFFER_SIZE = 16_MiB;
 constexpr std::size_t INDEX_BUFFER_SIZE = 2_MiB;
-constexpr std::size_t UNIFORM_BUFFER_SIZE = 2_MiB;
+constexpr std::size_t UNIFORM_BUFFER_SIZE = 8_MiB;
 constexpr std::size_t TEXTURE_BUFFER_SIZE = 2_MiB;
 
 GLenum MakePrimitiveMode(Pica::PipelineRegs::TriangleTopology topology) {
@@ -84,8 +85,8 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
                                    VideoCore::CustomTexManager& custom_tex_manager,
                                    VideoCore::RendererBase& renderer, Driver& driver_)
     : VideoCore::RasterizerAccelerated{memory, pica}, driver{driver_},
-      shader_manager{renderer.GetRenderWindow(), driver, !driver.IsOpenGLES()},
-      runtime{driver, renderer}, res_cache{memory, custom_tex_manager, runtime, regs, renderer},
+      render_window{renderer.GetRenderWindow()}, runtime{driver, renderer},
+      res_cache{memory, custom_tex_manager, runtime, regs, renderer},
       vertex_buffer{driver, GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE},
       uniform_buffer{driver, GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE},
       index_buffer{driver, GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE},
@@ -163,8 +164,6 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
 
     glEnable(GL_BLEND);
-
-    SyncEntireState();
 }
 
 RasterizerOpenGL::~RasterizerOpenGL() = default;
@@ -173,23 +172,195 @@ void RasterizerOpenGL::TickFrame() {
     res_cache.TickFrame();
 }
 
-void RasterizerOpenGL::LoadDiskResources(const std::atomic_bool& stop_loading,
-                                         const VideoCore::DiskResourceLoadCallback& callback) {
-    shader_manager.LoadDiskCache(stop_loading, callback, accurate_mul);
+void RasterizerOpenGL::LoadDefaultDiskResources(
+    const std::atomic_bool& stop_loading, const VideoCore::DiskResourceLoadCallback& callback) {
+    // First element in vector is the default one and cannot be removed.
+    u64 program_id;
+    if (Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id) !=
+        Loader::ResultStatus::Success) {
+        program_id = 0;
+    }
+
+    shader_managers.clear();
+    curr_shader_manager = shader_managers.emplace_back(std::make_shared<ShaderProgramManager>(
+        render_window, driver, program_id, !driver.IsOpenGLES()));
+
+    curr_shader_manager->LoadDiskCache(stop_loading, callback, accurate_mul);
 }
 
-void RasterizerOpenGL::SyncFixedState() {
-    SyncClipEnabled();
-    SyncCullMode();
-    SyncBlendEnabled();
-    SyncBlendFuncs();
-    SyncBlendColor();
-    SyncLogicOp();
-    SyncStencilTest();
-    SyncDepthTest();
-    SyncColorWriteMask();
-    SyncStencilWriteMask();
-    SyncDepthWriteMask();
+void RasterizerOpenGL::SwitchDiskResources(u64 title_id) {
+    // NOTE: curr_shader_manager can be null if emulation restarted without calling
+    // LoadDefaultDiskResources
+
+    // Check if the current manager is for the specified TID.
+    if (curr_shader_manager && curr_shader_manager->GetProgramID() == title_id) {
+        return;
+    }
+
+    // Search for an existing manager
+    size_t new_pos = 0;
+    for (new_pos = 0; new_pos < shader_managers.size(); new_pos++) {
+        if (shader_managers[new_pos]->GetProgramID() == title_id) {
+            break;
+        }
+    }
+    // Manager does not exist, create it and append to the end
+    if (new_pos >= shader_managers.size()) {
+        new_pos = shader_managers.size();
+        auto& new_manager = shader_managers.emplace_back(std::make_shared<ShaderProgramManager>(
+            render_window, driver, title_id, !driver.IsOpenGLES()));
+
+        if (switch_disk_resources_callback) {
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        }
+
+        std::atomic_bool stop_loading;
+        new_manager->LoadDiskCache(stop_loading, switch_disk_resources_callback, accurate_mul);
+
+        if (switch_disk_resources_callback) {
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
+        }
+    }
+
+    auto is_applet = [](u64 tid) {
+        constexpr u32 APPLET_TID_HIGH = 0x00040030;
+        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
+    };
+
+    bool prev_applet = curr_shader_manager ? is_applet(curr_shader_manager->GetProgramID()) : false;
+    bool new_applet = is_applet(shader_managers[new_pos]->GetProgramID());
+    curr_shader_manager = shader_managers[new_pos];
+
+    if (prev_applet) {
+        // If we came from an applet, clean up all other applets
+        for (auto it = shader_managers.begin(); it != shader_managers.end();) {
+            if (it == shader_managers.begin() || *it == curr_shader_manager ||
+                !is_applet((*it)->GetProgramID())) {
+                it++;
+                continue;
+            }
+            it = shader_managers.erase(it);
+        }
+    }
+    if (!new_applet) {
+        // If we are going into a non-applet, clean up everything
+        for (auto it = shader_managers.begin(); it != shader_managers.end();) {
+            if (it == shader_managers.begin() || *it == curr_shader_manager) {
+                it++;
+                continue;
+            }
+            it = shader_managers.erase(it);
+        }
+    }
+}
+
+void RasterizerOpenGL::SyncDrawState() {
+    SyncDrawUniforms();
+
+    // SyncClipEnabled();
+    state.clip_distance[1] = regs.rasterizer.clip_enable != 0;
+    // SyncCullMode();
+    state.cull.enabled = regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll;
+    if (state.cull.enabled) {
+        state.cull.front_face =
+            regs.rasterizer.cull_mode == Pica::RasterizerRegs::CullMode::KeepClockWise ? GL_CW
+                                                                                       : GL_CCW;
+    }
+    // If the framebuffer is flipped, vertex shader flips vertex y, so invert culling
+    const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
+    state.cull.mode = is_flipped && state.cull.enabled ? GL_FRONT : GL_BACK;
+    // SyncBlendEnabled();
+    state.blend.enabled = (regs.framebuffer.output_merger.alphablend_enable == 1);
+    // SyncBlendFuncs();
+    const bool has_minmax_factor = driver.HasBlendMinMaxFactor();
+    state.blend.rgb_equation = PicaToGL::BlendEquation(
+        regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb, has_minmax_factor);
+    state.blend.a_equation = PicaToGL::BlendEquation(
+        regs.framebuffer.output_merger.alpha_blending.blend_equation_a, has_minmax_factor);
+    state.blend.src_rgb_func =
+        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_rgb);
+    state.blend.dst_rgb_func =
+        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_dest_rgb);
+    state.blend.src_a_func =
+        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_a);
+    state.blend.dst_a_func =
+        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_dest_a);
+    if (!has_minmax_factor) {
+        // Blending with min/max equations is emulated in the fragment shader so
+        // configure blending to not modify the incoming fragment color.
+        emulate_minmax_blend = false;
+        if (state.EmulateColorBlend()) {
+            emulate_minmax_blend = true;
+            state.blend.rgb_equation = GL_FUNC_ADD;
+            state.blend.src_rgb_func = GL_ONE;
+            state.blend.dst_rgb_func = GL_ZERO;
+        }
+        if (state.EmulateAlphaBlend()) {
+            emulate_minmax_blend = true;
+            state.blend.a_equation = GL_FUNC_ADD;
+            state.blend.src_a_func = GL_ONE;
+            state.blend.dst_a_func = GL_ZERO;
+        }
+    }
+    // SyncBlendColor();
+    const auto blend_color = PicaToGL::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
+    state.blend.color.red = blend_color[0];
+    state.blend.color.green = blend_color[1];
+    state.blend.color.blue = blend_color[2];
+    state.blend.color.alpha = blend_color[3];
+    // SyncLogicOp();
+    // SyncColorWriteMask();
+    state.logic_op = PicaToGL::LogicOp(regs.framebuffer.output_merger.logic_op);
+    if (driver.IsOpenGLES() && !regs.framebuffer.output_merger.alphablend_enable &&
+        regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp) {
+        // Color output is disabled by logic operation. We use color write mask to skip
+        // color but allow depth write.
+        state.color_mask = {};
+    } else {
+        auto is_color_write_enabled = [&](u32 value) {
+            return (regs.framebuffer.framebuffer.allow_color_write != 0 && value != 0) ? GL_TRUE
+                                                                                       : GL_FALSE;
+        };
+        state.color_mask.red_enabled =
+            is_color_write_enabled(regs.framebuffer.output_merger.red_enable);
+        state.color_mask.green_enabled =
+            is_color_write_enabled(regs.framebuffer.output_merger.green_enable);
+        state.color_mask.blue_enabled =
+            is_color_write_enabled(regs.framebuffer.output_merger.blue_enable);
+        state.color_mask.alpha_enabled =
+            is_color_write_enabled(regs.framebuffer.output_merger.alpha_enable);
+    }
+    // SyncStencilTest();
+    state.stencil.test_enabled =
+        regs.framebuffer.output_merger.stencil_test.enable &&
+        regs.framebuffer.framebuffer.depth_format == Pica::FramebufferRegs::DepthFormat::D24S8;
+    state.stencil.test_func =
+        PicaToGL::CompareFunc(regs.framebuffer.output_merger.stencil_test.func);
+    state.stencil.test_ref = regs.framebuffer.output_merger.stencil_test.reference_value;
+    state.stencil.test_mask = regs.framebuffer.output_merger.stencil_test.input_mask;
+    state.stencil.action_stencil_fail =
+        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_stencil_fail);
+    state.stencil.action_depth_fail =
+        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_depth_fail);
+    state.stencil.action_depth_pass =
+        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_depth_pass);
+    // SyncDepthTest();
+    state.depth.test_enabled = regs.framebuffer.output_merger.depth_test_enable == 1 ||
+                               regs.framebuffer.output_merger.depth_write_enable == 1;
+    state.depth.test_func =
+        regs.framebuffer.output_merger.depth_test_enable == 1
+            ? PicaToGL::CompareFunc(regs.framebuffer.output_merger.depth_test_func)
+            : GL_ALWAYS;
+    // SyncStencilWriteMask();
+    state.stencil.write_mask =
+        (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0)
+            ? static_cast<GLuint>(regs.framebuffer.output_merger.stencil_test.write_mask)
+            : 0;
+    // SyncDepthWriteMask();
+    state.depth.write_mask = (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0 &&
+                              regs.framebuffer.output_merger.depth_write_enable)
+                                 ? GL_TRUE
+                                 : GL_FALSE;
 }
 
 void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
@@ -271,7 +442,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    return shader_manager.UseProgrammableVertexShader(regs, pica.vs_setup, accurate_mul);
+    return curr_shader_manager->UseProgrammableVertexShader(regs, pica.vs_setup, accurate_mul);
 }
 
 bool RasterizerOpenGL::SetupGeometryShader() {
@@ -286,9 +457,9 @@ bool RasterizerOpenGL::SetupGeometryShader() {
     // lighting and care about proper quaternions. Otherwise just use standard vertex+fragment
     // shaders
     if (regs.lighting.disable) {
-        shader_manager.UseTrivialGeometryShader();
+        curr_shader_manager->UseTrivialGeometryShader();
     } else {
-        shader_manager.UseFixedGeometryShader(regs);
+        curr_shader_manager->UseFixedGeometryShader(regs);
     }
 
     return true;
@@ -333,7 +504,7 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
     SetupVertexArray(buffer_ptr, buffer_offset, vs_input_index_min, vs_input_index_max);
     vertex_buffer.Unmap(vs_input_size);
 
-    shader_manager.ApplyTo(state, accurate_mul);
+    curr_shader_manager->ApplyTo(state, accurate_mul);
     state.Apply();
 
     if (is_indexed) {
@@ -370,6 +541,7 @@ void RasterizerOpenGL::DrawTriangles() {
 
 bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     MICROPROFILE_SCOPE(OpenGL_Drawing);
+    SyncDrawState();
 
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
     const bool has_stencil = regs.framebuffer.HasStencil();
@@ -420,16 +592,14 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
-    if (fs_uniform_block_data.data.scissor_x1 != scissor_x1 ||
-        fs_uniform_block_data.data.scissor_x2 != scissor_x2 ||
-        fs_uniform_block_data.data.scissor_y1 != scissor_y1 ||
-        fs_uniform_block_data.data.scissor_y2 != scissor_y2) {
+    if (fs_data.scissor_x1 != scissor_x1 || fs_data.scissor_x2 != scissor_x2 ||
+        fs_data.scissor_y1 != scissor_y1 || fs_data.scissor_y2 != scissor_y2) {
 
-        fs_uniform_block_data.data.scissor_x1 = scissor_x1;
-        fs_uniform_block_data.data.scissor_x2 = scissor_x2;
-        fs_uniform_block_data.data.scissor_y1 = scissor_y1;
-        fs_uniform_block_data.data.scissor_y2 = scissor_y2;
-        fs_uniform_block_data.dirty = true;
+        fs_data.scissor_x1 = scissor_x1;
+        fs_data.scissor_x2 = scissor_x2;
+        fs_data.scissor_y1 = scissor_y1;
+        fs_data.scissor_y2 = scissor_y2;
+        fs_data_dirty = true;
     }
 
     // Sync and bind the texture surfaces
@@ -437,10 +607,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     state.Apply();
 
     // Sync and bind the shader
-    if (shader_dirty) {
-        shader_manager.UseFragmentShader(regs, user_config);
-        shader_dirty = false;
-    }
+    curr_shader_manager->UseFragmentShader(regs, user_config);
 
     // Sync the LUTs within the texture buffer
     SyncAndUploadLUTs();
@@ -456,9 +623,9 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     } else {
         state.draw.vertex_array = sw_vao.handle;
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
-        shader_manager.UseTrivialVertexShader();
-        shader_manager.UseTrivialGeometryShader();
-        shader_manager.ApplyTo(state, accurate_mul);
+        curr_shader_manager->UseTrivialVertexShader();
+        curr_shader_manager->UseTrivialGeometryShader();
+        curr_shader_manager->ApplyTo(state, accurate_mul);
         state.Apply();
 
         std::size_t max_vertices = 3 * (VERTEX_BUFFER_SIZE / (3 * sizeof(HardwareVertex)));
@@ -624,73 +791,6 @@ void RasterizerOpenGL::UnbindSpecial() {
     state.image_shadow_buffer = 0;
 }
 
-void RasterizerOpenGL::NotifyFixedFunctionPicaRegisterChanged(u32 id) {
-    switch (id) {
-    // Clipping plane
-    case PICA_REG_INDEX(rasterizer.clip_enable):
-        SyncClipEnabled();
-        break;
-
-    // Culling
-    case PICA_REG_INDEX(rasterizer.cull_mode):
-        SyncCullMode();
-        break;
-
-    // Blending
-    case PICA_REG_INDEX(framebuffer.output_merger.alphablend_enable):
-        SyncBlendEnabled();
-        // Update since logic op emulation depends on alpha blend enable.
-        SyncLogicOp();
-        SyncColorWriteMask();
-        break;
-    case PICA_REG_INDEX(framebuffer.output_merger.alpha_blending):
-        SyncBlendFuncs();
-        break;
-    case PICA_REG_INDEX(framebuffer.output_merger.blend_const):
-        SyncBlendColor();
-        break;
-
-    // Sync GL stencil test + stencil write mask
-    // (Pica stencil test function register also contains a stencil write mask)
-    case PICA_REG_INDEX(framebuffer.output_merger.stencil_test.raw_func):
-        SyncStencilTest();
-        SyncStencilWriteMask();
-        break;
-    case PICA_REG_INDEX(framebuffer.output_merger.stencil_test.raw_op):
-    case PICA_REG_INDEX(framebuffer.framebuffer.depth_format):
-        SyncStencilTest();
-        break;
-
-    // Sync GL depth test + depth and color write mask
-    // (Pica depth test function register also contains a depth and color write mask)
-    case PICA_REG_INDEX(framebuffer.output_merger.depth_test_enable):
-        SyncDepthTest();
-        SyncDepthWriteMask();
-        SyncColorWriteMask();
-        break;
-
-    // Sync GL depth and stencil write mask
-    // (This is a dedicated combined depth / stencil write-enable register)
-    case PICA_REG_INDEX(framebuffer.framebuffer.allow_depth_stencil_write):
-        SyncDepthWriteMask();
-        SyncStencilWriteMask();
-        break;
-
-    // Sync GL color write mask
-    // (This is a dedicated color write-enable register)
-    case PICA_REG_INDEX(framebuffer.framebuffer.allow_color_write):
-        SyncColorWriteMask();
-        break;
-
-    // Logic op
-    case PICA_REG_INDEX(framebuffer.output_merger.logic_op):
-        SyncLogicOp();
-        // Update since color write mask is used to emulate no-op.
-        SyncColorWriteMask();
-        break;
-    }
-}
-
 void RasterizerOpenGL::FlushAll() {
     res_cache.FlushAll();
 }
@@ -768,170 +868,12 @@ bool RasterizerOpenGL::AccelerateDisplay(const Pica::FramebufferConfig& config,
     return true;
 }
 
-void RasterizerOpenGL::SyncClipEnabled() {
-    state.clip_distance[1] = regs.rasterizer.clip_enable != 0;
-}
-
-void RasterizerOpenGL::SyncCullMode() {
-    switch (regs.rasterizer.cull_mode) {
-    case Pica::RasterizerRegs::CullMode::KeepAll:
-        state.cull.enabled = false;
-        break;
-    case Pica::RasterizerRegs::CullMode::KeepClockWise:
-        state.cull.enabled = true;
-        state.cull.front_face = GL_CW;
-        break;
-    case Pica::RasterizerRegs::CullMode::KeepCounterClockWise:
-        state.cull.enabled = true;
-        state.cull.front_face = GL_CCW;
-        break;
-    default:
-        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode {}",
-                     static_cast<u32>(regs.rasterizer.cull_mode.Value()));
-        UNIMPLEMENTED();
-        break;
-    }
-}
-
-void RasterizerOpenGL::SyncBlendEnabled() {
-    state.blend.enabled = (regs.framebuffer.output_merger.alphablend_enable == 1);
-}
-
-void RasterizerOpenGL::SyncBlendFuncs() {
-    const bool has_minmax_factor = driver.HasBlendMinMaxFactor();
-
-    state.blend.rgb_equation = PicaToGL::BlendEquation(
-        regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb, has_minmax_factor);
-    state.blend.a_equation = PicaToGL::BlendEquation(
-        regs.framebuffer.output_merger.alpha_blending.blend_equation_a, has_minmax_factor);
-    state.blend.src_rgb_func =
-        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_rgb);
-    state.blend.dst_rgb_func =
-        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_dest_rgb);
-    state.blend.src_a_func =
-        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_source_a);
-    state.blend.dst_a_func =
-        PicaToGL::BlendFunc(regs.framebuffer.output_merger.alpha_blending.factor_dest_a);
-
-    if (has_minmax_factor) {
-        return;
-    }
-
-    // Blending with min/max equations is emulated in the fragment shader so
-    // configure blending to not modify the incoming fragment color.
-    emulate_minmax_blend = false;
-    if (state.EmulateColorBlend()) {
-        emulate_minmax_blend = true;
-        state.blend.rgb_equation = GL_FUNC_ADD;
-        state.blend.src_rgb_func = GL_ONE;
-        state.blend.dst_rgb_func = GL_ZERO;
-    }
-    if (state.EmulateAlphaBlend()) {
-        emulate_minmax_blend = true;
-        state.blend.a_equation = GL_FUNC_ADD;
-        state.blend.src_a_func = GL_ONE;
-        state.blend.dst_a_func = GL_ZERO;
-    }
-}
-
-void RasterizerOpenGL::SyncBlendColor() {
-    const auto blend_color = PicaToGL::ColorRGBA8(regs.framebuffer.output_merger.blend_const.raw);
-    state.blend.color.red = blend_color[0];
-    state.blend.color.green = blend_color[1];
-    state.blend.color.blue = blend_color[2];
-    state.blend.color.alpha = blend_color[3];
-
-    if (blend_color != fs_uniform_block_data.data.blend_color) {
-        fs_uniform_block_data.data.blend_color = blend_color;
-        fs_uniform_block_data.dirty = true;
-    }
-}
-
-void RasterizerOpenGL::SyncLogicOp() {
-    state.logic_op = PicaToGL::LogicOp(regs.framebuffer.output_merger.logic_op);
-
-    if (driver.IsOpenGLES()) {
-        if (!regs.framebuffer.output_merger.alphablend_enable) {
-            if (regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp) {
-                // Color output is disabled by logic operation. We use color write mask to skip
-                // color but allow depth write.
-                state.color_mask = {};
-            }
-        }
-    }
-}
-
-void RasterizerOpenGL::SyncColorWriteMask() {
-    if (driver.IsOpenGLES()) {
-        if (!regs.framebuffer.output_merger.alphablend_enable) {
-            if (regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp) {
-                // Color output is disabled by logic operation. We use color write mask to skip
-                // color but allow depth write. Return early to avoid overwriting this.
-                return;
-            }
-        }
-    }
-
-    auto is_color_write_enabled = [&](u32 value) {
-        return (regs.framebuffer.framebuffer.allow_color_write != 0 && value != 0) ? GL_TRUE
-                                                                                   : GL_FALSE;
-    };
-
-    state.color_mask.red_enabled =
-        is_color_write_enabled(regs.framebuffer.output_merger.red_enable);
-    state.color_mask.green_enabled =
-        is_color_write_enabled(regs.framebuffer.output_merger.green_enable);
-    state.color_mask.blue_enabled =
-        is_color_write_enabled(regs.framebuffer.output_merger.blue_enable);
-    state.color_mask.alpha_enabled =
-        is_color_write_enabled(regs.framebuffer.output_merger.alpha_enable);
-}
-
-void RasterizerOpenGL::SyncStencilWriteMask() {
-    state.stencil.write_mask =
-        (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0)
-            ? static_cast<GLuint>(regs.framebuffer.output_merger.stencil_test.write_mask)
-            : 0;
-}
-
-void RasterizerOpenGL::SyncDepthWriteMask() {
-    state.depth.write_mask = (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0 &&
-                              regs.framebuffer.output_merger.depth_write_enable)
-                                 ? GL_TRUE
-                                 : GL_FALSE;
-}
-
-void RasterizerOpenGL::SyncStencilTest() {
-    state.stencil.test_enabled =
-        regs.framebuffer.output_merger.stencil_test.enable &&
-        regs.framebuffer.framebuffer.depth_format == Pica::FramebufferRegs::DepthFormat::D24S8;
-    state.stencil.test_func =
-        PicaToGL::CompareFunc(regs.framebuffer.output_merger.stencil_test.func);
-    state.stencil.test_ref = regs.framebuffer.output_merger.stencil_test.reference_value;
-    state.stencil.test_mask = regs.framebuffer.output_merger.stencil_test.input_mask;
-    state.stencil.action_stencil_fail =
-        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_stencil_fail);
-    state.stencil.action_depth_fail =
-        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_depth_fail);
-    state.stencil.action_depth_pass =
-        PicaToGL::StencilOp(regs.framebuffer.output_merger.stencil_test.action_depth_pass);
-}
-
-void RasterizerOpenGL::SyncDepthTest() {
-    state.depth.test_enabled = regs.framebuffer.output_merger.depth_test_enable == 1 ||
-                               regs.framebuffer.output_merger.depth_write_enable == 1;
-    state.depth.test_func =
-        regs.framebuffer.output_merger.depth_test_enable == 1
-            ? PicaToGL::CompareFunc(regs.framebuffer.output_merger.depth_test_func)
-            : GL_ALWAYS;
-}
-
 void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     constexpr std::size_t max_size =
         sizeof(Common::Vec2f) * 256 * Pica::LightingRegs::NumLightingSampler +
         sizeof(Common::Vec2f) * 128; // fog
 
-    if (!fs_uniform_block_data.lighting_lut_dirty_any && !fs_uniform_block_data.fog_lut_dirty) {
+    if (!pica.lighting.lut_dirty && !pica.fog.lut_dirty) {
         return;
     }
 
@@ -940,50 +882,37 @@ void RasterizerOpenGL::SyncAndUploadLUTsLF() {
     const auto [buffer, offset, invalidate] =
         texture_lf_buffer.Map(max_size, sizeof(Common::Vec4f));
 
-    // Sync the lighting luts
-    if (fs_uniform_block_data.lighting_lut_dirty_any || invalidate) {
-        for (unsigned index = 0; index < fs_uniform_block_data.lighting_lut_dirty.size(); index++) {
-            if (fs_uniform_block_data.lighting_lut_dirty[index] || invalidate) {
-                std::array<Common::Vec2f, 256> new_data;
-                const auto& source_lut = pica.lighting.luts[index];
-                std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
-                               [](const auto& entry) {
-                                   return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
-                               });
+    if (invalidate) {
+        pica.lighting.lut_dirty = pica.lighting.LutAllDirty;
+        pica.fog.lut_dirty = true;
+    }
 
-                if (new_data != lighting_lut_data[index] || invalidate) {
-                    lighting_lut_data[index] = new_data;
-                    std::memcpy(buffer + bytes_used, new_data.data(),
-                                new_data.size() * sizeof(Common::Vec2f));
-                    fs_uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
-                        static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec2f));
-                    fs_uniform_block_data.dirty = true;
-                    bytes_used += new_data.size() * sizeof(Common::Vec2f);
-                }
-                fs_uniform_block_data.lighting_lut_dirty[index] = false;
-            }
+    // Sync the lighting luts
+    while (pica.lighting.lut_dirty) {
+        const u32 index = std::countr_zero(pica.lighting.lut_dirty);
+        pica.lighting.lut_dirty &= ~(1 << index);
+
+        Common::Vec2f* new_data = reinterpret_cast<Common::Vec2f*>(buffer + bytes_used);
+        const auto& source_lut = pica.lighting.luts[index];
+        for (u32 i = 0; i < source_lut.size(); i++) {
+            new_data[i] = {source_lut[i].ToFloat(), source_lut[i].DiffToFloat()};
         }
-        fs_uniform_block_data.lighting_lut_dirty_any = false;
+        fs_data.lighting_lut_offset[index / 4][index % 4] =
+            static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
+        fs_data_dirty = true;
+        bytes_used += source_lut.size() * sizeof(Common::Vec2f);
     }
 
     // Sync the fog lut
-    if (fs_uniform_block_data.fog_lut_dirty || invalidate) {
-        std::array<Common::Vec2f, 128> new_data;
-
-        std::transform(
-            pica.fog.lut.begin(), pica.fog.lut.end(), new_data.begin(),
-            [](const auto& entry) { return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()}; });
-
-        if (new_data != fog_lut_data || invalidate) {
-            fog_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(),
-                        new_data.size() * sizeof(Common::Vec2f));
-            fs_uniform_block_data.data.fog_lut_offset =
-                static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
-            fs_uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(Common::Vec2f);
+    if (pica.fog.lut_dirty) {
+        Common::Vec2f* new_data = reinterpret_cast<Common::Vec2f*>(buffer + bytes_used);
+        for (u32 i = 0; i < pica.fog.lut.size(); i++) {
+            new_data[i] = {pica.fog.lut[i].ToFloat(), pica.fog.lut[i].DiffToFloat()};
         }
-        fs_uniform_block_data.fog_lut_dirty = false;
+        fs_data.fog_lut_offset = static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
+        fs_data_dirty = true;
+        bytes_used += pica.fog.lut.size() * sizeof(Common::Vec2f);
+        pica.fog.lut_dirty = false;
     }
 
     texture_lf_buffer.Unmap(bytes_used);
@@ -995,10 +924,7 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
         sizeof(Common::Vec4f) * 256 +     // proctex
         sizeof(Common::Vec4f) * 256;      // proctex diff
 
-    if (!fs_uniform_block_data.proctex_noise_lut_dirty &&
-        !fs_uniform_block_data.proctex_color_map_dirty &&
-        !fs_uniform_block_data.proctex_alpha_map_dirty &&
-        !fs_uniform_block_data.proctex_lut_dirty && !fs_uniform_block_data.proctex_diff_lut_dirty) {
+    if (!pica.proctex.table_dirty) {
         return;
     }
 
@@ -1006,89 +932,61 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer.GetHandle());
     const auto [buffer, offset, invalidate] = texture_buffer.Map(max_size, sizeof(Common::Vec4f));
 
-    // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
-    const auto sync_proc_tex_value_lut =
-        [this, buffer = buffer, offset = offset, invalidate = invalidate, &bytes_used](
-            const auto& lut, std::array<Common::Vec2f, 128>& lut_data, GLint& lut_offset) {
-            std::array<Common::Vec2f, 128> new_data;
-            std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
-                return Common::Vec2f{entry.ToFloat(), entry.DiffToFloat()};
-            });
+    if (invalidate) {
+        pica.proctex.table_dirty = pica.proctex.TableAllDirty;
+    }
 
-            if (new_data != lut_data || invalidate) {
-                lut_data = new_data;
-                std::memcpy(buffer + bytes_used, new_data.data(),
-                            new_data.size() * sizeof(Common::Vec2f));
-                lut_offset = static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec2f));
-                fs_uniform_block_data.dirty = true;
-                bytes_used += new_data.size() * sizeof(Common::Vec2f);
-            }
-        };
+    // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
+    const auto sync_proc_tex_value_lut = [&](const auto& lut, GLint& lut_offset) {
+        Common::Vec2f* new_data = reinterpret_cast<Common::Vec2f*>(buffer + bytes_used);
+        for (u32 i = 0; i < lut.size(); i++) {
+            new_data[i] = {lut[i].ToFloat(), lut[i].DiffToFloat()};
+        }
+        lut_offset = static_cast<int>((offset + bytes_used) / sizeof(Common::Vec2f));
+        fs_data_dirty = true;
+        bytes_used += lut.size() * sizeof(Common::Vec2f);
+    };
 
     // Sync the proctex noise lut
-    if (fs_uniform_block_data.proctex_noise_lut_dirty || invalidate) {
-        sync_proc_tex_value_lut(pica.proctex.noise_table, proctex_noise_lut_data,
-                                fs_uniform_block_data.data.proctex_noise_lut_offset);
-        fs_uniform_block_data.proctex_noise_lut_dirty = false;
+    if (pica.proctex.noise_lut_dirty) {
+        sync_proc_tex_value_lut(pica.proctex.noise_table, fs_data.proctex_noise_lut_offset);
     }
 
     // Sync the proctex color map
-    if (fs_uniform_block_data.proctex_color_map_dirty || invalidate) {
-        sync_proc_tex_value_lut(pica.proctex.color_map_table, proctex_color_map_data,
-                                fs_uniform_block_data.data.proctex_color_map_offset);
-        fs_uniform_block_data.proctex_color_map_dirty = false;
+    if (pica.proctex.color_map_dirty) {
+        sync_proc_tex_value_lut(pica.proctex.color_map_table, fs_data.proctex_color_map_offset);
     }
 
     // Sync the proctex alpha map
-    if (fs_uniform_block_data.proctex_alpha_map_dirty || invalidate) {
-        sync_proc_tex_value_lut(pica.proctex.alpha_map_table, proctex_alpha_map_data,
-                                fs_uniform_block_data.data.proctex_alpha_map_offset);
-        fs_uniform_block_data.proctex_alpha_map_dirty = false;
+    if (pica.proctex.alpha_map_dirty) {
+        sync_proc_tex_value_lut(pica.proctex.alpha_map_table, fs_data.proctex_alpha_map_offset);
     }
 
     // Sync the proctex lut
-    if (fs_uniform_block_data.proctex_lut_dirty || invalidate) {
-        std::array<Common::Vec4f, 256> new_data;
-
-        std::transform(pica.proctex.color_table.begin(), pica.proctex.color_table.end(),
-                       new_data.begin(), [](const auto& entry) {
-                           auto rgba = entry.ToVector() / 255.0f;
-                           return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
-                       });
-
-        if (new_data != proctex_lut_data || invalidate) {
-            proctex_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(),
-                        new_data.size() * sizeof(Common::Vec4f));
-            fs_uniform_block_data.data.proctex_lut_offset =
-                static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec4f));
-            fs_uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(Common::Vec4f);
+    if (pica.proctex.lut_dirty) {
+        Common::Vec4f* new_data = reinterpret_cast<Common::Vec4f*>(buffer + bytes_used);
+        for (u32 i = 0; i < pica.proctex.color_table.size(); i++) {
+            new_data[i] = pica.proctex.color_table[i].ToVector() / 255.0f;
         }
-        fs_uniform_block_data.proctex_lut_dirty = false;
+        fs_data.proctex_lut_offset =
+            static_cast<int>((offset + bytes_used) / sizeof(Common::Vec4f));
+        fs_data_dirty = true;
+        bytes_used += pica.proctex.color_table.size() * sizeof(Common::Vec4f);
     }
 
     // Sync the proctex difference lut
-    if (fs_uniform_block_data.proctex_diff_lut_dirty || invalidate) {
-        std::array<Common::Vec4f, 256> new_data;
-
-        std::transform(pica.proctex.color_diff_table.begin(), pica.proctex.color_diff_table.end(),
-                       new_data.begin(), [](const auto& entry) {
-                           auto rgba = entry.ToVector() / 255.0f;
-                           return Common::Vec4f{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
-                       });
-
-        if (new_data != proctex_diff_lut_data || invalidate) {
-            proctex_diff_lut_data = new_data;
-            std::memcpy(buffer + bytes_used, new_data.data(),
-                        new_data.size() * sizeof(Common::Vec4f));
-            fs_uniform_block_data.data.proctex_diff_lut_offset =
-                static_cast<GLint>((offset + bytes_used) / sizeof(Common::Vec4f));
-            fs_uniform_block_data.dirty = true;
-            bytes_used += new_data.size() * sizeof(Common::Vec4f);
+    if (pica.proctex.diff_lut_dirty) {
+        Common::Vec4f* new_data = reinterpret_cast<Common::Vec4f*>(buffer + bytes_used);
+        for (u32 i = 0; i < pica.proctex.color_diff_table.size(); i++) {
+            new_data[i] = pica.proctex.color_diff_table[i].ToVector() / 255.0f;
         }
-        fs_uniform_block_data.proctex_diff_lut_dirty = false;
+        fs_data.proctex_diff_lut_offset =
+            static_cast<int>((offset + bytes_used) / sizeof(Common::Vec4f));
+        fs_data_dirty = true;
+        bytes_used += pica.proctex.color_diff_table.size() * sizeof(Common::Vec4f);
     }
+
+    pica.proctex.table_dirty = 0;
 
     texture_buffer.Unmap(bytes_used);
 }
@@ -1098,10 +996,8 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
     state.draw.uniform_buffer = uniform_buffer.GetHandle();
     state.Apply();
 
-    const bool sync_vs_pica = accelerate_draw;
-    const bool sync_vs = vs_uniform_block_data.dirty;
-    const bool sync_fs = fs_uniform_block_data.dirty;
-    if (!sync_vs_pica && !sync_vs && !sync_fs) {
+    const bool sync_vs_pica = accelerate_draw && pica.vs_setup.uniforms_dirty;
+    if (!sync_vs_pica && !vs_data_dirty && !fs_data_dirty) {
         return;
     }
 
@@ -1112,30 +1008,29 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
     const auto [uniforms, offset, invalidate] =
         uniform_buffer.Map(uniform_size, uniform_buffer_alignment);
 
-    if (sync_vs || invalidate) {
-        std::memcpy(uniforms + used_bytes, &vs_uniform_block_data.data,
-                    sizeof(vs_uniform_block_data.data));
+    if (vs_data_dirty || invalidate) {
+        std::memcpy(uniforms + used_bytes, &vs_data, sizeof(vs_data));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::VSData, uniform_buffer.GetHandle(),
-                          offset + used_bytes, sizeof(vs_uniform_block_data.data));
-        vs_uniform_block_data.dirty = false;
+                          offset + used_bytes, sizeof(vs_data));
+        vs_data_dirty = false;
         used_bytes += uniform_size_aligned_vs;
     }
 
-    if (sync_fs || invalidate) {
-        std::memcpy(uniforms + used_bytes, &fs_uniform_block_data.data,
-                    sizeof(fs_uniform_block_data.data));
+    if (fs_data_dirty || invalidate) {
+        std::memcpy(uniforms + used_bytes, &fs_data, sizeof(fs_data));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::FSData, uniform_buffer.GetHandle(),
-                          offset + used_bytes, sizeof(fs_uniform_block_data.data));
-        fs_uniform_block_data.dirty = false;
+                          offset + used_bytes, sizeof(fs_data));
+        fs_data_dirty = false;
         used_bytes += uniform_size_aligned_fs;
     }
 
-    if (sync_vs_pica) {
+    if (sync_vs_pica || invalidate) {
         VSPicaUniformData vs_uniforms;
-        vs_uniforms.uniforms.SetFromRegs(regs.vs, pica.vs_setup);
+        vs_uniforms.SetFromRegs(pica.vs_setup);
         std::memcpy(uniforms + used_bytes, &vs_uniforms, sizeof(vs_uniforms));
         glBindBufferRange(GL_UNIFORM_BUFFER, UniformBindings::VSPicaData,
                           uniform_buffer.GetHandle(), offset + used_bytes, sizeof(vs_uniforms));
+        pica.vs_setup.uniforms_dirty = false;
         used_bytes += uniform_size_aligned_vs_pica;
     }
 

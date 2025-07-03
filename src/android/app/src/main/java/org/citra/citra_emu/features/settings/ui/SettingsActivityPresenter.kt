@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.TurboHelper
 
 class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
     val settings: Settings get() = activityView.settings
@@ -28,8 +29,15 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         }
     }
 
-    fun onStart() {
+    fun onResume() {
         SystemSaveGame.load()
+    }
+
+    fun onPause() {
+        SystemSaveGame.save()
+    }
+
+    fun onStart() {
         prepareDirectoriesIfNeeded()
     }
 
@@ -56,10 +64,10 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
             settings.saveSettings(activityView)
-            SystemSaveGame.save()
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+            TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }
         NativeLibrary.reloadSettings()
     }

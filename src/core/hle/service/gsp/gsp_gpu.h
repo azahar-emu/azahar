@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -121,6 +121,13 @@ public:
      */
     u32 GetActiveThreadId() {
         return active_thread_id;
+    }
+
+    /**
+     * Retreives the ID of the client thread with GPU rights.
+     */
+    u32 GetActiveClientThreadId() {
+        return active_client_thread_id;
     }
 
 private:
@@ -377,6 +384,9 @@ private:
 
     /// Thread id that currently has GPU rights or std::numeric_limits<u32>::max() if none.
     u32 active_thread_id = std::numeric_limits<u32>::max();
+
+    /// Thread id of the client thread that has GPU rights
+    u32 active_client_thread_id = std::numeric_limits<u32>::max();
 
     bool first_initialization = true;
 
