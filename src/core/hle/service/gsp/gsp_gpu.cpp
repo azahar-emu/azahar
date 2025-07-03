@@ -444,7 +444,7 @@ void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
         system.perf_stats->EndGPUProcessing();
 
         if (command.stop) {
-            command_buffer->should_stop.Assign(1);
+            command_buffer->status.Assign(CommandBuffer::STATUS_STOPPED);
         }
     }
 

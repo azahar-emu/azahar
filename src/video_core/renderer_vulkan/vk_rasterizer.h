@@ -61,6 +61,9 @@ public:
                            u32 pixel_stride, ScreenInfo& screen_info);
     bool AccelerateDrawBatch(bool is_indexed) override;
 
+    /// Switches the disk resources to the specified title
+    void SwitchDiskResources(u64 title_id) override;
+
 private:
     /// Syncs pipeline state from PICA registers
     void SyncDrawState();

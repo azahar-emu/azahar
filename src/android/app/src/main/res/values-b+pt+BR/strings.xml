@@ -74,6 +74,9 @@
     <string name="permission_denied">Permissão negada</string>
     <string name="add_games_warning">Pular a seleção da pasta de aplicativos?</string>
     <string name="add_games_warning_description">Os softwares não serão exibidos na lista de Aplicativos se uma pasta não for selecionada.</string>
+    <string name="permissions">Premissões</string>
+    <string name="select_emulator_data_folders">Pastas de Dados</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Selecione pastas de dados<br/>(Pasta de usuário é necessária)]]></string>
     <string name="warning_help">Ajuda</string>
     <string name="warning_skip">Pular</string>
     <string name="warning_cancel">Cancelar</string>
@@ -124,6 +127,10 @@
     <string name="button_turbo">Turbo</string>
     <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
+    <string name="turbo_limit_hotkey">Velocidade Turbo</string>
+    <string name="turbo_enabled_toast">Velocidade Turbo Ativada</string>
+    <string name="turbo_disabled_toast">Velocidade Turbo Desativada</string>
+
     <!-- System files strings -->
     <string name="setup_system_files">Arquivos do Sistema</string>
     <string name="setup_system_files_description">Executar operações de arquivos do sistema, como instalar arquivos do sistema ou iniciar o Menu Principal.</string>
@@ -210,6 +217,7 @@
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
     <string name="delay_render_thread">Atrasar thread de renderização do aplicativo</string>
     <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
+    <string name="advanced">Avançado</string>
     <string name="texture_sampling_name">Amostragem de Texturas</string>
     <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
     <string name="shaders_accurate_mul">Multiplicação precisa</string>
@@ -220,6 +228,7 @@
     <string name="frame_limit_enable_description">Quando ativo, a velocidade de emulação será limitada à uma porcentagem especificada da velocidade normal. Se desativado, a velocidade de emulação será destravada e a tecla de atalho do turbo não irá funcionar.</string>
     <string name="frame_limit_slider">Limite de velocidade percentual</string>
     <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
+    <string name="turbo_limit">Limite da Velocidade Turbo:</string>
     <string name="expand_to_cutout_area">Expandir para a área recortada</string>
     <string name="expand_to_cutout_area_description">Expande a área da tela para incluir a área recortada (ou notch).</string>
     <string name="internal_resolution">Resolução Interna</string>
@@ -295,12 +304,20 @@
     <string name="layout_screen_orientation_landscape_reverse">Paisagem Reversa</string>
     <string name="layout_screen_orientation_portrait">Retrato</string>
     <string name="layout_screen_orientation_portrait_reverse">Retrato Reverso</string>
+    <string name="aspect_ratio_default">Padrão</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Esticar</string>
+
     <!-- Miscellaneous -->
     <string name="clear">Limpar</string>
     <string name="slider_default">Padrão</string>
     <string name="ini_saved">As configurações foram salvas</string>
     <string name="gameid_saved">As configurações de %1$s foram salvas</string>
     <string name="error_saving">Erro ao salvar %1$s.ini: %2$s</string>
+    <string name="saving">Salvando...</string>
     <string name="loading">Carregando…</string>
     <string name="next">Próximo</string>
     <string name="back">Voltar</string>
@@ -329,6 +346,9 @@
     <string name="cancelling">Cancelando...</string>
     <string name="important">Importante</string>
     <string name="dont_show_again">Não mostrar novamente</string>
+    <string name="visibility">Visibilidade</string>
+    <string name="information">Informação</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Escolher pasta de jogos</string>
 
@@ -375,6 +395,7 @@
     <string name="emulation_control_dpad_slide_enable">Deslize do D-Pad</string>
     <string name="emulation_open_settings">Abrir configurações</string>
     <string name="emulation_open_cheats">Mostrar Trapaças</string>
+    <string name="emulation_aspect_ratio">Proporção da Tela</string>
     <string name="emulation_switch_screen_layout">Disposição de tela em paisagem</string>
     <string name="emulation_switch_portrait_layout">Disposição da tela em retrato</string>
     <string name="emulation_screen_layout_largescreen">Tela Grande</string>

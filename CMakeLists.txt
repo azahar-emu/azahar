@@ -1,5 +1,6 @@
-# CMake 3.12 required for 20 to be a valid value for CXX_STANDARD
-cmake_minimum_required(VERSION 3.15)
+# CMake >=3.12 required for 20 to be a valid value for CXX_STANDARD,
+# and >=3.25 required to make LTO work on Android.
+cmake_minimum_required(VERSION 3.25)
 
 # Don't override the warning flags in MSVC:
 cmake_policy(SET CMP0092 NEW)
@@ -17,7 +18,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modul
 include(DownloadExternals)
 include(CMakeDependentOption)
 
-project(citra LANGUAGES C CXX ASM)
+if (APPLE)
+    project(citra LANGUAGES C CXX OBJC OBJCXX ASM)
+else()
+    project(citra LANGUAGES C CXX ASM)
+endif()
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -123,6 +128,9 @@ if (ENABLE_QT_TRANSLATION)
 endif()
 if (ENABLE_ROOM)
     add_definitions(-DENABLE_ROOM)
+endif()
+if (ENABLE_SDL2)
+    add_definitions(-DENABLE_SDL2)
 endif()
 if (ENABLE_SDL2_FRONTEND)
     add_definitions(-DENABLE_SDL2_FRONTEND)

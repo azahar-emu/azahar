@@ -232,6 +232,9 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install ccache apksigner -y
+      - name: Update Android SDK CMake version
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Build
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh
         env:

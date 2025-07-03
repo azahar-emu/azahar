@@ -879,7 +879,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    BooleanSetting.ASYNC_SHADERS,
+                    BooleanSetting.SHADERS_ACCURATE_MUL,
                     R.string.shaders_accurate_mul,
                     R.string.shaders_accurate_mul_description,
                     BooleanSetting.SHADERS_ACCURATE_MUL.key,

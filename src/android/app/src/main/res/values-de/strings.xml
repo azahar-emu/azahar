@@ -74,6 +74,10 @@
     <string name="permission_denied">Berechtigung verweigert</string>
     <string name="add_games_warning">Auswahl des Anwendungs Ordner überspringen?</string>
     <string name="add_games_warning_description">Software wird nicht in der Anwendungs Liste angezeigt, wenn kein Ordner ausgewählt ist.</string>
+    <string name="permissions">Berechtigungen</string>
+    <string name="select_emulator_data_folders">Daten Ordner</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Daten Ordner auswählen<br/>(Nutzer Ordner ist obligatorisch)]]></string>
+    <string name="permissions_description">Optionale Berechtigungen erteilen um spezifische Funktionen des Emulators zu verwenden</string>
     <string name="warning_help">Hilfe</string>
     <string name="warning_skip">Überspringen</string>
     <string name="warning_cancel">Abbrechen</string>
@@ -83,6 +87,7 @@
     <string name="keep_current_azahar_directory">Aktuelles Azahar-Verzeichnis behalten</string>
     <string name="use_prior_lime3ds_directory">Vorheriges Lime3DS-Verzeichnis nutzen</string>
     <string name="select">Auswählen</string>
+    <string name="cannot_skip">Der Nutzer Ordner muss gesetzt sein</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
     <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
@@ -207,6 +212,8 @@
     <string name="graphics_api">Grafik API</string>
     <string name="spirv_shader_gen">SPIR-V-Shader-Generierung aktivieren</string>
     <string name="spirv_shader_gen_description">Gibt den Fragment-Shader aus, der zur Emulation von PICA unter Verwendung von SPIR-V statt GLSL verwendet wird.</string>
+    <string name="disable_spirv_optimizer">SPIR-V Optimierer deaktivieren</string>
+    <string name="disable_spirv_optimizer_description">Deaktiviert den SPIR-V Optimierungsschritt, was stottern reduziert und die Leistung nur geringfügig beeinflusst.</string>
     <string name="async_shaders">Asynchrone GPU-Emulation aktivieren</string>
     <string name="async_shaders_description">Kompiliere Shader im Hintergrund, um das Stottern des Spiels zu reduzieren. Dadurch kann es zu temporären grafischen Fehlern während des Spielens kommen.</string>
     <string name="linear_filtering">Lineare Filterung</string>
@@ -215,6 +222,7 @@
     <string name="texture_filter_description">Verbessert die Optik von Anwendungen durch Anwenden eines Filters auf Texturen. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale und MMPX.</string>
     <string name="delay_render_thread">Game-Render-Thread verzögern</string>
     <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
+    <string name="advanced">Erweitert</string>
     <string name="texture_sampling_name">Textur-Sampling</string>
     <string name="texture_sampling_description">Setzt den von Spielen verwendeten Sampling-Filter außer Kraft. Dies kann in bestimmten Fällen nützlich sein, wenn sich die Spiele beim Hochskalieren schlecht verhalten. Wenn du dir unsicher bist, setze diese Einstellung auf „Spielgesteuert“</string>
     <string name="shaders_accurate_mul">Genaue Multiplikation</string>
@@ -295,13 +303,25 @@
     <string name="delay_start_lle_modules_description">Verzögert den Start der App, wenn die LLE-Module aktiviert sind.</string>
     <string name="deterministic_async_operations">Deterministische asynchrone Operationen</string>
     <string name="deterministic_async_operations_description">Asynchrone Operationen werden für Debug-Zwecke deterministisch. Die Aktivierung dieser Funktion kann zum Einfrieren führen.</string>
-    <!-- Layout settings strings -->
+    <string name="enable_rpc_server">RPC Server aktivieren</string>
+    <string name="enable_rpc_server_desc">Aktiviert den RPC Server auf Port 45987. Dadurch können Programme im emulierten RAM lesen und schreiben.</string>
+    <string name="shader_jit">Shader JIT aktivieren</string>
+    <string name="shader_jit_description">Verwendet die JIT Engine anstatt des Interpreters für Software Shader Emulation.</string>
+
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Bildschirmausrichtung</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisch</string>
     <string name="layout_screen_orientation_landscape">Querformat </string>
     <string name="layout_screen_orientation_landscape_reverse">Umgekehrtes Querformat</string>
     <string name="layout_screen_orientation_portrait">Hochformat</string>
     <string name="layout_screen_orientation_portrait_reverse">Umgekehrtes Hochformat</string>
+    <string name="aspect_ratio_default">Standard</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Gestreckt</string>
+
     <!-- Miscellaneous -->
     <string name="clear">Zurücksetzen</string>
     <string name="slider_default">Standard</string>
@@ -337,6 +357,9 @@
     <string name="cancelling">Wird abgebrochen...</string>
     <string name="important">Wichtig</string>
     <string name="dont_show_again">Nicht noch einmal anzeigen</string>
+    <string name="visibility">Sichtbarkeit</string>
+    <string name="information">Information</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
@@ -383,6 +406,7 @@
     <string name="emulation_control_dpad_slide_enable">Steuerkreuz-Gleiten</string>
     <string name="emulation_open_settings">Einstellungen öffnen</string>
     <string name="emulation_open_cheats">Cheats öffnen</string>
+    <string name="emulation_aspect_ratio">Seitenverhältnis</string>
     <string name="emulation_switch_screen_layout">Querformat-Bildschirmanordnung</string>
     <string name="emulation_switch_portrait_layout">Hochformat-Bildschirmanordnung</string>
     <string name="emulation_screen_layout_largescreen">Großer Bildschirm</string>
@@ -418,7 +442,9 @@
     <string name="emulation_custom_layout_height">Höhe</string>
     <string name="emulation_cycle_landscape_layouts">Anordnung wechseln</string>
     <string name="emulation_swap_screens">Bildschirme tauschen</string>
+    <string name="emulation_rotate_upright">Bildschirm aufrecht rotieren</string>
     <string name="emulation_touch_overlay_reset">Overlay zurücksetzen</string>
+    <string name="emulation_show_controller_overlay">Controller Overlay anzeigen</string>
     <string name="emulation_close_game">Spiel schließen</string>
     <string name="emulation_toggle_pause">Pause umschalten</string>
     <string name="miscellaneous">Weiteres</string>
@@ -506,6 +532,15 @@
     <string name="game_context_uninstall_dlc">DLC deinstallieren</string>
     <string name="game_context_uninstall_updates">Updates deinstallieren</string>
     <string name="shortcut">Verknüpfung</string>
+    <string name="overlay_position_top_left">Links Oben</string>
+    <string name="overlay_position_top_right">Rechts Oben</string>
+    <string name="overlay_position_bottom_left">Links Unten</string>
+    <string name="overlay_position_bottom_right">Rechts Unten</string>
+    <string name="overlay_position_center_top">Oben Mittig</string>
+    <string name="overlay_position_center_bottom">Unten Mittig</string>
+    <string name="overlay_background">Overlay Hintergrund</string>
+    <string name="overlay_background_description">Fügt einen Hintergrund hinter dem Overlay hinzu für bessere Lesbarkeit.</string>
+
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>
