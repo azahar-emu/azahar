@@ -471,9 +471,6 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 width = Core::kScreenTopWidth * res_scale;
                 height = Core::kScreenTopHeight * res_scale;
             }
-            if (stereo_full && !separate_window) {
-                width = width / 2;
-            }
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
             }

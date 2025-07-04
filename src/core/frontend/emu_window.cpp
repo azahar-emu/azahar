@@ -201,9 +201,10 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     const Settings::LayoutOption layout_option = Settings::values.layout_option.GetValue();
     const Settings::StereoRenderOption stereo_option = Settings::values.render_3d.GetValue();
     bool render_full_stereo = (stereo_option == Settings::StereoRenderOption::SideBySideFull);
-
+    bool is_bottom = is_secondary;
+    if (Settings::values.swap_screen.GetValue()) is_bottom = !is_bottom;
 #ifndef ANDROID
-    if (layout_option == Settings::LayoutOption::SeparateWindows && is_secondary) {
+    if (layout_option == Settings::LayoutOption::SeparateWindows && is_bottom) {
         render_full_stereo = false;
     }
 #endif
