@@ -442,9 +442,9 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                                Settings::values.custom_bottom_height.GetValue()),
                                   Settings::values.swap_screen.GetValue(), is_portrait);
             break;
-#ifndef ANDROID \
+#ifndef ANDROID
         case Settings::LayoutOption::SeparateWindows:
-                separate_window = true;
+            separate_window = true;
 #endif
         case Settings::LayoutOption::SingleScreen:
         {
@@ -456,7 +456,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 width = Core::kScreenTopWidth * res_scale;
                 height = Core::kScreenTopHeight * res_scale;
             }
-            if (stereo_full && !separate_windows) {
+            if (stereo_full && !separate_window) {
                 width = width / 2;
             }
             if (Settings::values.upright_screen.GetValue()) {
