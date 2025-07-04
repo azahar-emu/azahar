@@ -394,9 +394,6 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                                  bool is_portrait) {
     u32 width, height, gap;
     gap = (int)(Settings::values.screen_gap.GetValue()) * res_scale;
-    bool stereo_full =
-        Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull;
-    bool separate_window = false;
     FramebufferLayout layout;
     if (is_portrait) {
         auto layout_option = Settings::values.portrait_layout_option.GetValue();
@@ -444,10 +441,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                                Settings::values.custom_bottom_height.GetValue()),
                                   Settings::values.swap_screen.GetValue(), is_portrait);
             break;
-#ifndef ANDROID
         case Settings::LayoutOption::SeparateWindows:
-            separate_window = true;
-#endif
         case Settings::LayoutOption::SingleScreen:
         {
             const bool swap_screens = is_secondary || Settings::values.swap_screen.GetValue();
@@ -457,9 +451,6 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             } else {
                 width = Core::kScreenTopWidth * res_scale;
                 height = Core::kScreenTopHeight * res_scale;
-            }
-            if (stereo_full && !separate_window) {
-                width = width / 2;
             }
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
@@ -544,8 +535,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             break;
         }
     }
-    if (stereo_full && !separate_window)
-        layout.width *= 2;
+
     return layout;
     UNREACHABLE();
 }
