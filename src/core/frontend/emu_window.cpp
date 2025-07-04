@@ -198,8 +198,16 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
 
 void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_portrait_mode) {
     Layout::FramebufferLayout layout;
-
     const Settings::LayoutOption layout_option = Settings::values.layout_option.GetValue();
+    const Settings::StereoRenderOption stereo_option = Settings::values.render_3d.GetValue();
+    bool render_full_stereo = (stereo_option == Settings::StereoRenderOption::SideBySideFull);
+
+#ifndef ANDROID
+    if (layout_option == Settings::LayoutOption::SeparateWindows && is_secondary) {
+        render_full_stereo = false;
+    }
+#endif
+
     const Settings::PortraitLayoutOption portrait_layout_option =
         Settings::values.portrait_layout_option.GetValue();
     const auto min_size = is_portrait_mode
@@ -209,7 +217,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
 
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
-    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull) {
+    if (render_full_stereo) {
         if (Settings::values.upright_screen.GetValue()) {
             height = height / 2;
         } else {
@@ -276,17 +284,13 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
             break;
         }
     }
-bool separate_win = false;
 #ifdef ANDROID
     if (is_secondary) {
         layout = Layout::AndroidSecondaryLayout(width, height);
     }
-#else
-    separate_win =
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
 #endif
 
-    if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::SideBySideFull && !separate_win) {
+    if (render_full_stereo) {
         if (Settings::values.upright_screen.GetValue()) {
             layout.height = height * 2;
         } else {
