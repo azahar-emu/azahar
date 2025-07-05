@@ -12,6 +12,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/unordered_map.hpp>
+#include "common/archives.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 
@@ -61,6 +64,17 @@ struct Z3DSFileHeader {
     u32 metadata_size = 0;
     u64 compressed_size = 0;
     u64 uncompressed_size = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & magic;
+        ar & underlying_magic;
+        ar & version;
+        ar & header_size;
+        ar & metadata_size;
+        ar & compressed_size;
+        ar & uncompressed_size;
+    }
 };
 static_assert(sizeof(Z3DSFileHeader) == 0x20, "Invalid Z3DSFileHeader size");
 
@@ -102,6 +116,12 @@ private:
     static_assert(sizeof(Item) == 4);
 
     std::unordered_map<std::string, std::vector<u8>> items;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & items;
+    }
+    friend class boost::serialization::access;
 };
 
 class Z3DSWriteIOFile : public IOFile {
@@ -163,6 +183,11 @@ private:
     u64 written_uncompressed = 0;
     bool metadata_written = false;
     Z3DSMetadata metadata;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
+    bool is_serializing;
 };
 
 class Z3DSReadIOFile : public IOFile {
@@ -222,6 +247,11 @@ private:
 
     std::unique_ptr<IOFile> file;
     std::unique_ptr<Z3DSReadIOFileImpl> impl;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
+    bool is_serializing;
 };
 
 using ProgressCallback = void(std::size_t, std::size_t);
@@ -234,3 +264,6 @@ bool DeCompressZ3DSFile(const std::string& src_file, const std::string& dst_file
                         std::function<ProgressCallback>&& update_callback = nullptr);
 
 } // namespace FileUtil
+
+BOOST_CLASS_EXPORT_KEY(FileUtil::Z3DSWriteIOFile)
+BOOST_CLASS_EXPORT_KEY(FileUtil::Z3DSReadIOFile)
