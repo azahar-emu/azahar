@@ -32,6 +32,14 @@
 #include "common/string_util.h"
 #endif
 
+#ifdef HAVE_LIBRETRO_VFS
+#define SKIP_STDIO_REDEFINES
+#include <streams/file_stream_transforms.h>
+#define CORE_FILE RFILE
+#else
+#define CORE_FILE std::FILE
+#endif
+
 namespace FileUtil {
 
 // User paths for GetUserPath
@@ -121,7 +129,7 @@ private:
 [[nodiscard]] u64 GetSize(int fd);
 
 // Overloaded GetSize, accepts FILE*
-[[nodiscard]] u64 GetSize(FILE* f);
+[[nodiscard]] u64 GetSize(CORE_FILE* f);
 
 // Returns true if successful, or path already exists.
 bool CreateDir(const std::string& filename);
@@ -421,7 +429,11 @@ public:
         return m_good;
     }
     [[nodiscard]] int GetFd() const {
-#ifdef ANDROID
+#ifdef HAVE_LIBRETRO_VFS
+        if (m_file == nullptr)
+            return -1;
+        return fileno(filestream_get_vfs_handle(m_file)->fp);
+#elif defined(ANDROID)
         return m_fd;
 #else
         if (m_file == nullptr)
@@ -444,7 +456,12 @@ public:
     // clear error state
     void Clear() {
         m_good = true;
+
+#ifdef HAVE_LIBRETRO_VFS
+        filestream_rewind(m_file);
+#else
         std::clearerr(m_file);
+#endif
     }
 
     virtual bool IsCrypto() {
@@ -467,7 +484,7 @@ protected:
 private:
     bool Open();
 
-    std::FILE* m_file = nullptr;
+    CORE_FILE* m_file = nullptr;
     int m_fd = -1;
     bool m_good = true;
 

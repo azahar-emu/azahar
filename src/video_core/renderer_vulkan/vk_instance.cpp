@@ -636,9 +636,9 @@ void Instance::CreateAllocator() {
 
     const VmaAllocatorCreateInfo allocator_info = {
         .physicalDevice = physical_device,
-        .device = *device,
+        .device = GetDevice(),
         .pVulkanFunctions = &functions,
-        .instance = *instance,
+        .instance = GetInstance(),
         .vulkanApiVersion = TargetVulkanApiVersion,
     };
 

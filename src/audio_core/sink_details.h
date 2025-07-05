@@ -20,6 +20,7 @@ enum class SinkType : u32 {
     Cubeb = 2,
     OpenAL = 3,
     SDL2 = 4,
+    LibRetro = 5,
 };
 
 struct SinkDetails {

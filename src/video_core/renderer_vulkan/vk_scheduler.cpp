@@ -8,6 +8,9 @@
 #include "common/thread.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
+#ifdef HAVE_LIBRETRO
+#include "citra_libretro/libretro_vk.h"
+#endif
 
 MICROPROFILE_DEFINE(Vulkan_WaitForWorker, "Vulkan", "Wait for worker", MP_RGB(255, 192, 192));
 MICROPROFILE_DEFINE(Vulkan_Submit, "Vulkan", "Submit Exectution", MP_RGB(255, 192, 255));
@@ -17,11 +20,15 @@ namespace Vulkan {
 namespace {
 
 std::unique_ptr<MasterSemaphore> MakeMasterSemaphore(const Instance& instance) {
+#ifdef HAVE_LIBRETRO
+    return CreateLibRetroMasterSemaphore(instance);
+#else
     if (instance.IsTimelineSemaphoreSupported()) {
         return std::make_unique<MasterSemaphoreTimeline>(instance);
     } else {
         return std::make_unique<MasterSemaphoreFence>(instance);
     }
+#endif
 }
 
 } // Anonymous namespace

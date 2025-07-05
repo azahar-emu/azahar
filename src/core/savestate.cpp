@@ -217,4 +217,77 @@ void System::LoadState(u32 slot) {
     ia&* this;
 }
 
+#ifdef HAVE_LIBRETRO
+std::vector<u8> System::SaveStateBuffer() const {
+    std::ostringstream sstream{std::ios_base::binary};
+    // Serialize
+    oarchive oa{sstream};
+    oa&* this;
+
+    const std::string& str{sstream.str()};
+    const auto data = std::span<const u8>{reinterpret_cast<const u8*>(str.data()), str.size()};
+    auto buffer = Common::Compression::CompressDataZSTDDefault(data);
+
+    CSTHeader header{};
+    header.filetype = header_magic_bytes;
+    header.program_id = title_id;
+    std::string rev_bytes;
+    CryptoPP::StringSource ss(Common::g_scm_rev, true,
+                              new CryptoPP::HexDecoder(new CryptoPP::StringSink(rev_bytes)));
+    std::memcpy(header.revision.data(), rev_bytes.data(), sizeof(header.revision));
+    header.time = std::chrono::duration_cast<std::chrono::seconds>(
+                      std::chrono::system_clock::now().time_since_epoch())
+                      .count();
+    const std::string build_fullname = Common::g_build_fullname;
+    std::memset(header.build_name.data(), 0, sizeof(header.build_name));
+    std::memcpy(header.build_name.data(), build_fullname.c_str(),
+                std::min(build_fullname.length(), sizeof(header.build_name) - 1));
+
+    std::vector<u8> result((u8*)&header, (u8*)&header + sizeof(header));
+    std::copy(buffer.begin(), buffer.end(), std::back_inserter(result));
+
+    return result;
+}
+
+bool System::LoadStateBuffer(std::vector<u8> buffer) {
+    CSTHeader header;
+
+    if (buffer.size() < sizeof(header)) {
+        LOG_ERROR(Core, "Save state too small");
+        return false;
+    }
+
+    header = *((CSTHeader*)buffer.data());
+
+    if (header.filetype != header_magic_bytes) {
+        LOG_ERROR(Core, "Invalid save state");
+        return false;
+    }
+
+    if (header.program_id != title_id) {
+        LOG_ERROR(Core, "Save state isn't for the current game");
+        return false;
+    }
+    std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
+    if (revision != Common::g_scm_rev) {
+        LOG_ERROR(Core, "Save state file created from a different revision (core: {}, savestate: {})", Common::g_scm_rev, revision);
+        return false;
+    }
+
+    std::vector<u8> state(buffer.begin() + sizeof(CSTHeader), buffer.end());
+    auto decompressed = Common::Compression::DecompressDataZSTD(state);
+
+    std::istringstream sstream{
+        std::string{reinterpret_cast<char*>(decompressed.data()), decompressed.size()},
+        std::ios_base::binary};
+    decompressed.clear();
+
+    // Deserialize
+    iarchive ia{sstream};
+    ia&* this;
+
+    return true;
+}
+#endif
+
 } // namespace Core

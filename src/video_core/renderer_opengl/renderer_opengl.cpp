@@ -94,9 +94,14 @@ void RendererOpenGL::SwapBuffers() {
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
 
+    render_window.SetupFramebuffer();
+
     PrepareRendertarget();
     RenderScreenshot();
-
+#ifdef HAVE_LIBRETRO
+    DrawScreens(render_window.GetFramebufferLayout(), false);
+    render_window.SwapBuffers();
+#else
     const auto& main_layout = render_window.GetFramebufferLayout();
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
@@ -115,6 +120,7 @@ void RendererOpenGL::SwapBuffers() {
             LOG_DEBUG(Render_OpenGL, "Frame dumper exception caught: {}", exception.what());
         }
     }
+#endif
 
     system.perf_stats->EndSwap();
     EndFrame();
@@ -656,7 +662,9 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     const auto& bottom_screen = layout.bottom_screen;
 
     glViewport(0, 0, layout.width, layout.height);
-    glClear(GL_COLOR_BUFFER_BIT);
+    if (render_window.NeedsClearing()) {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     // Set projection matrix
     std::array<GLfloat, 3 * 2> ortho_matrix =
