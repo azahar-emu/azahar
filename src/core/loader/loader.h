@@ -85,8 +85,16 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
+    struct CompressFileInfo {
+        bool is_supported{};
+        bool is_compressed{};
+        std::array<u8, 4> underlying_magic{};
+        std::string recommended_compressed_extension;
+        std::string recommended_uncompressed_extension;
+    };
+
     explicit AppLoader(Core::System& system_, FileUtil::IOFile&& file)
-        : system(system_), file(std::move(file)) {}
+        : system(system_), file(std::make_unique<FileUtil::IOFile>(std::move(file))) {}
     virtual ~AppLoader() {}
 
     /**
@@ -279,9 +287,15 @@ public:
         return false;
     }
 
+    virtual CompressFileInfo GetCompressFileInfo() {
+        CompressFileInfo info{};
+        info.is_supported = false;
+        return info;
+    }
+
 protected:
     Core::System& system;
-    FileUtil::IOFile file;
+    std::unique_ptr<FileUtil::IOFile> file;
     bool is_loaded = false;
     std::optional<Kernel::MemoryMode> memory_mode_override = std::nullopt;
 };
