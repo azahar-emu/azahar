@@ -15,7 +15,10 @@
 #include <zstd.h>
 #include <zstd/contrib/seekable_format/zstd_seekable.h>
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include "common/alignment.h"
+#include "common/archives.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
@@ -149,6 +152,7 @@ std::vector<u8> Z3DSMetadata::AsBinary() {
 struct Z3DSWriteIOFile::Z3DSWriteIOFileImpl {
     Z3DSWriteIOFileImpl() {}
     Z3DSWriteIOFileImpl(size_t frame_size) {
+        zstd_frame_size = frame_size;
         cstream = ZSTD_seekable_createCStream();
         size_t init_result = ZSTD_seekable_initCStream(cstream, ZSTD_CLEVEL_DEFAULT, 0,
                                                        static_cast<unsigned int>(frame_size));
@@ -243,6 +247,7 @@ struct Z3DSWriteIOFile::Z3DSWriteIOFileImpl {
 
     std::vector<u8> write_buffer;
     size_t next_input_size_hint = 0;
+    size_t zstd_frame_size = 0;
     u64 written_compressed = 0;
 
     ZSTD_seekable_CStream* cstream{};
@@ -326,6 +331,9 @@ int Z3DSWriteIOFile::GetFd() const {
 }
 
 bool Z3DSWriteIOFile::Open() {
+    if (is_serializing) {
+        return true;
+    }
     // Stubbed
     UNIMPLEMENTED();
     return false;
@@ -360,6 +368,9 @@ std::size_t Z3DSWriteIOFile::WriteImpl(const void* data, std::size_t length,
 }
 
 bool Z3DSWriteIOFile::SeekImpl(s64 off, int origin) {
+    if (is_serializing) {
+        return true;
+    }
     // Stubbed
     UNIMPLEMENTED();
     return false;
@@ -373,9 +384,37 @@ size_t Z3DSWriteIOFile::GetNextWriteHint() {
     return impl->next_input_size_hint;
 }
 
+template <class Archive>
+void Z3DSWriteIOFile::serialize(Archive& ar, const unsigned int) {
+    is_serializing = true;
+    ar& boost::serialization::base_object<IOFile>(*this);
+
+    ar & file;
+    ar & written_uncompressed;
+    ar & metadata_written;
+    ar & metadata;
+
+    Z3DSFileHeader hd;
+    size_t frame_size;
+    u64 written_compressed;
+    if (Archive::is_loading::value) {
+        ar & hd;
+        ar & frame_size;
+        ar & written_compressed;
+        impl = std::make_unique<Z3DSWriteIOFileImpl>(frame_size);
+        impl->write_header = hd;
+        impl->written_compressed = written_compressed;
+    } else {
+        ar & impl->write_header;
+        ar & impl->zstd_frame_size;
+        ar & impl->written_compressed;
+    }
+    is_serializing = false;
+}
+
 struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
     Z3DSReadIOFileImpl() {}
-    Z3DSReadIOFileImpl(IOFile* file) {
+    Z3DSReadIOFileImpl(IOFile* file, bool load_metadata = true) {
         curr_file = file;
         m_good = file->ReadAtBytes(&header, sizeof(header), 0) == sizeof(header);
         m_good &= header.magic == Z3DSFileHeader::EXPECTED_MAGIC &&
@@ -385,7 +424,7 @@ struct Z3DSReadIOFile::Z3DSReadIOFileImpl {
             return;
         }
 
-        if (header.metadata_size) {
+        if (header.metadata_size && load_metadata) {
             std::vector<u8> buff(header.metadata_size);
             file->ReadAtBytes(buff.data(), buff.size(), header.header_size);
             metadata = Z3DSMetadata(buff);
@@ -559,6 +598,9 @@ int Z3DSReadIOFile::GetFd() const {
 }
 
 bool Z3DSReadIOFile::Open() {
+    if (is_serializing) {
+        return true;
+    }
     // Stubbed
     UNIMPLEMENTED();
     return false;
@@ -580,6 +622,9 @@ std::size_t Z3DSReadIOFile::WriteImpl(const void* data, std::size_t length, std:
 }
 
 bool Z3DSReadIOFile::SeekImpl(s64 off, int origin) {
+    if (is_serializing) {
+        return true;
+    }
     return impl->Seek(off, origin);
 }
 
@@ -593,6 +638,21 @@ std::array<u8, 4> Z3DSReadIOFile::GetFileMagic() {
 
 const Z3DSMetadata& Z3DSReadIOFile::Metadata() {
     return impl->metadata;
+}
+
+template <class Archive>
+void Z3DSReadIOFile::serialize(Archive& ar, const unsigned int) {
+    is_serializing = true;
+    ar& boost::serialization::base_object<IOFile>(*this);
+
+    ar & file;
+
+    if (Archive::is_loading::value) {
+        impl = std::make_unique<Z3DSReadIOFileImpl>(file.get(), false);
+    }
+    ar & impl->uncompressed_pos;
+    ar & impl->metadata;
+    is_serializing = false;
 }
 
 bool CompressZ3DSFile(const std::string& src_file_name, const std::string& dst_file_name,
@@ -696,3 +756,6 @@ bool DeCompressZ3DSFile(const std::string& src_file_name, const std::string& dst
     return true;
 }
 } // namespace FileUtil
+
+SERIALIZE_EXPORT_IMPL(FileUtil::Z3DSReadIOFile);
+SERIALIZE_EXPORT_IMPL(FileUtil::Z3DSWriteIOFile);
