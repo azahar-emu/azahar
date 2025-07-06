@@ -43,7 +43,7 @@ public:
 private:
     void InitializeRegs();
 
-    void WriteInternalReg(u32 id, u32 value, u32 mask);
+    void WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requested);
 
     void SubmitImmediate(u32 data);
 
