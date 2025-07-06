@@ -731,6 +731,9 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     if (!layout.top_screen_enabled) {
         return;
     }
+    int leftside, rightside;
+    leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
+    rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
 
     const float top_screen_left = static_cast<float>(top_screen.left);
     const float top_screen_top = static_cast<float>(top_screen.top);
@@ -747,29 +750,29 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
         break;
     }
     case Settings::StereoRenderOption::SideBySide: {
-        DrawSingleScreen(screen_infos[0], top_screen_left / 2, top_screen_top, top_screen_width / 2,
-                         top_screen_height, orientation);
+        DrawSingleScreen(screen_infos[leftside], top_screen_left / 2, top_screen_top,
+                         top_screen_width / 2, top_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[1],
+        DrawSingleScreen(screen_infos[rightside],
                          static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
                          top_screen_top, top_screen_width / 2, top_screen_height, orientation);
         break;
     }
-    case Settings::StereoRenderOption::ReverseSideBySide: {
-        DrawSingleScreen(screen_infos[1], top_screen_left / 2, top_screen_top, top_screen_width / 2,
+    case Settings::StereoRenderOption::SideBySideFull: {
+        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[0],
-                         static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
-                         top_screen_top, top_screen_width / 2, top_screen_height, orientation);
+        DrawSingleScreen(screen_infos[rightside],
+                         static_cast<float>(top_screen_left + layout.width / 2), top_screen_top,
+                         top_screen_width, top_screen_height, orientation);
         break;
     }
     case Settings::StereoRenderOption::CardboardVR: {
-        DrawSingleScreen(screen_infos[0], top_screen_left, top_screen_top, top_screen_width,
+        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         glUniform1i(uniform_layer, 1);
         DrawSingleScreen(
-            screen_infos[1],
+            screen_infos[rightside],
             static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
             top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
@@ -777,8 +780,8 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(screen_infos[0], screen_infos[1], top_screen_left, top_screen_top,
-                               top_screen_width, top_screen_height, orientation);
+        DrawSingleScreenStereo(screen_infos[leftside], screen_infos[rightside], top_screen_left,
+                               top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
     }
     }
@@ -804,6 +807,11 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
 #endif
 
+    if (separate_win) {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                                                           bottom_screen_width, bottom_screen_height, orientation);
+    }else {
+
     switch (Settings::values.render_3d.GetValue()) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
@@ -811,18 +819,23 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         break;
     }
     case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
-    case Settings::StereoRenderOption::ReverseSideBySide: {
-        if (separate_win) {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                             bottom_screen_width, bottom_screen_height, orientation);
-        } else {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
-                             bottom_screen_width / 2, bottom_screen_height, orientation);
-            glUniform1i(uniform_layer, 1);
-            DrawSingleScreen(
-                screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
-        }
+    {
+
+        DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
+                         bottom_screen_width / 2, bottom_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(
+            screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
+            bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
+        break;
+    }
+    case Settings::StereoRenderOption::SideBySideFull: {
+        if (separate_win)
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
+        glUniform1i(uniform_layer, 1);
+        DrawSingleScreen(screen_infos[2], bottom_screen_left + layout.width / 2, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
         break;
     }
     case Settings::StereoRenderOption::CardboardVR: {
@@ -842,6 +855,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
                                bottom_screen_top, bottom_screen_width, bottom_screen_height,
                                orientation);
         break;
+    }
     }
     }
 }
