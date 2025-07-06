@@ -441,7 +441,9 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                                Settings::values.custom_bottom_height.GetValue()),
                                   Settings::values.swap_screen.GetValue(), is_portrait);
             break;
+#ifndef ANDROID
         case Settings::LayoutOption::SeparateWindows:
+#endif
         case Settings::LayoutOption::SingleScreen:
         {
             const bool swap_screens = is_secondary || Settings::values.swap_screen.GetValue();
