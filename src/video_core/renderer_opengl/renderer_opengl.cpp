@@ -816,6 +816,11 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
 #endif
 
+    if (separate_win) {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                                                           bottom_screen_width, bottom_screen_height, orientation);
+    }else {
+
     switch (Settings::values.render_3d.GetValue()) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
