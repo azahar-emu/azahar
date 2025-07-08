@@ -171,8 +171,6 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
-    play_time_manager.cpp
-    play_time_manager.h
     precompiled_headers.h
     uisettings.cpp
     uisettings.h

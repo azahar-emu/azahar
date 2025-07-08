@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <QString>
-
 #include <map>
 
 #include "common/common_funcs.h"
@@ -39,7 +37,5 @@ private:
     u64 running_program_id;
     std::jthread play_time_thread;
 };
-
-QString ReadablePlayTime(qulonglong time_seconds);
 
 } // namespace PlayTime

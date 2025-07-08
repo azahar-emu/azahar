@@ -67,9 +67,9 @@
 #include "citra_qt/movie/movie_play_dialog.h"
 #include "citra_qt/movie/movie_record_dialog.h"
 #include "citra_qt/multiplayer/state.h"
-#include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
+#include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
 #include "citra_qt/update_checker.h"
 #endif
