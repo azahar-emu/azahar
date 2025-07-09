@@ -45,6 +45,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import org.citra.citra_emu.HomeNavigationDirections
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
@@ -55,7 +56,6 @@ import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
-import org.citra.citra_emu.utils.PlayTimeTracker
 
 class GameAdapter(private val activity: AppCompatActivity, private val inflater: LayoutInflater,  private val openImageLauncher: ActivityResultLauncher<String>?) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
@@ -354,8 +354,20 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
 
         bottomSheetView.findViewById<TextView>(R.id.about_game_playtime).text =
             buildString {
+                val playTimeSeconds = NativeLibrary.playTimeManagerGetPlayTime(game.titleId)
+
+                val hours = playTimeSeconds / 3600
+                val minutes = (playTimeSeconds % 3600) / 60
+                val seconds = playTimeSeconds % 60
+
+                val readablePlayTime = when {
+                    hours > 0 -> "${hours}h ${minutes}m ${seconds}s"
+                    minutes > 0 -> "${minutes}m ${seconds}s"
+                    else -> "${seconds}s"
+                }
+
                 append("Playtime: ")
-                append(PlayTimeTracker.getPlayTime(game.titleId))
+                append(readablePlayTime)
             }
 
         bottomSheetView.findViewById<MaterialButton>(R.id.game_shortcut).setOnClickListener {

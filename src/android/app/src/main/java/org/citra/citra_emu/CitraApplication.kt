@@ -58,6 +58,7 @@ class CitraApplication : Application() {
         NativeLibrary.logDeviceInfo()
         logDeviceInfo()
         createNotificationChannel()
+        NativeLibrary.playTimeManagerInit()
     }
 
     fun logDeviceInfo() {

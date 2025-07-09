@@ -27,6 +27,7 @@
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/play_time_manager.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
@@ -70,6 +71,9 @@ ANativeWindow* s_surf;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
+
+std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
+jlong ptm_current_title_id;
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
@@ -793,6 +797,31 @@ void Java_org_citra_citra_1emu_NativeLibrary_setTemporaryFrameLimit(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_disableTemporaryFrameLimit(JNIEnv* env, jobject obj) {
     Settings::is_temporary_frame_limit = false;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerInit(JNIEnv* env, jobject obj) {
+    play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStart(JNIEnv* env, jobject obj,
+                                                                  jlong title_id) {
+    ptm_current_title_id = title_id;
+    play_time_manager->SetProgramId(static_cast<u64>(title_id));
+    play_time_manager->Start();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStop(JNIEnv* env, jobject obj) {
+    play_time_manager->Stop();
+}
+
+jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetPlayTime(JNIEnv* env, jobject obj,
+                                                                         jlong title_id) {
+    return static_cast<jlong>(play_time_manager->GetPlayTime(title_id));
+}
+
+jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetCurrentTitleId(JNIEnv* env,
+                                                                               jobject obj) {
+    return ptm_current_title_id;
 }
 
 } // extern "C"

@@ -6,7 +6,6 @@ package org.citra.citra_emu.activities
 
 import android.Manifest.permission
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -21,6 +20,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -40,16 +40,13 @@ import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
+import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.ThemeUtil
-import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import androidx.core.os.BundleCompat
-import org.citra.citra_emu.utils.PlayTimeTracker
-import org.citra.citra_emu.model.Game
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -70,8 +67,6 @@ class EmulationActivity : AppCompatActivity() {
         }
 
     private var isEmulationRunning: Boolean = false
-
-    private var emulationStartTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -114,7 +109,15 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = true
         instance = this
 
-        emulationStartTime = System.currentTimeMillis()
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: throw IllegalStateException("Missing game data in intent extras")
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to retrieve game data: ${e.message}", e)
+        }
+
+        NativeLibrary.playTimeManagerStart(game.titleId)
 
         applyOrientationSettings() // Check for orientation settings at startup
     }
@@ -150,17 +153,7 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         EmulationLifecycleUtil.clear()
-        val sessionTime = System.currentTimeMillis() - emulationStartTime
-
-        val game = try {
-            intent.extras?.let { extras ->
-                BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: throw IllegalStateException("Missing game data in intent extras")
-        } catch (e: Exception) {
-            throw IllegalStateException("Failed to retrieve game data: ${e.message}", e)
-        }
-
-        PlayTimeTracker.addPlayTime(game, sessionTime)
+        NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
         super.onDestroy()
