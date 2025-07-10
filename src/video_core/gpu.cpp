@@ -364,7 +364,7 @@ void GPU::MemoryFill(u32 index, u32 intr_index) {
     // It seems that it won't signal interrupt if "address_start" is zero.
     // TODO: hwtest this
     if (config.GetStartAddress() != 0) {
-        if (!intr_index) {
+        if (intr_index == 0) {
             impl->signal_interrupt(Service::GSP::InterruptId::PSC0);
         } else if (intr_index == 1) {
             impl->signal_interrupt(Service::GSP::InterruptId::PSC1);
