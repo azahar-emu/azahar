@@ -77,7 +77,7 @@
 	path = externals/vulkan-headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers
 [submodule "sirit"]
-	path = externals/sirit
+	path = externals/sirit/sirit
 	url = https://github.com/azahar-emu/sirit
 [submodule "faad2"]
 	path = externals/faad2/faad2
@@ -94,3 +94,9 @@
 [submodule "compatibility-list"]
 	path = dist/compatibility_list
 	url = https://github.com/azahar-emu/compatibility-list
+[submodule "spirv-tools"]
+	path = externals/spirv-tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools
+[submodule "spirv-headers"]
+	path = externals/spirv-headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers
