@@ -806,8 +806,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerInit(JNIEnv* env, jo
 void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStart(JNIEnv* env, jobject obj,
                                                                   jlong title_id) {
     ptm_current_title_id = title_id;
-    play_time_manager->SetProgramId(static_cast<u64>(title_id));
-    play_time_manager->Start();
+    if (play_time_manager) {
+        play_time_manager->SetProgramId(static_cast<u64>(title_id));
+        play_time_manager->Start();
+    }
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStop(JNIEnv* env, jobject obj) {
