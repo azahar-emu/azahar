@@ -121,6 +121,12 @@ class HomeSettingsFragment : Fragment() {
                 }
             ),
             HomeSetting(
+                R.string.multiplayer,
+                R.string.multiplayer_description,
+                R.drawable.ic_multiplayer,
+                { mainActivity.displayMultiplayerDialog() }
+            ),
+            HomeSetting(
                 R.string.install_game_content,
                 R.string.install_game_content_description,
                 R.drawable.ic_install,
