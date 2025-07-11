@@ -73,7 +73,7 @@ std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
 
 std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
-jlong ptm_current_title_id;
+jlong ptm_current_title_id = std::numeric_limits<jlong>::max(); // Arbitrary default value
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};

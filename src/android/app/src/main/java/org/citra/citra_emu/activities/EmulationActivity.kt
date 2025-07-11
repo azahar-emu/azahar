@@ -45,6 +45,7 @@ import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
@@ -109,17 +110,21 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = true
         instance = this
 
+        applyOrientationSettings() // Check for orientation settings at startup
+
         val game = try {
             intent.extras?.let { extras ->
                 BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: throw IllegalStateException("Missing game data in intent extras")
+            } ?: run {
+                Log.error("[EmulationActivity] Missing game data in intent extras")
+                return
+            }
         } catch (e: Exception) {
-            throw IllegalStateException("Failed to retrieve game data: ${e.message}", e)
+            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+            return
         }
 
         NativeLibrary.playTimeManagerStart(game.titleId)
-
-        applyOrientationSettings() // Check for orientation settings at startup
     }
 
     // On some devices, the system bars will not disappear on first boot or after some
