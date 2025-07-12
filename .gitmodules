@@ -94,3 +94,6 @@
 [submodule "compatibility-list"]
 	path = dist/compatibility_list
 	url = https://github.com/azahar-emu/compatibility-list
+[submodule "externals/libretro-common"]
+	path = externals/libretro-common
+	url = https://github.com/libretro/libretro-common.git
