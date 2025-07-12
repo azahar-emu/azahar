@@ -55,11 +55,12 @@ namespace FileUtil {
 
 struct Z3DSFileHeader {
     static constexpr std::array<u8, 4> EXPECTED_MAGIC = {'Z', '3', 'D', 'S'};
-    static constexpr u16 EXPECTED_VERSION = 1;
+    static constexpr u8 EXPECTED_VERSION = 1;
 
     std::array<u8, 4> magic = EXPECTED_MAGIC;
     std::array<u8, 4> underlying_magic{};
-    u16 version = EXPECTED_VERSION;
+    u8 version = EXPECTED_VERSION;
+    u8 reserved = 0;
     u16 header_size = 0;
     u32 metadata_size = 0;
     u64 compressed_size = 0;
@@ -70,6 +71,7 @@ struct Z3DSFileHeader {
         ar & magic;
         ar & underlying_magic;
         ar & version;
+        ar & reserved;
         ar & header_size;
         ar & metadata_size;
         ar & compressed_size;
@@ -126,8 +128,9 @@ private:
 
 class Z3DSWriteIOFile : public IOFile {
 public:
-    static constexpr size_t DEFAULT_FRAME_SIZE = 256 * 1024; // 256KiB
-    static constexpr size_t MAX_FRAME_SIZE = 0;              // Let the lib decide, usually 1GiB
+    static constexpr size_t DEFAULT_FRAME_SIZE = 256 * 1024;           // 256KiB
+    static constexpr size_t DEFAULT_CIA_FRAME_SIZE = 32 * 1024 * 1024; // 32MiB
+    static constexpr size_t MAX_FRAME_SIZE = 0; // Let the lib decide, usually 1GiB
 
     Z3DSWriteIOFile();
 

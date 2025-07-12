@@ -210,6 +210,11 @@ disable_right_eye_render =
 # 5: Custom Layout
 layout_option =
 
+[Storage]
+# Whether to compress the installed CIA contents
+# 0 (default): Do not compress, 1: Compress
+compress_cia_installs =
+
 # Position of the performance overlay
 # 0: Top Left
 # 1: Center Top

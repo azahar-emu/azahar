@@ -214,6 +214,9 @@
     <string name="region_mismatch">Region Mismatch Warning</string>
     <string name="region_mismatch_emulated">The country setting is not valid for the selected emulated region.</string>
     <string name="region_mismatch_console">The country setting is not valid for the current linked console.</string>
+    <string name="storage">Storage</string>
+    <string name="compress_cia_installs">Compress installed CIA content</string>
+    <string name="compress_cia_installs_description">Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>

@@ -3081,7 +3081,7 @@ void GMainWindow::OnCompressFile() {
                 compress_info.recommended_compressed_extension = "zcia";
                 compress_info.recommended_uncompressed_extension = "cia";
                 compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
-                frame_size = FileUtil::Z3DSWriteIOFile::MAX_FRAME_SIZE;
+                frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
             }
         }
     }
