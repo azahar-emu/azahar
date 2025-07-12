@@ -218,6 +218,9 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.custom_portrait_bottom_width);
     ReadSetting("Layout", Settings::values.custom_portrait_bottom_height);
 
+    // Storage
+    ReadSetting("Storage", Settings::values.compress_cia_installs);
+
     // Utility
     ReadSetting("Utility", Settings::values.dump_textures);
     ReadSetting("Utility", Settings::values.custom_textures);

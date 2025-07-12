@@ -115,9 +115,13 @@ Z3DSMetadata::Z3DSMetadata(const std::span<u8>& source_data) {
     while (!in.eof()) {
         Item item;
         ReadFromIStream(in, &item, sizeof(Item));
+        // If end item is reached, stop processing
+        if (item.type == Item::TYPE_END) {
+            break;
+        }
         // Only binary type supported for now
         if (item.type != Item::TYPE_BINARY) {
-            break;
+            continue;
         }
         std::string name(item.name_len, '\0');
         std::vector<u8> data(item.data_len);
@@ -144,6 +148,10 @@ std::vector<u8> Z3DSMetadata::AsBinary() {
         WriteToOStream(out, it.first.data(), item.name_len);
         WriteToOStream(out, it.second.data(), item.data_len);
     }
+
+    // Write end item
+    Item end{};
+    WriteToOStream(out, &end, sizeof(end));
 
     std::string out_str = out.str();
     return std::vector<u8>(out_str.begin(), out_str.end());
