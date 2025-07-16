@@ -56,16 +56,6 @@ constexpr u8 VARIATION_SYSTEM = 0x02;
 constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
 constexpr u32 TID_HIGH_DLC = 0x0004008C;
 
-struct TitleInfo {
-    u64_le tid;
-    u64_le size;
-    u16_le version;
-    u16_le unused;
-    u32_le type;
-};
-
-static_assert(sizeof(TitleInfo) == 0x18, "Title info structure size is wrong");
-
 constexpr u8 OWNERSHIP_DOWNLOADED = 0x01;
 constexpr u8 OWNERSHIP_OWNED = 0x02;
 
@@ -1181,6 +1171,37 @@ InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
     }
 
     return InstallStatus::ErrorInvalid;
+}
+
+ResultVal<std::pair<TitleInfo, std::unique_ptr<Loader::SMDH>>> GetCIAInfos(
+    const std::string& path) {
+    if (!FileUtil::Exists(path)) {
+        LOG_ERROR(Service_AM, "File {} does not exist!", path);
+        return ResultUnknown;
+    }
+
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    FileSys::CIAContainer container;
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
+        const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+
+        TitleInfo info{};
+        info.tid = tmd.GetTitleID();
+        info.version = tmd.GetTitleVersion();
+        info.size = tmd.GetCombinedContentSize(container.GetHeader());
+        info.type = tmd.GetTitleType();
+
+        const auto& cia_smdh = container.GetSMDH();
+        std::unique_ptr<Loader::SMDH> smdh{};
+        if (cia_smdh) {
+            smdh = std::make_unique<Loader::SMDH>(*cia_smdh);
+        }
+
+        return std::pair<TitleInfo, std::unique_ptr<Loader::SMDH>>(info, std::move(smdh));
+    }
+
+    return ResultUnknown;
 }
 
 u64 GetTitleUpdateId(u64 title_id) {

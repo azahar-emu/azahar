@@ -13,6 +13,7 @@
 #include "common/swap.h"
 #include "core/file_sys/ticket.h"
 #include "core/file_sys/title_metadata.h"
+#include "core/loader/smdh.h"
 
 namespace Loader {
 enum class ResultStatus;
@@ -73,12 +74,14 @@ public:
     Loader::ResultStatus LoadTitleMetadata(std::span<const u8> tmd_data, std::size_t offset = 0);
     Loader::ResultStatus LoadTitleMetadata(const TitleMetadata& tmd);
     Loader::ResultStatus LoadMetadata(std::span<const u8> meta_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadSMDH(std::span<const u8> smdh_data, std::size_t offset = 0);
 
     const CIAHeader* GetHeader();
     Ticket& GetTicket();
     const TitleMetadata& GetTitleMetadata() const;
     std::array<u64, 0x30>& GetDependencies();
     u32 GetCoreVersion() const;
+    const std::unique_ptr<Loader::SMDH>& GetSMDH() const;
 
     u64 GetCertificateOffset() const;
     u64 GetTicketOffset() const;
@@ -108,6 +111,7 @@ private:
     bool has_header = false;
     CIAHeader cia_header;
     Metadata cia_metadata;
+    std::unique_ptr<Loader::SMDH> cia_smdh;
     Ticket cia_ticket;
     TitleMetadata cia_tmd;
 };

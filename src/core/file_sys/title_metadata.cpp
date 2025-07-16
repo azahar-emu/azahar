@@ -176,6 +176,17 @@ u64 TitleMetadata::GetContentSizeByIndex(std::size_t index) const {
     return tmd_chunks[index].size;
 }
 
+u64 TitleMetadata::GetCombinedContentSize(const CIAHeader* header) const {
+    u64 total_size = 0;
+    for (auto& chunk : tmd_chunks) {
+        if (header && !header->IsContentPresent(static_cast<u16>(chunk.index))) {
+            continue;
+        }
+        total_size += chunk.size;
+    }
+    return total_size;
+}
+
 bool TitleMetadata::GetContentOptional(std::size_t index) const {
     return (static_cast<u16>(tmd_chunks[index].type) & FileSys::TMDContentTypeFlag::Optional) != 0;
 }

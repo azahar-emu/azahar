@@ -54,6 +54,17 @@ Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
         result = LoadMetadata(meta_data);
         if (result != Loader::ResultStatus::Success)
             return result;
+        if (cia_header.meta_size >= sizeof(Metadata) + sizeof(Loader::SMDH)) {
+            std::vector<u8> smdh_data(sizeof(Loader::SMDH));
+            read_result = backend.Read(GetMetadataOffset() + CIA_METADATA_SIZE,
+                                       sizeof(Loader::SMDH), smdh_data.data());
+            if (read_result.Failed() || *read_result != sizeof(Loader::SMDH))
+                return Loader::ResultStatus::Error;
+
+            result = LoadSMDH(smdh_data);
+            if (result != Loader::ResultStatus::Success)
+                return result;
+        }
     }
 
     return Loader::ResultStatus::Success;
@@ -102,6 +113,16 @@ Loader::ResultStatus CIAContainer::Load(FileUtil::IOFile* file) {
         result = LoadMetadata(meta_data);
         if (result != Loader::ResultStatus::Success)
             return result;
+        if (cia_header.meta_size >= sizeof(Metadata) + sizeof(Loader::SMDH)) {
+            std::vector<u8> smdh_data(sizeof(Loader::SMDH));
+            file->Seek(GetMetadataOffset() + CIA_METADATA_SIZE, SEEK_SET);
+            if (file->ReadBytes(smdh_data.data(), sizeof(Loader::SMDH)) != sizeof(Loader::SMDH))
+                return Loader::ResultStatus::Error;
+
+            result = LoadSMDH(smdh_data);
+            if (result != Loader::ResultStatus::Success)
+                return result;
+        }
     }
 
     return Loader::ResultStatus::Success;
@@ -127,6 +148,11 @@ Loader::ResultStatus CIAContainer::Load(std::span<const u8> file_data) {
         result = LoadMetadata(file_data, GetMetadataOffset());
         if (result != Loader::ResultStatus::Success)
             return result;
+        if (cia_header.meta_size >= sizeof(Metadata) + sizeof(Loader::SMDH)) {
+            result = LoadSMDH(file_data, GetMetadataOffset() + CIA_METADATA_SIZE);
+            if (result != Loader::ResultStatus::Success)
+                return result;
+        }
     }
 
     return Loader::ResultStatus::Success;
@@ -172,6 +198,18 @@ Loader::ResultStatus CIAContainer::LoadMetadata(std::span<const u8> meta_data, s
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus CIAContainer::LoadSMDH(std::span<const u8> smdh_data, std::size_t offset) {
+    if (smdh_data.size() - offset < sizeof(Loader::SMDH)) {
+        return Loader::ResultStatus::Error;
+    }
+
+    cia_smdh = std::make_unique<Loader::SMDH>();
+
+    std::memcpy(cia_smdh.get(), smdh_data.data(), sizeof(Loader::SMDH));
+
+    return Loader::ResultStatus::Success;
+}
+
 Ticket& CIAContainer::GetTicket() {
     return cia_ticket;
 }
@@ -186,6 +224,10 @@ std::array<u64, 0x30>& CIAContainer::GetDependencies() {
 
 u32 CIAContainer::GetCoreVersion() const {
     return cia_metadata.core_version;
+}
+
+const std::unique_ptr<Loader::SMDH>& CIAContainer::GetSMDH() const {
+    return cia_smdh;
 }
 
 u64 CIAContainer::GetCertificateOffset() const {

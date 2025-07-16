@@ -121,6 +121,7 @@ Z3DSMetadata::Z3DSMetadata(const std::span<u8>& source_data) {
         }
         // Only binary type supported for now
         if (item.type != Item::TYPE_BINARY) {
+            in.ignore(static_cast<std::streamsize>(item.name_len) + item.data_len);
             continue;
         }
         std::string name(item.name_len, '\0');
@@ -665,7 +666,8 @@ void Z3DSReadIOFile::serialize(Archive& ar, const unsigned int) {
 
 bool CompressZ3DSFile(const std::string& src_file_name, const std::string& dst_file_name,
                       const std::array<u8, 4>& underlying_magic, size_t frame_size,
-                      std::function<ProgressCallback>&& update_callback) {
+                      std::function<ProgressCallback>&& update_callback,
+                      std::unordered_map<std::string, std::vector<u8>> metadata) {
 
     IOFile in_file(src_file_name, "rb");
     if (!in_file.IsOpen()) {
@@ -686,6 +688,12 @@ bool CompressZ3DSFile(const std::string& src_file_name, const std::string& dst_f
     }
 
     Z3DSWriteIOFile out_compress_file(std::move(out_file), underlying_magic, frame_size);
+
+    for (auto& it : metadata) {
+        std::string val_str(it.second.size(), '\0');
+        memcpy(val_str.data(), it.second.data(), val_str.size());
+        out_compress_file.Metadata().Add(it.first, val_str);
+    }
 
     size_t next_chunk = out_compress_file.GetNextWriteHint();
     std::vector<u8> buffer(next_chunk);
