@@ -3076,12 +3076,24 @@ void GMainWindow::OnCompressFile() {
             bool is_compressed = false;
             if (Service::AM::CheckCIAToInstall(in_path, is_compressed, true) ==
                 Service::AM::InstallStatus::Success) {
+                auto meta_info = Service::AM::GetCIAInfos(in_path);
                 compress_info.is_supported = true;
                 compress_info.is_compressed = is_compressed;
                 compress_info.recommended_compressed_extension = "zcia";
                 compress_info.recommended_uncompressed_extension = "cia";
                 compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
                 frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
+                if (meta_info.Succeeded()) {
+                    const auto& meta_info_val = meta_info.Unwrap();
+                    std::vector<u8> value(sizeof(Service::AM::TitleInfo));
+                    memcpy(value.data(), &meta_info_val.first, sizeof(Service::AM::TitleInfo));
+                    compress_info.default_metadata.emplace("titleinfo", value);
+                    if (meta_info_val.second) {
+                        value.resize(sizeof(Loader::SMDH));
+                        memcpy(value.data(), meta_info_val.second.get(), sizeof(Loader::SMDH));
+                        compress_info.default_metadata.emplace("smdh", value);
+                    }
+                }
             }
         }
     }
@@ -3121,8 +3133,9 @@ void GMainWindow::OnCompressFile() {
         const auto progress = [&](std::size_t written, std::size_t total) {
             emit UpdateProgress(written, total);
         };
-        bool success = FileUtil::CompressZ3DSFile(in_path, out_path, compress_info.underlying_magic,
-                                                  frame_size, progress);
+        bool success =
+            FileUtil::CompressZ3DSFile(in_path, out_path, compress_info.underlying_magic,
+                                       frame_size, progress, compress_info.default_metadata);
         if (!success) {
             FileUtil::Delete(out_path);
         }

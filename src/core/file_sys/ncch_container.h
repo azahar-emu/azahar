@@ -91,6 +91,10 @@ struct NCCH_Header {
     u8 reserved_4[4];
     u8 exefs_super_block_hash[0x20];
     u8 romfs_super_block_hash[0x20];
+
+    u32 GetContentUnitSize() {
+        return 0x200u * (1u << content_unit_size);
+    }
 };
 
 static_assert(sizeof(NCCH_Header) == 0x200, "NCCH header structure size is wrong");

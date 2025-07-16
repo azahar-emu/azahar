@@ -424,6 +424,16 @@ AppLoader::CompressFileInfo AppLoader_NCCH::GetCompressFileInfo() {
         info.recommended_compressed_extension = "zcxi";
         info.recommended_uncompressed_extension = "cxi";
     }
+    std::vector<u8> title_info_vec(sizeof(Service::AM::TitleInfo));
+    Service::AM::TitleInfo* title_info =
+        reinterpret_cast<Service::AM::TitleInfo*>(title_info_vec.data());
+    title_info->tid = base_ncch.ncch_header.program_id;
+    title_info->version = base_ncch.ncch_header.version;
+    title_info->size =
+        base_ncch.ncch_header.content_size * base_ncch.ncch_header.GetContentUnitSize();
+    title_info->unused = title_info->type = 0;
+    info.default_metadata.emplace("titleinfo", title_info_vec);
+
     return info;
 }
 

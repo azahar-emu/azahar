@@ -261,7 +261,8 @@ using ProgressCallback = void(std::size_t, std::size_t);
 
 bool CompressZ3DSFile(const std::string& src_file, const std::string& dst_file,
                       const std::array<u8, 4>& underlying_magic, size_t frame_size,
-                      std::function<ProgressCallback>&& update_callback = nullptr);
+                      std::function<ProgressCallback>&& update_callback = nullptr,
+                      std::unordered_map<std::string, std::vector<u8>> metadata = {});
 
 bool DeCompressZ3DSFile(const std::string& src_file, const std::string& dst_file,
                         std::function<ProgressCallback>&& update_callback = nullptr);
