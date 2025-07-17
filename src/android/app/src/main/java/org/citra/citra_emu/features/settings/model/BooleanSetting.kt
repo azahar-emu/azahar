@@ -48,7 +48,8 @@ enum class BooleanSetting(
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
-    UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false);
+    UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
+    ENABLE_COMBO_KEY("enable_combo_key", Settings.SECTION_CONTROLS, true);
 
     override var boolean: Boolean = defaultValue
 
