@@ -17,6 +17,8 @@
   !error "PRODUCT_VARIANT must be defined"
 !endif
 
+ManifestDPIAware true
+
 !define PRODUCT_NAME "Azahar"
 !define PRODUCT_PUBLISHER "Azahar Emulator Developers"
 !define PRODUCT_WEB_SITE "https://azahar-emu.org/"
@@ -60,13 +62,13 @@ Page custom desktopShortcutPageCreate desktopShortcutPageLeave
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
+!define MUI_FINISHPAGE_RUN "$INSTDIR\azahar.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Variables
-Var DisplayName
 Var DesktopShortcutPageDialog
 Var DesktopShortcutCheckbox
 Var DesktopShortcut
@@ -106,7 +108,6 @@ Function .onInit
   StrCpy $DesktopShortcut 1
   !insertmacro MULTIUSER_INIT
 
-  ; Keep in sync with build_info.txt
   !define MIN_WIN10_VERSION 1607
   ${IfNot} ${AtLeastwin10}
   ${OrIfNot} ${AtLeastWaaS} ${MIN_WIN10_VERSION}
@@ -120,14 +121,6 @@ FunctionEnd
 Function un.onInit
   !insertmacro MULTIUSER_UNINIT
 FunctionEnd
-
-!macro UPDATE_DISPLAYNAME
-  ${If} $MultiUser.InstallMode == "CurrentUser"
-    StrCpy $DisplayName "$(^Name) (User)"
-  ${Else}
-    StrCpy $DisplayName "$(^Name)"
-  ${EndIf}
-!macroend
 
 Function desktopShortcutPageCreate
   !insertmacro MUI_HEADER_TEXT "Create Desktop Shortcut" "Would you like to create a desktop shortcut?"
@@ -158,16 +151,11 @@ Section "Base"
   ; The binplaced build output will be included verbatim.
   File /r "${BINARY_SOURCE_DIR}\*"
 
-  !insertmacro UPDATE_DISPLAYNAME
-
   ; Create start menu and desktop shortcuts
-  CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
+  CreateShortCut "$SMPROGRAMS\$(^Name).lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
-    CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
+    CreateShortCut "$DESKTOP\$(^Name).lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
-
-  ; ??
-  SetOutPath "$TEMP"
 SectionEnd
 
 !include "FileFunc.nsh"
@@ -178,7 +166,7 @@ Section -Post
   WriteRegStr SHCTX "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\azahar.exe"
 
   ; Write metadata for add/remove programs applet
-  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayName" "$DisplayName"
+  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe /$MultiUser.InstallMode"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\azahar.exe"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
@@ -192,10 +180,9 @@ Section -Post
 SectionEnd
 
 Section Uninstall
-  !insertmacro UPDATE_DISPLAYNAME
 
-  Delete "$DESKTOP\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\$DisplayName.lnk"
+  Delete "$DESKTOP\$(^Name).lnk"
+  Delete "$SMPROGRAMS\$(^Name).lnk"
 
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
@@ -207,9 +194,10 @@ Section Uninstall
   RMDir /r "$INSTDIR\scripting"
   RMDir "$INSTDIR"
 
+  DeleteRegKey HKCU "Software\Classes\discord-1345366770436800533"
+
   DeleteRegKey SHCTX "${PRODUCT_UNINST_KEY}"
   DeleteRegKey SHCTX "${PRODUCT_DIR_REGKEY}"
-  DeleteRegKey HKCU "Software\Classes\discord-1345366770436800533"
 
   SetAutoClose true
 SectionEnd
