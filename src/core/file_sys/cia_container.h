@@ -9,9 +9,11 @@
 #include <span>
 #include <string>
 #include "common/common_types.h"
+#include "common/file_util.h"
 #include "common/swap.h"
 #include "core/file_sys/ticket.h"
 #include "core/file_sys/title_metadata.h"
+#include "core/loader/smdh.h"
 
 namespace Loader {
 enum class ResultStatus;
@@ -62,7 +64,7 @@ class CIAContainer {
 public:
     // Load whole CIAs outright
     Loader::ResultStatus Load(const FileBackend& backend);
-    Loader::ResultStatus Load(const std::string& filepath);
+    Loader::ResultStatus Load(FileUtil::IOFile* file);
     Loader::ResultStatus Load(std::span<const u8> header_data);
 
     // Load parts of CIAs (for CIAs streamed in)
@@ -72,12 +74,14 @@ public:
     Loader::ResultStatus LoadTitleMetadata(std::span<const u8> tmd_data, std::size_t offset = 0);
     Loader::ResultStatus LoadTitleMetadata(const TitleMetadata& tmd);
     Loader::ResultStatus LoadMetadata(std::span<const u8> meta_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadSMDH(std::span<const u8> smdh_data, std::size_t offset = 0);
 
     const CIAHeader* GetHeader();
     Ticket& GetTicket();
     const TitleMetadata& GetTitleMetadata() const;
     std::array<u64, 0x30>& GetDependencies();
     u32 GetCoreVersion() const;
+    const std::unique_ptr<Loader::SMDH>& GetSMDH() const;
 
     u64 GetCertificateOffset() const;
     u64 GetTicketOffset() const;
@@ -107,6 +111,7 @@ private:
     bool has_header = false;
     CIAHeader cia_header;
     Metadata cia_metadata;
+    std::unique_ptr<Loader::SMDH> cia_smdh;
     Ticket cia_ticket;
     TitleMetadata cia_tmd;
 };

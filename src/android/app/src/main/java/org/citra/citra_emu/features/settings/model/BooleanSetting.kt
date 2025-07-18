@@ -48,7 +48,8 @@ enum class BooleanSetting(
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
-    UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false);
+    UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
+    COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false);
 
     override var boolean: Boolean = defaultValue
 
@@ -80,7 +81,8 @@ enum class BooleanSetting(
             CPU_JIT,
             ASYNC_CUSTOM_LOADING,
             SHADERS_ACCURATE_MUL,
-            USE_ARTIC_BASE_CONTROLLER
+            USE_ARTIC_BASE_CONTROLLER,
+            COMPRESS_INSTALLED_CIA_CONTENT,
         )
 
         fun from(key: String): BooleanSetting? =

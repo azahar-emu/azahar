@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,6 +19,10 @@ bool IsValidSMDH(std::span<const u8> smdh_data) {
     u32 magic;
     std::memcpy(&magic, smdh_data.data(), sizeof(u32));
 
+    return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
+}
+
+bool SMDH::IsValid() const {
     return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
 }
 

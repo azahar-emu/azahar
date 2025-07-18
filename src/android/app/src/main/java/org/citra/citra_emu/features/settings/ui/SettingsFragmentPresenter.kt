@@ -565,6 +565,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.ALLOW_PLUGIN_LOADER.defaultValue
                 )
             )
+            add(HeaderSetting(R.string.storage_section))
+            add(
+                SwitchSetting(
+                    BooleanSetting.COMPRESS_INSTALLED_CIA_CONTENT,
+                    R.string.compress_cia_installs,
+                    R.string.compress_cia_installs_desc,
+                    BooleanSetting.COMPRESS_INSTALLED_CIA_CONTENT.key,
+                    BooleanSetting.COMPRESS_INSTALLED_CIA_CONTENT.defaultValue
+                )
+            )
         }
     }
 
