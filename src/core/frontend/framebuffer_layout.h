@@ -134,6 +134,14 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
 FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright);
 
 /**
+ * Method for constructing the secondary layout for Android, based on
+ * the appropriate setting.
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ */
+FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height);
+
+/**
  * Factory method for constructing a custom FramebufferLayout
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
