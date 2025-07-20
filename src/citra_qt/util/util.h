@@ -15,6 +15,9 @@ QFont GetMonospaceFont();
 /// Convert a size in bytes into a readable format (KiB, MiB, etc.)
 QString ReadableByteSize(qulonglong size);
 
+// Converts a length of time in seconds into a readable format
+QString ReadableDuration(qulonglong time_seconds);
+
 /**
  * Creates a circle pixmap from a specified color
  * @param color The color the pixmap shall have

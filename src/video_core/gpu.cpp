@@ -123,19 +123,21 @@ void GPU::Execute(const Service::GSP::Command& command) {
         auto& memfill = regs.memory_fill_config;
 
         // Write to the memory fill GPU registers.
+        // If both buffers are set GSP dispatches PSC0 only.
+        const bool has_both_bufs = params.start1 != 0 && params.start2 != 0;
         if (params.start1 != 0) {
             memfill[0].address_start = VirtualToPhysicalAddress(params.start1) >> 3;
             memfill[0].address_end = VirtualToPhysicalAddress(params.end1) >> 3;
             memfill[0].value_32bit = params.value1;
             memfill[0].control = params.control1;
-            MemoryFill(0);
+            MemoryFill(0, has_both_bufs ? std::numeric_limits<u32>::max() : 0);
         }
         if (params.start2 != 0) {
             memfill[1].address_start = VirtualToPhysicalAddress(params.start2) >> 3;
             memfill[1].address_end = VirtualToPhysicalAddress(params.end2) >> 3;
             memfill[1].value_32bit = params.value2;
             memfill[1].control = params.control2;
-            MemoryFill(1);
+            MemoryFill(1, has_both_bufs ? 0 : 1);
         }
         break;
     }
@@ -266,10 +268,10 @@ void GPU::WriteReg(VAddr addr, u32 data) {
         // Handle registers that trigger GPU actions
         switch (index) {
         case GPU_REG_INDEX(memory_fill_config[0].trigger):
-            MemoryFill(0);
+            MemoryFill(0, 0);
             break;
         case GPU_REG_INDEX(memory_fill_config[1].trigger):
-            MemoryFill(1);
+            MemoryFill(1, 1);
             break;
         case GPU_REG_INDEX(display_transfer_config.trigger):
             MemoryTransfer();
@@ -347,7 +349,7 @@ void GPU::SubmitCmdList(u32 index) {
     config.trigger[index] = 0;
 }
 
-void GPU::MemoryFill(u32 index) {
+void GPU::MemoryFill(u32 index, u32 intr_index) {
     // Check if a memory fill was triggered.
     auto& config = impl->pica.regs.memory_fill_config[index];
     if (!config.trigger) {
@@ -362,9 +364,9 @@ void GPU::MemoryFill(u32 index) {
     // It seems that it won't signal interrupt if "address_start" is zero.
     // TODO: hwtest this
     if (config.GetStartAddress() != 0) {
-        if (!index) {
+        if (intr_index == 0) {
             impl->signal_interrupt(Service::GSP::InterruptId::PSC0);
-        } else {
+        } else if (intr_index == 1) {
             impl->signal_interrupt(Service::GSP::InterruptId::PSC1);
         }
     }

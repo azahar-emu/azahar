@@ -10,8 +10,8 @@
 #include <QVector>
 #include <QWidget>
 #include "citra_qt/compatibility_list.h"
-#include "citra_qt/play_time_manager.h"
 #include "common/common_types.h"
+#include "common/play_time_manager.h"
 #include "uisettings.h"
 
 namespace Service::FS {

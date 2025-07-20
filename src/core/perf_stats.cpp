@@ -72,6 +72,14 @@ void PerfStats::EndGPUProcessing() {
     accumulated_gpu_time += (Clock::now() - start_gpu_time);
 }
 
+void PerfStats::StartSwap() {
+    start_swap_time = Clock::now();
+}
+
+void PerfStats::EndSwap() {
+    accumulated_swap_time += (Clock::now() - start_swap_time);
+}
+
 void PerfStats::BeginSystemFrame() {
     std::scoped_lock lock{object_mutex};
 
@@ -143,11 +151,17 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
     last_stats.time_gpu = system_frames ? (duration_cast<DoubleSecs>(accumulated_gpu_time).count() /
                                            static_cast<double>(system_frames))
                                         : 0;
+    last_stats.time_swap = system_frames
+                               ? (duration_cast<DoubleSecs>(accumulated_swap_time).count() /
+                                  static_cast<double>(system_frames))
+                               : 0;
+
     last_stats.time_remaining =
-        system_frames
-            ? (duration_cast<DoubleSecs>(accumulated_frametime - accumulated_svc_time).count() /
-               static_cast<double>(system_frames))
-            : 0;
+        system_frames ? (duration_cast<DoubleSecs>((accumulated_frametime - accumulated_svc_time) -
+                                                   accumulated_swap_time)
+                             .count() /
+                         static_cast<double>(system_frames))
+                      : 0;
     last_stats.emulation_speed = system_us_per_second.count() / 1'000'000.0;
     last_stats.artic_transmitted = static_cast<double>(artic_transmitted) / interval;
     last_stats.artic_events.raw = artic_events.raw | prev_artic_event.raw;
@@ -158,11 +172,9 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
     accumulated_frametime = Clock::duration::zero();
     system_frames = 0;
     accumulated_svc_time = Clock::duration::zero();
-    svc_processing_times = 0;
     accumulated_ipc_time = Clock::duration::zero();
-    ipc_processing_times = 0;
     accumulated_gpu_time = Clock::duration::zero();
-    gpu_processing_times = 0;
+    accumulated_swap_time = Clock::duration::zero();
     game_frames = 0;
     artic_transmitted = 0;
     prev_artic_event.raw &= artic_events.raw;

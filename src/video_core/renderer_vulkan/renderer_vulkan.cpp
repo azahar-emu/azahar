@@ -22,6 +22,14 @@
 
 #include <vk_mem_alloc.h>
 
+#ifdef __APPLE__
+#include "common/apple_utils.h"
+#endif
+
+#ifdef ENABLE_SDL2
+#include <SDL.h>
+#endif
+
 MICROPROFILE_DEFINE(Vulkan_RenderFrame, "Vulkan", "Render Frame", MP_RGB(128, 128, 64));
 
 namespace Vulkan {
@@ -50,11 +58,48 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
     {0, vk::DescriptorType::eCombinedImageSampler, 3, vk::ShaderStageFlagBits::eFragment},
 }};
 
+namespace {
+static bool IsLowRefreshRate() {
+#ifdef ENABLE_SDL2
+    const auto sdl_init_status = SDL_Init(SDL_INIT_VIDEO);
+    if (sdl_init_status < 0) {
+        LOG_ERROR(Render_Vulkan, "SDL failed to initialize, unable to check refresh rate");
+    } else {
+        SDL_DisplayMode cur_display_mode;
+        SDL_GetCurrentDisplayMode(0, &cur_display_mode); // TODO: Multimonitor handling. -OS
+        const auto cur_refresh_rate = cur_display_mode.refresh_rate;
+        SDL_Quit();
+
+        if (cur_refresh_rate < SCREEN_REFRESH_RATE) {
+            LOG_WARNING(Render_Vulkan,
+                        "Detected refresh rate lower than the emulated 3DS screen: {}hz. FIFO will "
+                        "be disabled",
+                        cur_refresh_rate);
+            return true;
+        }
+    }
+#endif
+
+#ifdef __APPLE__
+    // Apple's low power mode sometimes limits applications to 30fps without changing the refresh
+    // rate, meaning the above code doesn't catch it.
+    if (AppleUtils::IsLowPowerModeEnabled()) {
+        LOG_WARNING(Render_Vulkan, "Apple's low power mode is enabled, assuming low application "
+                                   "framerate. FIFO will be disabled");
+        return true;
+    }
+#endif
+
+    return false;
+}
+} // Anonymous namespace
+
 RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
                                Frontend::EmuWindow& window, Frontend::EmuWindow* secondary_window)
     : RendererBase{system, window, secondary_window}, memory{system.Memory()}, pica{pica_},
       instance{window, Settings::values.physical_device.GetValue()}, scheduler{instance},
-      renderpass_cache{instance, scheduler}, main_window{window, instance, scheduler},
+      renderpass_cache{instance, scheduler},
+      main_window{window, instance, scheduler, IsLowRefreshRate()},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},
       update_queue{instance},
@@ -66,7 +111,8 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     BuildLayouts();
     BuildPipelines();
     if (secondary_window) {
-        second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler);
+        second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
+                                                        IsLowRefreshRate());
     }
 }
 
@@ -455,7 +501,6 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
 }
 
 void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& texture) {
-    return;
     const vk::ClearColorValue clear_color = {
         .float32 =
             std::array{
@@ -832,6 +877,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
 }
 
 void RendererVulkan::SwapBuffers() {
+    system.perf_stats->StartSwap();
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
@@ -841,12 +887,14 @@ void RendererVulkan::SwapBuffers() {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
         if (!second_window) {
-            second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler);
+            second_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
+                                                            IsLowRefreshRate());
         }
         RenderToWindow(*second_window, secondary_layout, false);
         secondary_window->PollEvents();
     }
 #endif
+    system.perf_stats->EndSwap();
     rasterizer.TickFrame();
     EndFrame();
 }

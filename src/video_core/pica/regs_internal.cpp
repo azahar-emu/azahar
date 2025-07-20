@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,6 +13,9 @@ namespace Pica {
 
 static constexpr std::pair<u16, const char*> register_names[] = {
     {0x010, "GPUREG_FINALIZE"},
+    {0x020, "GPUREG_IRQ_CMP"},
+    {0x020, "GPUREG_IRQ_MASK"},
+    {0x034, "GPUREG_IRQ_AUTOSTOP"},
 
     {0x040, "GPUREG_FACECULLING_CONFIG"},
     {0x041, "GPUREG_VIEWPORT_WIDTH"},

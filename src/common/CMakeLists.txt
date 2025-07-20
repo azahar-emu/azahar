@@ -114,6 +114,8 @@ add_library(citra_common STATIC
     microprofileui.h
     param_package.cpp
     param_package.h
+    play_time_manager.cpp
+    play_time_manager.h
     polyfill_thread.h
     precompiled_headers.h
     quaternion.h
@@ -165,10 +167,12 @@ if (UNIX AND NOT APPLE)
 endif()
 
 if (APPLE)
-    target_sources(citra_common PUBLIC
-        apple_authorization.h
-        apple_authorization.cpp
-    )
+  target_sources(citra_common PUBLIC
+    apple_authorization.h
+    apple_authorization.cpp
+    apple_utils.h
+    apple_utils.mm
+  )
 endif()
 
 if (MSVC)

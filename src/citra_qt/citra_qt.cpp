@@ -67,9 +67,9 @@
 #include "citra_qt/movie/movie_play_dialog.h"
 #include "citra_qt/movie/movie_record_dialog.h"
 #include "citra_qt/multiplayer/state.h"
-#include "citra_qt/play_time_manager.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/uisettings.h"
+#include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
 #include "citra_qt/update_checker.h"
 #endif
@@ -3232,9 +3232,10 @@ void GMainWindow::UpdateStatusBar() {
     game_fps_label->setText(tr("App: %1 FPS").arg(results.game_fps, 0, 'f', 0));
     if (UISettings::values.show_advanced_frametime_info) {
         emu_frametime_label->setText(
-            tr("Frame: %1 ms (GPU: %2 ms, IPC: %3 ms, SVC: %4 ms, Rem: %5 ms)")
+            tr("Frame: %1 ms (GPU: [CMD: %2 ms, SWP: %3 ms], IPC: %4 ms, SVC: %5 ms, Rem: %6 ms)")
                 .arg(results.time_vblank_interval * 1000.0, 2, 'f', 2)
                 .arg(results.time_gpu * 1000.0, 2, 'f', 2)
+                .arg(results.time_swap * 1000.0, 2, 'f', 2)
                 .arg(results.time_hle_ipc * 1000.0, 2, 'f', 2)
                 .arg(results.time_hle_svc * 1000.0, 2, 'f', 2)
                 .arg(results.time_remaining * 1000.0, 2, 'f', 2));

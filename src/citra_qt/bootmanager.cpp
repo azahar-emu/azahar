@@ -29,7 +29,6 @@
 
 #ifdef ENABLE_OPENGL
 #include <glad/glad.h>
-
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
@@ -37,9 +36,7 @@
 #if defined(__APPLE__)
 #include <objc/message.h>
 #include <objc/objc.h>
-#endif
-
-#if !defined(WIN32)
+#elif !defined(WIN32)
 #include <qpa/qplatformnativeinterface.h>
 #endif
 

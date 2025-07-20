@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2018 yuzu emulator team
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -13,8 +17,8 @@
 #include <QString>
 #include <QVector>
 #include "citra_qt/compatibility_list.h"
-#include "citra_qt/play_time_manager.h"
 #include "common/common_types.h"
+#include "common/play_time_manager.h"
 
 namespace Service::FS {
 enum class MediaType : u32;

@@ -27,6 +27,7 @@
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/play_time_manager.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
@@ -70,6 +71,9 @@ ANativeWindow* s_surf;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
+
+std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
+jlong ptm_current_title_id = std::numeric_limits<jlong>::max(); // Arbitrary default value
 
 std::atomic<bool> stop_run{true};
 std::atomic<bool> pause_emulation{false};
@@ -644,18 +648,19 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
 jdoubleArray Java_org_citra_citra_1emu_NativeLibrary_getPerfStats(JNIEnv* env,
                                                                   [[maybe_unused]] jobject obj) {
     auto& core = Core::System::GetInstance();
-    jdoubleArray j_stats = env->NewDoubleArray(8);
+    jdoubleArray j_stats = env->NewDoubleArray(9);
 
     if (core.IsPoweredOn()) {
         auto results = core.GetAndResetPerfStats();
 
         // Converting the structure into an array makes it easier to pass it to the frontend
-        double stats[8] = {results.system_fps,      results.game_fps,
+        double stats[9] = {results.system_fps,      results.game_fps,
                            results.emulation_speed, results.time_vblank_interval,
                            results.time_hle_svc,    results.time_hle_ipc,
-                           results.time_gpu,        results.time_remaining};
+                           results.time_gpu,        results.time_swap,
+                           results.time_remaining};
 
-        env->SetDoubleArrayRegion(j_stats, 0, 8, stats);
+        env->SetDoubleArrayRegion(j_stats, 0, 9, stats);
     }
 
     return j_stats;
@@ -792,6 +797,33 @@ void Java_org_citra_citra_1emu_NativeLibrary_setTemporaryFrameLimit(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_disableTemporaryFrameLimit(JNIEnv* env, jobject obj) {
     Settings::is_temporary_frame_limit = false;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerInit(JNIEnv* env, jobject obj) {
+    play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStart(JNIEnv* env, jobject obj,
+                                                                  jlong title_id) {
+    ptm_current_title_id = title_id;
+    if (play_time_manager) {
+        play_time_manager->SetProgramId(static_cast<u64>(title_id));
+        play_time_manager->Start();
+    }
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerStop(JNIEnv* env, jobject obj) {
+    play_time_manager->Stop();
+}
+
+jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetPlayTime(JNIEnv* env, jobject obj,
+                                                                         jlong title_id) {
+    return static_cast<jlong>(play_time_manager->GetPlayTime(title_id));
+}
+
+jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetCurrentTitleId(JNIEnv* env,
+                                                                               jobject obj) {
+    return ptm_current_title_id;
 }
 
 } // extern "C"

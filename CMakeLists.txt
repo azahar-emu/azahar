@@ -20,6 +20,9 @@ include(CMakeDependentOption)
 include(FindPkgConfig)
 
 project(citra LANGUAGES C CXX ASM)
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    enable_language(OBJC OBJCXX)
+endif()
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -125,6 +128,9 @@ if (ENABLE_QT_TRANSLATION)
 endif()
 if (ENABLE_ROOM)
     add_definitions(-DENABLE_ROOM)
+endif()
+if (ENABLE_SDL2)
+    add_definitions(-DENABLE_SDL2)
 endif()
 if (ENABLE_SDL2_FRONTEND)
     add_definitions(-DENABLE_SDL2_FRONTEND)

@@ -32,7 +32,7 @@ using namespace Pica::Shader::Generator;
 
 constexpr std::size_t VERTEX_BUFFER_SIZE = 16_MiB;
 constexpr std::size_t INDEX_BUFFER_SIZE = 2_MiB;
-constexpr std::size_t UNIFORM_BUFFER_SIZE = 2_MiB;
+constexpr std::size_t UNIFORM_BUFFER_SIZE = 8_MiB;
 constexpr std::size_t TEXTURE_BUFFER_SIZE = 2_MiB;
 
 GLenum MakePrimitiveMode(Pica::PipelineRegs::TriangleTopology topology) {
