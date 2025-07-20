@@ -482,12 +482,10 @@ if (ENABLE_SDL2 AND USE_SYSTEM_SDL2)
 endif()
 
 if (ENABLE_LIBUSB AND USE_SYSTEM_LIBUSB)
-    include(FindPkgConfig)
     find_package(LibUSB)
 endif()
 
 if (USE_SYSTEM_SOUNDTOUCH)
-    include(FindPkgConfig)
     find_package(SoundTouch REQUIRED)
     add_library(SoundTouch INTERFACE)
     target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
