@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/button_combo"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <CheckBox
+        android:id="@+id/button_a"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="95dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_a"
+        app:layout_constraintBottom_toTopOf="@+id/button_b"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <CheckBox
+        android:id="@+id/button_b"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_b"
+        app:layout_constraintBottom_toTopOf="@+id/button_x"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_a" />
+
+    <CheckBox
+        android:id="@+id/button_x"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_x"
+        app:layout_constraintBottom_toTopOf="@+id/button_y"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_b" />
+
+    <CheckBox
+        android:id="@+id/button_y"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="37dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="510dp"
+        android:text="@string/button_y"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_x" />
+
+    <CheckBox
+        android:id="@+id/button_l"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="93dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_l"
+        app:layout_constraintBottom_toTopOf="@+id/button_r"
+        app:layout_constraintStart_toEndOf="@+id/button_a"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <CheckBox
+        android:id="@+id/button_home"
+        android:layout_width="105dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="152dp"
+        android:layout_marginTop="93dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_home"
+        app:layout_constraintBottom_toTopOf="@+id/button_r"
+        app:layout_constraintStart_toEndOf="@+id/button_a"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.473" />
+
+    <CheckBox
+        android:id="@+id/button_r"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="2dp"
+        android:text="@string/button_r"
+        app:layout_constraintBottom_toTopOf="@+id/button_zl"
+        app:layout_constraintStart_toEndOf="@+id/button_b"
+        app:layout_constraintTop_toBottomOf="@+id/button_l" />
+
+    <CheckBox
+        android:id="@+id/button_start"
+        android:layout_width="105dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="152dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_start"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/button_zl"
+        app:layout_constraintStart_toEndOf="@+id/button_b"
+        app:layout_constraintTop_toBottomOf="@+id/button_l"
+        app:layout_constraintVertical_bias="0.555" />
+
+    <CheckBox
+        android:id="@+id/button_zl"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
+        android:text="@string/button_zl"
+        app:layout_constraintBottom_toTopOf="@+id/button_zr"
+        app:layout_constraintStart_toEndOf="@+id/button_x"
+        app:layout_constraintTop_toBottomOf="@+id/button_r" />
+
+    <CheckBox
+        android:id="@+id/button_select"
+        android:layout_width="105dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="152dp"
+        android:layout_marginTop="2dp"
+        android:text="@string/button_select"
+        app:layout_constraintBottom_toTopOf="@+id/button_zr"
+        app:layout_constraintStart_toEndOf="@+id/button_x"
+        app:layout_constraintTop_toBottomOf="@+id/button_r"
+        app:layout_constraintVertical_bias="0.472" />
+
+    <CheckBox
+        android:id="@+id/button_zr"
+        android:layout_width="60dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginBottom="508dp"
+        android:text="@string/button_zr"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_y"
+        app:layout_constraintTop_toBottomOf="@+id/button_zl" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
