@@ -153,6 +153,11 @@
     <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
     <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
+    <string name="combo_key">Combo Key</string>
+    <string name="combo_key_enable">Enable Combo Button</string>
+    <string name="combo_key_options">Combo Key Settings</string>
+    <string name="combo_key_description">Enable and Change Combo Button Bindings.</string>
+    <string name="combo_key_submenu_description">Changes whether or not Combo Button can be displayed and used in game.</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">System Files</string>

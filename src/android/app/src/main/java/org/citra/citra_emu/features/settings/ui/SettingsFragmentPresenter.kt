@@ -104,6 +104,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
             Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
+            Settings.SECTION_COMBO -> addComboButtonSettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -795,7 +796,45 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
+            add(
+                SubmenuSetting(
+                    R.string.combo_key_options,
+                    R.string.combo_key_description,
+                    R.drawable.button_combo,
+                    Settings.SECTION_COMBO
+                )
+            )
         }
+    }
+
+    private fun addComboButtonSettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.combo_key))
+        sl.apply {
+            add(
+                SwitchSetting(
+                    BooleanSetting.ENABLE_COMBO_KEY,
+                    R.string.combo_key_enable,
+                    R.string.combo_key_submenu_description,
+                    BooleanSetting.ENABLE_COMBO_KEY.key,
+                    BooleanSetting.ENABLE_COMBO_KEY.defaultValue,
+                )
+            )
+            add(HeaderSetting(R.string.combo_key_options))
+            // TODO: Implement displaying selectable buttons
+            /*
+            add(
+                StringSingleChoiceSetting(
+                    comboSetting,
+                    R.string.emulated_language,
+                    0,
+                    R.array.n3dsButtons,
+                    R.array.
+                )
+            )
+
+            */
+        }
+
     }
 
     private fun getInputObject(key: String): AbstractStringSetting {
