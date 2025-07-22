@@ -4,9 +4,9 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
-import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.AbstractShortSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
 
 class MultiChoiceSetting(
     setting: AbstractSetting?,
@@ -15,26 +15,26 @@ class MultiChoiceSetting(
     val choicesId: Int,
     val valuesId: Int,
     val key: String? = null,
-    val defaultValues: Int? = null,
+    val defaultValues: List<Int>? = null,
     override var isEnabled: Boolean = true
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_MULTI_CHOICE
 
-    val selectedValue: Int
+    val selectedValues: List<Int>
         get() {
             if (setting == null) {
                 return defaultValues!!
             }
 
             try {
-                val setting = setting as AbstractIntSetting
-                return setting.int
+                val setting = setting as AbstractMultiIntSetting
+                return setting.ints
             } catch (_: ClassCastException) {
             }
 
             try {
-                val setting = setting as AbstractShortSetting
-                return setting.short.toInt()
+                val setting = setting as AbstractMultiShortSetting
+                return setting.shorts.map { it.toInt() }
             } catch (_: ClassCastException) {
             }
 
@@ -48,15 +48,15 @@ class MultiChoiceSetting(
      * @param selection New value of the int.
      * @return the existing setting with the new value applied.
      */
-    fun setSelectedValue(selection: Int): AbstractIntSetting {
-        val intSetting = setting as AbstractIntSetting
-        intSetting.int = selection
+    fun setSelectedValues(selection: List<Int>): AbstractMultiIntSetting {
+        val intSetting = setting as AbstractMultiIntSetting
+        intSetting.ints = selection
         return intSetting
     }
 
-    fun setSelectedValue(selection: Short): AbstractShortSetting {
-        val shortSetting = setting as AbstractShortSetting
-        shortSetting.short = selection
+    fun setSelectedValues(selection: List<Short>): AbstractMultiShortSetting {
+        val shortSetting = setting as AbstractMultiShortSetting
+        shortSetting.shorts = selection
         return shortSetting
     }
 }
