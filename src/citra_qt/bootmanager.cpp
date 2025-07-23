@@ -28,7 +28,9 @@
 #include "video_core/renderer_software/renderer_software.h"
 
 #ifdef ENABLE_OPENGL
-#include <glad/glad.h>
+// clang-format off
+#include <glad/glad.h> // Must be included first
+// clang-format on
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #endif
