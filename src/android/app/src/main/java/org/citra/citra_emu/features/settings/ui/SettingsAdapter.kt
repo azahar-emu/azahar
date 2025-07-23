@@ -38,6 +38,9 @@ import org.citra.citra_emu.databinding.ListItemSettingsHeaderBinding
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
@@ -663,6 +666,17 @@ class SettingsAdapter(
         }
     }
 
+    private fun getValueForMultiChoiceSelection(item: MultiChoiceSetting, which: Int, is_checked: Boolean): Int {
+        val valuesId = item.valuesId
+        if (valuesId > 0) {
+            val valuesArray = context.resources.getIntArray(valuesId)
+            if (is_checked) {
+                return valuesArray[which]
+            }
+        }
+        return which
+    }
+
     private fun onMultiChoiceClick(item: MultiChoiceSetting) {
         clickedItem = item
         val values = getSelectionForMultiChoiceValues(item)
@@ -695,27 +709,27 @@ class SettingsAdapter(
     //TODO: REFACTOR TO BE MULTICHOICE
     override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
         when (clickedItem) {
-            is SingleChoiceSetting -> {
-                val scSetting = clickedItem as? SingleChoiceSetting
+            is MultiChoiceSetting -> {
+                val scSetting = clickedItem as? MultiChoiceSetting
                 scSetting?.let {
                     val setting = when (it.setting) {
-                        is AbstractIntSetting -> {
-                            val value = getValueForSingleChoiceSelection(it, which)
-                            if (it.selectedValue != value) {
+                        is AbstractMultiIntSetting -> {
+                            val value = getValueForMultiChoiceSelection(it, which, is_checked)
+                            if (value !in it.selectedValues) {
                                 fragmentView?.onSettingChanged()
                             }
-                            it.setSelectedValue(value)
+                            it.setSelectedValues(value)
                         }
 
-                        is AbstractShortSetting -> {
-                            val value = getValueForSingleChoiceSelection(it, which).toShort()
-                            if (it.selectedValue.toShort() != value) {
+                        is AbstractMultiShortSetting -> {
+                            val value = getValueForMultiChoiceSelection(it, which, is_checked).toShort()
+                            if (value !in it.selectedValues.map { it.toShort() }) {
                                 fragmentView?.onSettingChanged()
                             }
-                            it.setSelectedValue(value)
+                            it.setSelectedValues(value)
                         }
 
-                        else -> throw IllegalStateException("Unrecognized type used for SingleChoiceSetting!")
+                        else -> throw IllegalStateException("Unrecognized type used for MultiChoiceSetting!")
                     }
                     fragmentView?.putSetting(setting)
                     fragmentView.loadSettingsList()
@@ -723,22 +737,22 @@ class SettingsAdapter(
                 }
             }
 
-            is StringSingleChoiceSetting -> {
-                val scSetting = clickedItem as? StringSingleChoiceSetting
+            is StringMultiChoiceSetting -> {
+                val scSetting = clickedItem as? StringMultiChoiceSetting
                 scSetting?.let {
                     val setting = when (it.setting) {
-                        is AbstractStringSetting -> {
+                        is AbstractMultiStringSetting -> {
                             val value = it.getValueAt(which)
-                            if (it.selectedValue != value) fragmentView?.onSettingChanged()
-                            it.setSelectedValue(value ?: "")
+                            if (value !in it.selectedValues ) fragmentView?.onSettingChanged()
+                            it.setSelectedValues(value ?: "")
                         }
 
-                        is AbstractShortSetting -> {
-                            if (it.selectValueIndex != which) fragmentView?.onSettingChanged()
-                            it.setSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
+                        is AbstractMultiShortSetting -> {
+                            if (is_checked != it.selectValueIndices[which]) fragmentView?.onSettingChanged()
+                            it.setSelectedValues(it.getValueAt(which)?.toShort() ?: 1)
                         }
 
-                        else -> throw IllegalStateException("Unrecognized type used for StringSingleChoiceSetting!")
+                        else -> throw IllegalStateException("Unrecognized type used for StringMultiChoiceSetting!")
                     }
 
                     fragmentView?.putSetting(setting)

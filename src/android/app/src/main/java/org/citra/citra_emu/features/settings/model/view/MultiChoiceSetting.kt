@@ -7,6 +7,8 @@ package org.citra.citra_emu.features.settings.model.view
 import org.citra.citra_emu.features.settings.model.AbstractMultiIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
+import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 
 class MultiChoiceSetting(
     setting: AbstractSetting?,
@@ -28,7 +30,7 @@ class MultiChoiceSetting(
 
             try {
                 val setting = setting as AbstractMultiIntSetting
-                return setting.ints
+                return setting.ints.toList()
             } catch (_: ClassCastException) {
             }
 
@@ -48,15 +50,15 @@ class MultiChoiceSetting(
      * @param selection New value of the int.
      * @return the existing setting with the new value applied.
      */
-    fun setSelectedValues(selection: List<Int>): AbstractMultiIntSetting {
+    fun setSelectedValues(selection: Int): AbstractMultiIntSetting {
         val intSetting = setting as AbstractMultiIntSetting
-        intSetting.ints = selection
+        intSetting.ints.add(selection)
         return intSetting
     }
 
-    fun setSelectedValues(selection: List<Short>): AbstractMultiShortSetting {
+    fun setSelectedValues(selection: Short): AbstractMultiShortSetting {
         val shortSetting = setting as AbstractMultiShortSetting
-        shortSetting.shorts = selection
+        shortSetting.shorts.add(selection)
         return shortSetting
     }
 }

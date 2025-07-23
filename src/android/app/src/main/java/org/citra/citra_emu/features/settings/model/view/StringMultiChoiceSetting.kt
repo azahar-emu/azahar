@@ -37,7 +37,7 @@ class StringMultiChoiceSetting(
 
             try {
                 val setting = setting as AbstractMultiStringSetting
-                return setting.strings
+                return setting.strings.toList()
             } catch (_: ClassCastException) {
             }
 
@@ -78,15 +78,15 @@ class StringMultiChoiceSetting(
      * @param selection New value of the int.
      * @return the existing setting with the new value applied.
      */
-    fun setSelectedValues(selection: List<String>): AbstractMultiStringSetting {
+    fun setSelectedValues(selection: String): AbstractMultiStringSetting {
         val stringSetting = setting as AbstractMultiStringSetting
-        stringSetting.strings = selection
+        stringSetting.strings.add(selection)
         return stringSetting
     }
 
-    fun setSelectedValues(selection: List<Short>): AbstractMultiShortSetting {
+    fun setSelectedValues(selection: Short): AbstractMultiShortSetting {
         val shortSetting = setting as AbstractMultiShortSetting
-        shortSetting.shorts = selection
+        shortSetting.shorts.add(selection)
         return shortSetting
     }
 }

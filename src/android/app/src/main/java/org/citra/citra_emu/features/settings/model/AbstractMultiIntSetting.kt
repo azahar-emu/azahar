@@ -5,5 +5,5 @@
 package org.citra.citra_emu.features.settings.model
 
 interface AbstractMultiIntSetting : AbstractSetting {
-    var ints: List<Int>
+    var ints: MutableSet<Int>
 }

@@ -5,5 +5,5 @@
 package org.citra.citra_emu.features.settings.model
 
 interface AbstractMultiBooleanSetting : AbstractSetting {
-    var booleans: List<Boolean>
+    var booleans: MutableSet<Boolean>
 }

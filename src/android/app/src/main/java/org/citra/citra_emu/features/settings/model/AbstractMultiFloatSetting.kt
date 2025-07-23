@@ -5,5 +5,5 @@
 package org.citra.citra_emu.features.settings.model
 
 interface AbstractMultiFloatSetting : AbstractSetting {
-    var floats: List<Float>
+    var floats: MutableSet<Float>
 }

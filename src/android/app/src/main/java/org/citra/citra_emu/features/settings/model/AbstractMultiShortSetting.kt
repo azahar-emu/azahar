@@ -5,5 +5,5 @@
 package org.citra.citra_emu.features.settings.model
 
 interface AbstractMultiShortSetting : AbstractSetting {
-    var shorts: List<Short>
+    var shorts: MutableSet<Short>
 }
