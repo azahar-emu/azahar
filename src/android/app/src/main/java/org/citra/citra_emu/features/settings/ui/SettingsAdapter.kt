@@ -716,22 +716,26 @@ class SettingsAdapter(
                         is AbstractMultiIntSetting -> {
                             val value = getValueForMultiChoiceSelection(it, which, is_checked)
                             if (value !in it.selectedValues) {
+                                it.removeSelectedValue(value)
                                 fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(value)
                             }
-                            it.setSelectedValues(value)
                         }
 
                         is AbstractMultiShortSetting -> {
                             val value = getValueForMultiChoiceSelection(it, which, is_checked).toShort()
                             if (value !in it.selectedValues.map { it.toShort() }) {
+                                it.removeSelectedValue(value)
                                 fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(value)
                             }
-                            it.setSelectedValues(value)
                         }
 
                         else -> throw IllegalStateException("Unrecognized type used for MultiChoiceSetting!")
                     }
-                    fragmentView?.putSetting(setting)
+                    fragmentView?.putSetting(setting as AbstractSetting)
                     fragmentView.loadSettingsList()
                     closeDialog()
                 }
@@ -743,19 +747,27 @@ class SettingsAdapter(
                     val setting = when (it.setting) {
                         is AbstractMultiStringSetting -> {
                             val value = it.getValueAt(which)
-                            if (value !in it.selectedValues ) fragmentView?.onSettingChanged()
-                            it.setSelectedValues(value ?: "")
+                            if (value !in it.selectedValues ) {
+                                it.removeSelectedValue(value ?: "")
+                                fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(value ?: "")
+                            }
                         }
 
                         is AbstractMultiShortSetting -> {
-                            if (is_checked != it.selectValueIndices[which]) fragmentView?.onSettingChanged()
-                            it.setSelectedValues(it.getValueAt(which)?.toShort() ?: 1)
+                            if (is_checked != it.selectValueIndices[which]) {
+                                it.removeSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
+                                fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
+                            }
                         }
 
                         else -> throw IllegalStateException("Unrecognized type used for StringMultiChoiceSetting!")
                     }
 
-                    fragmentView?.putSetting(setting)
+                    fragmentView?.putSetting(setting as AbstractSetting)
                     fragmentView.loadSettingsList()
                     closeDialog()
                 }

@@ -72,21 +72,32 @@ class StringMultiChoiceSetting(
         }
 
     /**
-     * Write a value to the backing int. If that int was previously null,
-     * initializes a new one and returns it, so it can be added to the Hashmap.
+     * Add values to multi choice through the backing mutable sets.
      *
      * @param selection New value of the int.
-     * @return the existing setting with the new value applied.
+     * @return the existing setting with the new value added.
      */
-    fun setSelectedValues(selection: String): AbstractMultiStringSetting {
+    fun addSelectedValue(selection: String): AbstractMultiStringSetting {
         val stringSetting = setting as AbstractMultiStringSetting
         stringSetting.strings.add(selection)
         return stringSetting
     }
 
-    fun setSelectedValues(selection: Short): AbstractMultiShortSetting {
+    fun addSelectedValue(selection: Short): AbstractMultiShortSetting {
         val shortSetting = setting as AbstractMultiShortSetting
         shortSetting.shorts.add(selection)
+        return shortSetting
+    }
+
+    fun removeSelectedValue(selection: String): AbstractMultiStringSetting {
+        val stringSetting = setting as AbstractMultiStringSetting
+        stringSetting.strings.remove(selection)
+        return stringSetting
+    }
+
+    fun removeSelectedValue(selection: Short): AbstractMultiShortSetting {
+        val shortSetting = setting as AbstractMultiShortSetting
+        shortSetting.shorts.remove(selection)
         return shortSetting
     }
 }

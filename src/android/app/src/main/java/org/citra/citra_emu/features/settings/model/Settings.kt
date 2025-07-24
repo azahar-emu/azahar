@@ -220,6 +220,8 @@ class Settings {
             R.string.turbo_limit_hotkey
         )
 
+        val comboSelection = mutableSetOf<String>()
+
         const val PREF_FIRST_APP_LAUNCH = "FirstApplicationLaunch"
         const val PREF_MATERIAL_YOU = "MaterialYouTheme"
         const val PREF_THEME_MODE = "ThemeMode"

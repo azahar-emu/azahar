@@ -21,6 +21,7 @@ import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
@@ -38,6 +39,7 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
+import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
@@ -809,6 +811,26 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addComboButtonSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.combo_key))
+        val comboSetting = object : AbstractMultiStringSetting {
+            override var strings: MutableSet<String>
+                get() {
+                    return Settings.comboSelection
+                }
+                set(values) {
+                    for (item in values) {
+                        Settings.comboSelection.add(item)
+                    }
+                }
+            override val key = null
+            override val section = null
+            override val isRuntimeEditable = false
+            override val valueAsString get() = ""
+            override val defaultValue = ""
+        }
+
+        val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
+        val combo_values =  settingsActivity.resources.getStringArray(R.array.combovalues)
+
         sl.apply {
             add(
                 SwitchSetting(
@@ -819,20 +841,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.ENABLE_COMBO_KEY.defaultValue,
                 )
             )
-            add(HeaderSetting(R.string.combo_key_options))
-            // TODO: Implement displaying selectable buttons
-            /*
             add(
-                StringSingleChoiceSetting(
+                StringMultiChoiceSetting(
                     comboSetting,
-                    R.string.emulated_language,
+                    R.string.combo_key_options,
                     0,
-                    R.array.n3dsButtons,
-                    R.array.
+                    buttons,
+                    combo_values
                 )
             )
-
-            */
         }
 
     }
