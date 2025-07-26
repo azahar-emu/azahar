@@ -116,18 +116,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
         }
 
-        var hasActiveJoy = false
+        var hasActiveJoystick = false
         if(!hasActiveButtons && !hasActiveDpad){
             for (joystick in overlayJoysticks) {
                 if (joystick.trackId == pointerId) {
-                    hasActiveJoy = true
+                    hasActiveJoystick = true
                     break
                 }
             }
         }
 
         var shouldUpdateView = false
-        if(!hasActiveDpad && !hasActiveJoy) {
+        if(!hasActiveDpad && !hasActiveJoystick) {
             for (button in overlayButtons) {
                 val stateChanged = button.updateStatus(event, hasActiveButtons, this)
                 if (!stateChanged) {
@@ -151,7 +151,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
         }
 
-        if(!hasActiveButtons && !hasActiveJoy) {
+        if(!hasActiveButtons && !hasActiveJoystick) {
             for (dpad in overlayDpads) {
                 val stateChanged = dpad.updateStatus(
                     event,
@@ -190,7 +190,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
         if(!hasActiveDpad && !hasActiveButtons) {
             for (joystick in overlayJoysticks) {
-                val stateChanged = joystick.updateStatus(event, hasActiveJoy, this)
+                val stateChanged = joystick.updateStatus(event, hasActiveJoystick, this)
                 if (!stateChanged) {
                     continue
                 }
