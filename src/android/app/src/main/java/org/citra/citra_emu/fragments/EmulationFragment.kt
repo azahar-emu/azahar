@@ -849,9 +849,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         val editor = preferences.edit()
 
         val buttonslidingmodes = mutableListOf<String>()
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_none))
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_simple))
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_keep_first))
+        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_disabled))
+        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_enabled))
+        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_alternative))
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.emulation_button_sliding_mode)
