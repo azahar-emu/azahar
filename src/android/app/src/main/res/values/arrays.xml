@@ -169,20 +169,6 @@
         <item>@string/button_turbo</item>
     </string-array>
 
-    <integer-array name="combovalues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-        <item>10</item>
-    </integer-array>
-
     <string-array name="cameraImageSourceNames">
         <item>@string/blank</item>
         <item>@string/still_image</item>

@@ -48,6 +48,7 @@ class StringMultiChoiceSetting(
             }
             return defaultValue!!
         }
+
     val selectValueIndices: BooleanArray
         get() {
             val noneList = values?.let {

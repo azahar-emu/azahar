@@ -665,7 +665,8 @@ class SettingsAdapter(
             return checked_values.toBooleanArray()
         }
     }
-
+    // TODO: Part of MultiChoice Impl
+    /*
     private fun getValueForMultiChoiceSelection(item: MultiChoiceSetting, which: Int, is_checked: Boolean): Int {
         val valuesId = item.valuesId
         if (valuesId > 0) {
@@ -676,6 +677,7 @@ class SettingsAdapter(
         }
         return which
     }
+     */
 
     private fun onMultiChoiceClick(item: MultiChoiceSetting) {
         clickedItem = item
@@ -706,9 +708,10 @@ class SettingsAdapter(
         onStringMultiChoiceClick(item)
     }
 
-    //TODO: REFACTOR TO BE MULTICHOICE
+    //TODO: I only added MultiChoice for fleshing out backend, debating whether to remove MultiChoiceSetting and related code for cleaning up
     override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
         when (clickedItem) {
+            /*
             is MultiChoiceSetting -> {
                 val scSetting = clickedItem as? MultiChoiceSetting
                 scSetting?.let {
@@ -736,18 +739,19 @@ class SettingsAdapter(
                         else -> throw IllegalStateException("Unrecognized type used for MultiChoiceSetting!")
                     }
                     fragmentView?.putSetting(setting as AbstractSetting)
-                    fragmentView.loadSettingsList()
-                    closeDialog()
+                    //fragmentView.loadSettingsList()
+                    //closeDialog()
                 }
             }
 
+             */
             is StringMultiChoiceSetting -> {
                 val scSetting = clickedItem as? StringMultiChoiceSetting
                 scSetting?.let {
                     val setting = when (it.setting) {
                         is AbstractMultiStringSetting -> {
                             val value = it.getValueAt(which)
-                            if (value !in it.selectedValues ) {
+                            if (value in it.selectedValues && !is_checked) {
                                 it.removeSelectedValue(value ?: "")
                                 fragmentView?.onSettingChanged()
                             } else {
@@ -768,8 +772,8 @@ class SettingsAdapter(
                     }
 
                     fragmentView?.putSetting(setting as AbstractSetting)
-                    fragmentView.loadSettingsList()
-                    closeDialog()
+                    //fragmentView.loadSettingsList()
+                    //closeDialog()
                 }
             }
         }

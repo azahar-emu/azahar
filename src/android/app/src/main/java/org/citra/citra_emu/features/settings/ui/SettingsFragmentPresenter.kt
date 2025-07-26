@@ -34,6 +34,7 @@ import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.HeaderSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.RunnableSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
@@ -829,7 +830,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
 
         val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
-        val combo_values =  settingsActivity.resources.getStringArray(R.array.combovalues)
 
         sl.apply {
             add(
@@ -847,7 +847,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.combo_key_options,
                     0,
                     buttons,
-                    combo_values
+                    buttons
                 )
             )
         }
