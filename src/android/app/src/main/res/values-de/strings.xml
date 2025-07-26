@@ -397,10 +397,6 @@
     <string name="emulation_configure_controls">Steuerung konfigurieren</string>
     <string name="emulation_edit_layout">Anordnung bearbeiten</string>
     <string name="emulation_done">Fertig</string>
-    <string name="emulation_button_sliding_mode">Knopf-Gleiten</string>
-    <string name="emulation_button_sliding_mode_none">Aus</string>
-    <string name="emulation_button_sliding_mode_simple">Einfach</string>
-    <string name="emulation_button_sliding_mode_keep_first">Erster Knopf bleibt, über weitere Knöpfe gleiten</string>
     <string name="emulation_toggle_controls">Knöpfe ein-/ausschalten</string>
     <string name="emulation_control_scale">Größe anpassen</string>
     <string name="emulation_control_scale_global">Globale Skalierung</string>
