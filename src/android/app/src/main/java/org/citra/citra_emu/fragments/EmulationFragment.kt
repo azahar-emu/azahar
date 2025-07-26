@@ -796,7 +796,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
-                R.id.menu_emulation_button_sliding_mode -> {
+                R.id.menu_emulation_button_sliding -> {
                     showButtonSlidingModeMenu()
                     true
                 }
@@ -849,12 +849,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         val editor = preferences.edit()
 
         val buttonSlidingModes = mutableListOf<String>()
-        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_disabled))
-        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_enabled))
-        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_alternative))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_disabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_enabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_alternative))
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.emulation_button_sliding_mode)
+            .setTitle(R.string.emulation_button_sliding)
             .setSingleChoiceItems(
                 buttonSlidingModes.toTypedArray(),
                 EmulationMenuSettings.buttonSlide

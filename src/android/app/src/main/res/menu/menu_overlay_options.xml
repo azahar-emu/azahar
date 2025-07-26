@@ -87,8 +87,8 @@
         android:title="@string/emulation_control_opacity" />
 
     <item
-        android:id="@+id/menu_emulation_button_sliding_mode"
-        android:title="@string/emulation_button_sliding_mode">
+        android:id="@+id/menu_emulation_button_sliding"
+        android:title="@string/emulation_button_sliding">
     </item>
     <group android:checkableBehavior="all">
         <item
