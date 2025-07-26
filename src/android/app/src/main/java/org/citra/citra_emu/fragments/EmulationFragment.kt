@@ -848,15 +848,15 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private fun showButtonSlidingModeMenu() {
         val editor = preferences.edit()
 
-        val buttonslidingmodes = mutableListOf<String>()
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_disabled))
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_enabled))
-        buttonslidingmodes.add(getString(R.string.emulation_button_sliding_mode_alternative))
+        val buttonSlidingModes = mutableListOf<String>()
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_disabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_enabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_mode_alternative))
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.emulation_button_sliding_mode)
             .setSingleChoiceItems(
-                buttonslidingmodes.toTypedArray(),
+                buttonSlidingModes.toTypedArray(),
                 EmulationMenuSettings.buttonSlide
             ) { _: DialogInterface?, which: Int ->
                 EmulationMenuSettings.buttonSlide = which

@@ -129,7 +129,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
         var shouldUpdateView = false
         if(!hasActiveDpad && !hasActiveJoy) {
             for (button in overlayButtons) {
-                if (!button.updateStatus(event, hasActiveButtons, this)) {
+                val stateChanged = button.updateStatus(event, hasActiveButtons, this)
+                if (!stateChanged) {
                     continue
                 }
 
@@ -145,21 +146,23 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     button.id,
                     button.status
                 )
+
                 shouldUpdateView = true
             }
         }
 
         if(!hasActiveButtons && !hasActiveJoy) {
             for (dpad in overlayDpads) {
-                if (!dpad.updateStatus(
-                        event,
-                        hasActiveDpad,
-                        EmulationMenuSettings.dpadSlide,
-                        this
-                    )
-                ) {
+                val stateChanged = dpad.updateStatus(
+                    event,
+                    hasActiveDpad,
+                    EmulationMenuSettings.dpadSlide,
+                    this
+                )
+                if (!stateChanged) {
                     continue
                 }
+
                 NativeLibrary.onGamePadEvent(
                     NativeLibrary.TouchScreenDevice,
                     dpad.upId,
@@ -180,15 +183,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     dpad.rightId,
                     dpad.rightStatus
                 )
+
                 shouldUpdateView = true
             }
         }
 
         if(!hasActiveDpad && !hasActiveButtons) {
             for (joystick in overlayJoysticks) {
-                if (!joystick.updateStatus(event, hasActiveJoy, this)) {
+                val stateChanged = joystick.updateStatus(event, hasActiveJoy, this)
+                if (!stateChanged) {
                     continue
                 }
+
                 val axisID = joystick.joystickId
                 NativeLibrary.onGamePadMoveEvent(
                     NativeLibrary.TouchScreenDevice,
@@ -196,6 +202,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     joystick.xAxis,
                     joystick.yAxis
                 )
+
                 shouldUpdateView = true
             }
         }
