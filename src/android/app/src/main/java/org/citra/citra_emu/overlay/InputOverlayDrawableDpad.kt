@@ -72,7 +72,7 @@ class InputOverlayDrawableDpad(
         val motionEvent = event.action and MotionEvent.ACTION_MASK
         var isActionDown =
             motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN
-        if (!isActionDown && EmulationMenuSettings.buttonSlide != ButtonSlidingMode.None.int) {
+        if (!isActionDown && EmulationMenuSettings.buttonSlide != ButtonSlidingMode.Disabled.int) {
             isActionDown = motionEvent == MotionEvent.ACTION_MOVE && !hasActiveButtons
         }
 

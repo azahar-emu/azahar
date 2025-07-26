@@ -16,15 +16,15 @@ import org.citra.citra_emu.utils.EmulationMenuSettings
 
 enum class ButtonSlidingMode(val int: Int) {
     // Disabled, buttons can only be triggered by pressing them directly.
-    None(0),
+    Disabled(0),
 
     // Additionally to pressing buttons directly, they can be activated and released by sliding into
     // and out of their area.
-    Simple(1),
+    Enabled(1),
 
     // The first button is kept activated until released, further buttons use the simple button
     // sliding method.
-    KeepFirst(2)
+    Alternative(2)
 }
 
 /**
@@ -97,7 +97,7 @@ class InputOverlayDrawableButton(
         }
 
         val isActionMoving = motionEvent == MotionEvent.ACTION_MOVE
-        if (buttonSliding != ButtonSlidingMode.None.int && isActionMoving) {
+        if (buttonSliding != ButtonSlidingMode.Disabled.int && isActionMoving) {
             val inside = bounds.contains(xPosition, yPosition)
             if (pressedState) {
                 // button is already pressed
@@ -106,7 +106,7 @@ class InputOverlayDrawableButton(
                     return false
                 }
                 // prevent the first (directly pressed) button to deactivate when sliding off
-                if (buttonSliding == ButtonSlidingMode.KeepFirst.int && isMotionFirstButton) {
+                if (buttonSliding == ButtonSlidingMode.Alternative.int && isMotionFirstButton) {
                     return false
                 }
                 buttonUp(overlay)

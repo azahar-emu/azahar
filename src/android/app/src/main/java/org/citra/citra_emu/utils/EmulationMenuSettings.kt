@@ -28,7 +28,7 @@ object EmulationMenuSettings {
                 .apply()
         }
     var buttonSlide: Int
-        get() = preferences.getInt("EmulationMenuSettings_ButtonSlideMode", ButtonSlidingMode.None.int)
+        get() = preferences.getInt("EmulationMenuSettings_ButtonSlideMode", ButtonSlidingMode.Disabled.int)
         set(value) {
             preferences.edit()
                 .putInt("EmulationMenuSettings_ButtonSlideMode", value)
