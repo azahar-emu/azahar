@@ -797,7 +797,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_emulation_button_sliding -> {
-                    showButtonSlidingModeMenu()
+                    showButtonSlidingMenu()
                     true
                 }
 
@@ -845,7 +845,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.show()
     }
 
-    private fun showButtonSlidingModeMenu() {
+    private fun showButtonSlidingMenu() {
         val editor = preferences.edit()
 
         val buttonSlidingModes = mutableListOf<String>()
