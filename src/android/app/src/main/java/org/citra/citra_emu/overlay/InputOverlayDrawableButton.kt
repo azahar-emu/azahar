@@ -45,7 +45,7 @@ class InputOverlayDrawableButton(
 ) {
     var trackId: Int
 
-    private var isMotionFirstButton = false // mark buttons that did not get activated by sliding
+    private var isMotionFirstButton = false // mark the first activated button with the current motion
 
     private var previousTouchX = 0
     private var previousTouchY = 0
