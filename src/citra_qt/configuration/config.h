@@ -49,7 +49,6 @@ private:
     void ReadUIGameListValues();
     void ReadUILayoutValues();
     void ReadUtilityValues();
-    void ReadWebServiceValues();
     void ReadVideoDumpingValues();
 
     void SaveValues();
@@ -70,7 +69,6 @@ private:
     void SaveUIGameListValues();
     void SaveUILayoutValues();
     void SaveUtilityValues();
-    void SaveWebServiceValues();
     void SaveVideoDumpingValues();
 
     /**

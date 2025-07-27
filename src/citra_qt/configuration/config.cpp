@@ -263,7 +263,6 @@ void QtConfig::ReadValues() {
         ReadDataStorageValues();
         ReadMiscellaneousValues();
         ReadDebuggingValues();
-        ReadWebServiceValues();
         ReadVideoDumpingValues();
     }
 
@@ -872,21 +871,6 @@ void QtConfig::ReadUILayoutValues() {
     qt_config->endGroup();
 }
 
-void QtConfig::ReadWebServiceValues() {
-    qt_config->beginGroup(QStringLiteral("WebService"));
-
-    NetSettings::values.web_api_url =
-        ReadSetting(QStringLiteral("web_api_url"), QStringLiteral("https://api.citra-emu.org"))
-            .toString()
-            .toStdString();
-    NetSettings::values.citra_username =
-        ReadSetting(QStringLiteral("citra_username")).toString().toStdString();
-    NetSettings::values.citra_token =
-        ReadSetting(QStringLiteral("citra_token")).toString().toStdString();
-
-    qt_config->endGroup();
-}
-
 void QtConfig::SaveValues() {
     if (global) {
         SaveControlValues();
@@ -894,7 +878,6 @@ void QtConfig::SaveValues() {
         SaveDataStorageValues();
         SaveMiscellaneousValues();
         SaveDebuggingValues();
-        SaveWebServiceValues();
         SaveVideoDumpingValues();
     }
 
@@ -1380,20 +1363,6 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(QStringLiteral("microProfileDialogGeometry"),
                  UISettings::values.microprofile_geometry);
     WriteBasicSetting(UISettings::values.microprofile_visible);
-
-    qt_config->endGroup();
-}
-
-void QtConfig::SaveWebServiceValues() {
-    qt_config->beginGroup(QStringLiteral("WebService"));
-
-    WriteSetting(QStringLiteral("web_api_url"),
-                 QString::fromStdString(NetSettings::values.web_api_url),
-                 QStringLiteral("https://api.citra-emu.org"));
-    WriteSetting(QStringLiteral("citra_username"),
-                 QString::fromStdString(NetSettings::values.citra_username));
-    WriteSetting(QStringLiteral("citra_token"),
-                 QString::fromStdString(NetSettings::values.citra_token));
 
     qt_config->endGroup();
 }
