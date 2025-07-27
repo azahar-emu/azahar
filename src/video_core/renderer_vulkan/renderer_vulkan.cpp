@@ -61,9 +61,7 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
 namespace {
 static bool IsLowRefreshRate() {
 #ifdef ENABLE_SDL2
-    const bool sdl_video_was_init = SDL_WasInit(SDL_INIT_VIDEO) != 0;
-
-    if (!sdl_video_was_init && SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         LOG_ERROR(Render_Vulkan, "SDL video failed to initialize, unable to check refresh rate");
         return false;
     }
@@ -72,8 +70,7 @@ static bool IsLowRefreshRate() {
     SDL_GetCurrentDisplayMode(0, &cur_display_mode); // TODO: Multimonitor handling. -OS
     const auto cur_refresh_rate = cur_display_mode.refresh_rate;
 
-    if (!sdl_video_was_init) // shutdown only if this was not inited before this function
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     if (cur_refresh_rate < SCREEN_REFRESH_RATE) {
         LOG_WARNING(Render_Vulkan,
