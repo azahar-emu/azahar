@@ -63,18 +63,18 @@ FileType GuessFromExtension(const std::string& extension_) {
     return FileType::Unknown;
 }
 
-const char* GetFileTypeString(FileType type) {
+const char* GetFileTypeString(FileType type, bool is_compressed) {
     switch (type) {
     case FileType::CCI:
-        return "NCSD";
+        return is_compressed ? "NCSD (Z)" : "NCSD";
     case FileType::CXI:
-        return "NCCH";
+        return is_compressed ? "NCCH (Z)" : "NCCH";
     case FileType::CIA:
-        return "CIA";
+        return is_compressed ? "CIA (Z)" : "CIA";
     case FileType::ELF:
         return "ELF";
     case FileType::THREEDSX:
-        return "3DSX";
+        return is_compressed ? "3DSX (Z)" : "3DSX";
     case FileType::ARTIC:
         return "ARTIC";
     case FileType::Error:

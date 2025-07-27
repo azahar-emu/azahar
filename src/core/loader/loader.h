@@ -60,7 +60,7 @@ FileType GuessFromExtension(const std::string& extension);
 /**
  * Convert a FileType into a string which can be displayed to the user.
  */
-const char* GetFileTypeString(FileType type);
+const char* GetFileTypeString(FileType type, bool is_compressed = false);
 
 /// Return type for functions in Loader namespace
 enum class ResultStatus {
@@ -292,6 +292,10 @@ public:
         CompressFileInfo info{};
         info.is_supported = false;
         return info;
+    }
+
+    virtual bool IsFileCompressed() {
+        return false;
     }
 
 protected:

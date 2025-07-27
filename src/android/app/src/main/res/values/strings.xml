@@ -535,7 +535,6 @@
     <string name="save_load_error">Save/Load Error</string>
     <string name="fatal_error">Fatal Error</string>
     <string name="fatal_error_message">A fatal error occurred. Check the log for details.\nContinuing emulation may result in crashes and bugs.</string>
-    <string name="invalid_region">Invalid region</string>
     <string name="unsupported_encrypted">Unsupported encrypted application</string>
 
     <!-- Disk Shader Cache -->
@@ -561,6 +560,9 @@
     <string name="create_shortcut">Create Shortcut</string>
     <string name="shortcut_name_empty">Shortcut name cannot be empty</string>
     <string name="shortcut_image_stretch_toggle">Stretch to fit image</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">File:</string>
+    <string name="game_context_type">Type:</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Show Performance Overlay</string>

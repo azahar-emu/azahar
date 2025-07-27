@@ -343,8 +343,9 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
         bottomSheetView.findViewById<TextView>(R.id.about_game_title).text = game.title
         bottomSheetView.findViewById<TextView>(R.id.about_game_company).text = game.company
         bottomSheetView.findViewById<TextView>(R.id.about_game_region).text = game.regions
-        bottomSheetView.findViewById<TextView>(R.id.about_game_id).text = "ID: " + String.format("%016X", game.titleId)
-        bottomSheetView.findViewById<TextView>(R.id.about_game_filename).text = "File: " + game.filename
+        bottomSheetView.findViewById<TextView>(R.id.about_game_id).text = context.getString(R.string.game_context_id) + " " + String.format("%016X", game.titleId)
+        bottomSheetView.findViewById<TextView>(R.id.about_game_filename).text = context.getString(R.string.game_context_file) + " " + game.filename
+        bottomSheetView.findViewById<TextView>(R.id.about_game_filetype).text = context.getString(R.string.game_context_type) + " " + game.fileType
         GameIconUtils.loadGameIcon(activity, game, bottomSheetView.findViewById(R.id.game_icon))
 
         bottomSheetView.findViewById<MaterialButton>(R.id.about_game_play).setOnClickListener {
