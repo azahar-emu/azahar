@@ -771,7 +771,7 @@ class SettingsAdapter(
 
                     fragmentView?.onSettingChanged()
                     fragmentView?.putSetting(setting as AbstractSetting)
-                    fragmentView.loadSettingsList()
+                    //fragmentView.loadSettingsList()
                     //closeDialog()
                 }
             }

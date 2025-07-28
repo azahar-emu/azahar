@@ -140,6 +140,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
                     TurboHelper.toggleTurbo(true)
                 }
+                /*
+                else if (button.id == NativeLibrary.ButtonType.BUTTON_COMBO && button.status == NativeLibrary.ButtonState.PRESSED) {
+                    var comboButtonArray =
+                }
+                 */
 
                 NativeLibrary.onGamePadEvent(
                     NativeLibrary.TouchScreenDevice,

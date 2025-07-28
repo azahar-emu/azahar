@@ -834,7 +834,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 }
             override val key = null
             override val section = null
-            override val isRuntimeEditable = false
+            override val isRuntimeEditable = true
             override val valueAsString get() = ""
             override val defaultValue = ""
         }
