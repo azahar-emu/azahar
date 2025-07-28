@@ -471,9 +471,8 @@ deterministic_async_operations =
 
 [WebService]
 # URL for Web API
-web_api_url = https://api.citra-emu.org
+web_api_url =
 # Username and token for Citra Web Service
-# See https://profile.citra-emu.org/ for more info
 citra_username =
 citra_token =
 )";

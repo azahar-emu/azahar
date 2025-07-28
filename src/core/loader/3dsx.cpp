@@ -346,6 +346,10 @@ AppLoader::CompressFileInfo AppLoader_THREEDSX::GetCompressFileInfo() {
     return info;
 }
 
+bool AppLoader_THREEDSX::IsFileCompressed() {
+    return FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt;
+}
+
 ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
     if (!file->IsOpen())
         return ResultStatus::Error;

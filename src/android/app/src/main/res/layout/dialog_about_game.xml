@@ -86,12 +86,21 @@
                 tools:text="Application Filename" />
 
             <TextView
-                android:id="@+id/about_game_playtime"
+                android:id="@+id/about_game_filetype"
                 style="?attr/textAppearanceBodyMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintStart_toStartOf="@id/about_game_title"
                 app:layout_constraintTop_toBottomOf="@+id/about_game_filename"
+                tools:text="Game Filetype" />
+
+            <TextView
+                android:id="@+id/about_game_playtime"
+                style="?attr/textAppearanceBodyMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="@id/about_game_title"
+                app:layout_constraintTop_toBottomOf="@+id/about_game_filetype"
                 tools:text="Game Playtime" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

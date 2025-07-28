@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2018 yuzu emulator team
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -112,8 +116,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                                          res == Loader::ResultStatus::ErrorEncrypted),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
-                    new GameListItem(
-                        QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
+                    new GameListItem(QString::fromStdString(Loader::GetFileTypeString(
+                        loader->GetFileType(), loader->IsFileCompressed()))),
                     new GameListItemSize(FileUtil::GetSize(physical_name)),
                     new GameListItemPlayTime(play_time_manager.GetPlayTime(program_id)),
                 },

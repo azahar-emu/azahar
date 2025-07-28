@@ -60,9 +60,12 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile* file) {
     if (MakeMagic('N', 'C', 'C', 'H') == magic)
         return FileType::CXI;
 
-    std::optional<u32> magic_zstd;
-    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) != std::nullopt ||
-        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file_crypto.get()) != std::nullopt) {
+    std::optional<u32> magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file);
+    if (!magic_zstd.has_value()) {
+        magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file_crypto.get());
+    }
+
+    if (magic_zstd.has_value()) {
         if (MakeMagic('N', 'C', 'S', 'D') == magic_zstd)
             return FileType::CCI;
 
@@ -435,6 +438,13 @@ AppLoader::CompressFileInfo AppLoader_NCCH::GetCompressFileInfo() {
     info.default_metadata.emplace("titleinfo", title_info_vec);
 
     return info;
+}
+
+bool AppLoader_NCCH::IsFileCompressed() {
+    if (base_ncch.LoadHeader() != ResultStatus::Success) {
+        return false;
+    }
+    return base_ncch.IsFileCompressed();
 }
 
 } // namespace Loader
