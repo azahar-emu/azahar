@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2014 Dolphin Emulator Project / Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -23,10 +27,10 @@ public:
      * @param file FileUtil::IOFile open file
      * @return FileType found, or FileType::Error if this loader doesn't know it
      */
-    static FileType IdentifyType(FileUtil::IOFile& file);
+    static FileType IdentifyType(FileUtil::IOFile* file);
 
     FileType GetFileType() override {
-        return IdentifyType(file);
+        return IdentifyType(file.get());
     }
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
@@ -34,6 +38,8 @@ public:
     ResultStatus ReadIcon(std::vector<u8>& buffer) override;
 
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
+
+    CompressFileInfo GetCompressFileInfo() override;
 
 private:
     std::string filename;

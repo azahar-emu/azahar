@@ -16,6 +16,7 @@
 #include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/certificate.h"
 #include "core/file_sys/errors.h"
@@ -54,16 +55,6 @@ constexpr u16 CATEGORY_DLP = 0x0001;
 constexpr u8 VARIATION_SYSTEM = 0x02;
 constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
 constexpr u32 TID_HIGH_DLC = 0x0004008C;
-
-struct TitleInfo {
-    u64_le tid;
-    u64_le size;
-    u16_le version;
-    u16_le unused;
-    u32_le type;
-};
-
-static_assert(sizeof(TitleInfo) == 0x18, "Title info structure size is wrong");
 
 constexpr u8 OWNERSHIP_DOWNLOADED = 0x01;
 constexpr u8 OWNERSHIP_OWNED = 0x02;
@@ -105,6 +96,12 @@ NCCHCryptoFile::NCCHCryptoFile(const std::string& out_file, bool encrypted_conte
         file = std::make_unique<FileUtil::IOFile>(out_file, "wb");
     }
 
+    if (Settings::values.compress_cia_installs) {
+        std::array<u8, 4> magic = {'N', 'C', 'C', 'H'};
+        file = std::make_unique<FileUtil::Z3DSWriteIOFile>(
+            std::move(file), magic, FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE);
+    }
+
     if (!file->IsOpen()) {
         is_error = true;
     }
@@ -116,6 +113,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
 
     if (is_not_ncch) {
         file->WriteBytes(buffer, length);
+        return;
     }
 
     const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
@@ -1061,8 +1059,16 @@ InstallStatus InstallCIA(const std::string& path,
         return InstallStatus::ErrorFileNotFound;
     }
 
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    bool is_compressed =
+        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
+    if (is_compressed) {
+        in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+    }
+
     FileSys::CIAContainer container;
-    if (container.Load(path) == Loader::ResultStatus::Success) {
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
         Service::AM::CIAFile installFile(
             Core::System::GetInstance(),
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
@@ -1072,18 +1078,12 @@ InstallStatus InstallCIA(const std::string& path,
             return InstallStatus::ErrorEncrypted;
         }
 
-        FileUtil::IOFile file(path, "rb");
-        if (!file.IsOpen()) {
-            LOG_ERROR(Service_AM, "Could not open CIA file '{}'.", path);
-            return InstallStatus::ErrorFailedToOpenFile;
-        }
-
         std::vector<u8> buffer;
         buffer.resize(0x10000);
-        auto file_size = file.GetSize();
+        auto file_size = in_file->GetSize();
         std::size_t total_bytes_read = 0;
         while (total_bytes_read != file_size) {
-            std::size_t bytes_read = file.ReadBytes(buffer.data(), buffer.size());
+            std::size_t bytes_read = in_file->ReadBytes(buffer.data(), buffer.size());
             auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
                                             false, static_cast<u8*>(buffer.data()));
 
@@ -1126,6 +1126,82 @@ InstallStatus InstallCIA(const std::string& path,
 
     LOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
     return InstallStatus::ErrorInvalid;
+}
+
+InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
+                                bool check_encryption) {
+    if (!FileUtil::Exists(path)) {
+        LOG_ERROR(Service_AM, "File {} does not exist!", path);
+        return InstallStatus::ErrorFileNotFound;
+    }
+
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    is_compressed = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(in_file.get()) != std::nullopt;
+    if (is_compressed) {
+        in_file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(in_file));
+    }
+
+    FileSys::CIAContainer container;
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
+        const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+
+        if (check_encryption) {
+            if (tmd.HasEncryptedContent(container.GetHeader())) {
+                return InstallStatus::ErrorEncrypted;
+            }
+
+            for (size_t i = 0; i < tmd.GetContentCount(); i++) {
+                u64 offset = container.GetContentOffset(i);
+                NCCH_Header ncch;
+                const auto read = in_file->ReadAtBytes(&ncch, sizeof(ncch), offset);
+                if (read != sizeof(ncch)) {
+                    return InstallStatus::ErrorInvalid;
+                }
+                if (ncch.magic != Loader::MakeMagic('N', 'C', 'C', 'H')) {
+                    return InstallStatus::ErrorInvalid;
+                }
+                if (!ncch.no_crypto) {
+                    return InstallStatus::ErrorEncrypted;
+                }
+            }
+        }
+
+        return InstallStatus::Success;
+    }
+
+    return InstallStatus::ErrorInvalid;
+}
+
+ResultVal<std::pair<TitleInfo, std::unique_ptr<Loader::SMDH>>> GetCIAInfos(
+    const std::string& path) {
+    if (!FileUtil::Exists(path)) {
+        LOG_ERROR(Service_AM, "File {} does not exist!", path);
+        return ResultUnknown;
+    }
+
+    std::unique_ptr<FileUtil::IOFile> in_file = std::make_unique<FileUtil::IOFile>(path, "rb");
+    FileSys::CIAContainer container;
+    if (container.Load(in_file.get()) == Loader::ResultStatus::Success) {
+        in_file->Seek(0, SEEK_SET);
+        const FileSys::TitleMetadata& tmd = container.GetTitleMetadata();
+
+        TitleInfo info{};
+        info.tid = tmd.GetTitleID();
+        info.version = tmd.GetTitleVersion();
+        info.size = tmd.GetCombinedContentSize(container.GetHeader());
+        info.type = tmd.GetTitleType();
+
+        const auto& cia_smdh = container.GetSMDH();
+        std::unique_ptr<Loader::SMDH> smdh{};
+        if (cia_smdh) {
+            smdh = std::make_unique<Loader::SMDH>(*cia_smdh);
+        }
+
+        return std::pair<TitleInfo, std::unique_ptr<Loader::SMDH>>(info, std::move(smdh));
+    }
+
+    return ResultUnknown;
 }
 
 u64 GetTitleUpdateId(u64 title_id) {

@@ -86,6 +86,10 @@
         android:id="@+id/menu_emulation_adjust_opacity"
         android:title="@string/emulation_control_opacity" />
 
+    <item
+        android:id="@+id/menu_emulation_button_sliding"
+        android:title="@string/emulation_button_sliding">
+    </item>
     <group android:checkableBehavior="all">
         <item
             android:id="@+id/menu_emulation_joystick_rel_center"

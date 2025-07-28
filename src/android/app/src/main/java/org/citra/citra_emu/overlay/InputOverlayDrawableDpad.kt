@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.utils.EmulationMenuSettings
 
 /**
  * Custom [BitmapDrawable] that is capable
@@ -62,15 +63,19 @@ class InputOverlayDrawableDpad(
         trackId = -1
     }
 
-    fun updateStatus(event: MotionEvent, dpadSlide: Boolean, overlay:InputOverlay): Boolean {
+    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, dpadSlide: Boolean, overlay: InputOverlay): Boolean {
         var isDown = false
         val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
         val motionEvent = event.action and MotionEvent.ACTION_MASK
-        val isActionDown =
+        var isActionDown =
             motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN
+        if (!isActionDown && EmulationMenuSettings.buttonSlide != ButtonSlidingMode.Disabled.int) {
+            isActionDown = motionEvent == MotionEvent.ACTION_MOVE && !hasActiveButtons
+        }
+
         val isActionUp =
             motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP
         if (isActionDown) {

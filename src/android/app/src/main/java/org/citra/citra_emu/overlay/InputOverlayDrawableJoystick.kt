@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -93,14 +93,18 @@ class InputOverlayDrawableJoystick(
         currentStateBitmapDrawable.draw(canvas)
     }
 
-    fun updateStatus(event: MotionEvent, overlay:InputOverlay): Boolean {
+    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
         val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
         val motionEvent = event.action and MotionEvent.ACTION_MASK
-        val isActionDown =
+        var isActionDown =
             motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN
+        if (!isActionDown && EmulationMenuSettings.buttonSlide != ButtonSlidingMode.Disabled.int) {
+            isActionDown = motionEvent == MotionEvent.ACTION_MOVE && !hasActiveButtons
+        }
+
         val isActionUp =
             motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP
         if (isActionDown) {

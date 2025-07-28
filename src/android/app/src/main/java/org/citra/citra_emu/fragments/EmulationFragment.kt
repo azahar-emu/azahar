@@ -796,6 +796,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_emulation_button_sliding -> {
+                    showButtonSlidingMenu()
+                    true
+                }
+
                 R.id.menu_emulation_dpad_slide_enable -> {
                     EmulationMenuSettings.dpadSlide = !EmulationMenuSettings.dpadSlide
                     true
@@ -838,6 +843,28 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         popupMenu.show()
+    }
+
+    private fun showButtonSlidingMenu() {
+        val editor = preferences.edit()
+
+        val buttonSlidingModes = mutableListOf<String>()
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_disabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_enabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_alternative))
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.emulation_button_sliding)
+            .setSingleChoiceItems(
+                buttonSlidingModes.toTypedArray(),
+                EmulationMenuSettings.buttonSlide
+            ) { _: DialogInterface?, which: Int ->
+                EmulationMenuSettings.buttonSlide = which
+            }
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                editor.apply()
+            }
+            .show()
     }
 
     private fun showLandscapeScreenLayoutMenu() {

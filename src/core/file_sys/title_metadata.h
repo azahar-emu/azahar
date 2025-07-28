@@ -99,6 +99,7 @@ public:
     u32 GetContentIDByIndex(std::size_t index) const;
     u16 GetContentTypeByIndex(std::size_t index) const;
     u64 GetContentSizeByIndex(std::size_t index) const;
+    u64 GetCombinedContentSize(const CIAHeader* header) const;
     bool GetContentOptional(std::size_t index) const;
     std::array<u8, 16> GetContentCTRByIndex(std::size_t index) const;
     bool HasEncryptedContent(const CIAHeader* header = nullptr) const;

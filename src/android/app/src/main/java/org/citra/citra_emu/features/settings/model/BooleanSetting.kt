@@ -52,6 +52,7 @@ enum class BooleanSetting(
     COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
     ENABLE_COMBO_KEY("enable_combo_key", Settings.SECTION_CONTROLS, true);
 
+
     override var boolean: Boolean = defaultValue
 
     override val valueAsString: String
@@ -82,7 +83,8 @@ enum class BooleanSetting(
             CPU_JIT,
             ASYNC_CUSTOM_LOADING,
             SHADERS_ACCURATE_MUL,
-            USE_ARTIC_BASE_CONTROLLER
+            USE_ARTIC_BASE_CONTROLLER,
+            COMPRESS_INSTALLED_CIA_CONTENT,
         )
 
         fun from(key: String): BooleanSetting? =

@@ -271,6 +271,7 @@ if (ENABLE_VULKAN)
 endif()
 
 if (NOT WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
     target_include_directories(citra_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
 endif()
 
