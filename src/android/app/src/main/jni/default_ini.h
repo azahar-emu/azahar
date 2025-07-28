@@ -468,5 +468,12 @@ delay_start_for_lle_modules =
 deterministic_async_operations =
 
 # To LLE a service module add "LLE\<module name>=true"
+
+[WebService]
+# URL for Web API
+web_api_url =
+# Username and token for Citra Web Service
+citra_username =
+citra_token =
 )";
 }
