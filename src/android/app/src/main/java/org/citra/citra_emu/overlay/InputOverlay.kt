@@ -542,6 +542,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 )
             )
         }
+
+        if (preferences.getBoolean("buttonToggle16", true)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.button_combo,
+                    R.drawable.button_combo_pressed,
+                    NativeLibrary.ButtonType.BUTTON_COMBO,
+                    orientation
+                )
+            )
+        }
     }
 
     fun refreshControls() {
@@ -755,6 +767,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
+            )
             .apply()
     }
 
@@ -905,6 +925,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + portrait + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                NativeLibrary.ButtonType.BUTTON_COMBO.toString() + portrait + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
             )
             .apply()
     }
