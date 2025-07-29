@@ -1199,10 +1199,12 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
 }
 
 void RendererVulkan::NotifySurfaceChanged(bool second) {
-    if (second && second_window)
+    if (second && second_window) {
         second_window->NotifySurfaceChanged();
-    if (!second)
+    }
+    if (!second) {
         main_window.NotifySurfaceChanged();
+    }
 }
 
 } // namespace Vulkan

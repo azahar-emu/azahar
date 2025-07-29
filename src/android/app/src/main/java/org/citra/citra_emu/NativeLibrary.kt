@@ -124,7 +124,7 @@ object NativeLibrary {
     external fun surfaceDestroyed()
     external fun doFrame()
 
-    //Second window
+    // Second window
     external fun secondarySurfaceChanged(secondary_surface: Surface)
     external fun secondarySurfaceDestroyed()
 
