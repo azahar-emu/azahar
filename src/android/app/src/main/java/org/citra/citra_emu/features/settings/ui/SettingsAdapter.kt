@@ -46,6 +46,7 @@ import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
@@ -745,6 +746,9 @@ class SettingsAdapter(
             }
 
              */
+
+            //TODO: Don't fully know how to grab the setting itself for the buttons so I'm adding them to a backing array to be called later
+            //TODO: Likely need to be reimplemented
             is StringMultiChoiceSetting -> {
                 val scSetting = clickedItem as? StringMultiChoiceSetting
                 scSetting?.let {
@@ -752,16 +756,20 @@ class SettingsAdapter(
                         is AbstractMultiStringSetting -> {
                             val value = it.getValueAt(which)
                             if (value in it.selectedValues && !is_checked) {
+                                Settings.comboSelection.remove(value ?: "")
                                 it.removeSelectedValue(value ?: "")
                             } else {
+                                Settings.comboSelection.add(value ?: "")
                                 it.addSelectedValue(value ?: "")
                             }
                         }
 
                         is AbstractMultiShortSetting -> {
                             if (is_checked != it.selectValueIndices[which]) {
+                                Settings.comboSelection.remove((it.getValueAt(which)?.toShort() ?: 1).toString())
                                 it.removeSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
                             } else {
+                                Settings.comboSelection.add((it.getValueAt(which)?.toShort() ?: 1).toString())
                                 it.addSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
                             }
                         }

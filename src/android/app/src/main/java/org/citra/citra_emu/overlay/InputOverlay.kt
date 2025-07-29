@@ -26,6 +26,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
+import org.citra.citra_emu.utils.ComboHelper
 import java.lang.NullPointerException
 import kotlin.math.min
 
@@ -140,11 +141,10 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
                     TurboHelper.toggleTurbo(true)
                 }
-                /*
-                else if (button.id == NativeLibrary.ButtonType.BUTTON_COMBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-                    var comboButtonArray =
+                else if (button.id == NativeLibrary.ButtonType.BUTTON_COMBO) {
+                    ComboHelper.comboActivate(button)
                 }
-                 */
+
 
                 NativeLibrary.onGamePadEvent(
                     NativeLibrary.TouchScreenDevice,

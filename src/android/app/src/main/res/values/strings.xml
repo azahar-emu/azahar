@@ -142,6 +142,7 @@
     <string name="button_home">HOME</string>
     <string name="button_swap">Swap Screens</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Combo Key</string>
     <string name="button_x" translatable="false">X</string>
     <string name="button_y" translatable="false">Y</string>
     <string name="button_l" translatable="false">L</string>
@@ -153,7 +154,6 @@
     <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
     <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
-    <string name="combo_key">Combo Key</string>
     <string name="combo_key_enable">Enable Combo Button</string>
     <string name="combo_key_options">Combo Key Settings</string>
     <string name="combo_key_description">Enable and Change Combo Button Bindings.</string>
