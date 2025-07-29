@@ -130,12 +130,17 @@ static void TryShutdown() {
     }
 
     window->DoneCurrent();
-    if (secondary_window)
+    if (secondary_window) {
         secondary_window->DoneCurrent();
+    }
+
     Core::System::GetInstance().Shutdown();
+
     window.reset();
-    if (secondary_window)
+    if (secondary_window) {
         secondary_window.reset();
+    }
+
     InputManager::Shutdown();
     MicroProfileShutdown();
 }
