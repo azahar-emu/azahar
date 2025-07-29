@@ -4,7 +4,6 @@
 
 package org.citra.citra_emu.activities
 
-import SecondScreen
 import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -34,6 +33,7 @@ import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
+import org.citra.citra_emu.display.SecondScreen
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting

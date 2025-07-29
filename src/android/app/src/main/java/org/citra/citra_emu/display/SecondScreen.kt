@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+package org.citra.citra_emu.display
+
 import android.app.Presentation
 import android.content.Context
 import android.graphics.SurfaceTexture
@@ -15,7 +17,6 @@ import android.view.SurfaceView
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.display.SecondaryScreenLayout
 import org.citra.citra_emu.features.settings.model.IntSetting
-
 
 class SecondScreen(val context: Context) {
     private var pres: SecondScreenPresentation? = null
