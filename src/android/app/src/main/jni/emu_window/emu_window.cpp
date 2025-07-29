@@ -59,8 +59,9 @@ void EmuWindow_Android::OnFramebufferSizeChanged() {
 EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
     : EmuWindow{is_secondary}, host_window(surface) {
     LOG_DEBUG(Frontend, "Initializing EmuWindow_Android");
-    if (is_secondary)
+    if (is_secondary) {
         LOG_DEBUG(Frontend, "Initializing secondary window Android");
+    }
     if (!surface) {
         LOG_CRITICAL(Frontend, "surface is nullptr");
         return;
