@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -352,10 +356,10 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
 
 namespace Loader {
 
-FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
+FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile* file) {
     u32 magic;
-    file.Seek(0, SEEK_SET);
-    if (1 != file.ReadArray<u32>(&magic, 1))
+    file->Seek(0, SEEK_SET);
+    if (1 != file->ReadArray<u32>(&magic, 1))
         return FileType::Error;
 
     if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
@@ -368,15 +372,15 @@ ResultStatus AppLoader_ELF::Load(std::shared_ptr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    if (!file.IsOpen())
+    if (!file->IsOpen())
         return ResultStatus::Error;
 
     // Reset read pointer in case this file has been read before.
-    file.Seek(0, SEEK_SET);
+    file->Seek(0, SEEK_SET);
 
-    std::size_t size = file.GetSize();
+    std::size_t size = file->GetSize();
     std::unique_ptr<u8[]> buffer(new u8[size]);
-    if (file.ReadBytes(&buffer[0], size) != size)
+    if (file->ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;
 
     ElfReader elf_reader(&buffer[0]);

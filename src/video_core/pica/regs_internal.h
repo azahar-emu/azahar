@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,8 +21,14 @@ struct RegsInternal {
     union {
         struct {
             INSERT_PADDING_WORDS(0x10);
-            u32 trigger_irq;
-            INSERT_PADDING_WORDS(0x2f);
+            u32 irq_request;
+            INSERT_PADDING_WORDS(0xf);
+            u32 irq_compare;
+            INSERT_PADDING_WORDS(0xf);
+            u32 irq_mask;
+            INSERT_PADDING_WORDS(0x3);
+            u32 irq_autostop;
+            INSERT_PADDING_WORDS(0xb);
             RasterizerRegs rasterizer;
             TexturingRegs texturing;
             FramebufferRegs framebuffer;
@@ -46,7 +52,10 @@ static_assert(sizeof(RegsInternal) == RegsInternal::NUM_REGS * sizeof(u32),
     static_assert(offsetof(RegsInternal, field_name) == position * 4,                              \
                   "Field " #field_name " has invalid position")
 
-ASSERT_REG_POSITION(trigger_irq, 0x10);
+ASSERT_REG_POSITION(irq_request, 0x10);
+ASSERT_REG_POSITION(irq_compare, 0x20);
+ASSERT_REG_POSITION(irq_mask, 0x30);
+ASSERT_REG_POSITION(irq_autostop, 0x34);
 
 ASSERT_REG_POSITION(rasterizer, 0x40);
 ASSERT_REG_POSITION(rasterizer.cull_mode, 0x40);

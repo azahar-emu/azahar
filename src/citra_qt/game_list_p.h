@@ -1,7 +1,6 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
-
 #pragma once
 
 #include <algorithm>
@@ -18,11 +17,11 @@
 #include <QStandardItem>
 #include <QString>
 #include <QWidget>
-#include "citra_qt/play_time_manager.h"
 #include "citra_qt/uisettings.h"
 #include "citra_qt/util/util.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/play_time_manager.h"
 #include "common/string_util.h"
 #include "core/loader/smdh.h"
 
@@ -382,7 +381,7 @@ public:
 
     void setData(const QVariant& value, int role) override {
         qulonglong time_seconds = value.toULongLong();
-        GameListItem::setData(PlayTime::ReadablePlayTime(time_seconds), Qt::DisplayRole);
+        GameListItem::setData(ReadableDuration(time_seconds), Qt::DisplayRole);
         GameListItem::setData(value, PlayTimeRole);
     }
 

@@ -61,22 +61,23 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
 namespace {
 static bool IsLowRefreshRate() {
 #ifdef ENABLE_SDL2
-    const auto sdl_init_status = SDL_Init(SDL_INIT_VIDEO);
-    if (sdl_init_status < 0) {
-        LOG_ERROR(Render_Vulkan, "SDL failed to initialize, unable to check refresh rate");
-    } else {
-        SDL_DisplayMode cur_display_mode;
-        SDL_GetCurrentDisplayMode(0, &cur_display_mode); // TODO: Multimonitor handling. -OS
-        const auto cur_refresh_rate = cur_display_mode.refresh_rate;
-        SDL_Quit();
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        LOG_ERROR(Render_Vulkan, "SDL video failed to initialize, unable to check refresh rate");
+        return false;
+    }
 
-        if (cur_refresh_rate < SCREEN_REFRESH_RATE) {
-            LOG_WARNING(Render_Vulkan,
-                        "Detected refresh rate lower than the emulated 3DS screen: {}hz. FIFO will "
-                        "be disabled",
-                        cur_refresh_rate);
-            return true;
-        }
+    SDL_DisplayMode cur_display_mode;
+    SDL_GetCurrentDisplayMode(0, &cur_display_mode); // TODO: Multimonitor handling. -OS
+    const auto cur_refresh_rate = cur_display_mode.refresh_rate;
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    if (cur_refresh_rate < SCREEN_REFRESH_RATE) {
+        LOG_WARNING(Render_Vulkan,
+                    "Detected refresh rate lower than the emulated 3DS screen: {}hz. FIFO will "
+                    "be disabled",
+                    cur_refresh_rate);
+        return true;
     }
 #endif
 

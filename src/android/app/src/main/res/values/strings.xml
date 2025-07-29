@@ -214,6 +214,9 @@
     <string name="region_mismatch">Region Mismatch Warning</string>
     <string name="region_mismatch_emulated">The country setting is not valid for the selected emulated region.</string>
     <string name="region_mismatch_console">The country setting is not valid for the current linked console.</string>
+    <string name="storage">Storage</string>
+    <string name="compress_cia_installs">Compress installed CIA content</string>
+    <string name="compress_cia_installs_description">Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>
@@ -418,6 +421,10 @@
     <string name="emulation_configure_controls">Configure Controls</string>
     <string name="emulation_edit_layout">Edit Layout</string>
     <string name="emulation_done">Done</string>
+    <string name="emulation_button_sliding">Button Sliding</string>
+    <string name="emulation_button_sliding_disabled">Hold originally pressed button</string>
+    <string name="emulation_button_sliding_enabled">Hold currently pressed button</string>
+    <string name="emulation_button_sliding_alternative">Hold original and currently pressed button</string>
     <string name="emulation_toggle_controls">Toggle Controls</string>
     <string name="emulation_control_scale">Adjust Scale</string>
     <string name="emulation_control_scale_global">Global Scale</string>
@@ -534,7 +541,6 @@
     <string name="save_load_error">Save/Load Error</string>
     <string name="fatal_error">Fatal Error</string>
     <string name="fatal_error_message">A fatal error occurred. Check the log for details.\nContinuing emulation may result in crashes and bugs.</string>
-    <string name="invalid_region">Invalid region</string>
     <string name="unsupported_encrypted">Unsupported encrypted application</string>
 
     <!-- Disk Shader Cache -->
@@ -560,6 +566,9 @@
     <string name="create_shortcut">Create Shortcut</string>
     <string name="shortcut_name_empty">Shortcut name cannot be empty</string>
     <string name="shortcut_image_stretch_toggle">Stretch to fit image</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">File:</string>
+    <string name="game_context_type">Type:</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Show Performance Overlay</string>

@@ -54,6 +54,10 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
 PicaCore::~PicaCore() = default;
 
 void PicaCore::InitializeRegs() {
+    // Values initialized by GSP
+    regs.internal.irq_autostop = 1;
+    regs.internal.irq_mask = 0xFFFFFFF0;
+
     auto& framebuffer_top = regs.framebuffer_config[0];
     auto& framebuffer_sub = regs.framebuffer_config[1];
 
@@ -100,7 +104,11 @@ void PicaCore::ProcessCmdList(PAddr list, u32 size, bool ignore_list) {
     const u8* head = memory.GetPhysicalPointer(list);
     cmd_list.Reset(list, head, size);
 
+    bool stop_requested = false;
     while (cmd_list.current_index < cmd_list.length) {
+        if (stop_requested) [[unlikely]] {
+            break;
+        }
         // Align read pointer to 8 bytes
         if (cmd_list.current_index % 2 != 0) {
             cmd_list.current_index++;
@@ -111,18 +119,26 @@ void PicaCore::ProcessCmdList(PAddr list, u32 size, bool ignore_list) {
         const CommandHeader header{cmd_list.head[cmd_list.current_index++]};
 
         // Write to the requested PICA register.
-        WriteInternalReg(header.cmd_id, value, header.parameter_mask);
+        WriteInternalReg(header.cmd_id, value, header.parameter_mask, stop_requested);
 
         // Write any extra paramters as well.
         for (u32 i = 0; i < header.extra_data_length; ++i) {
+            if (stop_requested) [[unlikely]] {
+                break;
+            }
             const u32 cmd = header.cmd_id + (header.group_commands ? i + 1 : 0);
             const u32 extra_value = cmd_list.head[cmd_list.current_index++];
-            WriteInternalReg(cmd, extra_value, header.parameter_mask);
+            WriteInternalReg(cmd, extra_value, header.parameter_mask, stop_requested);
         }
     }
 }
 
-void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
+static bool any_byte_match(u32 a, u32 b) {
+    return ((a & 0xFF) == (b & 0xFF)) || (((a >> 8) & 0xFF) == ((b >> 8) & 0xFF)) ||
+           (((a >> 16) & 0xFF) == ((b >> 16) & 0xFF)) || (((a >> 24) & 0xFF) == ((b >> 24) & 0xFF));
+}
+
+void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requested) {
     if (id >= RegsInternal::NUM_REGS) {
         LOG_ERROR(
             HW_GPU,
@@ -153,8 +169,15 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask) {
 
     switch (id) {
     // Trigger IRQ
-    case PICA_REG_INDEX(trigger_irq):
-        signal_interrupt(Service::GSP::InterruptId::P3D);
+    case PICA_REG_INDEX(irq_request):
+        // TODO(PabloMK7): This logic is not fully accurate, but close enough:
+        // https://problemkaputt.de/gbatek-3ds-gpu-internal-registers-finalize-interrupt-registers.htm
+        if (any_byte_match(regs.internal.reg_array[id], regs.internal.irq_compare)) [[likely]] {
+            signal_interrupt(Service::GSP::InterruptId::P3D);
+            if (regs.internal.irq_autostop) [[likely]] {
+                stop_requested = true;
+            }
+        }
         break;
 
     case PICA_REG_INDEX(pipeline.triangle_topology):

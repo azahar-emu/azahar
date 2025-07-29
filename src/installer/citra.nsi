@@ -107,7 +107,7 @@ Function .onInit
   !insertmacro MULTIUSER_INIT
 
   ; Keep in sync with build_info.txt
-  !define MIN_WIN10_VERSION 1703
+  !define MIN_WIN10_VERSION 1607
   ${IfNot} ${AtLeastwin10}
   ${OrIfNot} ${AtLeastWaaS} ${MIN_WIN10_VERSION}
     MessageBox MB_OK "At least Windows 10 version ${MIN_WIN10_VERSION} is required."
@@ -161,9 +161,6 @@ Section "Base"
   !insertmacro UPDATE_DISPLAYNAME
 
   ; Create start menu and desktop shortcuts
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
   CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
     CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
@@ -200,28 +197,19 @@ Section Uninstall
   Delete "$DESKTOP\$DisplayName.lnk"
   Delete "$SMPROGRAMS\$DisplayName.lnk"
 
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\$DisplayName.lnk"
-  Delete "$SMPROGRAMS\${PRODUCT_NAME}\Uninstall $DisplayName.lnk"
-  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
-
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
   Delete "$INSTDIR\azahar.exe"
   Delete "$INSTDIR\azahar-room.exe"
-  Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\qt.conf"
-  Delete "$INSTDIR\README.md"
   Delete "$INSTDIR\uninst.exe"
-  RMDir /r "$INSTDIR\dist"
   RMDir /r "$INSTDIR\plugins"
   RMDir /r "$INSTDIR\scripting"
-  ; This should never be distributed via the installer, but just in case it is
-  Delete "$INSTDIR\tests.exe"
-  ; Delete the installation directory if there are no files left
   RMDir "$INSTDIR"
 
   DeleteRegKey SHCTX "${PRODUCT_UNINST_KEY}"
   DeleteRegKey SHCTX "${PRODUCT_DIR_REGKEY}"
+  DeleteRegKey HKCU "Software\Classes\discord-1345366770436800533"
 
   SetAutoClose true
 SectionEnd

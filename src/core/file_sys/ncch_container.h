@@ -91,6 +91,10 @@ struct NCCH_Header {
     u8 reserved_4[4];
     u8 exefs_super_block_hash[0x20];
     u8 romfs_super_block_hash[0x20];
+
+    u32 GetContentUnitSize() {
+        return 0x200u * (1u << content_unit_size);
+    }
 };
 
 static_assert(sizeof(NCCH_Header) == 0x200, "NCCH header structure size is wrong");
@@ -333,16 +337,28 @@ public:
      */
     bool HasExHeader();
 
+    bool IsNCSD() {
+        return is_ncsd;
+    }
+
+    bool IsFileCompressed() {
+        return file->IsCompressed();
+    }
+
     NCCH_Header ncch_header;
     ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 
 private:
+    std::unique_ptr<FileUtil::IOFile> Reopen(const std::unique_ptr<FileUtil::IOFile>& orig_file,
+                                             const std::string& new_filename = "");
+
     bool has_header = false;
     bool has_exheader = false;
     bool has_exefs = false;
     bool has_romfs = false;
 
+    bool is_ncsd = false;
     bool is_proto = false;
     bool is_tainted = false; // Are there parts of this container being overridden?
     bool is_loaded = false;

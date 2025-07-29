@@ -17,11 +17,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
 include(CMakeDependentOption)
+include(FindPkgConfig)
 
-if (APPLE)
-    project(citra LANGUAGES C CXX OBJC OBJCXX ASM)
-else()
-    project(citra LANGUAGES C CXX ASM)
+project(citra LANGUAGES C CXX ASM)
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    enable_language(OBJC OBJCXX)
 endif()
 
 # Some submodules like to pick their own default build type if not specified.
@@ -482,12 +482,10 @@ if (ENABLE_SDL2 AND USE_SYSTEM_SDL2)
 endif()
 
 if (ENABLE_LIBUSB AND USE_SYSTEM_LIBUSB)
-    include(FindPkgConfig)
     find_package(LibUSB)
 endif()
 
 if (USE_SYSTEM_SOUNDTOUCH)
-    include(FindPkgConfig)
     find_package(SoundTouch REQUIRED)
     add_library(SoundTouch INTERFACE)
     target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")

@@ -171,8 +171,6 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
-    play_time_manager.cpp
-    play_time_manager.h
     precompiled_headers.h
     uisettings.cpp
     uisettings.h
@@ -273,6 +271,7 @@ if (ENABLE_VULKAN)
 endif()
 
 if (NOT WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
     target_include_directories(citra_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
 endif()
 

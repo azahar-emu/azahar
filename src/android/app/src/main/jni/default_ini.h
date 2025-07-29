@@ -210,6 +210,11 @@ disable_right_eye_render =
 # 5: Custom Layout
 layout_option =
 
+[Storage]
+# Whether to compress the installed CIA contents
+# 0 (default): Do not compress, 1: Compress
+compress_cia_installs =
+
 # Position of the performance overlay
 # 0: Top Left
 # 1: Center Top
@@ -475,9 +480,8 @@ deterministic_async_operations =
 
 [WebService]
 # URL for Web API
-web_api_url = https://api.citra-emu.org
+web_api_url =
 # Username and token for Citra Web Service
-# See https://profile.citra-emu.org/ for more info
 citra_username =
 citra_token =
 )";

@@ -356,7 +356,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_exit -> {
-                    NativeLibrary.pauseEmulation()
+                    emulationState.pause()
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
@@ -364,9 +364,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                             EmulationLifecycleUtil.closeGame()
                         }
                         .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
-                            NativeLibrary.unPauseEmulation()
+                            emulationState.unpause()
                         }
-                        .setOnCancelListener { NativeLibrary.unPauseEmulation() }
+                        .setOnCancelListener { emulationState.unpause() }
                         .show()
                     true
                 }
@@ -471,7 +471,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         super.onResume()
         Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
-            NativeLibrary.unPauseEmulation()
+            emulationState.pause()
 
             // If the overlay is enabled, we need to update the position if changed
             val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
@@ -797,6 +797,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_emulation_button_sliding -> {
+                    showButtonSlidingMenu()
+                    true
+                }
+
                 R.id.menu_emulation_dpad_slide_enable -> {
                     EmulationMenuSettings.dpadSlide = !EmulationMenuSettings.dpadSlide
                     true
@@ -839,6 +844,28 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         popupMenu.show()
+    }
+
+    private fun showButtonSlidingMenu() {
+        val editor = preferences.edit()
+
+        val buttonSlidingModes = mutableListOf<String>()
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_disabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_enabled))
+        buttonSlidingModes.add(getString(R.string.emulation_button_sliding_alternative))
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.emulation_button_sliding)
+            .setSingleChoiceItems(
+                buttonSlidingModes.toTypedArray(),
+                EmulationMenuSettings.buttonSlide
+            ) { _: DialogInterface?, which: Int ->
+                EmulationMenuSettings.buttonSlide = which
+            }
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                editor.apply()
+            }
+            .show()
     }
 
     private fun showLandscapeScreenLayoutMenu() {
@@ -1396,6 +1423,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 // Release the surface before pausing, since emulation has to be running for that.
                 NativeLibrary.surfaceDestroyed()
                 NativeLibrary.pauseEmulation()
+                NativeLibrary.playTimeManagerStop()
             } else {
                 Log.warning("[EmulationFragment] Pause called while already paused.")
             }
@@ -1408,6 +1436,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 Log.debug("[EmulationFragment] Unpausing emulation.")
 
                 NativeLibrary.unPauseEmulation()
+                NativeLibrary.playTimeManagerStart(NativeLibrary.playTimeManagerGetCurrentTitleId())
             } else {
                 Log.warning("[EmulationFragment] Unpause called while already running.")
             }
@@ -1474,7 +1503,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 State.PAUSED -> {
                     Log.debug("[EmulationFragment] Resuming emulation.")
-                    NativeLibrary.unPauseEmulation()
+                    unpause()
                 }
 
                 else -> {

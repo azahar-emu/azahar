@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -367,9 +367,8 @@ renderer_debug =
 
 [WebService]
 # URL for Web API
-web_api_url = https://api.citra-emu.org
+web_api_url =
 # Username and token for Citra Web Service
-# See https://profile.citra-emu.org/ for more info
 citra_username =
 citra_token =
 

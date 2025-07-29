@@ -1,12 +1,13 @@
-// SPDX-FileCopyrightText: 2024 Citra Emulator Project
-// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 
 #include <filesystem>
-#include "citra_qt/play_time_manager.h"
 #include "common/alignment.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/play_time_manager.h"
 #include "common/settings.h"
 #include "common/thread.h"
 
@@ -138,21 +139,6 @@ u64 PlayTimeManager::GetPlayTime(u64 program_id) const {
 void PlayTimeManager::ResetProgramPlayTime(u64 program_id) {
     database.erase(program_id);
     Save();
-}
-
-QString ReadablePlayTime(qulonglong time_seconds) {
-    if (time_seconds == 0) {
-        return {};
-    }
-    const auto time_minutes = std::max(static_cast<double>(time_seconds) / 60, 1.0);
-    const auto time_hours = static_cast<double>(time_seconds) / 3600;
-    const bool is_minutes = time_minutes < 60;
-    const char* unit = is_minutes ? "m" : "h";
-    const auto value = is_minutes ? time_minutes : time_hours;
-
-    return QStringLiteral("%L1 %2")
-        .arg(value, 0, 'f', !is_minutes && time_seconds % 60 != 0)
-        .arg(QString::fromUtf8(unit));
 }
 
 } // namespace PlayTime

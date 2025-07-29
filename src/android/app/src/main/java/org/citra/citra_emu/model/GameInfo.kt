@@ -13,16 +13,17 @@ class GameInfo(path: String) {
 
     init {
         pointer = initialize(path)
-        if (pointer == 0L) {
-            throw IOException()
-        }
     }
 
     protected external fun finalize()
 
     external fun getTitle(): String
 
+    external fun isValid(): Boolean
+
     external fun isEncrypted(): Boolean
+
+    external fun getTitleID(): Long
 
     external fun getRegions(): String
 
@@ -30,7 +31,11 @@ class GameInfo(path: String) {
 
     external fun getIcon(): IntArray?
 
+    external fun isSystemTitle(): Boolean
+
     external fun getIsVisibleSystemTitle(): Boolean
+
+    external fun getFileType(): String
 
     companion object {
         @JvmStatic

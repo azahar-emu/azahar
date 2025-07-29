@@ -1,9 +1,8 @@
-// SPDX-FileCopyrightText: 2024 Citra Emulator Project
-// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 
 #pragma once
-
-#include <QString>
 
 #include <map>
 
@@ -39,7 +38,5 @@ private:
     u64 running_program_id;
     std::jthread play_time_thread;
 };
-
-QString ReadablePlayTime(qulonglong time_seconds);
 
 } // namespace PlayTime

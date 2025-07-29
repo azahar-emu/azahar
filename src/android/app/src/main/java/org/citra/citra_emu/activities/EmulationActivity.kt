@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -40,12 +41,13 @@ import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
+import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.ThemeUtil
-import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
 class EmulationActivity : AppCompatActivity() {
@@ -111,6 +113,20 @@ class EmulationActivity : AppCompatActivity() {
         instance = this
 
         applyOrientationSettings() // Check for orientation settings at startup
+
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: run {
+                Log.error("[EmulationActivity] Missing game data in intent extras")
+                return
+            }
+        } catch (e: Exception) {
+            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+            return
+        }
+
+        NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
     // On some devices, the system bars will not disappear on first boot or after some
@@ -150,6 +166,7 @@ class EmulationActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         EmulationLifecycleUtil.clear()
+        NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
         secondScreen.releasePresentation()

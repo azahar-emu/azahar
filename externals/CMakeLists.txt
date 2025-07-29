@@ -214,8 +214,29 @@ else()
     set(ZSTD_BUILD_PROGRAMS OFF)
     set(ZSTD_BUILD_SHARED OFF)
     add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
-    target_include_directories(libzstd_static INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>)
+
+    target_include_directories(libzstd_static INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/externals/zstd/lib/common>
+    )
+
+    add_library(zstd_seekable STATIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_compress.c>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format/zstdseek_decompress.c>
+    )
+    target_include_directories(zstd_seekable PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/contrib/seekable_format>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/zstd/lib/common>
+    )
+    target_link_libraries(zstd_seekable PUBLIC libzstd_static)
+
+    target_link_libraries(libzstd_static INTERFACE zstd_seekable)
+
     add_library(zstd ALIAS libzstd_static)
+
+    install(TARGETS zstd_seekable
+        EXPORT zstdExports
+    )
 endif()
 
 # ENet
@@ -392,13 +413,16 @@ if (ENABLE_VULKAN)
         get_target_property(GLSLANG_PREFIX glslang::SPIRV INTERFACE_INCLUDE_DIRECTORIES)
         target_include_directories(SPIRV SYSTEM INTERFACE "${GLSLANG_PREFIX}/glslang")
     else()
+        set(SPIRV-Headers_SOURCE_DIR "${CMAKE_SOURCE_DIR}/externals/spirv-headers")
+        add_subdirectory(spirv-headers EXCLUDE_FROM_ALL)
+        set(SPIRV_SKIP_EXECUTABLES ON)
+        add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
         set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "")
         set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "")
         set(ENABLE_SPVREMAPPER OFF CACHE BOOL "")
         set(ENABLE_CTEST OFF CACHE BOOL "")
         set(ENABLE_HLSL OFF CACHE BOOL "")
         set(BUILD_EXTERNAL OFF CACHE BOOL "")
-        set(ALLOW_EXTERNAL_SPIRV_TOOLS ON)
         add_subdirectory(glslang)
     endif()
 

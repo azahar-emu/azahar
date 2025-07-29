@@ -96,57 +96,115 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
         if (isInEditMode) {
             return onTouchWhileEditing(event)
         }
-        var shouldUpdateView = false
+
+        var hasActiveButtons = false
+        val pointerIndex = event.actionIndex
+        val pointerId = event.getPointerId(pointerIndex)
         for (button in overlayButtons) {
-            if (!button.updateStatus(event, this)) {
-                continue
+            if (button.trackId == pointerId) {
+                hasActiveButtons = true
+                break
             }
-
-            if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
-                swapScreen()
-            }
-
-            if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-                TurboHelper.toggleTurbo(true)
-            }
-
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, button.id, button.status)
-            shouldUpdateView = true
         }
-        for (dpad in overlayDpads) {
-            if (!dpad.updateStatus(event, EmulationMenuSettings.dpadSlide, this)) {
-                continue
+        var hasActiveDpad = false
+        if (!hasActiveButtons) {
+            for (dpad in overlayDpads) {
+                if (dpad.trackId == pointerId) {
+                    hasActiveDpad = true
+                    break
+                }
             }
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, dpad.upId, dpad.upStatus)
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
-                dpad.downId,
-                dpad.downStatus
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
-                dpad.leftId,
-                dpad.leftStatus
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
-                dpad.rightId,
-                dpad.rightStatus
-            )
-            shouldUpdateView = true
         }
-        for (joystick in overlayJoysticks) {
-            if (!joystick.updateStatus(event, this)) {
-                continue
+
+        var hasActiveJoystick = false
+        if(!hasActiveButtons && !hasActiveDpad){
+            for (joystick in overlayJoysticks) {
+                if (joystick.trackId == pointerId) {
+                    hasActiveJoystick = true
+                    break
+                }
             }
-            val axisID = joystick.joystickId
-            NativeLibrary.onGamePadMoveEvent(
-                NativeLibrary.TouchScreenDevice,
-                axisID,
-                joystick.xAxis,
-                joystick.yAxis
-            )
-            shouldUpdateView = true
+        }
+
+        var shouldUpdateView = false
+        if(!hasActiveDpad && !hasActiveJoystick) {
+            for (button in overlayButtons) {
+                val stateChanged = button.updateStatus(event, hasActiveButtons, this)
+                if (!stateChanged) {
+                    continue
+                }
+
+                if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
+                    swapScreen()
+                }
+                else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
+                    TurboHelper.toggleTurbo(true)
+                }
+
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    button.id,
+                    button.status
+                )
+
+                shouldUpdateView = true
+            }
+        }
+
+        if(!hasActiveButtons && !hasActiveJoystick) {
+            for (dpad in overlayDpads) {
+                val stateChanged = dpad.updateStatus(
+                    event,
+                    hasActiveDpad,
+                    EmulationMenuSettings.dpadSlide,
+                    this
+                )
+                if (!stateChanged) {
+                    continue
+                }
+
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    dpad.upId,
+                    dpad.upStatus
+                )
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    dpad.downId,
+                    dpad.downStatus
+                )
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    dpad.leftId,
+                    dpad.leftStatus
+                )
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    dpad.rightId,
+                    dpad.rightStatus
+                )
+
+                shouldUpdateView = true
+            }
+        }
+
+        if(!hasActiveDpad && !hasActiveButtons) {
+            for (joystick in overlayJoysticks) {
+                val stateChanged = joystick.updateStatus(event, hasActiveJoystick, this)
+                if (!stateChanged) {
+                    continue
+                }
+
+                val axisID = joystick.joystickId
+                NativeLibrary.onGamePadMoveEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    axisID,
+                    joystick.xAxis,
+                    joystick.yAxis
+                )
+
+                shouldUpdateView = true
+            }
         }
 
         if (shouldUpdateView) {
@@ -157,10 +215,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             return true
         }
 
-        val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
-        val pointerId = event.getPointerId(pointerIndex)
         val motionEvent = event.action and MotionEvent.ACTION_MASK
         val isActionDown =
             motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN

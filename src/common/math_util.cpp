@@ -19,7 +19,7 @@
 #define DISABLE_VECTORIZE __pragma(loop(no_vector))
 #elif defined(__clang__)
 #define DISABLE_VECTORIZE _Pragma("clang loop vectorize(disable)")
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && (__GNUC__ >= 14)
 #define DISABLE_VECTORIZE _Pragma("GCC novector")
 #else
 #define DISABLE_VECTORIZE
