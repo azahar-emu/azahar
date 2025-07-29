@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 import android.app.Presentation
 import android.content.Context
 import android.graphics.SurfaceTexture
