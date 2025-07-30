@@ -367,7 +367,7 @@ void RendererOpenGL::ReloadShader() {
     // Link shaders and get variable locations
     std::string shader_data = fragment_shader_precision_OES;
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
-        if (Settings::values.anaglyph_shader_name.GetValue() == "dubois (builtin)") {
+        if (Settings::values.anaglyph_shader_name.GetValue() == "Dubois (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_ANAGLYPH_FRAG;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
@@ -384,7 +384,7 @@ void RendererOpenGL::ReloadShader() {
                    Settings::StereoRenderOption::ReverseInterlaced) {
         shader_data += HostShaders::OPENGL_PRESENT_INTERLACED_FRAG;
     } else {
-        if (Settings::values.pp_shader_name.GetValue() == "none (builtin)") {
+        if (Settings::values.pp_shader_name.GetValue() == "None (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_FRAG;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
