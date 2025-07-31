@@ -121,8 +121,10 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
                       width - Settings::values.screen_bottom_leftright_padding.GetValue(),
                       height - Settings::values.screen_bottom_topbottom_padding.GetValue()};
     } else {
-        top_screen = top_screen.TranslateY((height - top_screen.GetHeight()) / 2);
-        bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
+        top_screen = top_screen.TranslateX((width - top_screen.GetWidth()) / 2)
+                         .TranslateY((height - top_screen.GetHeight()) / 2);
+        bot_screen = bot_screen.TranslateX((width - bot_screen.GetWidth()) / 2)
+                         .TranslateY((height - bot_screen.GetHeight()) / 2);
     }
 #endif
 
