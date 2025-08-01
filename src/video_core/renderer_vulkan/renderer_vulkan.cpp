@@ -65,7 +65,7 @@ static bool IsLowRefreshRate() {
                  // input thread calls SDL_PumpEvents at the same time as we're in SDL_Init here.
     const auto cur_refresh_rate = AppleUtils::GetRefreshRate();
 #elif defined(ENABLE_SDL2)
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         LOG_ERROR(Render_Vulkan, "SDL video failed to initialize, unable to check refresh rate");
         return false;
     }
