@@ -5,6 +5,5 @@
 namespace AppleUtils {
 
 float GetRefreshRate();
-int IsLowPowerModeEnabled();
 
 } // namespace AppleUtils

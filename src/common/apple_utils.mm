@@ -25,8 +25,4 @@ float GetRefreshRate() { // TODO: How does this handle multi-monitor? -OS
     return 60; // Something went wrong, so just return a generic value
 }
 
-int IsLowPowerModeEnabled() {
-    return (int)[NSProcessInfo processInfo].lowPowerModeEnabled;
-}
-
 } // namespace AppleUtils

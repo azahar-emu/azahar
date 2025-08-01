@@ -86,16 +86,6 @@ static bool IsLowRefreshRate() {
     }
 #endif // defined(__APPLE__) || defined(ENABLE_SDL2)
 
-#ifdef __APPLE__
-    // Apple's low power mode sometimes limits applications to 30fps without changing the refresh
-    // rate, meaning the above code doesn't catch it.
-    if (AppleUtils::IsLowPowerModeEnabled()) {
-        LOG_WARNING(Render_Vulkan, "Apple's low power mode is enabled, assuming low application "
-                                   "framerate. FIFO will be disabled");
-        return true;
-    }
-#endif
-
     return false;
 }
 } // Anonymous namespace
