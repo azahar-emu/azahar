@@ -21,6 +21,7 @@ import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
@@ -38,6 +39,7 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
+import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
@@ -104,6 +106,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
             Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
+            Settings.SECTION_COMBO -> addComboButtonSettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -805,7 +808,59 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
+            add(
+                SubmenuSetting(
+                    R.string.combo_key_options,
+                    R.string.combo_key_description,
+                    R.drawable.button_combo,
+                    Settings.SECTION_COMBO
+                )
+            )
         }
+    }
+
+    private fun addComboButtonSettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.button_combo))
+        val comboSetting = object : AbstractMultiStringSetting {
+            override var strings: MutableSet<String>
+                get() {
+                    return Settings.comboSelection
+                }
+                set(values) {
+                    for (item in values) {
+                        Settings.comboSelection.add(item)
+                    }
+                }
+            override val key = null
+            override val section = null
+            override val isRuntimeEditable = true
+            override val valueAsString get() = ""
+            override val defaultValue = ""
+        }
+
+        val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
+
+        sl.apply {
+            add(
+                SwitchSetting(
+                    BooleanSetting.ENABLE_COMBO_KEY,
+                    R.string.combo_key_enable,
+                    R.string.combo_key_submenu_description,
+                    BooleanSetting.ENABLE_COMBO_KEY.key,
+                    BooleanSetting.ENABLE_COMBO_KEY.defaultValue,
+                )
+            )
+            add(
+                StringMultiChoiceSetting(
+                    comboSetting,
+                    R.string.combo_key_options,
+                    0,
+                    buttons,
+                    buttons
+                )
+            )
+        }
+
     }
 
     private fun getInputObject(key: String): AbstractStringSetting {
