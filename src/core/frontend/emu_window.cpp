@@ -271,6 +271,11 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
             break;
         }
     }
+#ifdef ANDROID
+    if (is_secondary) {
+        layout = Layout::AndroidSecondaryLayout(width, height);
+    }
+#endif
     UpdateMinimumWindowSize(min_size);
 
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::CardboardVR) {

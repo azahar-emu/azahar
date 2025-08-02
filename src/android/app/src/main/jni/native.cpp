@@ -16,11 +16,13 @@
 #include <core/hle/service/cfg/cfg.h>
 #include "audio_core/dsp_interface.h"
 #include "common/arch.h"
+
 #if CITRA_ARCH(arm64)
 #include "common/aarch64/cpu_detect.h"
 #elif CITRA_ARCH(x86_64)
 #include "common/x64/cpu_detect.h"
 #endif
+
 #include "common/common_paths.h"
 #include "common/dynamic_library/dynamic_library.h"
 #include "common/file_util.h"
@@ -47,12 +49,18 @@
 #include "jni/camera/ndk_camera.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
+
 #ifdef ENABLE_OPENGL
 #include "jni/emu_window/emu_window_gl.h"
 #endif
+
 #ifdef ENABLE_VULKAN
 #include "jni/emu_window/emu_window_vk.h"
+#if CITRA_ARCH(arm64)
+#include <adrenotools/driver.h>
 #endif
+#endif
+
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
@@ -61,16 +69,14 @@
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 
-#if defined(ENABLE_VULKAN) && CITRA_ARCH(arm64)
-#include <adrenotools/driver.h>
-#endif
-
 namespace {
 
-ANativeWindow* s_surf;
+ANativeWindow* s_surface;
+ANativeWindow* s_secondary_surface;
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
+std::unique_ptr<EmuWindow_Android> secondary_window;
 
 std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
 jlong ptm_current_title_id = std::numeric_limits<jlong>::max(); // Arbitrary default value
@@ -124,8 +130,17 @@ static void TryShutdown() {
     }
 
     window->DoneCurrent();
+    if (secondary_window) {
+        secondary_window->DoneCurrent();
+    }
+
     Core::System::GetInstance().Shutdown();
+
     window.reset();
+    if (secondary_window) {
+        secondary_window.reset();
+    }
+
     InputManager::Shutdown();
     MicroProfileShutdown();
 }
@@ -151,15 +166,21 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     Core::System& system{Core::System::GetInstance()};
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
+    EGLContext* c;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
-        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        c = window->GetEGLContext();
+        secondary_window =
+            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, c);
         break;
 #endif
 #ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
-        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library, false);
+        secondary_window =
+            std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
         break;
 #endif
     default:
@@ -167,11 +188,17 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                      "Unknown or unsupported graphics API {}, falling back to available default",
                      graphics_api);
 #ifdef ENABLE_OPENGL
-        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surf);
+        window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
+        c = window->GetEGLContext();
+        secondary_window =
+            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, c);
+
 #elif ENABLE_VULKAN
-        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surf, vulkan_library);
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library);
+        secondary_window =
+            std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
 #else
-// TODO: Add a null renderer backend for this, perhaps.
+        // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
 #endif
         break;
@@ -208,7 +235,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     InputManager::Init();
 
     window->MakeCurrent();
-    const Core::System::ResultStatus load_result{system.Load(*window, filepath)};
+    const Core::System::ResultStatus load_result{
+        system.Load(*window, filepath, secondary_window.get())};
     if (load_result != Core::System::ResultStatus::Success) {
         return load_result;
     }
@@ -262,6 +290,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
             std::unique_lock pause_lock{paused_mutex};
             running_cv.wait(pause_lock, [] { return !pause_emulation || stop_run; });
             window->PollEvents();
+            // if (secondary_window) secondary_window->PollEvents();
         }
     }
 
@@ -304,28 +333,68 @@ extern "C" {
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
                                                             [[maybe_unused]] jobject obj,
                                                             jobject surf) {
-    s_surf = ANativeWindow_fromSurface(env, surf);
+    s_surface = ANativeWindow_fromSurface(env, surf);
 
     bool notify = false;
     if (window) {
-        notify = window->OnSurfaceChanged(s_surf);
+        notify = window->OnSurfaceChanged(s_surface);
     }
 
     auto& system = Core::System::GetInstance();
     if (notify && system.IsPoweredOn()) {
-        system.GPU().Renderer().NotifySurfaceChanged();
+        system.GPU().Renderer().NotifySurfaceChanged(false);
     }
 
     LOG_INFO(Frontend, "Surface changed");
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env,
+                                                                     [[maybe_unused]] jobject obj,
+                                                                     jobject surf) {
+    auto& system = Core::System::GetInstance();
+
+    if (s_secondary_surface) {
+        ANativeWindow_release(s_secondary_surface);
+        s_secondary_surface = nullptr;
+    }
+    s_secondary_surface = ANativeWindow_fromSurface(env, surf);
+    if (!s_secondary_surface) {
+        return;
+    }
+
+    bool notify = false;
+    if (secondary_window) {
+        // Second window already created, so update it
+        notify = secondary_window->OnSurfaceChanged(s_secondary_surface);
+    } else {
+        LOG_WARNING(Frontend,
+                    "Second Window does not exist in native.cpp but surface changed. Ignoring.");
+    }
+
+    if (notify && system.IsPoweredOn()) {
+        system.GPU().Renderer().NotifySurfaceChanged(true);
+    }
+
+    LOG_INFO(Frontend, "Secondary Surface changed");
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(
+    JNIEnv* env, [[maybe_unused]] jobject obj) {
+    if (s_secondary_surface != nullptr) {
+        ANativeWindow_release(s_secondary_surface);
+        s_secondary_surface = nullptr;
+    }
+
+    LOG_INFO(Frontend, "Secondary Surface Destroyed");
+}
+
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,
                                                               [[maybe_unused]] jobject obj) {
-    if (s_surf != nullptr) {
-        ANativeWindow_release(s_surf);
-        s_surf = nullptr;
+    if (s_surface != nullptr) {
+        ANativeWindow_release(s_surface);
+        s_surface = nullptr;
         if (window) {
-            window->OnSurfaceChanged(s_surf);
+            window->OnSurfaceChanged(s_surface);
         }
     }
 }
@@ -337,6 +406,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_doFrame([[maybe_unused]] JNIEnv* en
     }
     if (window) {
         window->TryPresenting();
+    }
+    if (secondary_window) {
+        secondary_window->TryPresenting();
     }
 }
 
@@ -514,6 +586,9 @@ void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIE
     stop_run = true;
     pause_emulation = false;
     window->StopPresenting();
+    if (secondary_window) {
+        secondary_window->StopPresenting();
+    }
     running_cv.notify_all();
 }
 

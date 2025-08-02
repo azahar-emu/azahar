@@ -1,10 +1,11 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include <vector>
+#include <EGL/egl.h>
 #include "core/frontend/emu_window.h"
 
 namespace Core {
@@ -13,7 +14,7 @@ class System;
 
 class EmuWindow_Android : public Frontend::EmuWindow {
 public:
-    EmuWindow_Android(ANativeWindow* surface);
+    EmuWindow_Android(ANativeWindow* surface, bool is_secondary = false);
     ~EmuWindow_Android();
 
     /// Called by the onSurfaceChanges() method to change the surface
@@ -30,7 +31,12 @@ public:
     void DoneCurrent() override;
 
     virtual void TryPresenting() {}
-
+    // EGL Context must be shared
+    // could probably use the existing
+    // SharedContext for this instead, this is maybe temporary
+    virtual EGLContext* GetEGLContext() {
+        return nullptr;
+    }
     virtual void StopPresenting() {}
 
 protected:

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -254,6 +254,9 @@ public:
                                         bool is_portrait_mode = {});
 
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
+    bool isSecondary() const {
+        return is_secondary;
+    }
 
 protected:
     EmuWindow();
