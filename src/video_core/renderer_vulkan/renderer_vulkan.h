@@ -7,8 +7,12 @@
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "video_core/renderer_base.h"
+#ifdef HAVE_LIBRETRO
+#include "citra_libretro/libretro_vk.h"
+#else
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_present_window.h"
+#endif
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
 #include "video_core/renderer_vulkan/vk_render_manager.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
@@ -114,7 +118,11 @@ private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
 
+#ifdef HAVE_LIBRETRO
+    LibRetroVKInstance instance;
+#else
     Instance instance;
+#endif
     Scheduler scheduler;
     RenderManager renderpass_cache;
     PresentWindow main_window;

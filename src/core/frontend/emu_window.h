@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,6 +27,7 @@ enum class WindowSystemType : u8 {
     MacOS,
     X11,
     Wayland,
+    LibRetro,
 };
 
 struct Frame;
@@ -254,6 +255,16 @@ public:
                                         bool is_portrait_mode = {});
 
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
+
+    /**
+     * Requests for a frontend to setup a framebuffer.
+     */
+    virtual void SetupFramebuffer() {}
+
+    /// Flags that the framebuffer should be cleared.
+    virtual bool NeedsClearing() const {
+        return true;
+    }
 
 protected:
     EmuWindow();

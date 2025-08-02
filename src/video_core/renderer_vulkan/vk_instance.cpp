@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -636,9 +636,9 @@ void Instance::CreateAllocator() {
 
     const VmaAllocatorCreateInfo allocator_info = {
         .physicalDevice = physical_device,
-        .device = *device,
+        .device = GetDevice(),
         .pVulkanFunctions = &functions,
-        .instance = *instance,
+        .instance = GetInstance(),
         .vulkanApiVersion = TargetVulkanApiVersion,
     };
 
