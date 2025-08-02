@@ -1,4 +1,4 @@
-// Copyright 2020 yuzu Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -103,13 +103,14 @@ vk::CommandBuffer CommandPool::Commit() {
     return cmd_buffers[index];
 }
 
-constexpr u32 DESCRIPTOR_SET_BATCH = 32;
+constexpr u32 DESCRIPTOR_SET_BATCH = 64;
+constexpr u32 DESCRIPTOR_MULTIPLIER = 4; // Increase capacity of each pool
 
 DescriptorHeap::DescriptorHeap(const Instance& instance, MasterSemaphore* master_semaphore,
                                std::span<const vk::DescriptorSetLayoutBinding> bindings,
                                u32 descriptor_heap_count_)
     : ResourcePool{master_semaphore, DESCRIPTOR_SET_BATCH}, device{instance.GetDevice()},
-      descriptor_heap_count{descriptor_heap_count_} {
+      descriptor_heap_count{descriptor_heap_count_ * DESCRIPTOR_MULTIPLIER} { // Increase pool size
     // Create descriptor set layout.
     const vk::DescriptorSetLayoutCreateInfo layout_ci = {
         .bindingCount = static_cast<u32>(bindings.size()),
