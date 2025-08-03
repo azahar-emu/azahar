@@ -113,7 +113,6 @@ class Settings {
         const val SECTION_CUSTOM_PORTRAIT = "Custom Portrait Layout"
         const val SECTION_PERFORMANCE_OVERLAY = "Performance Overlay"
         const val SECTION_STORAGE = "Storage"
-        const val SECTION_COMBO = "Combo Button"
 
 
         const val KEY_BUTTON_A = "button_a"

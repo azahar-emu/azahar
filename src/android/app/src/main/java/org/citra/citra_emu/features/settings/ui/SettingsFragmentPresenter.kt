@@ -106,7 +106,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_CUSTOM_LANDSCAPE -> addCustomLandscapeSettings(sl)
             Settings.SECTION_CUSTOM_PORTRAIT -> addCustomPortraitSettings(sl)
             Settings.SECTION_PERFORMANCE_OVERLAY -> addPerformanceOverlaySettings(sl)
-            Settings.SECTION_COMBO -> addComboButtonSettings(sl)
             else -> {
                 fragmentView.showToastMessage("Unimplemented menu", false)
                 return
@@ -757,6 +756,26 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+
+        val comboSetting = object : AbstractMultiStringSetting {
+            override var strings: MutableSet<String>
+                get() {
+                    return Settings.comboSelection
+                }
+                set(values) {
+                    for (item in values) {
+                        Settings.comboSelection.add(item)
+                    }
+                }
+            override val key = null
+            override val section = null
+            override val isRuntimeEditable = true
+            override val valueAsString get() = ""
+            override val defaultValue = ""
+        }
+
+        val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
+
         sl.apply {
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
@@ -809,48 +828,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
-                SubmenuSetting(
-                    R.string.combo_key_options,
-                    R.string.combo_key_description,
-                    R.drawable.button_combo,
-                    Settings.SECTION_COMBO
-                )
-            )
-        }
-    }
-
-    private fun addComboButtonSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.button_combo))
-        val comboSetting = object : AbstractMultiStringSetting {
-            override var strings: MutableSet<String>
-                get() {
-                    return Settings.comboSelection
-                }
-                set(values) {
-                    for (item in values) {
-                        Settings.comboSelection.add(item)
-                    }
-                }
-            override val key = null
-            override val section = null
-            override val isRuntimeEditable = true
-            override val valueAsString get() = ""
-            override val defaultValue = ""
-        }
-
-        val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
-
-        sl.apply {
-            add(
-                SwitchSetting(
-                    BooleanSetting.ENABLE_COMBO_KEY,
-                    R.string.combo_key_enable,
-                    R.string.combo_key_submenu_description,
-                    BooleanSetting.ENABLE_COMBO_KEY.key,
-                    BooleanSetting.ENABLE_COMBO_KEY.defaultValue,
-                )
-            )
-            add(
                 StringMultiChoiceSetting(
                     comboSetting,
                     R.string.combo_key_options,
@@ -860,8 +837,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
         }
-
     }
+
+
 
     private fun getInputObject(key: String): AbstractStringSetting {
         return object : AbstractStringSetting {
