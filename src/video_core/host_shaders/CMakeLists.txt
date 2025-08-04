@@ -18,6 +18,13 @@ set(SHADER_FILES
     opengl_present.vert
     opengl_present_anaglyph.frag
     opengl_present_interlaced.frag
+    opengl_smaa.glsl
+    smaa_edge_detection.vert
+    smaa_edge_detection.frag
+    smaa_blending_weight_calculation.vert
+    smaa_blending_weight_calculation.frag
+    smaa_neighborhood_blending.vert
+    smaa_neighborhood_blending.frag
     vulkan_depth_to_buffer.comp
     vulkan_present.frag
     vulkan_present.vert

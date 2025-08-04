@@ -70,6 +70,17 @@ std::string_view GetTextureSamplingName(TextureSampling sampling) {
     }
 }
 
+std::string_view GetAntiAliasing(AntiAliasing aa) {
+    switch (aa) {
+    case AntiAliasing::None:
+        return "None";
+    case AntiAliasing::SMAA:
+        return "SMAA";
+    default:
+        return "Invalid";
+    }
+}
+
 } // Anonymous namespace
 
 Values values = {};
@@ -104,6 +115,7 @@ void LogSettings() {
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
+    log_setting("Renderer_AntiAliasing", GetAntiAliasing(values.anti_aliasing.GetValue()));
     log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
@@ -203,6 +215,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.resolution_factor.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
+    values.anti_aliasing.SetGlobal(true);
     values.texture_sampling.SetGlobal(true);
     values.delay_game_render_thread_us.SetGlobal(true);
     values.layout_option.SetGlobal(true);
