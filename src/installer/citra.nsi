@@ -69,6 +69,7 @@ Page custom desktopShortcutPageCreate desktopShortcutPageLeave
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Variables
+Var DisplayName
 Var DesktopShortcutPageDialog
 Var DesktopShortcutCheckbox
 Var DesktopShortcut
@@ -122,6 +123,14 @@ Function un.onInit
   !insertmacro MULTIUSER_UNINIT
 FunctionEnd
 
+!macro UPDATE_DISPLAYNAME
+  ${If} $MultiUser.InstallMode == "CurrentUser"
+    StrCpy $DisplayName "${PRODUCT_NAME} (User)"
+  ${Else}
+    StrCpy $DisplayName "${PRODUCT_NAME}"
+  ${EndIf}
+!macroend
+
 Function desktopShortcutPageCreate
   !insertmacro MUI_HEADER_TEXT "Create Desktop Shortcut" "Would you like to create a desktop shortcut?"
   nsDialogs::Create 1018
@@ -151,10 +160,12 @@ Section "Base"
   ; The binplaced build output will be included verbatim.
   File /r "${BINARY_SOURCE_DIR}\*"
 
+  !insertmacro UPDATE_DISPLAYNAME
+
   ; Create start menu and desktop shortcuts
-  CreateShortCut "$SMPROGRAMS\$(^Name).lnk" "$INSTDIR\azahar.exe"
+  CreateShortCut "$SMPROGRAMS\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${If} $DesktopShortcut == 1
-    CreateShortCut "$DESKTOP\$(^Name).lnk" "$INSTDIR\azahar.exe"
+    CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
 SectionEnd
 
@@ -166,7 +177,7 @@ Section -Post
   WriteRegStr SHCTX "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\azahar.exe"
 
   ; Write metadata for add/remove programs applet
-  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
+  WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayName" "$DisplayName"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\uninst.exe /$MultiUser.InstallMode"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\azahar.exe"
   WriteRegStr SHCTX "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
@@ -180,9 +191,10 @@ Section -Post
 SectionEnd
 
 Section Uninstall
+  !insertmacro UPDATE_DISPLAYNAME
 
-  Delete "$DESKTOP\$(^Name).lnk"
-  Delete "$SMPROGRAMS\$(^Name).lnk"
+  Delete "$DESKTOP\$DisplayName.lnk"
+  Delete "$SMPROGRAMS\$DisplayName.lnk"
 
   ; Be a bit careful to not delete files a user may have put into the install directory.
   Delete "$INSTDIR\*.dll"
