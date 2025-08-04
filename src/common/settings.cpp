@@ -57,6 +57,17 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
     }
 }
 
+std::string_view GetAntiAliasing(AntiAliasing aa) {
+    switch (aa) {
+    case AntiAliasing::None:
+        return "None";
+    case AntiAliasing::SMAA:
+        return "SMAA";
+    default:
+        return "Invalid";
+    }
+}
+
 std::string_view GetTextureSamplingName(TextureSampling sampling) {
     switch (sampling) {
     case TextureSampling::GameControlled:
@@ -102,6 +113,7 @@ void LogSettings() {
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
+    log_setting("Renderer_AntiAliasing", GetAntiAliasing(values.anti_aliasing.GetValue()));
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
     log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
@@ -203,6 +215,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.resolution_factor.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
+    values.anti_aliasing.SetGlobal(true);
     values.texture_sampling.SetGlobal(true);
     values.delay_game_render_thread_us.SetGlobal(true);
     values.layout_option.SetGlobal(true);

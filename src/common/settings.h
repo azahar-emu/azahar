@@ -106,6 +106,11 @@ enum class TextureSampling : u32 {
     Linear = 2,
 };
 
+enum class AntiAliasing : u32 {
+    None = 0,
+    SMAA = 1,
+};
+
 enum class AspectRatio : u32 {
     Default = 0,
     R16_9 = 1,
@@ -511,6 +516,7 @@ struct Values {
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
+    SwitchableSetting<AntiAliasing> anti_aliasing{AntiAliasing::None, "anti_aliasing"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,

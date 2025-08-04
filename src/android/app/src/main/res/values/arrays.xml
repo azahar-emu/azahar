@@ -271,6 +271,16 @@
         <item>5</item>
     </integer-array>
 
+    <string-array name="AntiAliasingNames">
+        <item>No AA</item>
+        <item>SMAA</item>
+    </string-array>
+
+    <integer-array name="AntiAliasingValues">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
     <string-array name="textureSamplingNames">
         <item>@string/game_controlled</item>
         <item>@string/nearest_neighbor</item>
