@@ -548,7 +548,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             )
         }
 
-        if (preferences.getBoolean("buttonToggle16", true)) {
+        if (preferences.getBoolean("buttonToggle16", false)) {
             overlayButtons.add(
                 initializeOverlayButton(
                     context,

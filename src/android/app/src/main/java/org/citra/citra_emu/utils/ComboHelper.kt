@@ -4,10 +4,7 @@
 
 package org.citra.citra_emu.utils
 
-import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.R
-import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.overlay.InputOverlayDrawableButton
 
@@ -33,10 +30,13 @@ object ComboHelper {
         var comboArray = Settings.comboSelection
         for (selectedbutton in comboArray) {
             var nativebutton = getButton(selectedbutton)
-            if (nativebutton == -1) {
+            if (nativebutton == -1)
+            {
                 println("Bad Button")
-            } else {
-            NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, nativebutton, button.status)
+            }
+            else
+            {
+                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, nativebutton, button.status)
             }
         }
     }
