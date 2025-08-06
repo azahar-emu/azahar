@@ -933,11 +933,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             )
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_COMBO.toString() + portrait + "-X",
-                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_X).toFloat() / 1000 * maxX
             )
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_COMBO.toString() + portrait + "-Y",
-                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .apply()
     }
