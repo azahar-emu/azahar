@@ -407,6 +407,8 @@ if (ENABLE_VULKAN)
         find_package(SPIRV-Headers REQUIRED)
         if(TARGET SPIRV-Headers::SPIRV-Headers)
             message(STATUS "Found SPIRV headers")
+            get_target_property(SPIRV-Headers_SOURCE_DIR SPIRV-Headers::SPIRV-Headers INTERFACE_INCLUDE_DIRECTORIES)
+            set(SPIRV-Headers_SOURCE_DIR "${SPIRV-Headers_SOURCE_DIR}/../") # Not sure why this is necessary
         endif()
     else()
         set(SPIRV-Headers_SOURCE_DIR "${CMAKE_SOURCE_DIR}/externals/spirv-headers")
