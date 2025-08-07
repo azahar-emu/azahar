@@ -77,6 +77,7 @@ set(LIB_VAR_LIST
     OPENAL
     VMA
     VULKAN_HEADERS
+    SPIRV_HEADERS
     CATCH2
     )
 
