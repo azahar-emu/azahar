@@ -167,13 +167,8 @@ void Client::UDPStream::Handle() {
     int actual_buffer_size;
     if (::getsockopt(main_socket, SOL_SOCKET, SO_RCVBUF,
                      reinterpret_cast<char*>(&actual_buffer_size), &actual_size_len) == 0) {
-#ifdef __APPLE__
-        LOG_INFO(Network, "macOS UDP buffer size set to: {} (requested: {})", actual_buffer_size,
+        LOG_INFO(Network, "UDP buffer size set to: {} (requested: {})", actual_buffer_size,
                  effective_buffer_size);
-#else
-        LOG_DEBUG(Network, "UDP buffer size set to: {} (requested: {})", actual_buffer_size,
-                  effective_buffer_size);
-#endif
     } else {
         LOG_WARNING(Network, "Could not verify UDP buffer size setting");
     }
