@@ -166,14 +166,14 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     Core::System& system{Core::System::GetInstance()};
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
-    EGLContext* c;
+    EGLContext* shared_context;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
-        c = window->GetEGLContext();
+        shared_context = window->GetEGLContext();
         secondary_window =
-            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, c);
+            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, shared_context);
         break;
 #endif
 #ifdef ENABLE_VULKAN
@@ -189,9 +189,9 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                      graphics_api);
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
-        c = window->GetEGLContext();
+        shared_context = window->GetEGLContext();
         secondary_window =
-            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, c);
+            std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface, true, shared_context);
 
 #elif ENABLE_VULKAN
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library);

@@ -213,9 +213,9 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
     if (presenting_state == PresentingState::Initial) [[unlikely]] {
         presenting_state = PresentingState::Running;
     }
-    //    if (presenting_state != PresentingState::Running) [[unlikely]] {
-    //        return;
-    //    }
+    if (presenting_state != PresentingState::Running) [[unlikely]] {
+            return;
+    }
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0);

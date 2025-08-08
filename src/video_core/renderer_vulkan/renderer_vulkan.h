@@ -115,11 +115,11 @@ private:
     Instance instance;
     Scheduler scheduler;
     RenderManager renderpass_cache;
-    PresentWindow main_window;
+    PresentWindow main_present_window;
     StreamBuffer vertex_buffer;
     DescriptorUpdateQueue update_queue;
     RasterizerVulkan rasterizer;
-    std::unique_ptr<PresentWindow> second_window;
+    std::unique_ptr<PresentWindow> secondary_present_window;
 
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
