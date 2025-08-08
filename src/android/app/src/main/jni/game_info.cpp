@@ -31,8 +31,17 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
     std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(path);
     u64 program_id = 0;
     bool is_encrypted = false;
+    Loader::ResultStatus result{};
+    if (loader) {
+        result = loader->ReadProgramId(program_id);
+        if (result == Loader::ResultStatus::ErrorNotImplemented) {
+            // This can happen for 3DSX and ELF files.
+            program_id = 0;
+            result = Loader::ResultStatus::Success;
+        }
+    }
 
-    if (!loader || loader->ReadProgramId(program_id) != Loader::ResultStatus::Success) {
+    if (!loader || result != Loader::ResultStatus::Success) {
         GameInfoData* gid = new GameInfoData();
         memset(&gid->smdh, 0, sizeof(Loader::SMDH));
         return gid;
