@@ -332,7 +332,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         }
 
         val selectedFiles =
-            FileBrowserHelper.getSelectedFiles(result, applicationContext, listOf("cia"))
+            FileBrowserHelper.getSelectedFiles(result, applicationContext, listOf("cia", "zcia"))
         if (selectedFiles == null) {
             Toast.makeText(applicationContext, R.string.cia_file_not_found, Toast.LENGTH_LONG)
                 .show()
