@@ -108,17 +108,23 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
       main_present_window{window, instance, scheduler, IsLowRefreshRate()},
       vertex_buffer{instance, scheduler, vk::BufferUsageFlagBits::eVertexBuffer,
                     VERTEX_BUFFER_SIZE},
-      update_queue{instance},
-      rasterizer{
-          memory,   pica,      system.CustomTexManager(), *this,        render_window,
-          instance, scheduler, renderpass_cache,          update_queue, main_present_window.ImageCount()},
+      update_queue{instance}, rasterizer{memory,
+                                         pica,
+                                         system.CustomTexManager(),
+                                         *this,
+                                         render_window,
+                                         instance,
+                                         scheduler,
+                                         renderpass_cache,
+                                         update_queue,
+                                         main_present_window.ImageCount()},
       present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
     CompileShaders();
     BuildLayouts();
     BuildPipelines();
     if (secondary_window) {
-        secondary_present_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
-                                                        IsLowRefreshRate());
+        secondary_present_window = std::make_unique<PresentWindow>(*secondary_window, instance,
+                                                                   scheduler, IsLowRefreshRate());
     }
 }
 
@@ -177,7 +183,8 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
     }
 
     renderpass_cache.EndRendering();
-    scheduler.Record([this, layout, frame, present_set, renderpass = main_present_window.Renderpass(),
+    scheduler.Record([this, layout, frame, present_set,
+                      renderpass = main_present_window.Renderpass(),
                       index = current_pipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
@@ -893,8 +900,8 @@ void RendererVulkan::SwapBuffers() {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
         if (!secondary_present_window) {
-            secondary_present_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
-                                                            IsLowRefreshRate());
+            secondary_present_window = std::make_unique<PresentWindow>(
+                *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
         RenderToWindow(*secondary_present_window, secondary_layout, false);
         secondary_window->PollEvents();
@@ -905,8 +912,8 @@ void RendererVulkan::SwapBuffers() {
     if (secondary_window) {
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
         if (!secondary_present_window) {
-            secondary_present_window = std::make_unique<PresentWindow>(*secondary_window, instance, scheduler,
-                                                            IsLowRefreshRate());
+            secondary_present_window = std::make_unique<PresentWindow>(
+                *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
         RenderToWindow(*secondary_present_window, secondary_layout, false);
         secondary_window->PollEvents();

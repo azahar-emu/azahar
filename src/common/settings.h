@@ -521,7 +521,7 @@ struct Values {
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{SecondaryDisplayLayout::None,
-                                                                     "secondary_display_layout"};
+                                                                       "secondary_display_layout"};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
                                                            "large_screen_proportion"};
     SwitchableSetting<int> screen_gap{0, "screen_gap"};
