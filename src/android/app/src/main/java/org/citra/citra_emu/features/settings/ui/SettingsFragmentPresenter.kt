@@ -1112,7 +1112,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 SingleChoiceSetting(
                     IntSetting.SECONDARY_DISPLAY_LAYOUT,
                     R.string.emulation_switch_secondary_layout,
-                    0,
+                    R.string.emulation_switch_secondary_layout_description,
                     R.array.secondaryLayouts,
                     R.array.secondaryLayoutValues,
                     IntSetting.SECONDARY_DISPLAY_LAYOUT.key,
