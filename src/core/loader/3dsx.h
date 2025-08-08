@@ -19,8 +19,7 @@ namespace Loader {
 class AppLoader_THREEDSX final : public AppLoader {
 public:
     AppLoader_THREEDSX(Core::System& system_, FileUtil::IOFile&& file, const std::string& filename,
-                       const std::string& filepath)
-        : AppLoader(system_, std::move(file)), filename(filename), filepath(filepath) {}
+                       const std::string& filepath);
 
     /**
      * Returns the type of the file
@@ -30,7 +29,7 @@ public:
     static FileType IdentifyType(FileUtil::IOFile* file);
 
     FileType GetFileType() override {
-        return IdentifyType(file.get());
+        return filetype;
     }
 
     ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
@@ -46,6 +45,7 @@ public:
 private:
     std::string filename;
     std::string filepath;
+    FileType filetype;
 };
 
 } // namespace Loader
