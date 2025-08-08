@@ -22,9 +22,12 @@ If you are unsure of whether you want to use MSYS2 or MSVC, use MSYS2.
 
 ### MacOS
 
-Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases).
+To download a build that will work on all Macs, you can download the `macos-universal` build on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
-The `macos-universal` download will work on both Intel and Apple Silicon Macs.
+Alternatively, if you wish to download a build specifically for your Mac, you can choose either:
+
+- `macos-arm64` for Apple Silicon Macs
+- `macos-x86_64` for Intel Macs
 
 ---
 ### Android

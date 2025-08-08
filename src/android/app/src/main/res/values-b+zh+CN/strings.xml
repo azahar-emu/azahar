@@ -193,6 +193,9 @@
     <string name="region_mismatch">区域不匹配警告</string>
     <string name="region_mismatch_emulated">此国家/地区设置对于所选择的模拟区域无效。</string>
     <string name="region_mismatch_console">此国家/地区设置对于当前关联的掌机无效。</string>
+    <string name="storage">存储</string>
+    <string name="compress_cia_installs">压缩已安装的 CIA 内容</string>
+    <string name="compress_cia_installs_description">安装到模拟 SD 卡时，压缩 CIA 文件的内容。仅影响启用此设置时安装的 CIA 内容。</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
@@ -397,13 +400,17 @@
     <string name="emulation_configure_controls">控制设置</string>
     <string name="emulation_edit_layout">编辑布局</string>
     <string name="emulation_done">完成</string>
+    <string name="emulation_button_sliding">按键滑行</string>
+    <string name="emulation_button_sliding_disabled">按住起始按下的按键</string>
+    <string name="emulation_button_sliding_enabled">按住当前按下的按键</string>
+    <string name="emulation_button_sliding_alternative">按住起始和当前按下的按键</string>
     <string name="emulation_toggle_controls">切换控制</string>
     <string name="emulation_control_scale">调整大小</string>
     <string name="emulation_control_scale_global">全局缩放</string>
     <string name="emulation_control_scale_reset_all">重置全部</string>
     <string name="emulation_control_opacity">调整透明度</string>
     <string name="emulation_control_joystick_rel_center">相对摇杆中心</string>
-    <string name="emulation_control_dpad_slide_enable">十字方向键滑动</string>
+    <string name="emulation_control_dpad_slide_enable">十字键滑行</string>
     <string name="emulation_open_settings">打开设置项</string>
     <string name="emulation_open_cheats">开启金手指</string>
     <string name="emulation_aspect_ratio">宽高比</string>
@@ -513,7 +520,6 @@
     <string name="save_load_error">保存/读取出现错误</string>
     <string name="fatal_error">致命错误</string>
     <string name="fatal_error_message">发生致命错误。请查阅日志获取相关信息。\n继续模拟可能会导致错误和崩溃。</string>
-    <string name="invalid_region">无效的地区</string>
     <string name="unsupported_encrypted">不支持的加密应用</string>
 
     <!-- Disk Shader Cache -->
@@ -539,6 +545,9 @@
     <string name="create_shortcut">创建快捷方式</string>
     <string name="shortcut_name_empty">快捷方式名称不能为空</string>
     <string name="shortcut_image_stretch_toggle">拉伸以适合图像</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">文件:</string>
+    <string name="game_context_type">类型:</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">显示性能参数</string>

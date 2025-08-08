@@ -185,7 +185,6 @@
     <string name="region_mismatch">Bölge Uyuşmazlık Uyarısı</string>
     <string name="region_mismatch_emulated">Ülke ayarı emülasyon bölgesi için geçerli değil.</string>
     <string name="region_mismatch_console">Ülke ayarı bağlı olan konsol için geçerli değil.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera"> 
 İç Kamera</string>
@@ -462,7 +461,6 @@
     <string name="save_load_error">Kaydetme/yükleme Hatası</string>
     <string name="fatal_error">Ölümcül Hata</string>
     <string name="fatal_error_message">Ölümcül bir hata oluştu. Ayrıntılar için log\'u kontrol edin.\nEmülasyona devam etmek çökmelere ve hatalara neden olabilir.</string>
-    <string name="invalid_region">Geçersiz bölge</string>
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
 
     <!-- Disk Shader Cache -->

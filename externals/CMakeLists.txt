@@ -402,6 +402,24 @@ endif()
 
 # Vulkan dependencies
 if (ENABLE_VULKAN)
+    # spirv-headers
+    if(USE_SYSTEM_SPIRV_HEADERS)
+        find_package(SPIRV-Headers REQUIRED)
+        if(TARGET SPIRV-Headers::SPIRV-Headers)
+            message(STATUS "Found SPIRV headers")
+            get_target_property(SPIRV-Headers_SOURCE_DIR SPIRV-Headers::SPIRV-Headers INTERFACE_INCLUDE_DIRECTORIES)
+            set(SPIRV-Headers_SOURCE_DIR "${SPIRV-Headers_SOURCE_DIR}/../") # Not sure why this is necessary
+        endif()
+    else()
+        set(SPIRV-Headers_SOURCE_DIR "${CMAKE_SOURCE_DIR}/externals/spirv-headers")
+        add_subdirectory(spirv-headers EXCLUDE_FROM_ALL)
+    endif()
+
+    # spirv-tools
+    # TODO: Implement USE_SYSTEM_SPIRV_TOOLS -OS
+    set(SPIRV_SKIP_EXECUTABLES ON)
+    add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
+
     # glslang
     if(USE_SYSTEM_GLSLANG)
         find_package(glslang REQUIRED)
@@ -413,10 +431,6 @@ if (ENABLE_VULKAN)
         get_target_property(GLSLANG_PREFIX glslang::SPIRV INTERFACE_INCLUDE_DIRECTORIES)
         target_include_directories(SPIRV SYSTEM INTERFACE "${GLSLANG_PREFIX}/glslang")
     else()
-        set(SPIRV-Headers_SOURCE_DIR "${CMAKE_SOURCE_DIR}/externals/spirv-headers")
-        add_subdirectory(spirv-headers EXCLUDE_FROM_ALL)
-        set(SPIRV_SKIP_EXECUTABLES ON)
-        add_subdirectory(spirv-tools EXCLUDE_FROM_ALL)
         set(SKIP_GLSLANG_INSTALL ON CACHE BOOL "")
         set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "")
         set(ENABLE_SPVREMAPPER OFF CACHE BOOL "")

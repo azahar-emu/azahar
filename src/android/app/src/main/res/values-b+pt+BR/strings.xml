@@ -11,13 +11,13 @@
     <string name="home_options">Opções</string>
     <string name="home_search">Procurar</string>
     <string name="home_games">Aplicativos</string>
-    <string name="settings_description">Definir configurações do emulador</string>
-    <string name="install_game_content">Instale o arquivo CIA</string>
+    <string name="settings_description">Definir as configurações do emulador</string>
+    <string name="install_game_content">Instalar arquivo CIA</string>
     <string name="install_game_content_description">Instalar aplicativos, atualizações ou DLC</string>
-    <string name="share_log">Compartilhar registro</string>
+    <string name="share_log">Compartilhar Registro</string>
     <string name="share_log_description">Compartilhe o arquivo de log do Azahar para depurar problemas</string>
-    <string name="gpu_driver_manager">Gerenciador de driver da GPU</string>
-    <string name="install_gpu_driver">Instale o driver da GPU</string>
+    <string name="gpu_driver_manager">Gerenciador de Driver da GPU</string>
+    <string name="install_gpu_driver">Instalar driver da GPU</string>
     <string name="install_gpu_driver_description">Instale drivers alternativos para poder obter desempenho ou precisão</string>
     <string name="driver_already_installed">Driver já instalado</string>
     <string name="custom_driver_not_supported">Drivers personalizados não suportados</string>
@@ -27,15 +27,15 @@
     <string name="select_games_folder_description">Permitir que o Azahar preencha a lista de aplicativos</string>
     <string name="about">Sobre</string>
     <string name="citra_description">Um emulador de 3DS de código aberto</string>
-    <string name="about_description">Versão de compilação, créditos e mais</string>
-    <string name="games_dir_selected">Diretório de aplicativos selecionado</string>
+    <string name="about_description">Versão da compilação, créditos e mais</string>
+    <string name="games_dir_selected">Diretório do aplicativo selecionado</string>
     <string name="select_citra_user_folder_home_description">Altera os arquivos que o Azahar usa para carregar aplicativos</string>
     <string name="theme_and_color_description">Modificar a aparência do aplicativo</string>
-    <string name="install_cia_title">Instale a CIA</string>
+    <string name="install_cia_title">Instalar arquivo CIA</string>
     <string name="warning_3ds_files"><![CDATA[Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Saiba mais.</a>]]></string>
 
     <!-- GPU driver installation -->
-    <string name="select_gpu_driver">Selecione o driver GPU</string>
+    <string name="select_gpu_driver">Selecionar driver da GPU</string>
     <string name="select_gpu_driver_title">Você quer substituir seu driver de GPU atual?</string>
     <string name="select_gpu_driver_install">Instalar</string>
     <string name="select_gpu_driver_default">Padrão</string>
@@ -77,6 +77,7 @@
     <string name="permissions">Premissões</string>
     <string name="select_emulator_data_folders">Pastas de Dados</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Selecione pastas de dados<br/>(Pasta de usuário é necessária)]]></string>
+    <string name="permissions_description">Conceda permissões opcionais para usar recursos específicos do emulador.</string>
     <string name="warning_help">Ajuda</string>
     <string name="warning_skip">Pular</string>
     <string name="warning_cancel">Cancelar</string>
@@ -86,6 +87,7 @@
     <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
     <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
+    <string name="cannot_skip">Você não pode pular a configuração da pasta do usuário.</string>
     <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
     <string name="selecting_user_directory_without_write_permissions">Você perdeu suas permissões de escrita no seu diretório de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">dados de usuário</a>, onde dados salvos e outras informações são guardadas.  Isso pode acontecer depois que algum app ou Android atualiza. Re-selecione o diretório para reobter as permissões para que você possa continuar.</string>
     <string name="set_up_theme_settings">Configurações de Tema</string>
@@ -167,6 +169,7 @@
     <string name="init_clock_description">Configura o relógio emulado do 3DS para refletir o do seu dispositivo ou para começar numa data e hora simulados.</string>
     <string name="device_clock">Clock do Dispositivo</string>
     <string name="simulated_clock">Clock Simulado</string>
+    <string name="simulated_clock_description">Se o relógio estiver definido como \'Relógio simulado\', isso altera a data e hora fixas de início.</string>
     <string name="profile_settings">Configurações de Perfil</string>
     <string name="emulated_region">Região</string>
     <string name="emulated_language">Linguagem</string>
@@ -190,7 +193,6 @@
     <string name="region_mismatch">Aviso de inconsistência de região</string>
     <string name="region_mismatch_emulated">O país configurado não é válido para a região emulada selecionada.</string>
     <string name="region_mismatch_console">O país configurado não é válido para o console vinculado atual.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Câmera frontal</string>
     <string name="outer_left_camera">Câmera traseira esquerda</string>
@@ -209,6 +211,8 @@
     <string name="graphics_api">API de gráficos</string>
     <string name="spirv_shader_gen">Ativar geração de shaders SPIR-V</string>
     <string name="spirv_shader_gen_description">Emite o fragment shader usado para emular PICA usando SPIR-V em vez de GLSL</string>
+    <string name="disable_spirv_optimizer">Desativar otimizador SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Desativa a etapa de otimização SPIR-V, reduzindo consideravelmente os travamentos, com impacto mínimo no desempenho.</string>
     <string name="async_shaders">Ativar a compilação assíncrona de shaders</string>
     <string name="async_shaders_description">Compila shaders em segundo plano para reduzir travamentos durante o jogo. Quando ativado, espere falhas gráficas temporárias</string>
     <string name="linear_filtering">Filtragem Linear</string>
@@ -229,6 +233,7 @@
     <string name="frame_limit_slider">Limite de velocidade percentual</string>
     <string name="frame_limit_slider_description">Especifica a porcentagem para limitar a velocidade. Com o padrão de 100% a emulação será limitada a velocidade normal. Valores maiores ou menores vão aumentar ou reduzir o limite de velocidade.</string>
     <string name="turbo_limit">Limite da Velocidade Turbo:</string>
+    <string name="turbo_limit_description">Limite de velocidade da emulação usado enquanto a tecla de atalho turbo está ativa.</string>
     <string name="expand_to_cutout_area">Expandir para a área recortada</string>
     <string name="expand_to_cutout_area_description">Expande a área da tela para incluir a área recortada (ou notch).</string>
     <string name="internal_resolution">Resolução Interna</string>
@@ -297,7 +302,12 @@
     <string name="delay_start_lle_modules_description">Atrasa a inicialização do aplicativo quando os módulos LLE estão ativados.</string>
     <string name="deterministic_async_operations">Operações Assíncronas Determinísticas</string>
     <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
-    <!-- Layout settings strings -->
+    <string name="enable_rpc_server">Ativar servidor RPC</string>
+    <string name="enable_rpc_server_desc">Ativa o servidor RPC na porta 45987. Isso permite ler e escrever remotamente a memória do sistema emulado.</string>
+    <string name="shader_jit">Ativar Shader JIT</string>
+    <string name="shader_jit_description">Usa o mecanismo JIT em vez do interpretador para a emulação de shaders por software.</string>
+
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientação da Tela</string>
     <string name="layout_screen_orientation_auto_sensor">Automático</string>
     <string name="layout_screen_orientation_landscape">Paisagem</string>
@@ -416,6 +426,8 @@
     <string name="small_screen_position_bottom_left">Inferior Esquerda</string>
     <string name="small_screen_position_above">Acima</string>
     <string name="small_screen_position_below">Abaixo</string>
+    <string name="screen_gap">Espaço entre Telas</string>
+    <string name="screen_gap_description">Espaço entre as telas em todos os modos de duas telas. Medido em pixels em relação à altura de 240 pixels da tela maior.</string>
     <string name="large_screen_proportion">Proporção de Tela Grande</string>
     <string name="large_screen_proportion_description">Quantas vezes maior é a tela grande em relação à tela pequena no Layout de Tela Grande?</string>
     <string name="emulation_adjust_custom_layout">Ajuste a Disposição Personalizada nas Configurações</string>
@@ -429,7 +441,9 @@
     <string name="emulation_custom_layout_height">Altura</string>
     <string name="emulation_cycle_landscape_layouts">Trocar Disposições</string>
     <string name="emulation_swap_screens">Trocar telas</string>
+    <string name="emulation_rotate_upright">Girar Tela para Posição Vertical</string>
     <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>
+    <string name="emulation_show_controller_overlay">Mostrar Sobreposição do Controle</string>
     <string name="emulation_close_game">Fechar jogo</string>
     <string name="emulation_toggle_pause">Alternar Pausa</string>
     <string name="miscellaneous">Diversos</string>
@@ -496,7 +510,6 @@
     <string name="save_load_error">Erro ao Salvar/Carregar</string>
     <string name="fatal_error">Erro Fatal</string>
     <string name="fatal_error_message">Ocorreu um erro fatal. Verifique o registro para obter detalhes.\nContinuar a emulação pode resultar em falhas e bugs.</string>
-    <string name="invalid_region">Região inválida</string>
     <string name="unsupported_encrypted">Aplicativo criptografado não suportado</string>
 
     <!-- Disk Shader Cache -->
@@ -517,6 +530,39 @@
     <string name="game_context_uninstall_dlc">Desinstalar DLC</string>
     <string name="game_context_uninstall_updates">Desinstalar atualizações</string>
     <string name="shortcut">Atalho</string>
+    <string name="shortcut_name">Nome do Atalho</string>
+    <string name="edit_icon">Editar ícone</string>
+    <string name="create_shortcut">Criar Atalho</string>
+    <string name="shortcut_name_empty">O nome do atalho não pode ficar vazio</string>
+    <string name="shortcut_image_stretch_toggle">Esticar para ajustar à imagem</string>
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">Mostrar Sobreposição de Desempenho</string>
+    <string name="performance_overlay_options">Sobreposição de Desempenho</string>
+    <string name="performance_overlay_enable">Ativa a Sobreposição de Desempenho</string>
+    <string name="performance_overlay_options_description">Configure se a sobreposição de desempenho será exibida e quais informações serão mostradas.</string>
+    <string name="overlay_show_fps">Mostrar FPS</string>
+    <string name="overlay_show_fps_description">Exibe a taxa de quadros atual por segundo.</string>
+    <string name="overlay_show_frametime">Mostrar Tempo de Quadro</string>
+    <string name="overlay_show_frametime_description">Exibe o tempo de quadro atual.</string>
+    <string name="overlay_show_speed">Mostrar Velocidade</string>
+    <string name="overlay_show_speed_description">Exibe a porcentagem atual da velocidade da emulação.</string>
+    <string name="overlay_show_app_ram_usage">Mostrar o Uso de Memória do Aplicativo</string>
+    <string name="overlay_show_app_ram_usage_description">Exibe a quantidade de RAM utilizada pelo emulador.</string>
+    <string name="overlay_show_available_ram">Mostrar Memória Disponível</string>
+    <string name="overlay_show_available_ram_description">Exibe a quantidade de RAM disponível.</string>
+    <string name="overlay_show_battery_temp">Mostrar a Temperatura da Bateria</string>
+    <string name="overlay_show_battery_temp_description">Exibe a temperatura atual da Bateria em Celsius e Fahrenheit.</string>
+    <string name="overlay_position">Posição da Sobreposição</string>
+    <string name="overlay_position_description">Escolha onde a sobreposição de desempenho será exibida na tela.</string>
+    <string name="overlay_position_top_left">Superior Esquerdo</string>
+    <string name="overlay_position_top_right">Superior Direito</string>
+    <string name="overlay_position_bottom_left">Inferior Esquerdo</string>
+    <string name="overlay_position_bottom_right">Inferior Direito</string>
+    <string name="overlay_position_center_top">Centro Superior</string>
+    <string name="overlay_position_center_bottom">Centro Inferior</string>
+    <string name="overlay_background">Plano de Fundo da Sobreposição</string>
+    <string name="overlay_background_description">Adiciona um plano de fundo atrás da sobreposição para facilitar a leitura.</string>
+
     <!-- Cheats -->
     <string name="cheats">Truques</string>
     <string name="cheats_add">Adicionar Trapaça</string>

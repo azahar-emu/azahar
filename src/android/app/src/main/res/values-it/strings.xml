@@ -144,6 +144,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="setup_tool_connect">Connettiti a Artic Setup Tool </string>
     <string name="setup_system_files_preamble"><![CDATA[Azahar necessita di dati unici della console e file firmware provenienti da una console reale per poter utilizzare alcune delle sue funzionalità. Questi file e dati possono essere configurati con <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br>Note: <ul><li><b>Questa operazione installerà dati unici della console su Azahar, non condividere le tue cartelle utente o NAND dopo aver completato il processo di configurazione!</b></li><li>Durante il processo di configurazione, Azahar si collegherà alla console che sta eseguendo lo strumento di configurazione. Puoi scollegare la console in seguito dalla scheda \"File di sistema\" nel menu delle opzioni dell\'emulatore.</li><li>Non andare online contemporaneamente con Azahar e la tua console 3DS dopo aver configurato i file di sistema, poiché ciò potrebbe causare problemi.</li><li>La configurazione del vecchio 3DS è necessaria affinché la configurazione del nuovo 3DS funzioni (si consiglia di configurare entrambi).</li><li>Entrambe le modalità di configurazione funzioneranno indipendentemente dal modello della console che esegue lo strumento di configurazione.</li></ul>]]></string>
     <string name="setup_system_files_detect">Recupero dello stato attuale dei file di sistema, per favore attendi...</string>
+    <string name="delete_system_files">Scollega i dati univoci della console</string>
+    <string name="delete_system_files_description"><![CDATA[Questa azione scollegherà la tua console reale da Azahar, con le seguenti conseguenze:<br><ul><li>il tuo OTP, SecureInfo e LocalFriendCodeSeed verranno rimossi da Azahar.</li><li>La tua lista amici verrà reimpostata e verrai disconnesso dal tuo account NNID/PNID.</li><li>I file di sistema e i titoli eshop ottenuti tramite Azahar diventeranno inaccessibili finché la stessa console non verrà nuovamente collegata tramite lo strumento di configurazione (i dati di salvataggio non andranno persi).</li></ul><br>Continuare?]]></string>
     <string name="setup_system_files_o3ds">Setup Old 3DS</string>
     <string name="setup_system_files_n3ds">Setup New 3DS</string>
     <string name="setup_system_files_possible">Il setup è possibile.</string>
@@ -196,6 +198,9 @@ Divertiti usando l\'emulatore!</string>
     <string name="region_mismatch">Mancata corrispondenza della regione</string>
     <string name="region_mismatch_emulated">L\'impostazione del paese non è valida per la regione emulata selezionata.</string>
     <string name="region_mismatch_console">L\'impostazione del paese non è valida per la console attualmente collegata.</string>
+    <string name="storage">Archiviazione</string>
+    <string name="compress_cia_installs">Comprimi i contenuti CIA installati</string>
+    <string name="compress_cia_installs_description">Comprime il contenuto dei file CIA quando installati sulla scheda SD emulata. Riguarda solo i contenuti CIA installati mentre l\'impostazione è abilitata.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Fotocamera Interna</string>
@@ -242,6 +247,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="expand_to_cutout_area_description">Espande l\'area di visualizzazione per includere l\'area di ritaglio (o notch).</string>
     <string name="internal_resolution">Risoluzione Interna</string>
     <string name="internal_resolution_description">Specifica la risoluzione a cui renderizzare. Una risoluzione alta migliorerà la qualità visiva ma avrà un grande effetto sulle prestazioni e potrebbe causare glitch in alcune applicazioni.</string>
+    <string name="internal_resolution_setting_auto">Auto (dimensione dello schermo)</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -399,6 +405,10 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_configure_controls">Configura Controlli</string>
     <string name="emulation_edit_layout">Modifica Disposizione</string>
     <string name="emulation_done">Fatto</string>
+    <string name="emulation_button_sliding">Pulsante scorrevole</string>
+    <string name="emulation_button_sliding_disabled">Tieni premuto il pulsante originariamente premuto</string>
+    <string name="emulation_button_sliding_enabled">Tieni premuto il pulsante attualmente premuto</string>
+    <string name="emulation_button_sliding_alternative">Tieni premuto il pulsante originale e attualmente premuto</string>
     <string name="emulation_toggle_controls">Attiva Controlli</string>
     <string name="emulation_control_scale">Regola la Dimensione</string>
     <string name="emulation_control_scale_global">Scala Globale</string>
@@ -408,6 +418,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_control_dpad_slide_enable">Trascinamento del D-Pad</string>
     <string name="emulation_open_settings">Apri Impostazioni</string>
     <string name="emulation_open_cheats">Apri Trucchi</string>
+    <string name="emulation_aspect_ratio">Proporzione</string>
     <string name="emulation_switch_screen_layout">Layout Schermi Orizzontale</string>
     <string name="emulation_switch_portrait_layout">Layout Schermi Verticale</string>
     <string name="emulation_screen_layout_largescreen">Schermo Grande</string>
@@ -428,6 +439,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="small_screen_position_bottom_left">Basso-Sinistra</string>
     <string name="small_screen_position_above">Sopra</string>
     <string name="small_screen_position_below">Sotto</string>
+    <string name="screen_gap">Spazio tra gli schermi</string>
+    <string name="screen_gap_description">Spazio tra gli schermi in tutte le modalità a due schermi. Misurato in px rispetto all\'altezza di 240px dello schermo più grande.</string>
     <string name="large_screen_proportion">Proporzioni Schermo Superiore</string>
     <string name="large_screen_proportion_description">Quante volte più grande deve essere lo schermo superiore rispetto a quello inferiore nella modalità Schermo Grande?</string>
     <string name="emulation_adjust_custom_layout">Modifica Layout personalizzato nelle impostazioni</string>
@@ -441,7 +454,9 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_custom_layout_height">Altezza</string>
     <string name="emulation_cycle_landscape_layouts">Rotazione Layout</string>
     <string name="emulation_swap_screens">Inverti Schermi</string>
+    <string name="emulation_rotate_upright">Ruota lo schermo in verticale</string>
     <string name="emulation_touch_overlay_reset">Ripristina Disposizione</string>
+    <string name="emulation_show_controller_overlay">Mostra Overlay Controller</string>
     <string name="emulation_close_game">Chiudi il Gioco</string>
     <string name="emulation_toggle_pause">Abilita/disabilita Pausa</string>
     <string name="miscellaneous">Miscellanea</string>
@@ -508,7 +523,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="save_load_error">Errore nel Salvataggio/Caricamento</string>
     <string name="fatal_error">Errore Fatale</string>
     <string name="fatal_error_message">Si è verificato un errore fatale. Controllare il log per i dettagli.\nContinuare l\'emulazione può causare crash e bug.</string>
-    <string name="invalid_region">Regione non valida</string>
     <string name="unsupported_encrypted">Applicazione criptata non supportata</string>
 
     <!-- Disk Shader Cache -->
@@ -529,8 +543,14 @@ Divertiti usando l\'emulatore!</string>
     <string name="edit_icon">Modifica icona</string>
     <string name="create_shortcut">Crea scorciatoia</string>
     <string name="shortcut_name_empty">Il nome della scorciatoia non può essere vuoto</string>
+    <string name="shortcut_image_stretch_toggle">Estendi per adattare l\'immagine</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">File:</string>
+    <string name="game_context_type">Tipo:</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostra overlay prestazioni</string>
+    <string name="performance_overlay_options">Overlay delle prestazioni</string>
     <string name="performance_overlay_enable">Abilita overlay prestazioni</string>
     <string name="performance_overlay_options_description">Configura se l\'overlay delle prestazioni viene visualizzato e quali informazioni vengono visualizzate.</string>
     <string name="overlay_show_fps">Mostra FPS</string>
@@ -672,6 +692,8 @@ Divertiti usando l\'emulatore!</string>
     <!-- Texture Sampling names -->
     <string name="game_controlled">Controllata dal gioco</string>
     <string name="nearest_neighbor">Nearest Neighbor</string>
+    <string name="linear">Lineare</string>
+
     <!-- Sound output modes -->
     <string name="mono">Mono</string>
     <string name="stereo">Stereo</string>

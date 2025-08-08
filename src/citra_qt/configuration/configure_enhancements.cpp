@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -75,7 +75,7 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
 
     if (stereo_option == Settings::StereoRenderOption::Interlaced ||
         stereo_option == Settings::StereoRenderOption::ReverseInterlaced) {
-        ui->shader_combobox->addItem(QStringLiteral("horizontal (builtin)"));
+        ui->shader_combobox->addItem(QStringLiteral("Horizontal (builtin)"));
         ui->shader_combobox->setCurrentIndex(0);
         ui->shader_combobox->setEnabled(false);
         return;
@@ -83,10 +83,10 @@ void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_op
 
     std::string current_shader;
     if (stereo_option == Settings::StereoRenderOption::Anaglyph) {
-        ui->shader_combobox->addItem(QStringLiteral("dubois (builtin)"));
+        ui->shader_combobox->addItem(QStringLiteral("Dubois (builtin)"));
         current_shader = Settings::values.anaglyph_shader_name.GetValue();
     } else {
-        ui->shader_combobox->addItem(QStringLiteral("none (builtin)"));
+        ui->shader_combobox->addItem(QStringLiteral("None (builtin)"));
         current_shader = Settings::values.pp_shader_name.GetValue();
     }
 

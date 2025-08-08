@@ -193,6 +193,9 @@
     <string name="region_mismatch">Avertissement d\'incompatibilité de région</string>
     <string name="region_mismatch_emulated">Le paramètre de pays n\'est pas valide pour la région émulée sélectionnée.</string>
     <string name="region_mismatch_console">Le paramètre de pays n\'est pas valide pour la console actuellement connectée.</string>
+    <string name="storage">Stockage</string>
+    <string name="compress_cia_installs">Compresser le contenu CIA installé</string>
+    <string name="compress_cia_installs_description">Compresse le contenu des fichiers CIA lorsqu\'ils sont installés sur la carte SD émulée. N\'affecte que le contenu CIA installé lorsque le paramètre est activé.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Caméra intérieure</string>
@@ -397,6 +400,10 @@
     <string name="emulation_configure_controls">Configurer les commandes</string>
     <string name="emulation_edit_layout">Modifier la disposition</string>
     <string name="emulation_done">Terminé</string>
+    <string name="emulation_button_sliding">Bouton coulissant</string>
+    <string name="emulation_button_sliding_disabled">Maintenez le bouton initialement enfoncé</string>
+    <string name="emulation_button_sliding_enabled">Maintenez le bouton enfoncé</string>
+    <string name="emulation_button_sliding_alternative">Maintenez enfoncé le bouton d\'origine et celui qui est actuellement enfoncé</string>
     <string name="emulation_toggle_controls">Alterner les commandes</string>
     <string name="emulation_control_scale">Ajuster la taille</string>
     <string name="emulation_control_scale_global">Taille globale</string>
@@ -511,7 +518,6 @@
     <string name="save_load_error">Erreur de sauvegarde/chargement</string>
     <string name="fatal_error">Erreur fatale</string>
     <string name="fatal_error_message">Une erreur fatale s\'est produite. Veuillez consulter les logs pour plus de détails.\nPoursuivre l\'émulation peut entraîner des plantages et des bugs.</string>
-    <string name="invalid_region">Région invalide</string>
     <string name="unsupported_encrypted">Application encryptée non supportée</string>
 
     <!-- Disk Shader Cache -->
@@ -537,6 +543,9 @@
     <string name="create_shortcut">Créer un raccourci</string>
     <string name="shortcut_name_empty">Le nom du raccourci ne peut pas être vide</string>
     <string name="shortcut_image_stretch_toggle">Étirer pour ajuster l\'image</string>
+    <string name="game_context_id">ID :</string>
+    <string name="game_context_file">Fichier :</string>
+    <string name="game_context_type">Type :</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Afficher l\'overlay des performances</string>

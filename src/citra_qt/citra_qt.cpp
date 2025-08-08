@@ -9,6 +9,7 @@
 #include <thread>
 #include <QFileDialog>
 #include <QFutureWatcher>
+#include <QIcon>
 #include <QLabel>
 #include <QMessageBox>
 #include <QPalette>
@@ -330,8 +331,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     ui->setupUi(this);
     statusBar()->hide();
 
-    setWindowIcon(QIcon(QString::fromStdString(":/icons/azahar.png")));
-
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
@@ -389,6 +388,10 @@ GMainWindow::GMainWindow(Core::System& system_)
     LOG_INFO(Frontend, "Host RAM: {:.2f} GiB", mem_info.total_physical_memory / f64{1_GiB});
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", mem_info.total_swap_memory / f64{1_GiB});
     UpdateWindowTitle();
+
+    QIcon azahar_icon = QIcon(QString::fromStdString(":/icons/default/256x256/azahar.png"));
+    render_window->setWindowIcon(azahar_icon);
+    secondary_window->setWindowIcon(azahar_icon);
 
     show();
 

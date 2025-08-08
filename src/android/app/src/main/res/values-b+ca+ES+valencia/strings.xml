@@ -193,7 +193,6 @@
     <string name="region_mismatch">Advertiment Regió No Vàlida</string>
     <string name="region_mismatch_emulated">La configuració del país no és vàlida per a la regió emulada seleccionada.</string>
     <string name="region_mismatch_console">La configuració del país no és vàlida per a la consola vinculada actual.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Càmera interior</string>
     <string name="outer_left_camera">Càmera esquerra externa</string>
@@ -512,7 +511,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="save_load_error">Error de guardat/càrrega</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocorregut un error fatal. Mira el registre per a més detalls.\nSeguir amb l\'emulació podria resultar en diversos penges i problemes.</string>
-    <string name="invalid_region">Regió no vàlida</string>
     <string name="unsupported_encrypted">Aplicació cifrada no suportada</string>
 
     <!-- Disk Shader Cache -->
@@ -538,7 +536,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="create_shortcut">Crear drecera</string>
     <string name="shortcut_name_empty">El nom de la drecera no pot estar buit</string>
     <string name="shortcut_image_stretch_toggle">Allargar per a ajustar la imatge</string>
-
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar informació de rendiment</string>
     <string name="performance_overlay_options">Informació de rendiment</string>

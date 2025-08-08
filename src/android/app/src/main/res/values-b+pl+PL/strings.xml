@@ -193,6 +193,9 @@
     <string name="region_mismatch">Ostrzeżenie o niedopasowaniu regionów</string>
     <string name="region_mismatch_emulated">Ustawienie kraju nie jest prawidłowe dla wybranego emulowanego regionu.</string>
     <string name="region_mismatch_console">Ustawienie kraju nie jest prawidłowe dla aktualnie podłączonej konsoli.</string>
+    <string name="storage">Miejsce</string>
+    <string name="compress_cia_installs">Kompresuj zainstalowaną zawartość CIA</string>
+    <string name="compress_cia_installs_description">Kompresuje zawartość plików CIA zainstalowanych na emulowanej karcie SD. Ma wpływ tylko na zawartość CIA, która jest instalowana, gdy ustawienie jest włączone.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Kamera wewnętrzna</string>
@@ -397,6 +400,10 @@
     <string name="emulation_configure_controls">Konfiguracja sterowania</string>
     <string name="emulation_edit_layout">Edytuj układ</string>
     <string name="emulation_done">Gotowe</string>
+    <string name="emulation_button_sliding">Przesuwanie przycisków</string>
+    <string name="emulation_button_sliding_disabled">Przytrzymuje pierwotnie naciśnięty przycisk</string>
+    <string name="emulation_button_sliding_enabled">przytrzymuje aktualnie naciśnięty przycisk</string>
+    <string name="emulation_button_sliding_alternative">Przytrzymuje oryginalny i aktualnie naciśnięty przycisk</string>
     <string name="emulation_toggle_controls">Przełącz sterowanie</string>
     <string name="emulation_control_scale">Dostosuj Skalę</string>
     <string name="emulation_control_scale_global">Ogólna Skala</string>
@@ -511,7 +518,6 @@
     <string name="save_load_error">Błąd zapisywania/wczytywania</string>
     <string name="fatal_error">Krytyczny Błąd</string>
     <string name="fatal_error_message">Wystąpił błąd krytyczny. Kontynuowanie emulacji może spowodować awarie i błędy.</string>
-    <string name="invalid_region">Nieprawidłowy region</string>
     <string name="unsupported_encrypted">Nieobsługiwana zaszyfrowana aplikacja</string>
 
     <!-- Disk Shader Cache -->
@@ -537,6 +543,9 @@
     <string name="create_shortcut">Utwórz skrót</string>
     <string name="shortcut_name_empty">Nazwa skrótu nie może być pusta</string>
     <string name="shortcut_image_stretch_toggle">Rozciągnij, aby dopasować obraz</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Plik:</string>
+    <string name="game_context_type">Typ:</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Wyświetl nakładkę wydajności</string>

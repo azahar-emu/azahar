@@ -74,6 +74,10 @@
     <string name="permission_denied">Tilladelse nægtet</string>
     <string name="add_games_warning">Vil du droppe at vælge applikationsmappen?</string>
     <string name="add_games_warning_description">Software vil ikke blive vist på applikationslisten, hvis en mappe ikke er valgt.</string>
+    <string name="permissions">Tilladelser</string>
+    <string name="select_emulator_data_folders">Datamapper</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Vælg datamapper<br/>(Brugermappe er påkrævet)]]></string>
+    <string name="permissions_description">Giv valgfrie tilladelser til at bruge specifikke funktioner i emulatoren</string>
     <string name="warning_help">Hjælp</string>
     <string name="warning_skip">Spring over</string>
     <string name="warning_cancel">Annuller</string>
@@ -83,6 +87,7 @@
     <string name="keep_current_azahar_directory">Behold den aktuelle Azahar-mappe</string>
     <string name="use_prior_lime3ds_directory">Brug tidligere Lime3DS mappe</string>
     <string name="select">Vælg</string>
+    <string name="cannot_skip">Du kan ikke springe opsætningen af ​​brugermappen over </string>
     <string name="cannot_skip_directory_description">Dette trin er påkrævet for at Azahar kan fungere. Vælg en mappe og så kan du fortsætte.</string>
     <string name="selecting_user_directory_without_write_permissions">Du har mistet skrivetilladelse i din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">brugerdata</a> mappe, hvor gemte tilstande og anden information er gemt. Dette kan ske efter en app- eller Android-opdatering. Vælg venligst mappen for at give tilladelse igen, så du kan fortsætte.</string>
     <string name="set_up_theme_settings">Temaindstillinger</string>
@@ -188,7 +193,6 @@
     <string name="region_mismatch">Advarsel om uoverensstemmelse i region</string>
     <string name="region_mismatch_emulated">Landeindstillingen er ikke gyldig for det valgte emulerede område.</string>
     <string name="region_mismatch_console">Landeindstillingen er ikke gyldig for den aktuelle forbundne konsol.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -207,6 +211,8 @@
     <string name="graphics_api">Grafik API</string>
     <string name="spirv_shader_gen">Aktiver generering af SPIR-V shader</string>
     <string name="spirv_shader_gen_description">Udsender den fragment shader, der bruges til at emulere PICA med SPIR-V i stedet for GLSL</string>
+    <string name="disable_spirv_optimizer">Deaktiver SPIR-V Optimeringsværktøj</string>
+    <string name="disable_spirv_optimizer_description">Deaktiverer SPIR-V-optimeringspasset, hvilket reducerer hakken betydeligt, mens ydeevnen næsten ikke påvirkes.</string>
     <string name="async_shaders">Aktiver asynkron shader kompilering</string>
     <string name="async_shaders_description">Kompilerer shaders i baggrunden for at reducere hakken under spilet. Når det er aktiveret, skal du forvente tilfældige grafiske fejl</string>
     <string name="linear_filtering">Lineær filtrering</string>
@@ -215,6 +221,7 @@
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
     <string name="delay_render_thread">Forsinket spillets renderingstråd</string>
     <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
+    <string name="advanced">Avanceret</string>
     <string name="texture_sampling_name">Tekstur sampling</string>
     <string name="texture_sampling_description">Tilsidesætter det samplingsfilter, der bruges af spillene. Dette kan i nogle tilfælde være nyttigt for spil, der ikke håndterer opskalering godt. Hvis du er usikker, skal du indstille dette til Styret af spillene.</string>
     <string name="shaders_accurate_mul">Nøjagtig multiplikation</string>
@@ -297,7 +304,10 @@
     <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
     <string name="enable_rpc_server">Aktivér RPC-server</string>
     <string name="enable_rpc_server_desc">Aktiverer RPC-serveren på port 45987. Dette tillader fjernlæsning/skrivning af gæstehukommelse.</string>
-    <!-- Layout settings strings -->
+    <string name="shader_jit">Aktiver shader-JIT</string>
+    <string name="shader_jit_description">Brug JIT-motoren i stedet for fortolkeren til software-shader-emulering.</string>
+
+  <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Skærmorientering</string>
     <string name="layout_screen_orientation_auto_sensor">Automatisk</string>
     <string name="layout_screen_orientation_landscape">Landskab</string>
@@ -431,6 +441,7 @@
     <string name="emulation_custom_layout_height">Højde</string>
     <string name="emulation_cycle_landscape_layouts">Skift layout</string>
     <string name="emulation_swap_screens">Byt skærme</string>
+    <string name="emulation_rotate_upright">Roter skærmen oprejst</string>
     <string name="emulation_touch_overlay_reset">Nulstil overlejring</string>
     <string name="emulation_show_controller_overlay">Vis controller-overlejring</string>
     <string name="emulation_close_game">Luk spil</string>
@@ -499,7 +510,6 @@
     <string name="save_load_error">Gem/indlæs fejl</string>
     <string name="fatal_error">Fatal fejl</string>
     <string name="fatal_error_message">Der opstod en fatal fejl. Kontroller loggen for detaljer.\nFortsat emulering kan resultere i nedbrud og fejl.</string>
-    <string name="invalid_region">Ugyldig region</string>
     <string name="unsupported_encrypted">Ikke understøttet krypteret applikation</string>
 
     <!-- Disk Shader Cache -->
@@ -520,6 +530,11 @@
     <string name="game_context_uninstall_dlc">Afinstaller DLC</string>
     <string name="game_context_uninstall_updates">Afinstaller opdateringer</string>
     <string name="shortcut">Genvej</string>
+    <string name="shortcut_name">Genvejsnavn</string>
+    <string name="edit_icon">Rediger ikon</string>
+    <string name="create_shortcut">Opret genvej</string>
+    <string name="shortcut_name_empty">Genvejsnavnet må ikke være tomt</string>
+    <string name="shortcut_image_stretch_toggle">Stræk for at tilpasse billedet</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Vis ydelsesoverlejring</string>
     <string name="performance_overlay_options">Ydelsesoverlejring</string>

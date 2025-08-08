@@ -193,7 +193,6 @@
     <string name="region_mismatch">Region passt nicht überein</string>
     <string name="region_mismatch_emulated">Die Ländereinstellung ist für die ausgewählte emulierte Region nicht gültig.</string>
     <string name="region_mismatch_console">Die Ländereinstellung ist für die gekoppelte Konsole ungültig.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -511,7 +510,6 @@
     <string name="save_load_error">Fehler beim Speichern/Laden</string>
     <string name="fatal_error">Schwerwiegender Fehler</string>
     <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen findest du in der Protokolldatei.\nDas Fortfahren könnte zu ungewollten Abstürzen oder Problemen führen.</string>
-    <string name="invalid_region">Ungültige Region</string>
     <string name="unsupported_encrypted">Nicht unterstützte verschlüsselte Anwendung</string>
 
     <!-- Disk Shader Cache -->
@@ -532,6 +530,30 @@
     <string name="game_context_uninstall_dlc">DLC deinstallieren</string>
     <string name="game_context_uninstall_updates">Updates deinstallieren</string>
     <string name="shortcut">Verknüpfung</string>
+    <string name="shortcut_name">Verknüpfungsname</string>
+    <string name="edit_icon">Symbol bearbeiten</string>
+    <string name="create_shortcut">Verknüpfung erstellen</string>
+    <string name="shortcut_name_empty">Verknüpfungsname darf nicht leer sein</string>
+    <string name="shortcut_image_stretch_toggle">Bildgröße anpassen</string>
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">Leistungs-Overlay anzeigen</string>
+    <string name="performance_overlay_options">Leistungs-Overlay</string>
+    <string name="performance_overlay_enable">Leistungsoverlay aktivieren</string>
+    <string name="performance_overlay_options_description">Konfigurieren Sie, ob das Leistungs-Overlay angezeigt wird und welche Informationen angezeigt werden.</string>
+    <string name="overlay_show_fps">FPS anzeigen</string>
+    <string name="overlay_show_fps_description">Aktuelle Bilder pro Sekunde anzeigen.</string>
+    <string name="overlay_show_frametime">Frametime anzeigen</string>
+    <string name="overlay_show_frametime_description">Aktuelle Frametime anzeigen.</string>
+    <string name="overlay_show_speed">Geschwindigkeit anzeigen</string>
+    <string name="overlay_show_speed_description">Zeigt die aktuelle Emulationsgeschwindigkeit in Prozent an.</string>
+    <string name="overlay_show_app_ram_usage">App-Speichernutzung anzeigen</string>
+    <string name="overlay_show_app_ram_usage_description">Zeigt die vom Emulator verwendete RAM-Menge an.</string>
+    <string name="overlay_show_available_ram">Verfügbaren Speicher anzeigen</string>
+    <string name="overlay_show_available_ram_description">Zeigt die verfügbare RAM-Menge an.</string>
+    <string name="overlay_show_battery_temp">Batterietemperatur anzeigen</string>
+    <string name="overlay_show_battery_temp_description">Zeigt die aktuelle Batterietemperatur in Celsius und Fahrenheit an.</string>
+    <string name="overlay_position">Overlay-Position</string>
+    <string name="overlay_position_description">Wählen Sie, wo das Leistungs-Overlay auf dem Bildschirm angezeigt wird</string>
     <string name="overlay_position_top_left">Links Oben</string>
     <string name="overlay_position_top_right">Rechts Oben</string>
     <string name="overlay_position_bottom_left">Links Unten</string>

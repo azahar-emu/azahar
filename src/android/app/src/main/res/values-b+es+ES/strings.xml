@@ -193,7 +193,8 @@
     <string name="region_mismatch">Advertencia Región No Válida</string>
     <string name="region_mismatch_emulated">La configuración del país no es válida para la región emulada seleccionada.</string>
     <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
-
+    <string name="storage">Almacenamiento</string>
+    <string name="compress_cia_installs">Comprimir el contenido CIA instalado</string>
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
     <string name="outer_left_camera">Cámara izquierda externa</string>
@@ -398,6 +399,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_configure_controls">Configurar Controles</string>
     <string name="emulation_edit_layout">Editar Estilo</string>
     <string name="emulation_done">Hecho</string>
+    <string name="emulation_button_sliding">Deslizamiento de botones</string>
     <string name="emulation_toggle_controls">Activar Controles</string>
     <string name="emulation_control_scale">Ajustar Escala</string>
     <string name="emulation_control_scale_global">Escala Global</string>
@@ -512,7 +514,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="save_load_error">Error de guardado/carga</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
-    <string name="invalid_region">Región no válida</string>
     <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
 
     <!-- Disk Shader Cache -->
@@ -538,6 +539,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="create_shortcut">Crear atajo</string>
     <string name="shortcut_name_empty">El nombre del atajo no puede estar vacío</string>
     <string name="shortcut_image_stretch_toggle">Alargar para ajustar la imagen</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Archivo:</string>
+    <string name="game_context_type">Tipo:</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar información de rendimiento</string>
