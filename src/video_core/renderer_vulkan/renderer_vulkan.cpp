@@ -123,8 +123,8 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     BuildLayouts();
     BuildPipelines();
     if (secondary_window) {
-        secondary_present_window = std::make_unique<PresentWindow>(*secondary_window, instance,
-                                                                   scheduler, IsLowRefreshRate());
+        secondary_present_window_ptr = std::make_unique<PresentWindow>(
+            *secondary_window, instance, scheduler, IsLowRefreshRate());
     }
 }
 
@@ -899,11 +899,11 @@ void RendererVulkan::SwapBuffers() {
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
-        if (!secondary_present_window) {
-            secondary_present_window = std::make_unique<PresentWindow>(
+        if (!secondary_present_window_ptr) {
+            secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
-        RenderToWindow(*secondary_present_window, secondary_layout, false);
+        RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
 #endif
@@ -911,11 +911,11 @@ void RendererVulkan::SwapBuffers() {
 #ifdef ANDROID
     if (secondary_window) {
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
-        if (!secondary_present_window) {
-            secondary_present_window = std::make_unique<PresentWindow>(
+        if (!secondary_present_window_ptr) {
+            secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
-        RenderToWindow(*secondary_present_window, secondary_layout, false);
+        RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
 #endif
@@ -1212,8 +1212,8 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
 
 void RendererVulkan::NotifySurfaceChanged(bool is_second_window) {
     if (is_second_window) {
-        if (secondary_present_window) {
-            secondary_present_window->NotifySurfaceChanged();
+        if (secondary_present_window_ptr) {
+            secondary_present_window_ptr->NotifySurfaceChanged();
         }
     } else {
         main_present_window.NotifySurfaceChanged();

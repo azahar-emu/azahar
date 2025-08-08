@@ -119,7 +119,7 @@ private:
     StreamBuffer vertex_buffer;
     DescriptorUpdateQueue update_queue;
     RasterizerVulkan rasterizer;
-    std::unique_ptr<PresentWindow> secondary_present_window;
+    std::unique_ptr<PresentWindow> secondary_present_window_ptr;
 
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
