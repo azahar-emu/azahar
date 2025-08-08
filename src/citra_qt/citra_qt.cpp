@@ -544,6 +544,26 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->insertPermanentWidget(0, graphics_api_button);
 
+    // setup AA button
+    aa_status_button = new QPushButton();
+    aa_status_button->setObjectName(QStringLiteral("TogglableStatusBarButton"));
+    aa_status_button->setFocusPolicy(Qt::NoFocus);
+    connect(aa_status_button, &QPushButton::clicked, [&] {
+        auto aa_mode = Settings::values.anti_aliasing.GetValue();
+        if (aa_mode == Settings::AntiAliasing::None) {
+            aa_mode = Settings::AntiAliasing::SMAA;
+        } else {
+            aa_mode = Settings::AntiAliasing::None;
+        }
+        Settings::values.anti_aliasing.SetValue(aa_mode);
+        aa_status_button->setChecked(true);
+        UpdateAAText();
+    });
+    UpdateAAText();
+    aa_status_button->setCheckable(true);
+    aa_status_button->setChecked(true);
+    statusBar()->insertPermanentWidget(1, aa_status_button);
+
     volume_popup = new QWidget(this);
     volume_popup->setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::Popup);
     volume_popup->setLayout(new QVBoxLayout());
@@ -574,7 +594,7 @@ void GMainWindow::InitializeWidgets() {
         bottomLeft.setY(bottomLeft.y() - volume_popup->geometry().height());
         volume_popup->setGeometry(QRect(bottomLeft, QSize(rect.width(), rect.height())));
     });
-    statusBar()->insertPermanentWidget(1, volume_button);
+    statusBar()->insertPermanentWidget(2, volume_button);
 
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
@@ -3566,8 +3586,24 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
     graphics_api_button->setStyleSheet(style_sheet);
 }
 
+void GMainWindow::UpdateAAText() {
+    const auto aa_mode = Settings::values.anti_aliasing.GetValue();
+    switch (aa_mode) {
+    case Settings::AntiAliasing::None:
+        aa_status_button->setText(tr("NO AA"));
+        break;
+    case Settings::AntiAliasing::SMAA:
+        aa_status_button->setText(tr("SMAA"));
+        break;
+    default:
+        aa_status_button->setText(tr("NO AA"));
+        break;
+    }
+}
+
 void GMainWindow::UpdateStatusButtons() {
     UpdateAPIIndicator();
+    UpdateAAText();
     UpdateVolumeUI();
 }
 

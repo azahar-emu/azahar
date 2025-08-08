@@ -320,8 +320,9 @@ private:
     void HideMouseCursor();
     void ShowMouseCursor();
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
-    void UpdateVolumeUI();
     void UpdateAPIIndicator(bool update = false);
+    void UpdateAAText();
+    void UpdateVolumeUI();
     void UpdateStatusButtons();
 #ifdef __unix__
     void SetGamemodeEnabled(bool state);
@@ -347,6 +348,7 @@ private:
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
     QPushButton* graphics_api_button = nullptr;
+    QPushButton* aa_status_button = nullptr;
     QPushButton* volume_button = nullptr;
     QWidget* volume_popup = nullptr;
     QSlider* volume_slider = nullptr;

@@ -695,6 +695,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.bg_blue);
 
     ReadGlobalSetting(Settings::values.texture_filter);
+    ReadGlobalSetting(Settings::values.anti_aliasing);
     ReadGlobalSetting(Settings::values.texture_sampling);
 
     ReadGlobalSetting(Settings::values.delay_game_render_thread_us);
@@ -1226,6 +1227,9 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.bg_blue);
 
     WriteGlobalSetting(Settings::values.texture_filter);
+    WriteSetting(QString::fromStdString(Settings::values.anti_aliasing.GetLabel()),
+                 static_cast<u32>(Settings::values.anti_aliasing.GetValue(global)),
+                 static_cast<u32>(Settings::values.anti_aliasing.GetDefault()));
     WriteGlobalSetting(Settings::values.texture_sampling);
 
     WriteGlobalSetting(Settings::values.delay_game_render_thread_us);
