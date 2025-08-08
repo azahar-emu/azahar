@@ -209,9 +209,9 @@ void Config::ReadValues() {
         static_cast<Settings::PortraitLayoutOption>(sdl2_config->GetInteger(
             "Layout", "portrait_layout_option",
             static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
-    Settings::values.secondary_screen_layout = static_cast<Settings::SecondaryScreenLayout>(
-        sdl2_config->GetInteger("Layout", "secondary_screen_layout",
-                                static_cast<int>(Settings::SecondaryScreenLayout::None)));
+    Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
+        sdl2_config->GetInteger("Layout", "secondary_display_layout",
+                                static_cast<int>(Settings::SecondaryDisplayLayout::None)));
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
     ReadSetting("Layout", Settings::values.custom_portrait_top_width);

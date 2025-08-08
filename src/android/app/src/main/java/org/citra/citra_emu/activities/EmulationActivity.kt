@@ -33,7 +33,7 @@ import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
-import org.citra.citra_emu.display.SecondScreen
+import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -60,7 +60,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private lateinit var secondScreen: SecondScreen;
+    private lateinit var secondaryDisplay: SecondaryDisplay;
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -77,8 +77,8 @@ class EmulationActivity : AppCompatActivity() {
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
         super.onCreate(savedInstanceState)
-        secondScreen = SecondScreen(this);
-        secondScreen.updateDisplay();
+        secondaryDisplay = SecondaryDisplay(this);
+        secondaryDisplay.updateDisplay();
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -139,7 +139,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        secondScreen.releasePresentation()
+        secondaryDisplay.releasePresentation()
         super.onStop()
     }
 
@@ -150,7 +150,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
-        secondScreen.updateDisplay()
+        secondaryDisplay.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -169,8 +169,8 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
-        secondScreen.releasePresentation()
-        secondScreen.releaseVD();
+        secondaryDisplay.releasePresentation()
+        secondaryDisplay.releaseVD();
 
         super.onDestroy()
     }

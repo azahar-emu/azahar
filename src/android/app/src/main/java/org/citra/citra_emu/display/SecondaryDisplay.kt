@@ -15,11 +15,10 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.display.SecondaryScreenLayout
 import org.citra.citra_emu.features.settings.model.IntSetting
 
-class SecondScreen(val context: Context) {
-    private var pres: SecondScreenPresentation? = null
+class SecondaryDisplay(val context: Context) {
+    private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
 
@@ -49,7 +48,7 @@ class SecondScreen(val context: Context) {
         // decide if we are going to the external display or the internal one
         var display = getCustomerDisplay()
         if (display == null ||
-            IntSetting.SECONDARY_SCREEN_LAYOUT.int == SecondaryScreenLayout.NONE.int) {
+            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
             display = vd.display
         }
 
@@ -58,7 +57,7 @@ class SecondScreen(val context: Context) {
 
         // otherwise, make a new presentation
         releasePresentation()
-        pres = SecondScreenPresentation(context, display!!, this)
+        pres = SecondaryDisplayPresentation(context, display!!, this)
         pres?.show()
     }
 
@@ -78,8 +77,8 @@ class SecondScreen(val context: Context) {
         vd.release()
     }
 }
-class SecondScreenPresentation(
-    context: Context, display: Display, val parent: SecondScreen
+class SecondaryDisplayPresentation(
+    context: Context, display: Display, val parent: SecondaryDisplay
 ) : Presentation(context, display) {
     private lateinit var surfaceView: SurfaceView
 

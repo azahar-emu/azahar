@@ -36,7 +36,7 @@
     </string-array>
 
     <string-array name="secondaryLayouts">
-        <item>@string/emulation_secondary_screen_default</item>
+        <item>@string/emulation_secondary_display_default</item>
         <item>@string/emulation_top_screen</item>
         <item>@string/emulation_bottom_screen</item>
         <item>@string/emulation_screen_layout_sidebyside</item>
