@@ -516,9 +516,9 @@ struct Values {
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
+    SwitchableSetting<AntiAliasing> anti_aliasing{AntiAliasing::None, "anti_aliasing"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};
-    SwitchableSetting<AntiAliasing> anti_aliasing{AntiAliasing::None, "anti_aliasing"};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
                                                              "delay_game_render_thread_us"};
 

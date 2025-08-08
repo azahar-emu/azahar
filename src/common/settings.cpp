@@ -57,6 +57,17 @@ std::string_view GetTextureFilterName(TextureFilter filter) {
     }
 }
 
+std::string_view GetAntiAliasing(AntiAliasing aa) {
+    switch (aa) {
+    case AntiAliasing::None:
+        return "None";
+    case AntiAliasing::SMAA:
+        return "SMAA";
+    default:
+        return "Invalid";
+    }
+}
+
 std::string_view GetTextureSamplingName(TextureSampling sampling) {
     switch (sampling) {
     case TextureSampling::GameControlled:
@@ -65,17 +76,6 @@ std::string_view GetTextureSamplingName(TextureSampling sampling) {
         return "NearestNeighbor";
     case TextureSampling::Linear:
         return "Linear";
-    default:
-        return "Invalid";
-    }
-}
-
-std::string_view GetAntiAliasing(AntiAliasing aa) {
-    switch (aa) {
-    case AntiAliasing::None:
-        return "None";
-    case AntiAliasing::SMAA:
-        return "SMAA";
     default:
         return "Invalid";
     }
@@ -113,9 +113,9 @@ void LogSettings() {
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
+    log_setting("Renderer_AntiAliasing", GetAntiAliasing(values.anti_aliasing.GetValue()));
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
-    log_setting("Renderer_AntiAliasing", GetAntiAliasing(values.anti_aliasing.GetValue()));
     log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());

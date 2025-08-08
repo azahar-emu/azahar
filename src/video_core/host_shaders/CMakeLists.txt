@@ -1,7 +1,3 @@
-# Copyright 2023 Citra Emulator Project
-# Licensed under GPLv2 or any later version
-# Refer to the license.txt file included.
-
 set(SHADER_FILES
     format_reinterpreter/d24s8_to_rgba8.frag
     format_reinterpreter/rgba4_to_rgb5a1.frag
