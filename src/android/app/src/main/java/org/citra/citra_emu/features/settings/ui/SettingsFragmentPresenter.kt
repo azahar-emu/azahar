@@ -18,6 +18,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
@@ -35,6 +36,7 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
+import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
@@ -751,6 +753,26 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+
+        val comboSetting = object : AbstractMultiStringSetting {
+            override var strings: MutableSet<String>
+                get() {
+                    return Settings.comboSelection
+                }
+                set(values) {
+                    for (item in values) {
+                        Settings.comboSelection.add(item)
+                    }
+                }
+            override val key = null
+            override val section = null
+            override val isRuntimeEditable = true
+            override val valueAsString get() = ""
+            override val defaultValue = ""
+        }
+
+        val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
+
         sl.apply {
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
@@ -802,8 +824,19 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
+            add(
+                StringMultiChoiceSetting(
+                    comboSetting,
+                    R.string.combo_key_options,
+                    0,
+                    buttons,
+                    buttons
+                )
+            )
         }
     }
+
+
 
     private fun getInputObject(key: String): AbstractStringSetting {
         return object : AbstractStringSetting {

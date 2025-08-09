@@ -49,7 +49,9 @@ enum class BooleanSetting(
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
-    COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false);
+    COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
+    ENABLE_COMBO_KEY("enable_combo_key", Settings.SECTION_CONTROLS, true);
+
 
     override var boolean: Boolean = defaultValue
 
