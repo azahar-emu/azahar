@@ -44,7 +44,6 @@ class InputOverlayDrawableButton(
     val opacity: Int
 ) {
     var trackId: Int
-    var isButtonSliding: Boolean
 
     private var isMotionFirstButton = false // mark the first activated button with the current motion
 
@@ -62,7 +61,6 @@ class InputOverlayDrawableButton(
         this.defaultStateBitmap = BitmapDrawable(res, defaultStateBitmap)
         this.pressedStateBitmap = BitmapDrawable(res, pressedStateBitmap)
         trackId = -1
-        isButtonSliding = false
         width = this.defaultStateBitmap.intrinsicWidth
         height = this.defaultStateBitmap.intrinsicHeight
     }
@@ -94,7 +92,7 @@ class InputOverlayDrawableButton(
             if (trackId != pointerId) {
                 return false
             }
-            buttonUp(overlay, false)
+            buttonUp(overlay)
             return true
         }
 
@@ -111,7 +109,7 @@ class InputOverlayDrawableButton(
                 if (buttonSliding == ButtonSlidingMode.Alternative.int && isMotionFirstButton) {
                     return false
                 }
-                buttonUp(overlay, true)
+                buttonUp(overlay)
                 return true
             } else {
                 // button was not yet pressed
@@ -134,11 +132,10 @@ class InputOverlayDrawableButton(
         overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 
-    private fun buttonUp(overlay: InputOverlay, _isButtonSliding: Boolean) {
+    private fun buttonUp(overlay: InputOverlay) {
         pressedState = false
         isMotionFirstButton = false
         trackId = -1
-        isButtonSliding = _isButtonSliding
         overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
     }
 

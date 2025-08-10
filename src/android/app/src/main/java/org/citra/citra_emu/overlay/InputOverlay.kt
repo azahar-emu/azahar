@@ -97,82 +97,42 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             return onTouchWhileEditing(event)
         }
 
+        var hasActiveButtons = false
         val pointerIndex = event.actionIndex
         val pointerId = event.getPointerId(pointerIndex)
-
-        val xPosition = event.getX(pointerIndex).toInt()
-        val yPosition = event.getY(pointerIndex).toInt()
-        val motionEvent = event.action and MotionEvent.ACTION_MASK
-        val isActionDown =
-            motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN
-        val isActionMove = motionEvent == MotionEvent.ACTION_MOVE
-        val isActionUp =
-            motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP
-
-        var hasActiveButtons = false
-        var isAnyButtonSliding = false
         for (button in overlayButtons) {
             if (button.trackId == pointerId) {
                 hasActiveButtons = true
-            }
-            if (button.isButtonSliding) {
-                if (isActionUp) {
-                    // A touch event ended, so tell any buttons tracking sliding to stop
-                    button.isButtonSliding = false
-                } else {
-                    isAnyButtonSliding = true
-                }
+                break
             }
         }
         var hasActiveDpad = false
-        for (dpad in overlayDpads) {
-            if (dpad.trackId == pointerId) {
-                hasActiveDpad = true
-                break
+        if (!hasActiveButtons) {
+            for (dpad in overlayDpads) {
+                if (dpad.trackId == pointerId) {
+                    hasActiveDpad = true
+                    break
+                }
             }
         }
 
         var hasActiveJoystick = false
-        for (joystick in overlayJoysticks) {
-            if (joystick.trackId == pointerId) {
-                hasActiveJoystick = true
-                break
+        if(!hasActiveButtons && !hasActiveDpad){
+            for (joystick in overlayJoysticks) {
+                if (joystick.trackId == pointerId) {
+                    hasActiveJoystick = true
+                    break
+                }
             }
         }
 
         var shouldUpdateView = false
-
-        if (!preferences.getBoolean("isTouchEnabled", true)) {
-            return true
-        }
-
-        if (isActionMove) {
-            var noneConsumed = true
-            for (i in 0 until event.pointerCount) {
-                val fingerId = event.getPointerId(i)
-                if (isTouchInputConsumed(fingerId)) {
-                    noneConsumed = false
-                    continue
-                }
-                NativeLibrary.onTouchMoved(xPosition.toFloat(), yPosition.toFloat())
-            }
-
-            if (noneConsumed && !isAnyButtonSliding) {
-                return true
-            }
-        }
-        if (isActionUp && !isTouchInputConsumed(pointerId)) {
-            NativeLibrary.onTouchEvent(0f, 0f, false)
-        }
-
-        var anyStateChanged = false
         if(!hasActiveDpad && !hasActiveJoystick) {
             for (button in overlayButtons) {
                 val stateChanged = button.updateStatus(event, hasActiveButtons, this)
                 if (!stateChanged) {
                     continue
                 }
-                anyStateChanged = true
 
                 if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
                     swapScreen()
@@ -202,7 +162,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 if (!stateChanged) {
                     continue
                 }
-                anyStateChanged = true
 
                 NativeLibrary.onGamePadEvent(
                     NativeLibrary.TouchScreenDevice,
@@ -229,32 +188,56 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
         }
 
-        for (joystick in overlayJoysticks) {
-            val stateChanged = joystick.updateStatus(event, true, this)
-            if (!stateChanged) {
-                continue
+        if(!hasActiveDpad && !hasActiveButtons) {
+            for (joystick in overlayJoysticks) {
+                val stateChanged = joystick.updateStatus(event, hasActiveJoystick, this)
+                if (!stateChanged) {
+                    continue
+                }
+
+                val axisID = joystick.joystickId
+                NativeLibrary.onGamePadMoveEvent(
+                    NativeLibrary.TouchScreenDevice,
+                    axisID,
+                    joystick.xAxis,
+                    joystick.yAxis
+                )
+
+                shouldUpdateView = true
             }
-            anyStateChanged = true
-
-            val axisID = joystick.joystickId
-            NativeLibrary.onGamePadMoveEvent(
-                NativeLibrary.TouchScreenDevice,
-                axisID,
-                joystick.xAxis,
-                joystick.yAxis
-            )
-
-            shouldUpdateView = true
         }
 
         if (shouldUpdateView) {
             invalidate()
         }
 
-        if (!anyStateChanged && isActionDown && !isTouchInputConsumed(pointerId)) {
-            NativeLibrary.onTouchEvent(xPosition.toFloat(), yPosition.toFloat(), true)
+        if (!preferences.getBoolean("isTouchEnabled", true)) {
+            return true
         }
 
+        val xPosition = event.getX(pointerIndex).toInt()
+        val yPosition = event.getY(pointerIndex).toInt()
+        val motionEvent = event.action and MotionEvent.ACTION_MASK
+        val isActionDown =
+            motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_POINTER_DOWN
+        val isActionMove = motionEvent == MotionEvent.ACTION_MOVE
+        val isActionUp =
+            motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP
+        if (isActionDown && !isTouchInputConsumed(pointerId)) {
+            NativeLibrary.onTouchEvent(xPosition.toFloat(), yPosition.toFloat(), true)
+        }
+        if (isActionMove) {
+            for (i in 0 until event.pointerCount) {
+                val fingerId = event.getPointerId(i)
+                if (isTouchInputConsumed(fingerId)) {
+                    continue
+                }
+                NativeLibrary.onTouchMoved(xPosition.toFloat(), yPosition.toFloat())
+            }
+        }
+        if (isActionUp && !isTouchInputConsumed(pointerId)) {
+            NativeLibrary.onTouchEvent(0f, 0f, false)
+        }
         return true
     }
 
