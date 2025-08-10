@@ -219,6 +219,6 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0);
-    system.GPU().Renderer().TryPresent(100, is_secondary);
+    system.GPU().Renderer().TryPresent(0, is_secondary);
     eglSwapBuffers(egl_display, egl_surface);
 }
