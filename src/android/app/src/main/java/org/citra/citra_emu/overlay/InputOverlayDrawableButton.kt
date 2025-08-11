@@ -70,9 +70,8 @@ class InputOverlayDrawableButton(
      *
      * @return true if value was changed
      */
-    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
         val buttonSliding = EmulationMenuSettings.buttonSlide
-        val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
@@ -92,7 +91,7 @@ class InputOverlayDrawableButton(
             if (trackId != pointerId) {
                 return false
             }
-            buttonUp(overlay)
+            buttonUp(overlay, false)
             return true
         }
 
@@ -105,11 +104,14 @@ class InputOverlayDrawableButton(
                 if (inside || trackId != pointerId) {
                     return false
                 }
+
                 // prevent the first (directly pressed) button to deactivate when sliding off
                 if (buttonSliding == ButtonSlidingMode.Alternative.int && isMotionFirstButton) {
                     return false
                 }
-                buttonUp(overlay)
+
+                val preserveTrackId = (buttonSliding != ButtonSlidingMode.Disabled.int)
+                buttonUp(overlay, preserveTrackId)
                 return true
             } else {
                 // button was not yet pressed
@@ -132,10 +134,12 @@ class InputOverlayDrawableButton(
         overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 
-    private fun buttonUp(overlay: InputOverlay) {
+    private fun buttonUp(overlay: InputOverlay, preserveTrackId: Boolean) {
         pressedState = false
         isMotionFirstButton = false
-        trackId = -1
+        if (!preserveTrackId) {
+            trackId = -1
+        }
         overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY_RELEASE)
     }
 

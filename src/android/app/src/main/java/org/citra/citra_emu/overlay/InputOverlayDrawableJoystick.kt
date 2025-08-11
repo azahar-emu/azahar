@@ -93,8 +93,7 @@ class InputOverlayDrawableJoystick(
         currentStateBitmapDrawable.draw(canvas)
     }
 
-    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
-        val pointerIndex = event.actionIndex
+    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
