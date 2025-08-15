@@ -244,6 +244,8 @@
     <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
     <string name="texture_filter_name">Texture Filter</string>
     <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
+    <string name="anti_aliasing">Anti-aliasing</string>
+    <string name="anti_aliasing_description">Enhances visuals by applying an Anti-aliasing filter and smoothing out jagged edges. The supported method is SMAA.</string>
     <string name="delay_render_thread">Delay game render thread</string>
     <string name="delay_render_thread_description">Delay the game render thread when it submits data to the GPU. Helps with performance issues in the (very few) applications with dynamic framerates.</string>
     <string name="advanced">Advanced</string>

@@ -914,6 +914,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SingleChoiceSetting(
+                    IntSetting.ANTI_ALIASING,
+                    R.string.anti_aliasing,
+                    R.string.anti_aliasing_description,
+                    R.array.AntiAliasingNames,
+                    R.array.AntiAliasingValues,
+                    IntSetting.ANTI_ALIASING.key,
+                    IntSetting.ANTI_ALIASING.defaultValue
+                )
+            )
+            add(
                 SliderSetting(
                     IntSetting.DELAY_RENDER_THREAD_US,
                     R.string.delay_render_thread,
