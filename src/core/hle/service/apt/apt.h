@@ -72,6 +72,8 @@ public:
          */
         void SetWirelessRebootInfo(Kernel::HLERequestContext& ctx);
 
+        void CardUpdateInitialize(Kernel::HLERequestContext& ctx);
+
         /**
          * NS::ShutdownAsync service function.
          * Inputs:
