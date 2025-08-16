@@ -233,10 +233,6 @@ else()
     target_link_libraries(libzstd_static INTERFACE zstd_seekable)
 
     add_library(zstd ALIAS libzstd_static)
-
-    install(TARGETS zstd_seekable
-        EXPORT zstdExports
-    )
 endif()
 
 # ENet
