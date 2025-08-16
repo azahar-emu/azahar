@@ -85,6 +85,8 @@ struct Values {
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
 
+    Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
+
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
 
