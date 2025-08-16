@@ -585,9 +585,9 @@ struct Values {
     SwitchableSetting<bool> enable_realtime_audio{false, "enable_realtime_audio"};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
-    Setting<std::string> output_device{"auto", "output_device"};
+    Setting<std::string> output_device{"Auto", "output_device"};
     Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, "input_type"};
-    Setting<std::string> input_device{"auto", "input_device"};
+    Setting<std::string> input_device{"Auto", "input_device"};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;

@@ -371,7 +371,7 @@ void QtConfig::ReadControlValues() {
     const auto append_profile = [this, num_touch_from_button_maps] {
         Settings::InputProfile profile;
         profile.name =
-            ReadSetting(QStringLiteral("name"), QStringLiteral("default")).toString().toStdString();
+            ReadSetting(QStringLiteral("name"), QStringLiteral("Default")).toString().toStdString();
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),

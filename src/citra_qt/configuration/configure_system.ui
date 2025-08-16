@@ -92,7 +92,7 @@ online features (if installed)</string>
             <item row="3" column="0">
              <widget class="QLabel" name="region_label">
               <property name="text">
-               <string>Region:</string>
+               <string>Region</string>
               </property>
              </widget>
             </item>
@@ -549,7 +549,7 @@ online features (if installed)</string>
             <item row="20" column="0">
              <widget class="QLabel" name="label_plugin_loader">
               <property name="text">
-               <string>3GX Plugin Loader:</string>
+               <string>3GX Plugin Loader</string>
               </property>
              </widget>
             </item>
