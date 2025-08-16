@@ -35,7 +35,7 @@
             <item>
             <widget class="QLabel" name="label_emulation">
             <property name="text">
-            <string>Emulation:</string>
+            <string>Emulation</string>
             </property>
             </widget>
             </item>

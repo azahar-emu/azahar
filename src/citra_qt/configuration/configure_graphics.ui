@@ -349,7 +349,7 @@
             <item>
               <widget class="QLabel" name="label_delay_render">
                 <property name="text">
-                  <string>Delay application render thread:</string>
+                  <string>Delay Application Render Thread</string>
                 </property>
                 <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated application render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic framerate applications to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
