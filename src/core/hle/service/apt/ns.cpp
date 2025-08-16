@@ -11,11 +11,21 @@ namespace Service::NS {
 
 std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType media_type,
                                              u64 title_id) {
-    std::string path = AM::GetTitleContentPath(media_type, title_id);
-    auto loader = Loader::GetLoader(path);
+    std::string path;
 
-    if (!loader) {
-        LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016x}", title_id);
+    if (media_type == FS::MediaType::GameCard) {
+        path = system.GetCartridge();
+    } else {
+        path = AM::GetTitleContentPath(media_type, title_id);
+    }
+
+    auto loader = Loader::GetLoader(path);
+    u64 program_id;
+
+    if (!loader || loader->ReadProgramId(program_id) != Loader::ResultStatus::Success ||
+        program_id != title_id) {
+        LOG_WARNING(Service_NS, "Could not load title=0x{:016x} media_type={}", title_id,
+                    static_cast<int>(media_type));
         return nullptr;
     }
 
@@ -60,7 +70,13 @@ std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType
 
 void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id,
                    std::optional<Kernel::MemoryMode> mem_mode) {
-    auto new_path = AM::GetTitleContentPath(media_type, title_id);
+    std::string new_path;
+    if (media_type == FS::MediaType::GameCard) {
+        new_path = system.GetCartridge();
+    } else {
+        new_path = AM::GetTitleContentPath(media_type, title_id);
+    }
+
     if (new_path.empty() || !FileUtil::Exists(new_path)) {
         // TODO: This can happen if the requested title is not installed. Need a way to find
         // non-installed titles in the game list.

@@ -670,6 +670,11 @@ void QtConfig::ReadPathValues() {
             ReadSetting(QStringLiteral("last_artic_base_addr"), QString{}).toString();
         UISettings::values.recent_files = ReadSetting(QStringLiteral("recentFiles")).toStringList();
         UISettings::values.language = ReadSetting(QStringLiteral("language"), QString{}).toString();
+
+        ReadBasicSetting(UISettings::values.inserted_cartridge);
+        if (!FileUtil::Exists(UISettings::values.inserted_cartridge.GetValue())) {
+            UISettings::values.inserted_cartridge.SetValue("");
+        }
     }
 
     qt_config->endGroup();
@@ -1204,6 +1209,7 @@ void QtConfig::SavePathValues() {
                      UISettings::values.last_artic_base_addr, QString{});
         WriteSetting(QStringLiteral("recentFiles"), UISettings::values.recent_files);
         WriteSetting(QStringLiteral("language"), UISettings::values.language, QString{});
+        WriteBasicSetting(UISettings::values.inserted_cartridge);
     }
 
     qt_config->endGroup();

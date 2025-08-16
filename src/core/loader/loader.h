@@ -302,6 +302,10 @@ public:
         return false;
     }
 
+    virtual std::string GetFilePath() {
+        return file ? file->Filename() : "";
+    }
+
 protected:
     Core::System& system;
     std::unique_ptr<FileUtil::IOFile> file;

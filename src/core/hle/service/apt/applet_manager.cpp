@@ -396,6 +396,10 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     // Note: In the real console the title id of a given applet slot is set by the APT module when
     // calling StartApplication.
     slot_data->title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
+    if (app_id == AppletId::Application) {
+        slot_data->media_type = next_app_mediatype;
+        next_app_mediatype = static_cast<FS::MediaType>(UINT32_MAX);
+    }
     slot_data->attributes.raw = attributes.raw;
 
     // Applications need to receive a Wakeup signal to actually start up, this signal is usually
@@ -1207,7 +1211,14 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
                       ErrorLevel::Status);
     }
 
-    auto media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    FS::MediaType media_type;
+    if (slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        media_type = slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    }
+
     return AppletInfo{
         .title_id = slot_data->title_id,
         .media_type = media_type,
@@ -1234,7 +1245,13 @@ ResultVal<Service::FS::MediaType> AppletManager::Unknown54(u32 in_param) {
         in_param >= 0x40 ? Service::FS::MediaType::GameCard : Service::FS::MediaType::SDMC;
     auto check_update = in_param == 0x01 || in_param == 0x42;
 
-    auto app_media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    FS::MediaType app_media_type;
+    if (slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        app_media_type = slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        app_media_type = Service::AM::GetTitleMediaType(slot_data->title_id);
+    }
     auto app_update_media_type =
         Service::AM::GetTitleMediaType(Service::AM::GetTitleUpdateId(slot_data->title_id));
     if (app_media_type == check_target || (check_update && app_update_media_type == check_target)) {
@@ -1283,8 +1300,16 @@ Result AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType med
     // Save the title data to send it to the Home Menu when DoApplicationJump is called.
     auto application_slot_data = GetAppletSlot(AppletSlot::Application);
     app_jump_parameters.current_title_id = application_slot_data->title_id;
-    app_jump_parameters.current_media_type =
-        Service::AM::GetTitleMediaType(application_slot_data->title_id);
+
+    FS::MediaType curr_media_type;
+    if (application_slot_data->media_type != static_cast<FS::MediaType>(UINT32_MAX)) {
+        curr_media_type = application_slot_data->media_type;
+    } else {
+        // Applet was not started from StartApplication, so we need to guess.
+        curr_media_type = Service::AM::GetTitleMediaType(application_slot_data->title_id);
+    }
+
+    app_jump_parameters.current_media_type = curr_media_type;
     if (flags == ApplicationJumpFlags::UseCurrentParameters) {
         app_jump_parameters.next_title_id = app_jump_parameters.current_title_id;
         app_jump_parameters.next_media_type = app_jump_parameters.current_media_type;
@@ -1369,7 +1394,15 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
 
     title_id = ConvertTitleID(system, title_id);
 
-    std::string path = AM::GetTitleContentPath(media_type, title_id);
+    std::string path;
+    if (media_type == FS::MediaType::GameCard) {
+        path = system.GetCartridge();
+    } else {
+        path = AM::GetTitleContentPath(media_type, title_id);
+    }
+
+    next_app_mediatype = media_type;
+
     auto loader = Loader::GetLoader(path);
 
     if (!loader) {

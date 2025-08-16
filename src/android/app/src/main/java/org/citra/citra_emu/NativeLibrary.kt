@@ -140,6 +140,12 @@ object NativeLibrary {
     external fun logUserDirectory(directory: String)
 
     /**
+     * Set the inserted cartridge that will appear
+     * in the home menu. Empty string to clear.
+     */
+    external fun setInsertedCartridge(path: String)
+
+    /**
      * Begins emulation.
      */
     external fun run(path: String)

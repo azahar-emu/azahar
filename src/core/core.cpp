@@ -24,6 +24,7 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/dumping/backend.h"
+#include "core/file_sys/ncch_container.h"
 #include "core/frontend/image_interface.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
@@ -810,6 +811,18 @@ void System::ApplySettings() {
 
 void System::RegisterAppLoaderEarly(std::unique_ptr<Loader::AppLoader>& loader) {
     early_app_loader = std::move(loader);
+}
+
+void System::InsertCartridge(const std::string& path) {
+    FileSys::NCCHContainer cartridge_container(path);
+    if (cartridge_container.LoadHeader() == Loader::ResultStatus::Success &&
+        cartridge_container.IsNCSD()) {
+        inserted_cartridge = path;
+    }
+}
+
+void System::EjectCartridge() {
+    inserted_cartridge.clear();
 }
 
 bool System::IsInitialSetup() {

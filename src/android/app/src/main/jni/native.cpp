@@ -101,6 +101,8 @@ std::mutex paused_mutex;
 std::mutex running_mutex;
 std::condition_variable running_cv;
 
+std::string inserted_cartridge;
+
 } // Anonymous namespace
 
 static jobject ToJavaCoreError(Core::System::ResultStatus result) {
@@ -148,7 +150,10 @@ static void TryShutdown() {
         secondary_window->DoneCurrent();
     }
 
-    Core::System::GetInstance().Shutdown();
+    Core::System& system{Core::System::GetInstance()};
+
+    system.Shutdown();
+    system.EjectCartridge();
 
     window.reset();
     if (secondary_window) {
@@ -178,6 +183,10 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     }
 
     Core::System& system{Core::System::GetInstance()};
+
+    if (!inserted_cartridge.empty()) {
+        system.InsertCartridge(inserted_cartridge);
+    }
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     EGLContext* shared_context;
@@ -1088,6 +1097,11 @@ jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetPlayTime(JNIEnv*
 jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetCurrentTitleId(JNIEnv* env,
                                                                                jobject obj) {
     return ptm_current_title_id;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setInsertedCartridge(JNIEnv* env, jobject obj,
+                                                                  jstring path) {
+    inserted_cartridge = GetJString(env, path);
 }
 
 } // extern "C"

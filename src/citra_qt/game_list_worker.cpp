@@ -113,7 +113,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 {
                     new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
                                          extdata_id, media_type,
-                                         res == Loader::ResultStatus::ErrorEncrypted),
+                                         res == Loader::ResultStatus::ErrorEncrypted,
+                                         loader->GetFileType() == Loader::FileType::CCI),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
                     new GameListItem(QString::fromStdString(Loader::GetFileTypeString(

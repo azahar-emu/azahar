@@ -25,6 +25,7 @@ class Game(
     val isInstalled: Boolean = false,
     val isSystemTitle: Boolean = false,
     val isVisibleSystemTitle: Boolean = false,
+    val isInsertable: Boolean = false,
     val icon: IntArray? = null,
     val fileType: String = "",
     val isCompressed: Boolean = false,

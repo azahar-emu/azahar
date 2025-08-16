@@ -144,6 +144,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             }
         }
 
+        val insertedCartridge = preferences.getString("insertedCartridge", "")
+        NativeLibrary.setInsertedCartridge(insertedCartridge ?: "")
+
         try {
             game = args.game ?: intentGame!!
         } catch (e: NullPointerException) {
