@@ -374,6 +374,14 @@ public:
 
     void RegisterAppLoaderEarly(std::unique_ptr<Loader::AppLoader>& loader);
 
+    void InsertCartridge(const std::string& path);
+
+    void EjectCartridge();
+
+    const std::string& GetCartridge() const {
+        return inserted_cartridge;
+    }
+
     bool IsInitialSetup();
 
 private:
@@ -398,6 +406,9 @@ private:
 
     // Temporary app loader passed from frontend
     std::unique_ptr<Loader::AppLoader> early_app_loader;
+
+    /// AppLoader for current inserted cartridge
+    std::string inserted_cartridge;
 
     /// ARM11 CPU core
     std::vector<std::shared_ptr<ARM_Interface>> cpu_cores;

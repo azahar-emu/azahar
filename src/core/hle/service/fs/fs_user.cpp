@@ -913,6 +913,14 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(0); // CTR Card
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
+}
+
 void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -999,8 +1007,8 @@ void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(false);
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    rb.Push(!system.GetCartridge().empty());
+    LOG_DEBUG(Service_FS, "called");
 }
 
 void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
@@ -1779,7 +1787,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0810, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
         {0x0811, nullptr, "DeleteSystemSaveData"},
         {0x0812, &FS_USER::GetFreeBytes, "GetFreeBytes"},
-        {0x0813, nullptr, "GetCardType"},
+        {0x0813, &FS_USER::GetCardType, "GetCardType"},
         {0x0814, &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
         {0x0815, &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
         {0x0816, nullptr, "GetSdmcFatfsError"},

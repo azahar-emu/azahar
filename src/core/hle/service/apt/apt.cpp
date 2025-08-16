@@ -75,6 +75,20 @@ void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) 
     LOG_WARNING(Service_APT, "called size={}", size);
 }
 
+void Module::NSInterface::CardUpdateInitialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    rp.Pop<u32>(); // Shared mem size
+    rp.Pop<u32>(); // Always 0
+    rp.Pop<u32>(); // Shared mem handle
+
+    LOG_WARNING(Service_APT, "(stubbed) called");
+    const Result update_not_needed(11, ErrorModule::CUP, ErrorSummary::NothingHappened,
+                                   ErrorLevel::Status);
+
+    auto rb = rp.MakeBuilder(1, 0);
+    rb.Push(update_not_needed);
+}
+
 void Module::NSInterface::ShutdownAsync(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
