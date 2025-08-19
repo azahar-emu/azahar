@@ -172,6 +172,18 @@ bool RenameFile(const std::string& source, const std::string& filename) {
                                         j_destination_path);
 }
 
+bool MoveFile(const std::string& filename, const std::string& source_dir_path,
+              const std::string& destination_dir_path) {
+    if (rename_file == nullptr)
+        return false;
+    auto env = GetEnvForThread();
+    jstring j_filename = env->NewStringUTF(filename.c_str());
+    jstring j_source_dir_path = env->NewStringUTF(source_dir_path.c_str());
+    jstring j_destination_dir_path = env->NewStringUTF(destination_dir_path.c_str());
+    return env->CallStaticBooleanMethod(native_library, move_file, j_filename, j_source_dir_path,
+                                        j_destination_dir_path);
+}
+
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature)                   \
     F(FunctionName, ReturnValue, JMethodID, Caller)
 #define F(FunctionName, ReturnValue, JMethodID, Caller)                                            \

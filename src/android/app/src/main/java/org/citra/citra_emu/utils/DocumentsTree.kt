@@ -191,7 +191,7 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
+    fun renameFile(filepath: String, destinationFilename: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
@@ -200,6 +200,20 @@ class DocumentsTree {
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
+        }
+    }
+
+    @Synchronized
+    fun moveFile(filename: String, sourceDirPath: String, destDirPath: String): Boolean {
+        val sourceFileNode = resolvePath(sourceDirPath + "/" + filename) ?: return false
+        val sourceDirNode = resolvePath(sourceDirPath) ?: return false
+        val destDirNode = resolvePath(destDirPath) ?: return false
+        try {
+            val newUri = DocumentsContract.moveDocument(context.contentResolver, sourceFileNode.uri!!, sourceDirNode.uri!!, destDirNode.uri!!)
+            sourceFileNode.rename(filename, newUri)
+            return true
+        } catch (e: Exception) {
+            error("[DocumentsTree]: Cannot move file, error: " + e.message)
         }
     }
 
