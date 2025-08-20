@@ -98,12 +98,16 @@ private:
     void DrawScreens(Frame* frame, const Layout::FramebufferLayout& layout, bool flipped);
     void DrawBottomScreen(const Layout::FramebufferLayout& layout,
                           const Common::Rectangle<u32>& bottom_screen);
+
     void DrawTopScreen(const Layout::FramebufferLayout& layout,
                        const Common::Rectangle<u32>& top_screen);
     void DrawSingleScreen(u32 screen_id, float x, float y, float w, float h,
                           Layout::DisplayOrientation orientation);
     void DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y, float w,
                                 float h, Layout::DisplayOrientation orientation);
+
+    void ApplySecondLayerOpacity(float alpha);
+
     void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
                             bool right_eye);
     void FillScreen(Common::Vec3<u8> color, const TextureInfo& texture);
