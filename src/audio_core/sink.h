@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,7 +9,7 @@
 
 namespace AudioCore {
 
-constexpr char auto_device_name[] = "auto";
+constexpr char auto_device_name[] = "Auto";
 
 /**
  * This class is an interface for an audio sink. An audio sink accepts samples in stereo signed
