@@ -864,8 +864,10 @@ bool CIAFile::Close() {
     if (!complete) {
         LOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
         if (!is_additional_content) {
-            FileUtil::DeleteDirRecursively(
-                GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()));
+            // Only delete the content folder as there may be user save data in the title folder.
+            const std::string title_content_path =
+                GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()) + "content/";
+            FileUtil::DeleteDirRecursively(title_content_path);
         }
         return true;
     }
