@@ -48,11 +48,17 @@ void ConfigureEnhancements::SetConfiguration() {
                                                &Settings::values.texture_filter);
         ConfigurationShared::SetHighlight(ui->widget_texture_filter,
                                           !Settings::values.texture_filter.UsingGlobal());
+        ConfigurationShared::SetPerGameSetting(ui->anti_aliasing_combobox,
+                                               &Settings::values.anti_aliasing);
+        ConfigurationShared::SetHighlight(ui->widget_anti_aliasing,
+                                          !Settings::values.anti_aliasing.UsingGlobal());
     } else {
         ui->resolution_factor_combobox->setCurrentIndex(
             Settings::values.resolution_factor.GetValue());
         ui->texture_filter_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.texture_filter.GetValue()));
+        ui->anti_aliasing_combobox->setCurrentIndex(
+            static_cast<int>(Settings::values.anti_aliasing.GetValue()));
     }
 
     ui->render_3d_combobox->setCurrentIndex(
@@ -127,6 +133,8 @@ void ConfigureEnhancements::ApplyConfiguration() {
                                              ui->toggle_linear_filter, linear_filter);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.texture_filter,
                                              ui->texture_filter_combobox);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.anti_aliasing,
+                                             ui->anti_aliasing_combobox);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.dump_textures,
                                              ui->toggle_dump_textures, dump_textures);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.custom_textures,
@@ -145,6 +153,7 @@ void ConfigureEnhancements::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->widget_resolution->setEnabled(Settings::values.resolution_factor.UsingGlobal());
         ui->widget_texture_filter->setEnabled(Settings::values.texture_filter.UsingGlobal());
+        ui->widget_anti_aliasing->setEnabled(Settings::values.anti_aliasing.UsingGlobal());
         ui->toggle_linear_filter->setEnabled(Settings::values.filter_mode.UsingGlobal());
         ui->toggle_dump_textures->setEnabled(Settings::values.dump_textures.UsingGlobal());
         ui->toggle_custom_textures->setEnabled(Settings::values.custom_textures.UsingGlobal());
@@ -184,4 +193,7 @@ void ConfigureEnhancements::SetupPerGameUI() {
     ConfigurationShared::SetColoredComboBox(
         ui->texture_filter_combobox, ui->widget_texture_filter,
         static_cast<int>(Settings::values.texture_filter.GetValue(true)));
+    ConfigurationShared::SetColoredComboBox(
+        ui->anti_aliasing_combobox, ui->widget_anti_aliasing,
+        static_cast<int>(Settings::values.anti_aliasing.GetValue(true)));
 }

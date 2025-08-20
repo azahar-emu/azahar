@@ -136,6 +136,10 @@ resolution_factor =
 # 0: None, 1: Anime4K, 2: Bicubic, 3: Nearest Neighbor, 4: ScaleForce, 5: xBRZ
 texture_filter =
 
+# Texture filter
+# 0: None, 1: SMAA
+anti_aliasing =
+
 # Limits the speed of the game to run no faster than this value as a percentage of target speed.
 # Will not have an effect if unthrottled is enabled.
 # 5 - 995: Speed limit as a percentage of target game speed. 0 for unthrottled. 100 (default)
