@@ -360,6 +360,11 @@ public:
 
     void LoadState(u32 slot);
 
+#ifdef HAVE_LIBRETRO
+    std::vector<u8> SaveStateBuffer() const;
+
+    bool LoadStateBuffer(std::vector<u8> buffer);
+#endif
     /// Self delete ncch
     bool SetSelfDelete(const std::string& file) {
         if (m_filepath == file) {
