@@ -146,9 +146,6 @@ bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
         (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
 #endif
 
-    // if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
-    //     return false;
-
     if (!separate_win) {
         if (framebuffer_x >= framebuffer_layout.width / 2) {
             if (render_3d_mode == Settings::StereoRenderOption::SideBySide ||
@@ -225,11 +222,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
     if (render_full_stereo) {
-        if (Settings::values.upright_screen.GetValue()) {
-            height = height / 2;
-        } else {
             width = width / 2;
-        }
     }
     if (is_portrait_mode) {
         switch (portrait_layout_option) {
@@ -298,11 +291,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
 #endif
 
     if (render_full_stereo) {
-        if (Settings::values.upright_screen.GetValue()) {
-            layout.height = height * 2;
-        } else {
-            layout.width = width * 2;
-        }
+        layout.width = width * 2;
     }
     UpdateMinimumWindowSize(min_size);
 
