@@ -818,56 +818,59 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
 
     if (separate_win) {
         DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                                                           bottom_screen_width, bottom_screen_height, orientation);
-    }else {
-
-    switch (Settings::values.render_3d.GetValue()) {
-    case Settings::StereoRenderOption::Off: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
                          bottom_screen_width, bottom_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
-    {
-        if (separate_win) {
+    } else {
+
+        switch (Settings::values.render_3d.GetValue()) {
+        case Settings::StereoRenderOption::Off: {
             DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
                              bottom_screen_width, bottom_screen_height, orientation);
-        } else {
-            DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
-                             bottom_screen_width / 2, bottom_screen_height, orientation);
+            break;
+        }
+        case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
+        {
+            if (separate_win) {
+                DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                                 bottom_screen_width, bottom_screen_height, orientation);
+            } else {
+                DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
+                                 bottom_screen_width / 2, bottom_screen_height, orientation);
+                glUniform1i(uniform_layer, 1);
+                DrawSingleScreen(screen_infos[2],
+                                 static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
+                                 bottom_screen_top, bottom_screen_width / 2, bottom_screen_height,
+                                 orientation);
+            }
+            break;
+        }
+        case Settings::StereoRenderOption::SideBySideFull: {
+            DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                             bottom_screen_width, bottom_screen_height, orientation);
+            glUniform1i(uniform_layer, 1);
+            DrawSingleScreen(screen_infos[2], bottom_screen_left + layout.width / 2,
+                             bottom_screen_top, bottom_screen_width, bottom_screen_height,
+                             orientation);
+            break;
+        }
+        case Settings::StereoRenderOption::CardboardVR: {
+            DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                             bottom_screen_width, bottom_screen_height, orientation);
             glUniform1i(uniform_layer, 1);
             DrawSingleScreen(
-                screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
+                screen_infos[2],
+                static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
+                bottom_screen_top, bottom_screen_width, bottom_screen_height, orientation);
+            break;
         }
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySideFull: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[2], bottom_screen_left + layout.width / 2, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::CardboardVR: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(
-            screen_infos[2],
-            static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
-            bottom_screen_top, bottom_screen_width, bottom_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::Anaglyph:
-    case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
-                               bottom_screen_top, bottom_screen_width, bottom_screen_height,
-                               orientation);
-        break;
-    }
+        case Settings::StereoRenderOption::Anaglyph:
+        case Settings::StereoRenderOption::Interlaced:
+        case Settings::StereoRenderOption::ReverseInterlaced: {
+            DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
+                                   bottom_screen_top, bottom_screen_width, bottom_screen_height,
+                                   orientation);
+            break;
+        }
+        }
     }
 }
 
