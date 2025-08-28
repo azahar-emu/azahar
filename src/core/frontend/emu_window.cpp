@@ -60,7 +60,9 @@ bool EmuWindow::IsWithinTouchscreen(const Layout::FramebufferLayout& layout, uns
 #ifndef ANDROID
     // If separate windows and the touch is in the primary (top) screen, ignore it.
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows &&
-        !is_secondary && !Settings::values.swap_screen.GetValue()) {
+            (!is_secondary && !Settings::values.swap_screen.GetValue()) ||
+            (is_secondary && Settings::values.swap_screen.GetValue())
+        ) {
         return false;
     }
 #endif
