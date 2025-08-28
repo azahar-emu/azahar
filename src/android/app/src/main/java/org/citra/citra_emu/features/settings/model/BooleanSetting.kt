@@ -28,6 +28,7 @@ enum class BooleanSetting(
     PERF_OVERLAY_SHOW_AVAILABLE_RAM("performance_overlay_show_available_ram", Settings.SECTION_LAYOUT, false),
     PERF_OVERLAY_SHOW_BATTERY_TEMP("performance_overlay_show_battery_temp", Settings.SECTION_LAYOUT, false),
     PERF_OVERLAY_BACKGROUND("performance_overlay_background", Settings.SECTION_LAYOUT, false),
+    RENDER_3D_SECONDARY_ONLY("render_3d_secondary_only",Settings.SECTION_RENDERER,false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),
     DETERMINISTIC_ASYNC_OPERATIONS("deterministic_async_operations", Settings.SECTION_DEBUG, false),
     REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false),
