@@ -182,6 +182,10 @@ factor_3d =
 # true or false (default)
 swap_eyes_3d =
 
+# Render 3D To Secondary Display
+# true or false (default)
+render_3d_secondary_only =
+
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
 pp_shader_name =

@@ -284,6 +284,8 @@
     <string name="disable_right_eye_render_description">Greatly improves performance in some applications, but can cause flickering in others.</string>
     <string name="swap_eyes_3d">Swap Eyes</string>
     <string name="swap_eyes_3d_description">Swaps which eye is shown where. Combine with Side by Side mode and cross your eyes to see 3D with no equipment!</string>
+    <string name="render_3d_secondary_only">3D on Secondary Display Only</string>
+    <string name="render_3d_secondary_only_description">If enabled, the selected 3d mode will only be applied on the secondary display (if enabled in the Layout menu). Applies to SBS modes only. </string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard Screen Size</string>
     <string name="cardboard_screen_size_description">Scales the screen to a percentage of its original size.</string>

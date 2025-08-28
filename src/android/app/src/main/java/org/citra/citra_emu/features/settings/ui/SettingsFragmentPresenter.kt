@@ -939,6 +939,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY,
+                    R.string.render_3d_secondary_only,
+                    R.string.render_3d_secondary_only_description,
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY.key,
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY.defaultValue
+                )
+            )
+            add(
                 SliderSetting(
                     IntSetting.STEREOSCOPIC_3D_DEPTH,
                     R.string.factor3d,
