@@ -258,6 +258,8 @@ public:
         return is_secondary;
     }
 
+    Settings::StereoRenderOption get3DMode() const;
+
 protected:
     EmuWindow();
     EmuWindow(bool is_secondary);

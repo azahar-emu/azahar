@@ -431,13 +431,14 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             height = (static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
                      res_scale) + gap;
             // clang-format on
-            layout= PortraitTopFullFrameLayout(width, height,Settings::values.swap_screen.GetValue(),Settings::values.upright_screen.GetValue());
+            layout =
+                PortraitTopFullFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
+                                           Settings::values.upright_screen.GetValue());
             break;
         case Settings::PortraitLayoutOption::PortraitOriginal:
             width = Core::kScreenTopWidth * res_scale;
             height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
-            layout = PortraitOriginalLayout(width, height,
-                                              Settings::values.swap_screen.GetValue());
+            layout = PortraitOriginalLayout(width, height, Settings::values.swap_screen.GetValue());
             break;
         }
     } else {
@@ -455,8 +456,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                                Settings::values.custom_bottom_height.GetValue()),
                                   Settings::values.swap_screen.GetValue(), is_portrait);
             break;
-        case Settings::LayoutOption::SingleScreen:
-        {
+        case Settings::LayoutOption::SingleScreen: {
             const bool swap_screens = is_secondary || Settings::values.swap_screen.GetValue();
             if (swap_screens) {
                 width = Core::kScreenBottomWidth * res_scale;
@@ -533,7 +533,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             }
 
             layout = HybridScreenLayout(width, height, Settings::values.swap_screen.GetValue(),
-                                      Settings::values.upright_screen.GetValue());
+                                        Settings::values.upright_screen.GetValue());
             break;
         case Settings::LayoutOption::Default:
         default:

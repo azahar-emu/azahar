@@ -568,8 +568,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
     });
 }
 
-void RendererVulkan::ReloadPipeline() {
-    const Settings::StereoRenderOption render_3d = Settings::values.render_3d.GetValue();
+void RendererVulkan::ReloadPipeline(Settings::StereoRenderOption render_3d) {
     switch (render_3d) {
     case Settings::StereoRenderOption::Anaglyph:
         current_pipeline = 1;
@@ -744,7 +743,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
 
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
-    switch (Settings::values.render_3d.GetValue()) {
+    switch (layout.render_3d_mode) {
     case Settings::StereoRenderOption::Off: {
         const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
         DrawSingleScreen(eye, top_screen_left, top_screen_top, top_screen_width, top_screen_height,
@@ -801,31 +800,21 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
                                                : Layout::DisplayOrientation::Portrait;
 
-    bool separate_win = false;
-#ifndef ANDROID
-    separate_win =
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows);
-#endif
-
-    switch (Settings::values.render_3d.GetValue()) {
+    switch (layout.render_3d_mode) {
     case Settings::StereoRenderOption::Off: {
         DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
                          bottom_screen_height, orientation);
+
         break;
     }
     case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
     {
-        if (separate_win) {
-            DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
-                             bottom_screen_height, orientation);
-        } else {
-            DrawSingleScreen(2, bottom_screen_left / 2, bottom_screen_top, bottom_screen_width / 2,
-                             bottom_screen_height, orientation);
-            draw_info.layer = 1;
-            DrawSingleScreen(2, static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-                             bottom_screen_top, bottom_screen_width / 2, bottom_screen_height,
-                             orientation);
-        }
+        DrawSingleScreen(2, bottom_screen_left / 2, bottom_screen_top, bottom_screen_width / 2,
+                         bottom_screen_height, orientation);
+        draw_info.layer = 1;
+        DrawSingleScreen(2, static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
+                         bottom_screen_top, bottom_screen_width / 2, bottom_screen_height,
+                         orientation);
         break;
     }
     case Settings::StereoRenderOption::SideBySideFull: {
@@ -848,13 +837,8 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        if (separate_win) {
-            DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
-                             bottom_screen_height, orientation);
-        } else {
-            DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
-                                   bottom_screen_height, orientation);
-        }
+        DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
+                               bottom_screen_height, orientation);
         break;
     }
     }
@@ -868,7 +852,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         clear_color.float32[2] = Settings::values.bg_blue.GetValue();
     }
     if (settings.shader_update_requested.exchange(false)) {
-        ReloadPipeline();
+        ReloadPipeline(layout.render_3d_mode);
     }
 
     PrepareDraw(frame, layout);

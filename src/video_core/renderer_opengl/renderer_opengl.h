@@ -56,7 +56,7 @@ public:
 
 private:
     void InitOpenGLObjects();
-    void ReloadShader();
+    void ReloadShader(Settings::StereoRenderOption render_3d);
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
