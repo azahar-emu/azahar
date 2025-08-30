@@ -166,7 +166,7 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(citra_common PRIVATE gamemode)
 endif()
 
-if (APPLE)
+if (APPLE AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PUBLIC
     apple_authorization.h
     apple_authorization.cpp
