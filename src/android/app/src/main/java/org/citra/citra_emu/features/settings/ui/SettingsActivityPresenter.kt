@@ -5,12 +5,14 @@
 package org.citra.citra_emu.features.settings.ui
 
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
+import androidx.documentfile.provider.DocumentFile
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -67,12 +69,29 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         loadSettingsUI()
     }
 
-    private fun updateImageVisibility() {
-        val dataPath = PermissionsHandler.citraDirectory.toString()
-        val noMedia = FileUtil.createFile(dataPath, ".nomedia")
-            if (!preferences.getBoolean(Settings.PREF_HIDE_IMAGES, false)) {
-                Log.info("[SettingsActivityPresenter]: Trying to delete .nomedia in $dataPath")
-                noMedia?.delete()
+    private fun updateAndroidImageVisibility() {
+        val dataDirTreeUri: Uri
+        val dataDirDocument: DocumentFile
+        val nomediaFileDocument: DocumentFile?
+        val nomediaFileExists: Boolean
+        try {
+            dataDirTreeUri = PermissionsHandler.citraDirectory
+            dataDirDocument = DocumentFile.fromTreeUri(CitraApplication.appContext, dataDirTreeUri)!!
+            nomediaFileDocument = dataDirDocument.findFile(".nomedia")
+            nomediaFileExists = (nomediaFileDocument != null)
+        } catch (e: Exception) {
+            Log.error("[SettingsActivity]: Error occurred while trying to find .nomedia, error: " + e.message)
+            return
+        }
+
+        if (BooleanSetting.ANDROID_HIDE_IMAGES.boolean) {
+            if (!nomediaFileExists) {
+                Log.info("[SettingsActivity]: Attempting to create .nomedia in user data directory")
+                FileUtil.createFile(dataDirTreeUri.toString(), ".nomedia")
+            }
+        } else if (nomediaFileExists) {
+            Log.info("[SettingsActivity]: Attempting to delete .nomedia in user data directory")
+            nomediaFileDocument!!.delete()
         }
     }
 
@@ -83,7 +102,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
-            updateImageVisibility()
+            updateAndroidImageVisibility()
             TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }
         NativeLibrary.reloadSettings()
