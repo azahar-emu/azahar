@@ -939,6 +939,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY,
+                    R.string.render_3d_secondary_only,
+                    R.string.render_3d_secondary_only_description,
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY.key,
+                    BooleanSetting.RENDER_3D_SECONDARY_ONLY.defaultValue
+                )
+            )
+            add(
                 SliderSetting(
                     IntSetting.STEREOSCOPIC_3D_DEPTH,
                     R.string.factor3d,
@@ -957,6 +966,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.disable_right_eye_render_description,
                     BooleanSetting.DISABLE_RIGHT_EYE_RENDER.key,
                     BooleanSetting.DISABLE_RIGHT_EYE_RENDER.defaultValue
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.SWAP_EYES_3D,
+                    R.string.swap_eyes_3d,
+                    R.string.swap_eyes_3d_description,
+                    BooleanSetting.SWAP_EYES_3D.key,
+                    BooleanSetting.SWAP_EYES_3D.defaultValue
                 )
             )
 
