@@ -49,7 +49,8 @@ enum class BooleanSetting(
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
-    COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false);
+    COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
+    ANDROID_HIDE_IMAGES("android_hide_images", Settings.SECTION_CORE, false);
 
     override var boolean: Boolean = defaultValue
 
@@ -83,6 +84,7 @@ enum class BooleanSetting(
             SHADERS_ACCURATE_MUL,
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
+            ANDROID_HIDE_IMAGES
         )
 
         fun from(key: String): BooleanSetting? =
