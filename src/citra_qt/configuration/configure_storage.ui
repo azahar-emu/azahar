@@ -27,7 +27,7 @@
           <item>
            <widget class="QCheckBox" name="toggle_virtual_sd">
             <property name="text">
-             <string>Use Virtual SD</string>
+             <string>Use virtual SD card</string>
             </property>
            </widget>
           </item>
@@ -42,7 +42,7 @@
            <item>
             <widget class="QCheckBox" name="toggle_custom_storage">
              <property name="text">
-              <string>Use Custom Storage</string>
+              <string>Use custom storage location</string>
              </property>
             </widget>
            </item>

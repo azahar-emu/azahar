@@ -28,7 +28,7 @@
            <string>Select the camera to configure</string>
           </property>
           <property name="text">
-           <string>Camera to configure</string>
+           <string>Camera to Configure</string>
           </property>
          </widget>
         </item>
