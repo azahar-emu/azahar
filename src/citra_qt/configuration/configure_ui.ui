@@ -37,7 +37,7 @@
           <item>
            <widget class="QLabel" name="language_label">
             <property name="text">
-             <string>Interface language</string>
+             <string>Interface Language</string>
             </property>
            </widget>
           </item>
@@ -191,14 +191,14 @@
         <item>
          <widget class="QCheckBox" name="toggle_hide_no_icon">
           <property name="text">
-           <string>Hide Titles without Icon</string>
+           <string>Hide titles without icon</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QCheckBox" name="toggle_single_line_mode">
           <property name="text">
-           <string>Single Line Mode</string>
+           <string>Single line mode</string>
           </property>
          </widget>
         </item>
@@ -218,7 +218,7 @@
         <item>
          <widget class="QCheckBox" name="show_advanced_frametime_info">
           <property name="text">
-           <string>Show Advanced Frame Time Info</string>
+           <string>Show advanced frame time info</string>
           </property>
          </widget>
         </item>

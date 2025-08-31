@@ -113,7 +113,7 @@
       <item>
        <widget class="QCheckBox" name="toggle_linear_filter">
         <property name="text">
-         <string>Enable Linear Filtering</string>
+         <string>Enable linear filtering</string>
         </property>
        </widget>
       </item>
@@ -320,7 +320,7 @@
       <item>
         <widget class="QCheckBox" name="disable_right_eye_render">
           <property name="text">
-            <string>Disable Right Eye Rendering</string>
+            <string>Disable right eye rendering</string>
           </property>
           <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -342,7 +342,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace textures with PNG files.&lt;/p&gt;&lt;p&gt;Textures are loaded from load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Use Custom Textures</string>
+         <string>Use custom textures</string>
         </property>
        </widget>
       </item>
@@ -352,7 +352,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dump textures to PNG files.&lt;/p&gt;&lt;p&gt;Textures are dumped to dump/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Dump Textures</string>
+         <string>Dump textures</string>
         </property>
        </widget>
       </item>
@@ -362,7 +362,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load all custom textures into memory on boot, instead of loading them when the application requires them.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Preload Custom Textures</string>
+         <string>Preload custom textures</string>
         </property>
        </widget>
       </item>
@@ -372,7 +372,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Load custom textures asynchronously with background threads to reduce loading stutter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Async Custom Texture Loading</string>
+         <string>Async custom texture loading</string>
         </property>
        </widget>
       </item>

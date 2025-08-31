@@ -38,7 +38,7 @@ constexpr u8 DEFAULT_SOUND_OUTPUT_MODE = SOUND_STEREO;
 // constants.
 constexpr u64_le DEFAULT_CONSOLE_ID = 0;
 constexpr u32_le DEFAULT_CONSOLE_RANDOM_NUMBER = 0;
-constexpr UsernameBlock DEFAULT_USERNAME{{u"Azahar"}, 0, 0};
+constexpr UsernameBlock DEFAULT_USERNAME{{u"AZAHAR"}, 0, 0};
 constexpr BirthdayBlock DEFAULT_BIRTHDAY{11, 7}; // November 7th, 2024
 constexpr u8 DEFAULT_LANGUAGE = LANGUAGE_EN;
 constexpr ConsoleCountryInfo DEFAULT_COUNTRY_INFO{
