@@ -14,6 +14,7 @@ import android.view.Display
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
 
@@ -53,7 +54,7 @@ class SecondaryDisplay(val context: Context) {
         }
 
         // if our presentation is already on the right display, ignore
-        if (pres?.display == display) return;
+        if (pres?.display == display) return
 
         // otherwise, make a new presentation
         releasePresentation()
@@ -62,7 +63,6 @@ class SecondaryDisplay(val context: Context) {
     }
 
     private fun getCustomerDisplay(): Display? {
-        val displays = displayManager.displays
         // code taken from MelonDS dual screen - should fix odin 2 detection bug
         return displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
             .firstOrNull { it.displayId != Display.DEFAULT_DISPLAY && it.name != "Built-in Screen" && it.name != "HiddenDisplay"}
@@ -84,6 +84,12 @@ class SecondaryDisplayPresentation(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window?.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        )
 
         // Initialize SurfaceView
         surfaceView = SurfaceView(context)
