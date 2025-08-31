@@ -11,6 +11,7 @@ import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.os.Bundle
 import android.view.Display
+import android.view.MotionEvent
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -78,6 +79,7 @@ class SecondaryDisplayPresentation(
     context: Context, display: Display, val parent: SecondaryDisplay
 ) : Presentation(context, display) {
     private lateinit var surfaceView: SurfaceView
+    private var touchscreenPointerId = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,6 +107,41 @@ class SecondaryDisplayPresentation(
                 parent.destroySurface()
             }
         })
+
+        this.surfaceView.setOnTouchListener { _, event ->
+            val pointerIndex = event.actionIndex
+            val pointerId = event.getPointerId(pointerIndex)
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                    if (touchscreenPointerId == -1) {
+                        touchscreenPointerId = pointerId
+                        NativeLibrary.onSecondaryTouchEvent(
+                            event.getX(pointerIndex),
+                            event.getY(pointerIndex),
+                            true
+                        )
+                    }
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val index = event.findPointerIndex(touchscreenPointerId)
+                    if (index != -1) {
+                        NativeLibrary.onSecondaryTouchMoved(
+                            event.getX(index),
+                            event.getY(index)
+                        )
+                    }
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (pointerId == touchscreenPointerId) {
+                        NativeLibrary.onSecondaryTouchEvent(0f, 0f, false)
+                        touchscreenPointerId = -1
+                    }
+                }
+            }
+            true
+        }
 
         setContentView(surfaceView) // Set SurfaceView as content
     }
