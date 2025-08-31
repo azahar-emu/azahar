@@ -24,21 +24,22 @@ struct CardboardSettings {
     s32 user_x_shift;
 };
 
+struct Screen {
+    Common::Rectangle<u32> rect;
+    bool is_bottom;
+    bool right_eye = false;
+    bool enabled = true;
+};
+
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
 struct FramebufferLayout {
     u32 width;
     u32 height;
-    bool top_screen_enabled;
-    bool bottom_screen_enabled;
-    Common::Rectangle<u32> top_screen;
-    Common::Rectangle<u32> bottom_screen;
-    bool is_rotated = true;
+    std::vector<Screen> screens;
+    DisplayOrientation orientation = DisplayOrientation::Landscape;
     bool is_portrait = false;
-    bool additional_screen_enabled;
-    Common::Rectangle<u32> additional_screen;
-
-    CardboardSettings cardboard;
-
+    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
+    CardboardSettings cardboard = {};
     /**
      * Returns the ratio of pixel size of the top screen, compared to the native size of the 3DS
      * screen.
@@ -46,8 +47,6 @@ struct FramebufferLayout {
     u32 GetScalingRatio() const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
-
-    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 };
 
 /**
@@ -56,101 +55,119 @@ struct FramebufferLayout {
 FramebufferLayout reverseLayout(FramebufferLayout layout);
 
 /**
- * Factory method for constructing a default FramebufferLayout with screens on top of one another
+ * Method to duplicate a framebuffer layout to the right side with the other eye, creating
+ * full-width stereo behavior
+ */
+FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes);
+
+/**
+ * Method to duplicate a framebuffer layout to the right side with the other eye, creating
+ * half-width stereo behavior
+ */
+FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes);
+
+/**
+ * Factory method for constructing a standard landscape layout based on a layout_option
+ * @param layout_option The Layout Option to use
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
- * @param is_swapped if true, the bottom screen will be displayed above the top screen
- * @param upright if true, the screens will be rotated 90 degrees anti-clockwise
+ * @param swapped if true, the bottom screen will be displayed above the top screen
+ * @param upright if true, rotate the screens 90 degrees counter-clockwise
+ * @param render_3d the StereoRenderOption to apply to this layout
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
+FramebufferLayout CreateLayout(Settings::LayoutOption layout_option, u32 width, u32 height,
+                               bool swapped, bool upright, Settings::StereoRenderOption render_3d,
+                               bool swap_eyes = false);
 
 /**
- * Factory method for constructing the mobile Full Width (Default) layout
- * Two screens at top, full width (so different heights)
+ * Factory method for constructing a portrait layout based on a layout_option
+ * @param layout_option The Layout Option to use
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
- * @param is_swapped if true, the bottom screen will be displayed above the top screen
- * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
- */
-FramebufferLayout PortraitTopFullFrameLayout(u32 width, u32 height, bool is_swapped,
-                                             bool upright = false);
-
-/**
- * Factory method for constructing the mobile Original layout
- * Two screens at top, equal heights
- * @param width Window framebuffer width in pixels
- * @param height Window framebuffer height in pixels
- * @param is_swapped if true, the bottom screen will be displayed above the top screen
- * @return Newly created FramebufferLayout object with mobile portrait screen regions initialized
- */
-FramebufferLayout PortraitOriginalLayout(u32 width, u32 height, bool is_swapped,
-                                         bool upright = false);
-
-/**
- * Factory method for constructing a FramebufferLayout with only the top or bottom screen
- * @param width Window framebuffer width in pixels
- * @param height Window framebuffer height in pixels
- * @param is_swapped if true, the bottom screen will be displayed (and the top won't be displayed)
- * @param upright if true, the screens will be rotated 90 degrees anti-clockwise
+ * @param swapped if true, the bottom screen will be displayed above the top screen
+ * @param upright if true, rotate the screens 90 degrees counter-clockwise
+ * @param render_3d the StereoRenderOption to apply to this layout
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_swapped, bool upright);
+FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_option, u32 width,
+                                       u32 height, bool swapped, bool upright,
+                                       Settings::StereoRenderOption render_3d,
+                                       bool swap_eyes = false);
 
 /**
- * Factory method for constructing a Frame with differently sized top and bottom windows
+ * Factory method for constructing the layout for the secondary mobile screen, if enabled
+ * @param layout_option The Layout Option to use
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
- * @param is_swapped if true, the bottom screen will be the large display
- * @param upright if true, the screens will be rotated 90 degrees anti-clockwise
+ * @param swapped if true, the bottom screen will be displayed above the top screen
+ * @param upright if true, rotate the screens 90 degrees counter-clockwise
+ * @param render_3d the StereoRenderOption to apply to this layout
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+FramebufferLayout CreateMobileSecondaryLayout(Settings::SecondaryDisplayLayout layout_option,
+                                              u32 width, u32 height, bool swapped, bool upright,
+                                              Settings::StereoRenderOption render_3d,
+                                              bool swap_eyes = false);
+
+/**
+ * Factory method for constructing a default FramebufferLayout with only one screen
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param swapped if true, the bottom screen will be displayed
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool swap_eyes = false);
+
+/**
+ * Factory method for constructing a Frame with top and bottom screens, arranged in a variety of
+ * ways
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @param swapped if true, the bottom screen will be displayed above the top screen
  * @param scale_factor The ratio between the large screen with respect to the smaller screen
  * @param vertical_alignment The vertical alignment of the smaller screen relative to the larger
  * screen
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, bool upright,
-                                   float scale_factor,
-                                   Settings::SmallScreenPosition small_screen_position);
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool is_swapped, float scale_factor,
+                                   Settings::SmallScreenPosition small_screen_position,
+                                   bool swap_eyes = false);
 /**
  * Factory method for constructing a frame with 2.5 times bigger top screen on the right,
  * and 1x top and bottom screen on the left
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
  * @param is_swapped if true, the bottom screen will be the large display
- * @param upright if true, the screens will be rotated 90 degrees anti-clockwise
- * @param scale_factor determines the proportion of large to small. Must be >= 1
- * @param small_screen_position determines where the small screen appears relative to the large
- * screen
+ * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
+ * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool upright);
+FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool swap_eyes);
 
 /**
- * Factory method for constructing a Frame with the Top screen and bottom
- * screen on separate windows
+ * Factory method for constructing a framebuffer based on custom settings
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
- * @param is_secondary if true, the bottom screen will be enabled instead of the top screen
+ * @param is_swapped switches the top and bottom displays (looks weird!)
+ * @param is_portrait_mode used for mobile portrait, has its own custom settings
+ * @param swap_eyes swaps left and right eyes OR renders right eye instead of left
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright);
 
-/**
- * Method for constructing the secondary layout for Android, based on
- * the appropriate setting.
- * @param width Window framebuffer width in pixels
- * @param height Window framebuffer height in pixels
- */
-FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height);
-
-/**
- * Factory method for constructing a custom FramebufferLayout
- * @param width Window framebuffer width in pixels
- * @param height Window framebuffer height in pixels
- * @return Newly created FramebufferLayout object with default screen regions initialized
- */
 FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped,
-                                    bool is_portrait_mode = false);
+                                    bool is_portrait_mode = false, bool swap_eyes);
 
 /**
  * Convenience method to get frame layout by resolution scale
