@@ -560,8 +560,7 @@ bool PipelineCache::EnsureDirectories() const {
 }
 
 std::string PipelineCache::GetPipelineCacheDir() const {
-    return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + "vulkan" + DIR_SEP + "pipeline" +
-           DIR_SEP;
+    return FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir) + "vulkan" + DIR_SEP;
 }
 
 void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& stop_loading,
