@@ -48,6 +48,15 @@ if (APPLE)
     else()
         # Minimum macOS 13
         set(CMAKE_OSX_DEPLOYMENT_TARGET "13.4")
+
+        # Catch compiler issue on AppleClang versions below 15.0
+        # TODO: Remove this check when we drop macOS 13 Ventura
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
+            message(FATAL_ERROR "AppleClang 15.0 or later is required due to a compiler bug in earlier versions.\n"
+                                "Current version: ${CMAKE_CXX_COMPILER_VERSION}\n"
+                                "After updating, delete 'CMakeCache.txt' in the build directory.")
+        endif()
     endif()
 endif()
 
