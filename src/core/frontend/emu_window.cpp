@@ -180,10 +180,8 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
 
     const Settings::PortraitLayoutOption portrait_layout_option =
         Settings::values.portrait_layout_option.GetValue();
-    const auto min_size = is_portrait_mode
-                              ? Layout::GetMinimumSizeFromPortraitLayout()
-                              : Layout::GetMinimumSizeFromLayout(
-                                    layout_option, Settings::values.upright_screen.GetValue());
+    const auto min_size = is_portrait_mode ? Layout::GetMinimumSizeFromPortraitLayout()
+                                           : Layout::GetMinimumSizeFromLayout(layout_option);
 
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
@@ -191,7 +189,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     if (is_portrait_mode) {
         layout = Layout::CreatePortraitLayout(portrait_layout_option, width, height, swapped,
                                               upright, stereo_option, swap_eyes);
-    } else if (is_mobile && is_secondary) { //TODO: Let Pablo look at this and help make it better?
+    } else if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
         layout = Layout::CreateMobileSecondaryLayout(
             Settings::values.secondary_display_layout.GetValue(), width, height, swapped, upright,
             stereo_option, swap_eyes);

@@ -167,7 +167,7 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool s
  */
 
 FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped,
-                                    bool is_portrait_mode = false, bool swap_eyes);
+                                    bool is_portrait_mode = false, bool swap_eyes = false);
 
 /**
  * Convenience method to get frame layout by resolution scale
@@ -185,8 +185,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
  */
 FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout);
 
-std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout,
-                                                       bool upright_screen);
+std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption layout);
 
 std::pair<unsigned, unsigned> GetMinimumSizeFromPortraitLayout();
 

@@ -455,7 +455,6 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
 
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary,
                                                  bool is_portrait) {
-    const u32 gap = (int)(Settings::values.screen_gap.GetValue()) * res_scale;
     const std::pair<unsigned, unsigned> min_size =
         is_portrait ? GetMinimumSizeFromPortraitLayout()
                     : GetMinimumSizeFromLayout(Settings::values.layout_option.GetValue());
@@ -693,6 +692,7 @@ std::pair<unsigned, unsigned> GetMinimumSizeFromLayout(Settings::LayoutOption la
         min_height = Core::kScreenTopHeight + Core::kScreenBottomHeight + gap;
         break;
     }
+    return std::make_pair(min_width, min_height);
 }
 
 float FramebufferLayout::GetAspectRatioValue(Settings::AspectRatio aspect_ratio) {
