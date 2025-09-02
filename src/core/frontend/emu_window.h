@@ -308,14 +308,14 @@ private:
     void CreateTouchState();
 
     /**
-     * Check if the given x/y coordinates are within the touchpad specified by the framebuffer
-     * layout
+     * Check if the given x/y coordinates are within any touchpad specified by the framebuffer
+     * layout and returns the index of the screen. Returns -1 if inside none.
      * @param layout FramebufferLayout object describing the framebuffer size and screen positions
      * @param framebuffer_x Framebuffer x-coordinate to check
      * @param framebuffer_y Framebuffer y-coordinate to check
      * @return True if the coordinates are within the touchpad, otherwise false
      */
-    bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
+    int WhichTouchscreen(const Layout::FramebufferLayout& layout, unsigned framebuffer_x,
                              unsigned framebuffer_y);
 
     Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
@@ -329,7 +329,7 @@ private:
     /**
      * Clip the provided coordinates to be inside the touchscreen area.
      */
-    std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y) const;
+    std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y, int index) const;
 
     void UpdateMinimumWindowSize(std::pair<unsigned, unsigned> min_size);
 };
