@@ -96,10 +96,8 @@ private:
                         bool flipped);
 
     void DrawScreens(Frame* frame, const Layout::FramebufferLayout& layout, bool flipped);
-    void DrawBottomScreen(const Layout::FramebufferLayout& layout,
-                          const Common::Rectangle<u32>& bottom_screen);
-    void DrawTopScreen(const Layout::FramebufferLayout& layout,
-                       const Common::Rectangle<u32>& top_screen);
+
+    void DrawScreen(const Layout::FramebufferLayout& layout, const Layout::Screen& screen);
     void DrawSingleScreen(u32 screen_id, float x, float y, float w, float h,
                           Layout::DisplayOrientation orientation);
     void DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y, float w,
