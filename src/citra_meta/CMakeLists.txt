@@ -60,6 +60,10 @@ if (ENABLE_QT AND UNIX AND NOT APPLE)
     target_link_libraries(citra_meta PRIVATE Qt6::DBus gamemode)
 endif()
 
+if (ENABLE_QT AND APPLE)
+    target_link_libraries(citra_meta PRIVATE Qt6::GuiPrivate)
+endif()
+
 if (ENABLE_QT AND USE_DISCORD_PRESENCE)
     target_link_libraries(citra_meta PRIVATE discord-rpc)
 endif()
