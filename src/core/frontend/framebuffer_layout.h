@@ -79,7 +79,7 @@ FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes);
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout CreateLayout(Settings::LayoutOption layout_option, u32 width, u32 height,
-                               bool swapped, bool upright, Settings::StereoRenderOption render_3d,
+                               bool swapped = false, bool upright = false, Settings::StereoRenderOption render_3d = Settings::StereoRenderOption::Off,
                                bool swap_eyes = false);
 
 /**
@@ -120,13 +120,13 @@ FramebufferLayout CreateMobileSecondaryLayout(Settings::SecondaryDisplayLayout l
  * Factory method for constructing a default FramebufferLayout with only one screen
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
- * @param swapped if true, the bottom screen will be displayed
+ * @param is_bottom if true, the bottom screen will be displayed
  * @param swap_eyes in mono mode, this will make mono do the right eye. In stereo modes, it will
  * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 
-FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool swap_eyes = false);
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom, bool swap_eyes = false);
 
 /**
  * Factory method for constructing a Frame with top and bottom screens, arranged in a variety of

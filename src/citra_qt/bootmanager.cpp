@@ -347,12 +347,12 @@ struct SoftwareRenderWidget : public RenderWidget {
 
         using VideoCore::ScreenId;
 
-        const auto layout{Layout::DefaultFrameLayout(width(), height(), false, false)};
+        const auto layout{Layout::CreateLayout(Settings::LayoutOption::Default,width(), height())};
         QPainter painter(this);
 
         const auto draw_screen = [&](ScreenId screen_id) {
             const auto rect =
-                screen_id == ScreenId::TopLeft ? layout.top_screen : layout.bottom_screen;
+                screen_id == ScreenId::TopLeft ? layout.screens[0].rect : layout.screens[1].rect;
             const QImage screen =
                 LoadFramebuffer(screen_id).scaled(rect.GetWidth(), rect.GetHeight());
             painter.drawImage(rect.left, rect.top, screen);
@@ -479,7 +479,7 @@ void GRenderWindow::OnFramebufferSizeChanged() {
     const qreal pixel_ratio = windowPixelRatio();
     const u32 width = static_cast<u32>(this->width() * pixel_ratio);
     const u32 height = static_cast<u32>(this->height() * pixel_ratio);
-    UpdateCurrentFramebufferLayout(width, height);
+    UpdateCurrentFramebufferLayout(width, height, false);
 }
 
 void GRenderWindow::BackupGeometry() {

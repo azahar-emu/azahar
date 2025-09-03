@@ -198,12 +198,10 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     return res;
 }
 
-FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom, bool upright,
-                                    bool render_stereo, bool swap_eyes) {
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom,
+                                    bool swap_eyes) {
 
     FramebufferLayout res{width, height, {}};
-    if (!render_stereo)
-        res.render_3d_mode = Settings::StereoRenderOption::Off;
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> top_screen;
@@ -269,19 +267,15 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom, bool 
     return res;
 }
 
-FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upright,
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped,
                                    float scale_factor,
                                    Settings::SmallScreenPosition small_screen_position,
-                                   bool render_stereo, bool swap_eyes) {
+                                 bool swap_eyes) {
 
     const bool vertical = (small_screen_position == Settings::SmallScreenPosition::AboveLarge ||
                            small_screen_position == Settings::SmallScreenPosition::BelowLarge);
     FramebufferLayout res{width, height, {}};
-    if (!render_stereo)
-        res.render_3d_mode = Settings::StereoRenderOption::Off;
 
-    if (upright)
-        res.orientation = DisplayOrientation::Portrait;
     // Split the window into two parts. Give proportional width to the smaller screen
     // To do that, find the total emulation box and maximize that based on window size
     u32 gap = (u32)(Settings::values.screen_gap.GetValue() * scale_factor);
@@ -404,12 +398,12 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
 
 FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool swap_eyes) {
     FramebufferLayout res =
-        LargeFrameLayout(width, height, swapped, 2.25f, Settings::SmallScreenPosition::TopRight);
+        LargeFrameLayout(width, height, swapped, 2.25f, Settings::SmallScreenPosition::BottomRight);
 
     // screens[0] is the large screen, screens[1] is the small screen. Add the other small screen.
     Screen small_screen =
-        Screen{Common::Rectangle<u32>{res.screens[1].rect.left, res.screens[1].rect.bottom,
-                                      res.screens[1].rect.right, res.screens[0].rect.bottom},
+        Screen{Common::Rectangle<u32>{res.screens[1].rect.left, res.screens[0].rect.top,
+                                      res.screens[1].rect.right, res.screens[1].rect.top},
                res.screens[0].is_bottom, swap_eyes, true};
     res.screens.push_back(small_screen);
     return res;

@@ -746,8 +746,9 @@ void RendererVulkan::DrawScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::SideBySide:
     case Settings::StereoRenderOption::SideBySideFull:
     case Settings::StereoRenderOption::CardboardVR: {
-        const int eye = screen.right_eye ? 1 : 0;
-        DrawSingleScreen(eye, screen_left, screen_top, screen_width, screen_height, orientation);
+        // 0 is top left, 1 is top right, 2 is bottom
+        const int screenId = screen.is_bottom ? 2 : (screen.right_eye ? 1 : 0);
+        DrawSingleScreen(screenId, screen_left, screen_top, screen_width, screen_height, orientation);
         break;
     }
 
