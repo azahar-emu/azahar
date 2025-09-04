@@ -18,11 +18,19 @@ object EmulationLifecycleUtil {
     }
 
     fun addShutdownHook(hook: Runnable) {
-        shutdownHooks.add(hook)
+        if (shutdownHooks.contains(hook)) {
+            Log.warning("Tried to add shutdown hook that already existed. Skipping.")
+        } else {
+            shutdownHooks.add(hook)
+        }
     }
 
     fun addPauseResumeHook(hook: Runnable) {
-        pauseResumeHooks.add(hook)
+        if (pauseResumeHooks.contains(hook)) {
+            Log.warning("Tried to add pause resume hook that already existed. Skipping.")
+        }else{
+            pauseResumeHooks.add(hook)
+        }
     }
 
     fun clear() {
