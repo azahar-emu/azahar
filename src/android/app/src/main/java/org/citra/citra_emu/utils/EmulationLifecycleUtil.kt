@@ -28,7 +28,7 @@ object EmulationLifecycleUtil {
     fun addPauseResumeHook(hook: Runnable) {
         if (pauseResumeHooks.contains(hook)) {
             Log.warning("Tried to add pause resume hook that already existed. Skipping.")
-        }else{
+        } else {
             pauseResumeHooks.add(hook)
         }
     }
