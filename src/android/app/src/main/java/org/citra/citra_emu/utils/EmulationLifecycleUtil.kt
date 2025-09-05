@@ -18,13 +18,17 @@ object EmulationLifecycleUtil {
     }
 
     fun addShutdownHook(hook: Runnable) {
-        if (!shutdownHooks.contains(hook)) {
+        if (shutdownHooks.contains(hook)) {
+            Log.warning("[EmulationLifecycleUtil] Tried to add shutdown hook for function that already existed. Skipping.")
+        } else {
             shutdownHooks.add(hook)
         }
     }
 
     fun addPauseResumeHook(hook: Runnable) {
-        if (!pauseResumeHooks.contains(hook)) {
+        if (pauseResumeHooks.contains(hook)) {
+            Log.warning("[EmulationLifecycleUtil] Tried to add pause resume hook for function that already existed. Skipping.")
+        } else {
             pauseResumeHooks.add(hook)
         }
     }
