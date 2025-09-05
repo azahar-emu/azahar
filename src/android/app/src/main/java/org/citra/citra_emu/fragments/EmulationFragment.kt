@@ -101,8 +101,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val emulationViewModel: EmulationViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    private lateinit var onShutdown: Runnable
-    private lateinit var onPause: Runnable
+    private val onPause = Runnable{ togglePause() }
+    private val onShutdown = Runnable{ emulationState.stop() }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -159,10 +159,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settingsViewModel.settings)
-        onShutdown = Runnable{ emulationState.stop()}
-        onPause = Runnable{ togglePause()}
-        EmulationLifecycleUtil.addShutdownHook(onShutdown)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
+        EmulationLifecycleUtil.addShutdownHook(onShutdown)
     }
 
     override fun onCreateView(
