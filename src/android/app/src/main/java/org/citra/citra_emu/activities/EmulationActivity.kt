@@ -167,7 +167,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        EmulationLifecycleUtil.remove(shutdownHook)
+        EmulationLifecycleUtil.removeHook(shutdownHook)
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null

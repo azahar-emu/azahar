@@ -30,7 +30,7 @@ object EmulationLifecycleUtil {
         shutdownHooks.clear()
     }
 
-    fun remove(hook: Runnable) {
+    fun removeHook(hook: Runnable) {
         if (pauseResumeHooks.contains(hook)) pauseResumeHooks.remove(hook)
         if (shutdownHooks.contains(hook)) shutdownHooks.remove(hook)
     }
