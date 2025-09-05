@@ -645,7 +645,7 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
 /**
  * Draws the emulated screens to the emulator window.
  */
-void RendererOpenGL::DrawScreens(Layout::FramebufferLayout& layout, bool flipped) {
+void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool flipped) {
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
@@ -680,7 +680,7 @@ void RendererOpenGL::DrawScreens(Layout::FramebufferLayout& layout, bool flipped
         glUniform1i(uniform_color_texture_r, 1);
     }
 
-    for (Layout::Screen& s : layout.screens) {
+    for (const Layout::Screen& s : layout.screens) {
         glUniform1i(uniform_layer, 0);
         DrawScreen(layout, s);
         // TODO: make opacity a property of individual screens on the layout!
@@ -690,7 +690,7 @@ void RendererOpenGL::DrawScreens(Layout::FramebufferLayout& layout, bool flipped
     ResetSecondLayerOpacity();
 }
 
-void RendererOpenGL::ApplySecondLayerOpacity(Layout::Screen& screen) {
+void RendererOpenGL::ApplySecondLayerOpacity(const Layout::Screen& screen) {
     if (screen.opacity < 100) {
         state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
         state.blend.src_a_func = GL_CONSTANT_ALPHA;

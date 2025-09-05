@@ -613,7 +613,8 @@ FramebufferLayout reverseLayout(FramebufferLayout layout) {
 FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
     // assumptions: the screens have already been set up so they are on the left side
     // if swap_eyes is true, those screens have already been set to right eye
-    for (int i = 0; i < layout.screens.size(); i++) {
+    int s = layout.screens.size();
+    for (int i = 0; i < s; i++) {
         Screen new_screen = layout.screens[i];
         new_screen.rect.left += layout.width / 2;
         new_screen.rect.right += layout.width / 2;
@@ -624,7 +625,8 @@ FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
 }
 
 FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes) {
-    for (int i = 0; i < layout.screens.size(); i++) {
+    int s = layout.screens.size();
+    for (int i = 0; i < s; i++) {
         Screen& s = layout.screens[i];
         s.rect.left /= 2;
         s.rect.right /= 2;

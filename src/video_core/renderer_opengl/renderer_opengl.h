@@ -64,8 +64,8 @@ private:
     void ConfigureFramebufferTexture(TextureInfo& texture,
                                      const Pica::FramebufferConfig& framebuffer,
                                      const Pica::ColorFill& color_fill);
-    void DrawScreens(Layout::FramebufferLayout& layout, bool flipped);
-    void ApplySecondLayerOpacity(Layout::Screen& screen);
+    void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
+    void ApplySecondLayerOpacity(const Layout::Screen& screen);
     void ResetSecondLayerOpacity();
 
     void DrawScreen(const Layout::FramebufferLayout& layout,
