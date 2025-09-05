@@ -18,15 +18,23 @@ object EmulationLifecycleUtil {
     }
 
     fun addShutdownHook(hook: Runnable) {
-        if (!shutdownHooks.contains(hook)) shutdownHooks.add(hook)
+        if (!shutdownHooks.contains(hook)) {
+            shutdownHooks.add(hook)
+        }
     }
 
     fun addPauseResumeHook(hook: Runnable) {
-        if (!pauseResumeHooks.contains(hook)) pauseResumeHooks.add(hook)
+        if (!pauseResumeHooks.contains(hook)) {
+            pauseResumeHooks.add(hook)
+        }
     }
 
     fun removeHook(hook: Runnable) {
-        if (pauseResumeHooks.contains(hook)) pauseResumeHooks.remove(hook)
-        if (shutdownHooks.contains(hook)) shutdownHooks.remove(hook)
+        if (pauseResumeHooks.contains(hook)) {
+            pauseResumeHooks.remove(hook)
+        }
+        if (shutdownHooks.contains(hook)) {
+            shutdownHooks.remove(hook)
+        }
     }
 }

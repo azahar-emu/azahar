@@ -511,8 +511,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDestroy() {
-        EmulationLifecycleUtil.removeHook(onShutdown)
         EmulationLifecycleUtil.removeHook(onPause)
+        EmulationLifecycleUtil.removeHook(onShutdown)
         super.onDestroy()
     }
 
