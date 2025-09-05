@@ -85,7 +85,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
-    private var emulationState: EmulationState? = null
+    private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
     private lateinit var emulationActivity: EmulationActivity
@@ -106,10 +106,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (context is EmulationActivity) {
             emulationActivity = context
             NativeLibrary.setEmulationActivity(context)
-            EmulationLifecycleUtil.addPauseResumeHook(hook = { togglePause() })
-            if (emulationState != null) {
-                EmulationLifecycleUtil.addShutdownHook(hook = { emulationState!!.stop() })
-            }
         } else {
             throw IllegalStateException("EmulationFragment must have EmulationActivity parent")
         }
@@ -160,7 +156,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settingsViewModel.settings)
-        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState!!.stop() })
+        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState.stop() })
+        EmulationLifecycleUtil.addPauseResumeHook(hook = { togglePause() })
     }
 
     override fun onCreateView(
@@ -259,8 +256,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.inGameMenu.setNavigationItemSelectedListener {
             when (it.itemId) {
                 R.id.menu_emulation_pause -> {
-                    if (emulationState!!.isPaused) {
-                        emulationState!!.unpause()
+                    if (emulationState.isPaused) {
+                        emulationState.unpause()
                         it.title = resources.getString(R.string.pause_emulation)
                         it.icon = ResourcesCompat.getDrawable(
                             resources,
@@ -268,7 +265,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                             requireContext().theme
                         )
                     } else {
-                        emulationState!!.pause()
+                        emulationState.pause()
                         it.title = resources.getString(R.string.resume_emulation)
                         it.icon = ResourcesCompat.getDrawable(
                             resources,
@@ -358,7 +355,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_exit -> {
-                    emulationState!!.pause()
+                    emulationState.pause()
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
@@ -366,9 +363,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                             EmulationLifecycleUtil.closeGame()
                         }
                         .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
-                            emulationState!!.unpause()
+                            emulationState.unpause()
                         }
-                        .setOnCancelListener { emulationState!!.unpause() }
+                        .setOnCancelListener { emulationState.unpause() }
                         .show()
                     true
                 }
@@ -462,10 +459,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     private fun togglePause() {
-        if (emulationState!!.isPaused) {
-            emulationState!!.unpause()
+        if (emulationState.isPaused) {
+            emulationState.unpause()
         } else {
-            emulationState!!.pause()
+            emulationState.pause()
         }
     }
 
@@ -473,7 +470,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         super.onResume()
         Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
-            emulationState!!.pause()
+            emulationState.pause()
 
             // If the overlay is enabled, we need to update the position if changed
             val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
@@ -491,7 +488,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState!!.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -499,7 +496,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     override fun onPause() {
         if (NativeLibrary.isRunning()) {
-            emulationState!!.pause()
+            emulationState.pause()
         }
         Choreographer.getInstance().removeFrameCallback(this)
         super.onPause()
@@ -515,7 +512,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState!!.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -1351,11 +1348,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
         Log.debug("[EmulationFragment] Surface changed. Resolution: " + width + "x" + height)
-        emulationState!!.newSurface(holder.surface)
+        emulationState.newSurface(holder.surface)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        emulationState!!.clearSurface()
+        emulationState.clearSurface()
     }
 
     override fun doFrame(frameTimeNanos: Long) {

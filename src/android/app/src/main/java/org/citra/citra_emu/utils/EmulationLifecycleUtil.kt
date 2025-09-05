@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,19 +18,11 @@ object EmulationLifecycleUtil {
     }
 
     fun addShutdownHook(hook: Runnable) {
-        if (shutdownHooks.contains(hook)) {
-            Log.warning("[EmulationLifecycleUtil] Tried to add shutdown hook that already existed. Skipping.")
-        } else {
-            shutdownHooks.add(hook)
-        }
+        shutdownHooks.add(hook)
     }
 
     fun addPauseResumeHook(hook: Runnable) {
-        if (pauseResumeHooks.contains(hook)) {
-            Log.warning("[EmulationLifecycleUtil] Tried to add pause resume hook that already existed. Skipping.")
-        } else {
-            pauseResumeHooks.add(hook)
-        }
+        pauseResumeHooks.add(hook)
     }
 
     fun clear() {
