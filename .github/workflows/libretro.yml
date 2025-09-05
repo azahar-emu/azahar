@@ -1,0 +1,167 @@
+name: citra-libretro
+
+on:
+  push:
+    branches: [ "*" ]
+    tags: [ "*" ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  CORE_ARGS: -DENABLE_LIBRETRO=ON -DENABLE_SDL2=OFF -DENABLE_QT=OFF -DENABLE_TESTS=OFF -DENABLE_ROOM=OFF -DENABLE_WEB_SERVICE=OFF -DENABLE_SCRIPTING=OFF -DENABLE_CUBEB=OFF -DENABLE_OPENAL=OFF -DENABLE_LIBUSB=OFF -DCITRA_WARNINGS_AS_ERRORS=OFF
+
+jobs:
+  android:
+    runs-on: ubuntu-22.04
+    env:
+      OS: android
+      TARGET: arm64-v8a
+      API_LEVEL: 21
+      ANDROID_NDK_VERSION: 26.2.11394342
+      ANDROID_ABI: arm64-v8a
+      BUILD_DIR: build/android-arm64-v8a
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set tag name
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+              echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
+          fi
+          echo $GIT_TAG_NAME
+      - name: Update Android SDK CMake version
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "ndk;$ANDROID_NDK_VERSION"
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
+      - name: Build
+        run: |
+          export NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/$ANDROID_NDK_VERSION
+          ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake $CORE_ARGS -DANDROID_PLATFORM=android-$API_LEVEL -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_static -DANDROID_ABI=$ANDROID_ABI . -B $BUILD_DIR
+          ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/azahar_libretro_android.so
+  linux:
+    runs-on: ubuntu-22.04
+    env:
+      OS: linux
+      TARGET: x86_64
+      BUILD_DIR: build/linux-x86_64
+      EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DENABLE_OPT=OFF
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
+          cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/azahar_libretro.so
+  windows:
+    runs-on: ubuntu-latest
+    env:
+      OS: windows
+      TARGET: x86_64
+      BUILD_DIR: build/windows-x86_64
+      EXTRA_CORE_ARGS: -DENABLE_LTO=OFF -G Ninja
+      CMAKE: x86_64-w64-mingw32.static-cmake
+      IMAGE: git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc11
+      EXTRA_PATH: bin/Release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build in cross-container
+        run: |
+          docker pull $IMAGE
+          docker run --rm --user root \
+              -v "${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}" \
+              -w "${GITHUB_WORKSPACE}" \
+              $IMAGE \
+              bash -lc "\
+                  apt-get update -qy && \
+                  apt-get install -qy software-properties-common && \
+                  add-apt-repository -y ppa:savoury1/build-tools && \
+                  add-apt-repository ppa:ubuntu-toolchain-r/test && \
+                  apt-get update -qy && \
+                  apt-get install -qy glslang-tools && \
+                  ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
+                  ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)"
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
+  macos:
+    runs-on: macos-14
+    strategy:
+      matrix:
+        target: ["x86_64", "arm64"]
+    env:
+      OS: macos
+      TARGET: ${{ matrix.target }}
+      MACOSX_DEPLOYMENT_TARGET: 10.15
+      BUILD_DIR: build/osx-${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install tools
+        run: brew install spirv-tools
+      - name: Build
+        run: |
+          cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
+          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/azahar_libretro.dylib
+  ios:
+    runs-on: macos-14
+    env:
+      OS: ios
+      TARGET: arm64
+      BUILD_DIR: build/ios-arm64
+      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
+          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/azahar_libretro.dylib
+  tvos:
+    runs-on: macos-14
+    env:
+      OS: tvos
+      TARGET: arm64
+      BUILD_DIR: build/tvos-arm64
+      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build
+        run: |
+          cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
+          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OS }}-${{ env.TARGET }}
+          path: ${{ env.BUILD_DIR }}/azahar_libretro.dylib

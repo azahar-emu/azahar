@@ -110,10 +110,14 @@ else()
         # In case a flag isn't supported on e.g. a certain architecture, don't error.
         -Wno-unused-command-line-argument
         # Build fortification options
-        -Wp,-D_GLIBCXX_ASSERTIONS
         -fstack-protector-strong
-        -fstack-clash-protection
     )
+    if (NOT ENABLE_LIBRETRO)
+        add_compile_options(
+            -Wp,-D_GLIBCXX_ASSERTIONS
+            -fstack-clash-protection
+        )
+    endif()
 
     # If we define _FORTIFY_SOURCE when it is already defined, compilation will fail
     string(FIND "-D_FORTIFY_SOURCE" "${CMAKE_CXX_FLAGS} " FORTIFY_SOURCE_DEFINED)
@@ -198,6 +202,10 @@ if (ENABLE_QT OR ENABLE_SDL2_FRONTEND)
     add_subdirectory(citra_meta)
 endif()
 
+if (ENABLE_LIBRETRO)
+    add_subdirectory(citra_libretro)
+endif()
+
 if (ENABLE_ROOM)
     add_subdirectory(citra_room)
 endif()
@@ -206,7 +214,7 @@ if (ENABLE_ROOM_STANDALONE)
     add_subdirectory(citra_room_standalone)
 endif()
 
-if (ANDROID)
+if (ANDROID AND NOT ENABLE_LIBRETRO)
     add_subdirectory(android/app/src/main/jni)
     target_include_directories(citra-android PRIVATE android/app/src/main)
 endif()

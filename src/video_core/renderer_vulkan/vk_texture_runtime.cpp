@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -146,7 +146,10 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
                   vk::Format format, vk::ImageUsageFlags usage, vk::ImageCreateFlags flags,
                   vk::ImageAspectFlags aspect, bool need_format_list,
                   std::string_view debug_name = {}) {
-    const u32 layers = type == TextureType::CubeMap ? 6 : 1;
+    // On tvOS/iOS, fall back to 2D textures when layered rendering isn't supported
+    const bool is_cube_map =
+        type == TextureType::CubeMap && instance->IsLayeredRenderingSupported();
+    const u32 layers = is_cube_map ? 6 : 1;
 
     const std::array format_list = {
         vk::Format::eR8G8B8A8Unorm,
@@ -192,8 +195,7 @@ Handle MakeHandle(const Instance* instance, u32 width, u32 height, u32 levels, T
     const vk::Image image{unsafe_image};
     const vk::ImageViewCreateInfo view_info = {
         .image = image,
-        .viewType =
-            type == TextureType::CubeMap ? vk::ImageViewType::eCube : vk::ImageViewType::e2D,
+        .viewType = is_cube_map ? vk::ImageViewType::eCube : vk::ImageViewType::e2D,
         .format = format,
         .subresourceRange{
             .aspectMask = aspect,

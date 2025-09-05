@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,8 @@ void DspInterface::OutputFrame(StereoFrame16 frame) {
     }
 
     fifo.Push(frame.data(), frame.size());
+
+    GetSink().OnAudioSubmission(frame.size());
 
     auto video_dumper = system.GetVideoDumper();
     if (video_dumper && video_dumper->IsDumping()) {

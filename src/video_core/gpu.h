@@ -96,6 +96,12 @@ public:
 
     void ReportLoadingProgramID(u64 program_ID);
 
+    /// Recreates the renderer (for GL context reset in libretro)
+    void RecreateRenderer(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window);
+
+    /// Releases the renderer (for GL context destroy in libretro)
+    void ReleaseRenderer();
+
 private:
     void SubmitCmdList(u32 index);
 

@@ -30,6 +30,9 @@ public:
      * @param sample_count Number of samples.
      */
     virtual void SetCallback(std::function<void(s16*, std::size_t)> cb) = 0;
+
+    /// Optional callback to signify that a buffer has been written.
+    virtual void OnAudioSubmission(std::size_t frames) {}
 };
 
 } // namespace AudioCore
