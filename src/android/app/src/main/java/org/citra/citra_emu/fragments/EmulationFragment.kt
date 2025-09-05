@@ -101,6 +101,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val emulationViewModel: EmulationViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
+    private lateinit var shutdownHook: Runnable
+    private lateinit var pauseHook: Runnable
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is EmulationActivity) {
@@ -156,8 +159,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settingsViewModel.settings)
-        EmulationLifecycleUtil.addShutdownHook(hook = { emulationState.stop() })
-        EmulationLifecycleUtil.addPauseResumeHook(hook = { togglePause() })
+        shutdownHook = Runnable{ emulationState.stop()}
+        pauseHook = Runnable{ togglePause()}
+        EmulationLifecycleUtil.addShutdownHook(shutdownHook)
+        EmulationLifecycleUtil.addPauseResumeHook(pauseHook)
     }
 
     override fun onCreateView(
@@ -505,6 +510,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     override fun onDetach() {
         NativeLibrary.clearEmulationActivity()
         super.onDetach()
+    }
+
+    override fun onDestroy() {
+        EmulationLifecycleUtil.remove(shutdownHook)
+        EmulationLifecycleUtil.remove(pauseHook)
+        super.onDestroy()
     }
 
     private fun setupCitraDirectoriesThenStartEmulation() {
