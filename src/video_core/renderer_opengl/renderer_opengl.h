@@ -64,13 +64,12 @@ private:
     void ConfigureFramebufferTexture(TextureInfo& texture,
                                      const Pica::FramebufferConfig& framebuffer,
                                      const Pica::ColorFill& color_fill);
-    void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
-    void ApplySecondLayerOpacity(bool isPortrait = false);
-    void ResetSecondLayerOpacity(bool isPortrait = false);
-    void DrawBottomScreen(const Layout::FramebufferLayout& layout,
-                          const Common::Rectangle<u32>& bottom_screen);
-    void DrawTopScreen(const Layout::FramebufferLayout& layout,
-                       const Common::Rectangle<u32>& top_screen);
+    void DrawScreens(Layout::FramebufferLayout& layout, bool flipped);
+    void ApplySecondLayerOpacity(Layout::Screen& screen);
+    void ResetSecondLayerOpacity();
+
+    void DrawScreen(const Layout::FramebufferLayout& layout,
+                       const Layout::Screen& screen);
     void DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w, float h,
                           Layout::DisplayOrientation orientation);
     void DrawSingleScreenStereo(const ScreenInfo& screen_info_l, const ScreenInfo& screen_info_r,

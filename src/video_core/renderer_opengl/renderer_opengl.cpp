@@ -645,7 +645,7 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
 /**
  * Draws the emulated screens to the emulator window.
  */
-void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool flipped) {
+void RendererOpenGL::DrawScreens(Layout::FramebufferLayout& layout, bool flipped) {
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
@@ -658,9 +658,6 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         // Link shaders and get variable locations
         ReloadShader(layout.render_3d_mode);
     }
-
-    const auto& top_screen = layout.top_screen;
-    const auto& bottom_screen = layout.bottom_screen;
 
     glViewport(0, 0, layout.width, layout.height);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -683,173 +680,67 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         glUniform1i(uniform_color_texture_r, 1);
     }
 
-    glUniform1i(uniform_layer, 0);
-    if (!Settings::values.swap_screen.GetValue()) {
-        DrawTopScreen(layout, top_screen);
+    for (Layout::Screen& s : layout.screens) {
         glUniform1i(uniform_layer, 0);
-        ApplySecondLayerOpacity(layout.is_portrait);
-        DrawBottomScreen(layout, bottom_screen);
-    } else {
-        DrawBottomScreen(layout, bottom_screen);
-        glUniform1i(uniform_layer, 0);
-        ApplySecondLayerOpacity(layout.is_portrait);
-        DrawTopScreen(layout, top_screen);
+        DrawScreen(layout, s);
+        // TODO: make opacity a property of individual screens on the layout!
+        ApplySecondLayerOpacity(s);
     }
 
-    if (layout.additional_screen_enabled) {
-        const auto& additional_screen = layout.additional_screen;
-        if (!Settings::values.swap_screen.GetValue()) {
-            DrawTopScreen(layout, additional_screen);
-        } else {
-            DrawBottomScreen(layout, additional_screen);
-        }
-    }
-    ResetSecondLayerOpacity(layout.is_portrait);
+    ResetSecondLayerOpacity();
 }
 
-void RendererOpenGL::ApplySecondLayerOpacity(bool isPortrait) {
-    // TODO: Allow for second layer opacity in portrait mode android
-
-    if (!isPortrait &&
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout) &&
-        Settings::values.custom_second_layer_opacity.GetValue() < 100) {
+void RendererOpenGL::ApplySecondLayerOpacity(Layout::Screen& screen) {
+    if (screen.opacity < 100) {
         state.blend.src_rgb_func = GL_CONSTANT_ALPHA;
         state.blend.src_a_func = GL_CONSTANT_ALPHA;
         state.blend.dst_a_func = GL_ONE_MINUS_CONSTANT_ALPHA;
         state.blend.dst_rgb_func = GL_ONE_MINUS_CONSTANT_ALPHA;
-        state.blend.color.alpha = Settings::values.custom_second_layer_opacity.GetValue() / 100.0f;
+        state.blend.color.alpha = screen.opacity / 100.0f;
     }
 }
 
-void RendererOpenGL::ResetSecondLayerOpacity(bool isPortrait) {
-    if (!isPortrait &&
-        (Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout) &&
-        Settings::values.custom_second_layer_opacity.GetValue() < 100) {
-        state.blend.src_rgb_func = GL_ONE;
-        state.blend.dst_rgb_func = GL_ZERO;
-        state.blend.src_a_func = GL_ONE;
-        state.blend.dst_a_func = GL_ZERO;
-        state.blend.color.alpha = 0.0f;
-    }
+void RendererOpenGL::ResetSecondLayerOpacity() {
+    state.blend.src_rgb_func = GL_ONE;
+    state.blend.dst_rgb_func = GL_ZERO;
+    state.blend.src_a_func = GL_ONE;
+    state.blend.dst_a_func = GL_ZERO;
+    state.blend.color.alpha = 0.0f;
 }
 
-void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
-                                   const Common::Rectangle<u32>& top_screen) {
-    if (!layout.top_screen_enabled) {
-        return;
-    }
-    int leftside, rightside;
-    leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
-    rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
+void RendererOpenGL::DrawScreen(const Layout::FramebufferLayout& layout,
+                                const Layout::Screen& screen) {
 
-    const float top_screen_left = static_cast<float>(top_screen.left);
-    const float top_screen_top = static_cast<float>(top_screen.top);
-    const float top_screen_width = static_cast<float>(top_screen.GetWidth());
-    const float top_screen_height = static_cast<float>(top_screen.GetHeight());
-
-    const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
-                                               : Layout::DisplayOrientation::Portrait;
-    switch (layout.render_3d_mode) {
-    case Settings::StereoRenderOption::Off: {
-        const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
-        DrawSingleScreen(screen_infos[eye], top_screen_left, top_screen_top, top_screen_width,
-                         top_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySide: {
-        DrawSingleScreen(screen_infos[leftside], top_screen_left / 2, top_screen_top,
-                         top_screen_width / 2, top_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[rightside],
-                         static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
-                         top_screen_top, top_screen_width / 2, top_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySideFull: {
-        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
-                         top_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[rightside],
-                         static_cast<float>(top_screen_left + layout.width / 2), top_screen_top,
-                         top_screen_width, top_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::CardboardVR: {
-        DrawSingleScreen(screen_infos[leftside], top_screen_left, top_screen_top, top_screen_width,
-                         top_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(
-            screen_infos[rightside],
-            static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
-            top_screen_top, top_screen_width, top_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::Anaglyph:
-    case Settings::StereoRenderOption::Interlaced:
-    case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(screen_infos[leftside], screen_infos[rightside], top_screen_left,
-                               top_screen_top, top_screen_width, top_screen_height, orientation);
-        break;
-    }
-    }
-}
-
-void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
-                                      const Common::Rectangle<u32>& bottom_screen) {
-    if (!layout.bottom_screen_enabled) {
+    if (!screen.enabled) {
         return;
     }
 
-    const float bottom_screen_left = static_cast<float>(bottom_screen.left);
-    const float bottom_screen_top = static_cast<float>(bottom_screen.top);
-    const float bottom_screen_width = static_cast<float>(bottom_screen.GetWidth());
-    const float bottom_screen_height = static_cast<float>(bottom_screen.GetHeight());
+    const float screen_left = static_cast<float>(screen.rect.left);
+    const float screen_top = static_cast<float>(screen.rect.top);
+    const float screen_width = static_cast<float>(screen.rect.GetWidth());
+    const float screen_height = static_cast<float>(screen.rect.GetHeight());
 
-    const auto orientation = layout.is_rotated ? Layout::DisplayOrientation::Landscape
-                                               : Layout::DisplayOrientation::Portrait;
+    const auto orientation = layout.orientation;
 
     switch (layout.render_3d_mode) {
-    case Settings::StereoRenderOption::Off: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySide: // Bottom screen is identical on both sides
-    {
-
-        DrawSingleScreen(screen_infos[2], bottom_screen_left / 2, bottom_screen_top,
-                         bottom_screen_width / 2, bottom_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(
-            screen_infos[2], static_cast<float>((bottom_screen_left / 2) + (layout.width / 2)),
-            bottom_screen_top, bottom_screen_width / 2, bottom_screen_height, orientation);
-
-        break;
-    }
-    case Settings::StereoRenderOption::SideBySideFull: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(screen_infos[2], bottom_screen_left + layout.width / 2, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        break;
-    }
+    case Settings::StereoRenderOption::Off:
+    case Settings::StereoRenderOption::SideBySide:
+    case Settings::StereoRenderOption::SideBySideFull:
     case Settings::StereoRenderOption::CardboardVR: {
-        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
-                         bottom_screen_width, bottom_screen_height, orientation);
-        glUniform1i(uniform_layer, 1);
-        DrawSingleScreen(
-            screen_infos[2],
-            static_cast<float>(layout.cardboard.bottom_screen_right_eye + (layout.width / 2)),
-            bottom_screen_top, bottom_screen_width, bottom_screen_height, orientation);
+        // 0 is top left, 1 is top right, 2 is bottom
+        const int screenId = screen.is_bottom ? 2 : (screen.right_eye ? 1 : 0);
+        DrawSingleScreen(screen_infos[screenId], screen_left, screen_top, screen_width,
+                         screen_height, orientation);
         break;
     }
+
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
-        DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
-                               bottom_screen_top, bottom_screen_width, bottom_screen_height,
-                               orientation);
+        const int leftside = Settings::values.swap_eyes_3d ? 1 : 0;
+        const int rightside = Settings::values.swap_eyes_3d ? 0 : 1;
+        DrawSingleScreenStereo(screen_infos[leftside], screen_infos[rightside], screen_left,
+                               screen_top, screen_width, screen_height, orientation);
         break;
     }
     }
@@ -875,8 +766,8 @@ void RendererOpenGL::TryPresent(int timeout_ms, bool is_secondary) {
     }
     glWaitSync(frame->render_fence, 0, GL_TIMEOUT_IGNORED);
     // INTEL workaround.
-    // Normally we could just delete the draw fence here, but due to driver bugs, we can just delete
-    // it on the emulation thread without too much penalty
+    // Normally we could just delete the draw fence here, but due to driver bugs, we can just
+    // delete it on the emulation thread without too much penalty
     // glDeleteSync(frame.render_sync);
     // frame.render_sync = 0;
 
