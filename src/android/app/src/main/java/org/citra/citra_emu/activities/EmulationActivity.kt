@@ -61,7 +61,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
     private lateinit var secondaryDisplay: SecondaryDisplay
-    private lateinit var shutdownHook: Runnable
+    private lateinit var onShutdown: Runnable
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -102,14 +102,14 @@ class EmulationActivity : AppCompatActivity() {
             windowManager.defaultDisplay.rotation
         )
 
-        shutdownHook = Runnable {
+        onShutdown = Runnable {
             if (intent.getBooleanExtra("launched_from_shortcut", false)) {
                 finishAffinity()
             } else {
                 this.finish()
             }
         }
-        EmulationLifecycleUtil.addShutdownHook(shutdownHook)
+        EmulationLifecycleUtil.addShutdownHook(onShutdown)
 
         isEmulationRunning = true
         instance = this
@@ -167,7 +167,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        EmulationLifecycleUtil.removeHook(shutdownHook)
+        EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null

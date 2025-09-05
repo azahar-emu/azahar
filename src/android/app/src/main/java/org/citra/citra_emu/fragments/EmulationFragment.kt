@@ -101,8 +101,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val emulationViewModel: EmulationViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
 
-    private lateinit var shutdownHook: Runnable
-    private lateinit var pauseHook: Runnable
+    private lateinit var onShutdown: Runnable
+    private lateinit var onPause: Runnable
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -159,10 +159,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settingsViewModel.settings)
-        shutdownHook = Runnable{ emulationState.stop()}
-        pauseHook = Runnable{ togglePause()}
-        EmulationLifecycleUtil.addShutdownHook(shutdownHook)
-        EmulationLifecycleUtil.addPauseResumeHook(pauseHook)
+        onShutdown = Runnable{ emulationState.stop()}
+        onPause = Runnable{ togglePause()}
+        EmulationLifecycleUtil.addShutdownHook(onShutdown)
+        EmulationLifecycleUtil.addPauseResumeHook(onPause)
     }
 
     override fun onCreateView(
@@ -513,8 +513,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDestroy() {
-        EmulationLifecycleUtil.removeHook(shutdownHook)
-        EmulationLifecycleUtil.removeHook(pauseHook)
+        EmulationLifecycleUtil.removeHook(onShutdown)
+        EmulationLifecycleUtil.removeHook(onPause)
         super.onDestroy()
     }
 
