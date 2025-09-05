@@ -58,6 +58,7 @@ FramebufferLayout CreateLayout(Settings::LayoutOption layout_option, u32 width, 
 #endif
     {
         res = SingleFrameLayout(width, height, swapped, swap_eyes);
+        break;
     }
     case Settings::LayoutOption::SideScreen: {
         res = LargeFrameLayout(width, height, swapped, 1.0f,
@@ -198,8 +199,7 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     return res;
 }
 
-FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom,
-                                    bool swap_eyes) {
+FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom, bool swap_eyes) {
 
     FramebufferLayout res{width, height, {}};
 
@@ -267,10 +267,9 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom,
     return res;
 }
 
-FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped,
-                                   float scale_factor,
+FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, float scale_factor,
                                    Settings::SmallScreenPosition small_screen_position,
-                                 bool swap_eyes) {
+                                   bool swap_eyes) {
 
     const bool vertical = (small_screen_position == Settings::SmallScreenPosition::AboveLarge ||
                            small_screen_position == Settings::SmallScreenPosition::BelowLarge);
@@ -397,8 +396,9 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped,
 }
 
 FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool swap_eyes) {
+    float ratio = swapped ? 2.25f : 1.8f;
     FramebufferLayout res =
-        LargeFrameLayout(width, height, swapped, 2.25f, Settings::SmallScreenPosition::BottomRight);
+        LargeFrameLayout(width, height, swapped, ratio, Settings::SmallScreenPosition::BottomRight);
 
     // screens[0] is the large screen, screens[1] is the small screen. Add the other small screen.
     Screen small_screen =
@@ -443,6 +443,7 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
         res.screens.push_back(Screen{top_screen, false, swap_eyes, true});
         res.screens.push_back(Screen{bot_screen, true, swap_eyes, true});
     }
+    res.screens[1].opacity = Settings::values.custom_second_layer_opacity.GetValue();
 
     return res;
 }
@@ -612,9 +613,10 @@ FramebufferLayout reverseLayout(FramebufferLayout layout) {
 FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
     // assumptions: the screens have already been set up so they are on the left side
     // if swap_eyes is true, those screens have already been set to right eye
-    for (Screen s : layout.screens) {
-        Screen new_screen = s;
+    for (int i = 0; i < layout.screens.size(); i++) {
+        Screen new_screen = layout.screens[i];
         new_screen.rect.left += layout.width / 2;
+        new_screen.rect.right += layout.width / 2;
         new_screen.right_eye = !swap_eyes;
         layout.screens.push_back(new_screen);
     }
@@ -622,7 +624,9 @@ FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
 }
 
 FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes) {
-    for (Screen s : layout.screens) {
+    for (int i = 0; i < layout.screens.size(); i++) {
+        Screen& s = layout.screens[i];
+        s.rect.left /= 2;
         s.rect.right /= 2;
         Screen new_screen = s;
         new_screen.rect.left += layout.width / 2;

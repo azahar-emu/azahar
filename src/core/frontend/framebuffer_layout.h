@@ -29,6 +29,7 @@ struct Screen {
     bool is_bottom;
     bool right_eye = false;
     bool enabled = true;
+    float opacity = 100.0f;
 };
 
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
@@ -78,9 +79,11 @@ FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes);
  * swap left eye and right eye
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
-FramebufferLayout CreateLayout(Settings::LayoutOption layout_option, u32 width, u32 height,
-                               bool swapped = false, bool upright = false, Settings::StereoRenderOption render_3d = Settings::StereoRenderOption::Off,
-                               bool swap_eyes = false);
+FramebufferLayout CreateLayout(
+    Settings::LayoutOption layout_option, u32 width, u32 height, bool swapped = false,
+    bool upright = false,
+    Settings::StereoRenderOption render_3d = Settings::StereoRenderOption::Off,
+    bool swap_eyes = false);
 
 /**
  * Factory method for constructing a portrait layout based on a layout_option
