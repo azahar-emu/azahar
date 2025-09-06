@@ -1,0 +1,81 @@
+name: citra-canary
+
+on:
+  schedule:
+    # Run every 4 hours to check for new changes
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    # Allow manual triggering
+    inputs:
+      force_build:
+        description: 'Force build even if no changes detected'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check for changes
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { checkCanaryChanges } = require('./.github/workflows/ci-merge.js');
+            const shouldBuild = await checkCanaryChanges(github, context) || ${{ github.event.inputs.force_build == 'true' }};
+            console.log(`Should build: ${shouldBuild}`);
+            core.setOutput('should_build', shouldBuild);
+
+  merge-and-build:
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ALT_GITHUB_TOKEN }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install execa@5
+      - name: Run merge bot
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { mergebot } = require('./.github/workflows/ci-merge.js');
+            const { execa } = require('execa');
+            await mergebot(github, context, execa);
+        env:
+          ALT_GITHUB_TOKEN: ${{ secrets.ALT_GITHUB_TOKEN }}
+
+  trigger-canary-build:
+    needs: [check-changes, merge-and-build]
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger canary repository build
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ALT_GITHUB_TOKEN }}
+          script: |
+            const [owner, repo] = context.repo.repo.includes('-canary') 
+              ? [context.repo.owner, context.repo.repo]
+              : [context.repo.owner, `${context.repo.repo}-canary`];
+            
+            console.log(`Triggering build for ${owner}/${repo}`);
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: owner,
+              repo: repo,
+              workflow_id: 'build.yml',
+              ref: 'master'
+            });
