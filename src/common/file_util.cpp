@@ -304,20 +304,41 @@ bool DeleteDir(const std::string& filename) {
     return false;
 }
 
-bool Rename(const std::string& srcFilename, const std::string& destFilename) {
-    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilename, destFilename);
+bool Rename(const std::string& srcFilePath, const std::string& destFileName) {
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilePath, destFileName);
 #ifdef _WIN32
-    if (_wrename(Common::UTF8ToUTF16W(srcFilename).c_str(),
-                 Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
+    if (_wrename(Common::UTF8ToUTF16W(srcFilePath).c_str(),
+                 Common::UTF8ToUTF16W(std::string(GetFilename(destFileName))).c_str()) == 0)
         return true;
 #elif ANDROID
-    if (AndroidStorage::RenameFile(srcFilename, std::string(GetFilename(destFilename))))
+    if (AndroidStorage::RenameFile(srcFilePath, std::string(GetFilename(destFileName))))
         return true;
 #else
-    if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
+    if (rename(srcFilePath.c_str(), std::string(GetFilename(destFileName)).c_str()) == 0)
         return true;
 #endif
-    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
+    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilePath, destFileName,
+              GetLastErrorMsg());
+    return false;
+}
+
+bool Move(const std::string& srcFileName, const std::string& srcDirPath,
+          const std::string& destDirPath) {
+    const auto srcFilePath = srcDirPath + DIR_SEP + srcFileName;
+    const auto destFilePath = destDirPath + DIR_SEP + srcFileName;
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilename, destFileName);
+#ifdef _WIN32
+    if (_wrename(Common::UTF8ToUTF16W(srcFilePath).c_str(),
+                 Common::UTF8ToUTF16W(destFilePath).c_str()) == 0)
+        return true;
+#elif ANDROID
+    if (AndroidStorage::MoveFile(srcFileName, srcDirPath, destDirPath))
+        return true;
+#else
+    if (rename(srcFilePath.c_str(), destFilePath.c_str()) == 0)
+        return true;
+#endif
+    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilePath, destFilePath,
               GetLastErrorMsg());
     return false;
 }

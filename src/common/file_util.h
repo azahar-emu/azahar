@@ -136,13 +136,18 @@ bool Delete(const std::string& filename);
 // Deletes a directory filename, returns true on success
 bool DeleteDir(const std::string& filename);
 
-// renames file srcFilename to destFilename, returns true on success
-bool Rename(const std::string& srcFilename, const std::string& destFilename);
+// Renames file srcFilepath to destFilename, returns true on success.
+// If a full path is passed to destFileName, everything except the name of the file is ignored.
+bool Rename(const std::string& srcFilePath, const std::string& destFileName);
 
-// copies file srcFilename to destFilename, returns true on success
+// Moves file srcFileName from srcDirPath to destDirPath, returns true on success
+bool Move(const std::string& srcFileName, const std::string& srcDirPath,
+          const std::string& destDirPath);
+
+// Copies file srcFilename to destFilename, returns true on success
 bool Copy(const std::string& srcFilename, const std::string& destFilename);
 
-// creates an empty file filename, returns true on success
+// Creates an empty file filename, returns true on success
 bool CreateEmptyFile(const std::string& filename);
 
 /**
