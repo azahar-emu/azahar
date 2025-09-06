@@ -153,6 +153,7 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
                                        Settings::StereoRenderOption render_3d, bool swap_eyes) {
     ASSERT(width > 0);
     ASSERT(height > 0);
+    LOG_INFO(Frontend,"Creating new portrait layout");
     if (upright) {
         std::swap(width, height);
     }
@@ -160,12 +161,12 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     switch (layout_option) {
     case Settings::PortraitLayoutOption::PortraitTopFullWidth: {
         const float scale_factor = swapped ? 1.25f : 0.8f;
-        FramebufferLayout res =
+        res =
             LargeFrameLayout(width, height, swapped, scale_factor,
                              Settings::SmallScreenPosition::BelowLarge, swap_eyes);
         const int shiftY = res.screens[0].rect.top;
-        res.screens[0].rect = res.screens[0].rect.TranslateY(shiftY);
-        res.screens[1].rect = res.screens[1].rect.TranslateY(shiftY);
+        res.screens[0].rect = res.screens[0].rect.TranslateY(-shiftY);
+        res.screens[1].rect = res.screens[1].rect.TranslateY(-shiftY);
         break;
     }
     case Settings::PortraitLayoutOption::PortraitCustomLayout: {
@@ -175,12 +176,12 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     case Settings::PortraitLayoutOption::PortraitOriginal:
     default: {
         const float scale_factor = 1;
-        FramebufferLayout res =
+        res =
             LargeFrameLayout(width, height, swapped, scale_factor,
                              Settings::SmallScreenPosition::BelowLarge, swap_eyes);
         const int shiftY = res.screens[0].rect.top;
-        res.screens[0].rect = res.screens[0].rect.TranslateY(shiftY);
-        res.screens[1].rect = res.screens[1].rect.TranslateY(shiftY);
+        res.screens[0].rect = res.screens[0].rect.TranslateY(-shiftY);
+        res.screens[1].rect = res.screens[1].rect.TranslateY(-shiftY);
         break;
     }
     }
@@ -196,6 +197,7 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     } else if (render_3d == Settings::StereoRenderOption::SideBySide) {
         res = ApplyHalfStereo(res, swap_eyes);
     }
+ //   LOG_INFO(Frontend,"Layout with {} screens. Screen 0 is {},{},{}.{}",res.screens.size(),res.screens[0].rect.left,res.screens[0].rect.right,res.screens[0].rect.top,res.screens[0].rect.bottom);
     return res;
 }
 

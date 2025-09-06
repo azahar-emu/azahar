@@ -50,6 +50,7 @@ void EmuWindow_Android::OnFramebufferSizeChanged() {
     const int bigger{window_width > window_height ? window_width : window_height};
     const int smaller{window_width < window_height ? window_width : window_height};
     if (is_portrait_mode && !is_secondary) {
+        LOG_INFO(Frontend,"Calling UpdateCurrentFramebufferLayout from Emuwindow_android");
         UpdateCurrentFramebufferLayout(smaller, bigger, is_portrait_mode);
     } else {
         UpdateCurrentFramebufferLayout(bigger, smaller, is_portrait_mode);
