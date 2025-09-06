@@ -186,13 +186,13 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
 
-    if (is_portrait_mode) {
-        layout = Layout::CreatePortraitLayout(portrait_layout_option, width, height, swapped,
-                                              upright, stereo_option, swap_eyes);
-    } else if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
+   if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
         layout = Layout::CreateMobileSecondaryLayout(
             Settings::values.secondary_display_layout.GetValue(), width, height, swapped, upright,
             stereo_option, swap_eyes);
+    }  else if (is_portrait_mode) {
+        layout = Layout::CreatePortraitLayout(portrait_layout_option, width, height, swapped,
+                                              upright, stereo_option, swap_eyes);
     } else {
 #ifndef ANDROID
         if (layout_option == Settings::LayoutOption::SeparateWindows) {
