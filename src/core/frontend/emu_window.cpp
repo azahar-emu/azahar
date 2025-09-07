@@ -110,11 +110,12 @@ void EmuWindow::CreateTouchState() {
 }
 
 bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
-    int screenIndex = WhichTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y);
+    const int screenIndex = WhichTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y);
     if (screenIndex < 0)
         return false;
-    Settings::StereoRenderOption render_3d_mode = get3DMode();
+    const Settings::StereoRenderOption render_3d_mode = get3DMode();
 
+    // TODO: test cardboard
     if (render_3d_mode == Settings::StereoRenderOption::CardboardVR)
         framebuffer_x -=
             (framebuffer_layout.width / 2) - (framebuffer_layout.cardboard.user_x_shift * 2);
@@ -186,11 +187,11 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
 
-   if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
+    if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
         layout = Layout::CreateMobileSecondaryLayout(
             Settings::values.secondary_display_layout.GetValue(), width, height, swapped, upright,
             stereo_option, swap_eyes);
-    }  else if (is_portrait_mode) {
+    } else if (is_portrait_mode) {
         layout = Layout::CreatePortraitLayout(portrait_layout_option, width, height, swapped,
                                               upright, stereo_option, swap_eyes);
     } else {

@@ -17,11 +17,11 @@ static constexpr float BOT_SCREEN_ASPECT_RATIO =
     static_cast<float>(Core::kScreenBottomHeight) / Core::kScreenBottomWidth;
 
 u32 FramebufferLayout::GetScalingRatio() const {
-    int core_width = screens[0].is_bottom ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
-    int core_height = screens[0].is_bottom ? Core::kScreenBottomHeight : Core::kScreenTopHeight;
+    const int core_width = screens[0].is_bottom ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+    const int core_height =
+        screens[0].is_bottom ? Core::kScreenBottomHeight : Core::kScreenTopHeight;
     if (orientation == DisplayOrientation::Landscape ||
         orientation == DisplayOrientation::LandscapeFlipped) {
-
         return static_cast<u32>(((screens[0].rect.GetWidth() - 1) / core_width) + 1);
     } else {
         return static_cast<u32>(((screens[0].rect.GetWidth() - 1) / core_height) + 1);
@@ -153,7 +153,7 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
                                        Settings::StereoRenderOption render_3d, bool swap_eyes) {
     ASSERT(width > 0);
     ASSERT(height > 0);
-    LOG_INFO(Frontend,"Creating new portrait layout");
+    LOG_INFO(Frontend, "Creating new portrait layout");
     if (upright) {
         std::swap(width, height);
     }
@@ -161,9 +161,8 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     switch (layout_option) {
     case Settings::PortraitLayoutOption::PortraitTopFullWidth: {
         const float scale_factor = swapped ? 1.25f : 0.8f;
-        res =
-            LargeFrameLayout(width, height, swapped, scale_factor,
-                             Settings::SmallScreenPosition::BelowLarge, swap_eyes);
+        res = LargeFrameLayout(width, height, swapped, scale_factor,
+                               Settings::SmallScreenPosition::BelowLarge, swap_eyes);
         const int shiftY = res.screens[0].rect.top;
         res.screens[0].rect = res.screens[0].rect.TranslateY(-shiftY);
         res.screens[1].rect = res.screens[1].rect.TranslateY(-shiftY);
@@ -176,9 +175,8 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     case Settings::PortraitLayoutOption::PortraitOriginal:
     default: {
         const float scale_factor = 1;
-        res =
-            LargeFrameLayout(width, height, swapped, scale_factor,
-                             Settings::SmallScreenPosition::BelowLarge, swap_eyes);
+        res = LargeFrameLayout(width, height, swapped, scale_factor,
+                               Settings::SmallScreenPosition::BelowLarge, swap_eyes);
         const int shiftY = res.screens[0].rect.top;
         res.screens[0].rect = res.screens[0].rect.TranslateY(-shiftY);
         res.screens[1].rect = res.screens[1].rect.TranslateY(-shiftY);
@@ -197,7 +195,6 @@ FramebufferLayout CreatePortraitLayout(Settings::PortraitLayoutOption layout_opt
     } else if (render_3d == Settings::StereoRenderOption::SideBySide) {
         res = ApplyHalfStereo(res, swap_eyes);
     }
- //   LOG_INFO(Frontend,"Layout with {} screens. Screen 0 is {},{},{}.{}",res.screens.size(),res.screens[0].rect.left,res.screens[0].rect.right,res.screens[0].rect.top,res.screens[0].rect.bottom);
     return res;
 }
 
@@ -259,8 +256,8 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool is_bottom, bool 
                          .TranslateY((height - bot_screen.GetHeight()) / 2);
     }
 #endif
-    Screen top{top_screen, false, swap_eyes, true};
-    Screen bot{bot_screen, true, swap_eyes, true};
+    const Screen top{top_screen, false, swap_eyes, true};
+    const Screen bot{bot_screen, true, swap_eyes, true};
     if (is_bottom) {
         res.screens.push_back(bot);
     } else {
@@ -281,13 +278,13 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, float sc
     // To do that, find the total emulation box and maximize that based on window size
     u32 gap = (u32)(Settings::values.screen_gap.GetValue() * scale_factor);
 
-    float large_height =
+    const float large_height =
         swapped ? Core::kScreenBottomHeight * scale_factor : Core::kScreenTopHeight * scale_factor;
-    float small_height =
+    const float small_height =
         static_cast<float>(swapped ? Core::kScreenTopHeight : Core::kScreenBottomHeight);
-    float large_width =
+    const float large_width =
         swapped ? Core::kScreenBottomWidth * scale_factor : Core::kScreenTopWidth * scale_factor;
-    float small_width =
+    const float small_width =
         static_cast<float>(swapped ? Core::kScreenTopWidth : Core::kScreenBottomWidth);
 
     float emulation_width;
@@ -306,7 +303,6 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, float sc
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-    // TODO: Wtf does this `scale_amount` value represent? -OS
     const float scale_amount = static_cast<float>(total_rect.GetHeight()) / emulation_height;
     gap = static_cast<u32>(static_cast<float>(gap) * scale_amount);
 
@@ -322,6 +318,7 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, float sc
     if (window_aspect_ratio < emulation_aspect_ratio) {
         // shift the large screen so it is at the left position of the bounding rectangle
         large_screen = large_screen.TranslateX((width - total_rect.GetWidth()) / 2);
+
     } else {
         // shift the large screen so it is at the top position of the bounding rectangle
         large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
@@ -390,23 +387,26 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, float sc
         UNREACHABLE();
         break;
     }
-    Screen large = Screen{large_screen, swapped, swap_eyes, true};
-    Screen small = Screen{small_screen, !swapped, swap_eyes, true};
+    const Screen large = Screen{large_screen, swapped, swap_eyes, true};
+    const Screen small = Screen{small_screen, !swapped, swap_eyes, true};
     res.screens.push_back(large);
     res.screens.push_back(small);
     return res;
 }
 
 FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool swap_eyes) {
-    float ratio = swapped ? 2.25f : 1.8f;
-    FramebufferLayout res =
-        LargeFrameLayout(width, height, swapped, ratio, Settings::SmallScreenPosition::BottomRight);
+    const float ratio = swapped ? 2.25f : 1.8f;
+    const Settings::SmallScreenPosition pos = swapped ? Settings::SmallScreenPosition::TopRight
+                                                      : Settings::SmallScreenPosition::BottomRight;
+    FramebufferLayout res = LargeFrameLayout(width, height, swapped, ratio, pos);
 
     // screens[0] is the large screen, screens[1] is the small screen. Add the other small screen.
-    Screen small_screen =
-        Screen{Common::Rectangle<u32>{res.screens[1].rect.left, res.screens[0].rect.top,
-                                      res.screens[1].rect.right, res.screens[1].rect.top},
-               res.screens[0].is_bottom, swap_eyes, true};
+    const Screen small_screen = Screen{
+        Common::Rectangle<u32>{res.screens[1].rect.left,
+                               swapped ? res.screens[1].rect.bottom : res.screens[0].rect.top,
+                               res.screens[1].rect.right,
+                               swapped ? res.screens[0].rect.bottom : res.screens[1].rect.top},
+        res.screens[0].is_bottom, swap_eyes, true};
     res.screens.push_back(small_screen);
     return res;
 }
@@ -599,7 +599,7 @@ FramebufferLayout GetCardboardSettings(const FramebufferLayout& layout) {
 FramebufferLayout reverseLayout(FramebufferLayout layout) {
     std::swap(layout.height, layout.width);
     u32 oldLeft, oldRight, oldTop, oldBottom;
-    for (Screen s : layout.screens) {
+    for (Screen& s : layout.screens) {
         oldLeft = s.rect.left;
         oldRight = s.rect.right;
         oldTop = s.rect.top;
@@ -615,8 +615,8 @@ FramebufferLayout reverseLayout(FramebufferLayout layout) {
 FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
     // assumptions: the screens have already been set up so they are on the left side
     // if swap_eyes is true, those screens have already been set to right eye
-    int s = layout.screens.size();
-    for (int i = 0; i < s; i++) {
+    int screenCount = layout.screens.size();
+    for (int i = 0; i < screenCount; i++) {
         Screen new_screen = layout.screens[i];
         new_screen.rect.left += layout.width / 2;
         new_screen.rect.right += layout.width / 2;
@@ -627,8 +627,8 @@ FramebufferLayout ApplyFullStereo(FramebufferLayout layout, bool swap_eyes) {
 }
 
 FramebufferLayout ApplyHalfStereo(FramebufferLayout layout, bool swap_eyes) {
-    int s = layout.screens.size();
-    for (int i = 0; i < s; i++) {
+    int screenCount = layout.screens.size();
+    for (int i = 0; i < screenCount; i++) {
         Screen& s = layout.screens[i];
         s.rect.left /= 2;
         s.rect.right /= 2;
