@@ -363,7 +363,18 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         .setTitle(R.string.emulation_close_game)
                         .setMessage(R.string.emulation_close_game_message)
                         .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
-                            EmulationLifecycleUtil.closeGame()
+                            // Auto save before closing if enabled and emulation is running
+                            if (BooleanSetting.AUTO_SAVE_ON_EXIT.boolean && NativeLibrary.isRunning()) {
+                                emulationState.unpause()
+                                NativeLibrary.saveState(NativeLibrary.AUTO_SAVE_SLOT)
+                                Toast.makeText(requireContext(), R.string.game_saved, Toast.LENGTH_SHORT).show()
+                                // Delay closing to allow save to complete
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    EmulationLifecycleUtil.closeGame()
+                                }, 500)
+                            } else {
+                                EmulationLifecycleUtil.closeGame()
+                            }
                         }
                         .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
                             emulationState.unpause()
@@ -574,14 +585,21 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             binding.inGameMenu.findViewById(R.id.menu_emulation_savestates)
         )
 
+        // Create custom order: Quick Save -> Auto Save -> Slot 1..N
+        val customOrder = mutableListOf<Int>()
+        customOrder.add(NativeLibrary.QUICKSAVE_SLOT) // 0
+        customOrder.add(NativeLibrary.AUTO_SAVE_SLOT) // 11
+        for (i in 1 until NativeLibrary.AUTO_SAVE_SLOT) {
+            customOrder.add(i)
+        }
+
         popupMenu.menu.apply {
-            for (i in 0 until NativeLibrary.SAVESTATE_SLOT_COUNT) {
-                val slot = i
+            customOrder.forEach { slot ->
                 var enableClick = isSaving
-                val text = if (slot == NativeLibrary.QUICKSAVE_SLOT) {
-                    getString(R.string.emulation_quicksave_slot)
-                } else {
-                    getString(R.string.emulation_empty_state_slot, slot)
+                val text = when (slot) {
+                    NativeLibrary.QUICKSAVE_SLOT -> getString(R.string.emulation_quicksave_slot)
+                    NativeLibrary.AUTO_SAVE_SLOT -> getString(R.string.emulation_autosave_slot)
+                    else -> getString(R.string.emulation_empty_state_slot, slot)
                 }
 
                 add(text).setEnabled(enableClick).setOnMenuItemClickListener {
@@ -602,14 +620,19 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             }
         }
 
-        savestates?.forEach {
-            var enableClick = true
-            val text = if(it.slot == NativeLibrary.QUICKSAVE_SLOT) {
-                getString(R.string.emulation_occupied_quicksave_slot, it.time)
-            } else{
-                getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
+        // Update occupied slots with proper text
+        savestates?.forEach { savestateInfo ->
+            val slot = savestateInfo.slot
+            val menuIndex = customOrder.indexOf(slot)
+            if (menuIndex >= 0) {
+                var enableClick = true
+                val text = when (slot) {
+                    NativeLibrary.QUICKSAVE_SLOT -> getString(R.string.emulation_occupied_quicksave_slot, savestateInfo.time)
+                    NativeLibrary.AUTO_SAVE_SLOT -> getString(R.string.emulation_occupied_autosave_slot, savestateInfo.time)
+                    else -> getString(R.string.emulation_occupied_state_slot, slot, savestateInfo.time)
+                }
+                popupMenu.menu.getItem(menuIndex).setTitle(text).setEnabled(enableClick)
             }
-            popupMenu.menu.getItem(it.slot).setTitle(text).setEnabled(enableClick)
         }
 
         popupMenu.show()

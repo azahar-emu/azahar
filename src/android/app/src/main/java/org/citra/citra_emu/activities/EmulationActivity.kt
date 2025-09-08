@@ -11,6 +11,8 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -78,6 +80,10 @@ class EmulationActivity : AppCompatActivity() {
         }
 
     private var isEmulationRunning: Boolean = false
+    // Auto save related variables
+    private var lastAutoSaveTime: Long = 0
+    private val autoSaveThrottleMs = 2000L // 2 seconds throttle
+    private val autoSaveHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -141,6 +147,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        tryAutoSave()
         secondaryDisplay.releasePresentation()
         super.onStop()
     }
@@ -148,6 +155,11 @@ class EmulationActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         enableFullscreenImmersive()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        tryAutoSave()
     }
 
     public override fun onRestart() {
@@ -534,6 +546,29 @@ class EmulationActivity : AppCompatActivity() {
 
             OnFilePickerResult(result.toString())
         }
+
+    private fun tryAutoSave() {
+        // Check if auto save is enabled
+        if (!BooleanSetting.AUTO_SAVE_ON_EXIT.boolean) {
+            return
+        }
+        // Check if emulation is running
+        if (!NativeLibrary.isRunning()) {
+            return
+        }
+        // Throttle auto save to prevent excessive saves
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastAutoSaveTime < autoSaveThrottleMs) {
+            return
+        }
+        // Check if activity is being recreated (configuration change)
+        if (isActivityRecreated) {
+            return
+        }
+        lastAutoSaveTime = currentTime
+        // Perform auto save
+        NativeLibrary.saveState(NativeLibrary.AUTO_SAVE_SLOT)
+    }
 
     companion object {
         private var instance: EmulationActivity? = null

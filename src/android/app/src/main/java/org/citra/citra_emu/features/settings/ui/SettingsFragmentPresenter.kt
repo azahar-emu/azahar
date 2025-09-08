@@ -248,6 +248,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.AUTO_SAVE_ON_EXIT,
+                    R.string.auto_save_on_exit,
+                    R.string.auto_save_on_exit_description,
+                    BooleanSetting.AUTO_SAVE_ON_EXIT.key,
+                    BooleanSetting.AUTO_SAVE_ON_EXIT.defaultValue
+                )
+            )
         }
     }
 
