@@ -171,13 +171,12 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
         stereo_option == Settings::StereoRenderOption::Off
             ? Settings::values.mono_render_option.GetValue() == Settings::MonoRenderOption::RightEye
             : Settings::values.swap_eyes_3d.GetValue();
-    bool is_bottom = is_secondary;
-    bool is_mobile = false;
+
 #ifdef ANDROID
-    is_mobile = true;
+    const bool is_mobile = true;
+#else
+    const bool is_mobile = false;
 #endif
-    if (Settings::values.swap_screen.GetValue())
-        is_bottom = !is_bottom;
 
     const Settings::PortraitLayoutOption portrait_layout_option =
         Settings::values.portrait_layout_option.GetValue();
@@ -187,7 +186,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
 
-    if (is_mobile && is_secondary) { // TODO: Let Pablo look at this and help make it better?
+    if (is_mobile && is_secondary) {
         layout = Layout::CreateMobileSecondaryLayout(
             Settings::values.secondary_display_layout.GetValue(), width, height, swapped, upright,
             stereo_option, swap_eyes);
@@ -198,7 +197,7 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
 #ifndef ANDROID
         if (layout_option == Settings::LayoutOption::SeparateWindows) {
             layout_option = Settings::LayoutOption::SingleScreen;
-            swapped = is_bottom;
+            swapped = (is_secondary != swapped); // swapped here really means "is bottom"
         }
 #endif
         layout = Layout::CreateLayout(layout_option, width, height, swapped, upright, stereo_option,
