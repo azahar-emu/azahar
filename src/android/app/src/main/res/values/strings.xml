@@ -886,10 +886,15 @@
     <string name="artic_base_enter_address">Enter Artic Base server address</string>
 
     <!-- Quickload&Save-->
-    <string name="emulation_quicksave_slot">Quicksave</string>
-    <string name="emulation_quicksave">Quicksave</string>
+    <string name="emulation_quicksave_slot">Quick Save</string>
+    <string name="emulation_quicksave">Quick Save</string>
+    <string name="emulation_autosave_slot">Auto Save</string>
     <string name="emulation_quickload">Quickload</string>
-    <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
-    <string name="quickload_not_found">No Quicksave available.</string>
+    <string name="emulation_occupied_quicksave_slot">Quick Save - %1$tF %1$tR</string>
+    <string name="emulation_occupied_autosave_slot">Auto Save - %1$tF %1$tR</string>
+    <string name="quickload_not_found">No Quick Save available.</string>
+    <string name="game_saved">Game saved</string>
+    <string name="auto_save_on_exit">Auto save on exit</string>
+    <string name="auto_save_on_exit_description">Automatically save the game when leaving the app or closing the game</string>
 
 </resources>

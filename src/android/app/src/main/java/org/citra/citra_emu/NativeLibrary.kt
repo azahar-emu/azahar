@@ -542,8 +542,9 @@ object NativeLibrary {
 
     external fun removeAmiibo()
 
-    const val SAVESTATE_SLOT_COUNT = 11
+    const val SAVESTATE_SLOT_COUNT = 12
     const val QUICKSAVE_SLOT = 0
+    const val AUTO_SAVE_SLOT = SAVESTATE_SLOT_COUNT - 1
 
     external fun getSavestateInfo(): Array<SaveStateInfo>?
 

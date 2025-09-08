@@ -868,8 +868,13 @@
     <!-- Quickload&Save-->
     <string name="emulation_quicksave_slot">快速保存</string>
     <string name="emulation_quicksave">快速保存</string>
+    <string name="emulation_autosave_slot">自动保存</string>
     <string name="emulation_quickload">快速加载</string>
     <string name="emulation_occupied_quicksave_slot">快速保存 - %1$tF %1$tR</string>
+    <string name="emulation_occupied_autosave_slot">自动保存 - %1$tF %1$tR</string>
     <string name="quickload_not_found">没有可用的快速保存。</string>
+    <string name="game_saved">游戏已保存</string>
+    <string name="auto_save_on_exit">退出时自动保存</string>
+    <string name="auto_save_on_exit_description">离开应用或关闭游戏时自动保存游戏进度</string>
 
 </resources>
