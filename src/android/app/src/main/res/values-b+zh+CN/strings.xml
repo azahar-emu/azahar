@@ -472,6 +472,21 @@
     <string name="lock_drawer">锁定侧滑菜单</string>
     <string name="unlock_drawer">解锁侧滑菜单</string>
 
+    <!-- Hot corner strings -->
+    <string name="hot_corner_settings">底部热区设置</string>
+    <string name="hot_corner_portrait_bl">竖屏 左下角</string>
+    <string name="hot_corner_portrait_br">竖屏 右下角</string>
+    <string name="hot_corner_landscape_bl">横屏 左下角</string>
+    <string name="hot_corner_landscape_br">横屏 右下角</string>
+    <string name="hot_corner_action_none">无</string>
+    <string name="hot_corner_action_pause_resume">暂停/继续</string>
+    <string name="hot_corner_action_toggle_turbo">加速</string>
+    <string name="hot_corner_action_quick_save">快速保存</string>
+    <string name="hot_corner_action_quick_load">快速加载</string>
+    <string name="hot_corner_action_open_menu">打开菜单</string>
+    <string name="hot_corner_action_swap_screens">交换上下屏</string>
+    <string name="hot_corner_radius">热区大小设置</string>
+
     <string name="write_permission_needed">您需要允许 Lime3DS 对外部存储器进行读写访问，以便模拟器正常工作。</string>
     <string name="load_settings">正在加载设置…</string>
 

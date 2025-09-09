@@ -16,4 +16,7 @@
     <dimen name="spacing_fab">24dp</dimen>
 
     <dimen name="dialog_margin">20dp</dimen>
+
+    <!-- Hot corner area size -->
+    <dimen name="hot_corner_size">50dp</dimen>
 </resources>

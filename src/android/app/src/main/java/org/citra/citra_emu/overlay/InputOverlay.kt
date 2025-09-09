@@ -598,6 +598,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
     fun setIsInEditMode(isInEditMode: Boolean) {
         this.isInEditMode = isInEditMode
+        // Hide hot corners while editing overlay to avoid drag conflicts
+        try {
+            val root = rootView
+            val hotCorner = root.findViewById<HotCornerOverlay>(R.id.hot_corner_overlay)
+            hotCorner?.visibility = if (isInEditMode) View.GONE else View.VISIBLE
+        } catch (_: Exception) {}
     }
 
     private fun defaultOverlay() {

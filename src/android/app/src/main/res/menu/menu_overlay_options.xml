@@ -24,6 +24,29 @@
         android:id="@+id/menu_emulation_toggle_controls"
         android:title="@string/emulation_toggle_controls" />
 
+    <!-- Hot corner settings moved up -->
+    <item
+        android:id="@+id/menu_hot_corner_settings"
+        android:title="@string/hot_corner_settings">
+        <menu>
+            <item
+                android:id="@+id/menu_hot_corner_portrait_bl"
+                android:title="@string/hot_corner_portrait_bl" />
+            <item
+                android:id="@+id/menu_hot_corner_portrait_br"
+                android:title="@string/hot_corner_portrait_br" />
+            <item
+                android:id="@+id/menu_hot_corner_landscape_bl"
+                android:title="@string/hot_corner_landscape_bl" />
+            <item
+                android:id="@+id/menu_hot_corner_landscape_br"
+                android:title="@string/hot_corner_landscape_br" />
+            <item
+                android:id="@+id/menu_hot_corner_radius"
+                android:title="@string/hot_corner_radius" />
+        </menu>
+    </item>
+
     <item
         android:id="@+id/menu_emulation_adjust_scales"
         android:title="@string/emulation_control_scale">
@@ -104,5 +127,4 @@
     <item
         android:id="@+id/menu_emulation_reset_overlay"
         android:title="@string/emulation_touch_overlay_reset" />
-
 </menu>
