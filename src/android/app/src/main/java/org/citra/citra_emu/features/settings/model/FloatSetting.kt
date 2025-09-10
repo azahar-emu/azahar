@@ -11,9 +11,9 @@ enum class FloatSetting(
 ) : AbstractFloatSetting {
     LARGE_SCREEN_PROPORTION("large_screen_proportion",Settings.SECTION_LAYOUT,2.25f),
     SECOND_SCREEN_OPACITY("second_layer_opacity", Settings.SECTION_RENDERER, 100f),
-    BACKGROUND_BLUE("bg_blue", Settings.SECTION_RENDERER, 0.0f),
-    BACKGROUND_GREEN("bg_green", Settings.SECTION_RENDERER, 0.0f),
-    BACKGROUND_RED("bg_red", Settings.SECTION_RENDERER, 0.0f),
+    BACKGROUND_RED("bg_red", Settings.SECTION_RENDERER, 0f),
+    BACKGROUND_BLUE("bg_blue", Settings.SECTION_RENDERER, 0f),
+    BACKGROUND_GREEN("bg_green", Settings.SECTION_RENDERER, 0f),
     EMPTY_SETTING("", "", 0.0f);
 
     override var float: Float = defaultValue

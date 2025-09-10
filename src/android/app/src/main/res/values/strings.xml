@@ -451,11 +451,10 @@
     <string name="emulation_secondary_display_default">System Default (mirror)</string>
     <string name="emulation_screen_layout_custom">Custom Layout</string>
     <string name="bg_color">Background Color</string>
-    <string name="bg_color_description">The clear color for the renderer. What shows up on the sides of the bottom screen.</string>
+    <string name="bg_color_description">The color which appears behind the screens during emulation, represented as an RGB value.</string>
     <string name="bg_red">Red</string>
-    <string name="bg_blue">Blue</string>
     <string name="bg_green">Green</string>
-    <string name="bg_description">Range from 0.0 to 1.0.</string>
+    <string name="bg_blue">Blue</string>
     <string name="second_screen_opacity">Second Screen Opacity (OpenGL Only)</string>
     <string name="second_screen_opacity_description">How opaque or transparent the second 3DS screen should be in <b>Custom Layout</b> mode. Useful if the second screen is to be positioned on top of the first screen. Experimental; may not work on all GPUs.</string>
     <string name="emulation_small_screen_position">Small Screen Position</string>

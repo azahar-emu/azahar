@@ -1190,40 +1190,73 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
+            val bgRedSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_RED.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_RED.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_RED, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+            }
             add(
                 SliderSetting(
-                    FloatSetting.BACKGROUND_RED,
+                    bgRedSetting,
                     R.string.bg_red,
-                    R.string.bg_description,
                     0,
-                    1,
-                    "x",
-                    FloatSetting.BACKGROUND_RED.key,
-                    FloatSetting.BACKGROUND_RED.defaultValue
+                    0,
+                    255,
+                    ""
                 )
             )
+            val bgGreenSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_GREEN.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_GREEN.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_GREEN, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+            }
             add(
                 SliderSetting(
-                    FloatSetting.BACKGROUND_BLUE,
-                    R.string.bg_blue,
-                    R.string.bg_description,
-                    0,
-                    1,
-                    "x",
-                    FloatSetting.BACKGROUND_BLUE.key,
-                    FloatSetting.BACKGROUND_BLUE.defaultValue
-                )
-            )
-            add(
-                SliderSetting(
-                    FloatSetting.BACKGROUND_GREEN,
+                    bgGreenSetting,
                     R.string.bg_green,
-                    R.string.bg_description,
                     0,
-                    1,
-                    "x",
-                    FloatSetting.BACKGROUND_GREEN.key,
-                    FloatSetting.BACKGROUND_GREEN.defaultValue
+                    0,
+                    255,
+                    ""
+                )
+            )
+            val bgBlueSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_BLUE.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_BLUE.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_BLUE, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgBlueSetting,
+                    R.string.bg_blue,
+                    0,
+                    0,
+                    255,
+                    ""
                 )
             )
             add(
