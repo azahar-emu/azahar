@@ -10,7 +10,7 @@ enum class FloatSetting(
     override val defaultValue: Float
 ) : AbstractFloatSetting {
     LARGE_SCREEN_PROPORTION("large_screen_proportion",Settings.SECTION_LAYOUT,2.25f),
-    SECOND_SCREEN_OPACITY("second_layer_opacity", Settings.SECTION_RENDERER, 100f),
+    SECOND_SCREEN_OPACITY("custom_second_layer_opacity", Settings.SECTION_RENDERER, 100f),
     BACKGROUND_RED("bg_red", Settings.SECTION_RENDERER, 0f),
     BACKGROUND_BLUE("bg_blue", Settings.SECTION_RENDERER, 0f),
     BACKGROUND_GREEN("bg_green", Settings.SECTION_RENDERER, 0f),

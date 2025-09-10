@@ -535,7 +535,7 @@ struct Values {
     Setting<u16> custom_bottom_y{500, "custom_bottom_y"};
     Setting<u16> custom_bottom_width{640, "custom_bottom_width"};
     Setting<u16> custom_bottom_height{480, "custom_bottom_height"};
-    Setting<u16> custom_second_layer_opacity{100, "second_layer_opacity"};
+    Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
     SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, "aspect_ratio"};
     SwitchableSetting<bool> screen_top_stretch{false, "screen_top_stretch"};
     Setting<u16> screen_top_leftright_padding{0, "screen_top_leftright_padding"};
