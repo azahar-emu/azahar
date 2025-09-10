@@ -1293,29 +1293,29 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_ENABLE,
+                    BooleanSetting.PERF_OVERLAY_ENABLE,
                     R.string.performance_overlay_enable,
                     0,
-                    BooleanSetting.OVERLAY_ENABLE.key,
-                    BooleanSetting.OVERLAY_ENABLE.defaultValue
+                    BooleanSetting.PERF_OVERLAY_ENABLE.key,
+                    BooleanSetting.PERF_OVERLAY_ENABLE.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_BACKGROUND,
-                    R.string.overlay_background,
-                    R.string.overlay_background_description,
-                    BooleanSetting.OVERLAY_BACKGROUND.key,
-                    BooleanSetting.OVERLAY_BACKGROUND.defaultValue
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND,
+                    R.string.performance_overlay_background,
+                    R.string.performance_overlay_background_description,
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND.key,
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND.defaultValue
                 )
             )
 
             add(
                 SingleChoiceSetting(
                     IntSetting.PERFORMANCE_OVERLAY_POSITION,
-                    R.string.overlay_position,
-                    R.string.overlay_position_description,
+                    R.string.performance_overlay_position,
+                    R.string.performance_overlay_position_description,
                     R.array.statsPosition,
                     R.array.statsPositionValues,
                 )
@@ -1326,61 +1326,61 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_FPS,
-                    R.string.overlay_show_fps,
-                    R.string.overlay_show_fps_description,
-                    BooleanSetting.OVERLAY_SHOW_FPS.key,
-                    BooleanSetting.OVERLAY_SHOW_FPS.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS,
+                    R.string.performance_overlay_show_fps,
+                    R.string.performance_overlay_show_fps_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_FRAMETIME,
-                    R.string.overlay_show_frametime,
-                    R.string.overlay_show_frametime_description,
-                    BooleanSetting.OVERLAY_SHOW_FRAMETIME.key,
-                    BooleanSetting.OVERLAY_SHOW_FRAMETIME.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME,
+                    R.string.performance_overlay_show_frametime,
+                    R.string.performance_overlay_show_frametime_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_SPEED,
-                    R.string.overlay_show_speed,
-                    R.string.overlay_show_speed_description,
-                    BooleanSetting.OVERLAY_SHOW_SPEED.key,
-                    BooleanSetting.OVERLAY_SHOW_SPEED.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED,
+                    R.string.performance_overlay_show_speed,
+                    R.string.performance_overlay_show_speed_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
-                    R.string.overlay_show_app_ram_usage,
-                    R.string.overlay_show_app_ram_usage_description,
-                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE.key,
-                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE,
+                    R.string.performance_overlay_show_app_ram_usage,
+                    R.string.performance_overlay_show_app_ram_usage_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
-                    R.string.overlay_show_available_ram,
-                    R.string.overlay_show_available_ram_description,
-                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM.key,
-                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM,
+                    R.string.performance_overlay_show_available_ram,
+                    R.string.performance_overlay_show_available_ram_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
-                    R.string.overlay_show_battery_temp,
-                    R.string.overlay_show_battery_temp_description,
-                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP.key,
-                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP.defaultValue
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP,
+                    R.string.performance_overlay_show_battery_temp,
+                    R.string.performance_overlay_show_battery_temp_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.defaultValue
                 )
             )
         }

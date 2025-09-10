@@ -19,14 +19,14 @@ enum class BooleanSetting(
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER("enable_rpc_server", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
-    OVERLAY_ENABLE("overlay_enable", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_FPS("overlay_show_fps", Settings.SECTION_LAYOUT, true),
-    OVERLAY_SHOW_FRAMETIME("overlay_show_frame_time", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_SPEED("overlay_show_speed", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_APP_RAM_USAGE("overlay_show_app_ram_usage", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_AVAILABLE_RAM("overlay_show_available_ram", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_BATTERY_TEMP("overlay_show_battery_temp", Settings.SECTION_LAYOUT, false),
-    OVERLAY_BACKGROUND("overlay_background", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_ENABLE("performance_overlay_enable", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_FPS("performance_overlay_show_fps", Settings.SECTION_LAYOUT, true),
+    PERF_OVERLAY_SHOW_FRAMETIME("performance_overlay_show_frame_time", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_SPEED("performance_overlay_show_speed", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_APP_RAM_USAGE("performance_overlay_show_app_ram_usage", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_AVAILABLE_RAM("performance_overlay_show_available_ram", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_BATTERY_TEMP("performance_overlay_show_battery_temp", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_BACKGROUND("performance_overlay_background", Settings.SECTION_LAYOUT, false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),
     DETERMINISTIC_ASYNC_OPERATIONS("deterministic_async_operations", Settings.SECTION_DEBUG, false),
     REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false),
@@ -86,7 +86,7 @@ enum class BooleanSetting(
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
             ANDROID_HIDE_IMAGES,
-            OVERLAY_ENABLE // Works in overlay options, but not from the settings menu
+            PERF_OVERLAY_ENABLE // Works in overlay options, but not from the settings menu
         )
 
         fun from(key: String): BooleanSetting? =
