@@ -85,7 +85,8 @@ enum class BooleanSetting(
             SHADERS_ACCURATE_MUL,
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
-            ANDROID_HIDE_IMAGES
+            ANDROID_HIDE_IMAGES,
+            OVERLAY_ENABLE // Works in overlay options, but not from the settings menu
         )
 
         fun from(key: String): BooleanSetting? =
