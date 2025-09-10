@@ -66,6 +66,7 @@ import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -100,6 +101,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     private val emulationViewModel: EmulationViewModel by activityViewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val settings get() = settingsViewModel.settings
 
     private val onPause = Runnable{ togglePause() }
     private val onShutdown = Runnable{ emulationState.stop() }
@@ -158,7 +160,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         retainInstance = true
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
-        screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settingsViewModel.settings)
+        screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
     }
@@ -671,7 +673,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
             findItem(R.id.menu_performance_overlay_show).isChecked =
-                EmulationMenuSettings.showPerformanceOverlay
+                BooleanSetting.OVERLAY_ENABLE.boolean
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
                 EmulationMenuSettings.joystickRelCenter
@@ -688,7 +690,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    EmulationMenuSettings.showPerformanceOverlay = !EmulationMenuSettings.showPerformanceOverlay
+                    BooleanSetting.OVERLAY_ENABLE.boolean = !BooleanSetting.OVERLAY_ENABLE.boolean
+                    settings.saveSetting(BooleanSetting.OVERLAY_ENABLE, SettingsFile.FILE_NAME_CONFIG)
                     updateShowPerformanceOverlay()
                     true
                 }
@@ -1211,7 +1214,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
         }
 
-        if (EmulationMenuSettings.showPerformanceOverlay) {
+        if (BooleanSetting.OVERLAY_ENABLE.boolean) {
             val SYSTEM_FPS = 0
             val FPS = 1
             val SPEED = 2
