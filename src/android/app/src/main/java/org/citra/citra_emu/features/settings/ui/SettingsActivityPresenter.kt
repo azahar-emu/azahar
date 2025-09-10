@@ -4,12 +4,10 @@
 
 package org.citra.citra_emu.features.settings.ui
 
-import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
 import androidx.documentfile.provider.DocumentFile
-import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
@@ -27,8 +25,6 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     private var shouldSave = false
     private lateinit var menuTag: String
     private lateinit var gameId: String
-    private val preferences: SharedPreferences get() =
-        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
         this.menuTag = menuTag
