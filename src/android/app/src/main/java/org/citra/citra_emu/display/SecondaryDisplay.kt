@@ -17,7 +17,7 @@ import android.view.SurfaceView
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
 
-class SecondaryDisplay(val context: Context) {
+class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
@@ -31,6 +31,7 @@ class SecondaryDisplay(val context: Context) {
             null,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
         )
+        displayManager.registerDisplayListener(this, null)
     }
 
     fun updateSurface() {
@@ -60,7 +61,6 @@ class SecondaryDisplay(val context: Context) {
 
     private fun getCustomerDisplay(): Display? {
         val displays = displayManager.displays
-        // code taken from MelonDS dual screen - should fix odin 2 detection bug
         return displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
             .firstOrNull { it.displayId != Display.DEFAULT_DISPLAY && it.name != "Built-in Screen" && it.name != "HiddenDisplay"}
     }
@@ -71,7 +71,19 @@ class SecondaryDisplay(val context: Context) {
     }
 
     fun releaseVD() {
+        displayManager.unregisterDisplayListener(this)
         vd.release()
+    }
+
+    override fun onDisplayAdded(displayId: Int) {
+        updateDisplay()
+    }
+
+    override fun onDisplayRemoved(displayId: Int) {
+        updateDisplay()
+    }
+    override fun onDisplayChanged(displayId: Int) {
+        updateDisplay()
     }
 }
 class SecondaryDisplayPresentation(
