@@ -58,6 +58,11 @@
         android:title="@string/preferences_settings" />
 
     <item
+        android:id="@+id/menu_application_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/application_settings" />
+
+    <item
         android:id="@+id/menu_exit"
         android:icon="@drawable/ic_exit"
         android:title="@string/emulation_close_game" />
