@@ -18,6 +18,8 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.display.DisplayHelper
+import org.citra.citra_emu.display.SecondaryDisplayLayout
 
 class SecondaryDisplay(val context: Context) {
     private var pres: SecondaryDisplayPresentation? = null
@@ -45,7 +47,7 @@ class SecondaryDisplay(val context: Context) {
 
     fun updateDisplay() {
         // decide if we are going to the external display or the internal one
-        var display = getCustomerDisplay()
+        var display = DisplayHelper.getExternalDisplay(context)
         if (display == null ||
             IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
             display = vd.display
@@ -58,12 +60,6 @@ class SecondaryDisplay(val context: Context) {
         releasePresentation()
         pres = SecondaryDisplayPresentation(context, display!!, this)
         pres?.show()
-    }
-
-    private fun getCustomerDisplay(): Display? {
-        // code taken from MelonDS dual screen - should fix odin 2 detection bug
-        return displayManager.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
-            .firstOrNull { it.displayId != Display.DEFAULT_DISPLAY && it.name != "Built-in Screen" && it.name != "HiddenDisplay"}
     }
 
     fun releasePresentation() {
@@ -108,7 +104,11 @@ class SecondaryDisplayPresentation(
             }
         })
 
+        val sendToSecondary = DisplayHelper.isBottomOnSecondary()
+
         this.surfaceView.setOnTouchListener { _, event ->
+            if (!sendToSecondary) return@setOnTouchListener true
+
             val pointerIndex = event.actionIndex
             val pointerId = event.getPointerId(pointerIndex)
             when (event.actionMasked) {

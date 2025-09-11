@@ -24,6 +24,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.display.DisplayHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
 import java.lang.NullPointerException
@@ -104,6 +105,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
         val isActionUp =
             motionEvent == MotionEvent.ACTION_UP || motionEvent == MotionEvent.ACTION_POINTER_UP
 
+        val isTouchScreenHere = DisplayHelper.isBottomOnPrimary()
+
         val pointerList = (0 until event.pointerCount).toMutableList()
         // Move the pointer that triggered the most recent event to the front
         // of the list so that it is processed first
@@ -149,12 +152,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
             val hasActiveOverlay = hasActiveButtons || hasActiveDpad || hasActiveJoystick
 
-            if (preferences.getBoolean("isTouchEnabled", true) && !hasActiveOverlay) {
+            if (preferences.getBoolean("isTouchEnabled", true) && !hasActiveOverlay && isTouchScreenHere) {
                 if (isActionMove) {
                     NativeLibrary.onTouchMoved(xPosition.toFloat(), yPosition.toFloat())
                     continue
-                }
-                else if (isActionUp) {
+                } else if (isActionUp) {
                     NativeLibrary.onTouchEvent(0f, 0f, false)
                     break // Up and down actions shouldn't loop
                 }
@@ -252,7 +254,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
             if (preferences.getBoolean("isTouchEnabled", true) &&
                 isActionDown &&
-                !anyOverlayStateChanged
+                !anyOverlayStateChanged &&
+                isTouchScreenHere
             ) {
                 // These need to be recalculated because touching the area
                 // right in the middle of the dpad (between the "buttons") or
