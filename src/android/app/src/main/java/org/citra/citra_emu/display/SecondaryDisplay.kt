@@ -20,7 +20,7 @@ import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.display.SecondaryDisplayLayout
 import org.citra.citra_emu.NativeLibrary
 
-class SecondaryDisplay(val context: Context) {
+class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
@@ -34,6 +34,7 @@ class SecondaryDisplay(val context: Context) {
             null,
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
         )
+        displayManager.registerDisplayListener(this, null)
     }
 
     fun updateSurface() {
@@ -74,7 +75,19 @@ class SecondaryDisplay(val context: Context) {
     }
 
     fun releaseVD() {
+        displayManager.unregisterDisplayListener(this)
         vd.release()
+    }
+
+    override fun onDisplayAdded(displayId: Int) {
+        updateDisplay()
+    }
+
+    override fun onDisplayRemoved(displayId: Int) {
+        updateDisplay()
+    }
+    override fun onDisplayChanged(displayId: Int) {
+        updateDisplay()
     }
 }
 class SecondaryDisplayPresentation(
