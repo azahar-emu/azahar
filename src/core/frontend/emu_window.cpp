@@ -66,6 +66,10 @@ bool EmuWindow::IsWithinTouchscreen(const Layout::FramebufferLayout& layout, uns
     }
 #endif
 
+    if (!layout.bottom_screen_enabled) {
+        return false;
+    }
+
     Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 
     if (render_3d_mode == Settings::StereoRenderOption::SideBySide ||
