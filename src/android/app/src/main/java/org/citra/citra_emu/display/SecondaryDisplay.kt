@@ -104,10 +104,7 @@ class SecondaryDisplayPresentation(
             }
         })
 
-        val sendToSecondary = DisplayHelper.isBottomOnSecondary()
-
         this.surfaceView.setOnTouchListener { _, event ->
-            if (!sendToSecondary) return@setOnTouchListener true
 
             val pointerIndex = event.actionIndex
             val pointerId = event.getPointerId(pointerIndex)
