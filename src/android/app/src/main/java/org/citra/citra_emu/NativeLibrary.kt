@@ -96,6 +96,24 @@ object NativeLibrary {
      */
     external fun onTouchMoved(xAxis: Float, yAxis: Float)
 
+    /**
+     * Handles touch events on the secondary display.
+     *
+     * @param xAxis  The value of the x-axis.
+     * @param yAxis  The value of the y-axis.
+     * @param pressed To identify if the touch held down or released.
+     * @return true if the pointer is within the touchscreen
+     */
+    external fun onSecondaryTouchEvent(xAxis: Float, yAxis: Float, pressed: Boolean): Boolean
+
+    /**
+     * Handles touch movement on the secondary display.
+     *
+     * @param xAxis The value of the instantaneous x-axis.
+     * @param yAxis The value of the instantaneous y-axis.
+     */
+    external fun onSecondaryTouchMoved(xAxis: Float, yAxis: Float)
+
     external fun reloadSettings()
 
     external fun getTitleId(filename: String): Long
