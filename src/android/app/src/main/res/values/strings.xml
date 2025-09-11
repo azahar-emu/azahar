@@ -494,6 +494,8 @@
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Load</string>
     <string name="menu_emulation_amiibo_remove">Remove</string>
+    <string name="application_settings">Custom Settings</string>
+    <string name="use_default">Use default</string>
     <string name="select_amiibo">Select Amiibo File</string>
     <string name="amiibo_load_error">Error Loading Amiibo</string>
     <string name="amiibo_load_error_message">While loading the specified Amiibo file, an error occurred. Please check that the file is correct.</string>

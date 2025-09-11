@@ -46,6 +46,15 @@
             android:textAlignment="viewStart"
             tools:text="@string/frame_limit_enable_description" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_use_default"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/use_default"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </RelativeLayout>

@@ -77,7 +77,12 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
+    std::string setting_value = setting.GetDefault();
+    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+        setting_value = per_game_config->Get(group, setting.GetLabel(), setting_value);
+    } else if (sdl2_config) {
+        setting_value = sdl2_config->Get(group, setting.GetLabel(), setting_value);
+    }
     if (setting_value.empty()) {
         setting_value = setting.GetDefault();
     }
@@ -86,16 +91,33 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<std::string
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = sdl2_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+    bool value = setting.GetDefault();
+    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+        value = per_game_config->GetBoolean(group, setting.GetLabel(), value);
+    } else if (sdl2_config) {
+        value = sdl2_config->GetBoolean(group, setting.GetLabel(), value);
+    }
+    setting = value;
 }
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
-        setting = sdl2_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
+        double value = static_cast<double>(setting.GetDefault());
+        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+            value = per_game_config->GetReal(group, setting.GetLabel(), value);
+        } else if (sdl2_config) {
+            value = sdl2_config->GetReal(group, setting.GetLabel(), value);
+        }
+        setting = static_cast<Type>(value);
     } else {
-        setting = static_cast<Type>(sdl2_config->GetInteger(
-            group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
+        long value = static_cast<long>(setting.GetDefault());
+        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+            value = per_game_config->GetInteger(group, setting.GetLabel(), value);
+        } else if (sdl2_config) {
+            value = sdl2_config->GetInteger(group, setting.GetLabel(), value);
+        }
+        setting = static_cast<Type>(value);
     }
 }
 
@@ -318,5 +340,39 @@ void Config::ReadValues() {
 
 void Config::Reload() {
     LoadINI(DefaultINI::sdl2_config_file);
+    ReadValues();
+}
+
+void Config::LoadPerGameConfig(u64 title_id, const std::string& fallback_name) {
+    // Determine file name
+    std::string name;
+    if (title_id != 0) {
+        std::ostringstream ss;
+        ss << std::uppercase << std::hex << std::setw(16) << std::setfill('0') << title_id;
+        name = ss.str();
+    } else {
+        name = fallback_name;
+    }
+    if (name.empty()) {
+        per_game_config.reset();
+        per_game_config_loc.clear();
+        return;
+    }
+
+    const auto base = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir);
+    per_game_config_loc = base + "custom/" + name + ".ini";
+
+    std::string ini_buffer;
+    FileUtil::ReadFileToString(true, per_game_config_loc, ini_buffer);
+    if (!ini_buffer.empty()) {
+        per_game_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
+        if (per_game_config->ParseError() < 0) {
+            per_game_config.reset();
+        }
+    } else {
+        per_game_config.reset();
+    }
+
+    // Re-apply values so that per-game overrides (if any) take effect immediately.
     ReadValues();
 }

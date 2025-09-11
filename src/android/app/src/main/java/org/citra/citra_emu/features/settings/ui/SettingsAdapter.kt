@@ -74,6 +74,7 @@ class SettingsAdapter(
     public val context: Context
 ) : RecyclerView.Adapter<SettingViewHolder?>(), DialogInterface.OnClickListener {
     private var settings: ArrayList<SettingsItem>? = null
+    var isPerGame: Boolean = false
     private var clickedItem: SettingsItem? = null
     private var clickedPosition: Int
     private var dialog: AlertDialog? = null
@@ -531,28 +532,41 @@ class SettingsAdapter(
         MaterialAlertDialogBuilder(context)
             .setMessage(R.string.reset_setting_confirmation)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                when (setting) {
-                    is AbstractBooleanSetting -> setting.boolean = setting.defaultValue as Boolean
-                    is AbstractFloatSetting -> {
-                        if (setting is ScaledFloatSetting) {
-                            setting.float = setting.defaultValue * setting.scale
-                        } else {
-                            setting.float = setting.defaultValue as Float
-                        }
-                    }
-
-                    is AbstractIntSetting -> setting.int = setting.defaultValue as Int
-                    is AbstractStringSetting -> setting.string = setting.defaultValue as String
-                    is AbstractShortSetting -> setting.short = setting.defaultValue as Short
-                }
-                notifyItemChanged(position)
-                fragmentView.onSettingChanged()
-                fragmentView.loadSettingsList()
+                resetSettingToDefault(setting, position)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
 
         return true
+    }
+
+    fun resetSettingToDefault(setting: AbstractSetting, position: Int) {
+        when (setting) {
+            is AbstractBooleanSetting -> setting.boolean = setting.defaultValue as Boolean
+            is AbstractFloatSetting -> {
+                if (setting is ScaledFloatSetting) {
+                    setting.float = setting.defaultValue * setting.scale
+                } else {
+                    setting.float = setting.defaultValue as Float
+                }
+            }
+            is AbstractIntSetting -> setting.int = setting.defaultValue as Int
+            is AbstractStringSetting -> setting.string = setting.defaultValue as String
+            is AbstractShortSetting -> setting.short = setting.defaultValue as Short
+        }
+        notifyItemChanged(position)
+        fragmentView.onSettingChanged()
+        fragmentView.loadSettingsList()
+    }
+
+    fun isAtCompiledDefault(s: AbstractSetting): Boolean = when (s) {
+        is AbstractBooleanSetting -> s.boolean == s.defaultValue
+        is AbstractIntSetting -> s.int == s.defaultValue
+        is ScaledFloatSetting -> s.float == s.defaultValue * s.scale
+        is AbstractFloatSetting -> s.float == s.defaultValue
+        is AbstractShortSetting -> s.short == s.defaultValue
+        is AbstractStringSetting -> s.string == s.defaultValue
+        else -> false
     }
 
     fun onClickDisabledSetting(isRuntimeDisabled: Boolean) {

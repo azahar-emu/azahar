@@ -884,6 +884,10 @@ void SetCurrentRomPath(const std::string& path) {
     g_currentRomPath = path;
 }
 
+std::string GetCurrentRomPath() {
+    return g_currentRomPath;
+}
+
 bool StringReplace(std::string& haystack, const std::string& a, const std::string& b, bool swap) {
     const auto& needle = swap ? b : a;
     const auto& replacement = swap ? a : b;
