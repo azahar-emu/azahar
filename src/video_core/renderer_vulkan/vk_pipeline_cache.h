@@ -108,6 +108,9 @@ private:
     /// Create pipeline cache directories. Returns true on success.
     bool EnsureDirectories() const;
 
+    /// Returns the Vulkan shader directory
+    std::string GetVulkanDir() const;
+
     /// Returns the pipeline cache storage dir
     std::string GetPipelineCacheDir() const;
 
