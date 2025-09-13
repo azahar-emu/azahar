@@ -1238,6 +1238,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     const auto scope = render_window->Acquire();
 
+    if (!UISettings::values.inserted_cartridge.GetValue().empty()) {
+        system.InsertCartridge(UISettings::values.inserted_cartridge.GetValue());
+    }
+
     const Core::System::ResultStatus result{
         system.Load(*render_window, filename.toStdString(), secondary_window)};
 
@@ -1521,6 +1525,8 @@ void GMainWindow::ShutdownGame() {
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();
     emu_thread = nullptr;
+
+    system.EjectCartridge();
 
     OnCloseMovie();
 
@@ -3699,6 +3705,9 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     if (emu_thread) {
         ShutdownGame();
     }
+
+    // Save settings in case they were changed from outside the configuration menu.
+    config->Save();
 
     render_window->close();
     secondary_window->close();
