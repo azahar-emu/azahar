@@ -14,6 +14,7 @@
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/uisettings.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_u.h"
 #include "network/network.h"
 #include "network/network_settings.h"
 #include "ui_direct_connect.h"
@@ -90,7 +91,7 @@ void DirectConnectWindow::Connect() {
             room_member->Join(ui->nickname->text().toStdString(),
                               Service::CFG::GetConsoleIdHash(system),
                               ui->ip->text().toStdString().c_str(), port, 0,
-                              Network::NoPreferredMac, ui->password->text().toStdString().c_str());
+                              Service::CFG::GetConsoleMacAddress(system), ui->password->text().toStdString().c_str());
         }
     });
     watcher->setFuture(f);
