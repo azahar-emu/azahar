@@ -698,20 +698,14 @@ void Module::APTInterface::AppletUtility(Kernel::HLERequestContext& ctx) {
                 utility_command, input_size, output_size);
 
     std::vector<u8> out(output_size);
-    switch (utility_command) {
-        case 0x6: {
-            // Command 0x6 (TryLockTransition) expects a boolean return value indicating
-            // whether the attempt succeeded. Since we don't implement any of the transition
-            // locking stuff yet, fake a success result to avoid app crashes.
-            if (output_size > 0)
-                out[0] = true;
-            break;
-        }
-        case 0x4: { // unknown: luigi's mansion 1 multiplayer requires this. works when byte 0 of output is set to true.
-            if (output_size > 0)
-                out[0] = true;
-            break;
-        }
+
+    if (utility_command == 0x6) {
+        // Command 0x6 (TryLockTransition) expects a boolean return value indicating
+        // whether the attempt succeeded. Since we don't implement any of the transition
+        // locking stuff yet, fake a success result to avoid app crashes.
+
+        if (output_size > 0)
+            out[0] = true;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
