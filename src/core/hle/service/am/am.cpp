@@ -3451,6 +3451,7 @@ void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(8, 0);
     rb.Push(ResultSuccess);
     rb.PushRaw<TitleInfo>(title_info);
+    rb.Push<u32>(0x0); // make num words pushed match header so no assert occurrs
 }
 
 void Module::Interface::GetSystemMenuDataFromCia(Kernel::HLERequestContext& ctx) {

@@ -11,6 +11,7 @@
 #include "common/swap.h"
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/nwm/uds_common.h"
 
 namespace Service::NWM {
 
@@ -90,9 +91,8 @@ constexpr u16 EAPoLStartMagic = 0x201;
 struct EAPoLStartPacket {
     u16_be magic = EAPoLStartMagic;
     u16_be association_id;
-    // This value is hardcoded to 1 in the NWM module.
-    u16_be unknown = 1;
-    INSERT_PADDING_BYTES(2);
+    enum_le<ConnectionType> conn_type;
+    INSERT_PADDING_BYTES(3);
     EAPoLNodeInfo node;
 };
 
@@ -132,7 +132,7 @@ SecureDataHeader ParseSecureDataHeader(std::span<const u8> data);
  * communication.
  * @returns The generated frame body.
  */
-std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info);
+std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, ConnectionType conn_type, const NodeInfo& node_info);
 
 /*
  * Returns the EtherType of the specified 802.11 frame.
@@ -150,6 +150,8 @@ u16 GetEAPoLFrameType(std::span<const u8> frame);
  * encapsulated in an 802.11 data frame.
  */
 NodeInfo DeserializeNodeInfoFromFrame(std::span<const u8> frame);
+
+EAPoLStartPacket DeserializeEAPolStartPacket(std::span<const u8> frame);
 
 /*
  * Returns a NodeInfo constructed from the data in the specified EAPoLNodeInfo.
