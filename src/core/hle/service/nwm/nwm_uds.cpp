@@ -351,7 +351,7 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     if (connection_status.status != NetworkStatus::ConnectedAsHost &&
         connection_status.status != NetworkStatus::ConnectedAsClient &&
         connection_status.status != NetworkStatus::ConnectedAsSpectator) {
-        LOG_ERROR(Service_NWM, "Ignored SecureDataPacket because connection status is {}",
+        LOG_DEBUG(Service_NWM, "Ignored SecureDataPacket because connection status is {}",
                   static_cast<u32>(connection_status.status));
         return;
     }
