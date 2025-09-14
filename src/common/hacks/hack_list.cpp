@@ -108,6 +108,9 @@ HackManager hack_manager = {
 
                      // Pretendo Network's Nimbus
                      0x000400000D40D200,
+
+                     // DLP
+                     0x0004013000002802,
                  },
          }},
 
