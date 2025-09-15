@@ -1349,6 +1349,19 @@ Result AppletManager::StartApplication(const std::vector<u8>& parameter,
     // PM::LaunchTitle. We should research more about that.
     ASSERT_MSG(app_start_parameters, "Trying to start an application without preparing it first.");
 
+    // Determine if the target title is an O3DS extended-memory title.
+    bool needs_extended_memory_reboot = NS::RequiresExtendedMemoryOld3DS(
+        app_start_parameters->next_media_type, app_start_parameters->next_title_id);
+
+    if (needs_extended_memory_reboot) {
+        // For O3DS extended-memory titles, reboot to ensure a clean low-memory state to prevent
+        // hang/crash.
+        NS::RebootToTitle(system, app_start_parameters->next_media_type,
+                          app_start_parameters->next_title_id);
+        app_start_parameters.reset();
+        return ResultSuccess;
+    }
+
     active_slot = AppletSlot::Application;
 
     // Launch the title directly.
