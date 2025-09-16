@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,5 +21,9 @@ std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType
 
 /// Reboots the system to the specified title.
 void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id);
+
+/// Returns true if the specified title requires extended memory on Old 3DS
+/// (i.e., its ExHeader system mode is not Prod/64MB).
+bool RequiresExtendedMemoryOld3DS(FS::MediaType media_type, u64 title_id);
 
 } // namespace Service::NS
