@@ -3261,8 +3261,8 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
 
         AuthorizeCIAFileDecryption(cia_file.get(), ctx);
 
-        file = std::make_shared<Service::FS::File>(
-            am->system.Kernel(), std::move(cia_file), cia_path);
+        file =
+            std::make_shared<Service::FS::File>(am->system.Kernel(), std::move(cia_file), cia_path);
     }
     am->cia_installing = true;
 

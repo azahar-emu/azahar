@@ -106,9 +106,12 @@ void NWM_UDS::BroadcastNodeMap() {
     packet.channel = network_channel;
     packet.type = Network::WifiPacket::PacketType::NodeMap;
     packet.destination_address = Network::BroadcastMac;
-    auto node_can_broad = [](auto& node) -> bool {return node.second.connected && !node.second.spec;};
-    std::size_t num_entries = std::count_if(node_map.begin(), node_map.end(),
-                                            [&node_can_broad](const auto& node) { return node_can_broad(node); });
+    auto node_can_broad = [](auto& node) -> bool {
+        return node.second.connected && !node.second.spec;
+    };
+    std::size_t num_entries =
+        std::count_if(node_map.begin(), node_map.end(),
+                      [&node_can_broad](const auto& node) { return node_can_broad(node); });
     using node_t = decltype(node_map)::value_type;
     packet.data.resize(sizeof(num_entries) +
                        (sizeof(node_t::first) + sizeof(node_t::second.node_id)) * num_entries);
@@ -186,7 +189,8 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
     using Network::WifiPacket;
     WifiPacket eapol_start;
     eapol_start.channel = network_channel;
-    eapol_start.data = GenerateEAPoLStartFrame(std::get<u16>(assoc_result), conn_type, current_node);
+    eapol_start.data =
+        GenerateEAPoLStartFrame(std::get<u16>(assoc_result), conn_type, current_node);
     // TODO(B3N30): Encrypt the packet.
     eapol_start.destination_address = packet.transmitter_address;
     eapol_start.type = WifiPacket::PacketType::Data;
@@ -245,7 +249,8 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
             node_map[packet.transmitter_address].connected = true;
             node_map[packet.transmitter_address].spec = true;
         } else {
-            LOG_ERROR(Service_NWM, "Client tried connecting with unknown connection type: 0x{:x}", static_cast<u32>(eapol_start.conn_type));
+            LOG_ERROR(Service_NWM, "Client tried connecting with unknown connection type: 0x{:x}",
+                      static_cast<u32>(eapol_start.conn_type));
         }
 
         // Send the EAPoL-Logoff packet.
@@ -310,7 +315,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         connection_status_event->Signal();
         connection_event->Signal();
     } else if (connection_status.status == NetworkStatus::ConnectedAsClient ||
-        connection_status.status == NetworkStatus::ConnectedAsSpectator) {
+               connection_status.status == NetworkStatus::ConnectedAsSpectator) {
         // TODO(B3N30): Remove that section and send/receive a proper connection_status packet
         // On a 3ds this packet wouldn't be addressed to already connected clients
         // We use this information because in the current implementation the host
@@ -345,8 +350,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
 void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     const auto secure_data = ParseSecureDataHeader(packet.data);
-    std::scoped_lock lock{connection_status_mutex,
-        system.Kernel().GetHLELock()};
+    std::scoped_lock lock{connection_status_mutex, system.Kernel().GetHLELock()};
 
     if (connection_status.status != NetworkStatus::ConnectedAsHost &&
         connection_status.status != NetworkStatus::ConnectedAsClient &&
@@ -626,7 +630,6 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
 
     // end scan input struct
 
-
     u32 wlan_comm_id = rp.Pop<u32>();
     u32 id = rp.Pop<u32>();
     // From 3dbrew:
@@ -796,7 +799,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     u8 data_channel = rp.Pop<u8>();
     u16 network_node_id = rp.Pop<u16>();
 
-    LOG_INFO(Service_NWM, "called");
+    LOG_DEBUG(Service_NWM, "called");
 
     if (data_channel == 0 || bind_node_id == 0) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1073,7 +1076,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
-    LOG_INFO(Service_NWM, "disconnecting from network");
+    LOG_DEBUG(Service_NWM, "disconnecting from network");
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 

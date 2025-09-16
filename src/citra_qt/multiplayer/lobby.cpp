@@ -14,7 +14,6 @@
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/cfg/cfg_u.h"
 #include "network/network.h"
 #include "network/network_settings.h"
 #include "ui_lobby.h"
@@ -176,7 +175,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
 #endif
         if (auto room_member = Network::GetRoomMember().lock()) {
             room_member->Join(nickname, Service::CFG::GetConsoleIdHash(system), ip.c_str(),
-                              static_cast<u16>(port), 0, Service::CFG::GetConsoleMacAddress(system), password, token);
+                              static_cast<u16>(port), 0, Service::CFG::GetConsoleMacAddress(system),
+                              password, token);
         }
     });
     watcher->setFuture(f);

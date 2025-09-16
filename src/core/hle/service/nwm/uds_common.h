@@ -1,4 +1,4 @@
-// Copyright 2025 Azahar Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,4 +13,4 @@ enum class ConnectionType : u8 {
     Spectator = 0x2,
 };
 
-}; // Service::NWM
+}; // namespace Service::NWM

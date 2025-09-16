@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,9 +18,9 @@
 #include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/hle/service/nwm/uds_common.h"
 #include "core/hle/service/service.h"
 #include "network/network.h"
-#include "core/hle/service/nwm/uds_common.h"
 
 namespace Core {
 class System;

@@ -19,8 +19,6 @@
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/cfg/cfg_u.h"
-#include "core/core.h"
 #include "network/announce_multiplayer_session.h"
 #include "network/network_settings.h"
 #include "ui_host_room.h"
@@ -195,8 +193,8 @@ void HostRoomWindow::Host() {
         }
 #endif
         member->Join(ui->username->text().toStdString(), Service::CFG::GetConsoleIdHash(system),
-                     "127.0.0.1", static_cast<u16>(port), 0, Service::CFG::GetConsoleMacAddress(system), password,
-                     token);
+                     "127.0.0.1", static_cast<u16>(port), 0,
+                     Service::CFG::GetConsoleMacAddress(system), password, token);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();

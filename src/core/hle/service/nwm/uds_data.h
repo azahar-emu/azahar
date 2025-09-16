@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,8 +10,8 @@
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/nwm/uds_beacon.h"
-#include "core/hle/service/service.h"
 #include "core/hle/service/nwm/uds_common.h"
+#include "core/hle/service/service.h"
 
 namespace Service::NWM {
 
@@ -132,7 +132,8 @@ SecureDataHeader ParseSecureDataHeader(std::span<const u8> data);
  * communication.
  * @returns The generated frame body.
  */
-std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, ConnectionType conn_type, const NodeInfo& node_info);
+std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, ConnectionType conn_type,
+                                        const NodeInfo& node_info);
 
 /*
  * Returns the EtherType of the specified 802.11 frame.
