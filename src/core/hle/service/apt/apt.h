@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -73,6 +73,8 @@ public:
          *     0 : Result of function, 0 on success, otherwise error code
          */
         void SetWirelessRebootInfo(Kernel::HLERequestContext& ctx);
+
+        void CardUpdateInitialize(Kernel::HLERequestContext& ctx);
 
         /**
          * NS::ShutdownAsync service function.

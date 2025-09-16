@@ -533,7 +533,8 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
                      selected.data(GameListItemPath::ProgramIdRole).toULongLong(),
                      selected.data(GameListItemPath::ExtdataIdRole).toULongLong(),
                      static_cast<Service::FS::MediaType>(
-                         selected.data(GameListItemPath::MediaTypeRole).toUInt()));
+                         selected.data(GameListItemPath::MediaTypeRole).toUInt()),
+                     selected.data(GameListItemPath::CanInsertRole).toUInt() != 0);
         break;
     case GameListItemType::CustomDir:
         AddPermDirPopup(context_menu, selected);
@@ -603,8 +604,16 @@ void ForEachOpenGLCacheFile(u64 program_id, auto func) {
 #endif
 
 void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QString& name,
-                            u64 program_id, u64 extdata_id, Service::FS::MediaType media_type) {
+                            u64 program_id, u64 extdata_id, Service::FS::MediaType media_type,
+                            bool can_insert) {
     QAction* favorite = context_menu.addAction(tr("Favorite"));
+    bool is_inserted =
+        can_insert && UISettings::values.inserted_cartridge.GetValue() == path.toStdString();
+    QAction* cartridge_insert = nullptr;
+    if (can_insert) {
+        cartridge_insert =
+            context_menu.addAction(is_inserted ? tr("Eject Cartridge") : tr("Insert Cartridge"));
+    }
     context_menu.addSeparator();
     QMenu* open_menu = context_menu.addMenu(tr("Open"));
     QAction* open_application_location = open_menu->addAction(tr("Application Location"));
@@ -713,6 +722,15 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     connect(open_extdata_location, &QAction::triggered, this, [this, extdata_id] {
         emit OpenFolderRequested(extdata_id, GameListOpenTarget::EXT_DATA);
     });
+    if (cartridge_insert) {
+        connect(cartridge_insert, &QAction::triggered, this, [path, is_inserted] {
+            if (is_inserted) {
+                UISettings::values.inserted_cartridge.SetValue("");
+            } else {
+                UISettings::values.inserted_cartridge.SetValue(path.toStdString());
+            }
+        });
+    }
     connect(open_application_location, &QAction::triggered, this, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::APPLICATION);
     });
