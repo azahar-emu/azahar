@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,10 @@ enum class FloatSetting(
     override val defaultValue: Float
 ) : AbstractFloatSetting {
     LARGE_SCREEN_PROPORTION("large_screen_proportion",Settings.SECTION_LAYOUT,2.25f),
+    SECOND_SCREEN_OPACITY("custom_second_layer_opacity", Settings.SECTION_RENDERER, 100f),
+    BACKGROUND_RED("bg_red", Settings.SECTION_RENDERER, 0f),
+    BACKGROUND_BLUE("bg_blue", Settings.SECTION_RENDERER, 0f),
+    BACKGROUND_GREEN("bg_green", Settings.SECTION_RENDERER, 0f),
     EMPTY_SETTING("", "", 0.0f);
 
     override var float: Float = defaultValue

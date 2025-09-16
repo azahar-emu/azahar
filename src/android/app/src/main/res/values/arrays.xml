@@ -148,12 +148,12 @@
     </integer-array>
 
     <string-array name="statsPosition">
-        <item>@string/overlay_position_top_left</item>
-        <item>@string/overlay_position_center_top</item>
-        <item>@string/overlay_position_top_right</item>
-        <item>@string/overlay_position_bottom_left</item>
-        <item>@string/overlay_position_center_bottom</item>
-        <item>@string/overlay_position_bottom_right</item>
+        <item>@string/performance_overlay_position_top_left</item>
+        <item>@string/performance_overlay_position_center_top</item>
+        <item>@string/performance_overlay_position_top_right</item>
+        <item>@string/performance_overlay_position_bottom_left</item>
+        <item>@string/performance_overlay_position_center_bottom</item>
+        <item>@string/performance_overlay_position_bottom_right</item>
     </string-array>
     <integer-array name="statsPositionValues">
         <item>0</item>

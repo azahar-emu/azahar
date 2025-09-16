@@ -69,6 +69,7 @@
 #include "citra_qt/movie/movie_record_dialog.h"
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/qt_image_interface.h"
+#include "citra_qt/qt_swizzle.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -4112,6 +4113,11 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 }
 
 void LaunchQtFrontend(int argc, char* argv[]) {
+#ifdef __APPLE__
+    // Ensure that the linker doesn't optimize qt_swizzle.mm out of existence.
+    QtSwizzle::Dummy();
+#endif
+
     Common::DetachedTasks detached_tasks;
 
 #if MICROPROFILE_ENABLED

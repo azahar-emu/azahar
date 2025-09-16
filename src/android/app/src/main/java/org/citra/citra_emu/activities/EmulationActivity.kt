@@ -60,7 +60,15 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private lateinit var secondaryDisplay: SecondaryDisplay;
+    private lateinit var secondaryDisplay: SecondaryDisplay
+
+    private val onShutdown = Runnable {
+        if (intent.getBooleanExtra("launched_from_shortcut", false)) {
+            finishAffinity()
+        } else {
+            this.finish()
+        }
+    }
 
     private val emulationFragment: EmulationFragment
         get() {
@@ -77,8 +85,8 @@ class EmulationActivity : AppCompatActivity() {
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
         super.onCreate(savedInstanceState)
-        secondaryDisplay = SecondaryDisplay(this);
-        secondaryDisplay.updateDisplay();
+        secondaryDisplay = SecondaryDisplay(this)
+        secondaryDisplay.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -101,13 +109,7 @@ class EmulationActivity : AppCompatActivity() {
             windowManager.defaultDisplay.rotation
         )
 
-        EmulationLifecycleUtil.addShutdownHook(hook = {
-            if (intent.getBooleanExtra("launched_from_shortcut", false)) {
-                finishAffinity()
-            } else {
-                this.finish()
-            }
-        })
+        EmulationLifecycleUtil.addShutdownHook(onShutdown)
 
         isEmulationRunning = true
         instance = this
@@ -165,12 +167,12 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        EmulationLifecycleUtil.clear()
+        EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
         secondaryDisplay.releasePresentation()
-        secondaryDisplay.releaseVD();
+        secondaryDisplay.releaseVD()
 
         super.onDestroy()
     }

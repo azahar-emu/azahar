@@ -248,6 +248,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT.defaultValue.toFloat()
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.ANDROID_HIDE_IMAGES,
+                    R.string.android_hide_images,
+                    R.string.android_hide_images_description,
+                    BooleanSetting.ANDROID_HIDE_IMAGES.key,
+                    BooleanSetting.ANDROID_HIDE_IMAGES.defaultValue
+                )
+            )
         }
     }
 
@@ -1167,6 +1176,89 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SliderSetting(
+                    FloatSetting.SECOND_SCREEN_OPACITY,
+                    R.string.second_screen_opacity,
+                    R.string.second_screen_opacity_description,
+                    0,
+                    100,
+                    "%",
+                    FloatSetting.SECOND_SCREEN_OPACITY.key,
+                    FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 5
+                )
+            )
+            add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))
+            val bgRedSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_RED.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_RED.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_RED, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgRedSetting,
+                    R.string.bg_red,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
+            val bgGreenSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_GREEN.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_GREEN.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_GREEN, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgGreenSetting,
+                    R.string.bg_green,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
+            val bgBlueSetting = object : AbstractIntSetting {
+                override var int: Int
+                    get() = (FloatSetting.BACKGROUND_BLUE.float * 255).toInt()
+                    set(value) {
+                        FloatSetting.BACKGROUND_BLUE.float = value.toFloat() / 255
+                        settings.saveSetting(FloatSetting.BACKGROUND_BLUE, SettingsFile.FILE_NAME_CONFIG)
+                    }
+                override val key = null
+                override val section = null
+                override val isRuntimeEditable = false
+                override val valueAsString = int.toString()
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+            }
+            add(
+                SliderSetting(
+                    bgBlueSetting,
+                    R.string.bg_blue,
+                    0,
+                    0,
+                    255,
+                    ""
+                )
+            )
+            add(
                 SubmenuSetting(
                     R.string.performance_overlay_options,
                     R.string.performance_overlay_options_description,
@@ -1201,38 +1293,29 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    object : AbstractBooleanSetting {
-                        override val key = "EmulationMenuSettings_showPerfPerformanceOverlay"
-                        override val section = Settings.SECTION_LAYOUT
-                        override val defaultValue = false
-                        override var boolean: Boolean
-                            get() = EmulationMenuSettings.showPerformanceOverlay
-                            set(value) { EmulationMenuSettings.showPerformanceOverlay = value }
-                        override val isRuntimeEditable = true
-                        override val valueAsString: String get() = boolean.toString()
-                    },
+                    BooleanSetting.PERF_OVERLAY_ENABLE,
                     R.string.performance_overlay_enable,
                     0,
-                    "EmulationMenuSettings_showPerfPerformanceOverlay",
-                    false
+                    BooleanSetting.PERF_OVERLAY_ENABLE.key,
+                    BooleanSetting.PERF_OVERLAY_ENABLE.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_BACKGROUND,
-                    R.string.overlay_background,
-                    R.string.overlay_background_description,
-                    "overlay_background",
-                    false
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND,
+                    R.string.performance_overlay_background,
+                    R.string.performance_overlay_background_description,
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND.key,
+                    BooleanSetting.PERF_OVERLAY_BACKGROUND.defaultValue
                 )
             )
 
             add(
                 SingleChoiceSetting(
                     IntSetting.PERFORMANCE_OVERLAY_POSITION,
-                    R.string.overlay_position,
-                    R.string.overlay_position_description,
+                    R.string.performance_overlay_position,
+                    R.string.performance_overlay_position_description,
                     R.array.statsPosition,
                     R.array.statsPositionValues,
                 )
@@ -1243,61 +1326,61 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_FPS,
-                    R.string.overlay_show_fps,
-                    R.string.overlay_show_fps_description,
-                    "overlay_show_fps",
-                    true
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS,
+                    R.string.performance_overlay_show_fps,
+                    R.string.performance_overlay_show_fps_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FPS.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_FRAMETIME,
-                    R.string.overlay_show_frametime,
-                    R.string.overlay_show_frametime_description,
-                    "overlay_show_frame_time",
-                    true
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME,
+                    R.string.performance_overlay_show_frametime,
+                    R.string.performance_overlay_show_frametime_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_SPEED,
-                    R.string.overlay_show_speed,
-                    R.string.overlay_show_speed_description,
-                    "overlay_show_speed",
-                    false
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED,
+                    R.string.performance_overlay_show_speed,
+                    R.string.performance_overlay_show_speed_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_SPEED.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_APP_RAM_USAGE,
-                    R.string.overlay_show_app_ram_usage,
-                    R.string.overlay_show_app_ram_usage_description,
-                    "overlay_show_app_ram_usage",
-                    false
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE,
+                    R.string.performance_overlay_show_app_ram_usage,
+                    R.string.performance_overlay_show_app_ram_usage_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_AVAILABLE_RAM,
-                    R.string.overlay_show_available_ram,
-                    R.string.overlay_show_available_ram_description,
-                    "overlay_show_available_ram",
-                    false
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM,
+                    R.string.performance_overlay_show_available_ram,
+                    R.string.performance_overlay_show_available_ram_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.defaultValue
                 )
             )
 
             add(
                 SwitchSetting(
-                    BooleanSetting.OVERLAY_SHOW_BATTERY_TEMP,
-                    R.string.overlay_show_battery_temp,
-                    R.string.overlay_show_battery_temp_description,
-                    "overlay_show_battery_temp",
-                    false
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP,
+                    R.string.performance_overlay_show_battery_temp,
+                    R.string.performance_overlay_show_battery_temp_description,
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.key,
+                    BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.defaultValue
                 )
             )
         }

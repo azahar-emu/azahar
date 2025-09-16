@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,6 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.utils.Log
-import kotlin.math.roundToInt
 
 class SliderSetting(
     setting: AbstractSetting?,
@@ -27,7 +26,8 @@ class SliderSetting(
     val selectedFloat: Float
         get() {
             val setting = setting ?: return defaultValue!!.toFloat()
-            return when (setting) {
+
+            val ret = when (setting) {
                 is AbstractIntSetting -> setting.int.toFloat()
                 is FloatSetting -> setting.float
                 is ScaledFloatSetting -> setting.float
@@ -36,8 +36,8 @@ class SliderSetting(
                     -1f
                 }
             }
+            return ret.coerceIn(min.toFloat(), max.toFloat())
         }
-
     /**
      * Write a value to the backing int. If that int was previously null,
      * initializes a new one and returns it, so it can be added to the Hashmap.
