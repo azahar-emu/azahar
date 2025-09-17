@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -49,6 +49,8 @@ public:
 
 private:
     void Host();
+    void SetLocalIPAddress();
+    void CopyIPToClipboard();
     std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) const;
 
     std::unique_ptr<Ui::HostRoom> ui;
