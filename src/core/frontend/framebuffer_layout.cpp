@@ -79,7 +79,7 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
 
     // TODO: This is kind of gross, make it platform agnostic. -OS
 #ifdef ANDROID
-    const float window_aspect_ratio = static_cast<float>(height) / width;
+    const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
     const auto aspect_ratio_setting = Settings::values.aspect_ratio.GetValue();
 
     float emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
@@ -342,6 +342,8 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryDisplayLayout layout =
         Settings::values.secondary_display_layout.GetValue();
     switch (layout) {
+    case Settings::SecondaryDisplayLayout::ReversePrimary:
+        return SingleFrameLayout(width,height,! Settings::values.swap_screen,Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::TopScreenOnly:
         return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
 
