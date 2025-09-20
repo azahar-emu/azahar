@@ -449,6 +449,7 @@
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Default</string>
     <string name="emulation_secondary_display_default">System Default (mirror)</string>
+    <string name="emulation_secondary_display_reverse_primary">Opposite of Primary Display</string>
     <string name="emulation_screen_layout_custom">Custom Layout</string>
     <string name="bg_color">Background Color</string>
     <string name="bg_color_description">The color which appears behind the screens during emulation, represented as an RGB value.</string>

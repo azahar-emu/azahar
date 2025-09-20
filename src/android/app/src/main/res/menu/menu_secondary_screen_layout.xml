@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/menu_secondary_layout_none"
+            android:title="@string/emulation_secondary_display_default" />
+
+        <item
+            android:id="@+id/menu_secondary_layout_reverse_primary"
+            android:title="@string/emulation_secondary_display_reverse_primary" />
+
+        <item
+            android:id="@+id/menu_secondary_layout_top"
+            android:title="@string/emulation_top_screen" />
+
+        <item
+            android:id="@+id/menu_secondary_layout_bottom"
+            android:title="@string/emulation_bottom_screen" />
+
+        <item
+            android:id="@+id/menu_secondary_layout_side_by_side"
+            android:title="@string/emulation_screen_layout_sidebyside" />
+
+    </group>
+
+</menu>

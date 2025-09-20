@@ -342,7 +342,8 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryDisplayLayout layout =
         Settings::values.secondary_display_layout.GetValue();
     switch (layout) {
-
+    case Settings::SecondaryDisplayLayout::ReversePrimary:
+        return SingleFrameLayout(width,height,! Settings::values.swap_screen,Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::BottomScreenOnly:
         return SingleFrameLayout(width, height, true, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::SideBySide:

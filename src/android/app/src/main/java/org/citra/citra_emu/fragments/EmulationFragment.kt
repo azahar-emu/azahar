@@ -64,6 +64,7 @@ import org.citra.citra_emu.databinding.FragmentEmulationBinding
 import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
+import org.citra.citra_emu.display.SecondaryDisplayLayout
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
@@ -303,6 +304,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 R.id.menu_portrait_screen_layout -> {
                     showPortraitScreenLayoutMenu()
+                    true
+                }
+
+                R.id.menu_secondary_screen_layout -> {
+                    showSecondaryScreenLayoutMenu()
                     true
                 }
 
@@ -1002,6 +1008,61 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.show()
     }
 
+    private fun showSecondaryScreenLayoutMenu() {
+        val popupMenu = PopupMenu(
+            requireContext(),
+            binding.inGameMenu.findViewById(R.id.menu_secondary_screen_layout)
+        )
+
+        popupMenu.menuInflater.inflate(R.menu.menu_secondary_screen_layout, popupMenu.menu)
+
+        val layoutOptionMenuItem = when (IntSetting.SECONDARY_DISPLAY_LAYOUT.int) {
+           SecondaryDisplayLayout.NONE.int ->
+                R.id.menu_secondary_layout_none
+            SecondaryDisplayLayout.REVERSE_PRIMARY.int ->
+                R.id.menu_secondary_layout_reverse_primary
+            SecondaryDisplayLayout.TOP_SCREEN.int ->
+                R.id.menu_secondary_layout_top
+            SecondaryDisplayLayout.BOTTOM_SCREEN.int ->
+                R.id.menu_secondary_layout_bottom
+            else ->
+                R.id.menu_secondary_layout_side_by_side
+
+        }
+
+        popupMenu.menu.findItem(layoutOptionMenuItem).setChecked(true)
+
+        popupMenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.menu_secondary_layout_none -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.NONE.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_reverse_primary -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.REVERSE_PRIMARY.int)
+                    true
+                }
+                R.id.menu_secondary_layout_top -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.TOP_SCREEN.int)
+                    true
+                }
+                R.id.menu_secondary_layout_bottom -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.BOTTOM_SCREEN.int)
+                    true
+                }
+                R.id.menu_secondary_layout_side_by_side -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.SIDE_BY_SIDE.int)
+                    true
+                }
+
+
+                else -> true
+            }
+        }
+
+        popupMenu.show()
+    }
     private fun editControlsPlacement() {
         if (binding.surfaceInputOverlay.isInEditMode) {
             binding.doneControlConfig.visibility = View.GONE
