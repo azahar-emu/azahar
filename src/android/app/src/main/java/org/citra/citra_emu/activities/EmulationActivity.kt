@@ -34,7 +34,6 @@ import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
-import org.citra.citra_emu.display.DisplayHelper
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -86,7 +85,6 @@ class EmulationActivity : AppCompatActivity() {
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
         super.onCreate(savedInstanceState)
-        DisplayHelper.checkLaunchDisplay(this)
         secondaryDisplay = SecondaryDisplay(this)
         secondaryDisplay.updateDisplay()
 

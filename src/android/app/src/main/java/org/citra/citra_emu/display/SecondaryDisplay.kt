@@ -18,7 +18,6 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.display.DisplayHelper
 import org.citra.citra_emu.display.SecondaryDisplayLayout
 
 class SecondaryDisplay(val context: Context) {
@@ -45,9 +44,16 @@ class SecondaryDisplay(val context: Context) {
         NativeLibrary.secondarySurfaceDestroyed()
     }
 
+    private fun getExternalDisplay(context: Context): Display? {
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val internalId = context.display.displayId ?: Display.DEFAULT_DISPLAY
+        val displays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+        return displays.firstOrNull { it.displayId != internalId && it.name != "HiddenDisplay" }
+    }
+
     fun updateDisplay() {
         // decide if we are going to the external display or the internal one
-        var display = DisplayHelper.getExternalDisplay(context)
+        var display = getExternalDisplay(context)
         if (display == null ||
             IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
             display = vd.display
