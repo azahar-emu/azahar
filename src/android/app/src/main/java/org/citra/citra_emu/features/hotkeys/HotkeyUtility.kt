@@ -20,6 +20,11 @@ class HotkeyUtility(
     var HotkeyIsPressed = false
 
     fun handleHotkey(bindedButton: Int): Boolean {
+        if (bindedButton == NativeLibrary.ButtonType.BUTTON_TURBO) {
+            TurboHelper.toggleTurbo(true)
+            HotkeyIsPressed = true
+            return true
+        }
         if(hotkeyButtons.contains(bindedButton)) {
             when (bindedButton) {
                 Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
