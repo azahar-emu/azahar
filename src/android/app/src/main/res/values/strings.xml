@@ -894,6 +894,7 @@
     <string name="emulation_occupied_autosave_slot">Auto Save - %1$tF %1$tR</string>
     <string name="quickload_not_found">No Quick Save available.</string>
     <string name="game_saved">Game saved</string>
+    <string name="save_failed">Save failed</string>
     <string name="auto_save_on_exit">Auto save on exit</string>
     <string name="auto_save_on_exit_description">Automatically save the game when leaving the app or closing the game</string>
 

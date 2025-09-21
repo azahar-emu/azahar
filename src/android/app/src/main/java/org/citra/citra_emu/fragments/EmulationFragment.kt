@@ -365,13 +365,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
                             // Auto save before closing if enabled and emulation is running
                             if (BooleanSetting.AUTO_SAVE_ON_EXIT.boolean && NativeLibrary.isRunning()) {
-                                emulationState.unpause()
-                                NativeLibrary.saveState(NativeLibrary.AUTO_SAVE_SLOT)
-                                Toast.makeText(requireContext(), R.string.game_saved, Toast.LENGTH_SHORT).show()
-                                // Delay closing to allow save to complete
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    EmulationLifecycleUtil.closeGame()
-                                }, 500)
+                                performAutoSaveAndClose()
                             } else {
                                 EmulationLifecycleUtil.closeGame()
                             }
@@ -1549,6 +1543,39 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             RUNNING,
             PAUSED
         }
+    }
+
+    private fun performAutoSaveAndClose() {
+        // Show saving toast immediately
+        Toast.makeText(requireContext(), R.string.saving, Toast.LENGTH_SHORT).show()
+        // Perform auto save on background thread to avoid ANR
+        Thread {
+            try {
+                // Ensure emulation is unpaused for saving
+                emulationState.unpause()
+                // Wait a bit for emulation to resume
+                Thread.sleep(200)
+                // Perform the save
+                NativeLibrary.saveState(NativeLibrary.AUTO_SAVE_SLOT)
+                // Switch back to main thread for UI operations
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(requireContext(), R.string.game_saved, Toast.LENGTH_SHORT).show()
+                    // Delay closing to ensure save is complete and user sees the toast
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        EmulationLifecycleUtil.closeGame()
+                    }, 800)
+                }
+            } catch (e: Exception) {
+                // If save fails, still close the game
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(requireContext(), R.string.save_failed, Toast.LENGTH_SHORT).show()
+                    // Still close the game even if save failed
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        EmulationLifecycleUtil.closeGame()
+                    }, 1000)
+                }
+            }
+        }.start()
     }
 
     companion object {
