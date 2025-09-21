@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -52,6 +52,19 @@ void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id)
         new_path.clear();
     }
     system.RequestReset(new_path);
+}
+
+bool RequiresExtendedMemoryOld3DS(FS::MediaType media_type, u64 title_id) {
+    const std::string path = AM::GetTitleContentPath(media_type, title_id);
+    auto loader = Loader::GetLoader(path);
+    if (!loader)
+        return false;
+
+    auto [mem_mode_opt, status] = loader->LoadKernelMemoryMode();
+    if (status != Loader::ResultStatus::Success || !mem_mode_opt.has_value())
+        return false;
+
+    return (*mem_mode_opt != Kernel::MemoryMode::Prod);
 }
 
 } // namespace Service::NS
