@@ -29,7 +29,7 @@ QtConfig::~QtConfig() {
 const std::array<int, Settings::NativeButton::NumButtons> QtConfig::default_buttons = {
     Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X, Qt::Key_T, Qt::Key_G,
     Qt::Key_F, Qt::Key_H, Qt::Key_Q, Qt::Key_W, Qt::Key_M, Qt::Key_N,
-    Qt::Key_O, Qt::Key_P, Qt::Key_1, Qt::Key_2, Qt::Key_B, Qt::Key_V,
+    Qt::Key_O, Qt::Key_P, Qt::Key_unknown, Qt::Key_1, Qt::Key_2, Qt::Key_B, Qt::Key_V,
 };
 
 const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfig::default_analogs{{

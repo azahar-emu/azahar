@@ -208,6 +208,7 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
         state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
         state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
+        state.turbo.Assign(buttons[Turbo - BUTTON_HID_BEGIN]->GetStatus());
 
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
