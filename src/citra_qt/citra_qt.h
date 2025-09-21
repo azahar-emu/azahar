@@ -6,6 +6,7 @@
 
 #include <array>
 #include <memory>
+#include <string>
 #include <vector>
 #ifdef __unix__
 #include <QDBusObjectPath>
@@ -23,6 +24,7 @@
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
+#include "core/frontend/input.h"
 #include "core/savestate.h"
 #include "video_core/rasterizer_interface.h"
 
@@ -272,6 +274,9 @@ private slots:
     bool IsTurboEnabled();
     void SetTurboEnabled(bool);
     void ReloadTurbo();
+    void UpdateTurboButtonBinding(bool force = false);
+    void RefreshTurboPollingState();
+    void PollTurboButton();
     void AdjustSpeedLimit(bool increase);
     void UpdateSecondaryWindowVisibility();
     void ToggleScreenLayout();
@@ -385,6 +390,10 @@ private:
     bool auto_paused = false;
     bool auto_muted = false;
     QTimer mouse_hide_timer;
+    QTimer turbo_poll_timer;
+    std::unique_ptr<Input::ButtonDevice> turbo_button_device;
+    std::string turbo_button_binding;
+    bool turbo_button_was_pressed = false;
 
     // Movie
     bool movie_record_on_start = false;
