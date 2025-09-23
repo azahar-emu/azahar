@@ -496,6 +496,14 @@
     <string name="menu_emulation_amiibo_remove">Remove</string>
     <string name="application_settings">Custom Settings</string>
     <string name="use_default">Use default</string>
+    <string name="overwrite_custom_settings_prompt">Custom settings for this game already exist. Overwrite them and proceed?</string>
+    <string name="custom_launch_missing_game_title">Game not found</string>
+    <string name="custom_launch_missing_game_message">This title isn\'t in your Azahar library (ID: %1$s). Add it to the library and try again.</string>
+    <string name="custom_launch_backend_warning_title">Vulkan backend requested</string>
+    <string name="custom_launch_backend_warning_message">This configuration asks Azahar to use the Vulkan renderer. Some devices crash when launching games externally with Vulkan. Keep Vulkan, or switch this launch to OpenGL for safety?</string>
+    <string name="custom_launch_backend_option_use_vulkan">Use Vulkan</string>
+    <string name="custom_launch_backend_option_use_opengl">Use OpenGL</string>
+    <string name="required_driver_missing">Missing required driver: %1$s. Please install it and try again.</string>
     <string name="select_amiibo">Select Amiibo File</string>
     <string name="amiibo_load_error">Error Loading Amiibo</string>
     <string name="amiibo_load_error_message">While loading the specified Amiibo file, an error occurred. Please check that the file is correct.</string>

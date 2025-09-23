@@ -79,6 +79,16 @@
         </activity>
 
         <activity
+            android:name="org.citra.citra_emu.features.external.ExternalLaunchActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Citra.Main">
+            <intent-filter>
+                <action android:name="org.citra.citra_emu.LAUNCH_WITH_CUSTOM_CONFIG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name="org.citra.citra_emu.features.cheats.ui.CheatsActivity"
             android:exported="false"
             android:theme="@style/Theme.Citra.Main"
