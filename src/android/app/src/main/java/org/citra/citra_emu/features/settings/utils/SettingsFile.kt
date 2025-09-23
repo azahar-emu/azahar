@@ -170,6 +170,19 @@ object SettingsFile {
         }
     }
 
+    fun saveCustomFileRaw(gameId: String, contents: String) {
+        val ini = getOrCreateCustomGameSettingsFile(gameId)
+        val context: Context = CitraApplication.appContext
+        context.contentResolver.openOutputStream(ini.uri, "wt").use { out ->
+            out?.write(contents.toByteArray())
+            out?.flush()
+        }
+    }
+
+    fun customExists(gameId: String): Boolean {
+        return findCustomGameSettingsFile(gameId) != null
+    }
+
     fun saveFile(
         fileName: String,
         setting: AbstractSetting
