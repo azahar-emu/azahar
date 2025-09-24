@@ -34,6 +34,17 @@ static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> window_area,
                                 static_cast<T>(std::round(scale * window_aspect_ratio))};
 }
 
+// returns a scaled down version of a rectangle so that the new height is a perfect integer scale of
+// a given height
+template <class T>
+static Common::Rectangle<T> ScaleToIntegerHeight(Common::Rectangle<T> original, int heightBasis) {
+    u32 newHeight = heightBasis * (static_cast<int>(original.GetHeight()) / heightBasis);
+    if (newHeight <= 0) {return original;}
+    u32 newWidth = static_cast<u32>(original.GetWidth() *
+                                    (static_cast<float>(newHeight) / original.GetHeight()));
+    return Common::Rectangle<T>{0, 0, newWidth, newHeight};
+}
+
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
     return LargeFrameLayout(width, height, swapped, upright, 1.0f,
                             Settings::SmallScreenPosition::BelowLarge);
@@ -95,7 +106,10 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
 
     top_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
     bot_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-
+    if (Settings::values.use_integer_scaling) {
+        top_screen = ScaleToIntegerHeight(top_screen, Core::kScreenTopHeight);
+        bot_screen = ScaleToIntegerHeight(bot_screen, Core::kScreenBottomHeight);
+    }
     if (window_aspect_ratio < emulation_aspect_ratio) {
         top_screen =
             top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
@@ -106,8 +120,13 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
         bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
     }
 #else
+
     top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
     bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
+    if (Settings::values.use_integer_scaling) {
+        top_screen = ScaleToIntegerHeight(top_screen, Core::kScreenTopHeight);
+        bot_screen = ScaleToIntegerHeight(bot_screen, Core::kScreenBottomHeight);
+    }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
                            (Settings::values.screen_bottom_stretch.GetValue() && swapped);
@@ -150,16 +169,14 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     FramebufferLayout res{width, height, true, true, {}, {}, !upright};
     // Split the window into two parts. Give proportional width to the smaller screen
     // To do that, find the total emulation box and maximize that based on window size
-    u32 gap = (u32)(Settings::values.screen_gap.GetValue() * scale_factor);
+    u32 gap = (u32)(Settings::values.screen_gap.GetValue());
 
-    float large_height =
-        swapped ? Core::kScreenBottomHeight * scale_factor : Core::kScreenTopHeight * scale_factor;
-    float small_height =
-        static_cast<float>(swapped ? Core::kScreenTopHeight : Core::kScreenBottomHeight);
-    float large_width =
-        swapped ? Core::kScreenBottomWidth * scale_factor : Core::kScreenTopWidth * scale_factor;
-    float small_width =
-        static_cast<float>(swapped ? Core::kScreenTopWidth : Core::kScreenBottomWidth);
+    float large_height = swapped ? Core::kScreenBottomHeight : Core::kScreenTopHeight;
+    float small_height = static_cast<float>(swapped ? Core::kScreenTopHeight / scale_factor
+                                                    : Core::kScreenBottomHeight / scale_factor);
+    float large_width = swapped ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+    float small_width = static_cast<float>(swapped ? Core::kScreenTopWidth / scale_factor
+                                                   : Core::kScreenBottomWidth / scale_factor);
 
     float emulation_width;
     float emulation_height;
@@ -177,7 +194,9 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-    // TODO: Wtf does this `scale_amount` value represent? -OS
+    if (Settings::values.use_integer_scaling) {
+        total_rect = ScaleToIntegerHeight(total_rect, static_cast<int>(emulation_height));
+    }
     const float scale_amount = static_cast<float>(total_rect.GetHeight()) / emulation_height;
     gap = static_cast<u32>(static_cast<float>(gap) * scale_amount);
 
@@ -298,10 +317,15 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
     Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, hybrid_area_aspect_ratio);
+    if (Settings::values.use_integer_scaling.GetValue()) {
+        total_rect = ScaleToIntegerHeight(total_rect,Core::kScreenBottomHeight);
+    }
     Common::Rectangle<u32> large_main_screen = MaxRectangle(total_rect, main_screen_aspect_ratio);
     Common::Rectangle<u32> side_rect = total_rect.Scale(1.f / scale_factor);
     Common::Rectangle<u32> small_top_screen = MaxRectangle(side_rect, top_screen_aspect_ratio);
     Common::Rectangle<u32> small_bottom_screen = MaxRectangle(side_rect, bot_screen_aspect_ratio);
+
+
 
     if (window_aspect_ratio < hybrid_area_aspect_ratio) {
         large_main_screen = large_main_screen.TranslateX((width - total_rect.GetWidth()) / 2);
