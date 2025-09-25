@@ -114,9 +114,9 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
         bot_screen = MaxRectangle(screen_window_area, window_aspect_ratio);
         break;
     default:
-        float emulation_aspect_ratio = res.GetAspectRatioValue(aspect_ratio_setting);
-        top_screen = MaxRectangle(screen_window_area, window_aspect_ratio);
-        bot_screen = MaxRectangle(screen_window_area, window_aspect_ratio);
+        float emulation_aspect_ratio = FramebufferLayout::GetAspectRatioValue(aspect_ratio_setting);
+        top_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
     }
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
@@ -278,7 +278,6 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
     // Split the window into two parts. Give 2.25x width to the main screen,
     // and make a bar on the right side with 1x width top screen and 1.25x width bottom screen
     // To do that, find the total emulation box and maximize that based on window size
-    const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
     const float scale_factor = swapped ? 2.25 : 1.8;
     const Settings::SmallScreenPosition pos = swapped ? Settings::SmallScreenPosition::TopRight
                                                       : Settings::SmallScreenPosition::BottomRight;
