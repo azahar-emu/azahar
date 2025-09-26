@@ -54,7 +54,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 38> QtConfig::default_hotkeys {{
+const std::array<UISettings::Shortcut, 45> QtConfig::default_hotkeys {{
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
@@ -90,6 +90,13 @@ const std::array<UISettings::Shortcut, 38> QtConfig::default_hotkeys {{
      {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Original Layout"),     QStringLiteral("Main Window"), {QStringLiteral("0"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Single Layout"),     QStringLiteral("Main Window"), {QStringLiteral("1"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Large Layout"),     QStringLiteral("Main Window"), {QStringLiteral("2"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Side Layout"),     QStringLiteral("Main Window"), {QStringLiteral("3"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Hybrid Layout"),     QStringLiteral("Main Window"), {QStringLiteral("4"),    Qt::WindowShortcut}},
+     {QStringLiteral("Use Custom Layout"),     QStringLiteral("Main Window"), {QStringLiteral("5"),    Qt::WindowShortcut}},
+     {QStringLiteral("Toggle Previous Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F12"),    Qt::WindowShortcut}},
      {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}},
      {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      Qt::ApplicationShortcut}},

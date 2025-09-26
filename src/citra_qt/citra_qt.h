@@ -269,6 +269,8 @@ private slots:
     void AdjustSpeedLimit(bool increase);
     void UpdateSecondaryWindowVisibility();
     void ToggleScreenLayout();
+    void SetLayout(Settings::LayoutOption option);
+    void TogglePreviousLayout();
     void OnSwapScreens();
     void OnRotateScreens();
     void TriggerSwapScreens();
