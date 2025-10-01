@@ -6,6 +6,7 @@
 #include <QtGlobal>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_layout.h"
+#include "citra_qt/configuration/configure_layout_cycle.h"
 #include "common/settings.h"
 #include "ui_configure_layout.h"
 #ifdef ENABLE_OPENGL
@@ -110,6 +111,13 @@ ConfigureLayout::ConfigureLayout(QWidget* parent)
         const QIcon color_icon(pixmap);
         ui->bg_button->setIcon(color_icon);
         ui->bg_button->setEnabled(true);
+    });
+
+    connect(ui->customize_layouts_to_cycle, &QPushButton::clicked, this, [this] {
+        ui->customize_layouts_to_cycle->setEnabled(false);
+        QDialog* layout_cycle_dialog = new ConfigureLayoutCycle(this);
+        layout_cycle_dialog->exec();
+        ui->customize_layouts_to_cycle->setEnabled(true);
     });
 }
 
