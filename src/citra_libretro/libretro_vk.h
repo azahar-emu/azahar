@@ -23,6 +23,18 @@ namespace LibRetro {
 
 extern void VulkanResetContext();
 
+/// Returns VkApplicationInfo for negotiation interface
+const VkApplicationInfo* GetVulkanApplicationInfo();
+
+/// CreateDevice callback for negotiation interface
+bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance,
+                        VkPhysicalDevice gpu, VkSurfaceKHR surface,
+                        PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+                        const char** required_device_extensions,
+                        unsigned num_required_device_extensions,
+                        const char** required_device_layers, unsigned num_required_device_layers,
+                        const VkPhysicalDeviceFeatures* required_features);
+
 } // namespace LibRetro
 
 namespace Vulkan {
@@ -44,6 +56,8 @@ class MasterSemaphore;
 
 /// LibRetro-specific MasterSemaphore implementation
 class MasterSemaphoreLibRetro : public MasterSemaphore {
+    using Waitable = std::pair<vk::Fence, u64>;
+
 public:
     explicit MasterSemaphoreLibRetro(const Instance& instance);
     ~MasterSemaphoreLibRetro() override;
@@ -52,6 +66,19 @@ public:
     void Wait(u64 tick) override;
     void SubmitWork(vk::CommandBuffer cmdbuf, vk::Semaphore wait, vk::Semaphore signal,
                     u64 signal_value) override;
+
+private:
+    void WaitThread(std::stop_token token);
+    vk::Fence GetFreeFence();
+
+    const Instance& instance;
+    std::deque<vk::Fence> free_queue;
+    std::queue<Waitable> wait_queue;
+    std::mutex free_mutex;
+    std::mutex wait_mutex;
+    std::condition_variable free_cv;
+    std::condition_variable_any wait_cv;
+    std::jthread wait_thread;
 };
 
 /// Factory function for scheduler to create LibRetro MasterSemaphore

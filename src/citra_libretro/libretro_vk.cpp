@@ -23,6 +23,176 @@ static const struct retro_hw_render_interface_vulkan* vulkan_intf;
 
 namespace LibRetro {
 
+const VkApplicationInfo* GetVulkanApplicationInfo() {
+    static VkApplicationInfo app_info{VK_STRUCTURE_TYPE_APPLICATION_INFO};
+    app_info.pApplicationName = "Azahar";
+    app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    app_info.pEngineName = "Azahar";
+    app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    // Request Vulkan 1.1 for better compatibility (especially on Android)
+    // Extensions can be used for features beyond 1.1
+    app_info.apiVersion = VK_API_VERSION_1_1;
+    return &app_info;
+}
+
+void AddExtensionIfAvailable(std::vector<const char*>& enabled_exts,
+                             const std::vector<VkExtensionProperties>& available_exts,
+                             const char* ext_name) {
+    // Check if already in the list
+    for (const char* ext : enabled_exts) {
+        if (ext && !strcmp(ext, ext_name)) {
+            return; // Already enabled
+        }
+    }
+
+    // Check if available
+    for (const auto& ext : available_exts) {
+        if (!strcmp(ext.extensionName, ext_name)) {
+            enabled_exts.push_back(ext_name);
+            LOG_INFO(Render_Vulkan, "Enabling Vulkan extension: {}", ext_name);
+            return;
+        }
+    }
+
+    LOG_DEBUG(Render_Vulkan, "Vulkan extension {} not available", ext_name);
+}
+
+bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance,
+                        VkPhysicalDevice gpu, VkSurfaceKHR surface,
+                        PFN_vkGetInstanceProcAddr get_instance_proc_addr,
+                        const char** required_device_extensions,
+                        unsigned num_required_device_extensions,
+                        const char** required_device_layers, unsigned num_required_device_layers,
+                        const VkPhysicalDeviceFeatures* required_features) {
+
+    LOG_INFO(Render_Vulkan, "CreateDevice callback invoked - negotiating Vulkan device creation");
+
+    // Get available extensions for this physical device
+    uint32_t ext_count = 0;
+    PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties =
+        (PFN_vkEnumerateDeviceExtensionProperties)get_instance_proc_addr(
+            instance, "vkEnumerateDeviceExtensionProperties");
+
+    vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, nullptr);
+    std::vector<VkExtensionProperties> available_exts(ext_count);
+    if (ext_count > 0) {
+        vkEnumerateDeviceExtensionProperties(gpu, nullptr, &ext_count, available_exts.data());
+    }
+
+    // Start with frontend's required extensions
+    std::vector<const char*> enabled_exts;
+    enabled_exts.reserve(num_required_device_extensions + 10);
+    for (unsigned i = 0; i < num_required_device_extensions; i++) {
+        if (required_device_extensions[i]) {
+            enabled_exts.push_back(required_device_extensions[i]);
+        }
+    }
+
+    // Add extensions we want (if available)
+    AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts,
+                            VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_TOOLING_INFO_EXTENSION_NAME);
+
+    // These are beneficial but blacklisted on some platforms due to driver bugs
+    // For now, let the Instance class handle these decisions
+    // AddExtensionIfAvailable(enabled_exts, available_exts,
+    // VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME);
+    // AddExtensionIfAvailable(enabled_exts, available_exts,
+    // VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
+
+    // Merge frontend's required features with our baseline
+    VkPhysicalDeviceFeatures merged_features{};
+    if (required_features) {
+        // Copy all frontend requirements
+        for (unsigned i = 0; i < sizeof(VkPhysicalDeviceFeatures) / sizeof(VkBool32); i++) {
+            if (reinterpret_cast<const VkBool32*>(required_features)[i]) {
+                reinterpret_cast<VkBool32*>(&merged_features)[i] = VK_TRUE;
+            }
+        }
+    }
+
+    // Request features we need (these will be OR'd with frontend requirements)
+    // The Instance class will validate these against actual device capabilities
+    merged_features.geometryShader = VK_TRUE;    // Used for certain rendering effects
+    merged_features.logicOp = VK_TRUE;           // Used for blending modes
+    merged_features.samplerAnisotropy = VK_TRUE; // Used for texture filtering
+
+    // Find queue family with graphics support
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties =
+        (PFN_vkGetPhysicalDeviceQueueFamilyProperties)get_instance_proc_addr(
+            instance, "vkGetPhysicalDeviceQueueFamilyProperties");
+
+    uint32_t queue_family_count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(gpu, &queue_family_count, nullptr);
+    std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(gpu, &queue_family_count, queue_families.data());
+
+    uint32_t graphics_queue_family = VK_QUEUE_FAMILY_IGNORED;
+    for (uint32_t i = 0; i < queue_family_count; i++) {
+        if (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            graphics_queue_family = i;
+            break;
+        }
+    }
+
+    if (graphics_queue_family == VK_QUEUE_FAMILY_IGNORED) {
+        LOG_CRITICAL(Render_Vulkan, "No graphics queue family found!");
+        return false;
+    }
+
+    // Create device
+    const float queue_priority = 1.0f;
+    VkDeviceQueueCreateInfo queue_info{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
+    queue_info.queueFamilyIndex = graphics_queue_family;
+    queue_info.queueCount = 1;
+    queue_info.pQueuePriorities = &queue_priority;
+
+    VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    device_info.queueCreateInfoCount = 1;
+    device_info.pQueueCreateInfos = &queue_info;
+    device_info.enabledExtensionCount = static_cast<uint32_t>(enabled_exts.size());
+    device_info.ppEnabledExtensionNames = enabled_exts.data();
+    device_info.enabledLayerCount = num_required_device_layers;
+    device_info.ppEnabledLayerNames = required_device_layers;
+    device_info.pEnabledFeatures = &merged_features;
+
+    PFN_vkCreateDevice vkCreateDevice =
+        (PFN_vkCreateDevice)get_instance_proc_addr(instance, "vkCreateDevice");
+
+    VkDevice device = VK_NULL_HANDLE;
+    VkResult result = vkCreateDevice(gpu, &device_info, nullptr, &device);
+    if (result != VK_SUCCESS) {
+        LOG_CRITICAL(Render_Vulkan, "vkCreateDevice failed: {}", static_cast<int>(result));
+        return false;
+    }
+
+    // Get the queue
+    PFN_vkGetDeviceQueue vkGetDeviceQueue =
+        (PFN_vkGetDeviceQueue)get_instance_proc_addr(instance, "vkGetDeviceQueue");
+
+    VkQueue queue = VK_NULL_HANDLE;
+    vkGetDeviceQueue(device, graphics_queue_family, 0, &queue);
+
+    // Fill in the context for the frontend
+    context->gpu = gpu;
+    context->device = device;
+    context->queue = queue;
+    context->queue_family_index = graphics_queue_family;
+    context->presentation_queue = queue; // Same queue for LibRetro
+    context->presentation_queue_family_index = graphics_queue_family;
+
+    LOG_INFO(Render_Vulkan,
+             "Vulkan device created successfully via negotiation interface (GPU: {}, Queue "
+             "Family: {})",
+             static_cast<void*>(gpu), graphics_queue_family);
+
+    return true;
+}
+
 void VulkanResetContext() {
     LibRetro::GetHWRenderInterface((void**)&vulkan_intf);
 
@@ -547,24 +717,32 @@ void PresentWindow::NotifySurfaceChanged() {
 // MasterSemaphoreLibRetro Implementation
 // ============================================================================
 
-MasterSemaphoreLibRetro::MasterSemaphoreLibRetro(const Instance& instance) {
-    // No internal synchronization objects needed - RetroArch handles everything
+constexpr u64 FENCE_RESERVE = 8;
+
+MasterSemaphoreLibRetro::MasterSemaphoreLibRetro(const Instance& instance_) : instance{instance_} {
+    const vk::Device device{instance.GetDevice()};
+    // Pre-allocate fence pool
+    for (u64 i = 0; i < FENCE_RESERVE; i++) {
+        free_queue.push_back(device.createFence({}));
+    }
+    // Start background wait thread
+    wait_thread = std::jthread([this](std::stop_token token) { WaitThread(token); });
 }
 
-MasterSemaphoreLibRetro::~MasterSemaphoreLibRetro() = default;
-
-void MasterSemaphoreLibRetro::Refresh() {
-    // No internal state to refresh - RetroArch manages synchronization
-    // Simply advance our tick counter to match submissions
-    gpu_tick.store(current_tick.load(std::memory_order_acquire), std::memory_order_release);
+MasterSemaphoreLibRetro::~MasterSemaphoreLibRetro() {
+    // wait_thread will be automatically stopped by jthread destructor
+    // Clean up remaining fences
+    const vk::Device device{instance.GetDevice()};
+    for (const auto& fence : free_queue) {
+        device.destroyFence(fence);
+    }
 }
+
+void MasterSemaphoreLibRetro::Refresh() {}
 
 void MasterSemaphoreLibRetro::Wait(u64 tick) {
-    // No waiting needed - RetroArch handles synchronization through its own mechanisms
-    // We trust that RetroArch's frame pacing will handle synchronization properly
-    // Simply mark the tick as completed
-    gpu_tick.store(std::max(gpu_tick.load(std::memory_order_acquire), tick),
-                   std::memory_order_release);
+    std::unique_lock lock{free_mutex};
+    free_cv.wait(lock, [this, tick] { return gpu_tick.load(std::memory_order_relaxed) >= tick; });
 }
 
 void MasterSemaphoreLibRetro::SubmitWork(vk::CommandBuffer cmdbuf, vk::Semaphore wait,
@@ -576,27 +754,29 @@ void MasterSemaphoreLibRetro::SubmitWork(vk::CommandBuffer cmdbuf, vk::Semaphore
 
     cmdbuf.end();
 
-    // CRITICAL: Following PPSSPP pattern - strip out ALL semaphores!
-    // RetroArch handles synchronization entirely through its own mechanisms
+    // Get a fence from the pool
+    const vk::Fence fence = GetFreeFence();
+
+    // Strip semaphores - RetroArch handles frame sync, we track resources internally
     const vk::SubmitInfo submit_info = {
-        .waitSemaphoreCount = 0, // No wait semaphores - RetroArch manages this
+        .waitSemaphoreCount = 0,
         .pWaitSemaphores = nullptr,
         .pWaitDstStageMask = nullptr,
         .commandBufferCount = 1u,
         .pCommandBuffers = &cmdbuf,
-        .signalSemaphoreCount = 0, // No signal semaphores - RetroArch manages this
+        .signalSemaphoreCount = 0,
         .pSignalSemaphores = nullptr,
     };
 
-    // Use LibRetro's queue coordination directly
+    // Use LibRetro's queue coordination
     if (vulkan_intf->lock_queue) {
         vulkan_intf->lock_queue(vulkan_intf->handle);
     }
 
     try {
-        // Submit without fence or semaphores - RetroArch handles all synchronization
+        // Submit with fence for internal resource tracking
         vk::Queue queue{vulkan_intf->queue};
-        queue.submit(submit_info);
+        queue.submit(submit_info, fence);
 
         if (vulkan_intf->unlock_queue) {
             vulkan_intf->unlock_queue(vulkan_intf->handle);
@@ -613,8 +793,63 @@ void MasterSemaphoreLibRetro::SubmitWork(vk::CommandBuffer cmdbuf, vk::Semaphore
         throw;
     }
 
-    // Mark the work as completed immediately - RetroArch handles real synchronization
-    gpu_tick.store(signal_value, std::memory_order_release);
+    // Enqueue fence for wait thread to process
+    {
+        std::scoped_lock lock{wait_mutex};
+        wait_queue.emplace(fence, signal_value);
+        wait_cv.notify_one();
+    }
+}
+
+void MasterSemaphoreLibRetro::WaitThread(std::stop_token token) {
+    const vk::Device device{instance.GetDevice()};
+
+    while (!token.stop_requested()) {
+        vk::Fence fence;
+        u64 signal_value;
+
+        // Wait for work
+        {
+            std::unique_lock lock{wait_mutex};
+            Common::CondvarWait(wait_cv, lock, token, [this] { return !wait_queue.empty(); });
+            if (token.stop_requested()) {
+                return;
+            }
+            std::tie(fence, signal_value) = wait_queue.front();
+            wait_queue.pop();
+        }
+
+        // Wait for fence (blocks only this background thread)
+        const vk::Result result = device.waitForFences(fence, true, UINT64_MAX);
+        if (result != vk::Result::eSuccess) {
+            LOG_ERROR(Render_Vulkan, "Fence wait failed: {}", vk::to_string(result));
+        }
+
+        // Reset fence and return to pool
+        device.resetFences(fence);
+
+        // Update GPU tick - signals main thread's Wait()
+        gpu_tick.store(signal_value, std::memory_order_release);
+
+        // Return fence to pool
+        {
+            std::scoped_lock lock{free_mutex};
+            free_queue.push_back(fence);
+            free_cv.notify_all();
+        }
+    }
+}
+
+vk::Fence MasterSemaphoreLibRetro::GetFreeFence() {
+    std::scoped_lock lock{free_mutex};
+    if (free_queue.empty()) {
+        // Pool exhausted - create new fence
+        return instance.GetDevice().createFence({});
+    }
+
+    const vk::Fence fence = free_queue.front();
+    free_queue.pop_front();
+    return fence;
 }
 
 // Factory function for scheduler to create LibRetro MasterSemaphore

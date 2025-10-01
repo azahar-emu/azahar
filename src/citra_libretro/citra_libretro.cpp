@@ -49,7 +49,7 @@
 
 class CitraLibRetro {
 public:
-    CitraLibRetro() : log_filter(Common::Log::Level::Info) {}
+    CitraLibRetro() : log_filter(Common::Log::Level::Debug) {}
 
     Common::Log::Filter log_filter;
     std::unique_ptr<EmuWindow_LibRetro> emu_window;
@@ -484,6 +484,16 @@ bool retro_load_game(const struct retro_game_info* info) {
             LibRetro::DisplayMessage("Failed to set HW renderer");
             return false;
         }
+
+        // Set up Vulkan context negotiation interface
+        static const struct retro_hw_render_context_negotiation_interface_vulkan vk_negotiation = {
+            RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN,
+            RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION,
+            LibRetro::GetVulkanApplicationInfo,
+            LibRetro::CreateVulkanDevice,
+            nullptr, // destroy_device - not needed (frontend owns the device)
+        };
+        LibRetro::SetHWRenderContextNegotiationInterface((void**)&vk_negotiation);
 #endif
         break;
     case Settings::GraphicsAPI::Software:
