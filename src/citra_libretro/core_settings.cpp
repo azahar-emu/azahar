@@ -860,6 +860,10 @@ static void ParseGraphicsOptions(void) {
 
     Settings::values.use_shader_jit = LibRetro::FetchVariable(config::graphics::use_shader_jit,
                                                               config::enabled) == config::enabled;
+#if defined(IOS)
+    if (!LibRetro::CanUseJIT())
+        Settings::values.use_shader_jit = false;
+#endif
 
     Settings::values.shaders_accurate_mul =
         LibRetro::FetchVariable(config::graphics::shaders_accurate_mul, config::enabled) ==
