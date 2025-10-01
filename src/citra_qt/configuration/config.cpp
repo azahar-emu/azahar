@@ -6,6 +6,8 @@
 #include <array>
 #include <QKeySequence>
 #include <QSettings>
+#include <QVariant>
+#include <QVector>
 #include "citra_qt/configuration/config.h"
 #include "common/file_util.h"
 #include "common/settings.h"
@@ -132,6 +134,34 @@ void QtConfig::ReadBasicSetting(Settings::Setting<std::string>& setting) {
         setting.SetValue(qt_config->value(name, default_value).toString().toStdString());
     }
 }
+// definition for vectors of enums
+template <typename Type, bool ranged>
+void QtConfig::ReadBasicSetting(Settings::Setting<std::vector<Type>, ranged>& setting) {
+    const QString name = QString::fromStdString(setting.GetLabel());
+    const std::vector<Type> default_value = setting.GetDefault();
+    QStringList stringList = qt_config->value(name).toStringList();
+
+    if (qt_config->value(name + QStringLiteral("/default"), false).toBool() || stringList.size() < 1) {
+        setting.SetValue(default_value);
+    } else {
+        if (stringList.size() < 1) {
+            setting.SetValue(default_value);
+        } else {
+            std::vector<Type> newValue;
+            for (const QString& str : stringList) {
+                if constexpr (std::is_enum_v<Type>) {
+                    using TypeU = std::underlying_type_t<Type>;
+                    newValue.push_back(static_cast<Type>(str.toInt()));
+                } else if constexpr (std::is_integral_v<Type>) {
+                    newValue.push_back(str.toInt());
+                } else {
+                    newValue.push_back(str.toStdString());
+                }
+            }
+            setting.SetValue(newValue);
+        }
+    }
+}
 
 template <typename Type, bool ranged>
 void QtConfig::ReadBasicSetting(Settings::Setting<Type, ranged>& setting) {
@@ -191,6 +221,29 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<std::string>& setting) 
     qt_config->setValue(name, QString::fromStdString(value));
 }
 
+template <typename Type, bool ranged>
+void QtConfig::WriteBasicSetting(const Settings::Setting<std::vector<Type>, ranged>& setting) {
+    const QString name = QString::fromStdString(setting.GetLabel());
+    const std::vector<Type>& value = setting.GetValue();
+
+    qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
+
+    QStringList stringList;
+    if constexpr (std::is_enum_v<Type>) {
+        // For enums, convert to underlying integer type strings
+        using TypeU = std::underlying_type_t<Type>;
+        for (const Type& item : value) {
+            stringList.append(QString::number(static_cast<TypeU>(item)));
+        }
+    } else {
+        // For non-enum types (assuming numeric)
+        for (const Type& item : value) {
+            stringList.append(QString::number(item));
+        }
+    }
+
+    qt_config->setValue(name, stringList);
+}
 // Explicit u16 definition: Qt would store it as QMetaType otherwise, which is not human-readable
 template <>
 void QtConfig::WriteBasicSetting(const Settings::Setting<u16>& setting) {
@@ -530,6 +583,7 @@ void QtConfig::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.small_screen_position);
 
     if (global) {
+        ReadBasicSetting(Settings::values.layouts_to_cycle);
         ReadBasicSetting(Settings::values.mono_render_option);
         ReadBasicSetting(Settings::values.custom_top_x);
         ReadBasicSetting(Settings::values.custom_top_y);
@@ -1109,6 +1163,7 @@ void QtConfig::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.screen_gap);
     WriteGlobalSetting(Settings::values.small_screen_position);
     if (global) {
+        WriteBasicSetting(Settings::values.layouts_to_cycle);
         WriteBasicSetting(Settings::values.mono_render_option);
         WriteBasicSetting(Settings::values.custom_top_x);
         WriteBasicSetting(Settings::values.custom_top_y);
