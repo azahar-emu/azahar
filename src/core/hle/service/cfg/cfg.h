@@ -672,6 +672,8 @@ u64 MacToU64(const std::string& mac);
 
 std::string GenerateRandomMAC();
 
+std::array<u8, 6> GetConsoleMacAddress(Core::System& system);
+
 } // namespace Service::CFG
 
 SERVICE_CONSTRUCT(Service::CFG::Module)

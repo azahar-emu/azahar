@@ -106,15 +106,19 @@ void NWM_UDS::BroadcastNodeMap() {
     packet.channel = network_channel;
     packet.type = Network::WifiPacket::PacketType::NodeMap;
     packet.destination_address = Network::BroadcastMac;
-    std::size_t num_entries = std::count_if(node_map.begin(), node_map.end(),
-                                            [](const auto& node) { return node.second.connected; });
+    auto node_can_broad = [](auto& node) -> bool {
+        return node.second.connected && !node.second.spec;
+    };
+    std::size_t num_entries =
+        std::count_if(node_map.begin(), node_map.end(),
+                      [&node_can_broad](const auto& node) { return node_can_broad(node); });
     using node_t = decltype(node_map)::value_type;
     packet.data.resize(sizeof(num_entries) +
                        (sizeof(node_t::first) + sizeof(node_t::second.node_id)) * num_entries);
     std::memcpy(packet.data.data(), &num_entries, sizeof(num_entries));
     std::size_t offset = sizeof(num_entries);
     for (const auto& node : node_map) {
-        if (node.second.connected) {
+        if (node_can_broad(node)) {
             std::memcpy(packet.data.data() + offset, node.first.data(), sizeof(node.first));
             std::memcpy(packet.data.data() + offset + sizeof(node.first), &node.second.node_id,
                         sizeof(node.second.node_id));
@@ -185,7 +189,8 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
     using Network::WifiPacket;
     WifiPacket eapol_start;
     eapol_start.channel = network_channel;
-    eapol_start.data = GenerateEAPoLStartFrame(std::get<u16>(assoc_result), current_node);
+    eapol_start.data =
+        GenerateEAPoLStartFrame(std::get<u16>(assoc_result), conn_type, current_node);
     // TODO(B3N30): Encrypt the packet.
     eapol_start.destination_address = packet.transmitter_address;
     eapol_start.type = WifiPacket::PacketType::Data;
@@ -217,24 +222,36 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         ASSERT(connection_status.max_nodes != connection_status.total_nodes);
 
-        auto node = DeserializeNodeInfoFromFrame(packet.data);
+        auto eapol_start = DeserializeEAPolStartPacket(packet.data);
 
-        // Get an unused network node id
-        u16 node_id = GetNextAvailableNodeId();
-        node.network_node_id = node_id;
+        auto node = DeserializeNodeInfo(eapol_start.node);
 
-        connection_status.node_bitmask |= 1 << (node_id - 1);
-        connection_status.changed_nodes |= 1 << (node_id - 1);
-        connection_status.nodes[node_id - 1] = node.network_node_id;
-        connection_status.total_nodes++;
+        if (eapol_start.conn_type == ConnectionType::Client) {
+            // Get an unused network node id
+            u16 node_id = GetNextAvailableNodeId();
+            node.network_node_id = node_id;
 
-        node_info[node_id - 1] = node;
-        network_info.total_nodes++;
+            connection_status.node_bitmask |= 1 << (node_id - 1);
+            connection_status.changed_nodes |= 1 << (node_id - 1);
+            connection_status.nodes[node_id - 1] = node.network_node_id;
+            connection_status.total_nodes++;
 
-        node_map[packet.transmitter_address].node_id = node.network_node_id;
-        node_map[packet.transmitter_address].connected = true;
+            node_info[node_id - 1] = node;
+            network_info.total_nodes++;
 
-        BroadcastNodeMap();
+            node_map[packet.transmitter_address].node_id = node.network_node_id;
+            node_map[packet.transmitter_address].connected = true;
+            node_map[packet.transmitter_address].spec = false;
+
+            BroadcastNodeMap();
+        } else if (eapol_start.conn_type == ConnectionType::Spectator) {
+            node_map[packet.transmitter_address].node_id = NodeIDSpec;
+            node_map[packet.transmitter_address].connected = true;
+            node_map[packet.transmitter_address].spec = true;
+        } else {
+            LOG_ERROR(Service_NWM, "Client tried connecting with unknown connection type: 0x{:x}",
+                      static_cast<u32>(eapol_start.conn_type));
+        }
 
         // Send the EAPoL-Logoff packet.
         using Network::WifiPacket;
@@ -282,15 +299,23 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
             node_info[index - 1] = DeserializeNodeInfo(node);
         }
 
+        if (conn_type == ConnectionType::Client) {
+            connection_status.status = NetworkStatus::ConnectedAsClient;
+        } else if (conn_type == ConnectionType::Spectator) {
+            connection_status.status = NetworkStatus::ConnectedAsSpectator;
+        } else {
+            LOG_ERROR(Service_NWM, "Unknown connection type: 0x{:x}", static_cast<u32>(conn_type));
+        }
+
         // We're now connected, signal the application
-        connection_status.status = NetworkStatus::ConnectedAsClient;
         connection_status.status_change_reason = NetworkStatusChangeReason::ConnectionEstablished;
         // Some games require ConnectToNetwork to block, for now it doesn't
         // If blocking is implemented this lock needs to be changed,
         // otherwise it might cause deadlocks
         connection_status_event->Signal();
         connection_event->Signal();
-    } else if (connection_status.status == NetworkStatus::ConnectedAsClient) {
+    } else if (connection_status.status == NetworkStatus::ConnectedAsClient ||
+               connection_status.status == NetworkStatus::ConnectedAsSpectator) {
         // TODO(B3N30): Remove that section and send/receive a proper connection_status packet
         // On a 3ds this packet wouldn't be addressed to already connected clients
         // We use this information because in the current implementation the host
@@ -328,9 +353,9 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     std::scoped_lock lock{connection_status_mutex, system.Kernel().GetHLELock()};
 
     if (connection_status.status != NetworkStatus::ConnectedAsHost &&
-        connection_status.status != NetworkStatus::ConnectedAsClient) {
-        // TODO(B3N30): Handle spectators
-        LOG_DEBUG(Service_NWM, "Ignored SecureDataPacket, because connection status is {}",
+        connection_status.status != NetworkStatus::ConnectedAsClient &&
+        connection_status.status != NetworkStatus::ConnectedAsSpectator) {
+        LOG_DEBUG(Service_NWM, "Ignored SecureDataPacket because connection status is {}",
                   static_cast<u32>(connection_status.status));
         return;
     }
@@ -370,12 +395,14 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     // TODO(B3N30): Allow more than one bind node per channel.
     auto channel_info = channel_data.find(secure_data.data_channel);
     // Ignore packets from channels we're not interested in.
-    if (channel_info == channel_data.end())
+    if (channel_info == channel_data.end()) {
         return;
+    }
 
     if (channel_info->second.network_node_id != BroadcastNetworkNodeId &&
-        channel_info->second.network_node_id != secure_data.src_node_id)
+        channel_info->second.network_node_id != secure_data.src_node_id) {
         return;
+    }
 
     // Add the received packet to the data queue.
     channel_info->second.received_packets.emplace_back(packet.data);
@@ -432,7 +459,9 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
     // Only the SEQ1 auth frame is handled here, the SEQ2 frame doesn't need any special behavior
     if (GetAuthenticationSeqNumber(packet.data) == AuthenticationSeq::SEQ1) {
         using Network::WifiPacket;
-        WifiPacket auth_request;
+        AuthenticationFrame auth_request;
+        memcpy(&auth_request, packet.data.data(), sizeof(auth_request));
+        WifiPacket auth_response;
         {
             std::scoped_lock lock(connection_status_mutex);
             if (connection_status.status != NetworkStatus::ConnectedAsHost) {
@@ -454,13 +483,13 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
                 return;
             }
             // Respond with an authentication response frame with SEQ2
-            auth_request.channel = network_channel;
-            auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
-            auth_request.destination_address = packet.transmitter_address;
-            auth_request.type = WifiPacket::PacketType::Authentication;
+            auth_response.channel = network_channel;
+            auth_response.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
+            auth_response.destination_address = packet.transmitter_address;
+            auth_response.type = WifiPacket::PacketType::Authentication;
             node_map[packet.transmitter_address].connected = false;
         }
-        SendPacket(auth_request);
+        SendPacket(auth_response);
 
         SendAssociationResponseFrame(packet.transmitter_address);
     }
@@ -495,16 +524,16 @@ void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
         return;
     }
 
-    connection_status.node_bitmask &= ~(1 << (node.node_id - 1));
-    connection_status.changed_nodes |= 1 << (node.node_id - 1);
-    connection_status.total_nodes--;
-    connection_status.nodes[node.node_id - 1] = 0;
+    if (!node.spec) {
+        connection_status.node_bitmask &= ~(1 << (node.node_id - 1));
+        connection_status.changed_nodes |= 1 << (node.node_id - 1);
+        connection_status.total_nodes--;
+        connection_status.nodes[node.node_id - 1] = 0;
 
-    network_info.total_nodes--;
-    // TODO(B3N30): broadcast new connection_status to clients
-
+        network_info.total_nodes--;
+        // TODO(B3N30): broadcast new connection_status to clients
+    }
     node_it->Reset();
-
     connection_status_event->Signal();
 }
 
@@ -588,13 +617,18 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     u32 out_buffer_size = rp.Pop<u32>();
+
+    // scan input struct
     u32 unk1 = rp.Pop<u32>();
     u32 unk2 = rp.Pop<u32>();
 
     MacAddress mac_address;
     rp.PopRaw(mac_address);
 
+    // uninitialized data in scan input struct
     rp.Skip(9, false);
+
+    // end scan input struct
 
     u32 wlan_comm_id = rp.Pop<u32>();
     u32 id = rp.Pop<u32>();
@@ -1042,6 +1076,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 }
 
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
+    LOG_DEBUG(Service_NWM, "disconnecting from network");
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -1277,6 +1312,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
                                std::vector<u8> passphrase) {
     network_info = {};
     std::memcpy(&network_info, network_info_buffer.data(), network_info_buffer.size());
+    conn_type = static_cast<ConnectionType>(connection_type);
 
     // Start the connection sequence
     StartConnectionSequence(network_info.host_mac_address);

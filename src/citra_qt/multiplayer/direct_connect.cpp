@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -90,7 +90,8 @@ void DirectConnectWindow::Connect() {
             room_member->Join(ui->nickname->text().toStdString(),
                               Service::CFG::GetConsoleIdHash(system),
                               ui->ip->text().toStdString().c_str(), port, 0,
-                              Network::NoPreferredMac, ui->password->text().toStdString().c_str());
+                              Service::CFG::GetConsoleMacAddress(system),
+                              ui->password->text().toStdString().c_str());
         }
     });
     watcher->setFuture(f);

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,6 +18,7 @@
 #include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/hle/service/nwm/uds_common.h"
 #include "core/hle/service/service.h"
 #include "network/network.h"
 
@@ -46,6 +47,8 @@ const u16 DefaultBeaconInterval = 100;
 
 /// The maximum number of nodes that can exist in an UDS session.
 constexpr u32 UDSMaxNodes = 16;
+
+constexpr u16 NodeIDSpec = 0;
 
 struct NodeInfo {
     u64_le friend_code_seed;
@@ -95,7 +98,7 @@ static_assert(sizeof(ConnectionStatus) == 0x30, "ConnectionStatus has incorrect 
 struct NetworkInfo {
     std::array<u8, 6> host_mac_address;
     u8 channel;
-    INSERT_PADDING_BYTES(1);
+    u8 unk1;
     u8 initialized;
     INSERT_PADDING_BYTES(3);
     std::array<u8, 3> oui_value;
@@ -477,7 +480,7 @@ private:
     void HandleSecureDataPacket(const Network::WifiPacket& packet);
 
     /*
-     * Start a connection sequence with an UDS server. The sequence starts by sending an 802.11
+     * Start a connection sequence with a UDS server. The sequence starts by sending an 802.11
      * authentication frame with SEQ1.
      */
     void StartConnectionSequence(const MacAddress& server);
@@ -526,6 +529,9 @@ private:
     // Node information about our own system.
     NodeInfo current_node;
 
+    // whether you are connecting as a client or a spec
+    ConnectionType conn_type;
+
     struct BindNodeData {
         u32 bind_node_id;    ///< Id of the bind node associated with this data.
         u8 channel;          ///< Channel that this bind node was bound to.
@@ -548,6 +554,7 @@ private:
     // Mapping of mac addresses to their respective node_ids.
     struct Node {
         bool connected;
+        bool spec;
         u16 node_id;
 
     private:

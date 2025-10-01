@@ -193,8 +193,8 @@ void HostRoomWindow::Host() {
         }
 #endif
         member->Join(ui->username->text().toStdString(), Service::CFG::GetConsoleIdHash(system),
-                     "127.0.0.1", static_cast<u16>(port), 0, Network::NoPreferredMac, password,
-                     token);
+                     "127.0.0.1", static_cast<u16>(port), 0,
+                     Service::CFG::GetConsoleMacAddress(system), password, token);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();
