@@ -470,6 +470,24 @@
               </item>
              </layout>
             </item>
+            <item row="3" column="1">
+             <layout class="QVBoxLayout" name="verticalLayout_32">
+              <item>
+               <widget class="QLabel" name="label_40">
+                <property name="text">
+                 <string>Toggle Turbo Mode:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonTurbo">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
          </item>
@@ -1093,6 +1111,7 @@
   <tabstop>buttonHome</tabstop>
   <tabstop>buttonCircleMod</tabstop>
   <tabstop>buttonDebug</tabstop>
+  <tabstop>buttonTurbo</tabstop>
   <tabstop>buttonGpio14</tabstop>
   <tabstop>buttonMotionTouch</tabstop>
   <tabstop>buttonAutoMap</tabstop>
