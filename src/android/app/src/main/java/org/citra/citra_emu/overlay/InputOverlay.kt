@@ -153,8 +153,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 if (isActionMove) {
                     NativeLibrary.onTouchMoved(xPosition.toFloat(), yPosition.toFloat())
                     continue
-                }
-                else if (isActionUp) {
+                } else if (isActionUp) {
                     NativeLibrary.onTouchEvent(0f, 0f, false)
                     break // Up and down actions shouldn't loop
                 }
