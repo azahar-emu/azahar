@@ -38,6 +38,18 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
         val textAlpha = if (setting.isActive) 1f else 0.5f
         binding.textSettingName.alpha = textAlpha
         binding.textSettingDescription.alpha = textAlpha
+
+        // Show "Use default" button in Custom Settings if applicable.
+        val adapterIsPerGame = adapter.isPerGame
+        val showDefault = adapterIsPerGame && setting.setting != null && !adapter.isAtCompiledDefault(setting.setting!!)
+        binding.buttonUseDefault.visibility = if (showDefault) View.VISIBLE else View.GONE
+        if (showDefault) {
+            binding.buttonUseDefault.setOnClickListener {
+                if (setting.setting != null) {
+                    adapter.resetSettingToDefault(setting.setting!!, bindingAdapterPosition)
+                }
+            }
+        }
     }
 
     override fun onClick(clicked: View) {

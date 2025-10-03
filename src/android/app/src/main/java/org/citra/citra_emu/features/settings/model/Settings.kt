@@ -15,6 +15,7 @@ class Settings {
     private var gameId: String? = null
 
     var isLoaded = false
+    private val touchedKeys: MutableSet<String> = mutableSetOf()
 
     /**
      * A HashMap<String></String>, SettingSection> that constructs a new SettingSection instead of returning null
@@ -42,6 +43,7 @@ class Settings {
 
     fun loadSettings(view: SettingsActivityView? = null) {
         sections = SettingsSectionMap()
+        touchedKeys.clear()
         loadCitraSettings(view)
         if (!TextUtils.isEmpty(gameId)) {
             loadCustomGameSettings(gameId!!, view)
@@ -86,11 +88,92 @@ class Settings {
                 val iniSections = TreeMap<String, SettingSection?>()
                 for (section in sectionNames) {
                     iniSections[section] = sections[section]
-                }
-                SettingsFile.saveFile(fileName, iniSections, view)
             }
+            SettingsFile.saveFile(fileName, iniSections, view)
+        }
         } else {
-            // TODO: Implement per game settings
+            // Save per-game settings to config/custom/<gameId>.ini.
+            // Compare current (merged) values to global config.ini and include explicit choices.
+            val globalSections = SettingsFile.readFile(SettingsFile.FILE_NAME_CONFIG, view)
+
+            val overrides = TreeMap<String, SettingSection?>()
+            val priorOverrides = SettingsFile.readCustomGameSettings(gameId!!, view)
+            for ((sectionName, effectiveSection) in sections) {
+                if (effectiveSection == null) continue
+                val globalSection = globalSections[sectionName]
+                val priorSection = priorOverrides[sectionName]
+
+                val overrideSection = SettingSection(sectionName)
+                for ((key, effSetting) in effectiveSection.settings) {
+                    if (effSetting == null) continue
+
+                    val globalSetting = globalSection?.getSetting(key)
+                    val hadPrior = priorSection?.getSetting(key) != null
+                    val wasTouched = touchedKeys.contains("$sectionName::$key")
+
+                    // Include key when one of the following is true:
+                    // - value differs from the compiled default (explicit choice),
+                    // - key existed previously in the per-game file (preserve intent),
+                    // - user touched this setting in this session (explicit choice).
+                    if (!isDefaultValue(effSetting) || hadPrior || wasTouched) {
+                        val toWrite: AbstractSetting = if (isDefaultValue(effSetting))
+                            SimpleStringSetting(key, sectionName, "") else effSetting
+                        overrideSection.putSetting(toWrite)
+                    }
+                }
+
+                if (!overrideSection.settings.isEmpty()) {
+                    overrides[sectionName] = overrideSection
+                }
+            }
+
+            view.showToastMessage(
+                CitraApplication.appContext.getString(R.string.ini_saved),
+                false
+            )
+            SettingsFile.saveCustomFile(gameId!!, overrides, view)
+        }
+    }
+
+    private fun isDefaultValue(setting: AbstractSetting): Boolean = when (setting) {
+        is AbstractBooleanSetting -> setting.boolean == setting.defaultValue
+        is AbstractIntSetting -> setting.int == setting.defaultValue
+        is ScaledFloatSetting -> setting.float == setting.defaultValue * setting.scale
+        is FloatSetting -> setting.float == setting.defaultValue
+        is AbstractShortSetting -> setting.short == setting.defaultValue
+        is AbstractStringSetting -> setting.string == setting.defaultValue
+        else -> false
+    }
+
+    private fun areSettingsEqual(a: AbstractSetting, b: AbstractSetting?): Boolean {
+        if (b == null) {
+            // Global missing means it uses compiled default; equal if a is default.
+            return isDefaultValue(a)
+        }
+        return when {
+            a is AbstractBooleanSetting && b is AbstractBooleanSetting -> a.boolean == b.boolean
+            a is AbstractIntSetting && b is AbstractIntSetting -> a.int == b.int
+            a is ScaledFloatSetting && b is ScaledFloatSetting -> a.float == b.float
+            a is FloatSetting && b is FloatSetting -> a.float == b.float
+            a is AbstractShortSetting && b is AbstractShortSetting -> a.short == b.short
+            a is AbstractStringSetting && b is AbstractStringSetting -> a.string == b.string
+            else -> a.valueAsString == b.valueAsString
+        }
+    }
+
+    private data class SimpleStringSetting(
+        override val key: String?,
+        override val section: String?,
+        private val value: String
+    ) : AbstractSetting {
+        override val isRuntimeEditable: Boolean get() = true
+        override val valueAsString: String get() = value
+        override val defaultValue: Any get() = ""
+    }
+
+    fun markTouched(setting: AbstractSetting) {
+        if (setting.section != null && setting.key != null) {
+            touchedKeys.add("${setting.section}::${setting.key}")
         }
     }
 

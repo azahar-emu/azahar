@@ -29,6 +29,9 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
         this.menuTag = menuTag
         this.gameId = gameId
+        // Force reload of settings for each entry to avoid leaking values between
+        // global and per-game contexts in the shared Settings instance.
+        settings.isLoaded = false
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)
         }
