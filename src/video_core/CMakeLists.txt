@@ -183,18 +183,18 @@ if (ENABLE_VULKAN)
         renderer_vulkan/vk_instance.h
         renderer_vulkan/vk_pipeline_cache.cpp
         renderer_vulkan/vk_pipeline_cache.h
-        renderer_vulkan/vk_platform.cpp
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_platform.cpp>
         renderer_vulkan/vk_platform.h
-        renderer_vulkan/vk_present_window.cpp
-        renderer_vulkan/vk_present_window.h
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_present_window.cpp>
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_present_window.h>
         renderer_vulkan/vk_render_manager.cpp
         renderer_vulkan/vk_render_manager.h
         renderer_vulkan/vk_shader_util.cpp
         renderer_vulkan/vk_shader_util.h
         renderer_vulkan/vk_stream_buffer.cpp
         renderer_vulkan/vk_stream_buffer.h
-        renderer_vulkan/vk_swapchain.cpp
-        renderer_vulkan/vk_swapchain.h
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_swapchain.cpp>
+        $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_swapchain.h>
         renderer_vulkan/vk_texture_runtime.cpp
         renderer_vulkan/vk_texture_runtime.h
         shader/generator/spv_fs_shader_gen.cpp
