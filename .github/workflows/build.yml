@@ -62,7 +62,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
   macos:
-    runs-on: ${{ (matrix.target == 'x86_64' && 'macos-13') || 'macos-14' }}
+    runs-on: ${{ (matrix.target == 'x86_64' && 'macos-15-intel') || 'macos-15' }}
     strategy:
       fail-fast: false
       matrix:
@@ -103,7 +103,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
   macos-universal:
-    runs-on: macos-14
+    runs-on: macos-15
     needs: macos
     env:
       OS: macos
