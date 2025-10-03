@@ -242,6 +242,8 @@
     <string name="async_shaders_description">Compiles shaders in the background to reduce stuttering during gameplay. When enabled expect temporary graphical glitches</string>
     <string name="linear_filtering">Linear Filtering</string>
     <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
+    <string name="use_integer_scaling">Integer Scaling</string>
+    <string name="use_integer_scaling_description">Scales the screens with an integer multiplier of the original 3DS screen. For layouts with two different screen sizes, the largest screen is integer-scaled.</string>
     <string name="texture_filter_name">Texture Filter</string>
     <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
     <string name="delay_render_thread">Delay Game Render Thread</string>

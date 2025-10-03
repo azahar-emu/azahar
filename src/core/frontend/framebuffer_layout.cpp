@@ -25,13 +25,33 @@ u32 FramebufferLayout::GetScalingRatio() const {
 }
 
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
+// aligned to the upper-left corner of the bounding rectangle
 template <class T>
 static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> window_area,
                                          float window_aspect_ratio) {
     float scale = std::min(static_cast<float>(window_area.GetWidth()),
                            window_area.GetHeight() / window_aspect_ratio);
-    return Common::Rectangle<T>{0, 0, static_cast<T>(std::round(scale)),
-                                static_cast<T>(std::round(scale * window_aspect_ratio))};
+    return Common::Rectangle<T>{
+        window_area.left, window_area.top, window_area.left + static_cast<T>(std::round(scale)),
+        window_area.top + static_cast<T>(std::round(scale * window_aspect_ratio))};
+}
+
+// overload of the above that takes an inner rectangle instead of an aspect ratio, and can be
+// limited to integer scaling if desired
+template <class T>
+static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> bounding_window,
+                                         Common::Rectangle<T> inner_window,
+                                         bool use_integer = false) {
+    float scale =
+        std::min(static_cast<float>(bounding_window.GetWidth()) / inner_window.GetWidth(),
+                 static_cast<float>(bounding_window.GetHeight()) / inner_window.GetHeight());
+    if (use_integer && scale >= 1.0) {
+        scale = std::floor(scale);
+    }
+    return Common::Rectangle(bounding_window.left, bounding_window.top,
+                             bounding_window.left + static_cast<T>(inner_window.GetWidth() * scale),
+                             bounding_window.top +
+                                 static_cast<T>(inner_window.GetHeight() * scale));
 }
 
 FramebufferLayout DefaultFrameLayout(u32 width, u32 height, bool swapped, bool upright) {
@@ -74,40 +94,30 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
     FramebufferLayout res{width, height, !swapped, swapped, {}, {}, !upright};
 
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
-    Common::Rectangle<u32> top_screen;
-    Common::Rectangle<u32> bot_screen;
+    Common::Rectangle<u32> top_screen{0, 0, Core::kScreenTopWidth, Core::kScreenTopHeight};
+    Common::Rectangle<u32> bot_screen{0, 0, Core::kScreenBottomWidth, Core::kScreenBottomHeight};
 
-    // TODO: This is kind of gross, make it platform agnostic. -OS
-#ifdef ANDROID
     const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
     const auto aspect_ratio_setting = Settings::values.aspect_ratio.GetValue();
 
-    float emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
     switch (aspect_ratio_setting) {
     case Settings::AspectRatio::Default:
+        // this is the only one where we allow integer scaling to apply
+        // also the only option on desktop
+        top_screen = MaxRectangle(screen_window_area, top_screen,
+                                  Settings::values.use_integer_scaling.GetValue());
+        bot_screen = MaxRectangle(screen_window_area, bot_screen,
+                                  Settings::values.use_integer_scaling.GetValue());
         break;
     case Settings::AspectRatio::Stretch:
-        emulation_aspect_ratio = window_aspect_ratio;
+        top_screen = MaxRectangle(screen_window_area, window_aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, window_aspect_ratio);
         break;
     default:
-        emulation_aspect_ratio = res.GetAspectRatioValue(aspect_ratio_setting);
+        float emulation_aspect_ratio = FramebufferLayout::GetAspectRatioValue(aspect_ratio_setting);
+        top_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
+        bot_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
     }
-
-    top_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-    bot_screen = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-
-    if (window_aspect_ratio < emulation_aspect_ratio) {
-        top_screen =
-            top_screen.TranslateX((screen_window_area.GetWidth() - top_screen.GetWidth()) / 2);
-        bot_screen =
-            bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
-    } else {
-        top_screen = top_screen.TranslateY((height - top_screen.GetHeight()) / 2);
-        bot_screen = bot_screen.TranslateY((height - bot_screen.GetHeight()) / 2);
-    }
-#else
-    top_screen = MaxRectangle(screen_window_area, TOP_SCREEN_ASPECT_RATIO);
-    bot_screen = MaxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
 
     const bool stretched = (Settings::values.screen_top_stretch.GetValue() && !swapped) ||
                            (Settings::values.screen_bottom_stretch.GetValue() && swapped);
@@ -126,7 +136,6 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
         bot_screen = bot_screen.TranslateX((width - bot_screen.GetWidth()) / 2)
                          .TranslateY((height - bot_screen.GetHeight()) / 2);
     }
-#endif
 
     res.top_screen = top_screen;
     res.bottom_screen = bot_screen;
@@ -150,19 +159,17 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
     FramebufferLayout res{width, height, true, true, {}, {}, !upright};
     // Split the window into two parts. Give proportional width to the smaller screen
     // To do that, find the total emulation box and maximize that based on window size
-    u32 gap = (u32)(Settings::values.screen_gap.GetValue() * scale_factor);
+    u32 gap = (u32)(Settings::values.screen_gap.GetValue());
 
-    float large_height =
-        swapped ? Core::kScreenBottomHeight * scale_factor : Core::kScreenTopHeight * scale_factor;
-    float small_height =
-        static_cast<float>(swapped ? Core::kScreenTopHeight : Core::kScreenBottomHeight);
-    float large_width =
-        swapped ? Core::kScreenBottomWidth * scale_factor : Core::kScreenTopWidth * scale_factor;
-    float small_width =
-        static_cast<float>(swapped ? Core::kScreenTopWidth : Core::kScreenBottomWidth);
+    u32 large_height = swapped ? Core::kScreenBottomHeight : Core::kScreenTopHeight;
+    u32 small_height = static_cast<u32>(swapped ? Core::kScreenTopHeight / scale_factor
+                                                : Core::kScreenBottomHeight / scale_factor);
+    u32 large_width = swapped ? Core::kScreenBottomWidth : Core::kScreenTopWidth;
+    u32 small_width = static_cast<u32>(swapped ? Core::kScreenTopWidth / scale_factor
+                                               : Core::kScreenBottomWidth / scale_factor);
 
-    float emulation_width;
-    float emulation_height;
+    u32 emulation_width;
+    u32 emulation_height;
     if (vertical) {
         // width is just the larger size at this point
         emulation_width = std::max(large_width, small_width);
@@ -172,12 +179,13 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
         emulation_height = std::max(large_height, small_height);
     }
 
-    const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
-    const float emulation_aspect_ratio = emulation_height / emulation_width;
-
     Common::Rectangle<u32> screen_window_area{0, 0, width, height};
-    Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, emulation_aspect_ratio);
-    // TODO: Wtf does this `scale_amount` value represent? -OS
+    Common::Rectangle<u32> total_rect{0, 0, emulation_width, emulation_height};
+    total_rect = MaxRectangle(screen_window_area, total_rect,
+                              Settings::values.use_integer_scaling.GetValue());
+    total_rect = total_rect.TranslateX((width - total_rect.GetWidth()) / 2)
+                     .TranslateY((height - total_rect.GetHeight()) / 2);
+
     const float scale_amount = static_cast<float>(total_rect.GetHeight()) / emulation_height;
     gap = static_cast<u32>(static_cast<float>(gap) * scale_amount);
 
@@ -190,61 +198,50 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
                                static_cast<u32>(small_width * scale_amount + total_rect.left),
                                static_cast<u32>(small_height * scale_amount + total_rect.top)};
 
-    if (window_aspect_ratio < emulation_aspect_ratio) {
-        // shift the large screen so it is at the left position of the bounding rectangle
-        large_screen = large_screen.TranslateX((width - total_rect.GetWidth()) / 2);
-    } else {
-        // shift the large screen so it is at the top position of the bounding rectangle
-        large_screen = large_screen.TranslateY((height - total_rect.GetHeight()) / 2);
-    }
-
     switch (small_screen_position) {
     case Settings::SmallScreenPosition::TopRight:
         // Shift the small screen to the top right corner
-        small_screen = small_screen.TranslateX(large_screen.right + gap);
-        small_screen = small_screen.TranslateY(large_screen.top);
+        small_screen = small_screen.TranslateX(large_screen.GetWidth() + gap);
+        small_screen = small_screen.TranslateY(large_screen.top - small_screen.top);
         break;
     case Settings::SmallScreenPosition::MiddleRight:
         // Shift the small screen to the center right
-        small_screen = small_screen.TranslateX(large_screen.right + gap);
-        small_screen = small_screen.TranslateY(
-            ((large_screen.GetHeight() - small_screen.GetHeight()) / 2) + large_screen.top);
+        small_screen = small_screen.TranslateX(large_screen.GetWidth() + gap);
+        small_screen =
+            small_screen.TranslateY(((large_screen.GetHeight() - small_screen.GetHeight()) / 2) +
+                                    large_screen.top - small_screen.top);
         break;
     case Settings::SmallScreenPosition::BottomRight:
         // Shift the small screen to the bottom right corner
-        small_screen = small_screen.TranslateX(large_screen.right + gap);
-        small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.GetHeight());
+        small_screen = small_screen.TranslateX(large_screen.GetWidth() + gap);
+        small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.bottom);
         break;
     case Settings::SmallScreenPosition::TopLeft:
-        // shift the small screen to the upper left then shift the large screen to its right
-        small_screen = small_screen.TranslateX(large_screen.left);
+        // shift the large screen to the upper right of the small screen
         large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
-        small_screen = small_screen.TranslateY(large_screen.top);
         break;
     case Settings::SmallScreenPosition::MiddleLeft:
         // shift the small screen to the middle left and shift the large screen to its right
-        small_screen = small_screen.TranslateX(large_screen.left);
         large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
-        small_screen = small_screen.TranslateY(
-            ((large_screen.GetHeight() - small_screen.GetHeight()) / 2) + large_screen.top);
+        small_screen =
+            small_screen.TranslateY(((large_screen.GetHeight() - small_screen.GetHeight()) / 2));
         break;
     case Settings::SmallScreenPosition::BottomLeft:
         // shift the small screen to the bottom left and shift the large screen to its right
-        small_screen = small_screen.TranslateX(large_screen.left);
         large_screen = large_screen.TranslateX(small_screen.GetWidth() + gap);
-        small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.GetHeight());
+        small_screen = small_screen.TranslateY(large_screen.bottom - small_screen.bottom);
         break;
     case Settings::SmallScreenPosition::AboveLarge:
-        // shift the large screen down and the bottom screen above it
-        small_screen = small_screen.TranslateY(large_screen.top);
+        // shift the large screen down
         large_screen = large_screen.TranslateY(small_screen.GetHeight() + gap);
         // If the "large screen" is actually smaller, center it
         if (large_screen.GetWidth() < total_rect.GetWidth()) {
             large_screen =
                 large_screen.TranslateX((total_rect.GetWidth() - large_screen.GetWidth()) / 2);
         }
-        small_screen = small_screen.TranslateX(large_screen.left + large_screen.GetWidth() / 2 -
-                                               small_screen.GetWidth() / 2);
+        small_screen =
+            small_screen.TranslateX((large_screen.left - total_rect.left) +
+                                    large_screen.GetWidth() / 2 - small_screen.GetWidth() / 2);
         break;
     case Settings::SmallScreenPosition::BelowLarge:
         // shift the bottom_screen down and then over to the center
@@ -253,9 +250,10 @@ FramebufferLayout LargeFrameLayout(u32 width, u32 height, bool swapped, bool upr
             large_screen =
                 large_screen.TranslateX((total_rect.GetWidth() - large_screen.GetWidth()) / 2);
         }
-        small_screen = small_screen.TranslateY(large_screen.bottom + gap);
-        small_screen = small_screen.TranslateX(large_screen.left + large_screen.GetWidth() / 2 -
-                                               small_screen.GetWidth() / 2);
+        small_screen = small_screen.TranslateY(large_screen.GetHeight() + gap);
+        small_screen =
+            small_screen.TranslateX((large_screen.left - total_rect.left) +
+                                    large_screen.GetWidth() / 2 - small_screen.GetWidth() / 2);
         break;
     default:
         UNREACHABLE();
@@ -276,54 +274,19 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
     if (upright) {
         std::swap(width, height);
     }
-    FramebufferLayout res{width, height, true, true, {}, {}, !upright, false, true, {}};
 
     // Split the window into two parts. Give 2.25x width to the main screen,
     // and make a bar on the right side with 1x width top screen and 1.25x width bottom screen
     // To do that, find the total emulation box and maximize that based on window size
-    const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
-    const float scale_factor = 2.25f;
-
-    float main_screen_aspect_ratio = TOP_SCREEN_ASPECT_RATIO;
-    float hybrid_area_aspect_ratio = 27.f / 65;
-    float top_screen_aspect_ratio = TOP_SCREEN_ASPECT_RATIO;
-    float bot_screen_aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
-
-    if (swapped) {
-        main_screen_aspect_ratio = BOT_SCREEN_ASPECT_RATIO;
-        hybrid_area_aspect_ratio =
-            Core::kScreenBottomHeight * scale_factor /
-            (Core::kScreenBottomWidth * scale_factor + Core::kScreenTopWidth);
-    }
-
-    Common::Rectangle<u32> screen_window_area{0, 0, width, height};
-    Common::Rectangle<u32> total_rect = MaxRectangle(screen_window_area, hybrid_area_aspect_ratio);
-    Common::Rectangle<u32> large_main_screen = MaxRectangle(total_rect, main_screen_aspect_ratio);
-    Common::Rectangle<u32> side_rect = total_rect.Scale(1.f / scale_factor);
-    Common::Rectangle<u32> small_top_screen = MaxRectangle(side_rect, top_screen_aspect_ratio);
-    Common::Rectangle<u32> small_bottom_screen = MaxRectangle(side_rect, bot_screen_aspect_ratio);
-
-    if (window_aspect_ratio < hybrid_area_aspect_ratio) {
-        large_main_screen = large_main_screen.TranslateX((width - total_rect.GetWidth()) / 2);
-    } else {
-        large_main_screen = large_main_screen.TranslateY((height - total_rect.GetHeight()) / 2);
-    }
-
-    // Scale the bottom screen so it's width is the same as top screen
-    small_bottom_screen = small_bottom_screen.Scale(1.25f);
-
-    // Shift the small bottom screen to the bottom right corner
-    small_bottom_screen = small_bottom_screen.TranslateX(large_main_screen.right)
-                              .TranslateY(large_main_screen.GetHeight() + large_main_screen.top -
-                                          small_bottom_screen.GetHeight());
-
-    // Shift small top screen to upper right corner
-    small_top_screen =
-        small_top_screen.TranslateX(large_main_screen.right).TranslateY(large_main_screen.top);
-
-    res.top_screen = small_top_screen;
-    res.additional_screen = swapped ? small_bottom_screen : large_main_screen;
-    res.bottom_screen = swapped ? large_main_screen : small_bottom_screen;
+    const float scale_factor = swapped ? 2.25 : 1.8;
+    const Settings::SmallScreenPosition pos = swapped ? Settings::SmallScreenPosition::TopRight
+                                                      : Settings::SmallScreenPosition::BottomRight;
+    FramebufferLayout res = LargeFrameLayout(width, height, swapped, upright, scale_factor, pos);
+    const Common::Rectangle<u32> main = swapped ? res.bottom_screen : res.top_screen;
+    const Common::Rectangle<u32> small = swapped ? res.top_screen : res.bottom_screen;
+    res.additional_screen = Common::Rectangle<u32>{small.left, swapped ? small.bottom : main.top,
+                                                   small.right, swapped ? main.bottom : small.top};
+    res.additional_screen_enabled = true;
     if (upright) {
         return reverseLayout(res);
     } else {

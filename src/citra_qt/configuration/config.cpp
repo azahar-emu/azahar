@@ -687,6 +687,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.use_disk_shader_cache);
     ReadGlobalSetting(Settings::values.use_vsync_new);
     ReadGlobalSetting(Settings::values.resolution_factor);
+    ReadGlobalSetting(Settings::values.use_integer_scaling);
     ReadGlobalSetting(Settings::values.frame_limit);
     ReadGlobalSetting(Settings::values.turbo_limit);
 
@@ -1218,6 +1219,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.use_disk_shader_cache);
     WriteGlobalSetting(Settings::values.use_vsync_new);
     WriteGlobalSetting(Settings::values.resolution_factor);
+    WriteGlobalSetting(Settings::values.use_integer_scaling);
     WriteGlobalSetting(Settings::values.frame_limit);
     WriteGlobalSetting(Settings::values.turbo_limit);
 

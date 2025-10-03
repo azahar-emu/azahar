@@ -884,6 +884,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.RESOLUTION_FACTOR.defaultValue
                 )
             )
+             add(
+                SwitchSetting(
+                    BooleanSetting.USE_INTEGER_SCALING,
+                    R.string.use_integer_scaling,
+                    R.string.use_integer_scaling_description,
+                    BooleanSetting.USE_INTEGER_SCALING.key,
+                    BooleanSetting.USE_INTEGER_SCALING.defaultValue
+                )
+            )
             add(
                 SwitchSetting(
                     BooleanSetting.LINEAR_FILTERING,

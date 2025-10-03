@@ -143,6 +143,7 @@ void SdlConfig::ReadValues() {
     ReadSetting("Renderer", Settings::values.shaders_accurate_mul);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);
+    ReadSetting("Renderer", Settings::values.use_integer_scaling);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.frame_limit);
     ReadSetting("Renderer", Settings::values.use_vsync_new);
@@ -156,6 +157,7 @@ void SdlConfig::ReadValues() {
     ReadSetting("Renderer", Settings::values.pp_shader_name);
     ReadSetting("Renderer", Settings::values.anaglyph_shader_name);
     ReadSetting("Renderer", Settings::values.filter_mode);
+    ReadSetting("Renderer", Settings::values.use_integer_scaling);
 
     ReadSetting("Renderer", Settings::values.bg_red);
     ReadSetting("Renderer", Settings::values.bg_green);

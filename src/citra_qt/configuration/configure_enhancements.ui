@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>440</width>
+    <width>639</width>
     <height>950</height>
    </rect>
   </property>
@@ -108,6 +108,13 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="use_integer_scaling">
+        <property name="text">
+         <string>Use Integer Scaling (if layout allows)</string>
+        </property>
        </widget>
       </item>
       <item>
@@ -318,14 +325,14 @@
        </layout>
       </item>
       <item>
-        <widget class="QCheckBox" name="disable_right_eye_render">
-          <property name="text">
-            <string>Disable right eye rendering</string>
-          </property>
-          <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-        </widget>
+       <widget class="QCheckBox" name="disable_right_eye_render">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Disable right eye rendering</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

@@ -148,6 +148,10 @@ use_disk_shader_cache =
 # factor for the 3DS resolution
 resolution_factor =
 
+# Use Integer Scaling when the layout allows
+# 0: Off (default), 1: On
+use_integer_scaling =
+
 # Whether to enable V-Sync (caps the framerate at 60FPS) or not.
 # 0 (default): Off, 1: On
 vsync_enabled =

@@ -33,6 +33,7 @@ enum class BooleanSetting(
     LLE_APPLETS("lle_applets", Settings.SECTION_SYSTEM, false),
     NEW_3DS("is_new_3ds", Settings.SECTION_SYSTEM, true),
     LINEAR_FILTERING("filter_mode", Settings.SECTION_RENDERER, true),
+    USE_INTEGER_SCALING("use_integer_scaling",Settings.SECTION_RENDERER, false),
     SHADERS_ACCURATE_MUL("shaders_accurate_mul", Settings.SECTION_RENDERER, false),
     DISK_SHADER_CACHE("use_disk_shader_cache", Settings.SECTION_RENDERER, true),
     DUMP_TEXTURES("dump_textures", Settings.SECTION_UTILITY, false),
