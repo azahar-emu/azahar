@@ -16,9 +16,9 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.display.SecondaryDisplayLayout
+import org.citra.citra_emu.NativeLibrary
 
 class SecondaryDisplay(val context: Context) {
     private var pres: SecondaryDisplayPresentation? = null
