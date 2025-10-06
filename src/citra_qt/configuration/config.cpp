@@ -141,7 +141,8 @@ void QtConfig::ReadBasicSetting(Settings::Setting<std::vector<Type>, ranged>& se
     const std::vector<Type> default_value = setting.GetDefault();
     QStringList stringList = qt_config->value(name).toStringList();
 
-    if (qt_config->value(name + QStringLiteral("/default"), false).toBool() || stringList.size() < 1) {
+    if (qt_config->value(name + QStringLiteral("/default"), false).toBool() ||
+        stringList.size() < 1) {
         setting.SetValue(default_value);
     } else {
         if (stringList.size() < 1) {
@@ -188,27 +189,7 @@ void QtConfig::ReadGlobalSetting(Settings::SwitchableSetting<Type, ranged>& sett
     const bool use_global = qt_config->value(name + QStringLiteral("/use_global"), true).toBool();
     setting.SetGlobal(use_global);
     if (global || !use_global) {
-        QVariant default_value{};
-        if constexpr (std::is_enum_v<Type>) {
-            using TypeU = std::underlying_type_t<Type>;
-            default_value = QVariant::fromValue<TypeU>(static_cast<TypeU>(setting.GetDefault()));
-            setting.SetValue(static_cast<Type>(ReadSetting(name, default_value).value<TypeU>()));
-        } else {
-            default_value = QVariant::fromValue<Type>(setting.GetDefault());
-            setting.SetValue(ReadSetting(name, default_value).value<Type>());
-        }
-    }
-}
-
-template <>
-void QtConfig::ReadGlobalSetting(Settings::SwitchableSetting<std::string>& setting) {
-    QString name = QString::fromStdString(setting.GetLabel());
-    const bool use_global = qt_config->value(name + QStringLiteral("/use_global"), true).toBool();
-    setting.SetGlobal(use_global);
-    if (global || !use_global) {
-        const QString default_value = QString::fromStdString(setting.GetDefault());
-        setting.SetValue(
-            ReadSetting(name, QVariant::fromValue(default_value)).toString().toStdString());
+        ReadBasicSetting(setting);
     }
 }
 
@@ -217,7 +198,8 @@ template <>
 void QtConfig::WriteBasicSetting(const Settings::Setting<std::string>& setting) {
     const QString name = QString::fromStdString(setting.GetLabel());
     const std::string& value = setting.GetValue();
-    qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
+    if (global)
+        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
     qt_config->setValue(name, QString::fromStdString(value));
 }
 
@@ -226,7 +208,8 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<std::vector<Type>, rang
     const QString name = QString::fromStdString(setting.GetLabel());
     const std::vector<Type>& value = setting.GetValue();
 
-    qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
+    if (global)
+        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
 
     QStringList stringList;
     if constexpr (std::is_enum_v<Type>) {
@@ -241,15 +224,14 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<std::vector<Type>, rang
             stringList.append(QString::number(item));
         }
     }
-
-    qt_config->setValue(name, stringList);
 }
 // Explicit u16 definition: Qt would store it as QMetaType otherwise, which is not human-readable
 template <>
 void QtConfig::WriteBasicSetting(const Settings::Setting<u16>& setting) {
     const QString name = QString::fromStdString(setting.GetLabel());
     const u16& value = setting.GetValue();
-    qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
+    if (global)
+        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
     qt_config->setValue(name, static_cast<u32>(value));
 }
 
@@ -257,7 +239,8 @@ template <typename Type, bool ranged>
 void QtConfig::WriteBasicSetting(const Settings::Setting<Type, ranged>& setting) {
     const QString name = QString::fromStdString(setting.GetLabel());
     const Type value = setting.GetValue();
-    qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
+    if (global)
+        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
     if constexpr (std::is_enum_v<Type>) {
         qt_config->setValue(name, static_cast<std::underlying_type_t<Type>>(value));
     } else {
@@ -273,39 +256,7 @@ void QtConfig::WriteGlobalSetting(const Settings::SwitchableSetting<Type, ranged
         qt_config->setValue(name + QStringLiteral("/use_global"), setting.UsingGlobal());
     }
     if (global || !setting.UsingGlobal()) {
-        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
-        if constexpr (std::is_enum_v<Type>) {
-            qt_config->setValue(name, static_cast<std::underlying_type_t<Type>>(value));
-        } else {
-            qt_config->setValue(name, QVariant::fromValue(value));
-        }
-    }
-}
-
-template <>
-void QtConfig::WriteGlobalSetting(const Settings::SwitchableSetting<std::string>& setting) {
-    const QString name = QString::fromStdString(setting.GetLabel());
-    const std::string& value = setting.GetValue(global);
-    if (!global) {
-        qt_config->setValue(name + QStringLiteral("/use_global"), setting.UsingGlobal());
-    }
-    if (global || !setting.UsingGlobal()) {
-        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
-        qt_config->setValue(name, QString::fromStdString(value));
-    }
-}
-
-// Explicit u16 definition: Qt would store it as QMetaType otherwise, which is not human-readable
-template <>
-void QtConfig::WriteGlobalSetting(const Settings::SwitchableSetting<u16, true>& setting) {
-    const QString name = QString::fromStdString(setting.GetLabel());
-    const u16& value = setting.GetValue(global);
-    if (!global) {
-        qt_config->setValue(name + QStringLiteral("/use_global"), setting.UsingGlobal());
-    }
-    if (global || !setting.UsingGlobal()) {
-        qt_config->setValue(name + QStringLiteral("/default"), value == setting.GetDefault());
-        qt_config->setValue(name, static_cast<u32>(value));
+        WriteBasicSetting(setting);
     }
 }
 
@@ -1498,7 +1449,8 @@ void QtConfig::WriteSetting(const QString& name, const QVariant& value) {
 
 void QtConfig::WriteSetting(const QString& name, const QVariant& value,
                             const QVariant& default_value) {
-    qt_config->setValue(name + QStringLiteral("/default"), value == default_value);
+    if (global)
+        qt_config->setValue(name + QStringLiteral("/default"), value == default_value);
     qt_config->setValue(name, value);
 }
 

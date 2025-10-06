@@ -131,9 +131,8 @@ private:
     template <typename Type, bool ranged>
     void WriteBasicSetting(const Settings::Setting<Type, ranged>& setting);
 
-     template <typename Type, bool ranged>
+    template <typename Type, bool ranged>
     void WriteBasicSetting(const Settings::Setting<std::vector<Type>, ranged>& setting);
-
 
     ConfigType type;
     std::unique_ptr<QSettings> qt_config;
