@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>ConfigureLayoutCycle</class>
+ <widget class="QDialog" name="ConfigureLayoutCycle">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -74,7 +74,7 @@
          <string>Default</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -84,7 +84,7 @@
          <string>Single Screen</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -94,7 +94,7 @@
          <string>Large Screen</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -104,7 +104,7 @@
          <string>Side by Side</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -114,7 +114,7 @@
          <string>Separate Windows</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -124,7 +124,7 @@
          <string>Hybrid</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -134,7 +134,7 @@
          <string>Custom</string>
         </property>
         <property name="checked">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -158,7 +158,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>ConfigureLayoutCycle</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -174,7 +174,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>ConfigureLayoutCycle</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

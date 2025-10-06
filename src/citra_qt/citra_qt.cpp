@@ -2742,13 +2742,21 @@ void GMainWindow::AdjustSpeedLimit(bool increase) {
 void GMainWindow::ToggleScreenLayout() {
     const Settings::LayoutOption new_layout = []() {
         const Settings::LayoutOption current_layout = Settings::values.layout_option.GetValue();
-        const std::vector<Settings::LayoutOption> layouts_to_cycle = Settings::values.layouts_to_cycle.GetValue();
-        const auto current_pos = distance(layouts_to_cycle.begin(),std::find(layouts_to_cycle.begin(),layouts_to_cycle.end(),current_layout));
+        std::vector<Settings::LayoutOption> layouts_to_cycle =
+            Settings::values.layouts_to_cycle.GetValue();
+        const auto current_pos =
+            distance(layouts_to_cycle.begin(),
+                     std::find(layouts_to_cycle.begin(), layouts_to_cycle.end(), current_layout));
+        // if the layouts_to_cycle setting has somehow been
+        // cleared out, add just default back in
+        if (layouts_to_cycle.size() == 0) {
+            layouts_to_cycle.push_back(Settings::LayoutOption::Default);
+        }
         if (current_pos >= layouts_to_cycle.size() - 1) {
             // either this layout wasn't found or it was last so move to the beginning
             return layouts_to_cycle[0];
-        }else {
-            return layouts_to_cycle[current_pos+1];
+        } else {
+            return layouts_to_cycle[current_pos + 1];
         }
     }();
 
