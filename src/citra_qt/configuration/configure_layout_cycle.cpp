@@ -16,9 +16,17 @@ ConfigureLayoutCycle::~ConfigureLayoutCycle() = default;
 void ConfigureLayoutCycle::ConnectEvents() {
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
             &ConfigureLayoutCycle::ApplyConfiguration);
+    connect(ui->globalCheck, &QCheckBox::stateChanged, this, &ConfigureLayoutCycle::UpdateGlobal);
 }
 
 void ConfigureLayoutCycle::SetConfiguration() {
+    if (Settings::IsConfiguringGlobal()) {
+        ui->globalCheck->setChecked(true);
+        ui->globalCheck->setVisible(false);
+    } else {
+        ui->globalCheck->setChecked(Settings::values.layouts_to_cycle.UsingGlobal());
+        ui->checkGroup->setDisabled(Settings::values.layouts_to_cycle.UsingGlobal());
+    }
     for (auto option : Settings::values.layouts_to_cycle.GetValue()) {
         switch (option) {
         case Settings::LayoutOption::Default:
@@ -64,4 +72,10 @@ void ConfigureLayoutCycle::ApplyConfiguration() {
         newSetting.push_back(Settings::LayoutOption::CustomLayout);
     Settings::values.layouts_to_cycle = newSetting;
     accept();
+}
+
+void ConfigureLayoutCycle::UpdateGlobal() {
+    Settings::values.layouts_to_cycle.SetGlobal(ui->globalCheck->isChecked());
+    ui->checkGroup->setDisabled(ui->globalCheck->isChecked());
+    ui->checkGroup->repaint(); // Force visual update
 }

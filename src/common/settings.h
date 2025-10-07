@@ -537,7 +537,7 @@ struct Values {
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{SecondaryDisplayLayout::None,
                                                                        "secondary_display_layout"};
-    Setting<std::vector<LayoutOption>> layouts_to_cycle{
+    SwitchableSetting<std::vector<LayoutOption>> layouts_to_cycle{
         {LayoutOption::Default, LayoutOption::SingleScreen, LayoutOption::LargeScreen,
          LayoutOption::SideScreen,
 #ifndef ANDROID

@@ -532,9 +532,8 @@ void QtConfig::ReadLayoutValues() {
     ReadGlobalSetting(Settings::values.large_screen_proportion);
     ReadGlobalSetting(Settings::values.screen_gap);
     ReadGlobalSetting(Settings::values.small_screen_position);
-
+    ReadGlobalSetting(Settings::values.layouts_to_cycle);
     if (global) {
-        ReadBasicSetting(Settings::values.layouts_to_cycle);
         ReadBasicSetting(Settings::values.mono_render_option);
         ReadBasicSetting(Settings::values.custom_top_x);
         ReadBasicSetting(Settings::values.custom_top_y);
@@ -1113,8 +1112,8 @@ void QtConfig::SaveLayoutValues() {
     WriteGlobalSetting(Settings::values.large_screen_proportion);
     WriteGlobalSetting(Settings::values.screen_gap);
     WriteGlobalSetting(Settings::values.small_screen_position);
+    WriteGlobalSetting(Settings::values.layouts_to_cycle);
     if (global) {
-        WriteBasicSetting(Settings::values.layouts_to_cycle);
         WriteBasicSetting(Settings::values.mono_render_option);
         WriteBasicSetting(Settings::values.custom_top_x);
         WriteBasicSetting(Settings::values.custom_top_y);

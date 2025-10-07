@@ -26,6 +26,7 @@ private slots:
 private:
     void SetConfiguration();
     void ConnectEvents();
+    void UpdateGlobal();
 
     std::unique_ptr<Ui::ConfigureLayoutCycle> ui;
 };
