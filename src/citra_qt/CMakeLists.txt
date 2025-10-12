@@ -278,8 +278,8 @@ if (ENABLE_VULKAN)
 endif()
 
 if (NOT WIN32)
-    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
-    target_include_directories(citra_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui GuiPrivate Widgets)
+    target_link_libraries(citra_qt PRIVATE Qt6::GuiPrivate)
 endif()
 
 if (APPLE)
