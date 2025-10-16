@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>ConfigureLayoutCycle</class>
  <widget class="QDialog" name="ConfigureLayoutCycle">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>398</width>
-    <height>310</height>
+    <width>395</width>
+    <height>334</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +20,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Configure Layout Cycling</string>
   </property>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
@@ -25,7 +28,7 @@
      <x>10</x>
      <y>10</y>
      <width>381</width>
-     <height>304</height>
+     <height>323</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,0,0,1">

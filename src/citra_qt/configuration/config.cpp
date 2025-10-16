@@ -224,6 +224,7 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<std::vector<Type>, rang
             stringList.append(QString::number(item));
         }
     }
+    qt_config->setValue(name, stringList);
 }
 // Explicit u16 definition: Qt would store it as QMetaType otherwise, which is not human-readable
 template <>
