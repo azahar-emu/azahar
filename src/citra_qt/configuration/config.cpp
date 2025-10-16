@@ -251,7 +251,6 @@ void QtConfig::WriteBasicSetting(const Settings::Setting<Type, ranged>& setting)
 template <typename Type, bool ranged>
 void QtConfig::WriteGlobalSetting(const Settings::SwitchableSetting<Type, ranged>& setting) {
     const QString name = QString::fromStdString(setting.GetLabel());
-    const Type& value = setting.GetValue(global);
     if (!global) {
         qt_config->setValue(name + QStringLiteral("/use_global"), setting.UsingGlobal());
     }
