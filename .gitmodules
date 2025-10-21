@@ -100,3 +100,6 @@
 [submodule "spirv-headers"]
 	path = externals/spirv-headers
 	url = https://github.com/KhronosGroup/SPIRV-Headers
+[submodule "externals/libretro-common"]
+	path = externals/libretro-common
+	url = https://github.com/libretro/libretro-common.git
