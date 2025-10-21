@@ -279,11 +279,12 @@ endif()
 
 if (NOT WIN32)
     find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
-    target_include_directories(citra_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
-endif()
-
-if (APPLE)
-    target_link_libraries(citra_qt PRIVATE Qt6::GuiPrivate)
+    if(Qt6_VERSION VERSION_GREATER_EQUAL "6.10.0")
+        find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
+        target_link_libraries(citra_qt PRIVATE Qt6::GuiPrivate)
+    else()
+        target_include_directories(citra_qt PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})
+    endif()
 endif()
 
 if (UNIX AND NOT APPLE)
