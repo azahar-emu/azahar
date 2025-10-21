@@ -107,6 +107,7 @@ signals:
     void AddDirectory();
     void ShowList(bool show);
     void PopulatingCompleted();
+    void StartingLaunchStressTest(const QString& game_path);
 
 private slots:
     void OnItemExpanded(const QModelIndex& item);

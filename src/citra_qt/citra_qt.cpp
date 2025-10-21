@@ -980,6 +980,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
     connect(game_list, &GameList::PopulatingCompleted, this,
             [this] { multiplayer_state->UpdateGameList(game_list->GetModel()); });
+    connect(game_list, &GameList::StartingLaunchStressTest, this,
+            &GMainWindow::StartLaunchStressTest);
 
     connect(game_list, &GameList::OpenPerGameGeneralRequested, this,
             &GMainWindow::OnGameListOpenPerGameProperties);
@@ -1574,6 +1576,16 @@ void GMainWindow::ShutdownGame() {
     // When closing the game, destroy the GLWindow to clear the context after the game is closed
     render_window->ReleaseRenderTarget();
     secondary_window->ReleaseRenderTarget();
+}
+
+void GMainWindow::StartLaunchStressTest(const QString& game_path) {
+    QThreadPool::globalInstance()->start([this, game_path] {
+        do {
+            ui->action_Stop->trigger();
+            emit game_list->GameChosen(game_path);
+            QThread::sleep(2);
+        } while (emulation_running);
+    });
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
