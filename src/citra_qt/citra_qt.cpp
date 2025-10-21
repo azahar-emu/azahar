@@ -980,8 +980,10 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
     connect(game_list, &GameList::PopulatingCompleted, this,
             [this] { multiplayer_state->UpdateGameList(game_list->GetModel()); });
+#ifdef ENABLE_DEVELOPER_OPTIONS
     connect(game_list, &GameList::StartingLaunchStressTest, this,
             &GMainWindow::StartLaunchStressTest);
+#endif
 
     connect(game_list, &GameList::OpenPerGameGeneralRequested, this,
             &GMainWindow::OnGameListOpenPerGameProperties);
