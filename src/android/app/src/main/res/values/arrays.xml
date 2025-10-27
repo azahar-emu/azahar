@@ -41,6 +41,9 @@
         <item>@string/emulation_top_screen</item>
         <item>@string/emulation_bottom_screen</item>
         <item>@string/emulation_screen_layout_sidebyside</item>
+        <item>@string/emulation_screen_layout_original</item>
+        <item>@string/emulation_screen_layout_hybrid</item>
+        <item>@string/emulation_screen_layout_largescreen</item>
 
     </string-array>
 
@@ -56,6 +59,9 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
     </integer-array>
 
     <string-array name="smallScreenPositions">
