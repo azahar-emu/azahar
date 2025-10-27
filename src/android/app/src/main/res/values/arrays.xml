@@ -44,6 +44,7 @@
         <item>@string/emulation_screen_layout_original</item>
         <item>@string/emulation_screen_layout_hybrid</item>
         <item>@string/emulation_screen_layout_largescreen</item>
+
     </string-array>
 
     <integer-array name="portraitLayoutValues">
