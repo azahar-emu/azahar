@@ -22,6 +22,15 @@
         <item
             android:id="@+id/menu_secondary_layout_side_by_side"
             android:title="@string/emulation_screen_layout_sidebyside" />
+        <item
+            android:id="@+id/menu_secondary_layout_original"
+            android:title="@string/emulation_screen_layout_original" />
+        <item
+            android:id="@+id/menu_secondary_layout_hybrid"
+            android:title="@string/emulation_screen_layout_hybrid" />
+        <item
+            android:id="@+id/menu_secondary_layout_largescreen"
+            android:title="@string/emulation_screen_layout_largescreen" />
 
     </group>
 

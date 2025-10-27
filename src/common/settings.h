@@ -54,7 +54,7 @@ enum class PortraitLayoutOption : u32 {
     PortraitOriginal
 };
 
-enum class SecondaryDisplayLayout : u32 { None, TopScreenOnly, BottomScreenOnly, SideBySide, ReversePrimary };
+enum class SecondaryDisplayLayout : u32 { None, TopScreenOnly, BottomScreenOnly, SideBySide, ReversePrimary, Original, Hybrid, LargeScreen };
 /** Defines where the small screen will appear relative to the large screen
  * when in Large Screen mode
  */

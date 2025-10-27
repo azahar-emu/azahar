@@ -57,8 +57,11 @@ enum class SecondaryDisplayLayout(val int: Int) {
     TOP_SCREEN(1),
     BOTTOM_SCREEN(2),
     SIDE_BY_SIDE(3),
-
-    REVERSE_PRIMARY(4);
+    REVERSE_PRIMARY(4),
+    ORIGINAL(5),
+    HYBRID(6),
+    LARGE_SCREEN(7)
+    ;
 
     companion object {
         fun from(int: Int): SecondaryDisplayLayout {

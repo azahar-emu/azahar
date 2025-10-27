@@ -453,7 +453,7 @@
     <string name="emulation_aspect_ratio">Aspect Ratio</string>
     <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
     <string name="emulation_switch_portrait_layout">Portrait Screen Layout</string>
-    <string name="emulation_switch_secondary_layout">Secondary Display Screen Layout</string>
+    <string name="emulation_switch_secondary_layout">Secondary Display Layout</string>
     <string name="emulation_switch_secondary_layout_description">The layout used by a connected secondary screen, wired or wireless (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Large Screen</string>
     <string name="emulation_screen_layout_portrait">Portrait</string>

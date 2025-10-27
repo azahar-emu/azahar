@@ -1029,6 +1029,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 R.id.menu_secondary_layout_top
             SecondaryDisplayLayout.BOTTOM_SCREEN.int ->
                 R.id.menu_secondary_layout_bottom
+            SecondaryDisplayLayout.HYBRID.int ->
+                R.id.menu_secondary_layout_hybrid
+            SecondaryDisplayLayout.LARGE_SCREEN.int ->
+                R.id.menu_secondary_layout_largescreen
+            SecondaryDisplayLayout.ORIGINAL.int ->
+                R.id.menu_secondary_layout_original
             else ->
                 R.id.menu_secondary_layout_side_by_side
 
@@ -1057,6 +1063,18 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
                 R.id.menu_secondary_layout_side_by_side -> {
                     screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.SIDE_BY_SIDE.int)
+                    true
+                }
+                R.id.menu_secondary_layout_hybrid -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.HYBRID.int)
+                    true
+                }
+                R.id.menu_secondary_layout_original -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.ORIGINAL.int)
+                    true
+                }
+                R.id.menu_secondary_layout_largescreen -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.LARGE_SCREEN.int)
                     true
                 }
 
