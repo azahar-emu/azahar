@@ -912,4 +912,19 @@
     <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
     <string name="quickload_not_found">No Quicksave available.</string>
 
+    <!-- File Compression -->
+    <string name="compress">Compress</string>
+    <string name="compressing">Compressing…</string>
+    <string name="decompress">Decompress</string>
+    <string name="decompressing">Decompressing…</string>
+    <string name="compress_success">Compression completed successfully.</string>
+    <string name="compress_unsupported">Compression not supported for this file.</string>
+    <string name="compress_already">File is already compressed.</string>
+    <string name="compress_failed">Compression failed.</string>
+    <string name="decompress_success">Decompression completed successfully.</string>
+    <string name="decompress_unsupported">Decompression not supported for this file.</string>
+    <string name="decompress_not_compressed">File is not compressed.</string>
+    <string name="decompress_failed">Decompression failed.</string>
+    <string name="compress_decompress_installed_app">Already installed applications cannot be compressed or decompressed.</string>
+
 </resources>

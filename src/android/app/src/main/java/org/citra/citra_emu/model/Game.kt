@@ -27,6 +27,7 @@ class Game(
     val isVisibleSystemTitle: Boolean = false,
     val icon: IntArray? = null,
     val fileType: String = "",
+    val isCompressed: Boolean = false,
     val filename: String,
 ) : Parcelable {
     val keyAddedToLibraryTime get() = "${filename}_AddedToLibraryTime"
