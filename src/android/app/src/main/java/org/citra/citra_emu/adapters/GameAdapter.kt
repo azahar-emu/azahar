@@ -57,7 +57,12 @@ import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
 
-class GameAdapter(private val activity: AppCompatActivity, private val inflater: LayoutInflater,  private val openImageLauncher: ActivityResultLauncher<String>?) :
+class GameAdapter(
+    private val activity: AppCompatActivity,
+    private val inflater: LayoutInflater,
+    private val openImageLauncher: ActivityResultLauncher<String>?,
+    private val onRequestCompressOrDecompress: ((inputPath: String, suggestedName: String, shouldCompress: Boolean) -> Unit)? = null
+) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
     View.OnClickListener, View.OnLongClickListener {
     private var lastClickTime = 0L
@@ -438,6 +443,20 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
         bottomSheetView.findViewById<MaterialButton>(R.id.cheats).setOnClickListener {
             val action = CheatsFragmentDirections.actionGlobalCheatsFragment(holder.game.titleId)
             view.findNavController().navigate(action)
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.compress).setOnClickListener {
+            val recommendedExt = NativeLibrary.getRecommendedExtension(holder.game.path, true)
+            val baseName = holder.game.filename.substringBeforeLast('.')
+            onRequestCompressOrDecompress?.invoke(holder.game.path, "$baseName.$recommendedExt", true)
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.decompress).setOnClickListener {
+            val recommendedUncompressed = NativeLibrary.getRecommendedExtension(holder.game.path, false)
+            val baseName = holder.game.filename.substringBeforeLast('.')
+            onRequestCompressOrDecompress?.invoke(holder.game.path, "$baseName.$recommendedUncompressed", false)
             bottomSheetDialog.dismiss()
         }
 

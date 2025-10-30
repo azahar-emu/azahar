@@ -34,6 +34,7 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
@@ -73,6 +74,16 @@ namespace {
 
 ANativeWindow* s_surface;
 ANativeWindow* s_secondary_surface;
+
+namespace CompressionStatus {
+constexpr jint Success = 0;
+constexpr jint Compress_Unsupported = 1;
+constexpr jint Compress_AlreadyCompressed = 2;
+constexpr jint Compress_Failed = 3;
+constexpr jint Decompress_Unsupported = 4;
+constexpr jint Decompress_NotCompressed = 5;
+constexpr jint Decompress_Failed = 6;
+} // namespace CompressionStatus
 
 std::shared_ptr<Common::DynamicLibrary> vulkan_library{};
 std::unique_ptr<EmuWindow_Android> window;
@@ -461,6 +472,155 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_getHomeMenuPath(JNIEnv* env,
         return ToJString(env, path);
     }
     return ToJString(env, "");
+}
+
+jint Java_org_citra_citra_1emu_NativeLibrary_compressFile(JNIEnv* env, jobject obj,
+                                                          jstring j_input_path,
+                                                          jstring j_output_path) {
+    const std::string input_path = GetJString(env, j_input_path);
+    const std::string output_path = GetJString(env, j_output_path);
+
+    Loader::AppLoader::CompressFileInfo compress_info{};
+    compress_info.is_supported = false;
+    size_t frame_size{};
+    {
+        auto loader = Loader::GetLoader(input_path);
+        if (loader) {
+            compress_info = loader->GetCompressFileInfo();
+            frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
+        } else {
+            bool is_compressed = false;
+            if (Service::AM::CheckCIAToInstall(input_path, is_compressed, true) ==
+                Service::AM::InstallStatus::Success) {
+                auto meta_info = Service::AM::GetCIAInfos(input_path);
+                compress_info.is_supported = true;
+                compress_info.is_compressed = is_compressed;
+                compress_info.recommended_compressed_extension = "zcia";
+                compress_info.recommended_uncompressed_extension = "cia";
+                compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
+                frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
+                if (meta_info.Succeeded()) {
+                    const auto& meta_info_val = meta_info.Unwrap();
+                    std::vector<u8> value(sizeof(Service::AM::TitleInfo));
+                    memcpy(value.data(), &meta_info_val.first, sizeof(Service::AM::TitleInfo));
+                    compress_info.default_metadata.emplace("titleinfo", value);
+                    if (meta_info_val.second) {
+                        value.resize(sizeof(Loader::SMDH));
+                        memcpy(value.data(), meta_info_val.second.get(), sizeof(Loader::SMDH));
+                        compress_info.default_metadata.emplace("smdh", value);
+                    }
+                }
+            }
+        }
+    }
+    if (!compress_info.is_supported) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Compress_Unsupported);
+    }
+
+    if (compress_info.is_compressed) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Compress_AlreadyCompressed);
+    }
+
+    auto progress = [](std::size_t processed, std::size_t total) {
+        JNIEnv* env = IDCache::GetEnvForThread();
+        env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
+                                  IDCache::GetCompressProgressMethod(), static_cast<jlong>(total),
+                                  static_cast<jlong>(processed));
+    };
+
+    bool success =
+        FileUtil::CompressZ3DSFile(input_path, output_path, compress_info.underlying_magic,
+                                   frame_size, progress, compress_info.default_metadata);
+    if (!success) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Compress_Failed);
+    }
+
+    return static_cast<jint>(CompressionStatus::Success);
+}
+
+jint Java_org_citra_citra_1emu_NativeLibrary_decompressFile(JNIEnv* env, jobject obj,
+                                                            jstring j_input_path,
+                                                            jstring j_output_path) {
+    const std::string input_path = GetJString(env, j_input_path);
+    const std::string output_path = GetJString(env, j_output_path);
+
+    Loader::AppLoader::CompressFileInfo compress_info{};
+    compress_info.is_supported = false;
+    size_t frame_size{};
+    {
+        auto loader = Loader::GetLoader(input_path);
+        if (loader) {
+            compress_info = loader->GetCompressFileInfo();
+        } else {
+            bool is_compressed = false;
+            if (Service::AM::CheckCIAToInstall(input_path, is_compressed, false) ==
+                Service::AM::InstallStatus::Success) {
+                compress_info.is_supported = true;
+                compress_info.is_compressed = is_compressed;
+                compress_info.recommended_compressed_extension = "zcia";
+                compress_info.recommended_uncompressed_extension = "cia";
+                compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
+            }
+        }
+    }
+
+    if (!compress_info.is_supported) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Decompress_Unsupported);
+    }
+
+    if (!compress_info.is_compressed) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Decompress_NotCompressed);
+    }
+
+    auto progress = [](std::size_t processed, std::size_t total) {
+        JNIEnv* env = IDCache::GetEnvForThread();
+        env->CallStaticVoidMethod(IDCache::GetNativeLibraryClass(),
+                                  IDCache::GetCompressProgressMethod(), static_cast<jlong>(total),
+                                  static_cast<jlong>(processed));
+    };
+
+    bool success = FileUtil::DeCompressZ3DSFile(input_path, output_path, progress);
+    if (!success) {
+        FileUtil::Delete(output_path);
+        return static_cast<jint>(CompressionStatus::Decompress_Failed);
+    }
+
+    return static_cast<jint>(CompressionStatus::Success);
+}
+
+jstring Java_org_citra_citra_1emu_NativeLibrary_getRecommendedExtension(
+    JNIEnv* env, jobject obj, jstring j_input_path, jboolean j_should_compress) {
+    const std::string input_path = GetJString(env, j_input_path);
+
+    std::string compressed_ext;
+    std::string uncompressed_ext;
+
+    auto loader = Loader::GetLoader(input_path);
+    if (loader) {
+        auto compress_info = loader->GetCompressFileInfo();
+        if (compress_info.is_supported) {
+            compressed_ext = compress_info.recommended_compressed_extension;
+            uncompressed_ext = compress_info.recommended_uncompressed_extension;
+        }
+    } else {
+        bool is_compressed = false;
+        if (Service::AM::CheckCIAToInstall(input_path, is_compressed, true) ==
+            Service::AM::InstallStatus::Success) {
+            compressed_ext = "zcia";
+            uncompressed_ext = "cia";
+        }
+    }
+
+    if (compressed_ext.empty()) {
+        return env->NewStringUTF("");
+    }
+
+    return env->NewStringUTF(j_should_compress ? compressed_ext.c_str() : uncompressed_ext.c_str());
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_setUserDirectory(JNIEnv* env,
