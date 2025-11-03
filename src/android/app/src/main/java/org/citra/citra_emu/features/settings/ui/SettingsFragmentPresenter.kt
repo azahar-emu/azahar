@@ -113,18 +113,24 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     /** Returns the portrait mode width */
     private fun getWidth(): Int {
         val dm = Resources.getSystem().displayMetrics;
-        return if (dm.widthPixels < dm.heightPixels)
-            dm.widthPixels
+        val wm = settingsActivity.windowManager.maximumWindowMetrics;
+        val height = wm.bounds.height().coerceAtLeast(dm.heightPixels);
+        val width  = wm.bounds.width().coerceAtLeast(dm.widthPixels);
+        return if (width < height)
+            width
         else
-            dm.heightPixels
+            height
     }
 
     private fun getHeight(): Int {
         val dm = Resources.getSystem().displayMetrics;
-        return if (dm.widthPixels < dm.heightPixels)
-            dm.heightPixels
+        val wm = settingsActivity.windowManager.maximumWindowMetrics;
+        val height = wm.bounds.height().coerceAtLeast(dm.heightPixels);
+        val width  = wm.bounds.width().coerceAtLeast(dm.widthPixels);
+        return if (width < height)
+            height
         else
-            dm.widthPixels
+            width
     }
 
     private fun addConfigSettings(sl: ArrayList<SettingsItem>) {
