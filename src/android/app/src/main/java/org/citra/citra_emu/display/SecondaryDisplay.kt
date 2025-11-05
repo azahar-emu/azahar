@@ -47,9 +47,18 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
 
     private fun getExternalDisplay(context: Context): Display? {
         val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val internalId = context.display.displayId ?: Display.DEFAULT_DISPLAY
-        val displays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
-        return displays.firstOrNull { it.displayId != internalId && it.name != "HiddenDisplay" }
+        val currentDisplayId = context.display.displayId
+        val displays = dm.displays
+        val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
+        return displays.firstOrNull {
+            val isPresentable = presDisplays.any { pd -> pd.displayId == it.displayId }
+            val isNotDefaultOrPresentable = it.displayId != Display.DEFAULT_DISPLAY || isPresentable
+            isNotDefaultOrPresentable &&
+                    it.displayId != currentDisplayId &&
+                    it.name != "HiddenDisplay" &&
+                    it.state != Display.STATE_OFF &&
+                    it.isValid
+        }
     }
 
     fun updateDisplay() {
