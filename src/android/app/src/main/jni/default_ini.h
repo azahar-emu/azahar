@@ -134,9 +134,9 @@ use_shader_jit =
 # 0 (default): Game Controlled, 1: Nearest Neighbor, 2: Linear
 texture_sampling =
 
-# Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
-# so only turn this off if you notice a speed difference.
-# 0: Off, 1 (default): On
+# Forces VSync on the display thread. Can cause input delay, so only turn this on
+# if you have screen tearing, which is unusual on Android
+# 0 (default): Off, 1: On
 use_vsync_new =
 
 # Reduce stuttering by storing and loading generated shaders to disk
