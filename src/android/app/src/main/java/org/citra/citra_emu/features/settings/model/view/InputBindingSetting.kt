@@ -16,6 +16,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.Settings
 
 class InputBindingSetting(
@@ -161,6 +162,7 @@ class InputBindingSetting(
     fun removeOldMapping() {
         // Try remove all possible keys we wrote for this setting
         val oldKey = preferences.getString(reverseKey, "")
+        (setting as AbstractStringSetting).string = ""
         if (oldKey != "") {
             preferences.edit()
                 .remove(abstractSetting.key) // Used for ui text
