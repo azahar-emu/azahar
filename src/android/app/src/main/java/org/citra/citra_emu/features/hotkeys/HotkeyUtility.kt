@@ -17,10 +17,16 @@ class HotkeyUtility(
     private val context: Context) {
 
     private val hotkeyButtons = Hotkey.entries.map { it.button }
+    private var hotkeyIsEnabled = false;
     var HotkeyIsPressed = false
 
     fun handleHotkey(bindedButton: Int): Boolean {
-        if(hotkeyButtons.contains(bindedButton)) {
+        if (bindedButton == Hotkey.ENABLE.button) {
+            hotkeyIsEnabled = true;
+            return true;
+        }
+        if(hotkeyButtons.contains(bindedButton) &&
+            (hotkeyIsEnabled || !hotkeyButtons.contains(Hotkey.ENABLE.button))) {
             when (bindedButton) {
                 Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
@@ -50,5 +56,15 @@ class HotkeyUtility(
             return true
         }
         return false
+    }
+
+    fun handleButtonRelease(bindedButton: Int): Boolean {
+        if (! hotkeyButtons.contains(bindedButton)) return false;
+        if (bindedButton == Hotkey.ENABLE.button) {
+            hotkeyIsEnabled = false;
+        }else {
+            HotkeyIsPressed = false;
+        }
+        return true;
     }
 }
