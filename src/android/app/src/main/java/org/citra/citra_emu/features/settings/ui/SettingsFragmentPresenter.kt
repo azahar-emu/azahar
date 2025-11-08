@@ -796,7 +796,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 add(InputBindingSetting(button, Settings.triggerTitles[i]))
             }
 
-            add(HeaderSetting(R.string.controller_hotkeys))
+            add(HeaderSetting(R.string.controller_hotkeys,R.string.controller_hotkeys_description))
             Settings.hotKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))

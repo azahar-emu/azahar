@@ -116,6 +116,8 @@
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Hotkeys</string>
+    <string name="controller_hotkeys_description">If the "Hotkey Enable" key is mapped, that key must be pressed in addition to the mapped hotkey</string>
+    <string name="controller_hotkey_enable_button">Hotkey Enable</string>
     <string name="controller_triggers">Triggers</string>
     <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
