@@ -267,12 +267,11 @@ class EmulationActivity : AppCompatActivity() {
             return super.dispatchKeyEvent(event)
         }
 
-        val button =
-            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
-        val action: Int = when (event.action) {
-            KeyEvent.ACTION_DOWN -> {
-                hotkeyUtility.handleHotkey(button)
+        val buttonSet = getButtonSet(event)
 
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> {
+                var handled = false;
                 // On some devices, the back gesture / button press is not intercepted by androidx
                 // and fails to open the emulation menu. So we're stuck running deprecated code to
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
@@ -280,23 +279,61 @@ class EmulationActivity : AppCompatActivity() {
                     // If the hotkey is pressed, we don't want to open the drawer
                     if (!hotkeyUtility.HotkeyIsPressed) {
                         onBackPressed()
+                        handled = true;
                     }
                 }
+                for (button in buttonSet) {
+                    if (hotkeyUtility.handleHotkey(button)) {
+                        handled = true;
+                    }else {
+                        handled = NativeLibrary.onGamePadEvent(
+                            event.device.descriptor,
+                            button,
+                            NativeLibrary.ButtonState.PRESSED) || handled
 
-                // Normal key events.
-                NativeLibrary.ButtonState.PRESSED
+                    }
+                }
+                return handled;
             }
-
             KeyEvent.ACTION_UP -> {
-                hotkeyUtility.HotkeyIsPressed = false
-                NativeLibrary.ButtonState.RELEASED
+                var handled = false;
+                for (button in buttonSet) {
+                    if (hotkeyUtility.handleButtonRelease(button)) {
+                        handled = true;
+                    }else {
+                        handled = NativeLibrary.onGamePadEvent(
+                            event.device.descriptor,
+                            button,
+                            NativeLibrary.ButtonState.RELEASED
+                        ) || handled
+                    }
+                }
+                return handled;
             }
-            else -> return false
+            else -> {
+                return false;
+            }
         }
-        val input = event.device
-            ?: // Controller was disconnected
-            return false
-        return NativeLibrary.onGamePadEvent(input.descriptor, button, action)
+    }
+
+    /**
+     * Get the mutable set of int button values this key should map to
+     */
+    private fun getButtonSet(keyCode: KeyEvent):MutableSet<Int> {
+       val key = InputBindingSetting.getInputButtonKey(keyCode)
+        var buttonCodes = try {
+           preferences.getStringSet(key, mutableSetOf<String>())
+        } catch (e: ClassCastException) {
+            val prefInt = preferences.getInt(key, -1);
+            val migratedSet = if (prefInt != -1) {
+                mutableSetOf(prefInt.toString())
+            } else {
+                mutableSetOf<String>()
+            }
+            migratedSet
+        }
+        if (buttonCodes == null) buttonCodes = mutableSetOf<String>()
+        return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
     }
 
     private fun onAmiiboSelected(selectedFile: String) {
