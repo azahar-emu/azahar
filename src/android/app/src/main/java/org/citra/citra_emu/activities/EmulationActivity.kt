@@ -35,6 +35,7 @@ import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
@@ -262,11 +263,16 @@ class EmulationActivity : AppCompatActivity() {
         if (emulationFragment.isDrawerOpen()) {
             return super.dispatchKeyEvent(event)
         }
-
+        val clickedButton = InputBindingSetting.getUiString(event)
+        val hotkeyEnableButton = preferences.getString(Settings.HOTKEY_ENABLE, "");
+        if (hotkeyEnableButton == "") hotkeyUtility.enableHotkeys();
         val button =
-            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
+            preferences.getInt(InputBindingSetting.getInputButtonKey(event), event.keyCode)
         val action: Int = when (event.action) {
             KeyEvent.ACTION_DOWN -> {
+                if (hotkeyEnableButton == clickedButton) {
+                    hotkeyUtility.enableHotkeys()
+                }
                 hotkeyUtility.handleHotkey(button)
 
                 // On some devices, the back gesture / button press is not intercepted by androidx
@@ -281,12 +287,17 @@ class EmulationActivity : AppCompatActivity() {
 
                 // Normal key events.
                 NativeLibrary.ButtonState.PRESSED
+
             }
 
             KeyEvent.ACTION_UP -> {
+                if (hotkeyEnableButton == clickedButton) {
+                    hotkeyUtility.disableHotkeys()
+                }
                 hotkeyUtility.HotkeyIsPressed = false
                 NativeLibrary.ButtonState.RELEASED
             }
+
             else -> return false
         }
         val input = event.device
@@ -309,7 +320,8 @@ class EmulationActivity : AppCompatActivity() {
         // TODO: Move this check into native code - prevents crash if input pressed before starting emulation
         if (!NativeLibrary.isRunning() ||
             (event.source and InputDevice.SOURCE_CLASS_JOYSTICK == 0) ||
-            emulationFragment.isDrawerOpen()) {
+            emulationFragment.isDrawerOpen()
+        ) {
             return super.dispatchGenericMotionEvent(event)
         }
 

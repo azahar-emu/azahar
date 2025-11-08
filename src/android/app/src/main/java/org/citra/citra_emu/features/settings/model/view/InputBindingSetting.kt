@@ -128,6 +128,7 @@ class InputBindingSetting(
                 Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
                 Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
                 Settings.KEY_BUTTON_RIGHT -> NativeLibrary.ButtonType.DPAD_RIGHT
+                Settings.HOTKEY_ENABLE -> Hotkey.ENABLE.button
                 Settings.HOTKEY_SCREEN_SWAP -> Hotkey.SWAP_SCREEN.button
                 Settings.HOTKEY_CYCLE_LAYOUT -> Hotkey.CYCLE_LAYOUT.button
                 Settings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
@@ -163,6 +164,7 @@ class InputBindingSetting(
         // Try remove all possible keys we wrote for this setting
         val oldKey = preferences.getString(reverseKey, "")
         (setting as AbstractStringSetting).string = ""
+        if (buttonCode == Hotkey.ENABLE.button) return;
         if (oldKey != "") {
             preferences.edit()
                 .remove(abstractSetting.key) // Used for ui text
@@ -178,22 +180,24 @@ class InputBindingSetting(
      */
     private fun writeButtonMapping(key: String) {
         val editor = preferences.edit()
+        if (buttonCode != Hotkey.ENABLE.button) {
+            // Remove mapping for another setting using this input
+            val oldButtonCode = preferences.getInt(key, -1)
+            if (oldButtonCode != -1) {
+                val oldKey = getButtonKey(oldButtonCode)
+                editor.remove(oldKey) // Only need to remove UI text setting, others will be overwritten
+            }
 
-        // Remove mapping for another setting using this input
-        val oldButtonCode = preferences.getInt(key, -1)
-        if (oldButtonCode != -1) {
-            val oldKey = getButtonKey(oldButtonCode)
-            editor.remove(oldKey) // Only need to remove UI text setting, others will be overwritten
+            // Cleanup old mapping for this setting
+            removeOldMapping()
+
+            // Write next reverse mapping for future cleanup
+            editor.putString(reverseKey, key)
+
+            // Write new mapping
+            editor.putInt(key, buttonCode)
         }
 
-        // Cleanup old mapping for this setting
-        removeOldMapping()
-
-        // Write new mapping
-        editor.putInt(key, buttonCode)
-
-        // Write next reverse mapping for future cleanup
-        editor.putString(reverseKey, key)
 
         // Apply changes
         editor.apply()
@@ -227,8 +231,10 @@ class InputBindingSetting(
         }
 
         val code = translateEventToKeyId(keyEvent)
-        writeButtonMapping(getInputButtonKey(code))
-        val uiString = "${keyEvent.device.name}: Button $code"
+        if (buttonCode != Hotkey.ENABLE.button) {
+            writeButtonMapping(getInputButtonKey(keyEvent))
+        }
+        val uiString = getUiString(keyEvent)
         value = uiString
     }
 
@@ -315,7 +321,12 @@ class InputBindingSetting(
         fun getInputAxisOrientationKey(axis: Int): String =
             "${getInputAxisKey(axis)}_GuestOrientation"
 
-
+        /**
+         * Helper function to get UI String from event
+         */
+        fun getUiString(keyEvent: KeyEvent):String {
+            return "${keyEvent.device.name}: Button ${translateEventToKeyId(keyEvent)}"
+        }
         /**
          * This function translates a keyEvent into an "keyid"
          * This key id is either the keyCode from the event, or

@@ -18,9 +18,16 @@ class HotkeyUtility(
 
     private val hotkeyButtons = Hotkey.entries.map { it.button }
     var HotkeyIsPressed = false
+    var enabled = false
 
+    fun enableHotkeys() {
+        enabled = true
+    }
+    fun disableHotkeys() {
+        enabled = false
+    }
     fun handleHotkey(bindedButton: Int): Boolean {
-        if(hotkeyButtons.contains(bindedButton)) {
+        if(hotkeyButtons.contains(bindedButton) && enabled) {
             when (bindedButton) {
                 Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
                 Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
