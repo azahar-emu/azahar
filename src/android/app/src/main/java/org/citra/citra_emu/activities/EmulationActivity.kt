@@ -267,7 +267,7 @@ class EmulationActivity : AppCompatActivity() {
             return super.dispatchKeyEvent(event)
         }
 
-        val buttonSet = getButtonSet(event)
+        val buttonSet = InputBindingSetting.getButtonSet(event)
 
         when (event.action) {
             KeyEvent.ACTION_DOWN -> {
@@ -314,26 +314,6 @@ class EmulationActivity : AppCompatActivity() {
                 return false;
             }
         }
-    }
-
-    /**
-     * Get the mutable set of int button values this key should map to
-     */
-    private fun getButtonSet(keyCode: KeyEvent):MutableSet<Int> {
-       val key = InputBindingSetting.getInputButtonKey(keyCode)
-        var buttonCodes = try {
-           preferences.getStringSet(key, mutableSetOf<String>())
-        } catch (e: ClassCastException) {
-            val prefInt = preferences.getInt(key, -1);
-            val migratedSet = if (prefInt != -1) {
-                mutableSetOf(prefInt.toString())
-            } else {
-                mutableSetOf<String>()
-            }
-            migratedSet
-        }
-        if (buttonCodes == null) buttonCodes = mutableSetOf<String>()
-        return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
     }
 
     private fun onAmiiboSelected(selectedFile: String) {

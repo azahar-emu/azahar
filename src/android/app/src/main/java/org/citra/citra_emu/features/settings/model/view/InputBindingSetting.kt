@@ -186,29 +186,17 @@ class InputBindingSetting(
     /**
      * Helper function to write a gamepad button mapping for the setting.
      */
-    private fun writeButtonMapping(key: String) {
+    private fun writeButtonMapping(keyEvent: KeyEvent) {
         val editor = preferences.edit()
-
+        val key = getInputButtonKey(keyEvent)
         // Pull in all codes associated with this key
         // Migrate from the old int preference if need be
-        val buttonCodes = try {
-            preferences.getStringSet(key, mutableSetOf<String>())!!.toMutableSet()
-        } catch (e: ClassCastException) {
-            // Migration: the old Int is still there
-            val prefInt = preferences.getInt(key, -1);
-            editor.remove(key).apply();
-            val migratedSet = if (prefInt != -1) {
-                mutableSetOf(prefInt.toString())
-            } else {
-                mutableSetOf<String>()
-            }
-            migratedSet
-        }
-        buttonCodes.add(buttonCode.toString())
+        val buttonCodes = InputBindingSetting.getButtonSet(keyEvent)
+        buttonCodes.add(buttonCode)
         // Cleanup old mapping for this setting
         removeOldMapping()
 
-        editor.putStringSet(key, buttonCodes)
+        editor.putStringSet(key, buttonCodes.mapTo(mutableSetOf()) {it.toString()})
 
         // Write next reverse mapping for future cleanup
         editor.putString(reverseKey, key)
@@ -246,7 +234,7 @@ class InputBindingSetting(
         }
 
         val code = translateEventToKeyId(keyEvent)
-        writeButtonMapping(getInputButtonKey(code))
+        writeButtonMapping(keyEvent)
         val uiString = "${keyEvent.device.name}: Button $code"
         value = uiString
     }
@@ -306,6 +294,26 @@ class InputBindingSetting(
                 NativeLibrary.ButtonType.DPAD_RIGHT -> Settings.KEY_BUTTON_RIGHT
                 else -> ""
             }
+        /**
+         * Get the mutable set of int button values this key should map to given an event
+         */
+        fun getButtonSet(keyCode: KeyEvent):MutableSet<Int> {
+            val key = getInputButtonKey(keyCode)
+            val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+            var buttonCodes = try {
+                preferences.getStringSet(key, mutableSetOf<String>())
+            } catch (e: ClassCastException) {
+                val prefInt = preferences.getInt(key, -1);
+                val migratedSet = if (prefInt != -1) {
+                    mutableSetOf(prefInt.toString())
+                } else {
+                    mutableSetOf<String>()
+                }
+                migratedSet
+            }
+            if (buttonCodes == null) buttonCodes = mutableSetOf<String>()
+            return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
+        }
 
         /**
          * Helper function to get the settings key for an gamepad button.
