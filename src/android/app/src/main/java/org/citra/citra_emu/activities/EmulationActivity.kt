@@ -267,48 +267,23 @@ class EmulationActivity : AppCompatActivity() {
             return super.dispatchKeyEvent(event)
         }
 
-        val buttonSet = InputBindingSetting.getButtonSet(event)
-
         when (event.action) {
             KeyEvent.ACTION_DOWN -> {
-                var handled = false;
                 // On some devices, the back gesture / button press is not intercepted by androidx
                 // and fails to open the emulation menu. So we're stuck running deprecated code to
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
+
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                     // If the hotkey is pressed, we don't want to open the drawer
-                    if (!hotkeyUtility.HotkeyIsPressed) {
+                    if (!hotkeyUtility.hotkeyIsPressed) {
                         onBackPressed()
-                        handled = true;
+                        return true
                     }
                 }
-                for (button in buttonSet) {
-                    if (hotkeyUtility.handleHotkey(button)) {
-                        handled = true;
-                    }else {
-                        handled = NativeLibrary.onGamePadEvent(
-                            event.device.descriptor,
-                            button,
-                            NativeLibrary.ButtonState.PRESSED) || handled
-
-                    }
-                }
-                return handled;
+                return hotkeyUtility.handleKeyPress(event)
             }
             KeyEvent.ACTION_UP -> {
-                var handled = false;
-                for (button in buttonSet) {
-                    if (hotkeyUtility.handleButtonRelease(button)) {
-                        handled = true;
-                    }else {
-                        handled = NativeLibrary.onGamePadEvent(
-                            event.device.descriptor,
-                            button,
-                            NativeLibrary.ButtonState.RELEASED
-                        ) || handled
-                    }
-                }
-                return handled;
+                return hotkeyUtility.handleKeyRelease(event)
             }
             else -> {
                 return false;
