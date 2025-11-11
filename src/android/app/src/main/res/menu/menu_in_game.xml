@@ -35,7 +35,7 @@
     <item
         android:id="@+id/menu_secondary_screen_layout"
         android:icon="@drawable/ic_secondary_fit_screen"
-        android:title="@string/emulation_switch_secondary_layout" />
+        android:title="@string/emulation_secondary_display_management" />
 
     <item
         android:id="@+id/menu_swap_screens"
