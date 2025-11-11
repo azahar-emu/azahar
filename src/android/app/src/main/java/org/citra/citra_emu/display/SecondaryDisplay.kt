@@ -42,7 +42,12 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateSurface() {
-        NativeLibrary.secondarySurfaceChanged(pres!!.getSurfaceHolder().surface)
+        val surface = pres?.getSurfaceHolder()?.surface
+        if (surface != null && surface.isValid) {
+            NativeLibrary.secondarySurfaceChanged(surface)
+        } else {
+            Log.w("SecondaryDisplay", "Attempted to update null or invalid surface")
+        }
     }
 
     fun destroySurface() {
