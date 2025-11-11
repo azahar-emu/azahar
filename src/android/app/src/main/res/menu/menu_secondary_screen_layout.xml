@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <group android:checkableBehavior="single">
-
-        <item
-            android:id="@+id/menu_secondary_layout_none"
-            android:title="@string/emulation_secondary_display_default" />
-
+    <item
+        android:id="@+id/menu_secondary_layout_none"
+        android:title="@string/emulation_secondary_display_enable"
+        android:checkable="true"
+        android:checked="true"/>
+    <item
+        android:id="@+id/menu_secondary_choose"
+        android:title="@string/emulation_select_secondary_display">
+        <menu>
+            <group
+                android:id="@+id/menu_secondary_management_display_group"
+                android:checkableBehavior="single">
+            </group>
+        </menu>
+    </item>
+    <item
+        android:title="@string/preferences_layout"
+        android:enabled="false"/>
+    <group
+        android:checkableBehavior="single"
+        android:id="@+id/menu_secondary_layout_group">
         <item
             android:id="@+id/menu_secondary_layout_reverse_primary"
             android:title="@string/emulation_secondary_display_reverse_primary" />

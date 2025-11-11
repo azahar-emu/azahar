@@ -62,7 +62,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private lateinit var secondaryDisplay: SecondaryDisplay
+    lateinit var secondaryDisplay: SecondaryDisplay
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launched_from_shortcut", false)) {

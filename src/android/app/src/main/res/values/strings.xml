@@ -453,7 +453,10 @@
     <string name="emulation_aspect_ratio">Aspect Ratio</string>
     <string name="emulation_switch_screen_layout">Landscape Screen Layout</string>
     <string name="emulation_switch_portrait_layout">Portrait Screen Layout</string>
+    <string name="emulation_secondary_display_enable">Enable Secondary Display</string>
     <string name="emulation_switch_secondary_layout">Secondary Display Layout</string>
+    <string name="emulation_secondary_display_management">Secondary Display</string>
+    <string name="emulation_select_secondary_display">Choose Display</string>
     <string name="emulation_switch_secondary_layout_description">The layout used by a connected secondary screen, wired or wireless (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Large Screen</string>
     <string name="emulation_screen_layout_portrait">Portrait</string>
@@ -462,7 +465,7 @@
     <string name="emulation_screen_layout_hybrid">Hybrid Screens</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Default</string>
-    <string name="emulation_secondary_display_default">System Default (mirror)</string>
+    <string name="emulation_secondary_display_default">None (system default)</string>
     <string name="emulation_secondary_display_reverse_primary">Opposite of Primary Display</string>
     <string name="emulation_screen_layout_custom">Custom Layout</string>
     <string name="bg_color">Background Color</string>
