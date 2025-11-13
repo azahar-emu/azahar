@@ -196,6 +196,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEmulationBinding.inflate(inflater)
+        binding.inGameMenu.menu.findItem(R.id.menu_secondary_screen_layout).isVisible =
+            emulationActivity.secondaryDisplay.getSecondaryDisplays(emulationActivity).isNotEmpty()
         binding.inGameMenu.menu.findItem(R.id.menu_landscape_screen_layout).isVisible =
             CitraApplication.appContext.resources.configuration.orientation !=
                     Configuration.ORIENTATION_PORTRAIT
