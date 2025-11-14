@@ -65,9 +65,11 @@ Settings::StereoRenderOption EmuWindow::get3DMode() const {
         render_3d_mode = Settings::StereoRenderOption::Off;
     }
 #else
-    // on mobile, if this is the primary screen and render_3d is set to secondary only
-    // then no stereo
-    if (!is_secondary && Settings::values.render_3d_secondary_only) {
+    // adjust the StereoRenderOption setting to Off if appropriate on mobile
+    Settings::StereoWhichDisplay whichDisplay = Settings::values.render_3d_which_display.GetValue();
+    if (whichDisplay == Settings::StereoWhichDisplay::None ||
+        whichDisplay == Settings::StereoWhichDisplay::PrimaryOnly && is_secondary ||
+        whichDisplay == Settings::StereoWhichDisplay::SecondaryOnly && !is_secondary) {
         render_3d_mode = Settings::StereoRenderOption::Off;
     }
 #endif

@@ -86,6 +86,14 @@ enum class MonoRenderOption : u32 {
     RightEye = 1,
 };
 
+// on android, which displays to render stereo mode to
+enum class StereoWhichDisplay: u32 {
+    None = 0, //equivalent to StereoRenderOption = Off
+    Both = 1,
+    PrimaryOnly = 2,
+    SecondaryOnly = 3
+};
+
 enum class AudioEmulation : u32 {
     HLE = 0,
     LLE = 1,
@@ -562,7 +570,8 @@ struct Values {
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};
     SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
-    SwitchableSetting<bool> render_3d_secondary_only{false, "render_3d_secondary_only"};
+
+    SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None, "render_3d_which_display"};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
                                                            "mono_render_option"};
 

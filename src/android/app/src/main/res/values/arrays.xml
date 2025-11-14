@@ -238,7 +238,6 @@
     </integer-array>
 
     <string-array name="render3dModes">
-        <item>@string/off</item>
         <item>@string/side_by_side</item>
         <item>@string/side_by_side_full</item>
         <item>@string/anaglyph</item>
@@ -248,13 +247,26 @@
     </string-array>
 
     <integer-array name="render3dValues">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+    </integer-array>
+
+    <string-array name="render3dWhichDisplay">
+        <item>@string/off</item>
+        <item>@string/render_3d_which_display_both</item>
+        <item>@string/render_3d_which_display_primary</item>
+        <item>@string/render_3d_which_display_secondary</item>
+    </string-array>
+
+    <integer-array name="render3dDisplayValues">
         <item>0</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
     </integer-array>
 
     <string-array name="graphicsApiNames">

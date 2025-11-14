@@ -181,9 +181,10 @@ factor_3d =
 # true or false (default)
 swap_eyes_3d =
 
-# Render 3D To Secondary Display
-# true or false (default)
-render_3d_secondary_only =
+# Which Display to render 3d mode to
+# 0 (default) - None. Equivalent to render_3d=0
+# 1: Both, 2: Primary Only, 3: Secondary Only
+render_3d_which_display =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
