@@ -17,7 +17,7 @@ enum class IntSetting(
     CAMERA_OUTER_RIGHT_FLIP("camera_outer_right_flip", Settings.SECTION_CAMERA, 0),
     GRAPHICS_API("graphics_api", Settings.SECTION_RENDERER, 1),
     RESOLUTION_FACTOR("resolution_factor", Settings.SECTION_RENDERER, 1),
-    STEREOSCOPIC_3D_MODE("render_3d", Settings.SECTION_RENDERER, 1),
+    STEREOSCOPIC_3D_MODE("render_3d", Settings.SECTION_RENDERER, 2),
     STEREOSCOPIC_3D_DEPTH("factor_3d", Settings.SECTION_RENDERER, 0),
     STEPS_PER_HOUR("steps_per_hour", Settings.SECTION_SYSTEM, 0),
     CARDBOARD_SCREEN_SIZE("cardboard_screen_size", Settings.SECTION_LAYOUT, 85),
