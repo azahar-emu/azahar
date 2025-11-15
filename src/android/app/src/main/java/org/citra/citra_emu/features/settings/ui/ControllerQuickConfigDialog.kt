@@ -4,40 +4,85 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
-import android.view.InputDevice
-import android.view.KeyEvent
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogControllerQuickConfigBinding
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
-import kotlin.math.abs
-
+import org.citra.citra_emu.features.settings.utils.InputBindingBase
 
 class ControllerQuickConfigDialog(
     private var context: Context,
     buttons: ArrayList<List<String>>,
     titles: ArrayList<List<Int>>,
-    private var preferences: SharedPreferences
+    private var preferences: SharedPreferences,
+    adapter: SettingsAdapter
 ) {
+    private var isWaiting = false;
     private var index = 0
     val inflater = LayoutInflater.from(context)
-    val quickConfigBinding = DialogControllerQuickConfigBinding.inflate(inflater)
+    private lateinit var quickConfigBinding: DialogControllerQuickConfigBinding
     var dialog: AlertDialog? = null
+    private var boundVerticalDpadAxis = false
+    private var boundHorizontalDpadAxis = false
 
     var allButtons = arrayListOf<String>()
     var allTitles = arrayListOf<Int>()
 
+    private val inputHandler = object : InputBindingBase() {
+        private val AXIS_WAIT_TIME = 400L
+        private val BUTTON_WAIT_TIME = 100L
+
+        private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
+        override fun onAxisCaptured() {
+            boundHorizontalDpadAxis =
+                boundHorizontalDpadAxis || setting != null && setting!!.isVerticalAxis()
+            boundVerticalDpadAxis =
+                boundVerticalDpadAxis || setting != null && setting!!.isHorizontalAxis()
+            onInputCaptured(AXIS_WAIT_TIME)
+        }
+
+        override fun onButtonCaptured() {
+            onInputCaptured(BUTTON_WAIT_TIME)
+        }
+
+        private fun onInputCaptured(waitTime: Long) {
+            if (isWaiting) {
+                return
+            }
+            quickConfigBinding.root.cancelPendingInputEvents()
+            index++
+            setting?.let { settingsList.add(it) }
+            isWaiting = true
+            quickConfigBinding.currentMappingTitle.text = context.getString(R.string.controller_quick_config_wait)
+
+            // the changed item after each setting is one more than the index, since the Quick Configure button is position 1
+            adapter.notifyItemChanged(index + 1)
+
+            // clear listeners during the waiting period, they will get reset once ready for input
+            dialog?.setOnKeyListener(null)
+            quickConfigBinding.root.setOnGenericMotionListener(null)
+
+            // Wait before preparing the next input
+            handler.postDelayed({
+                isWaiting = false
+                prepareUIforIndex()
+            }, waitTime)
+        }
+
+        override fun getCurrentSetting() = setting
+    }
+
     init {
-        buttons.forEach {group ->
-            group.forEach {button ->
+        buttons.forEach { group ->
+            group.forEach { button ->
                 allButtons.add(button)
             }
         }
-        titles.forEach {group ->
-            group.forEach {title ->
+        titles.forEach { group ->
+            group.forEach { title ->
                 allTitles.add(title)
             }
         }
@@ -45,10 +90,11 @@ class ControllerQuickConfigDialog(
 
     fun show() {
         val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+        quickConfigBinding = DialogControllerQuickConfigBinding.inflate(inflater)
         builder
             .setView(quickConfigBinding.root)
             .setTitle(context.getString(R.string.controller_quick_config))
-            .setPositiveButton(context.getString(R.string.next)) {_,_ -> }
+            .setPositiveButton(context.getString(R.string.next)) { _, _ -> }
             .setNegativeButton(context.getString(R.string.close)) { dialog, which ->
                 dialog.dismiss()
             }
@@ -56,36 +102,63 @@ class ControllerQuickConfigDialog(
         dialog = builder.create()
         dialog?.show()
 
-        dialog?.setOnKeyListener { _, _, event -> onKeyEvent(event) }
-        quickConfigBinding.root.setOnGenericMotionListener { _, event -> onMotionEvent(event) }
+        quickConfigBinding.root.requestFocus()
+        quickConfigBinding.root.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus) v.requestFocus()
+        }
 
         // Prepare the first element
-        prepareUIforIndex(index)
+        prepareUIforIndex()
 
         val nextButton = dialog?.getButton(AlertDialog.BUTTON_POSITIVE)
         nextButton?.setOnClickListener {
-            // Skip to next:
-            prepareUIforIndex(index++)
+            if (setting != null) setting!!.removeOldMapping()
+            index++
+            prepareUIforIndex()
         }
     }
 
-    private fun prepareUIforIndex(i: Int) {
-        if (allButtons.size-1 < i) {
-            settingsList.forEach { it.applyMapping() }
+    private fun prepareUIforIndex() {
+        if (index >= allButtons.size) {
             dialog?.dismiss()
             return
         }
+        setting = InputBindingSetting(
+            InputBindingSetting.getInputObject(allButtons[index], preferences),
+            allTitles[index]
+        )
+        // skip the dpad buttons if the corresponding axis is mapped
+        while (setting != null && (
+                    setting!!.isVerticalButton() && boundVerticalDpadAxis ||
+                            setting!!.isHorizontalButton() && boundHorizontalDpadAxis)
+        ) {
+            index++
+            if (index >= allButtons.size) {
+                dialog?.dismiss()
+                return
+            }
+            setting = InputBindingSetting(
+                InputBindingSetting.getInputObject(
+                    allButtons[index],
+                    preferences
+                ), allTitles[index]
+            )
 
-        if (index>0) {
+        }
+        // show the previous key, if this isn't the first key
+        if (index > 0) {
             quickConfigBinding.lastMappingIcon.visibility = View.VISIBLE
             quickConfigBinding.lastMappingDescription.visibility = View.VISIBLE
         }
 
-        val currentButton = allButtons[i]
-        val currentTitleInt = allTitles[i]
+        // change the button layout for the last button
+        if (index == allButtons.size - 1) {
+            dialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text =
+                context.getString(R.string.finish)
+            dialog?.getButton(AlertDialog.BUTTON_NEGATIVE)?.visibility = View.GONE
+        }
 
-        val button = InputBindingSetting.getInputObject(currentButton, preferences)
-
+        // set all the icons and text
         var lastTitle = setting?.value ?: ""
         if (lastTitle.isBlank()) {
             lastTitle = context.getString(R.string.unassigned)
@@ -93,16 +166,23 @@ class ControllerQuickConfigDialog(
         quickConfigBinding.lastMappingDescription.text = lastTitle
         quickConfigBinding.lastMappingIcon.setImageDrawable(quickConfigBinding.currentMappingIcon.drawable)
 
-        setting = InputBindingSetting(button, currentTitleInt)
         quickConfigBinding.currentMappingTitle.text = calculateTitle()
         quickConfigBinding.currentMappingDescription.text = setting?.value
         quickConfigBinding.currentMappingIcon.setImageDrawable(getIcon())
 
-        if (allButtons.size-1 < index) {
-            dialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.text =
-                context.getString(R.string.finish)
-            dialog?.getButton(AlertDialog.BUTTON_NEGATIVE)?.visibility = View.GONE
+        // reset all the handlers
+        if (setting!!.isButtonMappingSupported()) {
+            dialog?.setOnKeyListener { _, _, event -> inputHandler.onKeyEvent(event) }
         }
+        if (setting!!.isAxisMappingSupported()) {
+            quickConfigBinding.root.setOnGenericMotionListener { _, event ->
+                inputHandler.onMotionEvent(
+                    event
+                )
+            }
+        }
+        inputHandler.reset()
+
     }
 
     private fun calculateTitle(): String {
@@ -140,98 +220,7 @@ class ControllerQuickConfigDialog(
         return ContextCompat.getDrawable(context, id)
     }
 
-    private val previousValues = ArrayList<Float>()
-    private var prevDeviceId = 0
-    private var waitingForEvent = true
     private var setting: InputBindingSetting? = null
-    private var debounceTimestamp = System.currentTimeMillis()
 
     private var settingsList = arrayListOf<InputBindingSetting>()
-
-    private fun onKeyEvent(event: KeyEvent): Boolean {
-        return when (event.action) {
-            KeyEvent.ACTION_UP -> {
-                if (System.currentTimeMillis()-debounceTimestamp < DEBOUNCE_TIMER) {
-                    return true
-                }
-
-                debounceTimestamp = System.currentTimeMillis()
-                index++
-                setting?.let {
-                    it.onKeyInputDeferred(event)
-                    settingsList.add(it)
-                }
-                prepareUIforIndex(index)
-                // Even if we ignore the key, we still consume it. Thus return true regardless.
-                true
-            }
-            else -> false
-        }
-    }
-
-    private fun onMotionEvent(event: MotionEvent): Boolean {
-        if ((event.source and InputDevice.SOURCE_CLASS_JOYSTICK == 0) ||
-            event.action != MotionEvent.ACTION_MOVE) return false
-
-        val input = event.device
-        val motionRanges = input.motionRanges
-
-        if (input.id != prevDeviceId) {
-            previousValues.clear()
-        }
-        prevDeviceId = input.id
-        val firstEvent = previousValues.isEmpty()
-
-        var numMovedAxis = 0
-        var axisMoveValue = 0.0f
-        var lastMovedRange: InputDevice.MotionRange? = null
-        var lastMovedDir = '?'
-        if (waitingForEvent) {
-            for (i in motionRanges.indices) {
-                val range = motionRanges[i]
-                val axis = range.axis
-                val origValue = event.getAxisValue(axis)
-                if (firstEvent) {
-                    previousValues.add(origValue)
-                } else {
-                    val previousValue = previousValues[i]
-
-                    // Only handle the axes that are not neutral (more than 0.5)
-                    // but ignore any axis that has a constant value (e.g. always 1)
-                    if (abs(origValue) > 0.5f && origValue != previousValue) {
-                        // It is common to have multiple axes with the same physical input. For example,
-                        // shoulder butters are provided as both AXIS_LTRIGGER and AXIS_BRAKE.
-                        // To handle this, we ignore an axis motion that's the exact same as a motion
-                        // we already saw. This way, we ignore axes with two names, but catch the case
-                        // where a joystick is moved in two directions.
-                        // ref: bottom of https://developer.android.com/training/game-controllers/controller-input.html
-                        if (origValue != axisMoveValue) {
-                            axisMoveValue = origValue
-                            numMovedAxis++
-                            lastMovedRange = range
-                            lastMovedDir = if (origValue < 0.0f) '-' else '+'
-                        }
-                    } else if (abs(origValue) < 0.25f && abs(previousValue) > 0.75f) {
-                        // Special case for d-pads (axis value jumps between 0 and 1 without any values
-                        // in between). Without this, the user would need to press the d-pad twice
-                        // due to the first press being caught by the "if (firstEvent)" case further up.
-                        numMovedAxis++
-                        lastMovedRange = range
-                        lastMovedDir = if (previousValue < 0.0f) '-' else '+'
-                    }
-                }
-                previousValues[i] = origValue
-            }
-            // If only one axis moved, that's the winner.
-            if (numMovedAxis == 1) {
-                waitingForEvent = false
-                setting?.onMotionInput(input, lastMovedRange!!, lastMovedDir)
-            }
-        }
-        return true
-    }
-
-    companion object {
-        private const val DEBOUNCE_TIMER = 100
-    }
 }

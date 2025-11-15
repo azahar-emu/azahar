@@ -632,7 +632,8 @@ class SettingsAdapter(
             Settings.triggerTitles
         )
 
-        ControllerQuickConfigDialog(context, buttons, titles, PermissionsHandler.preferences).show()
+        ControllerQuickConfigDialog(context, buttons, titles, PermissionsHandler.preferences, this).show()
+
     }
 
     fun closeDialog() {

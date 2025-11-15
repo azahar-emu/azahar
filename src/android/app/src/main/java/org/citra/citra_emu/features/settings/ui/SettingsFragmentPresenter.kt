@@ -779,8 +779,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(
                 RunnableSetting(
                     R.string.controller_quick_config,
-                    0,
-                    false,
+                    R.string.controller_quick_config_description,
+                    true,
                     0,
                     { settingsAdapter.onClickControllerQuickConfig() }
                 )

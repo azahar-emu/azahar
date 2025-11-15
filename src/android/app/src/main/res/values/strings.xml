@@ -132,6 +132,8 @@
     <string name="controller_axis_vertical">Vertical Axis</string>
     <string name="controller_axis_horizontal">Horizontal Axis</string>
     <string name="controller_quick_config">Quick Configure</string>
+    <string name="controller_quick_config_description">Quickly configure all input buttons (not including hotkeys)</string>
+    <string name="controller_quick_config_wait">Please Wait</string>
     <string name="direction_up">Up</string>
     <string name="direction_down">Down</string>
     <string name="direction_left">Left</string>

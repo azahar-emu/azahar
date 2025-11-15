@@ -35,8 +35,6 @@ class InputBindingSetting(
                 .apply()
         }
 
-    private var key: String = ""
-
     /**
      * Returns true if this key is for the 3DS Circle Pad
      */
@@ -81,6 +79,36 @@ class InputBindingSetting(
 
             else -> false
         }
+
+    /**
+     * Returns true if this is an up or down dpad button
+     */
+
+    fun isVerticalButton(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_BUTTON_DOWN,
+            Settings.KEY_BUTTON_UP -> true
+
+            else -> false
+        }
+
+    fun isVerticalAxis(): Boolean  {
+        return abstractSetting.key ==
+            Settings.KEY_DPAD_AXIS_VERTICAL
+        }
+
+    fun isHorizontalAxis(): Boolean  {
+        return abstractSetting.key ==
+                Settings.KEY_DPAD_AXIS_HORIZONTAL
+    }
+
+    fun isHorizontalButton(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_BUTTON_LEFT,
+                Settings.KEY_BUTTON_RIGHT -> true
+            else -> false
+        }
+
     /**
      * Returns true if this key is for the 3DS L/R or ZL/ZR buttons. Note, these are not real
      * triggers on the 3DS, but we support them as such on a physical gamepad.
@@ -234,29 +262,6 @@ class InputBindingSetting(
         writeButtonMapping(getInputButtonKey(code))
         val uiString = "${keyEvent.device.name}: Button $code"
         value = uiString
-    }
-
-    /**
-     * Stores the provided key input setting as an Android preference.
-     * Only gets applied when apply(); is called.
-     *
-     * @param keyEvent KeyEvent of this key press.
-     */
-    fun onKeyInputDeferred(keyEvent: KeyEvent) {
-        if (!isButtonMappingSupported()) {
-            Toast.makeText(context, R.string.input_message_analog_only, Toast.LENGTH_LONG).show()
-            return
-        }
-        key = getInputButtonKey(keyEvent.keyCode)
-        val uiString = "${keyEvent.device.name}: Button ${keyEvent.keyCode}"
-        value = uiString
-    }
-
-    /**
-     * Stores the provided key input setting as an Android preference.
-     */
-    fun applyMapping() {
-        writeButtonMapping(key)
     }
 
     /**
