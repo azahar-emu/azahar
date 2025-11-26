@@ -338,6 +338,7 @@ class EmulationActivity : AppCompatActivity() {
                 preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
             val guestOrientation =
                 preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
+            val inverted = preferences.getBoolean(InputBindingSetting.getInputAxisInvertedKey(axis),false);
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped
                 continue
@@ -346,6 +347,8 @@ class EmulationActivity : AppCompatActivity() {
                 // Skip joystick wobble
                 value = 0f
             }
+            if (inverted) value = -value;
+
             when (nextMapping) {
                 NativeLibrary.ButtonType.STICK_LEFT -> {
                     axisValuesCirclePad[guestOrientation] = value
