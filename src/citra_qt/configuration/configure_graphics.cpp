@@ -198,7 +198,7 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_disk_shader_cache->setEnabled(
             Settings::values.use_disk_shader_cache.UsingGlobal());
         ui->toggle_vsync->setEnabled(ui->toggle_vsync->isEnabled() &&
-                                         Settings::values.use_vsync.UsingGlobal());
+                                     Settings::values.use_vsync.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
         ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
