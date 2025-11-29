@@ -136,7 +136,7 @@ texture_sampling =
 
 # Forces VSync on the display thread. Can cause input delay, so only turn this on
 # if you have screen tearing, which is unusual on Android
-# false (default): Off, true: On
+# 0 (default): Off, 1: On
 use_vsync_new =
 
 # Reduce stuttering by storing and loading generated shaders to disk
