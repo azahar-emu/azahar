@@ -145,7 +145,7 @@ void SdlConfig::ReadValues() {
     ReadSetting("Renderer", Settings::values.resolution_factor);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.frame_limit);
-    ReadSetting("Renderer", Settings::values.use_vsync_new);
+    ReadSetting("Renderer", Settings::values.use_vsync);
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);

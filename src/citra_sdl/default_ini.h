@@ -121,7 +121,7 @@ use_shader_jit =
 # Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
 # so only turn this off if you notice a speed difference.
 # 0: Off, 1 (default): On
-use_vsync_new =
+use_vsync =
 
 # Reduce stuttering by storing and loading generated shaders to disk
 # 0: Off, 1 (default. On)

@@ -754,7 +754,7 @@ bool GRenderWindow::InitializeOpenGL() {
     child->SetContext(std::move(child_context));
 
     auto format = child_widget->windowHandle()->format();
-    format.setSwapInterval(Settings::values.use_vsync_new.GetValue());
+    format.setSwapInterval(Settings::values.use_vsync.GetValue());
     child_widget->windowHandle()->setFormat(format);
 
     return true;

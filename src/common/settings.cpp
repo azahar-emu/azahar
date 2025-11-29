@@ -98,7 +98,7 @@ void LogSettings() {
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
-    log_setting("Renderer_VSyncNew", values.use_vsync_new.GetValue());
+    log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
@@ -200,7 +200,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.use_hw_shader.SetGlobal(true);
     values.use_disk_shader_cache.SetGlobal(true);
     values.shaders_accurate_mul.SetGlobal(true);
-    values.use_vsync_new.SetGlobal(true);
+    values.use_vsync.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
