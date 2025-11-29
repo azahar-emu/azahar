@@ -137,7 +137,7 @@ texture_sampling =
 # Forces VSync on the display thread. Can cause input delay, so only turn this on
 # if you have screen tearing, which is unusual on Android
 # 0 (default): Off, 1: On
-use_vsync_new =
+use_vsync =
 
 # Reduce stuttering by storing and loading generated shaders to disk
 # 0: Off, 1 (default. On)
@@ -147,10 +147,6 @@ use_disk_shader_cache =
 # 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution
 resolution_factor =
-
-# Whether to enable V-Sync (caps the framerate at 60FPS) or not.
-# 0 (default): Off, 1: On
-vsync_enabled =
 
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)

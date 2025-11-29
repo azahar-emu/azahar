@@ -308,7 +308,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="toggle_vsync_new">
+       <widget class="QCheckBox" name="toggle_vsync">
         <property name="toolTip">
          <string>VSync prevents the screen from tearing, but some graphics cards have lower performance with VSync enabled. Keep it enabled if you don't notice a performance difference.</string>
         </property>
@@ -416,7 +416,7 @@
   <tabstop>toggle_accurate_mul</tabstop>
   <tabstop>toggle_shader_jit</tabstop>
   <tabstop>toggle_disk_shader_cache</tabstop>
-  <tabstop>toggle_vsync_new</tabstop>
+  <tabstop>toggle_vsync</tabstop>
  </tabstops>
  <resources/>
  <connections/>

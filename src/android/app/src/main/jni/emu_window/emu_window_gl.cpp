@@ -122,7 +122,7 @@ EmuWindow_Android_OpenGL::EmuWindow_Android_OpenGL(Core::System& system_, ANativ
         LOG_CRITICAL(Frontend, "gladLoadGLES2Loader() failed");
         return;
     }
-    if (!eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0)) {
+    if (!eglSwapInterval(egl_display, Settings::values.use_vsync ? 1 : 0)) {
         LOG_CRITICAL(Frontend, "eglSwapInterval() failed");
         return;
     }
@@ -218,7 +218,7 @@ void EmuWindow_Android_OpenGL::TryPresenting() {
     }
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    eglSwapInterval(egl_display, Settings::values.use_vsync_new ? 1 : 0);
+    eglSwapInterval(egl_display, Settings::values.use_vsync ? 1 : 0);
     system.GPU().Renderer().TryPresent(0, is_secondary);
     eglSwapBuffers(egl_display, egl_surface);
 }
