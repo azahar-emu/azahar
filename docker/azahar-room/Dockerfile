@@ -7,7 +7,16 @@ FROM opensauce04/azahar-build-environment:latest AS builder
 COPY . /var/azahar-src
 
 RUN mkdir builddir && cd builddir && \
-    cmake /var/azahar-src -DENABLE_QT=OFF -DENABLE_TESTS=OFF -DENABLE_ROOM=ON -DENABLE_ROOM_STANDALONE=ON && \
+    cmake /var/azahar-src -DENABLE_QT=OFF \
+                          -DENABLE_TESTS=OFF \
+                          -DENABLE_ROOM=ON \
+                          -DENABLE_ROOM_STANDALONE=ON \
+                          -DENABLE_OPENGL=OFF $(:"TODO: Can we disable these automatically when there's no frontend?") \
+                          -DENABLE_VULKAN=OFF \
+                          -DENABLE_SDL2=OFF \
+                          -DENABLE_LIBUSB=OFF \
+                          -DENABLE_CUBEB=OFF \
+                          -DENABLE_OPENAL=OFF && \
     cmake --build . -j$(nproc) && \
     mv bin/Release/azahar-room /usr/local/bin/ && \
     cd .. && rm -rf builddir
