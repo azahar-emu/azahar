@@ -22,6 +22,7 @@ jobs:
         with:
           name: source
           path: artifacts/
+
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -61,6 +62,7 @@ jobs:
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
+
   macos:
     runs-on: ${{ (matrix.target == 'x86_64' && 'macos-15-intel') || 'macos-26' }}
     strategy:
@@ -102,6 +104,7 @@ jobs:
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
+
   macos-universal:
     runs-on: macos-26
     needs: macos
@@ -133,6 +136,7 @@ jobs:
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
+
   windows:
     runs-on: windows-latest
     strategy:
@@ -210,6 +214,7 @@ jobs:
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
+
   android:
     runs-on: ubuntu-latest
     env:
@@ -261,3 +266,23 @@ jobs:
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
+
+  docker:
+    runs-on: ubuntu-latest
+    container:
+      image: docker:dind
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build Docker image
+        run: ./.ci/docker.sh
+      - name: Move Docker image to artifacts directory
+        run: |
+          mkdir -p artifacts
+          mv build/*.dockerimage artifacts/
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker
+          path: artifacts/

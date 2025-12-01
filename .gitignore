@@ -10,6 +10,9 @@ src/installer/*.exe
 src/common/scm_rev.cpp
 .travis.descriptor.json
 
+# Docker image files
+*.dockerimage
+
 # Project/editor files
 *.swp
 *.kdev4
