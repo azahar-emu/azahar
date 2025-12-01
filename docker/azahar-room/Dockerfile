@@ -23,7 +23,7 @@ RUN mkdir builddir && cd builddir && \
     cd .. && rm -rf builddir
 
 # --- Final ------------------
-FROM debian:trixie
+FROM debian:trixie AS final
 
 RUN apt-get update && apt-get -y full-upgrade
 RUN apt-get install -y iputils-ping net-tools
