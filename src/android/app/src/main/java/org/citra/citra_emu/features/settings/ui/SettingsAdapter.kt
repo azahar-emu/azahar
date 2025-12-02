@@ -15,6 +15,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.text.format.DateFormat
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -354,7 +355,6 @@ class SettingsAdapter(
         clickedPosition = position
         sliderProgress = (item.selectedFloat * 100f).roundToInt() / 100f
 
-
         val inflater = LayoutInflater.from(context)
         val sliderBinding = DialogSliderBinding.inflate(inflater)
         textInputLayout = sliderBinding.textInput
@@ -374,6 +374,11 @@ class SettingsAdapter(
             valueFrom = item.min.toFloat()
             valueTo = item.max.toFloat()
             value = sliderProgress
+            if (!item.showSlider) {
+                isEnabled = false
+                visibility = View.GONE
+            }
+
             textSliderValue?.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     var textValue = s.toString().toFloatOrNull();
