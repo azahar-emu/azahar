@@ -365,6 +365,12 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
     }
     FramebufferLayout res{
         width, height, true, true, {}, {}, !Settings::values.upright_screen, is_portrait_mode};
+    float opacity_value = Settings::values.custom_second_layer_opacity.GetValue() / 100.0f;
+
+    if (!is_portrait_mode && opacity_value < 1) {
+        is_swapped ? res.top_opacity = opacity_value : res.bottom_opacity = opacity_value;
+    }
+
     const u16 top_x = is_portrait_mode ? Settings::values.custom_portrait_top_x.GetValue()
                                        : Settings::values.custom_top_x.GetValue();
     const u16 top_width = is_portrait_mode ? Settings::values.custom_portrait_top_width.GetValue()
