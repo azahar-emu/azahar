@@ -20,19 +20,27 @@ struct PlayTimeElement {
     PlayTime play_time;
 };
 
+#define PLAY_TIME_FILENAME "play_time.bin"
+
 std::string GetCurrentUserPlayTimePath() {
-    return FileUtil::GetUserPath(FileUtil::UserPath::PlayTimeDir) + DIR_SEP + "play_time.bin";
+    return FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + DIR_SEP + PLAY_TIME_FILENAME;
 }
 
 [[nodiscard]] bool ReadPlayTimeFile(PlayTimeDatabase& out_play_time_db) {
-    const auto filename = GetCurrentUserPlayTimePath();
+    const auto filepath = GetCurrentUserPlayTimePath();
+    const auto old_filepath =
+        FileUtil::GetUserPath(FileUtil::UserPath::LogDir) + DIR_SEP + PLAY_TIME_FILENAME;
+
+    if (FileUtil::Exists(old_filepath) && !FileUtil::Exists(filepath)) {
+        static_cast<void>(FileUtil::Rename(old_filepath, filepath));
+    }
 
     out_play_time_db.clear();
 
-    if (FileUtil::Exists(filename)) {
-        FileUtil::IOFile file{filename, "rb"};
+    if (FileUtil::Exists(filepath)) {
+        FileUtil::IOFile file{filepath, "rb"};
         if (!file.IsOpen()) {
-            LOG_ERROR(Frontend, "Failed to open play time file: {}", filename);
+            LOG_ERROR(Frontend, "Failed to open play time file: {}", filepath);
             return false;
         }
 
@@ -54,11 +62,11 @@ std::string GetCurrentUserPlayTimePath() {
 }
 
 [[nodiscard]] bool WritePlayTimeFile(const PlayTimeDatabase& play_time_db) {
-    const auto filename = GetCurrentUserPlayTimePath();
+    const auto filepath = GetCurrentUserPlayTimePath();
 
-    FileUtil::IOFile file{filename, "wb"};
+    FileUtil::IOFile file{filepath, "wb"};
     if (!file.IsOpen()) {
-        LOG_ERROR(Frontend, "Failed to open play time file: {}", filename);
+        LOG_ERROR(Frontend, "Failed to open play time file: {}", filepath);
         return false;
     }
 
