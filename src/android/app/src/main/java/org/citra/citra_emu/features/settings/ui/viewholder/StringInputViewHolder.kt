@@ -35,6 +35,18 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
         }
+
+        // Show "Use default" button in Custom Settings if applicable.
+        val adapterIsPerGame = adapter.isPerGame
+        val showDefault = adapterIsPerGame && setting.setting != null && !adapter.isAtCompiledDefault(setting.setting!!)
+        binding.buttonUseDefault.visibility = if (showDefault) View.VISIBLE else View.GONE
+        if (showDefault) {
+            binding.buttonUseDefault.setOnClickListener {
+                if (setting.setting != null) {
+                    adapter.resetSettingToDefault(setting.setting!!, bindingAdapterPosition)
+                }
+            }
+        }
     }
 
     override fun onClick(clicked: View) {

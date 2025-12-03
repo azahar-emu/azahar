@@ -14,6 +14,8 @@ class Config {
 private:
     std::unique_ptr<INIReader> sdl2_config;
     std::string sdl2_config_loc;
+    std::unique_ptr<INIReader> per_game_config;
+    std::string per_game_config_loc;
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
@@ -23,6 +25,8 @@ public:
     ~Config();
 
     void Reload();
+    // Load a per-game config overlay by title id or fallback name. Does not create files.
+    void LoadPerGameConfig(u64 title_id, const std::string& fallback_name = "");
 
 private:
     /**

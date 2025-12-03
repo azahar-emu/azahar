@@ -179,6 +179,14 @@
                 android:contentDescription="@string/cheats"
                 android:text="@string/cheats" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/application_settings"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/application_settings"
+                android:text="@string/application_settings" />
 
         </LinearLayout>
 
