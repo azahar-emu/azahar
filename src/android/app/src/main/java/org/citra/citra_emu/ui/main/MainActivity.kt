@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         binding = ActivityMainBinding.inflate(layoutInflater)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            MaxRefreshRate.set(this)
+            MaxRefreshRate.set(this, forceSixtyHrz = false)
         }
 
         setContentView(binding.root)
