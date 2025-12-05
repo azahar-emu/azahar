@@ -45,7 +45,8 @@
                 android:layout_height="wrap_content"
                 android:textAlignment="viewStart"
                 android:textSize="15sp"
-                android:textStyle="bold"                app:layout_constraintStart_toStartOf="parent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Application Title" />
 
@@ -179,6 +180,23 @@
                 android:contentDescription="@string/cheats"
                 android:text="@string/cheats" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/compress"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/compress"
+                android:text="@string/compress" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/decompress"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/decompress"
+                android:text="@string/decompress" />
 
         </LinearLayout>
 
