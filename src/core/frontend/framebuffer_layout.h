@@ -35,15 +35,19 @@ struct FramebufferLayout {
     bool is_rotated = true;
     bool is_portrait = false;
     bool additional_screen_enabled;
+    float top_opacity = 1.0f;
+    float bottom_opacity = 1.0f;
     Common::Rectangle<u32> additional_screen;
 
     CardboardSettings cardboard;
 
-    /**
+        /**
      * Returns the ratio of pixel size of the top screen, compared to the native size of the 3DS
      * screen.
      */
     u32 GetScalingRatio() const;
+
+
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
 };
