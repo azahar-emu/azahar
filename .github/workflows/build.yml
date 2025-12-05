@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["appimage", "fresh"]
+        target: ["appimage", "appimage-wayland", "fresh"]
     container:
       image: opensauce04/azahar-build-environment:latest
       options: -u 1001
@@ -51,12 +51,16 @@ jobs:
       - name: Build
         run: ./.ci/linux.sh
       - name: Move AppImage to artifacts directory
-        if: ${{ matrix.target == 'appimage' }}
+        if: ${{ contains(matrix.target, 'appimage') }}
         run: |
           mkdir -p artifacts
           mv build/bundle/*.AppImage artifacts/
+      - name: Rename AppImage
+        if: ${{ matrix.target == 'appimage-wayland' }}
+        run: |
+          mv artifacts/azahar.AppImage artifacts/azahar-wayland.AppImage
       - name: Upload
-        if: ${{ matrix.target == 'appimage' }}
+        if: ${{ contains(matrix.target, 'appimage') }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
