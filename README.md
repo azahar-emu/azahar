@@ -19,7 +19,6 @@ Download the latest release from [Releases](https://github.com/azahar-emu/azahar
 If you are unsure of whether you want to use MSYS2 or MSVC, use MSYS2.
 
 ---
-
 ### MacOS
 
 To download a build that will work on all Macs, you can download the `macos-universal` build on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
@@ -55,6 +54,11 @@ The recommended format for using Azahar on Linux is the Flatpak available on Fla
 
 Azahar is also available as an AppImage on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
+If you are unsure of which variant to use, we recommend using the default `azahar.AppImage`. This is because of upstream issues in the Wayland ecosystem which may cause problems when running the emulator (e.g. [#1162](https://github.com/azahar-emu/azahar/issues/1162)).
+
+Unless you explicitly require native Wayland support (e.g. you are running a system with no Xwayland), the non-Wayland variant is recommended.
+
+If you are using the Flatpak and run into issues with Wayland, you can disable Wayland support for the Azahar Flatpak using [Flatseal](https://flathub.org/en/apps/com.github.tchx84.Flatseal).
 
 # Build instructions
 
