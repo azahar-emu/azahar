@@ -11,6 +11,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Bundle
@@ -171,6 +172,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEmulationBinding.inflate(inflater)
+        binding.inGameMenu.menu.findItem(R.id.menu_landscape_screen_layout).isVisible =
+            CitraApplication.appContext.resources.configuration.orientation !=
+                    Configuration.ORIENTATION_PORTRAIT
+        binding.inGameMenu.menu.findItem(R.id.menu_portrait_screen_layout).isVisible =
+            CitraApplication.appContext.resources.configuration.orientation ==
+                    Configuration.ORIENTATION_PORTRAIT
         return binding.root
     }
 
