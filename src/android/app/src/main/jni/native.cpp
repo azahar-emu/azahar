@@ -365,6 +365,11 @@ void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env
     if (secondary_window) {
         // Second window already created, so update it
         notify = secondary_window->OnSurfaceChanged(s_secondary_surface);
+
+        // Log the dimensions for debugging
+        int32_t width = ANativeWindow_getWidth(s_secondary_surface);
+        int32_t height = ANativeWindow_getHeight(s_secondary_surface);
+        LOG_INFO(Frontend, "Secondary Surface changed to {}x{}", width, height);
     } else {
         LOG_WARNING(Frontend,
                     "Second Window does not exist in native.cpp but surface changed. Ignoring.");

@@ -342,17 +342,30 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryDisplayLayout layout =
         Settings::values.secondary_display_layout.GetValue();
     switch (layout) {
+    case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
 
     case Settings::SecondaryDisplayLayout::BottomScreenOnly:
         return SingleFrameLayout(width, height, true, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::SideBySide:
         return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
                                 1.0f, Settings::SmallScreenPosition::MiddleRight);
+    case Settings::SecondaryDisplayLayout::LargeScreen:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                Settings::values.large_screen_proportion.GetValue(),
+                                Settings::values.small_screen_position.GetValue());
+    case Settings::SecondaryDisplayLayout::Original:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                1.0f, Settings::SmallScreenPosition::BelowLarge);
+    case Settings::SecondaryDisplayLayout::Hybrid:
+        return HybridScreenLayout(width, height, false, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::None:
-        // this should never happen, but if it does, somehow, send the top screen
-    case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        // this should never happen - if "none" is set this method shouldn't run - but if it does,
+        // somehow, use ReversePrimary
+    case Settings::SecondaryDisplayLayout::ReversePrimary:
     default:
-        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
+        return SingleFrameLayout(width, height, !Settings::values.swap_screen.GetValue(),
+                                 Settings::values.upright_screen.GetValue());
     }
 }
 
