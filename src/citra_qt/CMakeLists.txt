@@ -49,6 +49,9 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     configuration/configure_layout.cpp
     configuration/configure_layout.h
     configuration/configure_layout.ui
+    configuration/configure_layout_cycle.cpp
+    configuration/configure_layout_cycle.h
+    configuration/configure_layout_cycle.ui
     configuration/configure_dialog.cpp
     configuration/configure_dialog.h
     configuration/configure_general.cpp
