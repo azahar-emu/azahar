@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -170,6 +170,18 @@ bool RenameFile(const std::string& source, const std::string& filename) {
     jstring j_destination_path = env->NewStringUTF(filename.c_str());
     return env->CallStaticBooleanMethod(native_library, rename_file, j_source_path,
                                         j_destination_path);
+}
+
+bool MoveFile(const std::string& filename, const std::string& source_dir_path,
+              const std::string& destination_dir_path) {
+    if (rename_file == nullptr)
+        return false;
+    auto env = GetEnvForThread();
+    jstring j_filename = env->NewStringUTF(filename.c_str());
+    jstring j_source_dir_path = env->NewStringUTF(source_dir_path.c_str());
+    jstring j_destination_dir_path = env->NewStringUTF(destination_dir_path.c_str());
+    return env->CallStaticBooleanMethod(native_library, move_file, j_filename, j_source_dir_path,
+                                        j_destination_dir_path);
 }
 
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature)                   \
