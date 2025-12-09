@@ -68,6 +68,10 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     override var themeId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            RefreshRateUtil.enforceRefreshRate(this)
+        }
+
         val splashScreen = installSplashScreen()
         CitraDirectoryUtils.attemptAutomaticUpdateDirectory()
         splashScreen.setKeepOnScreenCondition {
@@ -88,11 +92,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            RefreshRateUtil.enforceRefreshRate(this)
-        }
-
         setContentView(binding.root)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)

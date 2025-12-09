@@ -51,16 +51,15 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     override val settings: Settings get() = settingsViewModel.settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            RefreshRateUtil.enforceRefreshRate(this)
+        }
+
         ThemeUtil.setTheme(this)
 
         super.onCreate(savedInstanceState)
 
         binding = ActivitySettingsBinding.inflate(layoutInflater)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            RefreshRateUtil.enforceRefreshRate(this)
-        }
-
         setContentView(binding.root)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
