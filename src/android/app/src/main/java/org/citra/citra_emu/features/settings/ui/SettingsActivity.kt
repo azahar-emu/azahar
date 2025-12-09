@@ -51,9 +51,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     override val settings: Settings get() = settingsViewModel.settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            RefreshRateUtil.enforceRefreshRate(this)
-        }
+        RefreshRateUtil.enforceRefreshRate(this)
 
         ThemeUtil.setTheme(this)
 

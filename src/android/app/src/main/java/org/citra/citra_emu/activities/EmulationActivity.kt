@@ -84,9 +84,7 @@ class EmulationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
-        }
+        RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()

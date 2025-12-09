@@ -18,8 +18,11 @@ object RefreshRateUtil {
     // but is instead the refresh rate chosen by the user in the Android system settings.
     // For example, if the user selected 120hz in the settings, but the display is capable
     // of 144hz, 120hz will be treated as the maximum within this function.
-    @RequiresApi(Build.VERSION_CODES.R)
     fun enforceRefreshRate(activity: Activity, sixtyHz: Boolean = false) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            return
+        }
+
         val display = activity.display
         val window = activity.window
 
