@@ -8,8 +8,16 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 
 object RefreshRateUtil {
-    // Since Android 15, the OS automatically sets apps categorized as games to run with a 60hz refresh rate.
-    // This functions sets the refresh rate to either the maximum allowed refresh rate or 60hz.
+    // Since Android 15, the OS automatically runs apps categorized as games with a
+    // 60hz refresh rate by default, regardless of the refresh rate set by the user.
+    //
+    // This function sets the refresh rate to either the maximum allowed refresh rate or
+    // 60hz depending on the value of the `sixtyHz` parameter.
+    //
+    // Note: This isn't always the maximum refresh rate that the display is *capable of*,
+    // but is instead the refresh rate chosen by the user in the Android system settings.
+    // For example, if the user selected 120hz in the settings, but the display is capable
+    // of 144hz, 120hz will be treated as the maximum within this function.
     @RequiresApi(Build.VERSION_CODES.R)
     fun enforceRefreshRate(activity: Activity, sixtyHz: Boolean = false) {
         val display = activity.display
