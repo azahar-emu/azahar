@@ -6,6 +6,7 @@ package org.citra.citra_emu.ui.main
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -51,6 +52,7 @@ import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
+import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -66,6 +68,8 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     override var themeId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        RefreshRateUtil.enforceRefreshRate(this)
+
         val splashScreen = installSplashScreen()
         CitraDirectoryUtils.attemptAutomaticUpdateDirectory()
         splashScreen.setKeepOnScreenCondition {
