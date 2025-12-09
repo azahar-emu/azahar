@@ -48,7 +48,7 @@ import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.Log
-import org.citra.citra_emu.utils.MaxRefreshRate
+import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
@@ -87,7 +87,7 @@ class EmulationActivity : AppCompatActivity() {
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            MaxRefreshRate.set(this, forceSixtyHrz = true)
+            RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
         }
 
         super.onCreate(savedInstanceState)

@@ -52,7 +52,7 @@ import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
-import org.citra.citra_emu.utils.MaxRefreshRate
+import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         binding = ActivityMainBinding.inflate(layoutInflater)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            MaxRefreshRate.set(this, forceSixtyHrz = false)
+            RefreshRateUtil.enforceRefreshRate(this)
         }
 
         setContentView(binding.root)

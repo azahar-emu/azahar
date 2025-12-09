@@ -38,7 +38,7 @@ import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.InsetsHelper
-import org.citra.citra_emu.utils.MaxRefreshRate
+import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 
 class SettingsActivity : AppCompatActivity(), SettingsActivityView {
@@ -58,7 +58,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            MaxRefreshRate.set(this, forceSixtyHrz = false)
+            RefreshRateUtil.enforceRefreshRate(this)
         }
 
         setContentView(binding.root)
