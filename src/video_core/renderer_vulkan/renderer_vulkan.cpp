@@ -885,25 +885,18 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     // Apply the initial default opacity value; Needed to avoid flickering
     ApplySecondLayerOpacity(1.0f);
 
-    bool use_custom_opacity =
-        Settings::values.layout_option.GetValue() == Settings::LayoutOption::CustomLayout &&
-        Settings::values.custom_second_layer_opacity.GetValue() < 100;
-    float second_alpha = use_custom_opacity
-                             ? Settings::values.custom_second_layer_opacity.GetValue() / 100.0f
-                             : 1.0f;
-
     if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen);
         draw_info.layer = 0;
-        if (use_custom_opacity) {
-            ApplySecondLayerOpacity(second_alpha);
+        if (layout.bottom_opacity < 1) {
+            ApplySecondLayerOpacity(layout.bottom_opacity);
         }
         DrawBottomScreen(layout, bottom_screen);
     } else {
         DrawBottomScreen(layout, bottom_screen);
         draw_info.layer = 0;
-        if (use_custom_opacity) {
-            ApplySecondLayerOpacity(second_alpha);
+        if (layout.top_opacity < 1) {
+            ApplySecondLayerOpacity(layout.top_opacity);
         }
         DrawTopScreen(layout, top_screen);
     }
