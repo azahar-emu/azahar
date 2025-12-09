@@ -304,20 +304,20 @@ bool DeleteDir(const std::string& filename) {
     return false;
 }
 
-bool Rename(const std::string& srcFilename, const std::string& destFilename) {
-    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilename, destFilename);
+bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFullPath, destFullPath);
 #ifdef _WIN32
-    if (_wrename(Common::UTF8ToUTF16W(srcFilename).c_str(),
-                 Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
+    if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
+                 Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
         return true;
 #elif ANDROID
-    if (AndroidStorage::RenameFile(srcFilename, std::string(GetFilename(destFilename))))
+    if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath))
         return true;
 #else
-    if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
+    if (rename(srcFullPath.c_str(), destFullPath.c_str()) == 0)
         return true;
 #endif
-    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
+    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFullPath, destFullPath,
               GetLastErrorMsg());
     return false;
 }
