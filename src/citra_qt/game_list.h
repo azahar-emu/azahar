@@ -124,7 +124,7 @@ private:
     void PopupContextMenu(const QPoint& menu_location);
     void PopupHeaderContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, const QString& path, const QString& name, u64 program_id,
-                      u64 extdata_id, Service::FS::MediaType media_type);
+                      u64 extdata_id, Service::FS::MediaType media_type, bool can_insert);
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddFavoritesPopup(QMenu& context_menu);
