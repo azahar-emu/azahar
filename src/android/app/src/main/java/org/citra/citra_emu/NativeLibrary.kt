@@ -23,6 +23,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -588,6 +589,29 @@ object NativeLibrary {
      * Logs the Citra version, Android version and, CPU.
      */
     external fun logDeviceInfo()
+
+    // Compression / Decompression
+    external fun compressFile(inputPath: String?, outputPath: String): Int
+
+    external fun decompressFile(inputPath: String?, outputPath: String): Int
+
+    external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    object CompressStatus {
+        const val SUCCESS = 0
+        const val C_UNSUPPORTED = 1
+        const val C_ALREADY_COMPRESSED = 2
+        const val C_FAILED = 3
+        const val DC_UNSUPPORTED = 4
+        const val DC_NOT_COMPRESSED = 5
+        const val DC_FAILED = 6
+    }
+
+    @Keep
+    @JvmStatic
+    fun onCompressProgress(total: Long, current: Long) {
+        CompressProgressDialogViewModel.update(total, current)
+    }
 
     @Keep
     @JvmStatic
