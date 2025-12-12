@@ -191,8 +191,10 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
-        val node = resolvePath(filepath) ?: return false
+    fun renameFile(filepath: String, destinationFilename: String): Boolean {
+        val node = resolvePath(filepath) ?: run {
+            error("[DocumentsTree]: Failed to resolve path during rename: $filepath")
+        }
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
             val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
@@ -200,6 +202,27 @@ class DocumentsTree {
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
+        }
+    }
+
+    @Synchronized
+    fun moveFile(filename: String, sourceDirPath: String, destDirPath: String): Boolean {
+        val resolutionErrorMessage = "[DocumentsTree]: Failed to resolve path during move: "
+        val sourceFileNode = resolvePath(sourceDirPath + "/" + filename) ?: run {
+            error(resolutionErrorMessage + (sourceDirPath + "/" + filename))
+        }
+        val sourceDirNode = resolvePath(sourceDirPath) ?: run {
+            error(resolutionErrorMessage + sourceDirPath)
+        }
+        val destDirNode = resolvePath(destDirPath) ?: run {
+            error(resolutionErrorMessage + destDirPath)
+        }
+        try {
+            val newUri = DocumentsContract.moveDocument(context.contentResolver, sourceFileNode.uri!!, sourceDirNode.uri!!, destDirNode.uri!!)
+            sourceFileNode.rename(filename, newUri)
+            return true
+        } catch (e: Exception) {
+            error("[DocumentsTree]: Cannot move file, error: " + e.message)
         }
     }
 
@@ -215,7 +238,7 @@ class DocumentsTree {
             }
             return true
         } catch (e: Exception) {
-            error("[DocumentsTree]: Cannot rename file, error: " + e.message)
+            error("[DocumentsTree]: Cannot delete file, error: " + e.message)
         }
     }
 

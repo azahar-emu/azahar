@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,7 +24,11 @@
        const std::string& destination_filename),                                                   \
       copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")          \
     V(RenameFile, bool, (const std::string& source, const std::string& filename), rename_file,     \
-      "renameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")
+      "renameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")                                     \
+    V(MoveFile, bool,                                                                              \
+      (const std::string& filename, const std::string& source_dir_path,                            \
+       const std::string& destination_dir_path),                                                   \
+      move_file, "moveFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")
 #define ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(V)                                                 \
     V(IsDirectory, bool, is_directory, CallStaticBooleanMethod, "isDirectory",                     \
       "(Ljava/lang/String;)Z")                                                                     \
@@ -44,6 +48,7 @@ ANDROID_STORAGE_FUNCTIONS(FS)
 #undef F
 #undef FS
 #undef FR
+bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest_full_path);
 // Reference:
 // https://developer.android.com/reference/android/os/ParcelFileDescriptor#parseMode(java.lang.String)
 enum class AndroidOpenMode {

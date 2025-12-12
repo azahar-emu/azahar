@@ -1,9 +1,10 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #ifdef ANDROID
 #include "common/android_storage.h"
+#include "common/file_util.h"
 
 namespace AndroidStorage {
 JNIEnv* GetEnvForThread() {
@@ -170,6 +171,32 @@ bool RenameFile(const std::string& source, const std::string& filename) {
     jstring j_destination_path = env->NewStringUTF(filename.c_str());
     return env->CallStaticBooleanMethod(native_library, rename_file, j_source_path,
                                         j_destination_path);
+}
+
+bool MoveFile(const std::string& filename, const std::string& source_dir_path,
+              const std::string& destination_dir_path) {
+    if (move_file == nullptr)
+        return false;
+    auto env = GetEnvForThread();
+    jstring j_filename = env->NewStringUTF(filename.c_str());
+    jstring j_source_dir_path = env->NewStringUTF(source_dir_path.c_str());
+    jstring j_destination_dir_path = env->NewStringUTF(destination_dir_path.c_str());
+    return env->CallStaticBooleanMethod(native_library, move_file, j_filename, j_source_dir_path,
+                                        j_destination_dir_path);
+}
+
+bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest_full_path) {
+    const auto src_filename = std::string(FileUtil::GetFilename(src_full_path));
+    const auto src_parent_path = std::string(FileUtil::GetParentPath(src_full_path));
+    const auto dest_filename = std::string(FileUtil::GetFilename(dest_full_path));
+    const auto dest_parent_path = std::string(FileUtil::GetParentPath(dest_full_path));
+
+    bool result = AndroidStorage::MoveFile(src_filename, src_parent_path, dest_parent_path);
+    if (result == false) {
+        return false;
+    }
+    result = AndroidStorage::RenameFile((dest_parent_path + src_filename), dest_filename);
+    return result;
 }
 
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature)                   \

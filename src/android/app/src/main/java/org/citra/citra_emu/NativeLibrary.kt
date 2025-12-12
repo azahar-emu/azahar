@@ -683,10 +683,29 @@ object NativeLibrary {
             try {
                 CitraApplication.documentsTree.renameFile(path, destinationFilename)
             } catch (e: Exception) {
+                if (e.message != null) {
+                    Log.error(e.message!!)
+                }
                 false
             }
         } else {
             FileUtil.renameFile(path, destinationFilename)
+        }
+
+    @Keep
+    @JvmStatic
+    fun moveFile(filename: String, sourceDirPath: String, destinationDirPath: String): Boolean =
+        if (FileUtil.isNativePath(sourceDirPath)) {
+            try {
+                CitraApplication.documentsTree.moveFile(filename, sourceDirPath, destinationDirPath)
+            } catch (e: Exception) {
+                if (e.message != null) {
+                    Log.error(e.message!!)
+                }
+                false
+            }
+        } else {
+            FileUtil.moveFile(filename, sourceDirPath, destinationDirPath)
         }
 
     @Keep
