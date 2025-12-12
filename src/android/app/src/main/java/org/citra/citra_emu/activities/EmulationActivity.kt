@@ -267,36 +267,28 @@ class EmulationActivity : AppCompatActivity() {
             return super.dispatchKeyEvent(event)
         }
 
-        val button =
-            preferences.getInt(InputBindingSetting.getInputButtonKey(event.keyCode), event.keyCode)
-        val action: Int = when (event.action) {
+        when (event.action) {
             KeyEvent.ACTION_DOWN -> {
-                hotkeyUtility.handleHotkey(button)
-
                 // On some devices, the back gesture / button press is not intercepted by androidx
                 // and fails to open the emulation menu. So we're stuck running deprecated code to
                 // cover for either a fault on androidx's side or in OEM skins (MIUI at least)
+
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                     // If the hotkey is pressed, we don't want to open the drawer
-                    if (!hotkeyUtility.HotkeyIsPressed) {
+                    if (!hotkeyUtility.hotkeyIsPressed) {
                         onBackPressed()
+                        return true
                     }
                 }
-
-                // Normal key events.
-                NativeLibrary.ButtonState.PRESSED
+                return hotkeyUtility.handleKeyPress(event)
             }
-
             KeyEvent.ACTION_UP -> {
-                hotkeyUtility.HotkeyIsPressed = false
-                NativeLibrary.ButtonState.RELEASED
+                return hotkeyUtility.handleKeyRelease(event)
             }
-            else -> return false
+            else -> {
+                return false;
+            }
         }
-        val input = event.device
-            ?: // Controller was disconnected
-            return false
-        return NativeLibrary.onGamePadEvent(input.descriptor, button, action)
     }
 
     private fun onAmiiboSelected(selectedFile: String) {
