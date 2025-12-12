@@ -683,6 +683,9 @@ object NativeLibrary {
             try {
                 CitraApplication.documentsTree.renameFile(path, destinationFilename)
             } catch (e: Exception) {
+                if (e.message != null) {
+                    Log.error(e.message!!)
+                }
                 false
             }
         } else {
@@ -696,6 +699,9 @@ object NativeLibrary {
             try {
                 CitraApplication.documentsTree.moveFile(filename, sourceDirPath, destinationDirPath)
             } catch (e: Exception) {
+                if (e.message != null) {
+                    Log.error(e.message!!)
+                }
                 false
             }
         } else {
