@@ -7,10 +7,12 @@ package org.citra.citra_emu
 import android.Manifest.permission
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -18,7 +20,9 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.FileUtil
@@ -631,6 +635,23 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun getUserDirectory(): String {
+        val preferences: SharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+
+        val udUri = preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
+        val udPathSegment = udUri.lastPathSegment!!
+        val udVirtualPath = udPathSegment.removePrefix("primary:")
+        if (udVirtualPath == udPathSegment) {
+            throw IllegalStateException("TODO: User directory must be in primary external storage, is instead: $udVirtualPath")
+        }
+        val userDirNativePath = Environment.getExternalStorageDirectory().absolutePath + "/" + udVirtualPath + "/"
+
+        return userDirNativePath
+    }
+
+    @Keep
+    @JvmStatic
     fun getSize(path: String): Long =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.getFileSize(path)
@@ -674,19 +695,6 @@ object NativeLibrary {
                 Uri.parse(destinationParentPath),
                 destinationFilename
             )
-        }
-
-    @Keep
-    @JvmStatic
-    fun renameFile(path: String, destinationFilename: String): Boolean =
-        if (FileUtil.isNativePath(path)) {
-            try {
-                CitraApplication.documentsTree.renameFile(path, destinationFilename)
-            } catch (e: Exception) {
-                false
-            }
-        } else {
-            FileUtil.renameFile(path, destinationFilename)
         }
 
     @Keep

@@ -191,19 +191,6 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
-        val node = resolvePath(filepath) ?: return false
-        try {
-            val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
-            val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
-            node.rename(filename, newUri)
-            return true
-        } catch (e: Exception) {
-            error("[DocumentsTree]: Cannot rename file, error: " + e.message)
-        }
-    }
-
-    @Synchronized
     fun deleteDocument(filepath: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         try {

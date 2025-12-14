@@ -311,7 +311,9 @@ bool Rename(const std::string& srcFilename, const std::string& destFilename) {
                  Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
         return true;
 #elif ANDROID
-    if (AndroidStorage::RenameFile(srcFilename, std::string(GetFilename(destFilename))))
+    const std::string userDirLocation = AndroidStorage::GetUserDirectory();
+    if (rename((userDirLocation + srcFilename).c_str(),
+               (userDirLocation + destFilename).c_str()) == 0)
         return true;
 #else
     if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
