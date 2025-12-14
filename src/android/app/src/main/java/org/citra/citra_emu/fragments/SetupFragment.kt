@@ -5,12 +5,14 @@
 package org.citra.citra_emu.fragments
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -143,6 +145,31 @@ class SetupFragment : Fragment() {
                     0,
                     pageButtons = mutableListOf<PageButton>().apply {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            add(
+                                PageButton(
+                                    R.drawable.ic_folder,
+                                    R.string.filesystem_permission,
+                                    R.string.filesystem_permission_description,
+                                    buttonAction = {
+                                        pageButtonCallback = it
+                                        filesystemPermissionLauncher.launch(Intent(
+                                            android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                            Uri.fromParts("package", requireActivity().packageName, null)
+                                        ))
+                                    },
+                                    buttonState = {
+                                        if (Environment.isExternalStorageManager()) {
+                                            ButtonState.BUTTON_ACTION_COMPLETE
+                                        } else {
+                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        }
+                                    },
+                                    isUnskippable = true,
+                                    hasWarning = true,
+                                    R.string.filesystem_permission_warning,
+                                    R.string.filesystem_permission_warning_description,
+                                )
+                            )
                             add(
                                 PageButton(
                                     R.drawable.ic_notification,
@@ -452,6 +479,19 @@ class SetupFragment : Fragment() {
         }
     }
 
+    private fun showPermissionDeniedSnackbar() {
+        Snackbar.make(binding.root, R.string.permission_denied, Snackbar.LENGTH_LONG)
+            .setAnchorView(binding.buttonNext)
+            .setAction(R.string.grid_menu_core_settings) {
+                val intent =
+                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", requireActivity().packageName, null)
+                intent.data = uri
+                startActivity(intent)
+            }
+            .show()
+    }
+
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -459,16 +499,18 @@ class SetupFragment : Fragment() {
                 return@registerForActivityResult
             }
 
-            Snackbar.make(binding.root, R.string.permission_denied, Snackbar.LENGTH_LONG)
-                .setAnchorView(binding.buttonNext)
-                .setAction(R.string.grid_menu_core_settings) {
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    val uri = Uri.fromParts("package", requireActivity().packageName, null)
-                    intent.data = uri
-                    startActivity(intent)
-                }
-                .show()
+            showPermissionDeniedSnackbar()
+        }
+
+    // We can't use permissionLauncher because MANAGE_EXTERNAL_STORAGE is a special snowflake
+    private val filesystemPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (Environment.isExternalStorageManager()) {
+                checkForButtonState.invoke()
+                return@registerForActivityResult
+            }
+
+            showPermissionDeniedSnackbar()
         }
 
     private val openCitraDirectory = registerForActivityResult<Uri, Uri>(

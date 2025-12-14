@@ -76,10 +76,14 @@
     <string name="give_permission">Grant permission</string>
     <string name="notification_warning">Skip granting the notification permission?</string>
     <string name="notification_warning_description">Azahar won\'t be able to notify you of important information.</string>
+    <string name="filesystem_permission_warning">Missing Permissions</string>
+    <string name="filesystem_permission_warning_description">Azahar requires permission to manage files on this device in order to store and manage its data.\n\nPlease grant the \"Filesystem\" permission before continuing.</string>
     <string name="camera_permission">Camera</string>
     <string name="camera_permission_description">Grant the camera permission below to emulate the 3DS camera.</string>
     <string name="microphone_permission">Microphone</string>
     <string name="microphone_permission_description">Grant the microphone permission below to emulate the 3DS microphone.</string>
+    <string name="filesystem_permission">Filesystem</string>
+    <string name="filesystem_permission_description">Grant the filesystem permission below to allow Azahar to store files.</string>
     <string name="permission_denied">Permission denied</string>
     <string name="add_games_warning">Skip selecting applications folder?</string>
     <string name="add_games_warning_description">Software won\'t be displayed in the Applications list if a folder isn\'t selected.</string>
