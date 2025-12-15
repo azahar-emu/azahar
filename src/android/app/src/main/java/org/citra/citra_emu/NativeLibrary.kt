@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.RemovableStorageHelper
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -639,15 +640,24 @@ object NativeLibrary {
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
+        val dirSep = "/"
         val udUri = preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
         val udPathSegment = udUri.lastPathSegment!!
-        val udVirtualPath = udPathSegment.removePrefix("primary:")
-        if (udVirtualPath == udPathSegment) {
-            throw IllegalStateException("TODO: User directory must be in primary external storage, is instead: $udVirtualPath")
-        }
-        val userDirNativePath = Environment.getExternalStorageDirectory().absolutePath + "/" + udVirtualPath + "/"
+        val udVirtualPath = udPathSegment.substringAfter(":")
 
-        return userDirNativePath
+        if (udPathSegment.startsWith("primary:")) { // User directory is located in primary storage
+            val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+            return primaryStoragePath + dirSep + udVirtualPath + dirSep
+        } else { // User directory probably located on a removable storage device
+            val storageIdString = udPathSegment.substringBefore(":")
+            val udRemovablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
+
+            if (udRemovablePath == null) {
+                error("Unknown mount location for storage device '$storageIdString'")
+            }
+            return udRemovablePath + dirSep + udVirtualPath + dirSep
+        }
+
     }
 
     @Keep
