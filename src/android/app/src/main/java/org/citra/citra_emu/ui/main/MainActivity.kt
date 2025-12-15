@@ -6,8 +6,8 @@ package org.citra.citra_emu.ui.main
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
@@ -44,6 +44,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
+import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
 import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
 import org.citra.citra_emu.utils.CiaInstallWorker
@@ -197,6 +198,13 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         } else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && CitraDirectoryUtils.needToUpdateManually()) {
             UpdateUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
+        }
+
+        if (!Environment.isExternalStorageManager() &&
+            supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null
+        ) {
+            GrantMissingFilesystemPermissionFragment.newInstance()
+                .show(supportFragmentManager,GrantMissingFilesystemPermissionFragment.TAG)
         }
     }
 

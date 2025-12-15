@@ -152,7 +152,7 @@ class SetupFragment : Fragment() {
                                     R.string.filesystem_permission_description,
                                     buttonAction = {
                                         pageButtonCallback = it
-                                        filesystemPermissionLauncher.launch(Intent(
+                                        manageExternalStoragePermissionLauncher.launch(Intent(
                                             android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                                             Uri.fromParts("package", requireActivity().packageName, null)
                                         ))
@@ -503,7 +503,7 @@ class SetupFragment : Fragment() {
         }
 
     // We can't use permissionLauncher because MANAGE_EXTERNAL_STORAGE is a special snowflake
-    private val filesystemPermissionLauncher =
+    private val manageExternalStoragePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (Environment.isExternalStorageManager()) {
                 checkForButtonState.invoke()
