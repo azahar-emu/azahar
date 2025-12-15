@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -152,9 +152,11 @@ std::vector<std::string> GetFilesName(const std::string& filepath) {
 
 std::string GetUserDirectory() {
     if (get_user_directory == nullptr)
-        throw std::runtime_error("Unable to locate user directory: Function with ID 'get_user_directory' is missing");
+        throw std::runtime_error(
+            "Unable to locate user directory: Function with ID 'get_user_directory' is missing");
     auto env = GetEnvForThread();
-    auto j_user_directory = (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory));
+    auto j_user_directory =
+        (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory));
     return env->GetStringUTFChars(j_user_directory, nullptr);
 }
 

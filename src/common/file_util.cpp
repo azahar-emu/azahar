@@ -312,8 +312,8 @@ bool Rename(const std::string& srcFilename, const std::string& destFilename) {
         return true;
 #elif ANDROID
     const std::string userDirLocation = AndroidStorage::GetUserDirectory();
-    if (rename((userDirLocation + srcFilename).c_str(),
-               (userDirLocation + destFilename).c_str()) == 0)
+    if (rename((userDirLocation + srcFilename).c_str(), (userDirLocation + destFilename).c_str()) ==
+        0)
         return true;
 #else
     if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
