@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -144,32 +145,47 @@ class SetupFragment : Fragment() {
                     false,
                     0,
                     pageButtons = mutableListOf<PageButton>().apply {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            add(
-                                PageButton(
-                                    R.drawable.ic_folder,
-                                    R.string.filesystem_permission,
-                                    R.string.filesystem_permission_description,
-                                    buttonAction = {
-                                        pageButtonCallback = it
-                                        manageExternalStoragePermissionLauncher.launch(Intent(
-                                            android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                                            Uri.fromParts("package", requireActivity().packageName, null)
-                                        ))
-                                    },
-                                    buttonState = {
+                        add(
+                            PageButton(
+                                R.drawable.ic_folder,
+                                R.string.filesystem_permission,
+                                R.string.filesystem_permission_description,
+                                buttonAction = {
+                                    pageButtonCallback = it
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                        manageExternalStoragePermissionLauncher.launch(
+                                            Intent(
+                                                android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                                Uri.fromParts(
+                                                    "package",
+                                                    requireActivity().packageName,
+                                                    null
+                                                )
+                                            )
+                                        )
+                                    } else {
+                                        // TODO: Android <11 support
+                                    }
+                                },
+                                buttonState = {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                         if (Environment.isExternalStorageManager()) {
                                             ButtonState.BUTTON_ACTION_COMPLETE
                                         } else {
                                             ButtonState.BUTTON_ACTION_INCOMPLETE
                                         }
-                                    },
-                                    isUnskippable = true,
-                                    hasWarning = true,
-                                    R.string.filesystem_permission_warning,
-                                    R.string.filesystem_permission_warning_description,
-                                )
+                                    } else {
+                                        // TODO: Android <11 support
+                                        ButtonState.BUTTON_ACTION_INCOMPLETE
+                                    }
+                                },
+                                isUnskippable = true,
+                                hasWarning = true,
+                                R.string.filesystem_permission_warning,
+                                R.string.filesystem_permission_warning_description,
                             )
+                        )
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             add(
                                 PageButton(
                                     R.drawable.ic_notification,
@@ -503,6 +519,7 @@ class SetupFragment : Fragment() {
         }
 
     // We can't use permissionLauncher because MANAGE_EXTERNAL_STORAGE is a special snowflake
+    @RequiresApi(Build.VERSION_CODES.R)
     private val manageExternalStoragePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (Environment.isExternalStorageManager()) {
