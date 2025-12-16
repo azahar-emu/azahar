@@ -257,18 +257,29 @@ class SetupFragment : Fragment() {
                         )
                     },
                 ) {
-                    if (
+                    var permissionsComplete =
+                        // Microphone
                         ContextCompat.checkSelfPermission(
                             requireContext(),
                             Manifest.permission.RECORD_AUDIO
                         ) == PackageManager.PERMISSION_GRANTED &&
+                        // Camera
                         ContextCompat.checkSelfPermission(
                             requireContext(),
                             Manifest.permission.CAMERA
                         ) == PackageManager.PERMISSION_GRANTED &&
+                        // Notifications
                         NotificationManagerCompat.from(requireContext())
                             .areNotificationsEnabled()
-                    ) {
+                    // External Storage
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        permissionsComplete = (permissionsComplete && Environment.isExternalStorageManager())
+                    } else {
+                        // TODO: Android <11 support
+                        permissionsComplete = false
+                    }
+
+                    if (permissionsComplete) {
                         PageState.PAGE_STEPS_COMPLETE
                     } else {
                         PageState.PAGE_STEPS_INCOMPLETE
