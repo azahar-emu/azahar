@@ -190,12 +190,16 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
 
-        if (!firstTimeSetup && !PermissionsHandler.hasWriteAccess(this) &&
+        if (firstTimeSetup) {
+            return
+        }
+
+        if (!PermissionsHandler.hasWriteAccess(this) &&
             !homeViewModel.isPickingUserDir.value
         ) {
             SelectUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-        } else if (!firstTimeSetup && !homeViewModel.isPickingUserDir.value && CitraDirectoryUtils.needToUpdateManually()) {
+        } else if (!homeViewModel.isPickingUserDir.value && CitraDirectoryUtils.needToUpdateManually()) {
             UpdateUserDirectoryDialogFragment.newInstance(this)
                 .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
         }
