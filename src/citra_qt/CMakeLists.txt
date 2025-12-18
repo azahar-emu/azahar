@@ -287,7 +287,9 @@ if (NOT WIN32)
     endif()
 endif()
 
-if (UNIX AND NOT APPLE)
+if (APPLE)
+    target_link_libraries(citra_qt PRIVATE Qt6::QDarwinCameraPermissionPlugin)
+elseif (UNIX)
     target_link_libraries(citra_qt PRIVATE Qt6::DBus gamemode)
 endif()
 
