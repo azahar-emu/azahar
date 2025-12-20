@@ -30,6 +30,8 @@ class SharedMemory;
 namespace Service::GSP {
 
 struct FrameBufferInfo {
+    static constexpr u32 PIXEL_FORMAT_MASK = 0x7;
+
     u32 active_fb; // 0 = first, 1 = second
     u32 address_left;
     u32 address_right;
@@ -37,6 +39,10 @@ struct FrameBufferInfo {
     u32 format;   // maps to 0x1EF00X70 ?
     u32 shown_fb; // maps to 0x1EF00X78 ?
     u32 unknown;
+
+    u32 GetPixelFormat() {
+        return format & PIXEL_FORMAT_MASK;
+    }
 };
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
 
