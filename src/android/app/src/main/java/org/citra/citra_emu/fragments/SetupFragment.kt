@@ -164,7 +164,7 @@ class SetupFragment : Fragment() {
                                             )
                                         )
                                     } else {
-                                        // TODO: Android <11 support
+                                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                     }
                                 },
                                 buttonState = {
@@ -175,8 +175,15 @@ class SetupFragment : Fragment() {
                                             ButtonState.BUTTON_ACTION_INCOMPLETE
                                         }
                                     } else {
-                                        // TODO: Android <11 support
-                                        ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        if (ContextCompat.checkSelfPermission(
+                                                requireContext(),
+                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                            ) == PackageManager.PERMISSION_GRANTED
+                                        ) {
+                                            ButtonState.BUTTON_ACTION_COMPLETE
+                                        } else {
+                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                        }
                                     }
                                 },
                                 isUnskippable = true,
@@ -275,8 +282,10 @@ class SetupFragment : Fragment() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         permissionsComplete = (permissionsComplete && Environment.isExternalStorageManager())
                     } else {
-                        // TODO: Android <11 support
-                        permissionsComplete = false
+                        permissionsComplete = (permissionsComplete && ContextCompat.checkSelfPermission(
+                            requireContext(),
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) == PackageManager.PERMISSION_GRANTED)
                     }
 
                     if (permissionsComplete) {
@@ -303,7 +312,7 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
                                     pageButtonCallback = it
-                                    openCitraDirectory.launch(null)
+                                    PermissionsHandler.compatibleSelectDirectory(openCitraDirectory)
                                 },
                                 buttonState = {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {

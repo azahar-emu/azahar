@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
 class SelectUserDirectoryDialogFragment : DialogFragment() {
@@ -27,7 +28,7 @@ class SelectUserDirectoryDialogFragment : DialogFragment() {
             .setTitle(R.string.select_citra_user_folder)
             .setMessage(R.string.selecting_user_directory_without_write_permissions)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                mainActivity?.openCitraDirectoryLostPermission?.launch(null)
+                PermissionsHandler.compatibleSelectDirectory(mainActivity.openCitraDirectoryLostPermission)
             }
             .show()
     }

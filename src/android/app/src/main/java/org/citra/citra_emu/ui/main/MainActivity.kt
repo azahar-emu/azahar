@@ -4,7 +4,9 @@
 
 package org.citra.citra_emu.ui.main
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -205,15 +207,23 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager() &&
-                supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null
-            ) {
-                GrantMissingFilesystemPermissionFragment.newInstance()
-                    .show(supportFragmentManager,GrantMissingFilesystemPermissionFragment.TAG)
+        fun requestMissingFilesystemPermission() =
+            GrantMissingFilesystemPermissionFragment.newInstance()
+                .show(supportFragmentManager,GrantMissingFilesystemPermissionFragment.TAG)
+
+        if (supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (!Environment.isExternalStorageManager()) {
+                    requestMissingFilesystemPermission()
+                }
+            } else {
+                if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED) {
+                    requestMissingFilesystemPermission()
+                }
             }
-        } else {
-            // TODO: Android <11 support
         }
     }
 

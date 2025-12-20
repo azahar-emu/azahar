@@ -653,7 +653,9 @@ object NativeLibrary {
             val udRemovablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
 
             if (udRemovablePath == null) {
-                error("Unknown mount location for storage device '$storageIdString'")
+                android.util.Log.e("NativeLibrary",
+                    "Unknown mount location for storage device '$storageIdString' (URI: $udUri)"
+                )
             }
             return udRemovablePath + dirSep + udVirtualPath + dirSep
         }

@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.fragments
 
+import android.Manifest
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
@@ -37,8 +38,7 @@ class GrantMissingFilesystemPermissionFragment : DialogFragment() {
                     )
                 }
             } else {
-                // TODO: Android <11 support
-                {}
+                { permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) }
             }
 
 
@@ -56,6 +56,13 @@ class GrantMissingFilesystemPermissionFragment : DialogFragment() {
     private val manageExternalStoragePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (Environment.isExternalStorageManager()) {
+                return@registerForActivityResult
+            }
+        }
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
                 return@registerForActivityResult
             }
         }
