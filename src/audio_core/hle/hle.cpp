@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -113,7 +113,7 @@ private:
 
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
     : parent(parent_), core_timing(timing) {
-    dsp_memory = reinterpret_cast<HLE::DspMemory*>(memory.GetDspMemory().data());
+    dsp_memory = reinterpret_cast<HLE::DspMemory*>(memory.GetDspMemory(0));
     dsp_memory->raw_memory.fill(0);
 
     for (auto& source : sources) {
