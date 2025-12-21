@@ -85,7 +85,8 @@ Result ServiceFixture::DSP_ReadPipeIfPossible(u32 channel, u32 /*peer*/, void* o
 Result ServiceFixture::ServiceFixture::DSP_ConvertProcessAddressFromDspDram(u32 dsp_address,
                                                                             u16** host_address) {
     *host_address = reinterpret_cast<u16*>(
-        (dsp_address << 1) + (reinterpret_cast<uintptr_t>(dsp->GetDspMemory().data()) + 0x40000u));
+        (dsp_address << 1) +
+        (reinterpret_cast<uintptr_t>(memory.GetDspMemory().data()) + 0x40000u));
     return ResultSuccess;
 }
 

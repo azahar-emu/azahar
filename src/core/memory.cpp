@@ -91,13 +91,12 @@ public:
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+    std::unique_ptr<u8[]> dsp_ram = std::make_unique<u8[]>(Memory::DSP_RAM_SIZE);
 
     Core::System& system;
     std::shared_ptr<PageTable> current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
     std::vector<std::shared_ptr<PageTable>> page_table_list;
-
-    AudioCore::DspInterface* dsp = nullptr;
 
     std::shared_ptr<BackingMem> fcram_mem;
     std::shared_ptr<BackingMem> vram_mem;
@@ -111,7 +110,7 @@ public:
         case Region::VRAM:
             return vram.get();
         case Region::DSP:
-            return dsp->GetDspMemory().data();
+            return dsp_ram.get();
         case Region::FCRAM:
             return fcram.get();
         case Region::N3DS:
@@ -126,7 +125,7 @@ public:
         case Region::VRAM:
             return vram.get();
         case Region::DSP:
-            return dsp->GetDspMemory().data();
+            return dsp_ram.get();
         case Region::FCRAM:
             return fcram.get();
         case Region::N3DS:
@@ -324,6 +323,7 @@ private:
             fcram.get(), save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
         ar& boost::serialization::make_binary_object(
             n3ds_extra_ram.get(), save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
+        ar& boost::serialization::make_binary_object(dsp_ram.get(), Memory::DSP_RAM_SIZE);
         ar & cache_marker;
         ar & page_table_list;
         // dsp is set from Core::System at startup
@@ -989,8 +989,8 @@ MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
     return MemoryRef(impl->fcram_mem, offset);
 }
 
-void MemorySystem::SetDSP(AudioCore::DspInterface& dsp) {
-    impl->dsp = &dsp;
+std::span<u8, DSP_RAM_SIZE> MemorySystem::GetDspMemory() const {
+    return std::span<u8, DSP_RAM_SIZE>{impl->dsp_ram.get(), DSP_RAM_SIZE};
 }
 
 } // namespace Memory
