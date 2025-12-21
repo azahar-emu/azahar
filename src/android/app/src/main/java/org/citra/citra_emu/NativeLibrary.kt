@@ -711,6 +711,11 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean =
+        CitraApplication.documentsTree.updateDocumentLocation(sourcePath, destinationPath)
+
+    @Keep
+    @JvmStatic
     fun deleteDocument(path: String): Boolean =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.deleteDocument(path)

@@ -24,7 +24,11 @@
     V(CopyFile, bool,                                                                              \
       (const std::string& source, const std::string& destination_path,                             \
        const std::string& destination_filename),                                                   \
-      copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")
+      copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")          \
+    V(UpdateDocumentLocation, bool,                                                                \
+      (const std::string& source_path, const std::string& destination_path),                       \
+      update_document_location, "updateDocumentLocation",                                          \
+      "(Ljava/lang/String;Ljava/lang/String;)Z")
 #define ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(V)                                                 \
     V(IsDirectory, bool, is_directory, CallStaticBooleanMethod, "isDirectory",                     \
       "(Ljava/lang/String;)Z")                                                                     \

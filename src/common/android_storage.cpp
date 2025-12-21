@@ -172,6 +172,16 @@ bool CopyFile(const std::string& source, const std::string& destination_path,
                                         j_destination_path, j_destination_filename);
 }
 
+bool UpdateDocumentLocation(const std::string& source_path, const std::string& destination_path) {
+    if (update_document_location == nullptr)
+        return false;
+    auto env = GetEnvForThread();
+    jstring j_source_path = env->NewStringUTF(source_path.c_str());
+    jstring j_destination_path = env->NewStringUTF(destination_path.c_str());
+    return env->CallStaticBooleanMethod(native_library, update_document_location, j_source_path,
+                                        j_destination_path);
+}
+
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature)                   \
     F(FunctionName, ReturnValue, JMethodID, Caller)
 #define F(FunctionName, ReturnValue, JMethodID, Caller)                                            \
