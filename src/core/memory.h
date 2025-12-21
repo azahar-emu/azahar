@@ -641,7 +641,8 @@ public:
     /// Unregisters page table for rasterizer cache marking
     void UnregisterPageTable(std::shared_ptr<PageTable> page_table);
 
-    std::span<u8, DSP_RAM_SIZE> GetDspMemory() const;
+    /// Gets pointer to DSP shared memory with given offset
+    u8* GetDspMemory(std::size_t offset) const;
 
     void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 

@@ -989,8 +989,9 @@ MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
     return MemoryRef(impl->fcram_mem, offset);
 }
 
-std::span<u8, DSP_RAM_SIZE> MemorySystem::GetDspMemory() const {
-    return std::span<u8, DSP_RAM_SIZE>{impl->dsp_ram.get(), DSP_RAM_SIZE};
+u8* MemorySystem::GetDspMemory(std::size_t offset) const {
+    ASSERT(offset <= Memory::DSP_RAM_SIZE);
+    return impl->dsp_ram.get() + offset;
 }
 
 } // namespace Memory

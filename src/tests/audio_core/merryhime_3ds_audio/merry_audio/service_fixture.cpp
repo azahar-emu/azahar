@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include "audio_core/hle/hle.h"
 #include "audio_core/lle/lle.h"
 #include "common/settings.h"
@@ -85,8 +89,7 @@ Result ServiceFixture::DSP_ReadPipeIfPossible(u32 channel, u32 /*peer*/, void* o
 Result ServiceFixture::ServiceFixture::DSP_ConvertProcessAddressFromDspDram(u32 dsp_address,
                                                                             u16** host_address) {
     *host_address = reinterpret_cast<u16*>(
-        (dsp_address << 1) +
-        (reinterpret_cast<uintptr_t>(memory.GetDspMemory().data()) + 0x40000u));
+        (dsp_address << 1) + (reinterpret_cast<uintptr_t>(memory.GetDspMemory(0)) + 0x40000u));
     return ResultSuccess;
 }
 
