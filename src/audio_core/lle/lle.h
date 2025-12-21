@@ -31,8 +31,6 @@ public:
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) override;
 
-    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
-
     void SetInterruptHandler(
         std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) override;
 

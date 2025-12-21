@@ -496,8 +496,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         dsp_core = std::make_unique<AudioCore::DspLle>(*this, multithread);
     }
 
-    memory->SetDSP(*dsp_core);
-
     dsp_core->SetSink(Settings::values.output_type.GetValue(),
                       Settings::values.output_device.GetValue());
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching.GetValue());
@@ -819,7 +817,6 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         u32 cheats_pid;
         ar & cheats_pid;
         timing->UnlockEventQueue();
-        memory->SetDSP(*dsp_core);
         cheat_engine.Connect(cheats_pid);
 
         // Re-register gpu callback, because gsp service changed after service_manager got
