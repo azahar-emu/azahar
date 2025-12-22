@@ -150,14 +150,18 @@ std::vector<std::string> GetFilesName(const std::string& filepath) {
     return vector;
 }
 
-std::string GetUserDirectory() {
+std::optional<std::string> GetUserDirectory() {
     if (get_user_directory == nullptr)
         throw std::runtime_error(
             "Unable to locate user directory: Function with ID 'get_user_directory' is missing");
     auto env = GetEnvForThread();
     auto j_user_directory =
         (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory));
-    return env->GetStringUTFChars(j_user_directory, nullptr);
+    auto result = env->GetStringUTFChars(j_user_directory, nullptr);
+    if (result == "") {
+        return std::nullopt;
+    }
+    return result;
 }
 
 bool CopyFile(const std::string& source, const std::string& destination_path,

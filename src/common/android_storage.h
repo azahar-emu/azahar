@@ -19,7 +19,7 @@
       open_content_uri, "openContentUri", "(Ljava/lang/String;Ljava/lang/String;)I")               \
     V(GetFilesName, std::vector<std::string>, (const std::string& filepath), get_files_name,       \
       "getFilesName", "(Ljava/lang/String;)[Ljava/lang/String;")                                   \
-    V(GetUserDirectory, std::string, (), get_user_directory, "getUserDirectory",                   \
+    V(GetUserDirectory, std::optional<std::string>, (), get_user_directory, "getUserDirectory",    \
       "()Ljava/lang/String;")                                                                      \
     V(CopyFile, bool,                                                                              \
       (const std::string& source, const std::string& destination_path,                             \

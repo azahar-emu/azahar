@@ -311,9 +311,9 @@ bool Rename(const std::string& srcFilename, const std::string& destFilename) {
                  Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
         return true;
 #elif ANDROID
-    const std::string userDirLocation = AndroidStorage::GetUserDirectory();
-    if (rename((userDirLocation + srcFilename).c_str(), (userDirLocation + destFilename).c_str()) ==
-        0) {
+    std::optional<std::string> userDirLocation = AndroidStorage::GetUserDirectory();
+    if (userDirLocation && rename((*userDirLocation + srcFilename).c_str(),
+                                  (*userDirLocation + destFilename).c_str()) == 0) {
         AndroidStorage::UpdateDocumentLocation(srcFilename, destFilename);
         // ^ TODO: This shouldn't fail, but what should we do if it somehow does?
         return true;

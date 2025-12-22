@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
@@ -40,6 +41,7 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
@@ -197,16 +199,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return
         }
 
-        if (!PermissionsHandler.hasWriteAccess(this) &&
-            !homeViewModel.isPickingUserDir.value
-        ) {
-            SelectUserDirectoryDialogFragment.newInstance(this)
-                .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-        } else if (!homeViewModel.isPickingUserDir.value && CitraDirectoryUtils.needToUpdateManually()) {
-            UpdateUserDirectoryDialogFragment.newInstance(this)
-                .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
-        }
-
         fun requestMissingFilesystemPermission() =
             GrantMissingFilesystemPermissionFragment.newInstance()
                 .show(supportFragmentManager,GrantMissingFilesystemPermissionFragment.TAG)
@@ -223,6 +215,27 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 ) != PackageManager.PERMISSION_GRANTED) {
                     requestMissingFilesystemPermission()
                 }
+            }
+        }
+
+        if (homeViewModel.isPickingUserDir.value) {
+            return
+        }
+
+        if (!PermissionsHandler.hasWriteAccess(this)) {
+            SelectUserDirectoryDialogFragment.newInstance(this)
+                .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+            return
+        } else if (CitraDirectoryUtils.needToUpdateManually()) {
+            UpdateUserDirectoryDialogFragment.newInstance(this)
+                .show(supportFragmentManager,UpdateUserDirectoryDialogFragment.TAG)
+            return
+        }
+
+        if (supportFragmentManager.findFragmentByTag(SelectUserDirectoryDialogFragment.TAG) == null) {
+            if (NativeLibrary.getUserDirectory() == "") {
+                SelectUserDirectoryDialogFragment.newInstance(this)
+                    .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
             }
         }
     }

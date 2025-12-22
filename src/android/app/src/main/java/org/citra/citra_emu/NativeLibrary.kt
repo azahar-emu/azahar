@@ -656,6 +656,7 @@ object NativeLibrary {
                 android.util.Log.e("NativeLibrary",
                     "Unknown mount location for storage device '$storageIdString' (URI: $udUri)"
                 )
+                return ""
             }
             return udRemovablePath + dirSep + udVirtualPath + dirSep
         }
