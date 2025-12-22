@@ -636,12 +636,13 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun getUserDirectory(): String {
+    fun getUserDirectory(uriOverride: Uri? = null): String {
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
         val dirSep = "/"
-        val udUri = preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
+        val udUri = uriOverride ?:
+                    preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
         val udPathSegment = udUri.lastPathSegment!!
         val udVirtualPath = udPathSegment.substringAfter(":")
 

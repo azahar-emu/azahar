@@ -156,7 +156,7 @@ std::optional<std::string> GetUserDirectory() {
             "Unable to locate user directory: Function with ID 'get_user_directory' is missing");
     auto env = GetEnvForThread();
     auto j_user_directory =
-        (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory));
+        (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory, nullptr));
     auto result = env->GetStringUTFChars(j_user_directory, nullptr);
     if (result == "") {
         return std::nullopt;

@@ -11,7 +11,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
 import android.view.WindowManager
@@ -357,6 +356,15 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     ): ActivityResultLauncher<Uri?> {
         return registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { result: Uri? ->
             if (result == null) {
+                return@registerForActivityResult
+            }
+
+            if (NativeLibrary.getUserDirectory(result) == "") {
+                SelectUserDirectoryDialogFragment.newInstance(
+                    this,
+                    R.string.invalid_selection,
+                    R.string.invalid_user_directory
+                ).show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
                 return@registerForActivityResult
             }
 

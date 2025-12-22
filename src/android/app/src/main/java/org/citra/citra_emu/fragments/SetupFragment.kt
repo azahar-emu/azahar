@@ -5,7 +5,6 @@
 package org.citra.citra_emu.fragments
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -34,6 +33,7 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.SetupAdapter
 import org.citra.citra_emu.databinding.FragmentSetupBinding
@@ -554,6 +554,15 @@ class SetupFragment : Fragment() {
         ActivityResultContracts.OpenDocumentTree()
     ) { result: Uri? ->
         if (result == null) {
+            return@registerForActivityResult
+        }
+
+        if (NativeLibrary.getUserDirectory(result) == "") {
+            SelectUserDirectoryDialogFragment.newInstance(
+                mainActivity,
+                R.string.invalid_selection,
+                R.string.invalid_user_directory
+            ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
             return@registerForActivityResult
         }
 

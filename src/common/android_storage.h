@@ -20,7 +20,7 @@
     V(GetFilesName, std::vector<std::string>, (const std::string& filepath), get_files_name,       \
       "getFilesName", "(Ljava/lang/String;)[Ljava/lang/String;")                                   \
     V(GetUserDirectory, std::optional<std::string>, (), get_user_directory, "getUserDirectory",    \
-      "()Ljava/lang/String;")                                                                      \
+      "(Landroid/net/Uri;)Ljava/lang/String;")                                                     \
     V(CopyFile, bool,                                                                              \
       (const std::string& source, const std::string& destination_path,                             \
        const std::string& destination_filename),                                                   \
