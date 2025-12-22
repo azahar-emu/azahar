@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,21 @@ public:
 
     /// Emits GLSL source corresponding to the provided pica fragment configuration
     std::string Generate();
+
+private:
+    // Helper methods for efficient string building
+    template <typename... Args>
+    void Append(fmt::format_string<Args...> fmt, Args&&... args) {
+        fmt::format_to(std::back_inserter(out), fmt, std::forward<Args>(args)...);
+    }
+
+    void Append(std::string_view str) {
+        fmt::format_to(std::back_inserter(out), "{}", str);
+    }
+
+    void Append(char c) {
+        out.push_back(c);
+    }
 
 private:
     /// Undos the host perspective transformation and applies the PICA one
