@@ -40,6 +40,7 @@ jfieldID GetGameInfoPointer();
 
 jclass GetDiskCacheProgressClass();
 jmethodID GetDiskCacheLoadProgress();
+jmethodID GetCompressProgressMethod();
 jobject GetJavaLoadCallbackStage(VideoCore::LoadCallbackStage stage);
 
 jclass GetCiaInstallHelperClass();
