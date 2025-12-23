@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -533,6 +533,7 @@ union DspMemory {
         u8 unused_2[0x8000];
     };
 };
+static_assert(sizeof(DspMemory) == 0x80000, "Incorrect DSP memory size");
 static_assert(offsetof(DspMemory, region_0) == region0_offset,
               "DSP region 0 is at the wrong offset");
 static_assert(offsetof(DspMemory, region_1) == region1_offset,

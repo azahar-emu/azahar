@@ -16,6 +16,8 @@ public:
     ~AACDecoder() override;
     BinaryMessage ProcessRequest(const BinaryMessage& request) override;
 
+    void Reset() override;
+
 private:
     BinaryMessage Decode(const BinaryMessage& request);
     bool OpenNewDecoder();
