@@ -7,10 +7,12 @@ package org.citra.citra_emu
 import android.Manifest.permission
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -18,11 +20,14 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.RemovableStorageHelper
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -631,6 +636,36 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun getUserDirectory(uriOverride: Uri? = null): String {
+        val preferences: SharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+
+        val dirSep = "/"
+        val udUri = uriOverride ?:
+                    preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
+        val udPathSegment = udUri.lastPathSegment!!
+        val udVirtualPath = udPathSegment.substringAfter(":")
+
+        if (udPathSegment.startsWith("primary:")) { // User directory is located in primary storage
+            val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+            return primaryStoragePath + dirSep + udVirtualPath + dirSep
+        } else { // User directory probably located on a removable storage device
+            val storageIdString = udPathSegment.substringBefore(":")
+            val udRemovablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
+
+            if (udRemovablePath == null) {
+                android.util.Log.e("NativeLibrary",
+                    "Unknown mount location for storage device '$storageIdString' (URI: $udUri)"
+                )
+                return ""
+            }
+            return udRemovablePath + dirSep + udVirtualPath + dirSep
+        }
+
+    }
+
+    @Keep
+    @JvmStatic
     fun getSize(path: String): Long =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.getFileSize(path)
@@ -678,16 +713,8 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun renameFile(path: String, destinationFilename: String): Boolean =
-        if (FileUtil.isNativePath(path)) {
-            try {
-                CitraApplication.documentsTree.renameFile(path, destinationFilename)
-            } catch (e: Exception) {
-                false
-            }
-        } else {
-            FileUtil.renameFile(path, destinationFilename)
-        }
+    fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean =
+        CitraApplication.documentsTree.updateDocumentLocation(sourcePath, destinationPath)
 
     @Keep
     @JvmStatic

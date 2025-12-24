@@ -8,6 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
+import android.provider.DocumentsContract
+import androidx.activity.result.ActivityResultLauncher
 import androidx.preference.PreferenceManager
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
@@ -48,4 +51,17 @@ object PermissionsHandler {
 
     fun setCitraDirectory(uriString: String?) =
         preferences.edit().putString(CITRA_DIRECTORY, uriString).apply()
+
+    fun compatibleSelectDirectory(activityLauncher: ActivityResultLauncher<Uri?>) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activityLauncher.launch(null)
+        } else {
+            val initialUri = DocumentsContract.buildRootUri(
+                "com.android.externalstorage.documents",
+                "primary"
+            )
+            activityLauncher.launch(initialUri)
+        }
+
+    }
 }
