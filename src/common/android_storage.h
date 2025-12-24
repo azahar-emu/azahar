@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,12 +19,16 @@
       open_content_uri, "openContentUri", "(Ljava/lang/String;Ljava/lang/String;)I")               \
     V(GetFilesName, std::vector<std::string>, (const std::string& filepath), get_files_name,       \
       "getFilesName", "(Ljava/lang/String;)[Ljava/lang/String;")                                   \
+    V(GetUserDirectory, std::optional<std::string>, (), get_user_directory, "getUserDirectory",    \
+      "(Landroid/net/Uri;)Ljava/lang/String;")                                                     \
     V(CopyFile, bool,                                                                              \
       (const std::string& source, const std::string& destination_path,                             \
        const std::string& destination_filename),                                                   \
       copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")          \
-    V(RenameFile, bool, (const std::string& source, const std::string& filename), rename_file,     \
-      "renameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")
+    V(UpdateDocumentLocation, bool,                                                                \
+      (const std::string& source_path, const std::string& destination_path),                       \
+      update_document_location, "updateDocumentLocation",                                          \
+      "(Ljava/lang/String;Ljava/lang/String;)Z")
 #define ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(V)                                                 \
     V(IsDirectory, bool, is_directory, CallStaticBooleanMethod, "isDirectory",                     \
       "(Ljava/lang/String;)Z")                                                                     \

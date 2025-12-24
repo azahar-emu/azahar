@@ -6,10 +6,12 @@ package org.citra.citra_emu.utils
 
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.model.CheapDocument
 import java.net.URLDecoder
+import java.nio.file.Paths
 import java.util.StringTokenizer
 import java.util.concurrent.ConcurrentHashMap
 
@@ -191,19 +193,6 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
-        val node = resolvePath(filepath) ?: return false
-        try {
-            val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
-            val newUri = DocumentsContract.renameDocument(context.contentResolver, node.uri!!, filename)
-            node.rename(filename, newUri)
-            return true
-        } catch (e: Exception) {
-            error("[DocumentsTree]: Cannot rename file, error: " + e.message)
-        }
-    }
-
-    @Synchronized
     fun deleteDocument(filepath: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         try {
@@ -217,6 +206,29 @@ class DocumentsTree {
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
         }
+    }
+
+    @Synchronized
+    fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean {
+        Log.error("Got paths: $sourcePath, $destinationPath")
+        val sourceNode = resolvePath(sourcePath)
+        val newName = Paths.get(destinationPath).fileName.toString()
+        val parentPath = Paths.get(destinationPath).parent.toString()
+        val newParent = resolvePath(parentPath)
+        val newUri = (getUri(parentPath).toString() + "%2F$newName").toUri() // <- Is there a better way?
+
+        if (sourceNode == null || newParent == null)
+            return false
+
+        sourceNode.parent!!.removeChild(sourceNode)
+
+        sourceNode.name = newName
+        sourceNode.parent = newParent
+        sourceNode.uri = newUri
+
+        newParent.addChild(sourceNode)
+
+        return true
     }
 
     @Synchronized
@@ -286,15 +298,6 @@ class DocumentsTree {
             uri = document.uri
             isDirectory = isCreateDir
             loaded = true
-        }
-
-        @Synchronized
-        fun rename(name: String, uri: Uri?) {
-            parent ?: return
-            parent!!.removeChild(this)
-            this.name = name
-            this.uri = uri
-            parent!!.addChild(this)
         }
 
         fun addChild(node: DocumentsNode) {

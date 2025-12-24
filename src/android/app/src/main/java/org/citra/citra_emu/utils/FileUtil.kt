@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -420,18 +420,6 @@ object FileUtil {
         } catch (e: Exception) {
             Log.error("[FileUtil]: Cannot copy directory, error: " + e.message)
         }
-    }
-
-    @JvmStatic
-    fun renameFile(path: String, destinationFilename: String): Boolean {
-        try {
-            val uri = Uri.parse(path)
-            DocumentsContract.renameDocument(context.contentResolver, uri, destinationFilename)
-            return true
-        } catch (e: Exception) {
-            Log.error("[FileUtil]: Cannot rename file, error: " + e.message)
-        }
-        return false
     }
 
     @JvmStatic

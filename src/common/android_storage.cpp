@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -150,6 +150,20 @@ std::vector<std::string> GetFilesName(const std::string& filepath) {
     return vector;
 }
 
+std::optional<std::string> GetUserDirectory() {
+    if (get_user_directory == nullptr)
+        throw std::runtime_error(
+            "Unable to locate user directory: Function with ID 'get_user_directory' is missing");
+    auto env = GetEnvForThread();
+    auto j_user_directory =
+        (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory, nullptr));
+    auto result = env->GetStringUTFChars(j_user_directory, nullptr);
+    if (result == "") {
+        return std::nullopt;
+    }
+    return result;
+}
+
 bool CopyFile(const std::string& source, const std::string& destination_path,
               const std::string& destination_filename) {
     if (copy_file == nullptr)
@@ -162,13 +176,13 @@ bool CopyFile(const std::string& source, const std::string& destination_path,
                                         j_destination_path, j_destination_filename);
 }
 
-bool RenameFile(const std::string& source, const std::string& filename) {
-    if (rename_file == nullptr)
+bool UpdateDocumentLocation(const std::string& source_path, const std::string& destination_path) {
+    if (update_document_location == nullptr)
         return false;
     auto env = GetEnvForThread();
-    jstring j_source_path = env->NewStringUTF(source.c_str());
-    jstring j_destination_path = env->NewStringUTF(filename.c_str());
-    return env->CallStaticBooleanMethod(native_library, rename_file, j_source_path,
+    jstring j_source_path = env->NewStringUTF(source_path.c_str());
+    jstring j_destination_path = env->NewStringUTF(destination_path.c_str());
+    return env->CallStaticBooleanMethod(native_library, update_document_location, j_source_path,
                                         j_destination_path);
 }
 
