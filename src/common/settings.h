@@ -509,8 +509,8 @@ struct Values {
     SwitchableSetting<bool> use_vsync{true, "use_vsync"};
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
-    SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
-    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
+    SwitchableSetting<double, true> frame_limit{100, 1, 9999, "frame_limit"};
+    SwitchableSetting<double, true> turbo_limit{200, 1, 9999, "turbo_limit"};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         "texture_sampling"};

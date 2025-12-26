@@ -230,10 +230,11 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.frame_limit_slider,
                     R.string.frame_limit_slider_description,
                     1,
-                    200,
+                    9999,
                     "%",
                     IntSetting.FRAME_LIMIT.key,
-                    IntSetting.FRAME_LIMIT.defaultValue.toFloat()
+                    IntSetting.FRAME_LIMIT.defaultValue.toFloat(),
+                    showSlider = false
                 )
             )
             add(
@@ -241,11 +242,12 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TURBO_LIMIT,
                     R.string.turbo_limit,
                     R.string.turbo_limit_description,
-                    100,
-                    400,
+                    1,
+                    9999,
                     "%",
                     IntSetting.TURBO_LIMIT.key,
-                    IntSetting.TURBO_LIMIT.defaultValue.toFloat()
+                    IntSetting.TURBO_LIMIT.defaultValue.toFloat(),
+                    showSlider = false
                 )
             )
             add(
