@@ -121,6 +121,7 @@ class Settings {
         const val KEY_BUTTON_SELECT = "button_select"
         const val KEY_BUTTON_START = "button_start"
         const val KEY_BUTTON_HOME = "button_home"
+        const val KEY_BUTTON_TURBO = "button_turbo"
         const val KEY_BUTTON_UP = "button_up"
         const val KEY_BUTTON_DOWN = "button_down"
         const val KEY_BUTTON_LEFT = "button_left"
@@ -150,7 +151,8 @@ class Settings {
             KEY_BUTTON_Y,
             KEY_BUTTON_SELECT,
             KEY_BUTTON_START,
-            KEY_BUTTON_HOME
+            KEY_BUTTON_HOME,
+            KEY_BUTTON_TURBO
         )
         val buttonTitles = listOf(
             R.string.button_a,
@@ -159,7 +161,8 @@ class Settings {
             R.string.button_y,
             R.string.button_select,
             R.string.button_start,
-            R.string.button_home
+            R.string.button_home,
+            R.string.button_turbo
         )
         val circlePadKeys = listOf(
             KEY_CIRCLEPAD_AXIS_VERTICAL,
