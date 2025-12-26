@@ -120,12 +120,19 @@ private:
     template <typename Type, bool ranged>
     void ReadBasicSetting(Settings::Setting<Type, ranged>& setting);
 
+    // Add overload for vectors
+    template <typename Type, bool ranged>
+    void ReadBasicSetting(Settings::Setting<std::vector<Type>, ranged>& setting);
+
     /** Sets a value from the setting in the qt_config using the setting's label and default value.
      *
      * @param The setting
      */
     template <typename Type, bool ranged>
     void WriteBasicSetting(const Settings::Setting<Type, ranged>& setting);
+
+    template <typename Type, bool ranged>
+    void WriteBasicSetting(const Settings::Setting<std::vector<Type>, ranged>& setting);
 
     ConfigType type;
     std::unique_ptr<QSettings> qt_config;
