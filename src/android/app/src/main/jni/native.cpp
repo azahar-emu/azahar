@@ -95,6 +95,7 @@ static jobject ToJavaCoreError(Core::System::ResultStatus result) {
         {Core::System::ResultStatus::ErrorSystemFiles, "ErrorSystemFiles"},
         {Core::System::ResultStatus::ErrorSavestate, "ErrorSavestate"},
         {Core::System::ResultStatus::ErrorArticDisconnected, "ErrorArticDisconnected"},
+        {Core::System::ResultStatus::ErrorN3DSApplication, "ErrorN3DSApplication"},
         {Core::System::ResultStatus::ErrorUnknown, "ErrorUnknown"},
     };
 

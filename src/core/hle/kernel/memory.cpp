@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,23 +41,9 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode,
-                              u64 override_init_time) {
+void KernelSystem::MemoryInit(MemoryMode memory_mode, u64 override_init_time) {
     const bool is_new_3ds = Settings::values.is_new_3ds.GetValue();
-    u32 mem_type_index = static_cast<u32>(memory_mode);
-    u32 reported_mem_type = static_cast<u32>(memory_mode);
-    if (is_new_3ds) {
-        if (n3ds_mode == New3dsMemoryMode::NewProd || n3ds_mode == New3dsMemoryMode::NewDev2) {
-            mem_type_index = 6;
-            reported_mem_type = 6;
-        } else if (n3ds_mode == New3dsMemoryMode::NewDev1) {
-            mem_type_index = 7;
-            reported_mem_type = 7;
-        } else {
-            // On the N3ds, all O3ds configurations (<=5) are forced to 6 instead.
-            mem_type_index = 6;
-        }
-    }
+    const u32 mem_type_index = static_cast<u32>(memory_mode);
 
     // The kernel allocation regions (APPLICATION, SYSTEM and BASE) are laid out in sequence, with
     // the sizes specified in the memory_region_sizes table.
@@ -73,12 +59,39 @@ void KernelSystem::MemoryInit(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode
 
     config_mem_handler = std::make_shared<ConfigMem::Handler>();
     auto& config_mem = config_mem_handler->GetConfigMem();
-    config_mem.app_mem_type = reported_mem_type;
-    config_mem.app_mem_alloc = memory_region_sizes[reported_mem_type][0];
+    config_mem.app_mem_type = static_cast<u8>(memory_mode);
+    config_mem.app_mem_alloc = memory_regions[0]->size;
     config_mem.sys_mem_alloc = memory_regions[1]->size;
     config_mem.base_mem_alloc = memory_regions[2]->size;
 
     shared_page_handler = std::make_shared<SharedPage::Handler>(timing, override_init_time);
+}
+
+void KernelSystem::UpdateReportedMemory(MemoryMode memory_mode, New3dsMemoryMode n3ds_mode) {
+    // If we are in New 3DS prod memory mode, and the application n3ds memory mode is set to legacy
+    // (all Old 3DS applications), then update reported available memory to the proper one according
+    // to the memory mode.
+    // This is normally done by PM when launching applications using svcSetResourceLimitLimitValues,
+    // but we do not implement that.
+    if (GetMemoryMode() == Kernel::MemoryMode::NewProd &&
+        n3ds_mode == Kernel::New3dsMemoryMode::Legacy) {
+        const u32 mem_type_index = static_cast<u32>(memory_mode);
+        auto& config_mem = config_mem_handler->GetConfigMem();
+        config_mem.app_mem_alloc = memory_region_sizes[mem_type_index][0];
+    }
+}
+
+void KernelSystem::RestoreReportedMemory() {
+    // If we are on New 3DS prod memory mode and we have terminated a process, restore the available
+    // memory to the proper size.
+    // This is normally done by PM when the application ends using svcSetResourceLimitLimitValues,
+    // but we do not implement that.
+    auto mem_mode = GetMemoryMode();
+    if (mem_mode == Kernel::MemoryMode::NewProd) {
+        const u32 mem_type_index = static_cast<u32>(mem_mode);
+        auto& config_mem = config_mem_handler->GetConfigMem();
+        config_mem.app_mem_alloc = memory_region_sizes[mem_type_index][0];
+    }
 }
 
 std::shared_ptr<MemoryRegionInfo> KernelSystem::GetMemoryRegion(MemoryRegion region) {

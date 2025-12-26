@@ -92,16 +92,15 @@ void Module::NSInterface::RebootSystem(Kernel::HLERequestContext& ctx) {
     const auto title_id = rp.Pop<u64>();
     const auto media_type = static_cast<FS::MediaType>(rp.Pop<u8>());
     rp.Skip(1, false); // Skip padding
-    // TODO: Utilize requested memory type.
     const auto mem_type = rp.Pop<u8>();
 
     LOG_WARNING(Service_APT,
                 "called launch_title={}, title_id={:016X}, media_type={:02X}, mem_type={:02X}",
                 launch_title, title_id, media_type, mem_type);
 
-    // TODO: Handle mem type.
     if (launch_title) {
-        NS::RebootToTitle(apt->system, media_type, title_id);
+        NS::RebootToTitle(apt->system, media_type, title_id,
+                          static_cast<Kernel::MemoryMode>(mem_type));
     } else {
         apt->system.RequestReset();
     }
@@ -763,16 +762,12 @@ void Module::APTInterface::PrepareToStartSystemApplet(Kernel::HLERequestContext&
 
 void Module::APTInterface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     LOG_DEBUG(Service_APT, "called");
 
-    // TODO(Subv): This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
-
-    // This command must return an error when called, otherwise the Home Menu will try to reboot the
-    // system.
-    rb.Push(Result(ErrorDescription::AlreadyExists, ErrorModule::Applet, ErrorSummary::InvalidState,
-                   ErrorLevel::Status));
+    rb.Push(apt->applet_manager->PrepareToStartNewestHomeMenu());
 }
 
 void Module::APTInterface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -819,6 +814,19 @@ void Module::APTInterface::StartSystemApplet(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->StartSystemApplet(applet_id, object, buffer));
+}
+
+void Module::APTInterface::StartNewestHomeMenu(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    const auto buffer_size = rp.Pop<u32>();
+    [[maybe_unused]] const auto object = rp.PopGenericObject();
+    [[maybe_unused]] const auto buffer = rp.PopStaticBuffer();
+
+    LOG_DEBUG(Service_APT, "called, size={:08X}", buffer_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->StartNewestHomeMenu());
 }
 
 void Module::APTInterface::OrderToCloseApplication(Kernel::HLERequestContext& ctx) {
@@ -1011,10 +1019,10 @@ void Module::APTInterface::LoadSysMenuArg(Kernel::HLERequestContext& ctx) {
 
     // This service function does not clear the buffer.
     std::vector<u8> buffer(size);
-    std::copy_n(apt->sys_menu_arg_buffer.cbegin(), size, buffer.begin());
+    Result res = apt->applet_manager->LoadSysMenuArg(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess);
+    rb.Push(res);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
@@ -1026,10 +1034,10 @@ void Module::APTInterface::StoreSysMenuArg(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called");
     ASSERT_MSG(buffer.size() >= size, "Buffer too small to hold requested data");
 
-    std::copy_n(buffer.cbegin(), size, apt->sys_menu_arg_buffer.begin());
+    Result res = apt->applet_manager->StoreSysMenuArg(buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
+    rb.Push(res);
 }
 
 void Module::APTInterface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
@@ -1365,8 +1373,8 @@ void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
                 "called title_id={:016X}, media_type={:02X}, mem_type={:02X}, firm_tid_low={:08X}",
                 title_id, media_type, mem_type, firm_tid_low);
 
-    // TODO: Handle mem type and FIRM TID low.
-    NS::RebootToTitle(apt->system, media_type, title_id);
+    // TODO: Handle FIRM TID low.
+    NS::RebootToTitle(apt->system, media_type, title_id, static_cast<Kernel::MemoryMode>(mem_type));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -1420,8 +1428,7 @@ void Module::APTInterface::IsStandardMemoryLayout(Kernel::HLERequestContext& ctx
     bool is_standard;
     if (Settings::values.is_new_3ds) {
         // Memory layout is standard if it is not NewDev1 (178MB)
-        is_standard = apt->system.Kernel().GetNew3dsHwCapabilities().memory_mode !=
-                      Kernel::New3dsMemoryMode::NewDev1;
+        is_standard = apt->system.Kernel().GetMemoryMode() != Kernel::MemoryMode::NewDev1;
     } else {
         // Memory layout is standard if it is Prod (64MB)
         is_standard = apt->system.Kernel().GetMemoryMode() == Kernel::MemoryMode::Prod;
