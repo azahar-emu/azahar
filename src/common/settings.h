@@ -72,11 +72,11 @@ enum class SmallScreenPosition : u32 {
 enum class StereoRenderOption : u32 {
     Off = 0,
     SideBySide = 1,
-    ReverseSideBySide = 2,
-    Anaglyph = 3,
-    Interlaced = 4,
-    ReverseInterlaced = 5,
-    CardboardVR = 6
+    SideBySideFull = 2,
+    Anaglyph = 4,
+    Interlaced = 5,
+    ReverseInterlaced = 6,
+    CardboardVR = 7
 };
 
 // Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
@@ -84,6 +84,14 @@ enum class StereoRenderOption : u32 {
 enum class MonoRenderOption : u32 {
     LeftEye = 0,
     RightEye = 1,
+};
+
+// on android, which displays to render stereo mode to
+enum class StereoWhichDisplay: u32 {
+    None = 0, //equivalent to StereoRenderOption = Off
+    Both = 1,
+    PrimaryOnly = 2,
+    SecondaryOnly = 3
 };
 
 enum class AudioEmulation : u32 {
@@ -561,6 +569,9 @@ struct Values {
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};
+    SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
+
+    SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None, "render_3d_which_display"};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
                                                            "mono_render_option"};
 

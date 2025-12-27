@@ -938,6 +938,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.stereoscopy))
             add(
                 SingleChoiceSetting(
+                    IntSetting.RENDER_3D_WHICH_DISPLAY,
+                    R.string.render_3d_which_display,
+                    R.string.render_3d_which_display_description,
+                    R.array.render3dWhichDisplay,
+                    R.array.render3dDisplayValues,
+                    IntSetting.RENDER_3D_WHICH_DISPLAY.key,
+                    IntSetting.RENDER_3D_WHICH_DISPLAY.defaultValue
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.STEREOSCOPIC_3D_MODE,
                     R.string.render3d,
                     0,
@@ -947,6 +958,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.STEREOSCOPIC_3D_MODE.defaultValue
                 )
             )
+
             add(
                 SliderSetting(
                     IntSetting.STEREOSCOPIC_3D_DEPTH,
@@ -966,6 +978,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.disable_right_eye_render_description,
                     BooleanSetting.DISABLE_RIGHT_EYE_RENDER.key,
                     BooleanSetting.DISABLE_RIGHT_EYE_RENDER.defaultValue
+                )
+            )
+
+            add(
+                SwitchSetting(
+                    BooleanSetting.SWAP_EYES_3D,
+                    R.string.swap_eyes_3d,
+                    R.string.swap_eyes_3d_description,
+                    BooleanSetting.SWAP_EYES_3D.key,
+                    BooleanSetting.SWAP_EYES_3D.defaultValue
                 )
             )
 
