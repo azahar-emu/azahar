@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,6 +30,23 @@ std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType
         }
     }
 
+    {
+        // This is normally done by PM, but we don't emulate it
+        // so we do it here instead.
+        auto mem_mode_res = loader->LoadKernelMemoryMode();
+        Kernel::MemoryMode mem_mode{};
+        auto n3ds_cap_res = loader->LoadNew3dsHwCapabilities();
+        Kernel::New3dsHwCapabilities n3ds_hw_cap{};
+
+        if (mem_mode_res.second == Loader::ResultStatus::Success && mem_mode_res.first) {
+            mem_mode = mem_mode_res.first.value();
+        }
+        if (n3ds_cap_res.second == Loader::ResultStatus::Success && n3ds_cap_res.first) {
+            n3ds_hw_cap = n3ds_cap_res.first.value();
+        }
+        system.Kernel().UpdateCPUAndMemoryState(title_id, mem_mode, n3ds_hw_cap);
+    }
+
     std::shared_ptr<Kernel::Process> process;
     Loader::ResultStatus result = loader->Load(process);
 
@@ -41,7 +58,8 @@ std::shared_ptr<Kernel::Process> LaunchTitle(Core::System& system, FS::MediaType
     return process;
 }
 
-void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id) {
+void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id,
+                   std::optional<Kernel::MemoryMode> mem_mode) {
     auto new_path = AM::GetTitleContentPath(media_type, title_id);
     if (new_path.empty() || !FileUtil::Exists(new_path)) {
         // TODO: This can happen if the requested title is not installed. Need a way to find
@@ -51,7 +69,12 @@ void RebootToTitle(Core::System& system, FS::MediaType media_type, u64 title_id)
                      new_path);
         new_path.clear();
     }
-    system.RequestReset(new_path);
+
+    std::optional<u8> mem_mode_u8;
+    if (mem_mode) {
+        mem_mode_u8 = static_cast<u8>(mem_mode.value());
+    }
+    system.RequestReset(new_path, mem_mode_u8);
 }
 
 } // namespace Service::NS

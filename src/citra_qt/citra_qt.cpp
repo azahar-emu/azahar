@@ -1313,6 +1313,11 @@ bool GMainWindow::LoadROM(const QString& filename) {
                        system.GetStatusDetails())
                        .c_str()));
             break;
+        case Core::System::ResultStatus::ErrorN3DSApplication:
+            QMessageBox::critical(this, tr("Invalid system mode"),
+                                  tr("New 3DS exclusive applications cannot be loaded without "
+                                     "enabling the New 3DS mode."));
+            break;
         default:
             QMessageBox::critical(
                 this, tr("Error while loading App!"),

@@ -272,6 +272,12 @@ object NativeLibrary {
                 canContinue = false
             }
 
+            CoreError.ErrorN3DSApplication -> {
+                title = emulationActivity.getString(R.string.invalid_system_mode)
+                message = emulationActivity.getString(R.string.invalid_system_mode_message)
+                canContinue = false
+            }
+
             CoreError.ErrorUnknown -> {
                 title = emulationActivity.getString(R.string.fatal_error)
                 message = emulationActivity.getString(R.string.fatal_error_message)
@@ -729,6 +735,7 @@ object NativeLibrary {
         ErrorSystemFiles,
         ErrorSavestate,
         ErrorArticDisconnected,
+        ErrorN3DSApplication,
         ErrorUnknown
     }
 

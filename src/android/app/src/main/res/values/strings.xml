@@ -559,6 +559,8 @@
     <string name="fatal_error">Fatal Error</string>
     <string name="fatal_error_message">A fatal error occurred. Check the log for details.\nContinuing emulation may result in crashes and bugs.</string>
     <string name="unsupported_encrypted">Unsupported encrypted application</string>
+    <string name="invalid_system_mode">Invalid system mode</string>
+    <string name="invalid_system_mode_message">New 3DS exclusive applications cannot be loaded without enabling the New 3DS mode.</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparing Shaders</string>

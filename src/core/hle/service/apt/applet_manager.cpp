@@ -122,6 +122,37 @@ static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
     return itr->title_ids[region_value];
 }
 
+static constexpr std::size_t NumTitleIDConverts = 3;
+static constexpr std::array<std::array<u64, 7>, NumTitleIDConverts> TitleIDConvertTable = {{
+    // MSET
+    {{0x0004001000020000, 0x0004001000021000, 0x0004001000022000, 0x0004001000020000,
+      0x0004001000026000, 0x0004001000027000, 0x0004001000028000}},
+    // eShop
+    {{0x0004001000020900, 0x0004001000021900, 0x0004001000022900, 0x0004001000020900,
+      0x0004001000020900, 0x0004001000027900, 0x0004001000028900}},
+    // NNID Settings
+    {{0x000400100002BF00, 0x000400100002C000, 0x000400100002C100, 0x000400100002BF00,
+      0x000400100002BF00, 0x000400100002BF00, 0x000400100002BF00}},
+}};
+
+static u64 ConvertTitleID(Core::System& system, u64 base_title_id) {
+
+    auto cfg = Service::CFG::GetModule(system);
+    if (!cfg) {
+        return base_title_id;
+    }
+
+    u32 region_value = cfg->GetRegionValue(false);
+
+    for (auto& entry : TitleIDConvertTable) {
+        if (base_title_id == entry[0]) {
+            return entry[region_value];
+        }
+    }
+
+    return base_title_id;
+}
+
 static bool IsSystemAppletId(AppletId applet_id) {
     return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::AnySystemApplet)) != 0;
 }
@@ -1013,6 +1044,22 @@ Result AppletManager::LeaveHomeMenu(std::shared_ptr<Kernel::Object> object,
     return ResultSuccess;
 }
 
+Result AppletManager::LoadSysMenuArg(std::vector<u8>& buffer) {
+    if (sys_menu_arg.has_value()) {
+        std::memcpy(buffer.data(), sys_menu_arg.value().data(),
+                    std::min(buffer.size(), sys_menu_arg.value().size()));
+    }
+    // Always succeed, even if there is no data to copy.
+    return ResultSuccess;
+}
+
+Result AppletManager::StoreSysMenuArg(const std::vector<u8>& buffer) {
+    sys_menu_arg = std::array<u8, SysMenuArgSize>();
+    std::memcpy(sys_menu_arg.value().data(), buffer.data(),
+                std::min(buffer.size(), sys_menu_arg.value().size()));
+    return ResultSuccess;
+}
+
 Result AppletManager::OrderToCloseApplication() {
     if (active_slot == AppletSlot::Error) {
         return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
@@ -1213,8 +1260,8 @@ ApplicationRunningMode AppletManager::GetApplicationRunningMode() {
 
     // APT checks whether the system is a New 3DS and the 804MHz CPU speed is enabled to determine
     // the result.
-    auto new_3ds_mode = GetTargetPlatform() == TargetPlatform::New3ds &&
-                        system.Kernel().GetNew3dsHwCapabilities().enable_804MHz_cpu;
+    auto new_3ds_mode =
+        GetTargetPlatform() == TargetPlatform::New3ds && system.Kernel().GetRunning804MHz();
     if (slot_data->registered) {
         return new_3ds_mode ? ApplicationRunningMode::New3dsRegistered
                             : ApplicationRunningMode::Old3dsRegistered;
@@ -1242,7 +1289,7 @@ Result AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType med
         app_jump_parameters.next_title_id = app_jump_parameters.current_title_id;
         app_jump_parameters.next_media_type = app_jump_parameters.current_media_type;
     } else {
-        app_jump_parameters.next_title_id = title_id;
+        app_jump_parameters.next_title_id = ConvertTitleID(system, title_id);
         app_jump_parameters.next_media_type = media_type;
     }
     app_jump_parameters.flags = flags;
@@ -1301,7 +1348,7 @@ Result AppletManager::DoApplicationJump(const DeliverArg& arg) {
         */
 
         NS::RebootToTitle(system, app_jump_parameters.next_media_type,
-                          app_jump_parameters.next_title_id);
+                          app_jump_parameters.next_title_id, std::nullopt);
         return ResultSuccess;
     }
 }
@@ -1318,6 +1365,53 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
     if (GetAppletSlot(AppletSlot::Application)->registered) {
         return {ErrorDescription::AlreadyExists, ErrorModule::Applet, ErrorSummary::InvalidState,
                 ErrorLevel::Status};
+    }
+
+    title_id = ConvertTitleID(system, title_id);
+
+    std::string path = AM::GetTitleContentPath(media_type, title_id);
+    auto loader = Loader::GetLoader(path);
+
+    if (!loader) {
+        LOG_ERROR(Service_APT, "Could not find .app for title 0x{:016x}", title_id);
+        // TODO: Find proper error code
+        return ResultUnknown;
+    }
+
+    auto plg_ldr = Service::PLGLDR::GetService(system);
+    if (plg_ldr) {
+        const auto& plg_context = plg_ldr->GetPluginLoaderContext();
+        if (plg_context.is_enabled && plg_context.use_user_load_parameters &&
+            plg_context.user_load_parameters.low_title_Id == static_cast<u32>(title_id) &&
+            plg_context.user_load_parameters.plugin_memory_strategy ==
+                PLGLDR::PLG_LDR::PluginMemoryStrategy::PLG_STRATEGY_MODE3) {
+            loader->SetKernelMemoryModeOverride(Kernel::MemoryMode::Dev2);
+        }
+    }
+
+    auto mem_mode = loader->LoadKernelMemoryMode();
+    if (mem_mode.second != Loader::ResultStatus::Success || !mem_mode.first.has_value()) {
+        // This cannot happen on real HW at this point of execution
+        LOG_ERROR(Service_APT, "Could not determine memory mode");
+        return ResultUnknown;
+    }
+
+    auto curr_mem_mode = system.Kernel().GetMemoryMode();
+
+    if (mem_mode.first.value() != curr_mem_mode) {
+        if (system.Kernel().GetMemoryMode() == Kernel::MemoryMode::NewProd) {
+            // On New 3DS prod memory mode, only incorrect state is if the app
+            // reports having the "unused" memory mode 1. TODO: Figure out
+            // how this works and if it is even used.
+            if (mem_mode.first.value() == static_cast<Kernel::MemoryMode>(1)) {
+                return {ErrCodes::IncorrectMemoryMode, ErrorModule::Applet,
+                        ErrorSummary::InvalidState, ErrorLevel::Status};
+            }
+        } else {
+            // On other memory modes, the state is incorrect.
+            return {ErrCodes::IncorrectMemoryMode, ErrorModule::Applet, ErrorSummary::InvalidState,
+                    ErrorLevel::Status};
+        }
     }
 
     ASSERT_MSG(!app_start_parameters,
@@ -1400,6 +1494,44 @@ Result AppletManager::CancelApplication() {
         .signal = SignalType::WakeupByCancel,
     });
 
+    return ResultSuccess;
+}
+
+Result AppletManager::PrepareToStartNewestHomeMenu() {
+    if (active_slot == AppletSlot::Error ||
+        GetAppletSlot(active_slot)->attributes.applet_pos != AppletPos::System) {
+        return {ErrCodes::InvalidAppletSlot, ErrorModule::Applet, ErrorSummary::InvalidState,
+                ErrorLevel::Status};
+    }
+
+    bool is_standard;
+    if (Settings::values.is_new_3ds) {
+        // Memory layout is standard if it is not NewDev1 (178MB)
+        is_standard = system.Kernel().GetMemoryMode() != Kernel::MemoryMode::NewDev1;
+    } else {
+        // Memory layout is standard if it is Prod (64MB)
+        is_standard = system.Kernel().GetMemoryMode() == Kernel::MemoryMode::Prod;
+    }
+
+    if (is_standard) {
+        return Result{ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                      ErrorSummary::InvalidState, ErrorLevel::Status};
+    }
+
+    home_menu_tid_to_start = GetAppletSlot(active_slot)->title_id;
+    return ResultSuccess;
+}
+
+Result AppletManager::StartNewestHomeMenu() {
+    if (!home_menu_tid_to_start) {
+        return Result{ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                      ErrorSummary::InvalidState, ErrorLevel::Status};
+    }
+
+    u64 titleID = home_menu_tid_to_start;
+    home_menu_tid_to_start = 0;
+
+    NS::RebootToTitle(system, Service::FS::MediaType::NAND, titleID, std::nullopt);
     return ResultSuccess;
 }
 

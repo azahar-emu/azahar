@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -123,6 +123,8 @@ void KernelSystem::TerminateProcess(std::shared_ptr<Process> process) {
     for (u32 core = 0; core < Core::GetNumCores(); core++) {
         GetThreadManager(core).TerminateProcessThreads(process);
     }
+
+    RestoreMemoryState(process->codeset->program_id);
 
     process->Exit();
     std::erase(process_list, process);
