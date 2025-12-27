@@ -850,19 +850,25 @@ bool CIAFile::Close() {
         current_content_install_result.type = InstallResult::Type::NONE;
     }
 
-    bool complete =
-        from_cdn ? is_done
-                 : (install_state >= CIAInstallState::TMDLoaded &&
-                    content_written.size() == container.GetTitleMetadata().GetContentCount() &&
-                    std::all_of(content_written.begin(), content_written.end(),
-                                [this, i = 0](auto& bytes_written) mutable {
-                                    return bytes_written >=
-                                           container.GetContentSize(static_cast<u16>(i++));
-                                }));
+    bool complete;
+
+    if (is_cancel) {
+        complete = false;
+    } else {
+        complete =
+            from_cdn ? is_done
+                     : (install_state >= CIAInstallState::TMDLoaded &&
+                        content_written.size() == container.GetTitleMetadata().GetContentCount() &&
+                        std::all_of(content_written.begin(), content_written.end(),
+                                    [this, i = 0](auto& bytes_written) mutable {
+                                        return bytes_written >=
+                                               container.GetContentSize(static_cast<u16>(i++));
+                                    }));
+    }
 
     // Install aborted
     if (!complete) {
-        LOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
+        LOG_ERROR(Service_AM, "CIAFile closed prematurely or cancelled, aborting install...");
         if (!is_additional_content) {
             // Only delete the content folder as there may be user save data in the title folder.
             const std::string title_content_path =
@@ -3214,97 +3220,6 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     LOG_DEBUG(Service_AM, "tid={:016x}, content_index={}", tid, content_index);
 }
 
-void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
-
-    if (am->cia_installing) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
-        return;
-    }
-
-    // Create our CIAFile handle for the app to write to, and while the app writes
-    // Citra will store contents out to sdmc/nand
-    const FileSys::Path cia_path = {};
-    auto file = std::make_shared<Service::FS::File>(
-        am->system.Kernel(), std::make_unique<CIAFile>(am->system, media_type), cia_path);
-
-    am->cia_installing = true;
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess); // No error
-    rb.PushCopyObjects(file->Connect());
-
-    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
-}
-
-void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-
-    if (am->cia_installing) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
-        return;
-    }
-
-    // Note: This function should register the title in the temp_i.db database, but we can get away
-    // with not doing that because we traverse the file system to detect installed titles.
-    // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
-    // contents out to sdmc/nand
-    const FileSys::Path cia_path = {};
-    std::shared_ptr<Service::FS::File> file;
-    {
-        auto cia_file = std::make_unique<CIAFile>(am->system, FS::MediaType::NAND);
-
-        AuthorizeCIAFileDecryption(cia_file.get(), ctx);
-
-        file =
-            std::make_shared<Service::FS::File>(am->system.Kernel(), std::move(cia_file), cia_path);
-    }
-    am->cia_installing = true;
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess); // No error
-    rb.PushCopyObjects(file->Connect());
-
-    LOG_WARNING(Service_AM, "(STUBBED)");
-}
-
-void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
-
-    LOG_DEBUG(Service_AM, "");
-
-    am->ScanForAllTitles();
-
-    am->cia_installing = false;
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-}
-
-void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
-
-    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
-    // files to keep track of installed titles.
-    am->ScanForAllTitles();
-
-    am->cia_installing = false;
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-
-    LOG_WARNING(Service_AM, "(STUBBED)");
-}
-
-void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
-    CommitImportTitlesImpl(ctx, false, false);
-}
-
 /// Wraps all File operations to allow adding an offset to them.
 class AMFileWrapper : public FileSys::FileBackend {
 public:
@@ -3418,6 +3333,123 @@ ResultVal<T*> GetFileBackendFromSession(std::shared_ptr<Kernel::ClientSession> f
     // while they're at it, so not implemented.
     LOG_ERROR(Service_AM, "Given file handle does not have an HLE handler!");
     return Kernel::ResultNotImplemented;
+}
+
+void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+
+    if (am->cia_installing) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    // Create our CIAFile handle for the app to write to, and while the app writes
+    // Citra will store contents out to sdmc/nand
+    const FileSys::Path cia_path = {};
+    auto file = std::make_shared<Service::FS::File>(
+        am->system.Kernel(), std::make_unique<CIAFile>(am->system, media_type), cia_path);
+
+    am->cia_installing = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
+}
+
+void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    if (am->cia_installing) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    // Note: This function should register the title in the temp_i.db database, but we can get away
+    // with not doing that because we traverse the file system to detect installed titles.
+    // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
+    // contents out to sdmc/nand
+    const FileSys::Path cia_path = {};
+    std::shared_ptr<Service::FS::File> file;
+    {
+        auto cia_file = std::make_unique<CIAFile>(am->system, FS::MediaType::NAND);
+
+        AuthorizeCIAFileDecryption(cia_file.get(), ctx);
+
+        file =
+            std::make_shared<Service::FS::File>(am->system.Kernel(), std::move(cia_file), cia_path);
+    }
+    am->cia_installing = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED)");
+}
+
+void Module::Interface::CancelImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    LOG_DEBUG(Service_AM, "");
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Cancel();
+    }
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    LOG_DEBUG(Service_AM, "");
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Close();
+    }
+
+    am->ScanForAllTitles();
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Close();
+    }
+
+    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
+    // files to keep track of installed titles.
+    am->ScanForAllTitles();
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_AM, "(STUBBED)");
+}
+
+void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
+    CommitImportTitlesImpl(ctx, false, false);
 }
 
 void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
