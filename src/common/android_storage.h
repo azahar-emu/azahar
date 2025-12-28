@@ -25,10 +25,13 @@
       (const std::string& source, const std::string& destination_path,                             \
        const std::string& destination_filename),                                                   \
       copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")          \
+    V(RenameFile, bool, (const std::string& source, const std::string& filename), rename_file,     \
+      "renameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")                                     \
     V(UpdateDocumentLocation, bool,                                                                \
       (const std::string& source_path, const std::string& destination_path),                       \
       update_document_location, "updateDocumentLocation",                                          \
-      "(Ljava/lang/String;Ljava/lang/String;)Z")
+      "(Ljava/lang/String;Ljava/lang/String;)Z")                                                   \
+    V(GetBuildFlavor, std::string, (), get_build_flavor, "getBuildFlavor", "()Ljava/lang/String;")
 #define ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(V)                                                 \
     V(IsDirectory, bool, is_directory, CallStaticBooleanMethod, "isDirectory",                     \
       "(Ljava/lang/String;)Z")                                                                     \

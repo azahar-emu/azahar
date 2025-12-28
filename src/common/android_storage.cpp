@@ -164,6 +164,16 @@ std::optional<std::string> GetUserDirectory() {
     return result;
 }
 
+std::string GetBuildFlavor() {
+    if (get_build_flavor == nullptr)
+        throw std::runtime_error(
+            "Unable get build flavor: Function with ID 'get_build_flavor' is missing");
+    auto env = GetEnvForThread();
+    const auto jflavor =
+        (jstring)(env->CallStaticObjectMethod(native_library, get_build_flavor, nullptr));
+    return env->GetStringUTFChars(jflavor, nullptr);
+}
+
 bool CopyFile(const std::string& source, const std::string& destination_path,
               const std::string& destination_filename) {
     if (copy_file == nullptr)
@@ -174,6 +184,16 @@ bool CopyFile(const std::string& source, const std::string& destination_path,
     jstring j_destination_filename = env->NewStringUTF(destination_filename.c_str());
     return env->CallStaticBooleanMethod(native_library, copy_file, j_source_path,
                                         j_destination_path, j_destination_filename);
+}
+
+bool RenameFile(const std::string& source, const std::string& filename) {
+    if (rename_file == nullptr)
+        return false;
+    auto env = GetEnvForThread();
+    jstring j_source_path = env->NewStringUTF(source.c_str());
+    jstring j_destination_path = env->NewStringUTF(filename.c_str());
+    return env->CallStaticBooleanMethod(native_library, rename_file, j_source_path,
+                                        j_destination_path);
 }
 
 bool UpdateDocumentLocation(const std::string& source_path, const std::string& destination_path) {

@@ -423,6 +423,18 @@ object FileUtil {
     }
 
     @JvmStatic
+    fun renameFile(path: String, destinationFilename: String): Boolean {
+        try {
+            val uri = Uri.parse(path)
+            DocumentsContract.renameDocument(context.contentResolver, uri, destinationFilename)
+            return true
+        } catch (e: Exception) {
+            Log.error("[FileUtil]: Cannot rename file, error: " + e.message)
+        }
+        return false
+    }
+
+    @JvmStatic
     fun deleteDocument(path: String): Boolean {
         try {
             val uri = Uri.parse(path)

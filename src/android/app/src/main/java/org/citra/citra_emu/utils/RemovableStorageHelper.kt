@@ -4,6 +4,7 @@
 
 package org.citra.citra_emu.utils
 
+import org.citra.citra_emu.utils.BuildUtil
 import java.io.File
 
 object RemovableStorageHelper {
@@ -12,6 +13,8 @@ object RemovableStorageHelper {
     // Apparently, on certain devices the mount location can vary, so add
     // extra cases here if we discover any new ones.
     fun getRemovableStoragePath(idString: String): String? {
+        BuildUtil.assertNotGooglePlay()
+
         var pathFile: File
 
         pathFile = File("/mnt/media_rw/$idString");

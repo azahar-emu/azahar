@@ -40,6 +40,7 @@ import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
@@ -198,21 +199,25 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return
         }
 
-        fun requestMissingFilesystemPermission() =
-            GrantMissingFilesystemPermissionFragment.newInstance()
-                .show(supportFragmentManager,GrantMissingFilesystemPermissionFragment.TAG)
+        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
+        if (BuildConfig.FLAVOR != "googlePlay") {
+            fun requestMissingFilesystemPermission() =
+                GrantMissingFilesystemPermissionFragment.newInstance()
+                    .show(supportFragmentManager, GrantMissingFilesystemPermissionFragment.TAG)
 
-        if (supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (!Environment.isExternalStorageManager()) {
-                    requestMissingFilesystemPermission()
-                }
-            } else {
-                if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED) {
-                    requestMissingFilesystemPermission()
+            if (supportFragmentManager.findFragmentByTag(GrantMissingFilesystemPermissionFragment.TAG) == null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    if (!Environment.isExternalStorageManager()) {
+                        requestMissingFilesystemPermission()
+                    }
+                } else {
+                    if (ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        requestMissingFilesystemPermission()
+                    }
                 }
             }
         }
@@ -231,10 +236,13 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return
         }
 
-        if (supportFragmentManager.findFragmentByTag(SelectUserDirectoryDialogFragment.TAG) == null) {
-            if (NativeLibrary.getUserDirectory() == "") {
-                SelectUserDirectoryDialogFragment.newInstance(this)
-                    .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
+        if (BuildConfig.FLAVOR != "googlePlay") {
+            if (supportFragmentManager.findFragmentByTag(SelectUserDirectoryDialogFragment.TAG) == null) {
+                if (NativeLibrary.getUserDirectory() == "") {
+                    SelectUserDirectoryDialogFragment.newInstance(this)
+                        .show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                }
             }
         }
     }
