@@ -413,6 +413,11 @@ steps_per_hour =
 plugin_loader =
 allow_plugin_loader =
 
+# Apply region free patch to installed applications
+# Patches the region of installed applications to be region free, so that they always appear on the home menu.
+# 0: Disabled, 1 (default): Enabled
+apply_region_free_patch =
+
 [Camera]
 # Which camera engine to use for the right outer camera
 # blank: a dummy camera that always returns black image

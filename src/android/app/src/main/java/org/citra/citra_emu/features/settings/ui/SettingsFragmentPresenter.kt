@@ -354,6 +354,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.regionValues,
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.APPLY_REGION_FREE_PATCH,
+                    R.string.apply_region_free_patch,
+                    R.string.apply_region_free_patch_desc,
+                    BooleanSetting.APPLY_REGION_FREE_PATCH.key,
+                    BooleanSetting.APPLY_REGION_FREE_PATCH.defaultValue
+                )
+            )
             val systemCountrySetting = object : AbstractShortSetting {
                 override var short: Short
                     get() {

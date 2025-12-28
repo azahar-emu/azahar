@@ -116,6 +116,15 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
 
         // Load NCCH .code or icon/banner/logo
         result = ncch_container.LoadSectionExeFS(openfile_path.exefs_filepath.data(), buffer);
+        if (result == Loader::ResultStatus::Success && Settings::values.apply_region_free_patch &&
+            std::memcmp(openfile_path.exefs_filepath.data(), "icon", 4) == 0 &&
+            buffer.size() >= sizeof(Loader::SMDH)) {
+            // Change the SMDH region lockout value to be region free
+            Loader::SMDH* smdh = reinterpret_cast<Loader::SMDH*>(buffer.data());
+            constexpr u32 REGION_LOCKOUT_REGION_FREE = 0x7FFFFFFF;
+
+            smdh->region_lockout = REGION_LOCKOUT_REGION_FREE;
+        }
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
         file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {

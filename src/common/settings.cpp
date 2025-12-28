@@ -153,6 +153,7 @@ void LogSettings() {
     log_setting("System_RegionValue", values.region_value.GetValue());
     log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
     log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
+    log_setting("System_ApplyRegionFreePatch", values.apply_region_free_patch.GetValue());
     log_setting("Debugging_DelayStartForLLEModules", values.delay_start_for_lle_modules.GetValue());
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());

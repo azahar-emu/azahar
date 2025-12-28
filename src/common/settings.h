@@ -481,6 +481,7 @@ struct Values {
     Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
     Setting<u16> steps_per_hour{0, "steps_per_hour"};
+    Setting<bool> apply_region_free_patch{true, "apply_region_free_patch"};
 
     // Renderer
     SwitchableSetting<GraphicsAPI, true> graphics_api{
