@@ -18,6 +18,7 @@ import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.TurboHelper
+import org.citra.citra_emu.features.settings.utils.InputConfigSync
 
 class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
     val settings: Settings get() = activityView.settings
@@ -53,6 +54,8 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             } else {
                 settings.loadSettings(activityView)
             }
+            // Sync input controls from config.ini to SharedPreferences
+            InputConfigSync.syncFromConfigToPreferences()
         }
         activityView.showSettingsFragment(menuTag, false, gameId)
         activityView.onSettingsFileLoaded()

@@ -18,6 +18,7 @@ import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.utils.InputConfigSync
 
 class InputBindingSetting(
     val abstractSetting: AbstractSetting,
@@ -170,13 +171,16 @@ class InputBindingSetting(
                 .remove(oldKey + "_GuestOrientation") // Used for axis orientation
                 .remove(oldKey + "_GuestButton") // Used for axis button
                 .apply()
+
+            // Also clear from config.ini
+            InputConfigSync.clearMappingFromConfig(abstractSetting.key!!)
         }
     }
 
     /**
      * Helper function to write a gamepad button mapping for the setting.
      */
-    private fun writeButtonMapping(key: String) {
+    private fun writeButtonMapping(key: String, hostKeyCode: Int) {
         val editor = preferences.edit()
 
         // Remove mapping for another setting using this input
@@ -197,6 +201,9 @@ class InputBindingSetting(
 
         // Apply changes
         editor.apply()
+
+        // Sync to config.ini (ButtonType for core, keyCode for UI restoration)
+        InputConfigSync.writeButtonMappingToConfig(abstractSetting.key!!, buttonCode, hostKeyCode)
     }
 
     /**
@@ -213,6 +220,13 @@ class InputBindingSetting(
             // Write next reverse mapping for future cleanup
             .putString(reverseKey, getInputAxisKey(axis))
             .apply()
+
+        // Sync to config.ini
+        if (isTrigger()) {
+            InputConfigSync.writeAxisButtonMappingToConfig(abstractSetting.key!!, axis, "+")
+        } else {
+            InputConfigSync.writeAxisMappingToConfig(abstractSetting.key!!, axis, isHorizontalOrientation())
+        }
     }
 
     /**
@@ -227,7 +241,7 @@ class InputBindingSetting(
         }
 
         val code = translateEventToKeyId(keyEvent)
-        writeButtonMapping(getInputButtonKey(code))
+        writeButtonMapping(getInputButtonKey(code), code)
         val uiString = "${keyEvent.device.name}: Button $code"
         value = uiString
     }
