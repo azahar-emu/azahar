@@ -216,12 +216,16 @@ jobs:
           path: artifacts/
   android:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["vanilla", "googleplay"]
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
       OS: android
-      TARGET: universal
+      TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -233,16 +237,16 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-android-${{ github.sha }}
+          key: ${{ runner.os }}-${{ env.OS }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-android-
+            ${{ runner.os }}-${{ env.OS }}-${{ matrix.target }}-
       - name: Set tag name
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
-      - name: Deps
+      - name: Install tools
         run: |
           sudo apt-get update -y
           sudo apt-get install ccache apksigner -y
