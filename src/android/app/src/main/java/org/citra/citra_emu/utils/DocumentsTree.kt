@@ -193,7 +193,7 @@ class DocumentsTree {
     }
 
     @Synchronized
-    fun renameFile(filepath: String, destinationFilename: String?): Boolean {
+    fun renameFile(filepath: String, destinationFilename: String): Boolean {
         val node = resolvePath(filepath) ?: return false
         try {
             val filename = URLDecoder.decode(destinationFilename, FileUtil.DECODE_METHOD)
@@ -202,6 +202,20 @@ class DocumentsTree {
             return true
         } catch (e: Exception) {
             error("[DocumentsTree]: Cannot rename file, error: " + e.message)
+        }
+    }
+
+    @Synchronized
+    fun moveFile(filename: String, sourceDirPath: String, destDirPath: String): Boolean {
+        val sourceFileNode = resolvePath(sourceDirPath + "/" + filename) ?: return false
+        val sourceDirNode = resolvePath(sourceDirPath) ?: return false
+        val destDirNode = resolvePath(destDirPath) ?: return false
+        try {
+            val newUri = DocumentsContract.moveDocument(context.contentResolver, sourceFileNode.uri!!, sourceDirNode.uri!!, destDirNode.uri!!)
+            updateDocumentLocation("$sourceDirPath/$filename", "$destDirPath/$filename")
+            return true
+        } catch (e: Exception) {
+            error("[DocumentsTree]: Cannot move file, error: " + e.message)
         }
     }
 
@@ -223,15 +237,15 @@ class DocumentsTree {
 
     @Synchronized
     fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean {
-        Log.error("Got paths: $sourcePath, $destinationPath")
         val sourceNode = resolvePath(sourcePath)
         val newName = Paths.get(destinationPath).fileName.toString()
         val parentPath = Paths.get(destinationPath).parent.toString()
         val newParent = resolvePath(parentPath)
         val newUri = (getUri(parentPath).toString() + "%2F$newName").toUri() // <- Is there a better way?
 
-        if (sourceNode == null || newParent == null)
+        if (sourceNode == null || newParent == null) {
             return false
+        }
 
         sourceNode.parent!!.removeChild(sourceNode)
 
