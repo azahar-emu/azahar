@@ -201,6 +201,11 @@ bool RenameFile(const std::string& source, const std::string& filename) {
     if (rename_file == nullptr) {
         return false;
     }
+    if (std::string(FileUtil::GetFilename(source)) ==
+        std::string(FileUtil::GetFilename(filename))) {
+        // TODO: Should this be treated as a success or failure?
+        return false;
+    }
     auto env = GetEnvForThread();
     jstring j_source_path = env->NewStringUTF(source.c_str());
     jstring j_destination_path = env->NewStringUTF(filename.c_str());
@@ -224,6 +229,10 @@ bool MoveFile(const std::string& filename, const std::string& source_dir_path,
     if (move_file == nullptr) {
         return false;
     }
+    if (source_dir_path == destination_dir_path) {
+        // TODO: Should this be treated as a success or failure?
+        return false;
+    }
     auto env = GetEnvForThread();
     jstring j_filename = env->NewStringUTF(filename.c_str());
     jstring j_source_dir_path = env->NewStringUTF(source_dir_path.c_str());
@@ -233,6 +242,10 @@ bool MoveFile(const std::string& filename, const std::string& source_dir_path,
 }
 
 bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest_full_path) {
+    if (src_full_path == dest_full_path) {
+        // TODO: Should this be treated as a success or failure?
+        return false;
+    }
     const auto src_filename = std::string(FileUtil::GetFilename(src_full_path));
     const auto src_parent_path = std::string(FileUtil::GetParentPath(src_full_path));
     const auto dest_filename = std::string(FileUtil::GetFilename(dest_full_path));
