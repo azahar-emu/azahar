@@ -190,6 +190,8 @@
     <string name="username">Username</string>
     <string name="new_3ds">New 3DS Mode</string>
     <string name="lle_applets">Use LLE Applets (if installed)</string>
+    <string name="apply_region_free_patch">Apply region free patch to installed applications</string>
+    <string name="apply_region_free_patch_desc">Patches the region of installed applications to be region free, so that they always appear on the home menu.</string>
     <string name="enable_required_online_lle_modules">Enable required LLE modules for online features (if installed)</string>
     <string name="enable_required_online_lle_modules_desc">Enables the LLE modules required for online multiplayer, eShop access, etc.</string>
     <string name="clock">Clock</string>

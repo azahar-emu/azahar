@@ -51,7 +51,8 @@ enum class BooleanSetting(
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
-    ANDROID_HIDE_IMAGES("android_hide_images", Settings.SECTION_CORE, false);
+    ANDROID_HIDE_IMAGES("android_hide_images", Settings.SECTION_CORE, false),
+    APPLY_REGION_FREE_PATCH("apply_region_free_patch", Settings.SECTION_SYSTEM, true);
 
     override var boolean: Boolean = defaultValue
 
