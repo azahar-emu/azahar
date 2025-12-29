@@ -221,51 +221,64 @@ jobs:
 
   android:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["vanilla", "googleplay"]
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
       OS: android
-      TARGET: universal
+      TARGET: ${{ matrix.target }}
+      SHOULD_RUN: ${{ (matrix.target == 'vanilla' || github.ref_type == 'tag') }}
     steps:
       - uses: actions/checkout@v4
+        if: ${{ env.SHOULD_RUN == 'true' }}
         with:
           submodules: recursive
       - name: Set up cache
+        if: ${{ env.SHOULD_RUN == 'true' }}
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
             ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-android-${{ github.sha }}
+          key: ${{ runner.os }}-${{ env.OS }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-android-
+            ${{ runner.os }}-${{ env.OS }}-${{ matrix.target }}-
       - name: Set tag name
+        if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
-      - name: Deps
+      - name: Install tools
+        if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           sudo apt-get update -y
           sudo apt-get install ccache apksigner -y
       - name: Update Android SDK CMake version
+        if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Build
+        if: ${{ env.SHOULD_RUN == 'true' }}
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh
         env:
           ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
       - name: Pack
+        if: ${{ env.SHOULD_RUN == 'true' }}
         run: ../../../.ci/pack.sh
         working-directory: src/android/app
         env:
           UNPACKED: 1
       - name: Upload
+        if: ${{ env.SHOULD_RUN == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}

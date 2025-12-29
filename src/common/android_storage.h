@@ -25,10 +25,17 @@
       (const std::string& source, const std::string& destination_path,                             \
        const std::string& destination_filename),                                                   \
       copy_file, "copyFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")          \
+    V(RenameFile, bool, (const std::string& source, const std::string& filename), rename_file,     \
+      "renameFile", "(Ljava/lang/String;Ljava/lang/String;)Z")                                     \
     V(UpdateDocumentLocation, bool,                                                                \
       (const std::string& source_path, const std::string& destination_path),                       \
       update_document_location, "updateDocumentLocation",                                          \
-      "(Ljava/lang/String;Ljava/lang/String;)Z")
+      "(Ljava/lang/String;Ljava/lang/String;)Z")                                                   \
+    V(GetBuildFlavor, std::string, (), get_build_flavor, "getBuildFlavor", "()Ljava/lang/String;") \
+    V(MoveFile, bool,                                                                              \
+      (const std::string& filename, const std::string& source_dir_path,                            \
+       const std::string& destination_dir_path),                                                   \
+      move_file, "moveFile", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")
 #define ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(V)                                                 \
     V(IsDirectory, bool, is_directory, CallStaticBooleanMethod, "isDirectory",                     \
       "(Ljava/lang/String;)Z")                                                                     \
@@ -48,6 +55,7 @@ ANDROID_STORAGE_FUNCTIONS(FS)
 #undef F
 #undef FS
 #undef FR
+bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest_full_path);
 // Reference:
 // https://developer.android.com/reference/android/os/ParcelFileDescriptor#parseMode(java.lang.String)
 enum class AndroidOpenMode {

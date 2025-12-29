@@ -19,10 +19,13 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.BuildUtil
+
 class GrantMissingFilesystemPermissionFragment : DialogFragment() {
     private lateinit var mainActivity: MainActivity
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        BuildUtil.assertNotGooglePlay()
         mainActivity = requireActivity() as MainActivity
 
         isCancelable = false
@@ -71,6 +74,7 @@ class GrantMissingFilesystemPermissionFragment : DialogFragment() {
         const val TAG = "GrantMissingFilesystemPermissionFragment"
 
         fun newInstance(): GrantMissingFilesystemPermissionFragment {
+            BuildUtil.assertNotGooglePlay()
             return GrantMissingFilesystemPermissionFragment()
         }
     }

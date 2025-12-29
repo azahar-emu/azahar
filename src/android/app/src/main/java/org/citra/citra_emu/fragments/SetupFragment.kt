@@ -32,6 +32,7 @@ import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -44,6 +45,7 @@ import org.citra.citra_emu.model.PageState
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.PermissionsHandler
@@ -145,53 +147,56 @@ class SetupFragment : Fragment() {
                     false,
                     0,
                     pageButtons = mutableListOf<PageButton>().apply {
-                        add(
-                            PageButton(
-                                R.drawable.ic_folder,
-                                R.string.filesystem_permission,
-                                R.string.filesystem_permission_description,
-                                buttonAction = {
-                                    pageButtonCallback = it
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                        manageExternalStoragePermissionLauncher.launch(
-                                            Intent(
-                                                android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                                                Uri.fromParts(
-                                                    "package",
-                                                    requireActivity().packageName,
-                                                    null
+                        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
+                        if (BuildConfig.FLAVOR != "googlePlay") {
+                            add(
+                                PageButton(
+                                    R.drawable.ic_folder,
+                                    R.string.filesystem_permission,
+                                    R.string.filesystem_permission_description,
+                                    buttonAction = {
+                                        pageButtonCallback = it
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                            manageExternalStoragePermissionLauncher.launch(
+                                                Intent(
+                                                    android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                                    Uri.fromParts(
+                                                        "package",
+                                                        requireActivity().packageName,
+                                                        null
+                                                    )
                                                 )
                                             )
-                                        )
-                                    } else {
-                                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                    }
-                                },
-                                buttonState = {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                        if (Environment.isExternalStorageManager()) {
-                                            ButtonState.BUTTON_ACTION_COMPLETE
                                         } else {
-                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                         }
-                                    } else {
-                                        if (ContextCompat.checkSelfPermission(
-                                                requireContext(),
-                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                            ) == PackageManager.PERMISSION_GRANTED
-                                        ) {
-                                            ButtonState.BUTTON_ACTION_COMPLETE
+                                    },
+                                    buttonState = {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                            if (Environment.isExternalStorageManager()) {
+                                                ButtonState.BUTTON_ACTION_COMPLETE
+                                            } else {
+                                                ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            }
                                         } else {
-                                            ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            if (ContextCompat.checkSelfPermission(
+                                                    requireContext(),
+                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            ) {
+                                                ButtonState.BUTTON_ACTION_COMPLETE
+                                            } else {
+                                                ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            }
                                         }
-                                    }
-                                },
-                                isUnskippable = true,
-                                hasWarning = true,
-                                R.string.filesystem_permission_warning,
-                                R.string.filesystem_permission_warning_description,
+                                    },
+                                    isUnskippable = true,
+                                    hasWarning = true,
+                                    R.string.filesystem_permission_warning,
+                                    R.string.filesystem_permission_warning_description,
+                                )
                             )
-                        )
+                        }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             add(
                                 PageButton(
@@ -279,13 +284,18 @@ class SetupFragment : Fragment() {
                         NotificationManagerCompat.from(requireContext())
                             .areNotificationsEnabled()
                     // External Storage
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        permissionsComplete = (permissionsComplete && Environment.isExternalStorageManager())
-                    } else {
-                        permissionsComplete = (permissionsComplete && ContextCompat.checkSelfPermission(
-                            requireContext(),
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        ) == PackageManager.PERMISSION_GRANTED)
+                    @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
+                    if (BuildConfig.FLAVOR != "googlePlay") {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            permissionsComplete =
+                                (permissionsComplete && Environment.isExternalStorageManager())
+                        } else {
+                            permissionsComplete =
+                                (permissionsComplete && ContextCompat.checkSelfPermission(
+                                    requireContext(),
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ) == PackageManager.PERMISSION_GRANTED)
+                        }
                     }
 
                     if (permissionsComplete) {
@@ -542,6 +552,7 @@ class SetupFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.R)
     private val manageExternalStoragePermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            BuildUtil.assertNotGooglePlay()
             if (Environment.isExternalStorageManager()) {
                 checkForButtonState.invoke()
                 return@registerForActivityResult

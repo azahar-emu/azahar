@@ -11,6 +11,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.system.Os
 import android.util.Pair
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.model.CheapDocument
@@ -420,6 +421,32 @@ object FileUtil {
         } catch (e: Exception) {
             Log.error("[FileUtil]: Cannot copy directory, error: " + e.message)
         }
+    }
+
+    @JvmStatic
+    fun renameFile(path: String, destinationFilename: String): Boolean {
+        try {
+            val uri = Uri.parse(path)
+            DocumentsContract.renameDocument(context.contentResolver, uri, destinationFilename)
+            return true
+        } catch (e: Exception) {
+            Log.error("[FileUtil]: Cannot rename file, error: " + e.message)
+        }
+        return false
+    }
+
+    @JvmStatic
+    fun moveFile(filename: String, sourceDirUriString: String, destDirUriString: String): Boolean {
+        try {
+            val sourceFileUri = ("$sourceDirUriString%2F$filename").toUri()
+            val sourceDirUri = sourceDirUriString.toUri()
+            val destDirUri = destDirUriString.toUri()
+            DocumentsContract.moveDocument(context.contentResolver, sourceFileUri, sourceDirUri, destDirUri)
+            return true
+        } catch (e: Exception) {
+            Log.error("[FileUtil]: Cannot move file, error: " + e.message)
+        }
+        return false
     }
 
     @JvmStatic
