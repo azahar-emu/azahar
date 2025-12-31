@@ -305,7 +305,7 @@ bool DeleteDir(const std::string& filename) {
 }
 
 bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
-    LOG_TRACE(Common_Filesystem, "{} --> {}", srcPath, destFullPath);
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFullPath, destFullPath);
 #ifdef _WIN32
     if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
                  Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
