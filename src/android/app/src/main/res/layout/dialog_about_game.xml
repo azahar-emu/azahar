@@ -45,7 +45,8 @@
                 android:layout_height="wrap_content"
                 android:textAlignment="viewStart"
                 android:textSize="15sp"
-                android:textStyle="bold"                app:layout_constraintStart_toStartOf="parent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Application Title" />
 
@@ -166,7 +167,6 @@
             android:layout_marginTop="16dp"
             android:gravity="start|center"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/horizontal_layout">
@@ -179,6 +179,29 @@
                 android:contentDescription="@string/cheats"
                 android:text="@string/cheats" />
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/compress_tray"
+            style="@style/ThemeOverlay.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="start|center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/game_button_tray">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/compress_decompress"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/compress"
+                android:text="@string/compress" />
 
         </LinearLayout>
 

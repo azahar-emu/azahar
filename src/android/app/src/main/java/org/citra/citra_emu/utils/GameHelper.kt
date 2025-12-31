@@ -90,6 +90,7 @@ object GameHelper {
             gameInfo?.getIsVisibleSystemTitle() ?: false,
             gameInfo?.getIcon(),
             gameInfo?.getFileType() ?: "",
+            gameInfo?.getFileType()?.contains("(Z)") ?: false,
             if (FileUtil.isNativePath(filePath)) {
                 CitraApplication.documentsTree.getFilename(filePath)
             } else {
