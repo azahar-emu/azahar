@@ -1369,17 +1369,19 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
 vk::ImageView Surface::FramebufferView() noexcept {
     is_framebuffer = true;
 
+    const u32 index = res_scale == 1 ? 0u : 1u;
+
     // If we already have a framebuffer-compatible view, return it
-    if (framebuffer_view) {
-        return framebuffer_view.get();
+    if (framebuffer_view[index]) {
+        return framebuffer_view[index].get();
     }
 
     // Create a new view with a single mip level for framebuffer compatibility
     // This is critical to avoid VUID-VkFramebufferCreateInfo-pAttachments-00883 validation errors
-    framebuffer_view = MakeFramebufferImageView(
+    framebuffer_view[index] = MakeFramebufferImageView(
         instance->GetDevice(), Image(), instance->GetTraits(pixel_format).native, Aspect(), 0);
 
-    return framebuffer_view.get();
+    return framebuffer_view[index].get();
 }
 
 vk::ImageView Surface::DepthView() noexcept {

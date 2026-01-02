@@ -201,7 +201,7 @@ public:
     std::array<Handle, 3> handles{};
     std::array<vk::UniqueFramebuffer, 2> framebuffers{};
     Handle copy_handle;
-    vk::UniqueImageView framebuffer_view;
+    std::array<vk::UniqueImageView, 2> framebuffer_view;
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
