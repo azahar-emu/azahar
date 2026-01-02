@@ -7,6 +7,7 @@
 #include <boost/serialization/vector.hpp>
 #include "common/archives.h"
 #include "common/serialization/atomic.h"
+#include "common/settings.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
@@ -172,7 +173,9 @@ void KernelSystem::ResetThreadIDs() {
 
 void KernelSystem::UpdateCPUAndMemoryState(u64 title_id, MemoryMode memory_mode,
                                            New3dsHwCapabilities n3ds_hw_cap) {
-    SetRunning804MHz(n3ds_hw_cap.enable_804MHz_cpu);
+    if (Settings::values.is_new_3ds) {
+        SetRunning804MHz(n3ds_hw_cap.enable_804MHz_cpu);
+    }
 
     u32 tid_high = static_cast<u32>(title_id >> 32);
 
