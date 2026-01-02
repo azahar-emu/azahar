@@ -163,6 +163,10 @@ public:
             ResultStatus::Success);
     }
 
+    virtual bool IsN3DSExclusive() {
+        return false;
+    }
+
     /**
      * Get whether this application is executable.
      * @param out_executable Reference to store the executable flag into.
