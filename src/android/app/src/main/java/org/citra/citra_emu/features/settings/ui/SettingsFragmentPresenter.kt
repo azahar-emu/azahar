@@ -16,6 +16,9 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
+import org.citra.citra_emu.display.ScreenLayout
+import org.citra.citra_emu.display.StereoMode
+import org.citra.citra_emu.display.StereoWhichDisplay
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
@@ -950,15 +953,28 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             add(HeaderSetting(R.string.stereoscopy))
             add(
                 SingleChoiceSetting(
+                    IntSetting.RENDER_3D_WHICH_DISPLAY,
+                    R.string.render_3d_which_display,
+                    R.string.render_3d_which_display_description,
+                    R.array.render3dWhichDisplay,
+                    R.array.render3dDisplayValues,
+                    IntSetting.RENDER_3D_WHICH_DISPLAY.key,
+                    IntSetting.RENDER_3D_WHICH_DISPLAY.defaultValue
+                )
+            )
+            add(
+                SingleChoiceSetting(
                     IntSetting.STEREOSCOPIC_3D_MODE,
                     R.string.render3d,
-                    0,
+                    R.string.render3d_description,
                     R.array.render3dModes,
                     R.array.render3dValues,
                     IntSetting.STEREOSCOPIC_3D_MODE.key,
-                    IntSetting.STEREOSCOPIC_3D_MODE.defaultValue
+                    IntSetting.STEREOSCOPIC_3D_MODE.defaultValue,
+                    isEnabled = IntSetting.RENDER_3D_WHICH_DISPLAY.int != StereoWhichDisplay.NONE.int
                 )
             )
+
             add(
                 SliderSetting(
                     IntSetting.STEREOSCOPIC_3D_DEPTH,
@@ -981,6 +997,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
+            add(
+                SwitchSetting(
+                    BooleanSetting.SWAP_EYES_3D,
+                    R.string.swap_eyes_3d,
+                    R.string.swap_eyes_3d_description,
+                    BooleanSetting.SWAP_EYES_3D.key,
+                    BooleanSetting.SWAP_EYES_3D.defaultValue,
+                    isEnabled = IntSetting.RENDER_3D_WHICH_DISPLAY.int != StereoWhichDisplay.NONE.int
+                )
+            )
+
             add(HeaderSetting(R.string.cardboard_vr))
             add(
                 SliderSetting(
@@ -991,7 +1018,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     100,
                     "%",
                     IntSetting.CARDBOARD_SCREEN_SIZE.key,
-                    IntSetting.CARDBOARD_SCREEN_SIZE.defaultValue.toFloat()
+                    IntSetting.CARDBOARD_SCREEN_SIZE.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.CARDBOARD_VR.int
                 )
             )
             add(
@@ -1003,7 +1031,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     100,
                     "%",
                     IntSetting.CARDBOARD_X_SHIFT.key,
-                    IntSetting.CARDBOARD_X_SHIFT.defaultValue.toFloat()
+                    IntSetting.CARDBOARD_X_SHIFT.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.CARDBOARD_VR.int
                 )
             )
             add(
@@ -1015,7 +1044,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     100,
                     "%",
                     IntSetting.CARDBOARD_Y_SHIFT.key,
-                    IntSetting.CARDBOARD_Y_SHIFT.defaultValue.toFloat()
+                    IntSetting.CARDBOARD_Y_SHIFT.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.CARDBOARD_VR.int
                 )
             )
 
@@ -1149,7 +1179,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.aspectRatioValues,
                     IntSetting.ASPECT_RATIO.key,
                     IntSetting.ASPECT_RATIO.defaultValue,
-                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 1,
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == ScreenLayout.SINGLE_SCREEN.int,
                 )
             )
             add(
@@ -1197,7 +1227,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     FloatSetting.SECOND_SCREEN_OPACITY.key,
                     FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
-                    isEnabled = IntSetting.SCREEN_LAYOUT.int == 5
+                    isEnabled = IntSetting.SCREEN_LAYOUT.int == ScreenLayout.CUSTOM_LAYOUT.int
                 )
             )
             add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))

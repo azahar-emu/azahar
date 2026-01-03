@@ -170,12 +170,22 @@ bg_green =
 custom_second_layer_opacity =
 
 # Whether and how Stereoscopic 3D should be rendered
-# 0 (default): Off, 1: Side by Side, 2: Reverse Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
+# 0: Off, 1: Half Width Side by Side, 2 (default): Full Width Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
+# 0 is no longer supported in the interface, as using render_3d_which_display = 0 has the same effect, but supported here for backwards compatibility
 render_3d =
 
 # Change 3D Intensity
 # 0 - 255: Intensity. 0 (default)
 factor_3d =
+
+# Swap Eyes in 3d
+# true: Swap eyes, false (default): Do not swap eyes
+swap_eyes_3d =
+
+# Which Display to render 3d mode to
+# 0 (default) - None. Equivalent to render_3d=0
+# 1: Both, 2: Primary Only, 3: Secondary Only
+render_3d_which_display =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.

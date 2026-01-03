@@ -80,7 +80,7 @@ public:
     void TryPresent(int timeout_ms, bool is_secondary) override {}
 
 private:
-    void ReloadPipeline();
+    void ReloadPipeline(Settings::StereoRenderOption render_3d);
     void CompileShaders();
     void BuildLayouts();
     void BuildPipelines();
