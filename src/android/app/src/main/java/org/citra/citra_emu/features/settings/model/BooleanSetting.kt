@@ -19,6 +19,7 @@ enum class BooleanSetting(
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER("enable_rpc_server", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
+    SWAP_EYES_3D("swap_eyes_3d",Settings.SECTION_RENDERER,false),
     PERF_OVERLAY_ENABLE("performance_overlay_enable", Settings.SECTION_LAYOUT, false),
     PERF_OVERLAY_SHOW_FPS("performance_overlay_show_fps", Settings.SECTION_LAYOUT, true),
     PERF_OVERLAY_SHOW_FRAMETIME("performance_overlay_show_frame_time", Settings.SECTION_LAYOUT, false),
@@ -87,7 +88,8 @@ enum class BooleanSetting(
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
             ANDROID_HIDE_IMAGES,
-            PERF_OVERLAY_ENABLE // Works in overlay options, but not from the settings menu
+            PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
+            APPLY_REGION_FREE_PATCH
         )
 
         fun from(key: String): BooleanSetting? =

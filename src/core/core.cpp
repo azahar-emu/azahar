@@ -362,8 +362,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     ASSERT(n3ds_hw_caps.first);
     app_n3ds_hw_capabilities = n3ds_hw_caps.first.value();
 
-    if (!Settings::values.is_new_3ds.GetValue() &&
-        app_n3ds_hw_capabilities.memory_mode != Kernel::New3dsMemoryMode::Legacy) {
+    if (!Settings::values.is_new_3ds.GetValue() && app_loader->IsN3DSExclusive()) {
         return ResultStatus::ErrorN3DSApplication;
     }
 
@@ -374,14 +373,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     // proper memory mode.
     if (used_default_mem_mode) {
 
-        // If we are on the Old 3DS prod mode, the application is not a New 3DS application and
-        // the application memory mode does not match, we need to adjust it. We do not need
-        // adjustment if we are on the New 3DS prod mode, as that one overrides all the Old 3DS
-        // memory modes.
-        if (system_mem_mode == Kernel::MemoryMode::Prod &&
-            app_n3ds_hw_capabilities.memory_mode == Kernel::New3dsMemoryMode::Legacy &&
-            app_mem_mode != system_mem_mode) {
-
+        // If we are on the Old 3DS prod mode and the application memory mode does not match, we
+        // need to adjust it. We do not need adjustment if we are on the New 3DS prod mode, as that
+        // one overrides all the Old 3DS memory modes.
+        if (system_mem_mode == Kernel::MemoryMode::Prod && app_mem_mode != system_mem_mode) {
             system_mem_mode = app_mem_mode;
         }
 
@@ -389,7 +384,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         // memory mode (only CTRAging is known to do this), adjust the memory mode.
         else if (system_mem_mode == Kernel::MemoryMode::NewProd &&
                  app_n3ds_hw_capabilities.memory_mode == Kernel::New3dsMemoryMode::NewDev1) {
-
             system_mem_mode = Kernel::MemoryMode::NewDev1;
         }
     }

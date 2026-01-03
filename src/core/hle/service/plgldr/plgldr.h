@@ -1,6 +1,8 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+
+// Originally MIT-licensed code from The Pixellizer Group
 
 // Copyright 2022 The Pixellizer Group
 //
@@ -62,6 +64,9 @@ public:
         bool plugin_loaded = false;
         bool is_default_path = false;
         std::string plugin_path = "";
+        u32 plugin_process_id = UINT32_MAX;
+        Kernel::MemoryRegion memory_region{};
+        std::pair<u32, u32> memory_block{};
 
         bool use_user_load_parameters = false;
         PluginLoadParameters user_load_parameters;

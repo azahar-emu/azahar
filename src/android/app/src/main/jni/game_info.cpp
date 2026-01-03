@@ -222,7 +222,7 @@ jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsVisibleSystemTitle(JNIEnv
         return false;
     }
 
-    return smdh->flags & Loader::SMDH::Flags::Visible;
+    return smdh->flags.visible;
 }
 
 jstring Java_org_citra_citra_1emu_model_GameInfo_getFileType(JNIEnv* env, jobject obj) {

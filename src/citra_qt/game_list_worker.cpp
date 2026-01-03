@@ -92,7 +92,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             if (Loader::IsValidSMDH(smdh)) {
                 if (system_title) {
                     auto smdh_struct = reinterpret_cast<Loader::SMDH*>(smdh.data());
-                    if (!(smdh_struct->flags & Loader::SMDH::Flags::Visible)) {
+                    if (!smdh_struct->flags.visible) {
                         // Skip system titles without the visible flag.
                         return true;
                     }

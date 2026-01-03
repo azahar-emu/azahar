@@ -28,6 +28,7 @@ import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RemovableStorageHelper
+import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -599,6 +600,47 @@ object NativeLibrary {
      * Logs the Citra version, Android version and, CPU.
      */
     external fun logDeviceInfo()
+
+    enum class CompressStatus(val value: Int) {
+        SUCCESS(0),
+        COMPRESS_UNSUPPORTED(1),
+        COMPRESS_ALREADY_COMPRESSED(2),
+        COMPRESS_FAILED(3),
+        DECOMPRESS_UNSUPPORTED(4),
+        DECOMPRESS_NOT_COMPRESSED(5),
+        DECOMPRESS_FAILED(6),
+        INSTALLED_APPLICATION(7);
+
+        companion object {
+            fun fromValue(value: Int): CompressStatus =
+                CompressStatus.entries.first { it.value == value }
+        }
+    }
+
+    // Compression / Decompression
+    private external fun compressFileNative(inputPath: String?, outputPath: String): Int
+
+    fun compressFile(inputPath: String?, outputPath: String): CompressStatus {
+        return CompressStatus.fromValue(
+            compressFileNative(inputPath, outputPath)
+        )
+    }
+
+    private external fun decompressFileNative(inputPath: String?, outputPath: String): Int
+
+    fun decompressFile(inputPath: String?, outputPath: String): CompressStatus {
+        return CompressStatus.fromValue(
+            decompressFileNative(inputPath, outputPath)
+        )
+    }
+
+    external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    @Keep
+    @JvmStatic
+    fun onCompressProgress(total: Long, current: Long) {
+        CompressProgressDialogViewModel.update(total, current)
+    }
 
     @Keep
     @JvmStatic
