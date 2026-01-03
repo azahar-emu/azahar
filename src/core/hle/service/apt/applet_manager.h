@@ -456,6 +456,7 @@ private:
         AppletId applet_id;
         AppletSlot slot;
         u64 title_id;
+        FS::MediaType media_type;
         bool registered;
         bool loaded;
         AppletAttributes attributes;
@@ -476,6 +477,7 @@ private:
             ar & applet_id;
             ar & slot;
             ar & title_id;
+            ar & media_type;
             ar & registered;
             ar & loaded;
             ar & attributes.raw;
@@ -513,6 +515,8 @@ private:
     std::unique_ptr<Input::ButtonDevice> power_button;
     bool last_home_button_state = false;
     bool last_power_button_state = false;
+
+    FS::MediaType next_app_mediatype = static_cast<FS::MediaType>(UINT32_MAX);
 
     Core::System& system;
 
@@ -569,6 +573,7 @@ private:
         ar & capture_info;
         ar & applet_slots;
         ar & library_applet_closing_command;
+        ar & next_app_mediatype;
 
         if (Archive::is_loading::value) {
             LoadInputDevices();

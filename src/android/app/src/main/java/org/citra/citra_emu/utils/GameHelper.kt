@@ -88,6 +88,7 @@ object GameHelper {
             isInstalled,
             gameInfo?.isSystemTitle() ?: false,
             gameInfo?.getIsVisibleSystemTitle() ?: false,
+            gameInfo?.getIsInsertable() ?: false,
             gameInfo?.getIcon(),
             gameInfo?.getFileType() ?: "",
             gameInfo?.getFileType()?.contains("(Z)") ?: false,

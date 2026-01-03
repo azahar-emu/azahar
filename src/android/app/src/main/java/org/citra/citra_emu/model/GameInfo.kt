@@ -37,6 +37,8 @@ class GameInfo(path: String) {
 
     external fun getFileType(): String
 
+    external fun getIsInsertable(): Boolean
+
     companion object {
         @JvmStatic
         private external fun initialize(path: String): Long

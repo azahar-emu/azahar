@@ -598,6 +598,8 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">File:</string>
     <string name="game_context_type">Type:</string>
+    <string name="game_context_insert">Insert Cartridge</string>
+    <string name="game_context_eject">Eject Cartridge</string>
 
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Show Performance Overlay</string>
