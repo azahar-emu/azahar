@@ -140,8 +140,8 @@
     <string name="input_dialog_description">Press or move an input.</string>
     <string name="input_binding">Input Binding</string>
     <string name="input_binding_description">Press or move an input to bind it to %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Move your joystick up or down.</string>
-    <string name="input_binding_description_horizontal_axis">Move your joystick left or right.</string>
+    <string name="input_binding_description_vertical_axis">Move your joystick down</string>
+    <string name="input_binding_description_horizontal_axis">Move your joystick right</string>
     <string name="button_a" translatable="false">A</string>
     <string name="button_b" translatable="false">B</string>
     <string name="button_select" translatable="false">SELECT</string>
@@ -919,5 +919,20 @@
     <string name="emulation_quickload">Quickload</string>
     <string name="emulation_occupied_quicksave_slot">Quicksave - %1$tF %1$tR</string>
     <string name="quickload_not_found">No Quicksave available.</string>
+
+    <!-- File Compression -->
+    <string name="compress">Compress</string>
+    <string name="compressing">Compressing…</string>
+    <string name="decompress">Decompress</string>
+    <string name="decompressing">Decompressing…</string>
+    <string name="compress_success">Compression completed successfully.</string>
+    <string name="compress_unsupported">Compression not supported for this file.</string>
+    <string name="compress_already">File is already compressed.</string>
+    <string name="compress_failed">Compression failed.</string>
+    <string name="decompress_success">Decompression completed successfully.</string>
+    <string name="decompress_unsupported">Decompression not supported for this file.</string>
+    <string name="decompress_not_compressed">File is not compressed.</string>
+    <string name="decompress_failed">Decompression failed.</string>
+    <string name="compress_decompress_installed_app">Already installed applications cannot be compressed or decompressed.</string>
 
 </resources>

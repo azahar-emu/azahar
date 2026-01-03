@@ -169,6 +169,7 @@ class InputBindingSetting(
                 .remove(oldKey) // Used for button mapping
                 .remove(oldKey + "_GuestOrientation") // Used for axis orientation
                 .remove(oldKey + "_GuestButton") // Used for axis button
+                .remove(oldKey + "_Inverted") // used for axis inversion
                 .apply()
         }
     }
@@ -202,7 +203,7 @@ class InputBindingSetting(
     /**
      * Helper function to write a gamepad axis mapping for the setting.
      */
-    private fun writeAxisMapping(axis: Int, value: Int) {
+    private fun writeAxisMapping(axis: Int, value: Int, inverted: Boolean) {
         // Cleanup old mapping
         removeOldMapping()
 
@@ -210,6 +211,7 @@ class InputBindingSetting(
         preferences.edit()
             .putInt(getInputAxisOrientationKey(axis), if (isHorizontalOrientation()) 0 else 1)
             .putInt(getInputAxisButtonKey(axis), value)
+            .putBoolean(getInputAxisInvertedKey(axis),inverted)
             // Write next reverse mapping for future cleanup
             .putString(reverseKey, getInputAxisKey(axis))
             .apply()
@@ -237,7 +239,7 @@ class InputBindingSetting(
      *
      * @param device      InputDevice from which the input event originated.
      * @param motionRange MotionRange of the movement
-     * @param axisDir     Either '-' or '+' (currently unused)
+     * @param axisDir     Either '-' or '+'
      */
     fun onMotionInput(device: InputDevice, motionRange: MotionRange, axisDir: Char) {
         if (!isAxisMappingSupported()) {
@@ -253,8 +255,8 @@ class InputBindingSetting(
         } else {
             buttonCode
         }
-        writeAxisMapping(motionRange.axis, button)
-        val uiString = "${device.name}: Axis ${motionRange.axis}"
+        writeAxisMapping(motionRange.axis, button, axisDir == '-')
+        val uiString = "${device.name}: Axis ${motionRange.axis}" + axisDir
         value = uiString
     }
 
@@ -308,6 +310,11 @@ class InputBindingSetting(
          * Helper function to get the settings key for an gamepad axis button (stick or trigger).
          */
         fun getInputAxisButtonKey(axis: Int): String = "${getInputAxisKey(axis)}_GuestButton"
+
+        /**
+         * Helper function to get the settings key for an whether a gamepad axis is inverted.
+         */
+        fun getInputAxisInvertedKey(axis: Int): String = "${getInputAxisKey(axis)}_Inverted"
 
         /**
          * Helper function to get the settings key for an gamepad axis orientation.

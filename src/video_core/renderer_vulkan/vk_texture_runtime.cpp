@@ -1369,17 +1369,19 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
 vk::ImageView Surface::FramebufferView() noexcept {
     is_framebuffer = true;
 
+    const u32 index = res_scale == 1 ? 0u : 1u;
+
     // If we already have a framebuffer-compatible view, return it
-    if (framebuffer_view) {
-        return framebuffer_view.get();
+    if (framebuffer_view[index]) {
+        return framebuffer_view[index].get();
     }
 
     // Create a new view with a single mip level for framebuffer compatibility
     // This is critical to avoid VUID-VkFramebufferCreateInfo-pAttachments-00883 validation errors
-    framebuffer_view = MakeFramebufferImageView(
+    framebuffer_view[index] = MakeFramebufferImageView(
         instance->GetDevice(), Image(), instance->GetTraits(pixel_format).native, Aspect(), 0);
 
-    return framebuffer_view.get();
+    return framebuffer_view[index].get();
 }
 
 vk::ImageView Surface::DepthView() noexcept {
@@ -1482,9 +1484,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
     if (is_depth_stencil && !depth_traits.blit_support) {
         LOG_WARNING(Render_Vulkan, "Depth scale unsupported by hardware");
         return;
-    } // Check if texture filtering is enabled
-    const bool texture_filter_enabled =
-        Settings::values.texture_filter.GetValue() != Settings::TextureFilter::NoFilter;
+    }
 
     // Always use consistent source and destination images for proper scaling
     // When upscaling: source = unscaled (0), destination = scaled (1)
@@ -1493,8 +1493,8 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
     const vk::Image dst_image = up_scale ? Image(1) : Image(0);
 
     scheduler->Record([src_image, aspect = Aspect(), filter = MakeFilter(pixel_format), dst_image,
-                       src_access = AccessFlags(), dst_access = AccessFlags(), blit,
-                       texture_filter_enabled](vk::CommandBuffer render_cmdbuf) {
+                       src_access = AccessFlags(), dst_access = AccessFlags(),
+                       blit](vk::CommandBuffer render_cmdbuf) {
         // Adjust blitting parameters for filtered upscaling
         const std::array source_offsets = {
             vk::Offset3D{static_cast<s32>(blit.src_rect.left),
@@ -1508,15 +1508,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
                          static_cast<s32>(blit.dst_rect.bottom), 0},
             vk::Offset3D{static_cast<s32>(blit.dst_rect.right), static_cast<s32>(blit.dst_rect.top),
                          1},
-        }; // Ensure we're using the right filter for texture filtered upscaling
-        vk::Filter actual_filter;
-        if (texture_filter_enabled) {
-            // When texture filtering is enabled, always use LINEAR filtering
-            actual_filter = vk::Filter::eLinear;
-        } else {
-            // When texture filtering is disabled, use the filter appropriate for the texture format
-            actual_filter = filter;
-        }
+        };
 
         const vk::ImageBlit blit_area = {
             .srcSubresource{
@@ -1585,7 +1577,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
                                       vk::DependencyFlagBits::eByRegion, {}, {}, read_barriers);
 
         render_cmdbuf.blitImage(src_image, vk::ImageLayout::eTransferSrcOptimal, dst_image,
-                                vk::ImageLayout::eTransferDstOptimal, blit_area, actual_filter);
+                                vk::ImageLayout::eTransferDstOptimal, blit_area, filter);
 
         render_cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
                                       vk::PipelineStageFlagBits::eAllCommands,

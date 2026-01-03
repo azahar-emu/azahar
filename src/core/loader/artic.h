@@ -56,6 +56,8 @@ public:
     std::pair<std::optional<Kernel::New3dsHwCapabilities>, ResultStatus> LoadNew3dsHwCapabilities()
         override;
 
+    bool IsN3DSExclusive() override;
+
     ResultStatus IsExecutable(bool& out_executable) override;
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
