@@ -32,6 +32,16 @@
             android:focusableInTouchMode="true"
             android:visibility="invisible" />
 
+        <!-- Hot corner overlay: hosts invisible corner touch targets; placed above input overlay -->
+        <org.citra.citra_emu.overlay.HotCornerOverlay
+            android:id="@+id/hot_corner_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:clickable="false"
+            android:focusable="false"
+            android:visibility="visible" />
+
         <Button
             android:id="@+id/done_control_config"
             style="@style/Widget.Material3.Button.ElevatedButton"
