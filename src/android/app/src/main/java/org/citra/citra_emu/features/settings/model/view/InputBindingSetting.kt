@@ -239,7 +239,7 @@ class InputBindingSetting(
      *
      * @param device      InputDevice from which the input event originated.
      * @param motionRange MotionRange of the movement
-     * @param axisDir     Either '-' or '+' (currently unused)
+     * @param axisDir     Either '-' or '+'
      */
     fun onMotionInput(device: InputDevice, motionRange: MotionRange, axisDir: Char) {
         if (!isAxisMappingSupported()) {
