@@ -3808,6 +3808,9 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     game_list->SaveInterfaceLayout();
     hotkey_registry.SaveHotkeys();
 
+    // Save all settings to config file
+    config->Save();
+
     // Shutdown session if the emu thread is active...
     if (emu_thread) {
         ShutdownGame();
