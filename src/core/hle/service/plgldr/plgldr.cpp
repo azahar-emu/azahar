@@ -84,7 +84,6 @@ void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
     ar & exe_load_checksum;
     ar & load_exe_func;
     ar & load_exe_args;
-    ar & plugin_fb_addr;
 }
 SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
 
@@ -167,6 +166,7 @@ void PLG_LDR::OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kern
         plgldr_context.plugin_loaded = false;
         plgldr_context.plugin_process_id = UINT32_MAX;
         plgldr_context.memory_changed_handle = 0;
+        kernel.memory.Plugin3GXFramebufferAddress() = 0;
         LOG_INFO(Service_PLGLDR, "Plugin unloaded successfully.");
     }
 }

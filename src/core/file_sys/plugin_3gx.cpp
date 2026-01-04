@@ -290,7 +290,7 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     ASSERT(vma_heap.Succeeded());
     process.vm_manager.Reprotect(vma_heap.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
 
-    plg_ldr.SetPluginFBAddr(Memory::FCRAM_PADDR + fcram_offset + heap_offset);
+    kernel.memory.Plugin3GXFramebufferAddress() = Memory::FCRAM_PADDR + fcram_offset + heap_offset;
     plg_context.plugin_loaded = true;
     plg_context.plugin_process_id = process.process_id;
     plg_context.use_user_load_parameters = false;

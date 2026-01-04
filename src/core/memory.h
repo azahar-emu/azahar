@@ -646,6 +646,9 @@ public:
 
     void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
+    /// Returns a reference to the framebuffer address of the currently loaded 3GX plugin.
+    PAddr& Plugin3GXFramebufferAddress();
+
 private:
     template <typename T>
     T Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr);

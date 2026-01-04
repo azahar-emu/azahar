@@ -81,8 +81,6 @@ public:
         std::vector<u32> load_exe_func;
         u32_le load_exe_args[4] = {0};
 
-        PAddr plugin_fb_addr = 0;
-
         template <class Archive>
         void serialize(Archive& ar, const unsigned int);
         friend class boost::serialization::access;
@@ -113,12 +111,6 @@ public:
     }
     bool GetAllowGameChangeState() {
         return plgldr_context.allow_game_change;
-    }
-    void SetPluginFBAddr(PAddr addr) {
-        plgldr_context.plugin_fb_addr = addr;
-    }
-    PAddr GetPluginFBAddr() {
-        return plgldr_context.plugin_fb_addr;
     }
 
 private:
