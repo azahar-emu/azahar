@@ -6,6 +6,7 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/network.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
@@ -157,12 +158,64 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
 
 void Module::Interface::GetConnectingProxyEnable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    constexpr bool proxy_enabled = false;
+    const bool proxy_enabled = Common::https_proxy.has_value();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
     rb.Push(proxy_enabled);
+}
 
+void Module::Interface::GetConnectingProxyAuthType(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const int proxy_auth = 0;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(proxy_auth);
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
+void Module::Interface::GetConnectingProxyPort(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const int proxy_port = Common::https_proxy->port;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(proxy_port);
+}
+
+void Module::Interface::GetConnectingProxyHost(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const std::string& proxy_host = Common::https_proxy->host;
+
+    std::vector<u8> buffer(proxy_host.begin(), proxy_host.end());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushStaticBuffer(std::move(buffer), 0);
+}
+
+void Module::Interface::GetConnectingProxyUserName(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const std::string proxy_user = "";
+
+    std::vector<u8> buffer(proxy_user.begin(), proxy_user.end());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushStaticBuffer(std::move(buffer), 0);
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
+void Module::Interface::GetConnectingProxyPassword(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const std::string proxy_pass = "";
+
+    std::vector<u8> buffer(proxy_pass.begin(), proxy_pass.end());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess);
+    rb.PushStaticBuffer(std::move(buffer), 0);
     LOG_WARNING(Service_AC, "(STUBBED) called");
 }
 

@@ -112,6 +112,8 @@ add_library(citra_common STATIC
     microprofile.cpp
     microprofile.h
     microprofileui.h
+    network.cpp
+    network.h
     param_package.cpp
     param_package.h
     play_time_manager.cpp

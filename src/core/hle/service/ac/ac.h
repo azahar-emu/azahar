@@ -140,6 +140,52 @@ public:
         void GetConnectingProxyEnable(Kernel::HLERequestContext& ctx);
 
         /**
+         * AC::GetConnectingProxyAuthType service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : int, proxy auth type enum
+         */
+        void GetConnectingProxyAuthType(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AC::GetConnectingProxyPort service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : short, proxy port number
+         */
+        void GetConnectingProxyPort(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AC::GetConnectingProxyHost service function
+         *  Inputs:
+         *     64 : Buffer size << 14 | 2
+         *     65 : Output pointer to buffer
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetConnectingProxyHost(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AC::GetConnectingProxyUserName service function
+         *  Inputs:
+         *     64 : Buffer size << 14 | 2
+         *     65 : Output pointer to buffer
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetConnectingProxyUserName(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AC::GetConnectingProxyPassword service function
+         *  Inputs:
+         *     64 : Buffer size << 14 | 2
+         *     65 : Output pointer to buffer
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetConnectingProxyPassword(Kernel::HLERequestContext& ctx);
+
+        /**
          * AC::IsConnected service function
          *  Outputs:
          *      1 : Result of function, 0 on success, otherwise error code
