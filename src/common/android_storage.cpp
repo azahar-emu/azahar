@@ -256,9 +256,6 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
     AndroidStorage::CreateDir("/", "tmp");
 
     // If a simultaneous move and rename are not necessary, use individual methods
-    // TODO: Uncomment this code for 2123.4 RC to allow stress testing of move + rename process in
-    //       beta
-    /*
     if (src_filename == dest_filename || src_parent_path == dest_parent_path) {
         if (src_filename != dest_filename) {
             return AndroidStorage::RenameFile(src_full_path, dest_filename);
@@ -266,7 +263,6 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
             return AndroidStorage::MoveFile(src_filename, src_parent_path, dest_parent_path);
         }
     }
-    */
 
     // Step 1: Create directory named after UUID inside /tmp to house the moved file.
     //         This prevents clashes if files with the same name are moved simultaneously.
@@ -279,10 +275,7 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
     result = AndroidStorage::MoveFile(src_filename, src_parent_path, allocated_tmp_path);
     if (result == true) {
         // Step 3: Rename to desired file name.
-        if (src_filename != dest_filename) { // TODO: Remove this if statement in 2123.4 RC, keeping
-                                             //       the RenameFile call
-            AndroidStorage::RenameFile((allocated_tmp_path + "/" + src_filename), dest_filename);
-        }
+        AndroidStorage::RenameFile((allocated_tmp_path + "/" + src_filename), dest_filename);
 
         // Step 4: If a file with the desired name in the destination exists, remove it.
         AndroidStorage::DeleteDocument(dest_full_path);
