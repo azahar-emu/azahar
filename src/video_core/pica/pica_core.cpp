@@ -342,7 +342,8 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         } else {
             vs_setup.program_code[offset] = value;
             vs_setup.MarkProgramCodeDirty();
-            if (!regs.internal.pipeline.gs_unit_exclusive_configuration) {
+            if (!regs.internal.pipeline.gs_unit_exclusive_configuration &&
+                regs.internal.pipeline.use_gs == PipelineRegs::UseGS::No) {
                 gs_setup.program_code[offset] = value;
                 gs_setup.MarkProgramCodeDirty();
             }
@@ -365,7 +366,8 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         } else {
             vs_setup.swizzle_data[offset] = value;
             vs_setup.MarkSwizzleDataDirty();
-            if (!regs.internal.pipeline.gs_unit_exclusive_configuration) {
+            if (!regs.internal.pipeline.gs_unit_exclusive_configuration &&
+                regs.internal.pipeline.use_gs == PipelineRegs::UseGS::No) {
                 gs_setup.swizzle_data[offset] = value;
                 gs_setup.MarkSwizzleDataDirty();
             }
