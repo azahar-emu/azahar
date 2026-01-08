@@ -25,6 +25,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RemovableStorageHelper
@@ -685,6 +686,8 @@ object NativeLibrary {
     @Keep
     @JvmStatic
     fun getUserDirectory(uriOverride: Uri? = null): String {
+        BuildUtil.assertNotGooglePlay()
+
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
