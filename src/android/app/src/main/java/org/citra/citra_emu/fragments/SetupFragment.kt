@@ -568,13 +568,15 @@ class SetupFragment : Fragment() {
             return@registerForActivityResult
         }
 
-        if (NativeLibrary.getUserDirectory(result) == "") {
-            SelectUserDirectoryDialogFragment.newInstance(
-                mainActivity,
-                R.string.invalid_selection,
-                R.string.invalid_user_directory
-            ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-            return@registerForActivityResult
+        if (BuildConfig.FLAVOR != "googlePlay") {
+            if (NativeLibrary.getUserDirectory(result) == "") {
+                SelectUserDirectoryDialogFragment.newInstance(
+                    mainActivity,
+                    R.string.invalid_selection,
+                    R.string.invalid_user_directory
+                ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                return@registerForActivityResult
+            }
         }
 
         CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)
