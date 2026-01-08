@@ -364,13 +364,15 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 return@registerForActivityResult
             }
 
-            if (NativeLibrary.getUserDirectory(result) == "") {
-                SelectUserDirectoryDialogFragment.newInstance(
-                    this,
-                    R.string.invalid_selection,
-                    R.string.invalid_user_directory
-                ).show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-                return@registerForActivityResult
+            if (BuildConfig.FLAVOR != "googlePlay") {
+                if (NativeLibrary.getUserDirectory(result) == "") {
+                    SelectUserDirectoryDialogFragment.newInstance(
+                        this,
+                        R.string.invalid_selection,
+                        R.string.invalid_user_directory
+                    ).show(supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                    return@registerForActivityResult
+                }
             }
 
             CitraDirectoryHelper(this@MainActivity, permissionsLost)
