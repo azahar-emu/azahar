@@ -89,8 +89,8 @@ static std::tuple<PicaVSConfig, Pica::ShaderSetup> BuildVSConfigFromRaw(
     std::copy_n(raw.GetProgramCode().begin() + Pica::MAX_PROGRAM_CODE_LENGTH,
                 Pica::MAX_SWIZZLE_DATA_LENGTH, swizzle_data.begin());
     Pica::ShaderSetup setup;
-    setup.program_code = program_code;
-    setup.swizzle_data = swizzle_data;
+    setup.UpdateProgramCode(program_code);
+    setup.UpdateSwizzleData(swizzle_data);
 
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
@@ -354,12 +354,13 @@ bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal&
     // Save VS to the disk cache if its a new shader
     if (result) {
         auto& disk_cache = impl->disk_cache;
-        ProgramCode program_code{setup.program_code.begin(), setup.program_code.end()};
-        program_code.insert(program_code.end(), setup.swizzle_data.begin(),
-                            setup.swizzle_data.end());
-        const u64 unique_identifier = GetUniqueIdentifier(regs, program_code);
+        const auto& program_code = setup.GetProgramCode();
+        const auto& swizzle_data = setup.GetSwizzleData();
+        ProgramCode new_program_code{program_code.begin(), program_code.end()};
+        new_program_code.insert(new_program_code.end(), swizzle_data.begin(), swizzle_data.end());
+        const u64 unique_identifier = GetUniqueIdentifier(regs, new_program_code);
         const ShaderDiskCacheRaw raw{unique_identifier, ProgramType::VS, regs,
-                                     std::move(program_code)};
+                                     std::move(new_program_code)};
         disk_cache.SaveRaw(raw);
         disk_cache.SaveDecompiled(unique_identifier, *result, accurate_mul);
     }

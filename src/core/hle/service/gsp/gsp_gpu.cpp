@@ -20,6 +20,7 @@
 #include "core/memory.h"
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
+#include "video_core/pica/pica_core.h"
 #include "video_core/pica/regs_lcd.h"
 #include "video_core/renderer_base.h"
 #include "video_core/right_eye_disabler.h"
@@ -685,8 +686,16 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
         Common::Hacks::hack_manager.GetHackAllowMode(Common::Hacks::HackType::RIGHT_EYE_DISABLE,
                                                      process->codeset->program_id) !=
         Common::Hacks::HackAllowMode::DISALLOW;
+
+    bool requires_shader_fixup =
+        Common::Hacks::hack_manager.GetHackAllowMode(
+            Common::Hacks::HackType::REQUIRES_SHADER_FIXUP, process->codeset->program_id,
+            Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
+
     auto& gpu = system.GPU();
     gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
+    gpu.PicaCore().vs_setup.requires_fixup = requires_shader_fixup;
+    gpu.PicaCore().gs_setup.requires_fixup = requires_shader_fixup;
 
     if (active_thread_id == session_data->thread_id) {
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,

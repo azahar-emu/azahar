@@ -105,8 +105,8 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
     };
 
     const auto& uniforms = setup.uniforms;
-    const auto& swizzle_data = setup.swizzle_data;
-    const auto& program_code = setup.program_code;
+    const auto& swizzle_data = setup.GetSwizzleData();
+    const auto& program_code = setup.GetProgramCode();
 
     // Constants for handling invalid inputs
     static f24 dummy_vec4_float24_zeros[4] = {f24::Zero(), f24::Zero(), f24::Zero(), f24::Zero()};
@@ -736,6 +736,7 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
 
 void InterpreterEngine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
+    setup.DoProgramCodeFixup();
     setup.entry_point = entry_point;
 }
 
