@@ -103,6 +103,8 @@ public:
     std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
     std::shared_ptr<BackingMem> dsp_mem;
 
+    PAddr plugin_fb_address{};
+
     Impl(Core::System& system_);
 
     const u8* GetPtr(Region r) const {
@@ -262,12 +264,8 @@ public:
         if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
             return {vram_mem, addr - VRAM_VADDR};
         }
-        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
-            auto plg_ldr = Service::PLGLDR::GetService(system);
-            if (plg_ldr) {
-                return {fcram_mem,
-                        addr - PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr() - FCRAM_PADDR};
-            }
+        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END && plugin_fb_address) {
+            return {fcram_mem, addr - PLUGIN_3GX_FB_VADDR + plugin_fb_address - FCRAM_PADDR};
         }
 
         UNREACHABLE();
@@ -306,9 +304,8 @@ public:
         CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
         CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
         CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
-        auto plg_ldr = Service::PLGLDR::GetService(system);
-        if (plg_ldr && plg_ldr->GetPluginFBAddr()) {
-            CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plg_ldr->GetPluginFBAddr());
+        if (plugin_fb_address) {
+            CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plugin_fb_address);
         }
     }
 
@@ -332,6 +329,7 @@ private:
         ar & vram_mem;
         ar & n3ds_extra_ram_mem;
         ar & dsp_mem;
+        ar & plugin_fb_address;
     }
 };
 
@@ -388,6 +386,10 @@ std::shared_ptr<PageTable> MemorySystem::GetCurrentPageTable() const {
 
 void MemorySystem::RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     impl->RasterizerFlushVirtualRegion(start, size, mode);
+}
+
+PAddr& Memory::MemorySystem::Plugin3GXFramebufferAddress() {
+    return impl->plugin_fb_address;
 }
 
 void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
@@ -711,12 +713,9 @@ std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr add
         return {addr - VRAM_PADDR + VRAM_VADDR};
     }
     // NOTE: Order matters here.
-    auto plg_ldr = Service::PLGLDR::GetService(impl->system);
-    if (plg_ldr) {
-        auto fb_addr = plg_ldr->GetPluginFBAddr();
-        if (addr >= fb_addr && addr < fb_addr + PLUGIN_3GX_FB_SIZE) {
-            return {addr - fb_addr + PLUGIN_3GX_FB_VADDR};
-        }
+    PAddr plg_fb_addr = Plugin3GXFramebufferAddress();
+    if (plg_fb_addr && addr >= plg_fb_addr && addr < plg_fb_addr + PLUGIN_3GX_FB_SIZE) {
+        return {addr - plg_fb_addr + PLUGIN_3GX_FB_VADDR};
     }
     if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};

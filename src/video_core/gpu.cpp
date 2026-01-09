@@ -57,11 +57,10 @@ PAddr GPU::VirtualToPhysicalAddress(VAddr addr) {
     if (addr >= Memory::NEW_LINEAR_HEAP_VADDR && addr <= Memory::NEW_LINEAR_HEAP_VADDR_END) {
         return addr - Memory::NEW_LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
     }
-    if (addr >= Memory::PLUGIN_3GX_FB_VADDR && addr <= Memory::PLUGIN_3GX_FB_VADDR_END) {
-        auto plg_ldr = Service::PLGLDR::GetService(impl->system);
-        if (plg_ldr) {
-            return addr - Memory::PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr();
-        }
+    PAddr plg_fb_addr;
+    if (addr >= Memory::PLUGIN_3GX_FB_VADDR && addr <= Memory::PLUGIN_3GX_FB_VADDR_END &&
+        (plg_fb_addr = impl->system.Memory().Plugin3GXFramebufferAddress())) {
+        return addr - Memory::PLUGIN_3GX_FB_VADDR + plg_fb_addr;
     }
 
     LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);
