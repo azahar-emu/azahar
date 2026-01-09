@@ -3677,6 +3677,12 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
         if (api_index == static_cast<u32>(Settings::GraphicsAPI::Vulkan)) {
             api_index = (api_index + 1) % graphics_apis.size();
         }
+#else
+        if (physical_devices.empty()) {
+            if (api_index == static_cast<u32>(Settings::GraphicsAPI::Vulkan)) {
+                api_index = (api_index + 1) % graphics_apis.size();
+            }
+        }
 #endif
         Settings::values.graphics_api = static_cast<Settings::GraphicsAPI>(api_index);
     }
