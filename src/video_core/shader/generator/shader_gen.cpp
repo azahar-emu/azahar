@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,7 @@ void PicaVSConfigState::Init(const Pica::RegsInternal& regs, Pica::ShaderSetup& 
     use_geometry_shader = use_geometry_shader_;
     sanitize_mul = accurate_mul_;
 
+    setup.DoProgramCodeFixup();
     program_hash = setup.GetProgramCodeHash();
     swizzle_hash = setup.GetSwizzleDataHash();
     main_offset = regs.vs.main_offset;

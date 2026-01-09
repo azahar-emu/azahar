@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,7 +6,7 @@
 
 #include <cstddef>
 #include <cstring>
-#include "common/cityhash.h"
+#include <xxhash.h>
 #include "common/common_types.h"
 
 namespace Common {
@@ -18,7 +18,7 @@ namespace Common {
  * @returns 64-bit hash value that was computed over the data block
  */
 static inline u64 ComputeHash64(const void* data, std::size_t len) noexcept {
-    return CityHash64(static_cast<const char*>(data), len);
+    return XXH3_64bits(data, len);
 }
 
 /**

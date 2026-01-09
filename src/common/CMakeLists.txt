@@ -70,8 +70,6 @@ add_library(citra_common STATIC
     bit_field.h
     bit_set.h
     bounded_threadsafe_queue.h
-    cityhash.cpp
-    cityhash.h
     color.h
     common_funcs.h
     common_paths.h
@@ -216,3 +214,5 @@ if (SSE42_COMPILE_OPTION)
     target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
     target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
 endif()
+
+target_link_libraries(citra_common PUBLIC xxHash::xxhash)
