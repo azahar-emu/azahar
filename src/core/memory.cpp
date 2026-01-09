@@ -638,13 +638,10 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* MemorySystem::GetPhysicalPointer(PAddr address) {
-    return GetPhysicalRef(address);
-}
-
-MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
-    if (address == physical_ptr_cache.first) {
-        return physical_ptr_cache.second;
+MemorySystem::PhysMemRegionInfo MemorySystem::GetPhysMemRegionInfo(PAddr address) {
+    if (address >= phys_mem_region_info_cache.region_start &&
+        address < phys_mem_region_info_cache.region_end) {
+        return phys_mem_region_info_cache;
     }
 
     constexpr std::array memory_areas = {
@@ -661,38 +658,52 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
     });
 
     if (area == memory_areas.end()) [[unlikely]] {
-        LOG_ERROR(HW_Memory, "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}", address,
+        LOG_ERROR(HW_Memory, "Unknown GetPhysMemRegionInfo @ {:#08X} at PC {:#08X}", address,
                   impl->GetPC());
-        physical_ptr_cache = {address, {nullptr}};
-        return physical_ptr_cache.second;
+        phys_mem_region_info_cache = PhysMemRegionInfo();
+        return phys_mem_region_info_cache;
     }
 
-    u32 offset_into_region = address - area->first;
-
-    std::shared_ptr<BackingMem> target_mem = nullptr;
     switch (area->first) {
     case VRAM_PADDR:
-        target_mem = impl->vram_mem;
+        phys_mem_region_info_cache = {&impl->vram_mem, area->first, area->second};
         break;
     case DSP_RAM_PADDR:
-        target_mem = impl->dsp_mem;
+        phys_mem_region_info_cache = {&impl->dsp_mem, area->first, area->second};
         break;
     case FCRAM_PADDR:
-        target_mem = impl->fcram_mem;
+        phys_mem_region_info_cache = {&impl->fcram_mem, area->first, area->second};
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_mem = impl->n3ds_extra_ram_mem;
+        phys_mem_region_info_cache = {&impl->n3ds_extra_ram_mem, area->first, area->second};
         break;
     default:
         UNREACHABLE();
     }
-    if (offset_into_region > target_mem->GetSize()) [[unlikely]] {
-        physical_ptr_cache = {address, {nullptr}};
-        return physical_ptr_cache.second;
+
+    return phys_mem_region_info_cache;
+}
+
+u8* MemorySystem::GetPhysicalPointer(PAddr address) {
+    auto target_mem = GetPhysMemRegionInfo(address);
+
+    if (!target_mem.valid()) [[unlikely]] {
+        return {nullptr};
     }
 
-    physical_ptr_cache = {address, {target_mem, offset_into_region}};
-    return physical_ptr_cache.second;
+    u32 offset_into_region = address - target_mem.region_start;
+    return target_mem.backing_mem->get()->GetPtr() + offset_into_region;
+}
+
+MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
+    const auto& target_mem = GetPhysMemRegionInfo(address);
+
+    if (!target_mem.valid()) [[unlikely]] {
+        return {nullptr};
+    }
+
+    u32 offset_into_region = address - target_mem.region_start;
+    return {*target_mem.backing_mem, offset_into_region};
 }
 
 std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr addr) {

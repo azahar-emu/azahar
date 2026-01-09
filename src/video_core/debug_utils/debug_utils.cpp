@@ -1,5 +1,5 @@
-// Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <cstdint>
@@ -272,7 +272,7 @@ void StartPicaTracing() {
 }
 
 void OnPicaRegWrite(u16 cmd_id, u16 mask, u32 value) {
-    if (!g_is_pica_tracing)
+    if (!g_is_pica_tracing) [[likely]]
         return;
 
     std::lock_guard lock(pica_trace_mutex);

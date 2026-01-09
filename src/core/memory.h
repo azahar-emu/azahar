@@ -664,13 +664,34 @@ private:
      */
     MemoryRef GetPointerForRasterizerCache(VAddr addr) const;
 
-    void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
+    class PhysMemRegionInfo {
+    public:
+        // Use a pointer to the shared pointer instead of the shared pointer directly to prevent
+        // overhead in hot code.
+        const std::shared_ptr<BackingMem>* backing_mem{};
 
-    std::pair<PAddr, MemoryRef> physical_ptr_cache;
+        PAddr region_start{};
+        PAddr region_end{};
+
+        PhysMemRegionInfo() = default;
+
+        PhysMemRegionInfo(const std::shared_ptr<BackingMem>* mem, PAddr reg_start, size_t reg_size)
+            : backing_mem(mem), region_start{reg_start},
+              region_end{reg_start + static_cast<PAddr>(reg_size)} {}
+
+        bool valid() const {
+            return backing_mem != nullptr;
+        }
+    };
+    PhysMemRegionInfo GetPhysMemRegionInfo(PAddr address);
+
+    void MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory, PageType type);
 
 private:
     class Impl;
     std::unique_ptr<Impl> impl;
+
+    PhysMemRegionInfo phys_mem_region_info_cache{};
 
     friend class boost::serialization::access;
     template <class Archive>
