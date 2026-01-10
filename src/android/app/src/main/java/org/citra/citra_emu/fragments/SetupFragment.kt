@@ -147,8 +147,7 @@ class SetupFragment : Fragment() {
                     false,
                     0,
                     pageButtons = mutableListOf<PageButton>().apply {
-                        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
-                        if (BuildConfig.FLAVOR != "googlePlay") {
+                        if (!BuildUtil.isGooglePlayBuild) {
                             add(
                                 PageButton(
                                     R.drawable.ic_folder,
@@ -284,8 +283,7 @@ class SetupFragment : Fragment() {
                         NotificationManagerCompat.from(requireContext())
                             .areNotificationsEnabled()
                     // External Storage
-                    @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
-                    if (BuildConfig.FLAVOR != "googlePlay") {
+                    if (!BuildUtil.isGooglePlayBuild) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             permissionsComplete =
                                 (permissionsComplete && Environment.isExternalStorageManager())
@@ -568,7 +566,7 @@ class SetupFragment : Fragment() {
             return@registerForActivityResult
         }
 
-        if (BuildConfig.FLAVOR != "googlePlay") {
+        if (!BuildUtil.isGooglePlayBuild) {
             if (NativeLibrary.getUserDirectory(result) == "") {
                 SelectUserDirectoryDialogFragment.newInstance(
                     mainActivity,

@@ -45,6 +45,7 @@
     V(DeleteDocument, bool, delete_document, CallStaticBooleanMethod, "deleteDocument",            \
       "(Ljava/lang/String;)Z")
 namespace AndroidStorage {
+
 static JavaVM* g_jvm = nullptr;
 static jclass native_library = nullptr;
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature) F(JMethodID)
@@ -67,6 +68,12 @@ enum class AndroidOpenMode {
     READ_WRITE_APPEND = O_RDWR | O_APPEND,  // "rwa"
     READ_WRITE_TRUNCATE = O_RDWR | O_TRUNC, // "rwt"
     NEVER = EINVAL,
+};
+
+class AndroidBuildFlavors {
+public:
+    static constexpr std::string GOOGLEPLAY = "googlePlay";
+    static constexpr std::string VANILLA = "vanilla";
 };
 
 inline AndroidOpenMode operator|(AndroidOpenMode a, int b) {
@@ -92,5 +99,6 @@ ANDROID_STORAGE_FUNCTIONS(FS)
 ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(FR)
 #undef F
 #undef FR
+
 } // namespace AndroidStorage
 #endif
