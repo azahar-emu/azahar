@@ -13,6 +13,7 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -1022,12 +1023,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             // Buttons that are disabled by default
             var defaultValue = true
             when (i) {
+                // TODO: Remove these magic numbers
                 6, 7, 12, 13, 14, 15 -> defaultValue = false
             }
             enabledButtons[i] = preferences.getBoolean("buttonToggle$i", defaultValue)
         }
 
-        MaterialAlertDialogBuilder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.emulation_toggle_controls)
             .setMultiChoiceItems(
                 R.array.n3dsButtons, enabledButtons
@@ -1039,6 +1041,17 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 binding.surfaceInputOverlay.refreshControls()
             }
             .show()
+
+        // Band-aid fix for strange dialog flickering issue
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val displayMetrics = requireActivity().windowManager.currentWindowMetrics
+            val displayHeight = displayMetrics.bounds.height()
+            // The layout visually breaks if we try to set the height directly rather than like this.
+            // Why? Fuck you, that's why!
+            val newAttributes = dialog.window?.attributes
+            newAttributes?.height = (displayHeight * 0.85f).toInt()
+            dialog.window?.attributes = newAttributes
+        }
     }
 
     private fun showAdjustScaleDialog(target: String) {
