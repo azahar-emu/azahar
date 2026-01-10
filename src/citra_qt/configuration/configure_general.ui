@@ -105,44 +105,32 @@
            <item>
             <widget class="QLabel" name="label_emulation_speed">
              <property name="text">
-              <string>Emulation Speed</string>
+              <string>Emulation Speed:</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QSlider" name="frame_limit">
-             <property name="minimum">
-              <number>0</number>
-             </property>
+            <widget class="QSpinBox" name="frame_limit">
              <property name="maximum">
-              <number>199</number>
+              <number>9999</number>
              </property>
-             <property name="singleStep">
-              <number>5</number>
-             </property>
-             <property name="pageStep">
-              <number>15</number>
-             </property>
-             <property name="value">
-              <number>19</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
+             <property name="suffix">
+              <string>%</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="emulation_speed_display_label">
-             <property name="text">
-              <string/>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
              </property>
-            </widget>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -170,55 +158,27 @@
             </widget>
            </item>
            <item>
-            <widget class="QSlider" name="turbo_limit">
-             <property name="minimum">
-              <number>0</number>
-             </property>
+            <widget class="QSpinBox" name="turbo_limit">
              <property name="maximum">
-              <number>198</number>
+              <number>9999</number>
              </property>
-             <property name="singleStep">
-              <number>5</number>
-             </property>
-             <property name="pageStep">
-              <number>15</number>
-             </property>
-             <property name="value">
-              <number>19</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
+             <property name="suffix">
+              <string>%</string>
              </property>
             </widget>
            </item>
            <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>32</width>
+               <width>40</width>
                <height>20</height>
               </size>
              </property>
             </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="turbo_limit_display_label">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>
@@ -287,7 +247,7 @@
        </layout>
       </widget>
      </item>
-     <item alignment="Qt::AlignRight">
+     <item alignment="Qt::AlignmentFlag::AlignRight">
       <widget class="QPushButton" name="button_reset_defaults">
        <property name="text">
         <string>Reset All Settings</string>
@@ -297,7 +257,7 @@
      <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
-        <enum>Qt::Vertical</enum>
+        <enum>Qt::Orientation::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
