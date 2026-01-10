@@ -67,10 +67,14 @@
     <string name="give_permission">Giv tilladelse</string>
     <string name="notification_warning">Vil du droppe at give tilladelse til meddelelser?</string>
     <string name="notification_warning_description">Azahar vil ikke være i stand til at give dig meddelelse om vigtige oplysninger.</string>
+    <string name="filesystem_permission_warning">Manglende tilladelser</string>
+    <string name="filesystem_permission_warning_description">Azahar kræver tilladelse til at administrere filer på denne enhed for at kunne gemme og administrere dens data.\n\nGiv venligst tilladelsen \"Filsystem\", før du fortsætter.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">Giv kameraet tilladelse nedenfor til at efterligne 3DS-kameraet.</string>
     <string name="microphone_permission">Mikrofon</string>
     <string name="microphone_permission_description">Giv mikrofonen tilladelse nedenfor til at efterligne 3DS-mikrofonen.</string>
+    <string name="filesystem_permission">Filsystem</string>
+    <string name="filesystem_permission_description">Giv filsystemet tilladelse nedenfor for at tillade Azahar at gemme filer.</string>
     <string name="permission_denied">Tilladelse nægtet</string>
     <string name="add_games_warning">Vil du droppe at vælge applikationsmappen?</string>
     <string name="add_games_warning_description">Software vil ikke blive vist på applikationslisten, hvis en mappe ikke er valgt.</string>
@@ -90,6 +94,9 @@
     <string name="cannot_skip">Du kan ikke springe opsætningen af ​​brugermappen over </string>
     <string name="cannot_skip_directory_description">Dette trin er påkrævet for at Azahar kan fungere. Vælg en mappe og så kan du fortsætte.</string>
     <string name="selecting_user_directory_without_write_permissions">Du har mistet skrivetilladelse i din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">brugerdata</a> mappe, hvor gemte tilstande og anden information er gemt. Dette kan ske efter en app- eller Android-opdatering. Vælg venligst mappen for at give tilladelse igen, så du kan fortsætte.</string>
+    <string name="invalid_selection">Ugyldigt valg</string>
+    <string name="invalid_user_directory">Valget af brugermappe var ugyldigt.\nVælg venligst brugermappen igen, og sørg for at navigere til den fra roden af ​​din enheds lager.</string>
+    <string name="filesystem_permission_lost">Azahar har mistet tilladelsen til at administrere filer på denne enhed. Dette kan ske efter nogle app- eller Android-opdateringer. Giv venligst denne tilladelse igen på den næste skærm for at fortsætte med at bruge appen.</string>
     <string name="set_up_theme_settings">Temaindstillinger</string>
     <string name="setup_theme_settings_description">Konfigurer dine temaindstillinger for Azahar.</string>
     <string name="setup_set_theme">Indstil tema</string>
@@ -122,8 +129,6 @@
     <string name="input_dialog_description">Tryk på eller flyt et input.</string>
     <string name="input_binding">Inputbinding</string>
     <string name="input_binding_description">Tryk på eller flyt et input for at binde det til %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Bevæg joysticket op eller ned.</string>
-    <string name="input_binding_description_horizontal_axis">Bevæg joysticket til venstre eller højre</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Byt skærme</string>
     <string name="button_turbo">Turbo</string>
@@ -162,6 +167,8 @@
     <string name="username">Brugernavn</string>
     <string name="new_3ds">Ny 3DS tilstand</string>
     <string name="lle_applets">Brug LLE Applets (hvis installeret)</string>
+    <string name="apply_region_free_patch">Anvend regionfri programrettelse på installerede programmer</string>
+    <string name="apply_region_free_patch_desc">Opdaterer regionen for installerede programmer, så de altid vises i startmenuen.</string>
     <string name="enable_required_online_lle_modules">Aktiver nødvendige LLE moduler til onlinefunktioner (hvis installeret)</string>
     <string name="enable_required_online_lle_modules_desc">Aktiverer de LLE moduler, der kræves til online multiplayer, eShop-adgang osv.</string>
     <string name="clock">Ur</string>
@@ -193,6 +200,10 @@
     <string name="region_mismatch">Advarsel om uoverensstemmelse i region</string>
     <string name="region_mismatch_emulated">Landeindstillingen er ikke gyldig for det valgte emulerede område.</string>
     <string name="region_mismatch_console">Landeindstillingen er ikke gyldig for den aktuelle forbundne konsol.</string>
+    <string name="storage">Lager</string>
+    <string name="compress_cia_installs">Komprimer installeret CIA-indhold</string>
+    <string name="compress_cia_installs_description">Komprimerer indholdet af CIA-filer, når de installeres på det emulerede SD-kort. Påvirker kun CIA-indhold, der installeres, når indstillingen er aktiveret.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -219,7 +230,7 @@
     <string name="linear_filtering_description">Aktiverer lineær filtrering, hvilket får spillets grafik til at se mere jævnt ud.</string>
     <string name="texture_filter_name">Teksturfilter</string>
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
-    <string name="delay_render_thread">Forsinket spillets renderingstråd</string>
+    <string name="delay_render_thread">Forsink spillets renderingstråd</string>
     <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
     <string name="advanced">Avanceret</string>
     <string name="texture_sampling_name">Tekstur sampling</string>
@@ -232,6 +243,8 @@
     <string name="frame_limit_enable_description">Når aktiveret, vil emuleringshastigheden være begrænset til en specificeret procentdel af normal hastighed. Hvis deaktiveret, vil emuleringshastigheden være ubegrænset, og genvejstasten for turbohastighed vil ikke fungere.</string>
     <string name="frame_limit_slider">Begræns hastighedsprocent</string>
     <string name="frame_limit_slider_description">Angiver procentdelen emuleringshastigheden skal begrænses til. Med standardværdien på 100% vil emulering være begrænset til normal hastighed. Værdier højere eller lavere vil øge eller mindske hastighedsgrænsen.</string>
+    <string name="android_hide_images">Skjul 3DS-afbildninger fra Android</string>
+    <string name="android_hide_images_description">Forhindre at Android indekserer og viser billeder fra 3DS-kamera, skærmbilleder og brugerdefinerede teksturer i galleriet. Din enhed skal muligvis genstartes, efter at du har ændret denne indstilling, for at den træder i kraft.</string>
     <string name="turbo_limit">Turbohastighedsgrænse</string>
     <string name="turbo_limit_description">Grænse for emuleringens hastighed bruges, når turbo-genvejstasten er aktiv.</string>
     <string name="expand_to_cutout_area">Anvend området ved frontkamera</string>
@@ -293,12 +306,12 @@
     <string name="hw_shaders_description">Bruger hardware til at efterligne 3DS shaders. Når det er aktiveret, vil spillets ydeevne blive væsentligt forbedret.</string>
     <string name="cpu_clock_speed">CPU Clock hastighed</string>
     <string name="vsync">Aktiver V-Sync</string>
-    <string name="vsync_description">Synkroniserer spillets frame rate med opdateringshastigheden på din enhed.</string>
+    <string name="vsync_description">Synkroniserer spillets billedhastighed med din enheds opdateringshastighed. Kan forårsage yderligere inputforsinkelse, men kan reducere tearing i nogle tilfælde.</string>
     <string name="renderer_debug">Fejlsøg renderingen</string>
     <string name="renderer_debug_description">Log yderligere grafikrelaterede fejlfindingsoplysninger. Når det er aktiveret, vil spillets ydeevne blive væsentligt reduceret.</string>
-    <string name="instant_debug_log">Tøm loggen for alle beskeder</string>
+    <string name="instant_debug_log">Tøm loggen ved hver besked</string>
     <string name="instant_debug_log_description">Overfør øjeblikkeligt fejlretningsloggen til fil. Brug dette, hvis Azahar går ned, og logoutputtet afbrydes.</string>
-    <string name="delay_start_lle_modules">Forsinket start med LLE moduler</string>
+    <string name="delay_start_lle_modules">Forsink start med LLE moduler</string>
     <string name="delay_start_lle_modules_description">Forsinker starten af ​​appen, når LLE moduler er aktiveret.</string>
     <string name="deterministic_async_operations">Deterministiske asynkrone operationer</string>
     <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
@@ -396,18 +409,24 @@
     <string name="emulation_configure_controls">Konfigurer kontroller</string>
     <string name="emulation_edit_layout">Rediger layout</string>
     <string name="emulation_done">Færdig</string>
+    <string name="emulation_button_sliding">Knap flytning</string>
+    <string name="emulation_button_sliding_disabled">Hold den oprindeligt trykkede knap nede</string>
+    <string name="emulation_button_sliding_enabled">Hold den aktuelt nede knap nede</string>
+    <string name="emulation_button_sliding_alternative">Hold den oprindelige og den aktuelt nedtrykkede knap nede</string>
     <string name="emulation_toggle_controls">Skift kontrol</string>
     <string name="emulation_control_scale">Juster skala</string>
     <string name="emulation_control_scale_global">Global skala</string>
     <string name="emulation_control_scale_reset_all">Nulstil alle</string>
     <string name="emulation_control_opacity">Juster opacitet</string>
     <string name="emulation_control_joystick_rel_center">Relativt stick centrum</string>
-    <string name="emulation_control_dpad_slide_enable">D-Pad glidning</string>
+    <string name="emulation_control_dpad_slide_enable">D-Pad flytning</string>
     <string name="emulation_open_settings">Åbn Indstillinger</string>
     <string name="emulation_open_cheats">Åbn snydekoder</string>
     <string name="emulation_aspect_ratio">Billedformat</string>
     <string name="emulation_switch_screen_layout">Landskab skærmlayout</string>
     <string name="emulation_switch_portrait_layout">Portræt skærmlayout</string>
+    <string name="emulation_switch_secondary_layout">Layout af sekundær skærm</string>
+    <string name="emulation_switch_secondary_layout_description">Layoutet, der bruges af en tilsluttet sekundær skærm, kablet eller trådløs (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Stor skærm</string>
     <string name="emulation_screen_layout_portrait">Portræt</string>
     <string name="emulation_screen_layout_single">Enkelt skærm</string>
@@ -415,7 +434,15 @@
     <string name="emulation_screen_layout_hybrid">Hybrid skærme</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
+    <string name="emulation_secondary_display_default">Systemstandard (spejl)</string>
     <string name="emulation_screen_layout_custom">Brugerdefineret layout</string>
+    <string name="bg_color">Baggrundsfarve</string>
+    <string name="bg_color_description">Farven, der vises bag skærmene under emulering, repræsenteret som en RGB-værdi.</string>
+    <string name="bg_red">Rød</string>
+    <string name="bg_green">Grøn</string>
+    <string name="bg_blue">Blå</string>
+    <string name="second_screen_opacity">Brugerdefineret layout skærmopacitet for anden skærm</string>
+    <string name="second_screen_opacity_description">Opaciteten af ​​den anden 3DS-skærm, når der bruges et brugerdefineret skærmlayout. Nyttig, hvis den anden skærm skal placeres oven på den første skærm.</string>
     <string name="emulation_small_screen_position">Position for lille skærm</string>
     <string name="small_screen_position_description">Hvor skal den lille skærm vises i forhold til den store i storskærmslayout?</string>
     <string name="small_screen_position_top_right">Øverst til højre</string>
@@ -511,6 +538,8 @@
     <string name="fatal_error">Fatal fejl</string>
     <string name="fatal_error_message">Der opstod en fatal fejl. Kontroller loggen for detaljer.\nFortsat emulering kan resultere i nedbrud og fejl.</string>
     <string name="unsupported_encrypted">Ikke understøttet krypteret applikation</string>
+    <string name="invalid_system_mode">Ugyldig systemtilstand</string>
+    <string name="invalid_system_mode_message">Nye 3DS-eksklusive applikationer kan ikke indlæses uden at aktivere den nye 3DS-tilstand.</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Forberedelse af shaders</string>
@@ -535,33 +564,36 @@
     <string name="create_shortcut">Opret genvej</string>
     <string name="shortcut_name_empty">Genvejsnavnet må ikke være tomt</string>
     <string name="shortcut_image_stretch_toggle">Stræk for at tilpasse billedet</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Fil:</string>
+    <string name="game_context_type">Type:</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Vis ydelsesoverlejring</string>
     <string name="performance_overlay_options">Ydelsesoverlejring</string>
     <string name="performance_overlay_enable">Aktivér ydelsesoverlejring</string>
     <string name="performance_overlay_options_description">Konfigurer, om ydelsesoverlejringen skal vises, og hvilke oplysninger der vises.</string>
-    <string name="overlay_show_fps">Vis FPS</string>
-    <string name="overlay_show_fps_description">Vis aktuelle billeder pr. sekund.</string>
-    <string name="overlay_show_frametime">Vis billedtid</string>
-    <string name="overlay_show_frametime_description">Vis aktuel billedtid.</string>
-    <string name="overlay_show_speed">Vis hastighed</string>
-    <string name="overlay_show_speed_description">Vis den aktuelle emuleringshastighed i procent.</string>
-    <string name="overlay_show_app_ram_usage">Vis hukommelsesforbrug for app</string>
-    <string name="overlay_show_app_ram_usage_description">Vis mængden af ​​RAM, der bruges af emulatoren.</string>
-    <string name="overlay_show_available_ram">Vis tilgængelig hukommelse</string>
-    <string name="overlay_show_available_ram_description">Vis mængden af ​​RAM, der er tilgængelig.</string>
-    <string name="overlay_show_battery_temp">Vis batteritemperatur</string>
-    <string name="overlay_show_battery_temp_description">Viser den aktuelle batteritemperatur i Celsius og Fahrenheit.</string>
-    <string name="overlay_position">Position af overlejring</string>
-    <string name="overlay_position_description">Vælg, hvor ydelsesoverlejringen skal vises på skærmen.</string>
-    <string name="overlay_position_top_left">Øverst til venstre</string>
-    <string name="overlay_position_top_right">Øverst til højre</string>
-    <string name="overlay_position_bottom_left">Nederst til venstre</string>
-    <string name="overlay_position_bottom_right">Nederst til højre</string>
-    <string name="overlay_position_center_top">Midten øverst</string>
-    <string name="overlay_position_center_bottom">Midten nederst</string>
-    <string name="overlay_background">Overlejret baggrund</string>
-    <string name="overlay_background_description">Tilføjer en baggrund bag overlejringen for lettere læsning.</string>
+    <string name="performance_overlay_show_fps">Vis FPS</string>
+    <string name="performance_overlay_show_fps_description">Vis aktuelle billeder pr. sekund.</string>
+    <string name="performance_overlay_show_frametime">Vis billedtid</string>
+    <string name="performance_overlay_show_frametime_description">Vis aktuel billedtid.</string>
+    <string name="performance_overlay_show_speed">Vis hastighed</string>
+    <string name="performance_overlay_show_speed_description">Vis den aktuelle emuleringshastighed i procent.</string>
+    <string name="performance_overlay_show_app_ram_usage">Vis hukommelsesforbrug for app</string>
+    <string name="performance_overlay_show_app_ram_usage_description">Vis mængden af ​​RAM, der bruges af emulatoren.</string>
+    <string name="performance_overlay_show_available_ram">Vis tilgængelig hukommelse</string>
+    <string name="performance_overlay_show_available_ram_description">Vis mængden af ​​RAM, der er tilgængelig.</string>
+    <string name="performance_overlay_show_battery_temp">Vis batteritemperatur</string>
+    <string name="performance_overlay_show_battery_temp_description">Viser den aktuelle batteritemperatur i Celsius og Fahrenheit.</string>
+    <string name="performance_overlay_position">Overlejret-position</string>
+    <string name="performance_overlay_position_description">Vælg, hvor performance-overlayet skal vises på skærmen.</string>
+    <string name="performance_overlay_position_top_left">Øverst til venstre</string>
+    <string name="performance_overlay_position_top_right">Øverst til højre</string>
+    <string name="performance_overlay_position_bottom_left">Nederst til venstre</string>
+    <string name="performance_overlay_position_bottom_right">Nederst til højre</string>
+    <string name="performance_overlay_position_center_top">Centreret top</string>
+    <string name="performance_overlay_position_center_bottom">Centreret bund</string>
+    <string name="performance_overlay_background">Overlejret baggrund</string>
+    <string name="performance_overlay_background_description">Tilføjer en baggrund bag det overlejrede for lettere læsning.</string>
 
     <!-- Cheats -->
     <string name="cheats">Snyd</string>
@@ -665,7 +697,6 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Side om Side</string>
-    <string name="reverse_side_by_side">Omvendt side om side</string>
     <string name="anaglyph">Anaglyph</string>
     <string name="interlaced">Interlaced</string>
     <string name="reverse_interlaced">Omvendt interlaced</string>
@@ -853,5 +884,20 @@
     <string name="emulation_quickload">Hurtig indlæsning</string>
     <string name="emulation_occupied_quicksave_slot">Hurtig lagring - %1$tF %1$tR</string>
     <string name="quickload_not_found">Ingen hurtig lagring tilgængelig.</string>
+
+    <!-- File Compression -->
+    <string name="compress">Komprimer</string>
+    <string name="compressing">Komprimerer…</string>
+    <string name="decompress">Dekomprimer</string>
+    <string name="decompressing">Dekomprimerer…</string>
+    <string name="compress_success">Komprimering gennemført.</string>
+    <string name="compress_unsupported">Komprimering understøttes ikke for denne fil.</string>
+    <string name="compress_already">Filen er allerede komprimeret.</string>
+    <string name="compress_failed">Komprimeringen mislykkedes.</string>
+    <string name="decompress_success">Dekomprimeringen er gennemført.</string>
+    <string name="decompress_unsupported">Dekomprimering understøttes ikke for denne fil.</string>
+    <string name="decompress_not_compressed">Filen er ikke komprimeret.</string>
+    <string name="decompress_failed">Dekomprimeringen mislykkedes.</string>
+    <string name="compress_decompress_installed_app">Allerede installerede programmer kan ikke komprimeres eller dekomprimeres.</string>
 
 </resources>

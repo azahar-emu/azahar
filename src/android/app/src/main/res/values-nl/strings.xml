@@ -93,8 +93,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="input_dialog_description">Druk op of verplaats een invoer.</string>
     <string name="input_binding">Invoerbinding</string>
     <string name="input_binding_description">Druk op of verplaats een invoer waaraan u deze wilt koppelen %1$s</string>
-    <string name="input_binding_description_vertical_axis">Beweeg je joystick naar boven of beneden.</string>
-    <string name="input_binding_description_horizontal_axis">Beweeg je joystick naar links of rechts.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Verwissel Schermen</string>
     <string name="input_message_analog_only">Deze besturing moet worden gekoppeld aan een analoge gamepad-stick of D-pad-as!</string>

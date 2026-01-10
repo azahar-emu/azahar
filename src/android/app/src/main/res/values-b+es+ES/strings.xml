@@ -67,10 +67,12 @@
     <string name="give_permission">Conceder permiso</string>
     <string name="notification_warning">¿Saltarse la concesión del permiso de notificaciones?</string>
     <string name="notification_warning_description">Azahar no podrá notificarte sobre información importante.</string>
+    <string name="filesystem_permission_warning">Falta Permisos</string>
     <string name="camera_permission">Cámara</string>
     <string name="camera_permission_description">Concede el permiso de cámara debajo para emular la cámara de la 3DS.</string>
     <string name="microphone_permission">Micrófono</string>
     <string name="microphone_permission_description">Concede el permiso de micrófono debajo para emular el micrófono de la 3DS.</string>
+    <string name="filesystem_permission">Sistema de archivos</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
     <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
@@ -90,6 +92,7 @@
     <string name="cannot_skip">No puedes saltarte el configuración de la carpeta de usuario</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
     <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de algunas actualizaciones de aplicaciones o de Android. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
+    <string name="invalid_selection">Selección no válido</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
     <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
     <string name="setup_set_theme">Establecer tema</string>
@@ -122,8 +125,8 @@
     <string name="input_dialog_description">Pulsa o mueve un botón/palanca.</string>
     <string name="input_binding">Asignación de botones</string>
     <string name="input_binding_description">Pulsa o mueve un botón para asignarlo a %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Mueve el joystick arriba o abajo.</string>
-    <string name="input_binding_description_horizontal_axis">Mueve el joystick a izquierda o derecha.</string>
+    <string name="input_binding_description_vertical_axis">Mueve el joystick abajo.</string>
+    <string name="input_binding_description_horizontal_axis">Mueve el joystick a la derecha</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercambiar Pantallas</string>
     <string name="button_turbo">Turbo</string>
@@ -237,6 +240,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="frame_limit_enable_description">Cuando se active, la velocidad de emulación estará limitada a un porcentaje determinado de la velocidad normal. Cuando se desactive, la velocidad de emulación no tendrá límite y la tecla de acceso rápido de velocidad turbo no funcionará.</string>
     <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
     <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o altos incrementarán o reducirán el límite de velocidad.</string>
+    <string name="android_hide_images">Ocultar imágenes 3DS de Android</string>
     <string name="turbo_limit">Límite de Velocidad Turbo</string>
     <string name="turbo_limit_description">Límite de velocidad de emulación utilizado mientras la tecla de acceso rápido turbo está activa.</string>
     <string name="expand_to_cutout_area">Expandir al área de recorte</string>
@@ -262,6 +266,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.\nNota: Los valores de profundidad superiores al 100 % no son posibles en hardware real y pueden causar problemas gráficos.</string>
     <string name="disable_right_eye_render">Desactivar Renderizado de Ojo Derecho</string>
     <string name="disable_right_eye_render_description">Mejora significativamente el rendimiento en algunas aplicaciones, pero puede causar parpadeo en otros.</string>
+    <string name="swap_eyes_3d">Intercambiar Ojos</string>
+    <string name="render_3d_which_display">Renderizado 3D Estereoscópico</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Tamaño de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un porcentaje de su tamaño original.</string>
@@ -298,7 +304,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="cpu_clock_speed">Velocidad de reloj de la CPU</string>
     <string name="vsync">Activar Sincronización Vertical</string>
-    <string name="vsync_description">Sincroniza los cuadros por segundo del juego con la tasa de refresco de tu dispositivo.</string>
     <string name="renderer_debug">Renderizador de depuración</string>
     <string name="renderer_debug_description">Archiva información adicional gráfica relacionada con la depuración. Cuando está activada, el rendimiento de los juegos será reducido considerablemente</string>
     <string name="instant_debug_log">Limpiar la salida del registro en cada mensaje</string>
@@ -428,6 +433,12 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_portrait_layout_top_full">Por defecto</string>
     <string name="emulation_secondary_display_default">Por defecto del sistema (espejo)</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
+    <string name="bg_color">Color de fondo</string>
+    <string name="bg_red">Rojo</string>
+    <string name="bg_green">Verde</string>
+    <string name="bg_blue">Azul</string>
+    <string name="second_screen_opacity">Opacidad personalizado de la segunda pantalla</string>
+    <string name="second_screen_opacity_description">La opacidad de la segunda pantalla 3DS al usar el pantalla personalizado. Útil si la segunda pantalla ésta posición en la parte superior de la primera pantalla.</string>
     <string name="emulation_small_screen_position">Posición Pantalla Pequeña</string>
     <string name="small_screen_position_description">¿Dónde debería aparecer la pantalla pequeña en relación con la grande en Disposicion de Pantalla Grande?</string>
     <string name="small_screen_position_top_right">Arriba a la Derecha</string>
@@ -523,7 +534,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
     <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
-
+    <string name="invalid_system_mode">Modo de sistema no válido</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo shaders</string>
@@ -550,34 +561,33 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Archivo:</string>
     <string name="game_context_type">Tipo:</string>
-
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar información de rendimiento</string>
     <string name="performance_overlay_options">Información de rendimiento</string>
     <string name="performance_overlay_enable">Activar información de rendimiento</string>
     <string name="performance_overlay_options_description">Configura la información de rendimiento</string>
-    <string name="overlay_show_fps">Mostrar FPS</string>
-    <string name="overlay_show_fps_description">Muestra los fotogramas por segundo actuales.</string>
-    <string name="overlay_show_frametime">Mostrar duración de fotogramas</string>
-    <string name="overlay_show_frametime_description">Muestra la duración actual de cada fotograma.</string>
-    <string name="overlay_show_speed">Mostrar velocidad</string>
-    <string name="overlay_show_speed_description">Muestra el porcentaje de velocidad de emulación actual.</string>
-    <string name="overlay_show_app_ram_usage">Mostrar el uso de memoria de la aplicación</string>
-    <string name="overlay_show_app_ram_usage_description">Muestra la cantidad de memoria RAM que esta usando el emulador.</string>
-    <string name="overlay_show_available_ram">Mostrar memoria disponible</string>
-    <string name="overlay_show_available_ram_description">Muestra la cantidad de memoria RAM que esta disponible.</string>
-    <string name="overlay_show_battery_temp">Mostrar la temperatura de la batería</string>
-    <string name="overlay_show_battery_temp_description">Muestra la temperatura actual de la batería en Celsius y Fahrenheit.</string>
-    <string name="overlay_position">Posición de la información</string>
-    <string name="overlay_position_description">Elige donde la información de rendimiento será mostrada en la pantalla.</string>
-    <string name="overlay_position_top_left">Arriba a la izquierda</string>
-    <string name="overlay_position_top_right">Arriba a la derecha</string>
-    <string name="overlay_position_bottom_left">Abajo a la izquierda</string>
-    <string name="overlay_position_bottom_right">Abajo a la derecha</string>
-    <string name="overlay_position_center_top">Centro superior</string>
-    <string name="overlay_position_center_bottom">Centro inferior </string>
-    <string name="overlay_background">Fondo de la información</string>
-    <string name="overlay_background_description">Agrega un fondo detrás de la información para hacerla más legible.</string>
+    <string name="performance_overlay_show_fps">Mostrar FPS</string>
+    <string name="performance_overlay_show_fps_description">Muestra los fotogramas por segundo actuales.</string>
+    <string name="performance_overlay_show_frametime">Mostrar duración de fotogramas</string>
+    <string name="performance_overlay_show_frametime_description">Muestra la duración actual de cada fotograma.</string>
+    <string name="performance_overlay_show_speed">Mostrar velocidad</string>
+    <string name="performance_overlay_show_speed_description">Muestra el porcentaje de velocidad de emulación actual.</string>
+    <string name="performance_overlay_show_app_ram_usage">Mostrar el uso de memoria de la aplicación</string>
+    <string name="performance_overlay_show_app_ram_usage_description">Muestra la cantidad de memoria RAM que esta usando el emulador.</string>
+    <string name="performance_overlay_show_available_ram">Mostrar memoria disponible</string>
+    <string name="performance_overlay_show_available_ram_description">Muestra la cantidad de memoria RAM que esta disponible.</string>
+    <string name="performance_overlay_show_battery_temp">Mostrar la temperatura de la batería</string>
+    <string name="performance_overlay_show_battery_temp_description">Muestra la temperatura actual de la batería en Celsius y Fahrenheit.</string>
+    <string name="performance_overlay_position">Posición de la información</string>
+    <string name="performance_overlay_position_description">Elegir donde el superposición de rendimiento esta mostrado en el pantalla</string>
+    <string name="performance_overlay_position_top_left">Arriba a la Izquierda</string>
+    <string name="performance_overlay_position_top_right">Arriba a la Derecha</string>
+    <string name="performance_overlay_position_bottom_left">Abajo a la Izquierda</string>
+    <string name="performance_overlay_position_bottom_right">Abajo a la Derecha</string>
+    <string name="performance_overlay_position_center_top">Centro Superior</string>
+    <string name="performance_overlay_position_center_bottom">Centro Inferior</string>
+    <string name="performance_overlay_background">Fondo de la información</string>
+    <string name="performance_overlay_background_description">Agrega un fondo detrás de la información para hacerla más legible.</string>
 
     <!-- Cheats -->
     <string name="cheats">Trucos</string>
@@ -682,7 +692,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
     <!-- Render 3D modes -->
     <string name="side_by_side">De lado a lado</string>
-    <string name="reverse_side_by_side">De lado a lado inverso</string>
+    <string name="side_by_side_full">De lado a lado ancho completo</string>
     <string name="anaglyph">Anáglifo</string>
     <string name="interlaced">Entrelazado</string>
     <string name="reverse_interlaced">Entrelazado inverso</string>
@@ -871,4 +881,17 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_occupied_quicksave_slot">Guardado rápido - %1$tF %1$tR</string>
     <string name="quickload_not_found">Guardado rápido no disponible.</string>
 
-</resources>
+    <!-- File Compression -->
+    <string name="compress">Comprimir</string>
+    <string name="compressing">Compresando...</string>
+    <string name="decompress">Descomprimir</string>
+    <string name="decompressing">Descomprimiendo…</string>
+    <string name="compress_success">Compresión completada con éxito.</string>
+    <string name="compress_unsupported">Compresión no está soportado con este archivo.</string>
+    <string name="compress_already">Este archivo ya está comprimido.</string>
+    <string name="compress_failed">Falló la compresión.</string>
+    <string name="decompress_success">Descompresión completada con éxito.</string>
+    <string name="decompress_unsupported">Descompresión no está soportado con este archivo.</string>
+    <string name="decompress_not_compressed">El archivo no está comprimido.</string>
+    <string name="decompress_failed"> Falló la descompresión.</string>
+    </resources>
