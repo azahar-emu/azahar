@@ -7,11 +7,19 @@ package org.citra.citra_emu.utils
 import org.citra.citra_emu.BuildConfig
 
 object BuildUtil {
-    fun assertNotGooglePlay() {
+    @Suppress("unused")
+    object BuildFlavors {
+        const val GOOGLEPLAY = "googlePlay"
+        const val VANILLA = "vanilla"
+    }
 
-        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
-        if (BuildConfig.FLAVOR == "googlePlay") {
+    fun assertNotGooglePlay() {
+        if (isGooglePlayBuild) {
             error("Non-GooglePlay code being called in GooglePlay build")
         }
     }
+
+    @Suppress("SimplifyBooleanWithConstants", "KotlinConstantConditions")
+    val isGooglePlayBuild =
+        BuildConfig.FLAVOR == BuildFlavors.GOOGLEPLAY
 }

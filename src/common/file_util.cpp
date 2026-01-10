@@ -312,7 +312,7 @@ bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
         return true;
 #elif ANDROID
     // srcFullPath and destFullPath are relative to the user directory
-    if (AndroidStorage::GetBuildFlavor() == "googlePlay") {
+    if (AndroidStorage::GetBuildFlavor() == AndroidStorage::AndroidBuildFlavors::GOOGLEPLAY) {
         if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath))
             return true;
     } else {

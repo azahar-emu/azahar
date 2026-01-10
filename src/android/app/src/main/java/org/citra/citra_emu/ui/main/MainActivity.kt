@@ -52,6 +52,7 @@ import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
 import org.citra.citra_emu.fragments.SelectUserDirectoryDialogFragment
 import org.citra.citra_emu.fragments.UpdateUserDirectoryDialogFragment
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CiaInstallWorker
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.CitraDirectoryUtils
@@ -199,8 +200,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return
         }
 
-        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
-        if (BuildConfig.FLAVOR != "googlePlay") {
+        if (!BuildUtil.isGooglePlayBuild) {
             fun requestMissingFilesystemPermission() =
                 GrantMissingFilesystemPermissionFragment.newInstance()
                     .show(supportFragmentManager, GrantMissingFilesystemPermissionFragment.TAG)
@@ -236,8 +236,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             return
         }
 
-        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
-        if (BuildConfig.FLAVOR != "googlePlay") {
+        if (!BuildUtil.isGooglePlayBuild) {
             if (supportFragmentManager.findFragmentByTag(SelectUserDirectoryDialogFragment.TAG) == null) {
                 if (NativeLibrary.getUserDirectory() == "") {
                     SelectUserDirectoryDialogFragment.newInstance(this)
@@ -367,7 +366,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 return@registerForActivityResult
             }
 
-            if (BuildConfig.FLAVOR != "googlePlay") {
+            if (!BuildUtil.isGooglePlayBuild) {
                 if (NativeLibrary.getUserDirectory(result) == "") {
                     SelectUserDirectoryDialogFragment.newInstance(
                         this,
