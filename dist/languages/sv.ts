@@ -5101,12 +5101,12 @@ Vill du hämta ner den?</translation>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Eject Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Mata ut cartridge</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Insert Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Mata in cartridge</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="658"/>

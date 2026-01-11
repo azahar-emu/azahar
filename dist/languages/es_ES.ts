@@ -4540,12 +4540,12 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2371"/>
         <source>Failed to compress some files, check log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron comprimir algunos archivos, mira el registro para más detalles.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2374"/>
         <source>Failed to decompress some files, check log for details.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudieron descomprimir algunos archivos, mira el registro para más detalles.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2379"/>
@@ -4711,7 +4711,7 @@ Para ver una guía sobre cómo instalar FFmpeg, pulsa Ayuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3197"/>
         <source>Select Output 3DS Compressed ROM Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccione la carpeta de salida comprimida del ROM 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3254"/>
@@ -4736,7 +4736,7 @@ Para ver una guía sobre cómo instalar FFmpeg, pulsa Ayuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3290"/>
         <source>Select Output 3DS ROM Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccione la carpeta de salida del ROM 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3347"/>
@@ -5100,12 +5100,12 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Eject Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Expulsar Cartucho</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Insert Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Insertar Cartucho</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="658"/>
@@ -5220,7 +5220,7 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="698"/>
         <source>Stress Test: App Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Prueba de estrés: lanzamiento de la aplicación</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="702"/>

@@ -329,7 +329,7 @@ Questo bannerà sia il suo nome utente del forum che il suo indirizzo IP.</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="91"/>
         <source>This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.</source>
-        <translation>Questo effetto di post-processing permette di far combaciare la velocità dell&apos;emulazione con quella dell&apos;audio per prevenire lo stutter. Questo però aumenta la latenza dell&apos;audio.</translation>
+        <translation>Questo effetto di post-processing permette di far combaciare la velocità dell&apos;emulazione con quella dell&apos;audio per prevenire scatti. Tuttavia, ciò aumenta la latenza dell&apos;audio.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="94"/>
@@ -733,7 +733,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="123"/>
         <source>Flush log output on every message</source>
-        <translation>Pulisci l&apos;output del log ad ogni messaggio</translation>
+        <translation>Svuota l&apos;output del log ad ogni messaggio</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="126"/>
@@ -1020,7 +1020,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="116"/>
         <source>Enable Linear Filtering</source>
-        <translation>Abilita Filtro Lineare</translation>
+        <translation>Abilita filtraggio lineare</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="138"/>
@@ -1085,7 +1085,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="239"/>
         <source>Side by Side Full Width</source>
-        <translation>Fianco a Fianco Larghezza Intera</translation>
+        <translation>Affiancato a larghezza intera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="244"/>
@@ -1135,7 +1135,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="323"/>
         <source>Disable Right Eye Rendering</source>
-        <translation>Disabilita il Rendering dell&apos;occhio destro</translation>
+        <translation>Disabilita il rendering dell&apos;occhio destro</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="326"/>
@@ -1145,7 +1145,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="333"/>
         <source>Swap Eyes</source>
-        <translation>Inverti Occhi</translation>
+        <translation>Inverti occhi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="343"/>
@@ -1170,7 +1170,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="362"/>
         <source>Dump textures</source>
-        <translation>Estrai Textures</translation>
+        <translation>Estrai texture</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="369"/>
@@ -1370,12 +1370,12 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="142"/>
         <source>Disable GLSL -&gt; SPIR-V optimizer</source>
-        <translation>Disabilita GLSL -&gt; Ottimizzatore SPIR-V</translation>
+        <translation>Disabilita ottimizzazione GLSL -&gt; SPIR-V</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="145"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disables the SPIR-V optimization pass, reducing stuttering considerably while barely affecting performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disabilita il passaggio di ottimizzazione SPIR-V, riducendo considerevolmente lo strutter influenzando minimamente le prestazioni.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disabilita il passaggio di ottimizzazione SPIR-V, riducendo considerevolmente gli scatti con un impatto minimo sulle prestazioni.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="155"/>
@@ -2454,7 +2454,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
         <source>Use virtual SD card</source>
-        <translation>Usa la SD virtuale</translation>
+        <translation>Usa la scheda SD virtuale</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="39"/>
@@ -2562,13 +2562,12 @@ online features (if installed)</source>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="146"/>
         <source>Apply region free patch to
 installed applications.</source>
-        <translation>Applica la patch regione libera alle
-applicazioni installate.</translation>
+        <translation>Applica la patch region-free alle applicazioni installate.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="150"/>
         <source>Patches the region of installed applications to be region free, so that they always appear on the home menu.</source>
-        <translation>Corregge la regione delle applicazioni installate in modo che siano senza regione, in modo che vengano sempre visualizzate nel menu home.</translation>
+        <translation>Corregge la regione delle applicazioni installate per renderle region-free, in modo che vengano sempre visualizzate nel menù Home.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="170"/>
@@ -2813,7 +2812,7 @@ applicazioni installate.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="510"/>
         <source>Run System Setup when Home Menu is launched</source>
-        <translation>Esegui il Setup del Sistema quando l&apos;Home Menu viene avviato.</translation>
+        <translation>Esegui la configurazione del sistema quando il menù Home viene avviato</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="517"/>
@@ -2834,7 +2833,7 @@ applicazioni installate.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="563"/>
         <source>3GX Plugin Loader</source>
-        <translation>Caricatore di plugin 3GX</translation>
+        <translation>Caricamento dei plugin 3GX</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="570"/>
@@ -3801,7 +3800,7 @@ Trascina i punti per cambiarne la posizione, o fai doppio clic sulla tabella per
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="81"/>
         <source>Icon Size</source>
-        <translation>Dimensione Icona</translation>
+        <translation>Dimensione icona</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="89"/>
@@ -4422,7 +4421,7 @@ Consulta il log per i dettagli.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2230"/>
         <source>(✅) Old 3DS setup</source>
-        <translation>(✅) Confiurazione Old 3DS</translation>
+        <translation>(✅) Configurazione Old 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2231"/>
@@ -4701,7 +4700,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3186"/>
         <source>3DS Compressed ROM File (*.%1)</source>
-        <translation>File ROM 3DS Compresso (*.%1)</translation>
+        <translation>File ROM 3DS compresso (*.%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3189"/>
@@ -4711,7 +4710,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3197"/>
         <source>Select Output 3DS Compressed ROM Folder</source>
-        <translation>Seleziona la Cartella di Output per le ROM 3DS Compresse</translation>
+        <translation>Seleziona la cartella di destinazione delle ROM 3DS compresse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3254"/>
@@ -4721,7 +4720,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3255"/>
         <source>3DS Compressed ROM Files (*.zcia *zcci *z3dsx *zcxi)</source>
-        <translation>File ROM 3DS Compresso (*.zcia *zcci *z3dsx *zcxi)</translation>
+        <translation>File ROM 3DS compresso (*.zcia *zcci *z3dsx *zcxi)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3280"/>
@@ -4736,7 +4735,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3290"/>
         <source>Select Output 3DS ROM Folder</source>
-        <translation>Seleziona la Cartella ROM 3DS di Output</translation>
+        <translation>Seleziona la cartella di destinazione delle ROM 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3347"/>
@@ -5100,12 +5099,12 @@ Vuoi installarlo?</translation>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Eject Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimuovi schedina</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
         <source>Insert Cartridge</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserisci schedina</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="658"/>
@@ -5471,7 +5470,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
         <source>Region free</source>
-        <translation>Region free</translation>
+        <translation>Region-free</translation>
     </message>
 </context>
 <context>
@@ -6425,12 +6424,12 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="466"/>
         <source>Compress ROM File...</source>
-        <translation>File ROM compresso...</translation>
+        <translation>Comprimi file ROM...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="471"/>
         <source>Decompress ROM File...</source>
-        <translation>File ROM decompresso...</translation>
+        <translation>Decomprimi file ROM...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="479"/>

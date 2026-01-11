@@ -73,6 +73,7 @@
     <string name="microphone_permission">Micrófono</string>
     <string name="microphone_permission_description">Concede el permiso de micrófono debajo para emular el micrófono de la 3DS.</string>
     <string name="filesystem_permission">Sistema de archivos</string>
+    <string name="filesystem_permission_description">Concede el permiso de sistema de archivos debajo para permitir que Azahar almacene archivos.</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
     <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
@@ -125,7 +126,7 @@
     <string name="input_dialog_description">Pulsa o mueve un botón/palanca.</string>
     <string name="input_binding">Asignación de botones</string>
     <string name="input_binding_description">Pulsa o mueve un botón para asignarlo a %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Mueve el joystick abajo.</string>
+    <string name="input_binding_description_vertical_axis">Mueve el joystick abajo</string>
     <string name="input_binding_description_horizontal_axis">Mueve el joystick a la derecha</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercambiar Pantallas</string>
@@ -268,6 +269,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="disable_right_eye_render_description">Mejora significativamente el rendimiento en algunas aplicaciones, pero puede causar parpadeo en otros.</string>
     <string name="swap_eyes_3d">Intercambiar Ojos</string>
     <string name="render_3d_which_display">Renderizado 3D Estereoscópico</string>
+    <string name="render_3d_which_display_both">Activado (todas las pantallas)</string>
+    <string name="render_3d_which_display_primary">Activado (solo pantalla principal)</string>
+    <string name="render_3d_which_display_secondary">Activado (solo pantalla secundaria)</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Tamaño de la pantalla Cardboard</string>
     <string name="cardboard_screen_size_description">Escala la pantalla a un porcentaje de su tamaño original.</string>
@@ -561,6 +565,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Archivo:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_insert">Insertar Cartucho</string>
+    <string name="game_context_eject">Expulsar Cartucho</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar información de rendimiento</string>
     <string name="performance_overlay_options">Información de rendimiento</string>

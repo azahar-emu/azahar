@@ -577,6 +577,9 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Fil:</string>
     <string name="game_context_type">Typ:</string>
+    <string name="game_context_insert">Mata in cartridge</string>
+    <string name="game_context_eject">Mata ut cartridge</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Visa prestandaöverlägg</string>
     <string name="performance_overlay_options">Prestandaöverlägg</string>

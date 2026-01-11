@@ -89,7 +89,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="permissions_description">Concedere autorizzazioni opzionali per utilizzare specifiche funzionalità dell\'emulatore</string>
     <string name="warning_help">Aiuto</string>
     <string name="warning_skip">Salta</string>
-    <string name="warning_cancel">Indietro</string>
+    <string name="warning_cancel">Annulla</string>
     <string name="select_citra_user_folder">Seleziona cartella utente</string>
     <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">utente</a> usando il bottone sottostante.]]></string>
     <string name="select_which_user_directory_to_use">Sembra che tu abbia impostato la cartella utente sia per Lime3DS che per Azahar. Questo probabilmente è dovuto al fatto che hai eseguito l\'aggiornamento ad Azahar e, al momento della richiesta, hai scelto una directory utente diversa da quella utilizzata per Lime3DS.\n\nQuesto potrebbe averti fatto pensare di aver perso salvataggi o altre impostazioni - ci scusiamo se è successo.\n\nDesideri tornare a utilizzare la tua cartella utente originale di Lime3DS, ripristinando impostazioni e salvataggi da Lime3DS, oppure preferisci mantenere la cartella utente attuale di Azahar?\n\nNessuna delle cartelle verrà eliminata, indipendentemente dalla tua scelta, e potrai passare liberamente da una all\'altra utilizzando l\'opzione \"Seleziona Cartella Utente\".</string>
@@ -170,12 +170,12 @@ Divertiti usando l\'emulatore!</string>
     <string name="button">Pulsante</string>
 
     <!-- System settings strings -->
-    <string name="emulation_settings">Impostazioni Emulazione</string>
-    <string name="username">Nome Utente</string>
+    <string name="emulation_settings">Impostazioni emulazione</string>
+    <string name="username">Nome utente</string>
     <string name="new_3ds">Modalità New 3DS</string>
     <string name="lle_applets">Usa Applet LLE (se installati)</string>
-    <string name="apply_region_free_patch">Applica la patch regione libera alle applicazioni installate</string>
-    <string name="apply_region_free_patch_desc">Corregge la regione delle applicazioni installate in modo che siano senza regione, in modo che vengano sempre visualizzate nel menu home.</string>
+    <string name="apply_region_free_patch">Applica la patch region-free alle applicazioni installate</string>
+    <string name="apply_region_free_patch_desc">Corregge la regione delle applicazioni installate per renderle region-free, in modo che vengano sempre visualizzate nel menù Home.</string>
     <string name="enable_required_online_lle_modules">Abilitare i moduli LLE richiesti per le funzionalità online (se installati)</string>
     <string name="enable_required_online_lle_modules_desc">Abilita i moduli LLE necessari per il multigiocatore online, l\'accesso all\'eShop, ecc.</string>
     <string name="clock">Orologio</string>
@@ -228,22 +228,22 @@ Divertiti usando l\'emulatore!</string>
     <string name="renderer">Renderer</string>
     <string name="graphics_api">API grafiche</string>
     <string name="spirv_shader_gen">Abilita la generazione di shader SPIR-V</string>
-    <string name="spirv_shader_gen_description">Crea le fragments shader usate per emulare PICA tramite SPIR-V, invece di GLSL</string>
-    <string name="disable_spirv_optimizer">Disabilita SPIR-V Optimizer</string>
-    <string name="disable_spirv_optimizer_description">Disabilita il passaggio di ottimizzazione SPIR-V, riducendo considerevolmente gli stutter e influendo appena sulle prestazioni.</string>
+    <string name="spirv_shader_gen_description">Crea il fragment shader usato per emulare PICA tramite SPIR-V, invece di GLSL</string>
+    <string name="disable_spirv_optimizer">Disabilita ottimizzazione SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Disabilita il passaggio di ottimizzazione SPIR-V, riducendo considerevolmente gli scatti con un impatto minimo sulle prestazioni.</string>
     <string name="async_shaders">Abilita la compilazione asincrona degli shader</string>
-    <string name="async_shaders_description">Compila le shader in background per ridurre lo stuttering durante il gioco. Quando abilitato, potrebbero verificarsi dei glitch grafici.</string>
-    <string name="linear_filtering">Filtering Lineare</string>
+    <string name="async_shaders_description">Compila gli shader in background per ridurre gli scatti durante il gioco. Se l\'opzione è abilitata, potrebbero verificarsi dei glitch grafici temporanei.</string>
+    <string name="linear_filtering">Filtraggio lineare</string>
     <string name="linear_filtering_description">Abilita il filtraggio lineare, che fa sembrare più smussata la grafica dei giochi.</string>
-    <string name="texture_filter_name">Filtro Texture</string>
+    <string name="texture_filter_name">Filtro texture</string>
     <string name="texture_filter_description">Migliora la grafica delle applicazioni applicando un filtro alle texture. I filtri supportati sono Anime4k Ultrafast, Bicubic, ScaleForce, xBRZ freescale e MMPX.</string>
     <string name="delay_render_thread">Ritarda il thread di rendering del gioco</string>
     <string name="delay_render_thread_description">Ritarda il thread di rendering del gioco quando invia dati alla GPU. Aiuta con i problemi di prestazioni nelle (poche) applicazioni con frame rate dinamici.</string>
     <string name="advanced">Avanzato</string>
     <string name="texture_sampling_name">Campionamento texture</string>
     <string name="texture_sampling_description">Sovrascrive il filtro di campionamento utilizzato dai giochi. Questo può essere utile in alcuni casi con giochi che gestiscono male l\'upscaling. Se hai dubbi, imposta questa opzione su \"Gestito dal gioco\".</string>
-    <string name="shaders_accurate_mul">Moltiplicazione Accurata</string>
-    <string name="shaders_accurate_mul_description">Utilizza una moltiplicazione più accurata degli shader hardware, che potrebbe correggere alcuni bug grafici. Se abilitato, le prestazioni saranno ridotte.</string>
+    <string name="shaders_accurate_mul">Moltiplicazione accurata</string>
+    <string name="shaders_accurate_mul_description">Utilizza una moltiplicazione più accurata degli shader hardware, che potrebbe correggere alcuni bug grafici. Se l\'opzione è abilitata, le prestazioni saranno ridotte.</string>
     <string name="asynchronous_gpu">Abilita l\'emulazione GPU asincrona</string>
     <string name="asynchronous_gpu_description">Usa un thread separato per l\'emulazione asincrona della GPU. Quando è abilitato le prestazioni saranno migliori.</string>
     <string name="frame_limit_enable">Limita Velocità</string>
@@ -258,7 +258,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="expand_to_cutout_area_description">Espande l\'area di visualizzazione per includere l\'area di ritaglio (o notch).</string>
     <string name="internal_resolution">Risoluzione Interna</string>
     <string name="internal_resolution_description">Specifica la risoluzione a cui renderizzare. Una risoluzione alta migliorerà la qualità visiva ma avrà un grande effetto sulle prestazioni e potrebbe causare glitch in alcune applicazioni.</string>
-    <string name="internal_resolution_setting_auto">Auto (dimensione dello schermo)</string>
+    <string name="internal_resolution_setting_auto">Automatica (dimensione dello schermo)</string>
     <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
     <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
     <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
@@ -278,7 +278,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="factor3d_description">Specifica il valore del regolatore di profindità 3D. Questo valore deve essere impostato su un valore superiore allo 0% quando è abilitato il \"3D stereoscopico\".\nNote: Valori di profondità superiori al 100% non sono possibili su hardware reale e possono causare problemi grafici</string>
     <string name="disable_right_eye_render">Disabilita il rendering dell\'occhio destro</string>
     <string name="disable_right_eye_render_description">Migliora notevolmente le prestazioni in alcune applicazioni, ma può causare flickering in altre.</string>
-    <string name="swap_eyes_3d">Inverti Occhi</string>
+    <string name="swap_eyes_3d">Inverti occhi</string>
     <string name="swap_eyes_3d_description">Cambia l\'occhio dal quale lato viene visualizzato. In combinazione con la modalità Fianco a Fianco è possibile vedere il 3D incrociando gli occhi!</string>
     <string name="render_3d_which_display">Rendering 3D Stereoscopico</string>
     <string name="render_3d_which_display_description">Indica se abilitare il 3D stereoscopico e su quali schermi. Le opzioni di visualizzazione singola sono rilevanti solo quando sono collegati più display.</string>
@@ -293,16 +293,16 @@ Divertiti usando l\'emulatore!</string>
     <string name="cardboard_y_shift">Spostamento Verticale</string>
     <string name="cardboard_y_shift_description">Specifica la percentuale di spazio vuoto per spostare gli schermi verticalmente. Valori positivi muoveranno alla parte bassa dello schermo, mentre i negativi faranno il contrario.</string>
     <string name="use_shader_jit">Shader JIT</string>
-    <string name="use_disk_shader_cache">Shader Cache su Disco</string>
-    <string name="use_disk_shader_cache_description">Riduce lo stuttering salvando e caricando le shader generate sul disco principale. Non può essere usato senza aver prima attivato \"Abilita Shader Hardware\"</string>
+    <string name="use_disk_shader_cache">Cache degli shader su disco</string>
+    <string name="use_disk_shader_cache_description">Riduce gli scatti salvando e caricando gli shader generati su disco. Non può essere usata senza aver prima attivato \"Abilita shader hardware\".</string>
     <string name="utility">Utilità</string>
-    <string name="dump_textures">Estrai Textures</string>
-    <string name="dump_textures_description">Le textures vengono estratte in dump/textures/[ID Gioco]/.</string>
-    <string name="custom_textures">Textures Personalizzate</string>
+    <string name="dump_textures">Estrai texture</string>
+    <string name="dump_textures_description">Le texture vengono estratte in dump/textures/[ID Gioco]/.</string>
+    <string name="custom_textures">Texture personalizzate</string>
     <string name="custom_textures_description">Le texture vengono caricate da load/textures/[ID Gioco]/.</string>
-    <string name="preload_textures">Precaricamento delle Textures Personalizzate</string>
+    <string name="preload_textures">Precarica texture personalizzate</string>
     <string name="preload_textures_description">Carica tutte le texture personalizzate nella RAM del dispositivo. Questa funzionalità può usare molta memoria.</string>
-    <string name="async_custom_loading">Caricamento asincrono delle Textures</string>
+    <string name="async_custom_loading">Caricamento asincrono delle texture personalizzate</string>
     <string name="async_custom_loading_description">Carica le texture personalizzate in modo asincrono con i thread in background per ridurre lo stutter del caricamento.</string>
 
     <!-- Audio settings strings -->
@@ -317,7 +317,7 @@ Divertiti usando l\'emulatore!</string>
     <!-- Debug settings strings -->
     <string name="cpu_jit">CPU JIT</string>
     <string name="cpu_jit_description">Utilizza il compilatore Just-in-Time (JIT) per l\'emulazione della CPU. Se abilitato, le prestazioni di gioco miglioreranno significativamente.</string>
-    <string name="hw_shaders">Abilita le Shader Hardware</string>
+    <string name="hw_shaders">Abilita shader hardware</string>
     <string name="hw_shaders_description">Utilizza l\'hardware per emulare gli shader del 3DS. Se abilitato, le prestazioni dei giochi miglioreranno significativamente.</string>
     <string name="cpu_clock_speed">Velocità Clock CPU</string>
     <string name="vsync">Abilita V-Sync</string>
@@ -333,7 +333,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="enable_rpc_server">Abilita server RPC</string>
     <string name="enable_rpc_server_desc">Abilita il server RPC sulla porta 45987. Questo permette di leggere e scrivere remotamente la memoria guest.</string>
     <string name="shader_jit">Abilita shader JIT</string>
-    <string name="shader_jit_description">Usa il motore JIT invece dell\'interprete per l\'emulazione di shader software.</string>
+    <string name="shader_jit_description">Usa il motore JIT al posto dell\'interprete per l\'emulazione software degli shader.</string>
 
   <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Orientamento schermo</string>
@@ -379,9 +379,9 @@ Divertiti usando l\'emulatore!</string>
     <string name="setting_disabled">Impostazione disabilitata</string>
     <string name="setting_disabled_description">Questa impostazione è attualmente disattivata a causa di un\'altra impostazione che non è il valore appropriato.</string>
     <string name="setting_not_editable_description">Questa opzione non può essere modificata mentre un gioco è in esecuzione.</string>
-    <string name="auto_select">Auto-seleziona.</string>
+    <string name="auto_select">Seleziona automaticamente</string>
     <string name="start">Avvia</string>
-    <string name="cancelling">Cancellazione...</string>
+    <string name="cancelling">Annullamento in corso...</string>
     <string name="important">Importante</string>
     <string name="dont_show_again">Non mostrare più</string>
     <string name="visibility">Visibilità</string>
@@ -407,7 +407,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="preferences_layout">Layout</string>
 
     <!-- ROM loading errors -->
-    <string name="loader_error_encrypted">La tua ROM è Criptata</string>
+    <string name="loader_error_encrypted">La tua ROM è criptata</string>
     <string name="loader_error_invalid_format">Formato ROM non valido</string>
     <string name="loader_error_file_not_found">Il file ROM non esiste</string>
     <string name="no_game_present">Nessun gioco avviabile è presente!</string>
@@ -422,7 +422,7 @@ Divertiti usando l\'emulatore!</string>
     <string name="emulation_haptic_feedback">Feedback aptico</string>
     <string name="emulation_overlay_options">Impostazioni Overlay</string>
     <string name="emulation_configure_controls">Configura Controlli</string>
-    <string name="emulation_edit_layout">Modifica Disposizione</string>
+    <string name="emulation_edit_layout">Modifica disposizione</string>
     <string name="emulation_done">Fatto</string>
     <string name="emulation_button_sliding">Pulsante scorrevole</string>
     <string name="emulation_button_sliding_disabled">Tieni premuto il pulsante originariamente premuto</string>
@@ -557,8 +557,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="invalid_system_mode_message">Le applicazioni esclusive del New 3DS non possono essere caricate senza abilitare la modalità New 3DS.</string>
 
     <!-- Disk Shader Cache -->
-    <string name="preparing_shaders">Preparando le Shaders</string>
-    <string name="building_shaders">Costruisco le Shaders</string>
+    <string name="preparing_shaders">Preparazione degli shader</string>
+    <string name="building_shaders">Compilazione degli shader</string>
 
     <!-- About Game Dialog -->
     <string name="play">Riproduci</string>
@@ -582,6 +582,9 @@ Divertiti usando l\'emulatore!</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">File:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_insert">Inserisci schedina</string>
+    <string name="game_context_eject">Rimuovi schedina</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostra overlay prestazioni</string>
     <string name="performance_overlay_options">Overlay delle prestazioni</string>
@@ -653,12 +656,12 @@ Divertiti usando l\'emulatore!</string>
 
     <!-- System theme -->
     <string name="change_theme_mode">Tema</string>
-    <string name="theme_mode_follow_system">Segui sistema</string>
-    <string name="theme_mode_light">Chiara</string>
-    <string name="theme_mode_dark">Scura</string>
+    <string name="theme_mode_follow_system">Segui il sistema</string>
+    <string name="theme_mode_light">Chiaro</string>
+    <string name="theme_mode_dark">Scuro</string>
 
     <!-- Material You theme -->
-    <string name="material_you">Material you</string>
+    <string name="material_you">Material You</string>
     <string name="material_you_description">Utilizza il colore del tema del sistema operativo all\'interno dell\'app (sovrascrive l\'impostazione \"Colore tema\" quando abilitata)</string>
 
     <!-- Static theme color -->
@@ -712,11 +715,11 @@ Divertiti usando l\'emulatore!</string>
     <string name="real_openal">Dispositivo Reale (OpenAL)</string>
 
     <!-- Render 3D modes -->
-    <string name="side_by_side">Affiancati</string>
-    <string name="side_by_side_full">Fianco a Fianco Larghezza Intera</string>
+    <string name="side_by_side">Affiancato</string>
+    <string name="side_by_side_full">Affiancato a larghezza intera</string>
     <string name="anaglyph">Anaglifo</string>
     <string name="interlaced">Interlacciato</string>
-    <string name="reverse_interlaced">Interlacciato Invertito</string>
+    <string name="reverse_interlaced">Interlacciato invertito</string>
 
     <!-- Graphics API names -->
     <string name="opengles">OpenGLES</string>
