@@ -292,6 +292,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install tools
+        run: apk add bash
+      - name: Fix git ownership
+        run: git config --global --add safe.directory .
       - name: Build Docker image
         run: ./.ci/docker.sh
       - name: Move Docker image to artifacts directory
