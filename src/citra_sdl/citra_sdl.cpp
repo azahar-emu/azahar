@@ -465,6 +465,10 @@ void LaunchSdlFrontend(int argc, char** argv) {
         }
     }
 
+#ifdef _WIN32
+    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+#endif
+
 #ifdef __unix__
     Common::Linux::StartGamemode();
 #endif
