@@ -12,7 +12,7 @@ RUN mkdir builddir && cd builddir && \
                           -DENABLE_TESTS=OFF \
                           -DENABLE_ROOM=ON \
                           -DENABLE_ROOM_STANDALONE=ON \
-                          -DENABLE_OPENGL=OFF $(:"TODO: Can we disable these automatically when there's no frontend?") \
+                          -DENABLE_OPENGL=OFF $( : "TODO: Can we disable these automatically when there's no frontend?") \
                           -DENABLE_VULKAN=OFF \
                           -DENABLE_SDL2=OFF \
                           -DENABLE_LIBUSB=OFF \
