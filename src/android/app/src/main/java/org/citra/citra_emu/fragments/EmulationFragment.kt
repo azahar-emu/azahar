@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.content.DialogInterface
+import android.content.res.Configuration
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
@@ -50,6 +51,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.slider.Slider
 import java.io.File
 import kotlinx.coroutines.flow.collectLatest
@@ -75,6 +77,9 @@ import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.overlay.HotCornerOverlay
+import org.citra.citra_emu.utils.HotCornerSettings
+import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
@@ -104,7 +109,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val settings get() = settingsViewModel.settings
 
-    private val onPause = Runnable{ togglePause() }
+    private val onPause = Runnable{ togglePauseAndSyncMenu() }
     private val onShutdown = Runnable{ emulationState.stop() }
 
     override fun onAttach(context: Context) {
@@ -187,6 +192,32 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         binding.surfaceEmulation.holder.addCallback(this)
+        // Setup hot corner overlay
+        binding.hotCornerOverlay.apply {
+            actionListener = object : HotCornerOverlay.OnActionListener {
+                override fun onHotCornerAction(action: HotCornerSettings.HotCornerAction) {
+                    when (action) {
+                        HotCornerSettings.HotCornerAction.NONE -> {}
+                        HotCornerSettings.HotCornerAction.PAUSE_RESUME -> togglePauseAndSyncMenu()
+                        HotCornerSettings.HotCornerAction.TOGGLE_TURBO -> TurboHelper.toggleTurbo(true)
+                        HotCornerSettings.HotCornerAction.QUICK_SAVE -> {
+                            NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
+                            Toast.makeText(context, getString(R.string.saving), Toast.LENGTH_SHORT).show()
+                        }
+                        HotCornerSettings.HotCornerAction.QUICK_LOAD -> {
+                            val loaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
+                            val resId = if (loaded) R.string.loading else R.string.quickload_not_found
+                            Toast.makeText(context, getString(resId), Toast.LENGTH_SHORT).show()
+                        }
+                        HotCornerSettings.HotCornerAction.OPEN_MENU -> {
+                            if (!binding.drawerLayout.isOpen) binding.drawerLayout.open()
+                        }
+                        HotCornerSettings.HotCornerAction.SWAP_SCREENS -> screenAdjustmentUtil.swapScreen()
+                    }
+                }
+            }
+            refresh()
+        }
         binding.doneControlConfig.setOnClickListener {
             binding.doneControlConfig.visibility = View.GONE
             binding.surfaceInputOverlay.setIsInEditMode(false)
@@ -475,9 +506,23 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
     }
 
+    private fun togglePauseAndSyncMenu() {
+        togglePause()
+        binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
+            if (emulationState.isPaused) {
+                menuItem.title = resources.getString(R.string.resume_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_play, requireContext().theme)
+            } else {
+                menuItem.title = resources.getString(R.string.pause_emulation)
+                menuItem.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_pause, requireContext().theme)
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         Choreographer.getInstance().postFrameCallback(this)
+        binding.hotCornerOverlay.refresh()
         if (NativeLibrary.isRunning()) {
             emulationState.pause()
 
@@ -827,11 +872,137 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_hot_corner_radius -> {
+                    runAfterDrawerClosed { showHotCornerRadiusDialog() }
+                    true
+                }
+
+                R.id.menu_hot_corner_portrait_bl -> {
+                    showHotCornerSelectDialog(Configuration.ORIENTATION_PORTRAIT, HotCornerSettings.HotCornerPosition.BOTTOM_LEFT)
+                    true
+                }
+                R.id.menu_hot_corner_portrait_br -> {
+                    showHotCornerSelectDialog(Configuration.ORIENTATION_PORTRAIT, HotCornerSettings.HotCornerPosition.BOTTOM_RIGHT)
+                    true
+                }
+                R.id.menu_hot_corner_landscape_bl -> {
+                    showHotCornerSelectDialog(Configuration.ORIENTATION_LANDSCAPE, HotCornerSettings.HotCornerPosition.BOTTOM_LEFT)
+                    true
+                }
+                R.id.menu_hot_corner_landscape_br -> {
+                    showHotCornerSelectDialog(Configuration.ORIENTATION_LANDSCAPE, HotCornerSettings.HotCornerPosition.BOTTOM_RIGHT)
+                    true
+                }
+
                 else -> true
             }
         }
 
         popupMenu.show()
+    }
+
+    private fun showHotCornerSelectDialog(orientation: Int, position: HotCornerSettings.HotCornerPosition) {
+        val actions = arrayOf(
+            getString(R.string.hot_corner_action_none),
+            getString(R.string.hot_corner_action_pause_resume),
+            getString(R.string.hot_corner_action_toggle_turbo),
+            getString(R.string.hot_corner_action_quick_save),
+            getString(R.string.hot_corner_action_quick_load),
+            getString(R.string.hot_corner_action_open_menu),
+            getString(R.string.hot_corner_action_swap_screens)
+        )
+
+        val values = HotCornerSettings.HotCornerAction.values()
+        val current = HotCornerSettings.getAction(orientation, position)
+        var selectedIndex = values.indexOf(current)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.hot_corner_settings)
+            .setSingleChoiceItems(actions, selectedIndex) { _: DialogInterface?, which: Int ->
+                selectedIndex = which
+            }
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                HotCornerSettings.setAction(orientation, position, values[selectedIndex])
+                binding.hotCornerOverlay.refresh()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun showHotCornerRadiusDialog() {
+        val sliderBinding = DialogSliderBinding.inflate(layoutInflater)
+        val max = 125
+        val min = 0
+        val previousDp = HotCornerSettings.getRadiusDp()
+        var currentDp = previousDp
+
+        sliderBinding.apply {
+            slider.valueFrom = min.toFloat()
+            slider.valueTo = max.toFloat()
+            slider.value = previousDp.toFloat()
+            textValue.setText(previousDp.toString())
+            textInput.suffixText = "dp"
+            slider.addOnChangeListener { _: Slider, value: Float, _: Boolean ->
+                currentDp = value.toInt()
+                if (textValue.text.toString() != currentDp.toString()) {
+                    textValue.setText(currentDp.toString())
+                    textValue.setSelection(textValue.length())
+                }
+                // Live preview
+                binding.hotCornerOverlay.showPreview(true)
+                binding.hotCornerOverlay.updatePreviewRadiusDp(currentDp)
+            }
+        }
+
+        // Ensure preview is visible with current value before interaction
+        binding.hotCornerOverlay.showPreview(true)
+        binding.hotCornerOverlay.updatePreviewRadiusDp(previousDp)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.hot_corner_radius)
+            .setView(sliderBinding.root)
+            .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
+                // Revert to previous value
+                HotCornerSettings.setRadiusDp(previousDp)
+                binding.hotCornerOverlay.showPreview(false)
+                binding.hotCornerOverlay.refresh()
+            }
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->
+                // Persist current value
+                HotCornerSettings.setRadiusDp(currentDp)
+                binding.hotCornerOverlay.showPreview(false)
+                binding.hotCornerOverlay.refresh()
+            }
+            .setNeutralButton(R.string.slider_default, null)
+            .create()
+
+        dialog.setOnShowListener {
+            val neutral = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            neutral.setOnClickListener {
+                currentDp = 72
+                sliderBinding.slider.value = 72f
+                binding.hotCornerOverlay.showPreview(true)
+                binding.hotCornerOverlay.updatePreviewRadiusDp(currentDp)
+            }
+        }
+        dialog.show()
+    }
+
+    private fun runAfterDrawerClosed(action: () -> Unit) {
+        if (!binding.drawerLayout.isOpen) {
+            action()
+            return
+        }
+        binding.drawerLayout.addDrawerListener(object : DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
+            override fun onDrawerOpened(drawerView: View) {}
+            override fun onDrawerStateChanged(newState: Int) {}
+            override fun onDrawerClosed(drawerView: View) {
+                binding.drawerLayout.removeDrawerListener(this)
+                action()
+            }
+        })
+        binding.drawerLayout.close()
     }
 
     private fun showAmiiboMenu() {
