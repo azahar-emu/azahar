@@ -144,11 +144,6 @@ Samples CubebInput::Read() {
     while (impl->sample_queue.Pop(queue)) {
         samples.insert(samples.end(), queue.begin(), queue.end());
     }
-
-    if (samples.empty()) {
-        samples = GenerateSilentSamples(parameters);
-    }
-
     return samples;
 }
 
