@@ -70,6 +70,8 @@ add_library(citra_common STATIC
     bit_field.h
     bit_set.h
     bounded_threadsafe_queue.h
+    cityhash.cpp
+    cityhash.h
     color.h
     common_funcs.h
     common_paths.h

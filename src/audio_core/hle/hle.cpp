@@ -510,11 +510,13 @@ void DspHle::SetInterruptHandler(
 void DspHle::LoadComponent(std::span<const u8> component_data) {
     // HLE doesn't need DSP program. Only log some info here
     LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
-             Common::ComputeHash64(component_data.data(), component_data.size()));
+             Common::ComputeHash64<Common::HashAlgo64::CityHash>(component_data.data(),
+                                                                 component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
     if (component_data.size() > 0x37C) {
-        LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
-                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+        LOG_INFO(
+            Service_DSP, "Structures hash: {:#018x}",
+            Common::ComputeHash64<Common::HashAlgo64::CityHash>(component_data.data() + 0x340, 60));
     }
 }
 
