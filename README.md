@@ -16,16 +16,16 @@ The goal of this project is to be the de-facto platform for future development.
 
 ### Windows
 
-Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases).
+Releases are available as installers and in portable formats. Download the latest release from [Releases](https://github.com/azahar-emu/azahar/releases). 
 
-If you are unsure of whether you want to use MSYS2 or MSVC, use MSYS2.
+If you are unsure of whether you want to use MSVC or MSYS2, use MSYS2.
 
 ---
 ### MacOS
 
 To download a build that will work on all Macs, you can download the `macos-universal` build on the [Releases](https://github.com/azahar-emu/azahar/releases) page.
 
-Alternatively, if you wish to download a build specifically for your Mac, you can choose either:
+Alternatively, if you wish to download a build specifically for your Mac with reduced binary size and faster startup, you can choose either:
 
 - `macos-arm64` for Apple Silicon Macs
 - `macos-x86_64` for Intel Macs
@@ -97,7 +97,7 @@ Below are the minimum requirements to run Azahar:
 ### Desktop
 ```
 Operating System: Windows 10 (64-bit), MacOS 13.4 (Ventura), or modern 64-bit Linux
-CPU: x86-64/ARM64 CPU (Windows for ARM not supported). Single core performance higher than 1,800 on Passmark
+CPU: x86-64 with SSE4.2/ARM64 CPU (Windows for ARM not supported). Single core performance higher than 1,800 on Passmark
 GPU: OpenGL 4.3 or Vulkan 1.1 support
 Memory: 2GB of RAM. 4GB is recommended
 ```
@@ -118,4 +118,4 @@ You can find these at https://github.com/azahar-emu/azahar/milestones.
 # Join the conversation
 We have a community Discord server where you can chat about the project, keep up to date with the latest announcements, or coordinate emulator development.
 
-[![](https://dcbadge.vercel.app/api/server/4ZjMpAp3M6)](https://discord.gg/4ZjMpAp3M6)
+Join at https://discord.gg/4ZjMpAp3M6
