@@ -132,6 +132,9 @@
     <string name="controller_dpad_button_description">Only map the D-pad to these if you\'re facing issues with the D-Pad (Axis) button mappings.</string>
     <string name="controller_axis_vertical">Up/Down Axis</string>
     <string name="controller_axis_horizontal">Left/Right Axis</string>
+    <string name="controller_quick_config">Quick Configure</string>
+    <string name="controller_quick_config_description">Quickly configure all input buttons (not including hotkeys)</string>
+    <string name="controller_quick_config_wait">Please Wait</string>
     <string name="direction_up">Up</string>
     <string name="direction_down">Down</string>
     <string name="direction_left">Left</string>
@@ -402,6 +405,8 @@
     <string name="dont_show_again">Don\'t show again</string>
     <string name="visibility">Visibility</string>
     <string name="information">Information</string>
+    <string name="finish">Finish</string>
+    <string name="unassigned">Unassigned</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Select Game Folder</string>
