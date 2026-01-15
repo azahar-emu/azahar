@@ -90,7 +90,7 @@ void ConfigureGeneral::SetConfiguration() {
         ui->toggle_background_mute->setChecked(
             UISettings::values.mute_when_in_background.GetValue());
         ui->toggle_hide_mouse->setChecked(UISettings::values.hide_mouse.GetValue());
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_QT_UPDATE_CHECKER
         ui->toggle_update_checker->setChecked(
             UISettings::values.check_for_update_on_start.GetValue());
 #endif
@@ -180,7 +180,7 @@ void ConfigureGeneral::ApplyConfiguration() {
         UISettings::values.pause_when_in_background = ui->toggle_background_pause->isChecked();
         UISettings::values.mute_when_in_background = ui->toggle_background_mute->isChecked();
         UISettings::values.hide_mouse = ui->toggle_hide_mouse->isChecked();
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_QT_UPDATE_CHECKER
         UISettings::values.check_for_update_on_start = ui->toggle_update_checker->isChecked();
 #endif
 #ifdef __unix__
