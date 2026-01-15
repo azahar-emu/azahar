@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-#include <QFutureWatcher>
 #include <QWidget>
 
 namespace Ui {
