@@ -577,6 +577,9 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Arquivo:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_insert">Inserir Cartucho</string>
+    <string name="game_context_eject">Ejetar Cartucho</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar Sobreposição de Desempenho</string>
     <string name="performance_overlay_options">Sobreposição de Desempenho</string>

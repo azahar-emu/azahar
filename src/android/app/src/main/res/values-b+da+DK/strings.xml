@@ -129,6 +129,8 @@
     <string name="input_dialog_description">Tryk på eller flyt et input.</string>
     <string name="input_binding">Inputbinding</string>
     <string name="input_binding_description">Tryk på eller flyt et input for at binde det til %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Bevæg joysticket ned</string>
+    <string name="input_binding_description_horizontal_axis">Bevæg joysticket til højre</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Byt skærme</string>
     <string name="button_turbo">Turbo</string>
@@ -266,10 +268,18 @@
     <string name="debug_warning">Advarsel: Ændringer i disse indstillinger vil gøre emuleringen langsommere</string>
     <string name="stereoscopy">Stereoskopi</string>
     <string name="render3d">Stereoskopisk 3D-tilstand</string>
+    <string name="render3d_description">Vælg den stereoskopiske 3D-tilstand til 3D-gengivelse. Side om side-tilstande er mest almindelige i moderne brug. Anaglyf- og interlaced-tilstande vil altid gælde for alle tilsluttede skærme.</string>
     <string name="factor3d">Dybde</string>
     <string name="factor3d_description">Angiver værdien af ​​3D-skyderen. Denne bør sættes højere end 0 %, når stereoskopisk 3D-tilstand er aktiveret.\nBemærk: Dybdeværdier over 100 % er ikke muligt på rigtig hardware og kan forårsage grafiske problemer</string>
     <string name="disable_right_eye_render">Deaktiver rendering af højre øje</string>
     <string name="disable_right_eye_render_description">Forbedrer ydeevnen betydeligt i nogle applikationer, men kan forårsage flimren i andre.</string>
+    <string name="swap_eyes_3d">Skift øjne</string>
+    <string name="swap_eyes_3d_description">Bytter om på hvilket øje, der skal se hvilken side. Kombineret med side om side-tilstanden er det muligt at se 3D ved at krydse øjnene!</string>
+    <string name="render_3d_which_display">Gengiv stereoskopisk 3D</string>
+    <string name="render_3d_which_display_description">Om stereoskopisk 3D skal aktiveres, og på hvilke skærme. Indstillingerne for en enkel skærm er kun relevant, når flere skærme er tilsluttet.</string>
+    <string name="render_3d_which_display_both">Til (alle skærme)</string>
+    <string name="render_3d_which_display_primary">Til (kun primær skærm)</string>
+    <string name="render_3d_which_display_secondary">Til (kun sekundær skærm)</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Cardboard skærmstørrelse</string>
     <string name="cardboard_screen_size_description">Skalerer skærmen til en procentdel af dens oprindelige størrelse.</string>
@@ -567,6 +577,9 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Fil:</string>
     <string name="game_context_type">Type:</string>
+    <string name="game_context_insert">Indsæt kassette</string>
+    <string name="game_context_eject">Udtag kassette</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Vis ydelsesoverlejring</string>
     <string name="performance_overlay_options">Ydelsesoverlejring</string>
@@ -697,6 +710,7 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Side om Side</string>
+    <string name="side_by_side_full">Side om side i fuld bredde</string>
     <string name="anaglyph">Anaglyph</string>
     <string name="interlaced">Interlaced</string>
     <string name="reverse_interlaced">Omvendt interlaced</string>

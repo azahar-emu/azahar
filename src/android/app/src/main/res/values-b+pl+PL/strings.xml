@@ -129,6 +129,8 @@
     <string name="input_dialog_description">Naciśnij lub przenieś wejście.</string>
     <string name="input_binding">Powiązanie wejścia</string>
     <string name="input_binding_description">Naciśnij lub przesuń wejście, aby powiązać je z %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Przesuń analog w dół.</string>
+    <string name="input_binding_description_horizontal_axis">Przesuń analog w prawo.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Zamień ekrany</string>
     <string name="button_turbo">Turbo</string>
@@ -266,10 +268,18 @@
     <string name="debug_warning">Ostrzeżenie: Zmiana tych ustawień spowolni emulację</string>
     <string name="stereoscopy">Sterowanie stereoskopowe</string>
     <string name="render3d">Tryb stereoskopowy 3D</string>
+    <string name="render3d_description">Wybierz tryb stereoskopowego 3D dla renderowania 3D.Tryb ekranów obok siebie jest obecnie najczęściej stosowany. Tryby obrazu Anaglyph i Interlaced będą zawsze stosowane do wyświetlania obrazu na wszystkich podłączonych monitorach.</string>
     <string name="factor3d">Zasięg</string>
     <string name="factor3d_description">Określa wartość suwaka 3D. Powinien być ustawiony na wartość wyższą niż 0%, gdy włączony jest tryb stereoskopowy 3D.\nUwaga: Wartość przekraczająca 100% nie jest możliwa na rzeczywistym sprzęcie i może powodować problemy graficzne.</string>
     <string name="disable_right_eye_render">Wyłącz renderowanie prawego oka</string>
     <string name="disable_right_eye_render_description">Znacznie poprawia wydajność w niektórych aplikacjach, ale może powodować migotanie w innych.</string>
+    <string name="swap_eyes_3d">Zamiana Oczu</string>
+    <string name="swap_eyes_3d_description">Zamiana oczu jest wyświetlana po obu stronach. W połączeniu z trybem obrazów obok siebie umożliwia oglądanie obrazu 3D poprzez przesunięcie oczu!</string>
+    <string name="render_3d_which_display">Render stereoskopowego 3D</string>
+    <string name="render_3d_which_display_description">Czy włączyć stereoskopowe 3D i na jakich wyświetlaczach to włączyć? Opcje dotyczące pojedynczego wyświetlacza mają znaczenie tylko wtedy, gdy podłączonych jest wiele wyświetlaczy.</string>
+    <string name="render_3d_which_display_both">Włącz (Wszystkie Wyświetlacze)</string>
+    <string name="render_3d_which_display_primary">Włącz (Tylko Główny Wyświetlacz)</string>
+    <string name="render_3d_which_display_secondary">Włącz (Tylko na Dodatkowym Wyświetlaczu)</string>
     <string name="cardboard_vr">Cardboard VR</string>
     <string name="cardboard_screen_size">Rozmiar ekranu Cardboarda</string>
     <string name="cardboard_screen_size_description">Skaluje ekran do wartości procentowej jego oryginalnego rozmiaru.</string>
@@ -567,6 +577,9 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Plik:</string>
     <string name="game_context_type">Typ:</string>
+    <string name="game_context_insert">Włóż Kartridż</string>
+    <string name="game_context_eject">Wyjmij Kartridż</string>
+
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Wyświetl nakładkę wydajności</string>
     <string name="performance_overlay_options">Nakładkę wydajności</string>
@@ -699,6 +712,7 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Obok Siebie</string>
+    <string name="side_by_side_full">Obok Siebie na Pełną Szerokość</string>
     <string name="anaglyph">Analogiczny</string>
     <string name="interlaced">Naprzemienny</string>
     <string name="reverse_interlaced">Odwrócony Obraz</string>
