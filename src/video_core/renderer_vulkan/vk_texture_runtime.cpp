@@ -465,49 +465,6 @@ void TextureRuntime::ClearTextureWithRenderpass(Surface& surface,
     });
 }
 
-vk::UniqueImageView MakeFramebufferImageView(vk::Device device, vk::Image image, vk::Format format,
-                                             vk::ImageAspectFlags aspect, u32 base_level = 0) {
-    // For framebuffer attachments, we must always use levelCount=1 to avoid
-    // Vulkan validation errors about mipLevel being outside of the allowed range
-    const vk::ImageViewCreateInfo view_info = {
-        .image = image,
-        .viewType = vk::ImageViewType::e2D,
-        .format = format,
-        .subresourceRange{
-            .aspectMask = aspect,
-            .baseMipLevel = base_level, // Use the specified base mip level
-            .levelCount = 1,            // Framebuffers require a single mip level
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-    };
-    return device.createImageViewUnique(view_info);
-}
-
-vk::ImageView CreateFramebufferImageView(const Instance* instance, vk::Image image,
-                                         vk::Format format, vk::ImageAspectFlags aspect) {
-    // Always create a view with a single mip level for framebuffer attachments
-    const vk::ImageViewCreateInfo view_info = {
-        .image = image,
-        .viewType = vk::ImageViewType::e2D,
-        .format = format,
-        .subresourceRange{
-            .aspectMask = aspect,
-            .baseMipLevel = 0,
-            .levelCount = 1, // Always use 1 for framebuffers to avoid Vulkan validation errors
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-    };
-    return instance->GetDevice().createImageView(view_info);
-}
-
-bool IsImagelessFramebufferSupported(const Instance* instance) {
-    // We're not using imageless framebuffers to avoid validation errors
-    // Even if the extension is supported, we'll use standard framebuffers for better compatibility
-    return false;
-}
-
 bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
                                   std::span<const VideoCore::TextureCopy> copies) {
     renderpass_cache.EndRendering();
@@ -866,7 +823,6 @@ Surface::Surface(TextureRuntime& runtime_, u32 width_, u32 height_, VideoCore::P
     const vk::ImageUsageFlags usage =
         vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst |
         vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
-
     handles[0] = MakeHandle(instance, width_, height_, 1, VideoCore::TextureType::Texture2D,
                             traits.native, usage, {}, traits.aspect, false, "Temporary Surface");
 
@@ -1368,20 +1324,7 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
 
 vk::ImageView Surface::FramebufferView() noexcept {
     is_framebuffer = true;
-
-    const u32 index = res_scale == 1 ? 0u : 1u;
-
-    // If we already have a framebuffer-compatible view, return it
-    if (framebuffer_view[index]) {
-        return framebuffer_view[index].get();
-    }
-
-    // Create a new view with a single mip level for framebuffer compatibility
-    // This is critical to avoid VUID-VkFramebufferCreateInfo-pAttachments-00883 validation errors
-    framebuffer_view[index] = MakeFramebufferImageView(
-        instance->GetDevice(), Image(), instance->GetTraits(pixel_format).native, Aspect(), 0);
-
-    return framebuffer_view[index].get();
+    return ImageView();
 }
 
 vk::ImageView Surface::DepthView() noexcept {
@@ -1471,11 +1414,50 @@ vk::Framebuffer Surface::Framebuffer() noexcept {
     const auto depth_format = is_depth ? pixel_format : PixelFormat::Invalid;
     const auto render_pass =
         runtime->renderpass_cache.GetRenderpass(color_format, depth_format, false);
-    // Use FramebufferView() instead of ImageView() to ensure single mip level
-    const auto attachments = std::array{FramebufferView()};
+    // Use AttachmentView() to get single mip level view for framebuffer
+    const auto attachments = std::array{AttachmentView()};
     framebuffers[index] = MakeFramebuffer(instance->GetDevice(), render_pass, GetScaledWidth(),
                                           GetScaledHeight(), attachments);
     return framebuffers[index].get();
+}
+
+vk::ImageView Surface::AttachmentView() noexcept {
+    is_framebuffer = true;
+
+    // Return appropriate single-mip-level view based on surface type
+    const bool is_depth = type == SurfaceType::Depth || type == SurfaceType::DepthStencil;
+    if (is_depth) {
+        // For depth/stencil surfaces, we need to return a view suitable for attachments
+        // DepthView and StencilView use VK_REMAINING_MIP_LEVELS, so create a single-level view here
+        const vk::ImageViewCreateInfo view_info = {
+            .image = Image(),
+            .viewType = vk::ImageViewType::e2D,
+            .format = traits.native,
+            .subresourceRange{
+                .aspectMask = traits.aspect,
+                .baseMipLevel = 0,
+                .levelCount = 1, // Single mip level for framebuffer
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        };
+        return instance->GetDevice().createImageViewUnique(view_info).release();
+    } else {
+        // For color surfaces, create a single-level view
+        const vk::ImageViewCreateInfo view_info = {
+            .image = Image(),
+            .viewType = vk::ImageViewType::e2D,
+            .format = traits.native,
+            .subresourceRange{
+                .aspectMask = traits.aspect,
+                .baseMipLevel = 0,
+                .levelCount = 1, // Single mip level for framebuffer
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+        };
+        return instance->GetDevice().createImageViewUnique(view_info).release();
+    }
 }
 
 void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
@@ -1605,62 +1587,44 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         }
         images[index] = surface->Image();
         aspects[index] = surface->Aspect();
+        // Use AttachmentView() for single-mip-level framebuffer attachment
+        image_views[index] = surface->AttachmentView();
     };
+    boost::container::static_vector<vk::ImageView, 2> attachments;
 
-    // Prepare the surfaces for use in framebuffer
-    if (color) {
-        prepare(0, color);
-    }
+    if (!shadow_rendering) {
+        // Prepare the surfaces for use in framebuffer
+        if (color) {
+            prepare(0, color);
+            attachments.emplace_back(image_views[0]);
+        }
 
-    if (depth_stencil) {
-        prepare(1, depth_stencil);
+        if (depth_stencil) {
+            prepare(1, depth_stencil);
+            attachments.emplace_back(image_views[1]);
+        }
+    } else {
+        // For shadow rendering, just collect surface info without adding attachments
+        if (color) {
+            prepare(0, color);
+        }
+        if (depth_stencil) {
+            prepare(1, depth_stencil);
+        }
     }
 
     const vk::Device device = runtime.GetInstance().GetDevice();
 
-    // Create appropriate image views for the framebuffer
-    boost::container::static_vector<vk::ImageView, 2> fb_attachments;
-
-    if (color) {
-        vk::UniqueImageView single_level_view =
-            MakeFramebufferImageView(device, color->Image(), color->traits.native, color->Aspect());
-        fb_attachments.push_back(single_level_view.get());
-        framebuffer_views.push_back(std::move(single_level_view));
-    }
-
-    if (depth_stencil) {
-        vk::UniqueImageView single_level_view = MakeFramebufferImageView(
-            device, depth_stencil->Image(), depth_stencil->traits.native, depth_stencil->Aspect());
-        fb_attachments.push_back(single_level_view.get());
-        framebuffer_views.push_back(std::move(single_level_view));
-    }
     if (shadow_rendering) {
-        // For shadow rendering, we need a special render pass with depth-only
-        // Since shadow rendering doesn't output to color buffer, we use depth-only render pass
-        render_pass = renderpass_cache.GetRenderpass(PixelFormat::Invalid, formats[1], false);
-
-        // Find the depth attachment in fb_attachments
-        boost::container::static_vector<vk::ImageView, 1> shadow_attachments;
-        if (depth_stencil) {
-            // Depth attachment is the last one added (after color if present)
-            shadow_attachments.push_back(fb_attachments.back());
-        } else if (!fb_attachments.empty()) {
-            // Fallback to first attachment if no depth_stencil
-            shadow_attachments.push_back(fb_attachments[0]);
-        }
-
-        // Create framebuffer with depth attachment only
-        framebuffer = MakeFramebuffer(
-            device, render_pass, color ? color->GetScaledWidth() : depth_stencil->GetScaledWidth(),
-            color ? color->GetScaledHeight() : depth_stencil->GetScaledHeight(),
-            shadow_attachments);
+        // For shadow rendering, we don't need a framebuffer with attachments
+        // Just create a dummy render pass for the rendering pipeline
+        render_pass =
+            renderpass_cache.GetRenderpass(PixelFormat::Invalid, PixelFormat::Invalid, false);
+        // Don't create a framebuffer for shadow rendering
+        framebuffer.reset();
     } else {
-        // For normal rendering, create a render pass that matches our attachments
-        render_pass = renderpass_cache.GetRenderpass(
-            color ? formats[0] : PixelFormat::Invalid,
-            depth_stencil ? formats[1] : PixelFormat::Invalid, false);
-        // Create the framebuffer with attachments matching the render pass
-        framebuffer = MakeFramebuffer(device, render_pass, width, height, fb_attachments);
+        render_pass = renderpass_cache.GetRenderpass(formats[0], formats[1], false);
+        framebuffer = MakeFramebuffer(device, render_pass, width, height, attachments);
     }
 }
 
