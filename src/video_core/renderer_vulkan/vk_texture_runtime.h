@@ -163,6 +163,9 @@ public:
     /// Returns a framebuffer handle for rendering to this surface
     vk::Framebuffer Framebuffer() noexcept;
 
+    /// Returns a single-mip-level view suitable for framebuffer attachments
+    vk::ImageView AttachmentView() noexcept;
+
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
 

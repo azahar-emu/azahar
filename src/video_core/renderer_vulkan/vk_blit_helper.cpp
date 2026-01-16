@@ -263,12 +263,6 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
       depth_blit_pipeline{MakeDepthStencilBlitPipeline()},
-      // Texture filtering pipelines
-      bicubic_pipeline{MakeFilterPipeline(bicubic_frag, single_texture_pipeline_layout)},
-      scale_force_pipeline{MakeFilterPipeline(scale_force_frag, single_texture_pipeline_layout)},
-      xbrz_pipeline{MakeFilterPipeline(xbrz_frag, single_texture_pipeline_layout)},
-      mmpx_pipeline{MakeFilterPipeline(mmpx_frag, single_texture_pipeline_layout)},
-      refine_pipeline{MakeFilterPipeline(refine_frag, three_textures_pipeline_layout)},
       linear_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eLinear>)},
       nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {
 
@@ -311,12 +305,6 @@ BlitHelper::~BlitHelper() {
     device.destroyPipeline(depth_to_buffer_pipeline);
     device.destroyPipeline(d24s8_to_rgba8_pipeline);
     device.destroyPipeline(depth_blit_pipeline);
-    // Destroy texture filtering pipelines
-    device.destroyPipeline(bicubic_pipeline);
-    device.destroyPipeline(scale_force_pipeline);
-    device.destroyPipeline(xbrz_pipeline);
-    device.destroyPipeline(mmpx_pipeline);
-    device.destroyPipeline(refine_pipeline);
     device.destroySampler(linear_sampler);
     device.destroySampler(nearest_sampler);
 }
@@ -665,32 +653,54 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
 }
 
 void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit) {
-    FilterPassThreeTextures(surface, surface, surface, surface, refine_pipeline,
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(refine_frag, three_textures_pipeline_layout, color_format);
+    FilterPassThreeTextures(surface, surface, surface, surface, pipeline,
                             three_textures_pipeline_layout, blit);
 }
 
 void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit) {
-    FilterPass(surface, surface, bicubic_pipeline, single_texture_pipeline_layout, blit);
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(bicubic_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
 }
 
 void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit) {
-    FilterPass(surface, surface, scale_force_pipeline, single_texture_pipeline_layout, blit);
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline =
+        MakeFilterPipeline(scale_force_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
 }
 
 void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit) {
-    FilterPass(surface, surface, xbrz_pipeline, single_texture_pipeline_layout, blit);
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(xbrz_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
 }
 
 void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit) {
-    FilterPass(surface, surface, mmpx_pipeline, single_texture_pipeline_layout, blit);
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(mmpx_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
 }
 
 vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
-                                            vk::PipelineLayout layout) {
+                                            vk::PipelineLayout layout,
+                                            VideoCore::PixelFormat color_format) {
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
-    // Use color format for render pass, always a color target
-    const auto renderpass = renderpass_cache.GetRenderpass(VideoCore::PixelFormat::RGBA8,
-                                                           VideoCore::PixelFormat::Invalid, false);
+    // Use the provided color format for render pass compatibility
+    const auto renderpass =
+        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
 
     vk::GraphicsPipelineCreateInfo pipeline_info = {
         .stageCount = static_cast<u32>(stages.size()),
