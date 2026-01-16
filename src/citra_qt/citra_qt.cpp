@@ -1599,6 +1599,7 @@ void GMainWindow::ShutdownGame() {
     secondary_window->ReleaseRenderTarget();
 }
 
+#ifdef ENABLE_DEVELOPER_OPTIONS
 void GMainWindow::StartLaunchStressTest(const QString& game_path) {
     QThreadPool::globalInstance()->start([this, game_path] {
         do {
@@ -1608,6 +1609,7 @@ void GMainWindow::StartLaunchStressTest(const QString& game_path) {
         } while (emulation_running);
     });
 }
+#endif
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
     UISettings::values.recent_files.prepend(filename);

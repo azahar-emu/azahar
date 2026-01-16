@@ -312,7 +312,9 @@ private slots:
 #endif
     void OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
                                std::size_t total);
+#ifdef ENABLE_DEVELOPER_OPTIONS
     void StartLaunchStressTest(const QString& game_path);
+#endif
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
