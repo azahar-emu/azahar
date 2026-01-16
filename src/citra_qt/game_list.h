@@ -107,7 +107,9 @@ signals:
     void AddDirectory();
     void ShowList(bool show);
     void PopulatingCompleted();
+#ifdef ENABLE_DEVELOPER_OPTIONS
     void StartingLaunchStressTest(const QString& game_path);
+#endif
 
 private slots:
     void OnItemExpanded(const QModelIndex& item);
