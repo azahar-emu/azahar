@@ -673,7 +673,8 @@ void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit
     const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
                           surface.type == VideoCore::SurfaceType::DepthStencil;
     const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
-    auto pipeline = MakeFilterPipeline(scale_force_frag, single_texture_pipeline_layout, color_format);
+    auto pipeline =
+        MakeFilterPipeline(scale_force_frag, single_texture_pipeline_layout, color_format);
     FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
 }
 
@@ -698,8 +699,8 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
                                             VideoCore::PixelFormat color_format) {
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
     // Use the provided color format for render pass compatibility
-    const auto renderpass = renderpass_cache.GetRenderpass(color_format,
-                                                           VideoCore::PixelFormat::Invalid, false);
+    const auto renderpass =
+        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
 
     vk::GraphicsPipelineCreateInfo pipeline_info = {
         .stageCount = static_cast<u32>(stages.size()),
