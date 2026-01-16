@@ -519,6 +519,21 @@
     <string name="lock_drawer">Lock Drawer</string>
     <string name="unlock_drawer">Unlock Drawer</string>
 
+    <!-- Hot corner strings -->
+    <string name="hot_corner_settings">Bottom Hot Corners</string>
+    <string name="hot_corner_portrait_bl">Portrait Bottom-Left</string>
+    <string name="hot_corner_portrait_br">Portrait Bottom-Right</string>
+    <string name="hot_corner_landscape_bl">Landscape Bottom-Left</string>
+    <string name="hot_corner_landscape_br">Landscape Bottom-Right</string>
+    <string name="hot_corner_action_none">None</string>
+    <string name="hot_corner_action_pause_resume">Pause/Resume</string>
+    <string name="hot_corner_action_toggle_turbo">Turbo Speed</string>
+    <string name="hot_corner_action_quick_save">Quicksave</string>
+    <string name="hot_corner_action_quick_load">Quickload</string>
+    <string name="hot_corner_action_open_menu">Open Menu</string>
+    <string name="hot_corner_action_swap_screens">Swap Screens</string>
+    <string name="hot_corner_radius">Hot Corner Size</string>
+
     <string name="write_permission_needed">You need to allow write access to external storage for the emulator to work</string>
     <string name="load_settings">Loading Settings…</string>
 
