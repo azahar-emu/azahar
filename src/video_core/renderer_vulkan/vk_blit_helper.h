@@ -5,6 +5,7 @@
 #pragma once
 
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
+#include "video_core/rasterizer_cache/pixel_format.h"
 
 namespace VideoCore {
 struct TextureBlit;
@@ -39,7 +40,8 @@ public:
 private:
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
     vk::Pipeline MakeDepthStencilBlitPipeline();
-    vk::Pipeline MakeFilterPipeline(vk::ShaderModule fragment_shader, vk::PipelineLayout layout);
+    vk::Pipeline MakeFilterPipeline(vk::ShaderModule fragment_shader, vk::PipelineLayout layout,
+                                    VideoCore::PixelFormat color_format = VideoCore::PixelFormat::RGBA8);
 
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
     void FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -90,11 +92,6 @@ private:
     vk::Pipeline d24s8_to_rgba8_pipeline;
     vk::Pipeline depth_to_buffer_pipeline;
     vk::Pipeline depth_blit_pipeline;
-    vk::Pipeline bicubic_pipeline;
-    vk::Pipeline scale_force_pipeline;
-    vk::Pipeline xbrz_pipeline;
-    vk::Pipeline mmpx_pipeline;
-    vk::Pipeline refine_pipeline;
     vk::Sampler linear_sampler;
     vk::Sampler nearest_sampler;
 };
