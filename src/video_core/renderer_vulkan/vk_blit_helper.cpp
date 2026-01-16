@@ -636,7 +636,15 @@ bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
                                                               // and when no filter is selected
     if (filter == Settings::TextureFilter::NoFilter || is_depth) {
         return false;
-    } // Only filter base mipmap level
+    }
+
+    // Filter pipelines are created with RGBA8 format, so only apply filtering to RGBA8 surfaces
+    // to avoid render pass compatibility issues
+    if (surface.pixel_format != VideoCore::PixelFormat::RGBA8) {
+        return false;
+    }
+
+    // Only filter base mipmap level
     if (blit.src_level != 0) {
         return true;
     }
