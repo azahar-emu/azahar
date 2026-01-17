@@ -120,6 +120,11 @@ enum class SystemInfoType {
      */
     KERNEL_SPAWNED_PIDS = 26,
     /**
+     * Check various Luma3DS config values. This parameter is not available on real systems,
+     * but can be used by homebrew applications.
+     */
+    LUMA_CFW_INFO = 0x10000,
+    /**
      * Check if the current system is a new 3DS. This parameter is not available on real systems,
      * but can be used by homebrew applications.
      */
@@ -268,6 +273,13 @@ enum class SystemInfoMemUsageRegion {
     APPLICATION = 1,
     SYSTEM = 2,
     BASE = 3,
+};
+
+enum class SystemInfoLumaCFWInformation {
+    REAL_APP_REGION_SIZE = 0x80, // Gets the real APPLICATION region size,
+                                 // instead of the one reported by the kernel shared page
+                                 // which depends on the memory mode.
+    IS_N3DS = 0x201,             // Checks if the system is a N3DS or not.
 };
 
 /**
@@ -1826,6 +1838,20 @@ Result SVC::GetSystemInfo(s64* out, u32 type, s32 param) {
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
         *out = 5;
+        break;
+    case SystemInfoType::LUMA_CFW_INFO:
+        switch ((SystemInfoLumaCFWInformation)param) {
+        case SystemInfoLumaCFWInformation::REAL_APP_REGION_SIZE:
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->size;
+            break;
+        case SystemInfoLumaCFWInformation::IS_N3DS:
+            *out = Settings::values.is_new_3ds ? 1 : 0;
+            break;
+        default:
+            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0x10000 region: param={}", param);
+            *out = 0;
+            break;
+        }
         break;
     case SystemInfoType::NEW_3DS_INFO:
         // The actual subtypes are not implemented, homebrew just check

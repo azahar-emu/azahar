@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -172,6 +172,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         break;
     case TexturingRegs::FogMode::Gas:
         WriteGas();
+        // Return early due to unimplemented gas mode
         return out;
     default:
         break;
@@ -832,7 +833,10 @@ void FragmentModule::WriteFog() {
 void FragmentModule::WriteGas() {
     // TODO: Implement me
     LOG_CRITICAL(Render, "Unimplemented gas mode");
-    out += "discard; }";
+    // Replace the output color with a transparent pixel,
+    // (just discarding the pixel causes graphical issues
+    // in some MH games).
+    out += "color = vec4(0.0); }";
 }
 
 void FragmentModule::WriteShadow() {

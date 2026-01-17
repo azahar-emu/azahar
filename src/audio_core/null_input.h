@@ -30,11 +30,10 @@ public:
     void AdjustSampleRate(u32 sample_rate) override {}
 
     Samples Read() override {
-        return GenerateSilentSamples(parameters);
+        return {};
     }
 
 private:
-    InputParameters parameters;
     bool is_sampling = false;
 };
 

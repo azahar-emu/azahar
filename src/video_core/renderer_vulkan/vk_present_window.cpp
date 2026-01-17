@@ -105,7 +105,7 @@ PresentWindow::PresentWindow(Frontend::EmuWindow& emu_window_, const Instance& i
       swapchain{instance, emu_window.GetFramebufferLayout().width,
                 emu_window.GetFramebufferLayout().height, surface, low_refresh_rate_},
       graphics_queue{instance.GetGraphicsQueue()}, present_renderpass{CreateRenderpass()},
-      vsync_enabled{Settings::values.use_vsync_new.GetValue()},
+      vsync_enabled{Settings::values.use_vsync.GetValue()},
       blit_supported{
           CanBlitToSwapchain(instance.GetPhysicalDevice(), swapchain.GetSurfaceFormat().format)},
       use_present_thread{Settings::values.async_presentation.GetValue()},
@@ -360,7 +360,7 @@ void PresentWindow::CopyToSwapchain(Frame* frame) {
     };
 
 #ifndef ANDROID
-    const bool use_vsync = Settings::values.use_vsync_new.GetValue();
+    const bool use_vsync = Settings::values.use_vsync.GetValue();
     const bool size_changed =
         swapchain.GetWidth() != frame->width || swapchain.GetHeight() != frame->height;
     const bool vsync_changed = vsync_enabled != use_vsync;

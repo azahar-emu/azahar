@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,6 +6,7 @@
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/binary_object.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
@@ -60,12 +61,14 @@ public:
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer);
 
-    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
-
     void SetInterruptHandler(
         std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler);
 
 private:
+    void Initialize();
+    void Sleep();
+    void Wakeup();
+
     void ResetPipes();
     void WriteU16(DspPipe pipe_number, u16 value);
     void AudioPipeWriteStructAddresses();
@@ -81,7 +84,10 @@ private:
     DspState dsp_state = DspState::Off;
     std::array<std::vector<u8>, num_dsp_pipe> pipe_data{};
 
-    HLE::DspMemory dsp_memory;
+public:
+    HLE::DspMemory* dsp_memory;
+
+private:
     std::array<HLE::Source, HLE::num_sources> sources{{
         HLE::Source(0),  HLE::Source(1),  HLE::Source(2),  HLE::Source(3),  HLE::Source(4),
         HLE::Source(5),  HLE::Source(6),  HLE::Source(7),  HLE::Source(8),  HLE::Source(9),
@@ -90,6 +96,8 @@ private:
         HLE::Source(20), HLE::Source(21), HLE::Source(22), HLE::Source(23),
     }};
     HLE::Mixers mixers{};
+
+    HLE::DspMemory backup_dsp_memory;
 
     DspHle& parent;
     Core::Timing& core_timing;
@@ -101,9 +109,10 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::make_binary_object(backup_dsp_memory.raw_memory.data(),
+                                                     backup_dsp_memory.raw_memory.size());
         ar & dsp_state;
         ar & pipe_data;
-        ar & dsp_memory.raw_memory;
         ar & sources;
         ar & mixers;
         // interrupt_handler is reregistered when loading state from DSP_DSP
@@ -113,7 +122,8 @@ private:
 
 DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory, Core::Timing& timing)
     : parent(parent_), core_timing(timing) {
-    dsp_memory.raw_memory.fill(0);
+    dsp_memory = reinterpret_cast<HLE::DspMemory*>(memory.GetDspMemory(0));
+    dsp_memory->raw_memory.fill(0);
 
     for (auto& source : sources) {
         source.SetMemory(memory);
@@ -216,8 +226,6 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             Sleep = 3,
         };
 
-        // The difference between Initialize and Wakeup is that Input state is maintained
-        // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)
         // Waking up from sleep garbles some of the structs in the memory region. (TODO:
         // Implement this.) Applications store away the state of these structs before
         // sleeping and reset it back after wakeup on behalf of the DSP.
@@ -225,7 +233,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
         switch (static_cast<StateChange>(buffer[0])) {
         case StateChange::Initialize:
             LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
-            ResetPipes();
+            Initialize();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
@@ -235,13 +243,13 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
             break;
         case StateChange::Wakeup:
             LOG_INFO(Audio_DSP, "Application has requested wakeup of DSP hardware");
-            ResetPipes();
+            Wakeup();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
         case StateChange::Sleep:
             LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
-            UNIMPLEMENTED();
+            Sleep();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::Sleeping;
             break;
@@ -284,20 +292,56 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     }
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::Impl::GetDspMemory() {
-    return dsp_memory.raw_memory;
-}
-
 void DspHle::Impl::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
     interrupt_handler = handler;
+}
+
+void DspHle::Impl::Initialize() {
+    // TODO(PabloMK7): This is NOT the right way to do this,
+    // but it is close enough. This makes sure the DSP state
+    // is clean and consistent every time the HW is initialized,
+    // but what is exactly reset needs to be figured out.
+    dsp_memory->raw_memory.fill(0);
+    mixers.Reset();
+    for (auto& s : sources) {
+        s.Reset();
+    }
+    aac_decoder->Reset();
+    ResetPipes();
+}
+
+void DspHle::Impl::Sleep() {
+    // TODO(PabloMK7): This is NOT the right way to do this,
+    // but it is close enough. What state is saved on
+    // real hardware still not figured out.
+    backup_dsp_memory.raw_memory = dsp_memory->raw_memory;
+    mixers.Sleep();
+    for (auto& s : sources) {
+        s.Sleep();
+    }
+    // TODO(PabloMK7): Figure out if we need to save the state
+    // of the AAC decoder, probably not.
+}
+
+void DspHle::Impl::Wakeup() {
+    // TODO(PabloMK7): This is NOT the right way to do this,
+    // but it is close enough. What state is restored on
+    // real hardware still not figured out.
+    dsp_memory->raw_memory = backup_dsp_memory.raw_memory;
+    backup_dsp_memory.raw_memory.fill(0);
+    mixers.Wakeup();
+    for (auto& s : sources) {
+        s.Wakeup();
+    }
+    aac_decoder->Reset();
+    ResetPipes();
 }
 
 void DspHle::Impl::ResetPipes() {
     for (auto& data : pipe_data) {
         data.clear();
     }
-    dsp_state = DspState::Off;
 }
 
 void DspHle::Impl::WriteU16(DspPipe pipe_number, u16 value) {
@@ -343,8 +387,8 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
 size_t DspHle::Impl::CurrentRegionIndex() const {
     // The region with the higher frame counter is chosen unless there is wraparound.
     // This function only returns a 0 or 1.
-    const u16 frame_counter_0 = dsp_memory.region_0.frame_counter;
-    const u16 frame_counter_1 = dsp_memory.region_1.frame_counter;
+    const u16 frame_counter_0 = dsp_memory->region_0.frame_counter;
+    const u16 frame_counter_1 = dsp_memory->region_1.frame_counter;
 
     if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu) {
         // Wraparound has occurred.
@@ -360,11 +404,11 @@ size_t DspHle::Impl::CurrentRegionIndex() const {
 }
 
 HLE::SharedMemory& DspHle::Impl::ReadRegion() {
-    return CurrentRegionIndex() == 0 ? dsp_memory.region_0 : dsp_memory.region_1;
+    return CurrentRegionIndex() == 0 ? dsp_memory->region_0 : dsp_memory->region_1;
 }
 
 HLE::SharedMemory& DspHle::Impl::WriteRegion() {
-    return CurrentRegionIndex() != 0 ? dsp_memory.region_0 : dsp_memory.region_1;
+    return CurrentRegionIndex() != 0 ? dsp_memory->region_0 : dsp_memory->region_1;
 }
 
 StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
@@ -399,15 +443,19 @@ StereoFrame16 DspHle::Impl::GenerateCurrentFrame() {
 }
 
 bool DspHle::Impl::Tick() {
-    StereoFrame16 current_frame = {};
+    bool is_on = GetDspState() == DspState::On;
 
-    // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to
-    // shared memory region)
-    current_frame = GenerateCurrentFrame();
+    if (is_on) {
+        StereoFrame16 current_frame = {};
 
-    parent.OutputFrame(std::move(current_frame));
+        // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing
+        // to shared memory region)
+        current_frame = GenerateCurrentFrame();
 
-    return GetDspState() == DspState::On;
+        parent.OutputFrame(std::move(current_frame));
+    }
+
+    return is_on;
 }
 
 void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
@@ -454,10 +502,6 @@ void DspHle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     impl->PipeWrite(pipe_number, buffer);
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
-    return impl->GetDspMemory();
-}
-
 void DspHle::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
     impl->SetInterruptHandler(handler);
@@ -466,11 +510,13 @@ void DspHle::SetInterruptHandler(
 void DspHle::LoadComponent(std::span<const u8> component_data) {
     // HLE doesn't need DSP program. Only log some info here
     LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
-             Common::ComputeHash64(component_data.data(), component_data.size()));
+             Common::ComputeHash64<Common::HashAlgo64::CityHash>(component_data.data(),
+                                                                 component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
     if (component_data.size() > 0x37C) {
-        LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
-                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+        LOG_INFO(
+            Service_DSP, "Structures hash: {:#018x}",
+            Common::ComputeHash64<Common::HashAlgo64::CityHash>(component_data.data() + 0x340, 60));
     }
 }
 

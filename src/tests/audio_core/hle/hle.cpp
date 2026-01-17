@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,8 +22,7 @@ TEST_CASE("DSP LLE vs HLE", "[audio_core][hle]") {
     Memory::MemorySystem lle_memory{system};
     Core::Timing lle_core_timing(1, 100);
     Kernel::KernelSystem lle_kernel(
-        lle_memory, lle_core_timing, [] {}, Kernel::MemoryMode::Prod, 1,
-        Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});
+        lle_memory, lle_core_timing, [] {}, Kernel::MemoryMode::NewProd, 1);
 
     AudioCore::DspHle hle(system, hle_memory, hle_core_timing);
     AudioCore::DspLle lle(system, lle_memory, lle_core_timing, true);

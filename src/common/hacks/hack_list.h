@@ -14,6 +14,7 @@ enum class HackType : int {
     DECRYPTION_AUTHORIZED,
     ONLINE_LLE_REQUIRED,
     REGION_FROM_SECURE,
+    REQUIRES_SHADER_FIXUP,
 };
 
 class UserHackData {};

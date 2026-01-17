@@ -108,10 +108,6 @@ Samples OpenALInput::Read() {
         return {};
     }
 
-    if (samples.empty()) {
-        samples = GenerateSilentSamples(parameters);
-    }
-
     return samples;
 }
 

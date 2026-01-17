@@ -313,6 +313,8 @@ void ConfigureSystem::SetConfiguration() {
         ui->region_combobox->setCurrentIndex(Settings::values.region_value.GetValue() + 1);
     }
 
+    ui->apply_region_free_patch->setChecked(Settings::values.apply_region_free_patch.GetValue());
+
     ui->combo_init_clock->setCurrentIndex(static_cast<u8>(Settings::values.init_clock.GetValue()));
     QDateTime date_time;
     date_time.setSecsSinceEpoch(Settings::values.init_time.GetValue());
@@ -488,6 +490,7 @@ void ConfigureSystem::ApplyConfiguration() {
         Settings::values.lle_applets = ui->toggle_lle_applets->isChecked();
         Settings::values.enable_required_online_lle_modules =
             ui->enable_required_online_lle_modules->isChecked();
+        Settings::values.apply_region_free_patch.SetValue(ui->apply_region_free_patch->isChecked());
 
         Settings::values.plugin_loader_enabled.SetValue(ui->plugin_loader->isChecked());
         Settings::values.allow_plugin_loader.SetValue(ui->allow_plugin_loader->isChecked());
@@ -710,6 +713,7 @@ void ConfigureSystem::SetupPerGameUI() {
     }
 
     // Hide most settings for now, we can implement them later
+    ui->apply_region_free_patch->setVisible(false);
     ui->label_username->setVisible(false);
     ui->label_birthday->setVisible(false);
     ui->label_init_clock->setVisible(false);

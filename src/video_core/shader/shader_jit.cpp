@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,6 +26,7 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.entry_point = entry_point;
 
+    setup.DoProgramCodeFixup();
     const u64 code_hash = setup.GetProgramCodeHash();
     const u64 swizzle_hash = setup.GetSwizzleDataHash();
 
@@ -35,7 +36,7 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
         setup.cached_shader = iter->second.get();
     } else {
         auto shader = std::make_unique<JitShader>();
-        shader->Compile(&setup.program_code, &setup.swizzle_data);
+        shader->Compile(&setup.GetProgramCode(), &setup.GetSwizzleData());
         setup.cached_shader = shader.get();
         cache.emplace_hint(iter, cache_key, std::move(shader));
     }

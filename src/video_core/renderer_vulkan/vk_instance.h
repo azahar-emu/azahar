@@ -231,7 +231,7 @@ public:
     }
 
     /// Returns the maximum supported elements in a texel buffer
-    u32 MaxTexelBufferElements() const {
+    u64 MaxTexelBufferElements() const {
         return properties.limits.maxTexelBufferElements;
     }
 

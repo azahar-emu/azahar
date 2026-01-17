@@ -64,3 +64,36 @@ enum class SecondaryDisplayLayout(val int: Int) {
         }
     }
 }
+
+enum class StereoWhichDisplay(val int: Int) {
+    // These must match what is defined in src/common/settings.h
+
+    NONE(0), // equivalent to StereoRenderOption = Off
+    BOTH(1),
+    PRIMARY_ONLY(2),
+    SECONDARY_ONLY(3);
+
+    companion object {
+        fun from(int: Int): StereoWhichDisplay {
+            return entries.firstOrNull { it.int == int } ?: NONE
+        }
+    }
+}
+
+enum class StereoMode(val int: Int) {
+     // These must match what is defined in src/common/settings.h
+
+    OFF(0),
+    SIDE_BY_SIDE(1),
+    SIDE_BY_SIDE_FULL(2),
+    ANAGLYPH(3),
+    INTERLACED(4),
+    REVERSE_INTERLACED (5),
+    CARDBOARD_VR (6);
+
+    companion object {
+        fun from(int: Int): StereoMode {
+            return entries.firstOrNull { it.int == int } ?: OFF
+        }
+    }
+}

@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -137,6 +137,8 @@ class DecoderBase {
 public:
     virtual ~DecoderBase() = default;
     virtual BinaryMessage ProcessRequest(const BinaryMessage& request) = 0;
+
+    virtual void Reset() = 0;
 };
 
 } // namespace AudioCore::HLE

@@ -161,7 +161,7 @@ void Swapchain::FindPresentFormat() {
 
 void Swapchain::SetPresentMode() {
     const auto modes = instance.GetPhysicalDevice().getSurfacePresentModesKHR(surface);
-    const bool use_vsync = Settings::values.use_vsync_new.GetValue();
+    const bool use_vsync = Settings::values.use_vsync.GetValue();
     const auto find_mode = [&modes](vk::PresentModeKHR requested) {
         const auto it =
             std::find_if(modes.begin(), modes.end(),

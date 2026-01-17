@@ -58,7 +58,7 @@ AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
         {0x0401, nullptr, "UpdateFirmwareTo"},
         {0x0402, &AM_NET::BeginImportProgram, "BeginImportProgram"},
         {0x0403, &AM_NET::BeginImportProgramTemporarily, "BeginImportProgramTemporarily"},
-        {0x0404, nullptr, "CancelImportProgram"},
+        {0x0404, &AM_NET::CancelImportProgram, "CancelImportProgram"},
         {0x0405, &AM_NET::EndImportProgram, "EndImportProgram"},
         {0x0406, &AM_NET::EndImportProgramWithoutCommit, "EndImportProgramWithoutCommit"},
         {0x0407, &AM_NET::CommitImportPrograms, "CommitImportPrograms"},

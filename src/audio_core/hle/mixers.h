@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,6 +19,9 @@ public:
 
     void Reset();
 
+    void Sleep();
+    void Wakeup();
+
     DspStatus Tick(DspConfiguration& config, const IntermediateMixSamples& read_samples,
                    IntermediateMixSamples& write_samples, const std::array<QuadFrame32, 3>& input);
 
@@ -28,10 +31,11 @@ public:
 
 private:
     StereoFrame16 current_frame = {};
+    StereoFrame16 backup_frame = {}; // TODO(PabloMK7): Check if we actually need this
 
     using OutputFormat = DspConfiguration::OutputFormat;
 
-    struct {
+    struct MixerState {
         std::array<float, 3> intermediate_mixer_volume = {};
 
         std::array<bool, 2> aux_bus_enable = {};
@@ -39,7 +43,17 @@ private:
 
         OutputFormat output_format = OutputFormat::Stereo;
 
-    } state;
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & intermediate_mixer_volume;
+            ar & aux_bus_enable;
+            ar & intermediate_mix_buffer;
+            ar & output_format;
+        }
+    };
+
+    MixerState state;
+    MixerState backup_state;
 
     /// INTERNAL: Update our internal state based on the current config.
     void ParseConfig(DspConfiguration& config);
@@ -58,10 +72,9 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & current_frame;
-        ar & state.intermediate_mixer_volume;
-        ar & state.aux_bus_enable;
-        ar & state.intermediate_mix_buffer;
-        ar & state.output_format;
+        ar & backup_frame;
+        ar & state;
+        ar & backup_state;
     }
     friend class boost::serialization::access;
 };

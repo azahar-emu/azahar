@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -51,6 +51,7 @@ enum class ArchiveIdCode : u32 {
 /// Media types for the archives
 enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
+bool IsInstalledApplication(std::string_view path);
 MediaType GetMediaTypeFromPath(std::string_view path);
 
 enum class SpecialContentType : u8 {

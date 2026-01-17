@@ -56,7 +56,7 @@ public:
 
 private:
     void InitOpenGLObjects();
-    void ReloadShader();
+    void ReloadShader(Settings::StereoRenderOption render_3d);
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
@@ -65,8 +65,8 @@ private:
                                      const Pica::FramebufferConfig& framebuffer,
                                      const Pica::ColorFill& color_fill);
     void DrawScreens(const Layout::FramebufferLayout& layout, bool flipped);
-    void ApplySecondLayerOpacity(bool isPortrait = false);
-    void ResetSecondLayerOpacity(bool isPortrait = false);
+    void ApplySecondLayerOpacity(float opacity = 1.0f);
+    void ResetSecondLayerOpacity();
     void DrawBottomScreen(const Layout::FramebufferLayout& layout,
                           const Common::Rectangle<u32>& bottom_screen);
     void DrawTopScreen(const Layout::FramebufferLayout& layout,

@@ -122,8 +122,6 @@
     <string name="input_dialog_description">Drücke eine Taste, oder bewege einen Stick</string>
     <string name="input_binding">Eingabeverknüpfung</string>
     <string name="input_binding_description">Drücke eine Taste, oder bewege einen Stick, um diesen als %1$s einzustellen.</string>
-    <string name="input_binding_description_vertical_axis">Bewege den Joystick nach oben oder unten.</string>
-    <string name="input_binding_description_horizontal_axis">Bewegen den Joystick nach links oder rechts.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Bildschirme tauschen</string>
     <string name="button_turbo">Turbo</string>
@@ -193,6 +191,10 @@
     <string name="region_mismatch">Region passt nicht überein</string>
     <string name="region_mismatch_emulated">Die Ländereinstellung ist für die ausgewählte emulierte Region nicht gültig.</string>
     <string name="region_mismatch_console">Die Ländereinstellung ist für die gekoppelte Konsole ungültig.</string>
+    <string name="storage">Speicher</string>
+    <string name="compress_cia_installs">Komprimiere installierten CIA Kontent</string>
+    <string name="compress_cia_installs_description">Komprimiert den Inhalt von CIA-Dateien, wenn diese auf der emulierten SD-Karte installiert werden. Betrifft nur CIA-Inhalte, die installiert werden, während die Einstellung aktiviert ist.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -213,20 +215,17 @@
     <string name="spirv_shader_gen_description">Gibt den Fragment-Shader aus, der zur Emulation von PICA unter Verwendung von SPIR-V statt GLSL verwendet wird.</string>
     <string name="disable_spirv_optimizer">SPIR-V Optimierer deaktivieren</string>
     <string name="disable_spirv_optimizer_description">Deaktiviert den SPIR-V Optimierungsschritt, was stottern reduziert und die Leistung nur geringfügig beeinflusst.</string>
-    <string name="async_shaders">Asynchrone GPU-Emulation aktivieren</string>
     <string name="async_shaders_description">Kompiliere Shader im Hintergrund, um das Stottern des Spiels zu reduzieren. Dadurch kann es zu temporären grafischen Fehlern während des Spielens kommen.</string>
     <string name="linear_filtering">Lineare Filterung</string>
     <string name="linear_filtering_description">Aktiviert lineare Filterung, welche die Spieltexturen glättet.</string>
     <string name="texture_filter_name">Texturfilter</string>
     <string name="texture_filter_description">Verbessert die Optik von Anwendungen durch Anwenden eines Filters auf Texturen. Die unterstützten Filter sind Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale und MMPX.</string>
-    <string name="delay_render_thread">Game-Render-Thread verzögern</string>
     <string name="delay_render_thread_description">Verzögert den Render-Thread des Spiels, wenn er Daten an die GPU sendet. Hilft bei Leistungsproblemen in den (sehr wenigen) Anwendungen mit dynamischen Frameraten.</string>
     <string name="advanced">Erweitert</string>
     <string name="texture_sampling_name">Textur-Sampling</string>
     <string name="texture_sampling_description">Setzt den von Spielen verwendeten Sampling-Filter außer Kraft. Dies kann in bestimmten Fällen nützlich sein, wenn sich die Spiele beim Hochskalieren schlecht verhalten. Wenn du dir unsicher bist, setze diese Einstellung auf „Spielgesteuert“</string>
     <string name="shaders_accurate_mul">Genaue Multiplikation</string>
     <string name="shaders_accurate_mul_description">Benutzt genauere Multiplikation in Hardware-Shadern, welche einige Grafikbugs fixen kann. Wenn aktiviert, ist die Leistung reduziert.</string>
-    <string name="asynchronous_gpu">Asynchrone GPU-Emulation aktivieren</string>
     <string name="asynchronous_gpu_description">Verwendet einen separaten Thread, um die GPU asynchron zu emulieren. Wenn aktiviert, wird die Leistung verbessert.</string>
     <string name="frame_limit_enable">Höchstgeschwindigkeit</string>
     <string name="frame_limit_enable_description">Wenn aktiviert, wird die Emulationsgeschwindigkeit auf einen angegebenen Prozentsatz der normalen Geschwindigkeit begrenzt.  Wenn diese Option deaktiviert ist, wird die Emulationsgeschwindigkeit nicht begrenzt und der Hotkey für die Turbogeschwindigkeit funktioniert nicht.</string>
@@ -281,7 +280,6 @@
     <string name="audio_volume">Lautstärke</string>
     <string name="audio_stretch">Audiodehnung</string>
     <string name="audio_stretch_description">Dehnt Audio, um Stottern zu reduzieren. Wenn aktiviert, wird die Audiolatenz erhöht und die Leistung leicht verschlechtert.</string>
-    <string name="realtime_audio">Echtzeitaudio aktivieren</string>
     <string name="realtime_audio_description">Skaliert die Tonabspielgeschwindigkeit, um Einbrüche in der Emulationsframerate zu minimieren. Das bedeutet, dass der Ton in voller Geschwindigkeit abspielt, selbst wenn die Framerate des Spiels niedrig ist. Kann zu Tonverschiebungen führen.</string>
     <string name="audio_input_type">Audioeingabegerät</string>
     <string name="sound_output_mode">Tonausgabemodus</string>
@@ -293,12 +291,9 @@
     <string name="hw_shaders_description">Benutzt Hardware, um die 3DS-Shader zu emulieren. Wenn aktiviert, wird die Spielleistung stark verbessert.</string>
     <string name="cpu_clock_speed">CPU-Takt-Rate</string>
     <string name="vsync">V-Sync aktivieren</string>
-    <string name="vsync_description">Synchronisiert die Bildrate des Spiels mit der Bildwiederholrate des Geräts.</string>
     <string name="renderer_debug">Debug-Renderer</string>
     <string name="renderer_debug_description">Zusätzliche grafisch spezifische Debuginformationen werden protokolliert. Wenn dies aktiviert ist, ist die Leistung des Spiels minimal reduziert.</string>
-    <string name="instant_debug_log">Protokollausgabe bei jeder Nachricht</string>
     <string name="instant_debug_log_description">Überträgt das Debugprotokoll sofort in eine Datei. Verwenden Sie dies, wenn Azahar abstürzt und die Protokollausgabe abgeschnitten wird.</string>
-    <string name="delay_start_lle_modules">Start mit LLE-Module verzögern</string>
     <string name="delay_start_lle_modules_description">Verzögert den Start der App, wenn die LLE-Module aktiviert sind.</string>
     <string name="deterministic_async_operations">Deterministische asynchrone Operationen</string>
     <string name="deterministic_async_operations_description">Asynchrone Operationen werden für Debug-Zwecke deterministisch. Die Aktivierung dieser Funktion kann zum Einfrieren führen.</string>
@@ -511,7 +506,6 @@
     <string name="fatal_error">Schwerwiegender Fehler</string>
     <string name="fatal_error_message">Es ist ein schwerwiegender Fehler aufgetreten. Weitere Informationen findest du in der Protokolldatei.\nDas Fortfahren könnte zu ungewollten Abstürzen oder Problemen führen.</string>
     <string name="unsupported_encrypted">Nicht unterstützte verschlüsselte Anwendung</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
     <string name="building_shaders">Shader werden erstellt</string>
@@ -540,29 +534,6 @@
     <string name="performance_overlay_options">Leistungs-Overlay</string>
     <string name="performance_overlay_enable">Leistungsoverlay aktivieren</string>
     <string name="performance_overlay_options_description">Konfigurieren Sie, ob das Leistungs-Overlay angezeigt wird und welche Informationen angezeigt werden.</string>
-    <string name="overlay_show_fps">FPS anzeigen</string>
-    <string name="overlay_show_fps_description">Aktuelle Bilder pro Sekunde anzeigen.</string>
-    <string name="overlay_show_frametime">Frametime anzeigen</string>
-    <string name="overlay_show_frametime_description">Aktuelle Frametime anzeigen.</string>
-    <string name="overlay_show_speed">Geschwindigkeit anzeigen</string>
-    <string name="overlay_show_speed_description">Zeigt die aktuelle Emulationsgeschwindigkeit in Prozent an.</string>
-    <string name="overlay_show_app_ram_usage">App-Speichernutzung anzeigen</string>
-    <string name="overlay_show_app_ram_usage_description">Zeigt die vom Emulator verwendete RAM-Menge an.</string>
-    <string name="overlay_show_available_ram">Verfügbaren Speicher anzeigen</string>
-    <string name="overlay_show_available_ram_description">Zeigt die verfügbare RAM-Menge an.</string>
-    <string name="overlay_show_battery_temp">Batterietemperatur anzeigen</string>
-    <string name="overlay_show_battery_temp_description">Zeigt die aktuelle Batterietemperatur in Celsius und Fahrenheit an.</string>
-    <string name="overlay_position">Overlay-Position</string>
-    <string name="overlay_position_description">Wählen Sie, wo das Leistungs-Overlay auf dem Bildschirm angezeigt wird</string>
-    <string name="overlay_position_top_left">Links Oben</string>
-    <string name="overlay_position_top_right">Rechts Oben</string>
-    <string name="overlay_position_bottom_left">Links Unten</string>
-    <string name="overlay_position_bottom_right">Rechts Unten</string>
-    <string name="overlay_position_center_top">Oben Mittig</string>
-    <string name="overlay_position_center_bottom">Unten Mittig</string>
-    <string name="overlay_background">Overlay Hintergrund</string>
-    <string name="overlay_background_description">Fügt einen Hintergrund hinter dem Overlay hinzu für bessere Lesbarkeit.</string>
-
     <!-- Cheats -->
     <string name="cheats">Cheats</string>
     <string name="cheats_add">Cheat hinzufügen</string>
@@ -665,7 +636,6 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Nebeneinander</string>
-    <string name="reverse_side_by_side">Invers Nebeneinander</string>
     <string name="anaglyph">Anaglyphen</string>
     <string name="interlaced">Überlappend</string>
     <string name="reverse_interlaced">Invers überlappend</string>
@@ -854,4 +824,4 @@
     <string name="emulation_occupied_quicksave_slot">Schnellspeichern - %1$tF %1$tR</string>
     <string name="quickload_not_found">Kein Schnellspeicher vorhanden.</string>
 
-</resources>
+    </resources>

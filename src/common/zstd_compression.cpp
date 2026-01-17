@@ -12,7 +12,7 @@
 #include <mutex>
 #include <sstream>
 #include <zstd.h>
-#include <zstd/contrib/seekable_format/zstd_seekable.h>
+#include <zstd_seekable.h>
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/unique_ptr.hpp>

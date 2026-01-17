@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -508,11 +508,13 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, const void* ve
     info.Clear();
 
     auto& pica = system.GPU().PicaCore();
-    for (auto instr : pica.vs_setup.program_code)
+    const auto& program_code = pica.vs_setup.GetProgramCode();
+    const auto& swizzle_data = pica.vs_setup.GetSwizzleData();
+    for (auto instr : program_code)
         info.code.push_back({instr});
     int num_attributes = pica.regs.internal.vs.max_input_attribute_index + 1;
 
-    for (auto pattern : pica.vs_setup.swizzle_data) {
+    for (auto pattern : swizzle_data) {
         const nihstro::SwizzleInfo swizzle_info = {.pattern = nihstro::SwizzlePattern{pattern}};
         info.swizzle_info.push_back(swizzle_info);
     }

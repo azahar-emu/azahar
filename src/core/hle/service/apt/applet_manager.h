@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -118,6 +118,8 @@ enum class ApplicationRunningMode : u8 {
     New3dsUnregistered = 4,
 };
 
+constexpr std::size_t SysMenuArgSize = 0x40;
+
 /// Holds information about the parameters used in Send/Glance/ReceiveParameter
 struct MessageParameter {
     AppletId sender_id = AppletId::None;
@@ -179,6 +181,8 @@ private:
     }
     friend class boost::serialization::access;
 };
+
+using SysMenuArg = std::array<u8, SysMenuArgSize>;
 
 struct ApplicationJumpParameters {
     u64 next_title_id;
@@ -322,6 +326,16 @@ public:
     Result PrepareToLeaveHomeMenu();
     Result LeaveHomeMenu(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
 
+    Result LoadSysMenuArg(std::vector<u8>& buffer);
+    Result StoreSysMenuArg(const std::vector<u8>& buffer);
+
+    boost::optional<SysMenuArg> GetSysMenuArg() {
+        return sys_menu_arg;
+    }
+    void SetSysMenuArg(const SysMenuArg& arg) {
+        sys_menu_arg = arg;
+    }
+
     Result OrderToCloseApplication();
     Result PrepareToCloseApplication(bool return_to_sys);
     Result CloseApplication(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
@@ -376,6 +390,9 @@ public:
     Result WakeupApplication(std::shared_ptr<Kernel::Object> object, const std::vector<u8>& buffer);
     Result CancelApplication();
 
+    Result PrepareToStartNewestHomeMenu();
+    Result StartNewestHomeMenu();
+
     struct AppletManInfo {
         AppletPos active_applet_pos;
         AppletId requested_applet_id;
@@ -417,6 +434,8 @@ private:
     ApplicationJumpParameters app_jump_parameters{};
     boost::optional<ApplicationStartParameters> app_start_parameters{};
     boost::optional<DeliverArg> deliver_arg{};
+    boost::optional<SysMenuArg> sys_menu_arg{};
+    u64 home_menu_tid_to_start{};
 
     boost::optional<CaptureBufferInfo> capture_info;
     boost::optional<CaptureBufferInfo> capture_buffer_info;
@@ -437,6 +456,7 @@ private:
         AppletId applet_id;
         AppletSlot slot;
         u64 title_id;
+        FS::MediaType media_type;
         bool registered;
         bool loaded;
         AppletAttributes attributes;
@@ -457,6 +477,7 @@ private:
             ar & applet_id;
             ar & slot;
             ar & title_id;
+            ar & media_type;
             ar & registered;
             ar & loaded;
             ar & attributes.raw;
@@ -495,6 +516,8 @@ private:
     bool last_home_button_state = false;
     bool last_power_button_state = false;
 
+    FS::MediaType next_app_mediatype = static_cast<FS::MediaType>(UINT32_MAX);
+
     Core::System& system;
 
     AppletSlotData* GetAppletSlot(AppletSlot slot) {
@@ -532,6 +555,8 @@ private:
         ar & delayed_parameter;
         ar & app_start_parameters;
         ar & deliver_arg;
+        ar & sys_menu_arg;
+        ar & home_menu_tid_to_start;
         ar & capture_info;
         ar & capture_buffer_info;
         ar & active_slot;
@@ -548,6 +573,7 @@ private:
         ar & capture_info;
         ar & applet_slots;
         ar & library_applet_closing_command;
+        ar & next_app_mediatype;
 
         if (Archive::is_loading::value) {
             LoadInputDevices();

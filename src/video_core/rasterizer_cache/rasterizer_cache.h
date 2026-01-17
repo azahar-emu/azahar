@@ -1053,9 +1053,10 @@ u64 RasterizerCache<T>::ComputeHash(const SurfaceParams& load_info, std::span<u8
         const u32 bpp = GetFormatBytesPerPixel(load_info.pixel_format);
         auto decoded = std::vector<u8>(width * height * bpp);
         DecodeTexture(load_info, load_info.addr, load_info.end, upload_data, decoded, false);
-        return Common::ComputeHash64(decoded.data(), decoded.size());
+        return Common::ComputeHash64<Common::HashAlgo64::CityHash>(decoded.data(), decoded.size());
     } else {
-        return Common::ComputeHash64(upload_data.data(), upload_data.size());
+        return Common::ComputeHash64<Common::HashAlgo64::CityHash>(upload_data.data(),
+                                                                   upload_data.size());
     }
 }
 

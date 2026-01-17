@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,9 +23,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     Core::Timing timing(1, 100);
     Core::System system;
     Memory::MemorySystem memory{system};
-    Kernel::KernelSystem kernel(
-        memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
-        Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});
+    Kernel::KernelSystem kernel(memory, timing, [] {}, Kernel::MemoryMode::NewProd, 1);
     auto [server, client] = kernel.CreateSessionPair();
     HLERequestContext context(kernel, std::move(server), nullptr);
 
@@ -256,9 +254,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     Core::Timing timing(1, 100);
     Core::System system;
     Memory::MemorySystem memory{system};
-    Kernel::KernelSystem kernel(
-        memory, timing, [] {}, Kernel::MemoryMode::Prod, 1,
-        Kernel::New3dsHwCapabilities{false, false, Kernel::New3dsMemoryMode::Legacy});
+    Kernel::KernelSystem kernel(memory, timing, [] {}, Kernel::MemoryMode::NewProd, 1);
     auto [server, client] = kernel.CreateSessionPair();
     HLERequestContext context(kernel, std::move(server), nullptr);
 

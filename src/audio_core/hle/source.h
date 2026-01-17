@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,9 @@ public:
     /// Resets internal state.
     void Reset();
 
+    void Sleep();
+    void Wakeup();
+
     /// Sets the memory system to read data from
     void SetMemory(Memory::MemorySystem& memory);
 
@@ -68,6 +71,7 @@ private:
     const std::size_t source_id;
     Memory::MemorySystem* memory_system{};
     StereoFrame16 current_frame;
+    StereoFrame16 backup_frame; // TODO(PabloMK7): Check if we actually need this
 
     using Format = SourceConfiguration::Configuration::Format;
     using InterpolationMode = SourceConfiguration::Configuration::InterpolationMode;
@@ -116,7 +120,7 @@ private:
         }
     };
 
-    struct {
+    struct SourceState {
 
         // State variables
 
@@ -179,8 +183,10 @@ private:
             ar & interpolation_mode;
         }
         friend class boost::serialization::access;
+    };
 
-    } state;
+    SourceState state;
+    SourceState backup_state;
 
     // Internal functions
 
@@ -197,6 +203,9 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & state;
+        ar & backup_state;
+        ar & current_frame;
+        ar & backup_frame;
     }
     friend class boost::serialization::access;
 };

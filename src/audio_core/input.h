@@ -53,22 +53,6 @@ public:
      */
     virtual Samples Read() = 0;
 
-    /**
-     * Generates a buffer of silence.
-     * Takes into account the sample size and signedness of the input.
-     */
-    virtual Samples GenerateSilentSamples(const InputParameters& params) {
-        u8 silent_value = 0x00;
-
-        if (params.sample_size == 8) {
-            silent_value = params.sign == Signedness::Unsigned ? 0x80 : 0x00;
-            return std::vector<u8>(32, silent_value);
-        } else {
-            silent_value = params.sign == Signedness::Unsigned ? 0x80 : 0x00;
-            return std::vector<u8>(64, silent_value);
-        }
-    }
-
 protected:
     InputParameters parameters;
 };

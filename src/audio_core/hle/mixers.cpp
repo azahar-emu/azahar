@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,6 +13,18 @@ namespace AudioCore::HLE {
 void Mixers::Reset() {
     current_frame.fill({});
     state = {};
+}
+
+void Mixers::Sleep() {
+    backup_state = state;
+    backup_frame = current_frame;
+}
+
+void Mixers::Wakeup() {
+    state = backup_state;
+    current_frame = backup_frame;
+    backup_state = {};
+    backup_frame.fill({});
 }
 
 DspStatus Mixers::Tick(DspConfiguration& config, const IntermediateMixSamples& read_samples,

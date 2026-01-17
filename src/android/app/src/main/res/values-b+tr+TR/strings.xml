@@ -74,6 +74,9 @@
     <string name="permission_denied">İzin reddedildi</string>
     <string name="add_games_warning">Uygulama dosyasını seçmeyi atla?</string>
     <string name="add_games_warning_description">Eğer bir dosya seçili değilse yazılımlar uygulama listesinde görünmeyecektir.</string>
+    <string name="permissions">İzinler</string>
+    <string name="select_emulator_data_folders">Veri Klasörleri</string>
+    <string name="permissions_description">Emülatörün belirli özelliklerini kullanmak için isteğe bağlı izinler verin</string>
     <string name="warning_help">Yardım</string>
     <string name="warning_skip">Atla</string>
     <string name="warning_cancel">İptal et</string>
@@ -83,6 +86,7 @@
     <string name="keep_current_azahar_directory">Şimdiki Azahar Dizinini Koru</string>
     <string name="use_prior_lime3ds_directory">Eski Lime3DS Dizinini Kullan</string>
     <string name="select">Seç</string>
+    <string name="cannot_skip">Kullanıcı klasörü ayarlamayı atlayamazsınız</string>
     <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
     <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
@@ -117,8 +121,6 @@
     <string name="input_dialog_description">Bir girdiye basın veya hareket ettirin.</string>
     <string name="input_binding">Girdi Ataması</string>
     <string name="input_binding_description">Bir girdiyi %1$s e atamak için basın veya hareket ettirin.</string>
-    <string name="input_binding_description_vertical_axis">Joystick\'inizi yukarı veya aşağı kaydırın.</string>
-    <string name="input_binding_description_horizontal_axis">Joystick\'inizi sağa veya sola kaydırın.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Ekranları değiştir</string>
     <string name="button_turbo">Turbo</string>
@@ -185,6 +187,7 @@
     <string name="region_mismatch">Bölge Uyuşmazlık Uyarısı</string>
     <string name="region_mismatch_emulated">Ülke ayarı emülasyon bölgesi için geçerli değil.</string>
     <string name="region_mismatch_console">Ülke ayarı bağlı olan konsol için geçerli değil.</string>
+    <string name="storage">Depolama</string>
     <!-- Camera settings strings -->
     <string name="inner_camera"> 
 İç Kamera</string>
@@ -196,23 +199,24 @@
     <string name="camera_device_description">“Görüntü Kaynağı” ayarı ‘Cihaz Kamerası’ olarak ayarlanmışsa, bu ayar kullanılacak fiziksel kamerayı ayarlar.</string>
     <string name="camera_facing_front">Ön</string>
     <string name="camera_facing_back">Geri</string>
+    <string name="camera_facing_external">Harici</string>
+    <string name="image_flip">Çevir</string>
+
     <!-- Graphics settings strings -->
     <string name="renderer">İşleyici</string>
     <string name="graphics_api">Grafik API\'ı</string>
     <string name="spirv_shader_gen">SPIR-V gölgelendirici oluşturmayı etkinleştir</string>
-    <string name="async_shaders">Asenkron gölgeleme derlemesini etkinleştir</string>
     <string name="async_shaders_description">Oyun sırasında takılmayı azaltmak için gölgelendiricileri arka planda derler. Etkinleştirildiğinde geçici grafik hataları meydana gelebilir.</string>
     <string name="linear_filtering">Doğrusal filtreleme</string>
     <string name="linear_filtering_description">Oyun görsellerinin daha pürüzsüz görünmesini sağlayan doğrusal filtrelemeyi etkinleştirir.</string>
     <string name="texture_filter_name">Doku Filtresi</string>
     <string name="texture_filter_description">Dokulara bir filtre uygulayarak uygulamaların görsellerini geliştirir. Desteklenen filtreler Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale ve MMPX\'tir.</string>
-    <string name="delay_render_thread">Oyun işleme iş parçacığını geciktir</string>
     <string name="delay_render_thread_description">GPU\'ya veri gönderirken oyun işleme iş parçacığını geciktirin. Dinamik kare hızlarına sahip (çok az sayıda) uygulamada performans sorunlarına yardımcı olur.</string>
+    <string name="advanced">Gelişmiş</string>
     <string name="texture_sampling_name">Doku Örnekleme</string>
     <string name="texture_sampling_description">Uygulamalar tarafından kullanılan örnekleme filtresini geçersiz kılar. Bu, görüntü yükseltme sırasında hatalı davranan uygulamaların olduğu bazı durumlarda faydalı olabilir. Emin değilseniz, bunu Uygulama Kontrollü olarak ayarlayın.</string>
     <string name="shaders_accurate_mul">İsabetli Çoğaltma</string>
     <string name="shaders_accurate_mul_description">Donanım gölgelendiricilerinde daha doğru çarpım kullanır, bu da bazı grafik hatalarını düzeltebilir. Etkinleştirildiğinde performans düşecektir.</string>
-    <string name="asynchronous_gpu">Asenkron GPU emülasyonunu etkinleştir</string>
     <string name="asynchronous_gpu_description">GPU emülasyonunu asenkron olarak yapmak için ayrı bir iş parçacığı kullanır. Etkinleştirildiğinde performans artacaktır.</string>
     <string name="frame_limit_enable">Hızı Sınırlandır</string>
     <string name="frame_limit_enable_description">Etkinleştirildiğinde, emülasyon hızı normal hızın belirli bir yüzdesiyle sınırlandırılır. Devre dışı bırakılırsa, emülasyon hızı sınırlandırılmaz ve turbo hız kısayol tuşu çalışmaz.</string>
@@ -220,6 +224,7 @@
     <string name="frame_limit_slider_description">Emülasyon hızını sınırlamak için yüzdeyi belirtir. Varsayılan değer olan %100 ile emülasyon normal hız ile sınırlandırılacaktır. Daha yüksek veya daha düşük değerler hız sınırını artıracak veya azaltacaktır Etkinleştirildiğinde, emülasyon hızı normal hızın belirli bir yüzdesiyle sınırlandırılacaktır. Devre dışı bırakılırsa, emülasyon hızı sınırlandırılmaz ve turbo hız kısayol tuşu çalışmaz.</string>
     <string name="turbo_limit">Turbo Hız Limiti</string>
     <string name="turbo_limit_description">Turbo kısayolu aktfiken kullanılan emülasyon hız limiti.</string>
+    <string name="expand_to_cutout_area">Kesme Alanına Genişlet</string>
     <string name="internal_resolution">İç Çözünürlük</string>
     <string name="internal_resolution_description">Render için kullanılan çözünürlüğü belirtir. Yüksek çözünürlük görsel kaliteyi çok artıracaktır ancak performans açısından da oldukça ağırdır ve bazı uygulamalarda aksaklıklara neden olabilir.</string>
     <string name="internal_resolution_setting_auto">Otomatik (Ekran Boyutu)</string>
@@ -259,7 +264,7 @@
     <string name="audio_volume">Ses düzeyi</string>
     <string name="audio_stretch">Ses Gerdirme</string>
     <string name="audio_stretch_description">Takılmayı azaltmak için sesi esnetir. Etkinleştirildiğinde, ses gecikmesini artırır ve performansı biraz düşürür.</string>
-    <string name="realtime_audio">Gerçek zamanlı sesi etkinleştir</string>
+    <string name="realtime_audio">Gerçek Zamanlı Sesi Etkinleştir</string>
     <string name="realtime_audio_description">Emülasyon kare hızındaki düşüşleri hesaba katmak için ses çalma hızını ölçeklendirir. Bu, oyun kare hızı düşük olsa bile sesin tam hızda çalınacağı anlamına gelir. Ses senkronizasyon sorunlarına neden olabilir.</string>
     <string name="audio_input_type">Ses Giriş Cihazı</string>
     <string name="sound_output_mode">Ses Çıkış Modu</string>
@@ -271,15 +276,13 @@
     <string name="hw_shaders_description">3DS shader\'larının emülasyonu için donanımı kullanır. Etkinleştirildiğinde oyun performansı önemli ölçüde artacaktır.</string>
     <string name="cpu_clock_speed">CPU Saat Hızı</string>
     <string name="vsync">V-Sync\'i Etkinleştir</string>
-    <string name="vsync_description">Oyun kare hızını cihazınızın yenileme hızına senkronize eder.</string>
     <string name="renderer_debug">Hata Ayıklama İşleyicisi</string>
     <string name="renderer_debug_description">Grafiklerle ilgili ek hata ayıklama bilgilerini günlüğe kaydedin. Etkinleştirildiğinde, oyun performansı önemli ölçüde azalacaktır.</string>
-    <string name="instant_debug_log">Her mesajda günlük çıktısını temizle</string>
     <string name="instant_debug_log_description">Hata ayıklama günlüğünü hemen dosyaya işler. Azahar çöküyor ve günlük çıktısı kesiliyorsa bunu kullanın.</string>
-    <string name="delay_start_lle_modules">LLE modülleriyle başlamayı geciktir</string>
     <string name="delay_start_lle_modules_description">LLE modülleri etkinken uygulamanın başlamasını geciktirir</string>
     <string name="deterministic_async_operations">Deterministik Asenkron İşlemler</string>
     <string name="deterministic_async_operations_description">Hata ayıklama için asenkron işlemleri deterministik hale getirir. Bunu etkinleştirmek donmalara neden olabilir.</string>
+    <string name="enable_rpc_server">RPC Sunucusunu Etkinleştir</string>
     <!-- Layout settings strings -->
     <string name="layout_screen_orientation">Ekran Yönelimi</string>
     <string name="layout_screen_orientation_auto_sensor">Otomatik</string>
@@ -287,6 +290,13 @@
     <string name="layout_screen_orientation_landscape_reverse">Ters Yatay</string>
     <string name="layout_screen_orientation_portrait">Portre</string>
     <string name="layout_screen_orientation_portrait_reverse">Ters Portre</string>
+    <string name="aspect_ratio_default">Varsayılan</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <string name="aspect_ratio_stretch">Gerdir</string>
+
     <!-- Miscellaneous -->
     <string name="clear">Temizle</string>
     <string name="slider_default">Varsayılan</string>
@@ -302,6 +312,7 @@
     <string name="reset_to_default">Varsayılanlara Sıfırla</string>
     <string name="redump_games"><![CDATA[Lütfen <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">oyun kartuşlarınızı</a> veya <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">yüklü başlıklarınızı</a>yeniden yüklemek için kılavuzları izleyin.]]></string>
     <string name="option_default">Varsayılan</string>
+    <string name="auto">Otomatik</string>
     <string name="off">Kapalı</string>
     <string name="install">Yükle</string>
     <string name="delete">Sil</string>
@@ -320,6 +331,9 @@
     <string name="cancelling">İptal ediliyor...</string>
     <string name="important">Önemli</string>
     <string name="dont_show_again">Tekrar gösterme</string>
+    <string name="visibility">Görünürlük</string>
+    <string name="information">Bilgi</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Oyun Dosyası Seç</string>
 
@@ -357,12 +371,14 @@
     <string name="emulation_configure_controls">Kontrolleri Yapılandır</string>
     <string name="emulation_edit_layout">Düzeni Değiştir</string>
     <string name="emulation_done">Bitti</string>
+    <string name="emulation_button_sliding">Buton Kayması</string>
     <string name="emulation_control_scale">Ölçeği Ayarla</string>
     <string name="emulation_control_scale_reset_all">Tümünü Sıfırla</string>
     <string name="emulation_control_opacity">Görünürlüğü Ayarla</string>
     <string name="emulation_control_dpad_slide_enable">D-Pad kayması</string>
     <string name="emulation_open_settings">Ayarları Aç</string>
     <string name="emulation_open_cheats">Hileleri Aç</string>
+    <string name="emulation_aspect_ratio">En Boy Oranı</string>
     <string name="emulation_switch_screen_layout">Yatay Ekran Düzeni</string>
     <string name="emulation_switch_portrait_layout">Dikey Ekran Düzeni</string>
     <string name="emulation_screen_layout_largescreen">Büyük Ekran</string>
@@ -372,7 +388,12 @@
     <string name="emulation_screen_layout_hybrid">Hibrit Ekranlar</string>
     <string name="emulation_screen_layout_original">Orijinal</string>
     <string name="emulation_portrait_layout_top_full">Varsayılan</string>
+    <string name="emulation_secondary_display_default">Sistem Varsayılanı (ayna)</string>
     <string name="emulation_screen_layout_custom">Özel Düzen</string>
+    <string name="bg_color">Arkaplan Rengi</string>
+    <string name="bg_red">Kırmızı</string>
+    <string name="bg_green">Yeşil</string>
+    <string name="bg_blue">Mavi</string>
     <string name="emulation_small_screen_position">Küçük Ekran Konumu</string>
     <string name="small_screen_position_description">Büyük Ekran Düzeninde küçük ekran büyük ekrana kıyasla nerede olmalı?</string>
     <string name="small_screen_position_top_right">Sağ Üst</string>
@@ -398,6 +419,7 @@
     <string name="emulation_custom_layout_height">Yükseklik</string>
     <string name="emulation_swap_screens">Ekranları Değiştir</string>
     <string name="emulation_touch_overlay_reset">Yerleşimi Sıfırla</string>
+    <string name="emulation_show_controller_overlay">Kontrolcü Yerleşimini Göster</string>
     <string name="emulation_close_game">Oyunu Kapat</string>
     <string name="emulation_toggle_pause">Duraklatmayı Aç / Kapat</string>
     <string name="miscellaneous">Çeşitli</string>
@@ -462,7 +484,6 @@
     <string name="fatal_error">Ölümcül Hata</string>
     <string name="fatal_error_message">Ölümcül bir hata oluştu. Ayrıntılar için log\'u kontrol edin.\nEmülasyona devam etmek çökmelere ve hatalara neden olabilir.</string>
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
     <string name="building_shaders">Gölgelendiriciler Oluşturuluyor</string>
@@ -481,6 +502,22 @@
     <string name="game_context_uninstall_dlc">DLC\'leri Sil</string>
     <string name="game_context_uninstall_updates">Güncellemeleri Sil</string>
     <string name="shortcut">Kısayol</string>
+    <string name="shortcut_name">Kısayol Adı</string>
+    <string name="edit_icon">Simgeyi düzenle</string>
+    <string name="create_shortcut">Kısayol Oluştur</string>
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Dosya:</string>
+    <string name="game_context_type">Tür:</string>
+    <string name="performance_overlay_show_fps">FPS\'i Göster</string>
+    <string name="performance_overlay_show_speed">Hızı Göster</string>
+    <string name="performance_overlay_show_available_ram">Kullanılabilir Belleği Göster</string>
+    <string name="performance_overlay_show_battery_temp">Pil Sıcaklığını Göster</string>
+    <string name="performance_overlay_position_top_left">Sol Üst</string>
+    <string name="performance_overlay_position_top_right">Sağ Üst</string>
+    <string name="performance_overlay_position_bottom_left">Sol Alt</string>
+    <string name="performance_overlay_position_bottom_right">Sağ Alt</string>
+    <string name="performance_overlay_position_center_top">Orta Üst</string>
+    <string name="performance_overlay_position_center_bottom">Orta Alt</string>
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>
@@ -583,7 +620,6 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Yan Yana</string>
-    <string name="reverse_side_by_side">Ters Yan Yana</string>
     <string name="anaglyph">Anaglif</string>
     <string name="interlaced">Geçmeli</string>
     <string name="reverse_interlaced">Ters Geçmeli</string>
@@ -601,6 +637,7 @@
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Oyun Kontrollü</string>
+    <string name="nearest_neighbor">En Yakın Komşu</string>
     <string name="linear">Lineer</string>
 
     <!-- Sound output modes -->
@@ -771,4 +808,4 @@
     <string name="emulation_occupied_quicksave_slot">Hızlı Kayıt - %1$tF %1$tR</string>
     <string name="quickload_not_found">Hiçbir Hızlı Kayıt mevcut değil.</string>
 
-</resources>
+    </resources>

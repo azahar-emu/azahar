@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -36,8 +36,6 @@ public:
     std::vector<u8> PipeRead(DspPipe pipe_number, std::size_t length) override;
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) override;
-
-    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
 
     void SetInterruptHandler(
         std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) override;

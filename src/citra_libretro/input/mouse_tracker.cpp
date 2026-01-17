@@ -70,7 +70,7 @@ static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigne
     Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 
     if (render_3d_mode == Settings::StereoRenderOption::SideBySide ||
-        render_3d_mode == Settings::StereoRenderOption::ReverseSideBySide) {
+        render_3d_mode == Settings::StereoRenderOption::SideBySideFull) {
         return (framebuffer_y >= layout.bottom_screen.top &&
                 framebuffer_y < layout.bottom_screen.bottom &&
                 ((framebuffer_x >= layout.bottom_screen.left / 2 &&

@@ -98,7 +98,7 @@ void LogSettings() {
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
-    log_setting("Renderer_VSyncNew", values.use_vsync_new.GetValue());
+    log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
@@ -108,6 +108,9 @@ void LogSettings() {
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
+    log_setting("Stereoscopy_Swap_Eyes", values.swap_eyes_3d.GetValue());
+    log_setting("Stereoscopy_Render_3d_to_which_display",
+                values.render_3d_which_display.GetValue());
     log_setting("Stereoscopy_MonoRenderOption", values.mono_render_option.GetValue());
     if (values.render_3d.GetValue() == StereoRenderOption::Anaglyph) {
         log_setting("Renderer_AnaglyphShader", values.anaglyph_shader_name.GetValue());
@@ -153,6 +156,7 @@ void LogSettings() {
     log_setting("System_RegionValue", values.region_value.GetValue());
     log_setting("System_PluginLoader", values.plugin_loader_enabled.GetValue());
     log_setting("System_PluginLoaderAllowed", values.allow_plugin_loader.GetValue());
+    log_setting("System_ApplyRegionFreePatch", values.apply_region_free_patch.GetValue());
     log_setting("Debugging_DelayStartForLLEModules", values.delay_start_for_lle_modules.GetValue());
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
@@ -200,7 +204,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.use_hw_shader.SetGlobal(true);
     values.use_disk_shader_cache.SetGlobal(true);
     values.shaders_accurate_mul.SetGlobal(true);
-    values.use_vsync_new.SetGlobal(true);
+    values.use_vsync.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
@@ -218,6 +222,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.bg_green.SetGlobal(true);
     values.bg_blue.SetGlobal(true);
     values.render_3d.SetGlobal(true);
+    values.swap_eyes_3d.SetGlobal(true);
     values.factor_3d.SetGlobal(true);
     values.filter_mode.SetGlobal(true);
     values.pp_shader_name.SetGlobal(true);

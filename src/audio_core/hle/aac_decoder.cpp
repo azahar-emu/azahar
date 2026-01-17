@@ -8,7 +8,7 @@
 namespace AudioCore::HLE {
 
 AACDecoder::AACDecoder(Memory::MemorySystem& memory) : memory(memory) {
-    OpenNewDecoder();
+    Reset();
 }
 
 AACDecoder::~AACDecoder() {
@@ -61,6 +61,10 @@ BinaryMessage AACDecoder::ProcessRequest(const BinaryMessage& request) {
                 },
         };
     }
+}
+
+void AACDecoder::Reset() {
+    OpenNewDecoder();
 }
 
 BinaryMessage AACDecoder::Decode(const BinaryMessage& request) {

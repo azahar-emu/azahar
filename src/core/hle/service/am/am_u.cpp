@@ -58,7 +58,7 @@ AM_U::AM_U(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:u"
         {0x0401, nullptr, "UpdateFirmwareTo"},
         {0x0402, &AM_U::BeginImportProgram, "BeginImportProgram"},
         {0x0403, &AM_U::BeginImportProgramTemporarily, "BeginImportProgramTemporarily"},
-        {0x0404, nullptr, "CancelImportProgram"},
+        {0x0404, &AM_U::CancelImportProgram, "CancelImportProgram"},
         {0x0405, &AM_U::EndImportProgram, "EndImportProgram"},
         {0x0406, &AM_U::EndImportProgramWithoutCommit, "EndImportProgramWithoutCommit"},
         {0x0407, &AM_U::CommitImportPrograms, "CommitImportPrograms"},

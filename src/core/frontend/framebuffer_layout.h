@@ -35,6 +35,8 @@ struct FramebufferLayout {
     bool is_rotated = true;
     bool is_portrait = false;
     bool additional_screen_enabled;
+    float top_opacity = 1.0f;
+    float bottom_opacity = 1.0f;
     Common::Rectangle<u32> additional_screen;
 
     CardboardSettings cardboard;
@@ -46,6 +48,8 @@ struct FramebufferLayout {
     u32 GetScalingRatio() const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
+
+    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 };
 
 /**

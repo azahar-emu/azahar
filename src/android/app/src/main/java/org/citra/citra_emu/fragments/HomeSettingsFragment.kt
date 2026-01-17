@@ -159,7 +159,7 @@ class HomeSettingsFragment : Fragment() {
                 R.string.select_citra_user_folder,
                 R.string.select_citra_user_folder_home_description,
                 R.drawable.ic_home,
-                { mainActivity?.openCitraDirectory?.launch(null) },
+                { PermissionsHandler.compatibleSelectDirectory(mainActivity.openCitraDirectory) },
                 details = homeViewModel.userDir
             ),
             HomeSetting(

@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.content.Context
+import android.content.SharedPreferences
 import android.widget.TextView
 import android.widget.ImageView
 import android.widget.Toast
@@ -57,12 +58,20 @@ import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
 
-class GameAdapter(private val activity: AppCompatActivity, private val inflater: LayoutInflater,  private val openImageLauncher: ActivityResultLauncher<String>?) :
+class GameAdapter(
+    private val activity: AppCompatActivity,
+    private val inflater: LayoutInflater,
+    private val openImageLauncher: ActivityResultLauncher<String>?,
+    private val onRequestCompressOrDecompress: ((inputPath: String, suggestedName: String, shouldCompress: Boolean) -> Unit)? = null
+) :
     ListAdapter<Game, GameViewHolder>(AsyncDifferConfig.Builder(DiffCallback()).build()),
     View.OnClickListener, View.OnLongClickListener {
     private var lastClickTime = 0L
     private var imagePath: String? = null
     private var dialogShortcutBinding: DialogShortcutBinding? = null
+
+    private val preferences: SharedPreferences
+        get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     fun handleShortcutImageResult(uri: Uri?) {
         val path = uri?.toString()
@@ -191,6 +200,11 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             binding.textGameTitle.text = game.title
             binding.textCompany.text = game.company
             binding.textGameRegion.text = game.regions
+            binding.imageCartridge.visibility = if (preferences.getString("insertedCartridge", "") != game.path) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
 
             val backgroundColorId =
                 if (
@@ -340,12 +354,29 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
         val bottomSheetDialog = BottomSheetDialog(context)
         bottomSheetDialog.setContentView(bottomSheetView)
 
+        val insertable = game.isInsertable
+        val inserted = insertable && (preferences.getString("insertedCartridge", "") == game.path)
+
         bottomSheetView.findViewById<TextView>(R.id.about_game_title).text = game.title
         bottomSheetView.findViewById<TextView>(R.id.about_game_company).text = game.company
         bottomSheetView.findViewById<TextView>(R.id.about_game_region).text = game.regions
         bottomSheetView.findViewById<TextView>(R.id.about_game_id).text = context.getString(R.string.game_context_id) + " " + String.format("%016X", game.titleId)
         bottomSheetView.findViewById<TextView>(R.id.about_game_filename).text = context.getString(R.string.game_context_file) + " " + game.filename
         bottomSheetView.findViewById<TextView>(R.id.about_game_filetype).text = context.getString(R.string.game_context_type) + " " + game.fileType
+
+        val insertButton = bottomSheetView.findViewById<MaterialButton>(R.id.insert_cartridge_button)
+        insertButton.text = if (inserted) { context.getString(R.string.game_context_eject) } else { context.getString(R.string.game_context_insert) }
+        insertButton.visibility = if (insertable) View.VISIBLE else View.GONE
+        insertButton.setOnClickListener {
+            if (inserted) {
+                preferences.edit().putString("insertedCartridge", "").apply()
+            } else {
+                preferences.edit().putString("insertedCartridge", game.path).apply()
+            }
+            bottomSheetDialog.dismiss()
+            notifyItemRangeChanged(0, currentList.size)
+        }
+
         GameIconUtils.loadGameIcon(activity, game, bottomSheetView.findViewById(R.id.game_icon))
 
         bottomSheetView.findViewById<MaterialButton>(R.id.about_game_play).setOnClickListener {
@@ -440,6 +471,27 @@ class GameAdapter(private val activity: AppCompatActivity, private val inflater:
             view.findNavController().navigate(action)
             bottomSheetDialog.dismiss()
         }
+
+        val compressDecompressButton = bottomSheetView.findViewById<MaterialButton>(R.id.compress_decompress)
+        if (game.isInstalled) {
+            compressDecompressButton.setOnClickListener {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.compress_decompress_installed_app),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            compressDecompressButton.alpha = 0.38f
+        } else {
+            compressDecompressButton.setOnClickListener {
+                val shouldCompress = !game.isCompressed
+                val recommendedExt = NativeLibrary.getRecommendedExtension(holder.game.path, shouldCompress)
+                val baseName = holder.game.filename.substringBeforeLast('.')
+                onRequestCompressOrDecompress?.invoke(holder.game.path, "$baseName.$recommendedExt", shouldCompress)
+                bottomSheetDialog.dismiss()
+            }
+        }
+        compressDecompressButton.text = context.getString(if (!game.isCompressed) R.string.compress else R.string.decompress)
 
         bottomSheetView.findViewById<MaterialButton>(R.id.menu_button_open).setOnClickListener {
             showOpenContextMenu(it, game)

@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -936,7 +936,21 @@ void JitShader::Compile_NextInstr() {
 
     L(instruction_labels[program_counter]);
 
-    Instruction instr = {(*program_code)[program_counter++]};
+    // Always treat the last instruction of the program code as an
+    // end instruction. This fixes some games such as Thunder Blade
+    // or After Burner II which have malformed geo shaders without an
+    // end instruction crashing the emulator due to the program counter
+    // growing uncontrollably.
+    // TODO(PabloMK7): Find how real HW reacts to this, most likely the
+    // program counter wraps around after reaching the last instruction,
+    // but more testing is needed.
+    Instruction instr{};
+    if (program_counter < MAX_PROGRAM_CODE_LENGTH - 1) {
+        instr.hex = (*program_code)[program_counter];
+    } else {
+        instr.opcode.Assign(OpCode::Id::END);
+    }
+    ++program_counter;
 
     OpCode::Id opcode = instr.opcode.Value();
     auto instr_func = instr_table[static_cast<u32>(opcode)];

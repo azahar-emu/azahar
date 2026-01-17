@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -121,7 +121,9 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl(Core::Timing& timing, bool multithread) : core_timing(timing), multithread(multithread) {
+    Impl(Core::Timing& timing, Memory::MemorySystem& memory, bool multithread)
+        : teakra(Teakra::UserConfig{.dsp_memory = memory.GetDspMemory(0)}), core_timing(timing),
+          multithread(multithread) {
         teakra_slice_event = core_timing.RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
     }
@@ -189,12 +191,12 @@ struct DspLle::Impl final {
     }
 
     u8* GetDspDataPointer(u32 baddr) {
-        auto& memory = teakra.GetDspMemory();
+        uint8_t* memory = teakra.GetDspMemory();
         return &memory[DspDataOffset + baddr];
     }
 
     const u8* GetDspDataPointer(u32 baddr) const {
-        auto& memory = teakra.GetDspMemory();
+        const uint8_t* memory = teakra.GetDspMemory();
         return &memory[DspDataOffset + baddr];
     }
 
@@ -312,9 +314,9 @@ struct DspLle::Impl final {
         teakra.Reset();
 
         Dsp1 dsp(buffer);
-        auto& dsp_memory = teakra.GetDspMemory();
-        u8* program = dsp_memory.data();
-        u8* data = dsp_memory.data() + DspDataOffset;
+        auto dsp_memory = teakra.GetDspMemory();
+        u8* program = dsp_memory;
+        u8* data = dsp_memory + DspDataOffset;
         for (const auto& segment : dsp.segments) {
             if (segment.memory_type == SegmentType::ProgramA ||
                 segment.memory_type == SegmentType::ProgramB) {
@@ -403,10 +405,6 @@ void DspLle::PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) {
     impl->WritePipe(static_cast<u8>(pipe_number), buffer);
 }
 
-std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
-    return impl->teakra.GetDspMemory();
-}
-
 void DspLle::SetInterruptHandler(
     std::function<void(Service::DSP::InterruptType type, DspPipe pipe)> handler) {
     impl->teakra.SetRecvDataHandler(0, [this, handler]() {
@@ -469,7 +467,7 @@ DspLle::DspLle(Core::System& system, bool multithread)
 
 DspLle::DspLle(Core::System& system, Memory::MemorySystem& memory, Core::Timing& timing,
                bool multithread)
-    : DspInterface(system), impl(std::make_unique<Impl>(timing, multithread)) {
+    : DspInterface(system), impl(std::make_unique<Impl>(timing, memory, multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);

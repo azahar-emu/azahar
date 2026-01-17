@@ -130,25 +130,10 @@ if (BUNDLE_TARGET_EXECUTE)
             --icon-file "${CMAKE_BINARY_DIR}/dist/org.azahar_emu.Azahar.svg"
             --desktop-file "${source_path}/dist/${executable_name}.desktop"
             --appdir "${appdir_path}"
-            RESULT_VARIABLE linuxdeploy_appdir_result)
+            RESULT_VARIABLE linuxdeploy_appdir_result
+            ERROR_VARIABLE linuxdeploy_appdir_error)
         if (NOT linuxdeploy_appdir_result EQUAL "0")
-            message(FATAL_ERROR "linuxdeploy failed to create AppDir: ${linuxdeploy_appdir_result}")
-        endif()
-
-        if (enable_qt)
-            set(qt_hook_file "${appdir_path}/apprun-hooks/linuxdeploy-plugin-qt-hook.sh")
-            file(READ "${qt_hook_file}" qt_hook_contents)
-            # Add Cinnamon to list of DEs for GTK3 theming.
-            string(REPLACE
-                "*XFCE*"
-                "*X-Cinnamon*|*XFCE*"
-                qt_hook_contents "${qt_hook_contents}")
-            # Wayland backend crashes due to changed schemas in Gnome 40.
-            string(REPLACE
-                "export QT_QPA_PLATFORMTHEME=gtk3"
-                "export QT_QPA_PLATFORMTHEME=gtk3; export GDK_BACKEND=x11"
-                qt_hook_contents "${qt_hook_contents}")
-            file(WRITE "${qt_hook_file}" "${qt_hook_contents}")
+            message(FATAL_ERROR "linuxdeploy failed to create AppDir w/ exit code ${linuxdeploy_appdir_result}:\n${linuxdeploy_appdir_error}")
         endif()
 
         message(STATUS "Creating AppImage for executable ${executable_path}")

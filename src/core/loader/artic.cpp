@@ -134,6 +134,16 @@ Apploader_Artic::LoadNew3dsHwCapabilities() {
     return std::make_pair(std::move(caps), ResultStatus::Success);
 }
 
+bool Apploader_Artic::IsN3DSExclusive() {
+    std::vector<u8> smdh_buffer;
+    if (ReadIcon(smdh_buffer) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
+        SMDH* smdh = reinterpret_cast<SMDH*>(smdh_buffer.data());
+        return smdh->flags.n3ds_exclusive != 0;
+    }
+
+    return false;
+}
+
 ResultStatus Apploader_Artic::LoadExec(std::shared_ptr<Kernel::Process>& process) {
 
     if (!is_loaded)

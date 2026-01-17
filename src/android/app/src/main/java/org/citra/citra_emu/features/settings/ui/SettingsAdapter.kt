@@ -555,6 +555,21 @@ class SettingsAdapter(
         return true
     }
 
+    fun onInputBindingLongClick(setting: InputBindingSetting, position: Int): Boolean {
+        MaterialAlertDialogBuilder(context)
+            .setMessage(R.string.reset_setting_confirmation)
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
+                setting.removeOldMapping()
+                notifyItemChanged(position)
+                fragmentView.onSettingChanged()
+                fragmentView.loadSettingsList()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+
+        return true
+    }
+
     fun onClickDisabledSetting(isRuntimeDisabled: Boolean) {
         val titleId = if (isRuntimeDisabled)
             R.string.setting_not_editable

@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,18 @@ void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const {
 void Source::Reset() {
     current_frame.fill({});
     state = {};
+}
+
+void Source::Sleep() {
+    backup_frame = current_frame;
+    backup_state = state;
+}
+
+void Source::Wakeup() {
+    current_frame = backup_frame;
+    state = backup_state;
+    backup_frame.fill({});
+    backup_state = {};
 }
 
 void Source::SetMemory(Memory::MemorySystem& memory) {

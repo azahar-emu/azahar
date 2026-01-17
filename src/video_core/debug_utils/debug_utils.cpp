@@ -1,5 +1,5 @@
-// Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <cstdint>
@@ -184,17 +184,18 @@ void DumpShader(const std::string& filename, const ShaderRegs& config, const Sha
     dvlb.dvle_offset = QueueForWriting(reinterpret_cast<const u8*>(&dvle), sizeof(dvle));
 
     // TODO: Reduce the amount of binary code written to relevant portions
+    const auto& program_code = setup.GetProgramCode();
     dvlp.binary_offset = write_offset - dvlp_offset;
-    dvlp.binary_size_words = static_cast<uint32_t>(setup.program_code.size());
-    QueueForWriting(reinterpret_cast<const u8*>(setup.program_code.data()),
-                    static_cast<u32>(setup.program_code.size()) * sizeof(u32));
+    dvlp.binary_size_words = static_cast<uint32_t>(program_code.size());
+    QueueForWriting(reinterpret_cast<const u8*>(program_code.data()),
+                    static_cast<u32>(program_code.size()) * sizeof(u32));
 
+    const auto& swizzle_data = setup.GetSwizzleData();
     dvlp.swizzle_info_offset = write_offset - dvlp_offset;
-    dvlp.swizzle_info_num_entries = static_cast<uint32_t>(setup.swizzle_data.size());
+    dvlp.swizzle_info_num_entries = static_cast<uint32_t>(swizzle_data.size());
     u32 dummy = 0;
-    for (unsigned int i = 0; i < setup.swizzle_data.size(); ++i) {
-        QueueForWriting(reinterpret_cast<const u8*>(&setup.swizzle_data[i]),
-                        sizeof(setup.swizzle_data[i]));
+    for (unsigned int i = 0; i < swizzle_data.size(); ++i) {
+        QueueForWriting(reinterpret_cast<const u8*>(&swizzle_data[i]), sizeof(swizzle_data[i]));
         QueueForWriting(reinterpret_cast<const u8*>(&dummy), sizeof(dummy));
     }
 
@@ -272,7 +273,7 @@ void StartPicaTracing() {
 }
 
 void OnPicaRegWrite(u16 cmd_id, u16 mask, u32 value) {
-    if (!g_is_pica_tracing)
+    if (!g_is_pica_tracing) [[likely]]
         return;
 
     std::lock_guard lock(pica_trace_mutex);

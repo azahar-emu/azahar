@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -60,7 +60,7 @@ class CitraDirectoryDialogFragment : DialogFragment() {
             }
             .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
                 if (!PermissionsHandler.hasWriteAccess(requireContext())) {
-                    (requireActivity() as MainActivity)?.openCitraDirectory?.launch(null)
+                    PermissionsHandler.compatibleSelectDirectory((requireActivity() as MainActivity).openCitraDirectory)
                 }
             }
             .show()

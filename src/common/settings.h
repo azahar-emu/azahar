@@ -72,7 +72,7 @@ enum class SmallScreenPosition : u32 {
 enum class StereoRenderOption : u32 {
     Off = 0,
     SideBySide = 1,
-    ReverseSideBySide = 2,
+    SideBySideFull = 2,
     Anaglyph = 3,
     Interlaced = 4,
     ReverseInterlaced = 5,
@@ -84,6 +84,14 @@ enum class StereoRenderOption : u32 {
 enum class MonoRenderOption : u32 {
     LeftEye = 0,
     RightEye = 1,
+};
+
+// on android, which displays to render stereo mode to
+enum class StereoWhichDisplay : u32 {
+    None = 0, // equivalent to StereoRenderOption = Off
+    Both = 1,
+    PrimaryOnly = 2,
+    SecondaryOnly = 3
 };
 
 enum class AudioEmulation : u32 {
@@ -481,6 +489,7 @@ struct Values {
     Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
     Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
     Setting<u16> steps_per_hour{0, "steps_per_hour"};
+    Setting<bool> apply_region_free_patch{true, "apply_region_free_patch"};
 
     // Renderer
     SwitchableSetting<GraphicsAPI, true> graphics_api{
@@ -506,7 +515,7 @@ struct Values {
     SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
     SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
     SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
-    SwitchableSetting<bool> use_vsync_new{true, "use_vsync_new"};
+    SwitchableSetting<bool> use_vsync{true, "use_vsync"};
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
@@ -561,6 +570,10 @@ struct Values {
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};
+    SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
+
+    SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None,
+                                                                  "render_3d_which_display"};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
                                                            "mono_render_option"};
 

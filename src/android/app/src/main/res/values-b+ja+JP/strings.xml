@@ -9,7 +9,6 @@
     <string name="mac_address">MACアドレス</string>
     <string name="regenerate_mac_address">MACアドレスを再生成</string>
     <string name="regenerate_mac_address_description">これを行うと、今のMACアドレスを新しいもので置き換えます。セットアップツールで実機からMACアドレスを吸い出した場合、これをするのは推奨しません。続行しますか？</string>
-    <string name="delay_render_thread">描写スレッドを遅延する</string>
     <string name="delay_render_thread_description">GPUにデータを送信する間、ゲームの描写スレッドを遅延します。動的フレームレートである（ほんの一部の）アプリケーションでのパフォーマンスが向上します。</string>
     <string name="instant_debug_log_description">デバッグログを即座にファイルに書き込みます。Azaharがクラッシュしてログが途切れるときに有効にしてください。</string>
     <string name="miscellaneous">その他</string>

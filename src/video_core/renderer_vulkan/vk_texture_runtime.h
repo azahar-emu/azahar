@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -110,6 +110,8 @@ public:
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
+    explicit Surface(TextureRuntime& runtime, u32 width_, u32 height_,
+                     VideoCore::PixelFormat format_);
     ~Surface();
 
     Surface(const Surface&) = delete;
@@ -127,6 +129,21 @@ public:
 
     /// Returns the image view at index, otherwise the base view
     vk::ImageView ImageView(u32 index = 1) const noexcept;
+
+    /// Returns width of the surface
+    u32 GetWidth() const noexcept {
+        return width;
+    }
+
+    /// Returns height of the surface
+    u32 GetHeight() const noexcept {
+        return height;
+    }
+
+    /// Returns resolution scale of the surface
+    u32 GetResScale() const noexcept {
+        return res_scale;
+    }
 
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
@@ -184,6 +201,7 @@ public:
     std::array<Handle, 3> handles{};
     std::array<vk::UniqueFramebuffer, 2> framebuffers{};
     Handle copy_handle;
+    std::array<vk::UniqueImageView, 2> framebuffer_view;
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
@@ -244,6 +262,7 @@ private:
     std::array<vk::ImageView, 2> image_views{};
     vk::UniqueFramebuffer framebuffer;
     vk::RenderPass render_pass;
+    std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};

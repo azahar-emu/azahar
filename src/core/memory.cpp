@@ -91,18 +91,19 @@ public:
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+    std::unique_ptr<u8[]> dsp_ram = std::make_unique<u8[]>(Memory::DSP_RAM_SIZE);
 
     Core::System& system;
     std::shared_ptr<PageTable> current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
     std::vector<std::shared_ptr<PageTable>> page_table_list;
 
-    AudioCore::DspInterface* dsp = nullptr;
-
     std::shared_ptr<BackingMem> fcram_mem;
     std::shared_ptr<BackingMem> vram_mem;
     std::shared_ptr<BackingMem> n3ds_extra_ram_mem;
     std::shared_ptr<BackingMem> dsp_mem;
+
+    PAddr plugin_fb_address{};
 
     Impl(Core::System& system_);
 
@@ -111,7 +112,7 @@ public:
         case Region::VRAM:
             return vram.get();
         case Region::DSP:
-            return dsp->GetDspMemory().data();
+            return dsp_ram.get();
         case Region::FCRAM:
             return fcram.get();
         case Region::N3DS:
@@ -126,7 +127,7 @@ public:
         case Region::VRAM:
             return vram.get();
         case Region::DSP:
-            return dsp->GetDspMemory().data();
+            return dsp_ram.get();
         case Region::FCRAM:
             return fcram.get();
         case Region::N3DS:
@@ -263,12 +264,8 @@ public:
         if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
             return {vram_mem, addr - VRAM_VADDR};
         }
-        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END) {
-            auto plg_ldr = Service::PLGLDR::GetService(system);
-            if (plg_ldr) {
-                return {fcram_mem,
-                        addr - PLUGIN_3GX_FB_VADDR + plg_ldr->GetPluginFBAddr() - FCRAM_PADDR};
-            }
+        if (addr >= PLUGIN_3GX_FB_VADDR && addr < PLUGIN_3GX_FB_VADDR_END && plugin_fb_address) {
+            return {fcram_mem, addr - PLUGIN_3GX_FB_VADDR + plugin_fb_address - FCRAM_PADDR};
         }
 
         UNREACHABLE();
@@ -307,9 +304,8 @@ public:
         CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
         CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
         CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
-        auto plg_ldr = Service::PLGLDR::GetService(system);
-        if (plg_ldr && plg_ldr->GetPluginFBAddr()) {
-            CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plg_ldr->GetPluginFBAddr());
+        if (plugin_fb_address) {
+            CheckRegion(PLUGIN_3GX_FB_VADDR, PLUGIN_3GX_FB_VADDR_END, plugin_fb_address);
         }
     }
 
@@ -324,6 +320,7 @@ private:
             fcram.get(), save_n3ds_ram ? Memory::FCRAM_N3DS_SIZE : Memory::FCRAM_SIZE);
         ar& boost::serialization::make_binary_object(
             n3ds_extra_ram.get(), save_n3ds_ram ? Memory::N3DS_EXTRA_RAM_SIZE : 0);
+        ar& boost::serialization::make_binary_object(dsp_ram.get(), Memory::DSP_RAM_SIZE);
         ar & cache_marker;
         ar & page_table_list;
         // dsp is set from Core::System at startup
@@ -332,6 +329,7 @@ private:
         ar & vram_mem;
         ar & n3ds_extra_ram_mem;
         ar & dsp_mem;
+        ar & plugin_fb_address;
     }
 };
 
@@ -388,6 +386,10 @@ std::shared_ptr<PageTable> MemorySystem::GetCurrentPageTable() const {
 
 void MemorySystem::RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     impl->RasterizerFlushVirtualRegion(start, size, mode);
+}
+
+PAddr& Memory::MemorySystem::Plugin3GXFramebufferAddress() {
+    return impl->plugin_fb_address;
 }
 
 void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
@@ -638,13 +640,10 @@ std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* MemorySystem::GetPhysicalPointer(PAddr address) {
-    return GetPhysicalRef(address);
-}
-
-MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
-    if (address == physical_ptr_cache.first) {
-        return physical_ptr_cache.second;
+MemorySystem::PhysMemRegionInfo MemorySystem::GetPhysMemRegionInfo(PAddr address) {
+    if (address >= phys_mem_region_info_cache.region_start &&
+        address < phys_mem_region_info_cache.region_end) {
+        return phys_mem_region_info_cache;
     }
 
     constexpr std::array memory_areas = {
@@ -661,38 +660,52 @@ MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
     });
 
     if (area == memory_areas.end()) [[unlikely]] {
-        LOG_ERROR(HW_Memory, "Unknown GetPhysicalPointer @ {:#08X} at PC {:#08X}", address,
+        LOG_ERROR(HW_Memory, "Unknown GetPhysMemRegionInfo @ {:#08X} at PC {:#08X}", address,
                   impl->GetPC());
-        physical_ptr_cache = {address, {nullptr}};
-        return physical_ptr_cache.second;
+        phys_mem_region_info_cache = PhysMemRegionInfo();
+        return phys_mem_region_info_cache;
     }
 
-    u32 offset_into_region = address - area->first;
-
-    std::shared_ptr<BackingMem> target_mem = nullptr;
     switch (area->first) {
     case VRAM_PADDR:
-        target_mem = impl->vram_mem;
+        phys_mem_region_info_cache = {&impl->vram_mem, area->first, area->second};
         break;
     case DSP_RAM_PADDR:
-        target_mem = impl->dsp_mem;
+        phys_mem_region_info_cache = {&impl->dsp_mem, area->first, area->second};
         break;
     case FCRAM_PADDR:
-        target_mem = impl->fcram_mem;
+        phys_mem_region_info_cache = {&impl->fcram_mem, area->first, area->second};
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_mem = impl->n3ds_extra_ram_mem;
+        phys_mem_region_info_cache = {&impl->n3ds_extra_ram_mem, area->first, area->second};
         break;
     default:
         UNREACHABLE();
     }
-    if (offset_into_region > target_mem->GetSize()) [[unlikely]] {
-        physical_ptr_cache = {address, {nullptr}};
-        return physical_ptr_cache.second;
+
+    return phys_mem_region_info_cache;
+}
+
+u8* MemorySystem::GetPhysicalPointer(PAddr address) {
+    auto target_mem = GetPhysMemRegionInfo(address);
+
+    if (!target_mem.valid()) [[unlikely]] {
+        return {nullptr};
     }
 
-    physical_ptr_cache = {address, {target_mem, offset_into_region}};
-    return physical_ptr_cache.second;
+    u32 offset_into_region = address - target_mem.region_start;
+    return target_mem.backing_mem->get()->GetPtr() + offset_into_region;
+}
+
+MemoryRef MemorySystem::GetPhysicalRef(PAddr address) {
+    const auto& target_mem = GetPhysMemRegionInfo(address);
+
+    if (!target_mem.valid()) [[unlikely]] {
+        return {nullptr};
+    }
+
+    u32 offset_into_region = address - target_mem.region_start;
+    return {*target_mem.backing_mem, offset_into_region};
 }
 
 std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr addr) {
@@ -700,12 +713,9 @@ std::vector<VAddr> MemorySystem::PhysicalToVirtualAddressForRasterizer(PAddr add
         return {addr - VRAM_PADDR + VRAM_VADDR};
     }
     // NOTE: Order matters here.
-    auto plg_ldr = Service::PLGLDR::GetService(impl->system);
-    if (plg_ldr) {
-        auto fb_addr = plg_ldr->GetPluginFBAddr();
-        if (addr >= fb_addr && addr < fb_addr + PLUGIN_3GX_FB_SIZE) {
-            return {addr - fb_addr + PLUGIN_3GX_FB_VADDR};
-        }
+    PAddr plg_fb_addr = Plugin3GXFramebufferAddress();
+    if (plg_fb_addr && addr >= plg_fb_addr && addr < plg_fb_addr + PLUGIN_3GX_FB_SIZE) {
+        return {addr - plg_fb_addr + PLUGIN_3GX_FB_VADDR};
     }
     if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
         return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
@@ -989,8 +999,9 @@ MemoryRef MemorySystem::GetFCRAMRef(std::size_t offset) const {
     return MemoryRef(impl->fcram_mem, offset);
 }
 
-void MemorySystem::SetDSP(AudioCore::DspInterface& dsp) {
-    impl->dsp = &dsp;
+u8* MemorySystem::GetDspMemory(std::size_t offset) const {
+    ASSERT(offset <= Memory::DSP_RAM_SIZE);
+    return impl->dsp_ram.get() + offset;
 }
 
 } // namespace Memory

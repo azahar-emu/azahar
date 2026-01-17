@@ -45,7 +45,8 @@
                 android:layout_height="wrap_content"
                 android:textAlignment="viewStart"
                 android:textSize="15sp"
-                android:textStyle="bold"                app:layout_constraintStart_toStartOf="parent"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Application Title" />
 
@@ -120,12 +121,13 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/about_game_play"
                 style="@style/Widget.Material3.Button.Icon"
-                android:layout_width="0dp"
+                android:layout_width="142dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="3"
                 android:contentDescription="@string/play"
                 android:focusedByDefault="true"
                 android:text="@string/play"
+                android:textAlignment="center"
                 app:icon="@drawable/ic_play" />
 
             <com.google.android.material.button.MaterialButton
@@ -166,7 +168,6 @@
             android:layout_marginTop="16dp"
             android:gravity="start|center"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/horizontal_layout">
@@ -179,6 +180,37 @@
                 android:contentDescription="@string/cheats"
                 android:text="@string/cheats" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/insert_cartridge_button"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/compress_decompress"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@string/compress"
+                android:text="@string/compress" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/compress_tray"
+            style="@style/ThemeOverlay.Material3.Button.IconButton.Filled.Tonal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="start|center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/game_button_tray">
 
         </LinearLayout>
 
