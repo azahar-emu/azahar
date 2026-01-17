@@ -5,12 +5,14 @@
 #include "common/archives.h"
 #include "common/hacks/hack_manager.h"
 #include "common/microprofile.h"
+#include "common/settings.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
+#include "video_core/gpu_command_queue.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/gpu_impl.h"
 #include "video_core/pica/pica_core.h"
@@ -39,6 +41,14 @@ GPU::GPU(Core::System& system, Frontend::EmuWindow& emu_window,
 
     // Bind the rasterizer to the PICA GPU
     impl->pica.BindRasterizer(impl->rasterizer);
+
+    // Initialize GPU command queue if async GPU is enabled.
+    // Note: Async GPU is disabled for Vulkan as it causes threading issues with command buffer
+    // recording.
+    if (Settings::values.async_gpu.GetValue() &&
+        Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Vulkan) {
+        impl->command_queue = std::make_unique<GPUCommandQueue>(*this);
+    }
 }
 
 GPU::~GPU() = default;
@@ -85,6 +95,15 @@ void GPU::ClearAll(bool flush) {
 }
 
 void GPU::Execute(const Service::GSP::Command& command) {
+    // If async GPU is enabled, queue the command; otherwise execute it directly
+    if (impl->command_queue) {
+        impl->command_queue->QueueCommand(command);
+    } else {
+        ExecuteCommand(command);
+    }
+}
+
+void GPU::ExecuteCommand(const Service::GSP::Command& command) {
     using Service::GSP::CommandId;
     auto& regs = impl->pica.regs;
 

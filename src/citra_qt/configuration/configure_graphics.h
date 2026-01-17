@@ -41,6 +41,7 @@ private:
     ConfigurationShared::CheckState use_vsync;
     ConfigurationShared::CheckState async_shader_compilation;
     ConfigurationShared::CheckState async_presentation;
+    ConfigurationShared::CheckState async_gpu;
     ConfigurationShared::CheckState spirv_shader_gen;
     ConfigurationShared::CheckState disable_spirv_optimizer;
     std::unique_ptr<Ui::ConfigureGraphics> ui;

@@ -15,6 +15,7 @@
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/gpu_impl.h"
+#include "video_core/gpu_command_queue.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/pica/regs_lcd.h"
 #include "video_core/renderer_base.h"
@@ -33,6 +34,7 @@ struct GPU::Impl {
     std::unique_ptr<RendererBase> renderer;
     RasterizerInterface* rasterizer;
     std::unique_ptr<SwRenderer::SwBlitter> sw_blitter;
+    std::unique_ptr<GPUCommandQueue> command_queue;
     Core::TimingEventType* vblank_event;
     Service::GSP::InterruptHandler signal_interrupt;
 

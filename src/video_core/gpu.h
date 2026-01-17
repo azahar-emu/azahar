@@ -63,6 +63,9 @@ public:
     /// Executes the provided GSP command.
     void Execute(const Service::GSP::Command& command);
 
+    /// Executes a GPU command directly (internal use for async command processing).
+    void ExecuteCommand(const Service::GSP::Command& command);
+
     /// Updates GPU display framebuffer configuration using the specified parameters.
     void SetBufferSwap(u32 screen_id, const Service::GSP::FrameBufferInfo& info);
 
