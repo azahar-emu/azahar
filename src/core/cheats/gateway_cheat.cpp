@@ -487,6 +487,10 @@ std::string GatewayCheat::ToString() const {
 std::vector<std::shared_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string& filepath) {
     std::vector<std::shared_ptr<CheatBase>> cheats;
 
+    if (!FileUtil::Exists(filepath)) {
+        return cheats;
+    }
+
     boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
     FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
     if (!file.is_open()) {
