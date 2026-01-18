@@ -148,9 +148,6 @@ public:
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
 
-    /// Returns the framebuffer view of the surface image
-    vk::ImageView FramebufferView() noexcept;
-
     /// Returns the depth view of the surface image
     vk::ImageView DepthView() noexcept;
 
@@ -162,6 +159,9 @@ public:
 
     /// Returns a framebuffer handle for rendering to this surface
     vk::Framebuffer Framebuffer() noexcept;
+
+    /// Returns a single-mip-level view suitable for framebuffer attachments
+    vk::ImageView AttachmentView() noexcept;
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
@@ -201,7 +201,6 @@ public:
     std::array<Handle, 3> handles{};
     std::array<vk::UniqueFramebuffer, 2> framebuffers{};
     Handle copy_handle;
-    std::array<vk::UniqueImageView, 2> framebuffer_view;
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
@@ -247,14 +246,6 @@ public:
 
     u32 Scale() const noexcept {
         return res_scale;
-    }
-
-    u32 Width() const noexcept {
-        return width;
-    }
-
-    u32 Height() const noexcept {
-        return height;
     }
 
 private:
