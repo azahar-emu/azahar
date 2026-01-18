@@ -6,12 +6,15 @@
 #include <mutex>
 #include <thread>
 #include "common/logging/log.h"
+#include "core/frontend/emu_window.h"
 #include "video_core/gpu.h"
 #include "video_core/gpu_command_queue.h"
+#include "video_core/gpu_impl.h"
 
 namespace VideoCore {
 
-GPUCommandQueue::GPUCommandQueue(GPU& gpu) : gpu{gpu} {
+GPUCommandQueue::GPUCommandQueue(GPU& gpu, std::unique_ptr<Frontend::GraphicsContext> context)
+    : gpu{gpu}, graphics_context{std::move(context)} {
     worker_thread = std::make_unique<std::thread>([this] { ProcessCommandQueue(); });
 }
 
@@ -33,6 +36,17 @@ void GPUCommandQueue::WaitForIdle() {
     idle_cv.wait(lock, [this] { return is_idle; });
 }
 
+void GPUCommandQueue::SignalFlush() {
+    // Non-blocking signal that GPU should flush pending work
+    // Used at frame boundaries where we can't block the timing thread
+    {
+        std::lock_guard<std::mutex> lock(queue_mutex);
+        // Just ensure the worker is awake to process any remaining commands
+        // Don't wait for completion
+    }
+    queue_cv.notify_one();
+}
+
 void GPUCommandQueue::Shutdown() {
     {
         std::lock_guard<std::mutex> lock(queue_mutex);
@@ -51,6 +65,9 @@ bool GPUCommandQueue::IsIdle() const {
 }
 
 void GPUCommandQueue::ProcessCommandQueue() {
+    // Execute queued commands on a dedicated worker thread.
+    // Rasterizer access is protected by a mutex to ensure thread safety.
+
     while (true) {
         Service::GSP::Command command;
         bool has_command = false;
@@ -72,8 +89,10 @@ void GPUCommandQueue::ProcessCommandQueue() {
             }
         }
 
-        // Process the command outside the lock - no artificial delays
+        // Process the command outside the queue lock but with rasterizer lock held
         if (has_command) {
+            // Hold rasterizer mutex while executing to prevent races with main thread
+            std::lock_guard<std::mutex> rasterizer_lock(gpu.impl->rasterizer_mutex);
             gpu.ExecuteCommand(command);
 
             // Check if queue is now idle after processing this command

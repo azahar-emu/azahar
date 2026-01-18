@@ -38,6 +38,7 @@ constexpr u64 FRAME_TICKS = 4481136ull;
 class GraphicsDebugger;
 class RendererBase;
 class RightEyeDisabler;
+class GPUCommandQueue;
 
 /**
  * The GPU class is the high level interface to the video_core for core services.
@@ -78,6 +79,10 @@ public:
     /// Writes the provided value to the GPU virtual address.
     void WriteReg(VAddr addr, u32 data);
 
+    /// Queues a synthetic GPU command for an internally-triggered operation
+    /// Used when WriteReg triggers GPU actions that should be async
+    void QueueInternalCommand(const Service::GSP::Command& command);
+
     /// Returns a mutable reference to the renderer.
     [[nodiscard]] VideoCore::RendererBase& Renderer();
 
@@ -99,6 +104,23 @@ public:
 
     void ReportLoadingProgramID(u64 program_ID);
 
+    /// Waits for all pending GPU commands to complete.
+    /// This should ONLY be called in critical sections where game logic depends on GPU results.
+    /// Normal rendering does not require this call - it happens asynchronously.
+    /// Examples: Memory reads after transfers, register reads that reflect GPU state
+    void WaitForGPUCompletion();
+
+    /// Check if GPU command queue is idle (non-blocking check)
+    [[nodiscard]] bool IsGPUCommandQueueIdle() const;
+
+    /// Signal GPU to flush pending work (non-blocking).
+    /// Used at frame boundaries where timing thread cannot block.
+    void SignalGPUFlush();
+
+    // Allow GPUCommandQueue to access implementation details
+    struct Impl;
+    std::unique_ptr<Impl> impl;
+
 private:
     void SubmitCmdList(u32 index);
 
@@ -113,12 +135,12 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const u32 file_version);
 
+    friend class GPUCommandQueue; // Allow access to impl for rasterizer mutex
+
     std::unique_ptr<RightEyeDisabler> right_eye_disabler;
 
 private:
     friend class RightEyeDisabler;
-    struct Impl;
-    std::unique_ptr<Impl> impl;
 
     PAddr VirtualToPhysicalAddress(VAddr addr);
 };

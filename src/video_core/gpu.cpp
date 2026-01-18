@@ -8,6 +8,7 @@
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/frontend/emu_window.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hle/service/plgldr/plgldr.h"
 #include "video_core/debug_utils/debug_utils.h"
@@ -32,8 +33,8 @@ MICROPROFILE_DEFINE(GPU_CmdlistProcessing, "GPU", "Cmdlist Processing", MP_RGB(1
 
 GPU::GPU(Core::System& system, Frontend::EmuWindow& emu_window,
          Frontend::EmuWindow* secondary_window)
-    : right_eye_disabler{std::make_unique<RightEyeDisabler>(*this)},
-      impl{std::make_unique<Impl>(system, emu_window, secondary_window)} {
+    : impl{std::make_unique<Impl>(system, emu_window, secondary_window)},
+      right_eye_disabler{std::make_unique<RightEyeDisabler>(*this)} {
     impl->vblank_event = impl->timing.RegisterEvent(
         "GPU::VBlankCallback",
         [this](uintptr_t user_data, s64 cycles_late) { VBlankCallback(user_data, cycles_late); });
@@ -43,11 +44,14 @@ GPU::GPU(Core::System& system, Frontend::EmuWindow& emu_window,
     impl->pica.BindRasterizer(impl->rasterizer);
 
     // Initialize GPU command queue if async GPU is enabled.
-    // Note: Async GPU is disabled for Vulkan as it causes threading issues with command buffer
-    // recording.
+    // Note: Async GPU is disabled for Vulkan as it causes threading issues.
     if (Settings::values.async_gpu.GetValue() &&
         Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::Vulkan) {
-        impl->command_queue = std::make_unique<GPUCommandQueue>(*this);
+        auto shared_context = emu_window.CreateSharedContext();
+        if (shared_context) {
+            impl->command_queue =
+                std::make_unique<GPUCommandQueue>(*this, std::move(shared_context));
+        }
     }
 }
 
@@ -95,18 +99,12 @@ void GPU::ClearAll(bool flush) {
 }
 
 void GPU::Execute(const Service::GSP::Command& command) {
-    // If async GPU is enabled, queue the command; otherwise execute it directly
-    if (impl->command_queue) {
-        impl->command_queue->QueueCommand(command);
-    } else {
-        ExecuteCommand(command);
-    }
+    QueueInternalCommand(command);
 }
 
 void GPU::ExecuteCommand(const Service::GSP::Command& command) {
     using Service::GSP::CommandId;
     auto& regs = impl->pica.regs;
-
     switch (command.id) {
     case CommandId::RequestDma: {
         impl->system.Memory().RasterizerFlushVirtualRegion(
@@ -257,7 +255,14 @@ u32 GPU::ReadReg(VAddr addr) {
         const u32 index = offset / sizeof(u32);
         ASSERT(addr % sizeof(u32) == 0);
         ASSERT(index < Pica::PicaCore::Regs::NUM_REGS);
-        return impl->pica.regs.reg_array[index];
+
+        // Protect GPU register reads with mutex only when async GPU is enabled
+        if (impl->command_queue) {
+            std::lock_guard<std::mutex> lock(impl->rasterizer_mutex);
+            return impl->pica.regs.reg_array[index];
+        } else {
+            return impl->pica.regs.reg_array[index];
+        }
     }
     default:
         UNREACHABLE_MSG("Read from unknown GPU address {:#08X}", addr);
@@ -281,27 +286,66 @@ void GPU::WriteReg(VAddr addr, u32 data) {
 
         ASSERT(addr % sizeof(u32) == 0);
         ASSERT(index < Pica::PicaCore::Regs::NUM_REGS);
-        impl->pica.regs.reg_array[index] = data;
 
-        // Handle registers that trigger GPU actions
-        switch (index) {
-        case GPU_REG_INDEX(memory_fill_config[0].trigger):
-            MemoryFill(0, 0);
-            break;
-        case GPU_REG_INDEX(memory_fill_config[1].trigger):
-            MemoryFill(1, 1);
-            break;
-        case GPU_REG_INDEX(display_transfer_config.trigger):
-            MemoryTransfer();
-            break;
-        case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[0]):
-            SubmitCmdList(0);
-            break;
-        case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[1]):
-            SubmitCmdList(1);
-            break;
-        default:
-            break;
+        if (impl->command_queue) {
+            // Async GPU path: protect with mutex and execute operations
+            std::lock_guard<std::mutex> lock(impl->rasterizer_mutex);
+            impl->pica.regs.reg_array[index] = data;
+
+            // Handle registers that trigger GPU actions asynchronously
+            switch (index) {
+            case GPU_REG_INDEX(memory_fill_config[0].trigger):
+                if (data)
+                    MemoryFill(0, 0);
+                break;
+            case GPU_REG_INDEX(memory_fill_config[1].trigger):
+                if (data)
+                    MemoryFill(1, 1);
+                break;
+            case GPU_REG_INDEX(display_transfer_config.trigger):
+                if (data)
+                    MemoryTransfer();
+                break;
+            case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[0]):
+                if (data)
+                    SubmitCmdList(0);
+                break;
+            case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[1]):
+                if (data)
+                    SubmitCmdList(1);
+                break;
+            default:
+                break;
+            }
+        } else {
+            // Synchronous GPU path: no mutex needed, execute directly
+            impl->pica.regs.reg_array[index] = data;
+
+            // Handle registers that trigger GPU actions synchronously
+            switch (index) {
+            case GPU_REG_INDEX(memory_fill_config[0].trigger):
+                if (data)
+                    MemoryFill(0, 0);
+                break;
+            case GPU_REG_INDEX(memory_fill_config[1].trigger):
+                if (data)
+                    MemoryFill(1, 1);
+                break;
+            case GPU_REG_INDEX(display_transfer_config.trigger):
+                if (data)
+                    MemoryTransfer();
+                break;
+            case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[0]):
+                if (data)
+                    SubmitCmdList(0);
+                break;
+            case GPU_REG_INDEX(internal.pipeline.command_buffer.trigger[1]):
+                if (data)
+                    SubmitCmdList(1);
+                break;
+            default:
+                break;
+            }
         }
         break;
     }
@@ -348,6 +392,33 @@ void GPU::ReportLoadingProgramID(u64 program_ID) {
         }
     }
     impl->rasterizer->SetAccurateMul(use_accurate_mul);
+}
+
+void GPU::WaitForGPUCompletion() {
+    if (impl->command_queue) {
+        impl->command_queue->WaitForIdle();
+    }
+}
+
+bool GPU::IsGPUCommandQueueIdle() const {
+    if (impl->command_queue) {
+        return impl->command_queue->IsIdle();
+    }
+    return true;
+}
+
+void GPU::SignalGPUFlush() {
+    if (impl->command_queue) {
+        impl->command_queue->SignalFlush();
+    }
+}
+
+void GPU::QueueInternalCommand(const Service::GSP::Command& command) {
+    if (impl->command_queue) {
+        impl->command_queue->QueueCommand(command);
+    } else {
+        ExecuteCommand(command);
+    }
 }
 
 void GPU::SubmitCmdList(u32 index) {
@@ -429,7 +500,15 @@ void GPU::MemoryTransfer() {
 }
 
 void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
-    // Present renderered frame.
+    // Signal GPU to flush any pending work before presenting.
+    // Use non-blocking signal because VBlank happens on timing thread and cannot block.
+    // The GPU worker thread will process queued commands and complete them before
+    // the next frame if there's time, enabling proper async operation.
+    if (impl->command_queue) {
+        impl->command_queue->SignalFlush();
+    }
+
+    // Present rendered frame.
     impl->renderer->SwapBuffers();
 
     // Signal to GSP that GPU interrupt has occurred

@@ -13,15 +13,17 @@
 #include "core/hle/service/plgldr/plgldr.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
+#include "video_core/gpu_command_queue.h"
 #include "video_core/gpu_debugger.h"
 #include "video_core/gpu_impl.h"
-#include "video_core/gpu_command_queue.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/pica/regs_lcd.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_software/sw_blitter.h"
 #include "video_core/right_eye_disabler.h"
 #include "video_core/video_core.h"
+
+#include <mutex>
 
 namespace VideoCore {
 struct GPU::Impl {
@@ -37,6 +39,10 @@ struct GPU::Impl {
     std::unique_ptr<GPUCommandQueue> command_queue;
     Core::TimingEventType* vblank_event;
     Service::GSP::InterruptHandler signal_interrupt;
+
+    // Mutex to protect rasterizer access when async GPU is enabled
+    // Ensures cache consistency when accessed from multiple threads
+    mutable std::mutex rasterizer_mutex;
 
     explicit Impl(Core::System& system, Frontend::EmuWindow& emu_window,
                   Frontend::EmuWindow* secondary_window)

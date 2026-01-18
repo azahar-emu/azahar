@@ -163,8 +163,8 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->toggle_async_shaders, async_shader_compilation);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_presentation,
                                              ui->toggle_async_present, async_presentation);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_gpu,
-                                             ui->toggle_async_gpu, async_gpu);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.async_gpu, ui->toggle_async_gpu,
+                                             async_gpu);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.spirv_shader_gen,
                                              ui->spirv_shader_gen, spirv_shader_gen);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.disable_spirv_optimizer,
