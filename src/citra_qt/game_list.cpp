@@ -19,8 +19,10 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QModelIndex>
+#include <QPainter>
 #include <QStandardItem>
 #include <QStandardItemModel>
+#include <QStyledItemDelegate>
 #include <QThreadPool>
 #include <QToolButton>
 #include <QTreeView>
@@ -33,6 +35,7 @@
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/hle/service/am/am.h"
@@ -306,6 +309,42 @@ void GameList::OnFilterCloseClicked() {
     main_window->filterBarSetChecked(false);
 }
 
+class CartridgeIconDelegate : public QStyledItemDelegate {
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override {
+        QStyleOptionViewItem opt(option);
+        initStyleOption(&opt, index);
+
+        QStyle* style = opt.widget ? opt.widget->style() : QApplication::style();
+
+        // Draw the default item (background, text, selection, etc.)
+        style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, opt.widget);
+
+        // Draw cartridge inserted icon
+        quint32 can_insert = index.data(GameListItemPath::CanInsertRole).value<quint32>();
+        QString game_path = index.data(GameListItemPath::FullPathRole).value<QString>();
+
+        bool is_inserted = can_insert && UISettings::values.inserted_cartridge.GetValue() ==
+                                             game_path.toStdString();
+
+        if (is_inserted) {
+            QPixmap pixmap = QIcon::fromTheme(QStringLiteral("cartridge")).pixmap(24);
+
+            const int margin = 12;
+            QSize pmSize = pixmap.size() / pixmap.devicePixelRatio();
+
+            QRect pmRect(opt.rect.right() - pmSize.width() - margin,
+                         opt.rect.center().y() - pmSize.height() / 2, pmSize.width(),
+                         pmSize.height());
+
+            painter->drawPixmap(pmRect, pixmap);
+        }
+    }
+};
+
 GameList::GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* parent)
     : QWidget{parent}, play_time_manager{play_time_manager_} {
     watcher = new QFileSystemWatcher(this);
@@ -328,6 +367,7 @@ GameList::GameList(PlayTime::PlayTimeManager& play_time_manager_, GMainWindow* p
     tree_view->setEditTriggers(QHeaderView::NoEditTriggers);
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
     tree_view->setStyleSheet(QStringLiteral("QTreeView{ border: none; }"));
+    tree_view->setItemDelegateForColumn(0, new CartridgeIconDelegate(tree_view));
     tree_view->header()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     UpdateColumnVisibility();
@@ -533,7 +573,8 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
                      selected.data(GameListItemPath::ProgramIdRole).toULongLong(),
                      selected.data(GameListItemPath::ExtdataIdRole).toULongLong(),
                      static_cast<Service::FS::MediaType>(
-                         selected.data(GameListItemPath::MediaTypeRole).toUInt()));
+                         selected.data(GameListItemPath::MediaTypeRole).toUInt()),
+                     selected.data(GameListItemPath::CanInsertRole).toUInt() != 0);
         break;
     case GameListItemType::CustomDir:
         AddPermDirPopup(context_menu, selected);
@@ -603,8 +644,16 @@ void ForEachOpenGLCacheFile(u64 program_id, auto func) {
 #endif
 
 void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QString& name,
-                            u64 program_id, u64 extdata_id, Service::FS::MediaType media_type) {
+                            u64 program_id, u64 extdata_id, Service::FS::MediaType media_type,
+                            bool can_insert) {
     QAction* favorite = context_menu.addAction(tr("Favorite"));
+    bool is_inserted =
+        can_insert && UISettings::values.inserted_cartridge.GetValue() == path.toStdString();
+    QAction* cartridge_insert = nullptr;
+    if (can_insert) {
+        cartridge_insert =
+            context_menu.addAction(is_inserted ? tr("Eject Cartridge") : tr("Insert Cartridge"));
+    }
     context_menu.addSeparator();
     QMenu* open_menu = context_menu.addMenu(tr("Open"));
     QAction* open_application_location = open_menu->addAction(tr("Application Location"));
@@ -718,6 +767,16 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     connect(open_extdata_location, &QAction::triggered, this, [this, extdata_id] {
         emit OpenFolderRequested(extdata_id, GameListOpenTarget::EXT_DATA);
     });
+    if (cartridge_insert) {
+        connect(cartridge_insert, &QAction::triggered, this, [this, path, is_inserted] {
+            if (is_inserted) {
+                UISettings::values.inserted_cartridge.SetValue("");
+            } else {
+                UISettings::values.inserted_cartridge.SetValue(path.toStdString());
+            }
+            tree_view->viewport()->update();
+        });
+    }
     connect(open_application_location, &QAction::triggered, this, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::APPLICATION);
     });
@@ -1054,6 +1113,13 @@ const QStringList GameList::supported_file_extensions = {
 };
 
 void GameList::RefreshGameDirectory() {
+
+    // Do not scan directories when the system is powered on, it will be
+    // repopulated on shutdown anyways.
+    if (Core::System::GetInstance().IsPoweredOn()) {
+        return;
+    }
+
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
         LOG_INFO(Frontend, "Change detected in the applications directory. Reloading game list.");
         PopulateAsync(UISettings::values.game_dirs);

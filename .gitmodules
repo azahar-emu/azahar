@@ -100,3 +100,6 @@
 [submodule "spirv-headers"]
 	path = externals/spirv-headers
 	url = https://github.com/KhronosGroup/SPIRV-Headers
+[submodule "externals/xxHash"]
+	path = externals/xxHash
+	url = https://github.com/Cyan4973/xxHash.git

@@ -517,6 +517,8 @@ void QtConfig::ReadLayoutValues() {
 
     ReadGlobalSetting(Settings::values.render_3d);
     ReadGlobalSetting(Settings::values.factor_3d);
+    ReadGlobalSetting(Settings::values.swap_eyes_3d);
+    ReadGlobalSetting(Settings::values.render_3d_which_display);
     ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.pp_shader_name);
     ReadGlobalSetting(Settings::values.anaglyph_shader_name);
@@ -668,6 +670,11 @@ void QtConfig::ReadPathValues() {
             ReadSetting(QStringLiteral("last_artic_base_addr"), QString{}).toString();
         UISettings::values.recent_files = ReadSetting(QStringLiteral("recentFiles")).toStringList();
         UISettings::values.language = ReadSetting(QStringLiteral("language"), QString{}).toString();
+
+        ReadBasicSetting(UISettings::values.inserted_cartridge);
+        if (!FileUtil::Exists(UISettings::values.inserted_cartridge.GetValue())) {
+            UISettings::values.inserted_cartridge.SetValue("");
+        }
     }
 
     qt_config->endGroup();
@@ -745,6 +752,7 @@ void QtConfig::ReadSystemValues() {
         ReadBasicSetting(Settings::values.steps_per_hour);
         ReadBasicSetting(Settings::values.plugin_loader_enabled);
         ReadBasicSetting(Settings::values.allow_plugin_loader);
+        ReadBasicSetting(Settings::values.apply_region_free_patch);
     }
 
     qt_config->endGroup();
@@ -1082,6 +1090,8 @@ void QtConfig::SaveLayoutValues() {
 
     WriteGlobalSetting(Settings::values.render_3d);
     WriteGlobalSetting(Settings::values.factor_3d);
+    WriteGlobalSetting(Settings::values.swap_eyes_3d);
+    WriteGlobalSetting(Settings::values.render_3d_which_display);
     WriteGlobalSetting(Settings::values.filter_mode);
     WriteGlobalSetting(Settings::values.pp_shader_name);
     WriteGlobalSetting(Settings::values.anaglyph_shader_name);
@@ -1199,6 +1209,7 @@ void QtConfig::SavePathValues() {
                      UISettings::values.last_artic_base_addr, QString{});
         WriteSetting(QStringLiteral("recentFiles"), UISettings::values.recent_files);
         WriteSetting(QStringLiteral("language"), UISettings::values.language, QString{});
+        WriteBasicSetting(UISettings::values.inserted_cartridge);
     }
 
     qt_config->endGroup();
@@ -1276,6 +1287,7 @@ void QtConfig::SaveSystemValues() {
         WriteBasicSetting(Settings::values.steps_per_hour);
         WriteBasicSetting(Settings::values.plugin_loader_enabled);
         WriteBasicSetting(Settings::values.allow_plugin_loader);
+        WriteBasicSetting(Settings::values.apply_region_free_patch);
     }
 
     qt_config->endGroup();

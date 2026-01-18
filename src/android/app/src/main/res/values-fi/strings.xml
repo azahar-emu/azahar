@@ -8,8 +8,6 @@
     <string name="controller_dpad">D-Pad</string>
     <string name="controller_axis_vertical">Ylä/ala-akseli</string>
     <string name="controller_axis_horizontal">Vasen/oikea akseli</string>
-    <string name="input_binding_description_vertical_axis">Liikuta tattia ylös tai alas.</string>
-    <string name="input_binding_description_horizontal_axis">Liikuta tattia vasemmalle tai oikealle.</string>
     <!-- Generic buttons (Shared with lots of stuff) -->
     <string name="generic_buttons">Nappulat</string>
     <string name="init_clock">Järjestelmän kellotyyppi</string>
@@ -38,7 +36,6 @@
     <string name="hw_shaders">Aktivoi Laitteistovarjostin</string>
     <string name="hw_shaders_description">Käyttää laitteistoa emuloidakseen 3DS:n varjostimia. Kun tämä on päällä, pelien suorituskyky on huomattavasti parempi.</string>
     <string name="vsync">Aktivoi V-Sync</string>
-    <string name="vsync_description">Synkronoi pelin virkistystaajuus laitteesi virkistystaajuuteen.</string>
     <!-- Miscellaneous -->
     <string name="clear">Tyhjennä</string>
     <string name="slider_default">Oletus</string>

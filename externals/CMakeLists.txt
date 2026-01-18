@@ -243,13 +243,8 @@ else()
     )
     target_link_libraries(zstd_seekable PUBLIC libzstd_static)
 
-    target_link_libraries(libzstd_static INTERFACE zstd_seekable)
-
-    add_library(zstd ALIAS libzstd_static)
-
-    install(TARGETS zstd_seekable
-        EXPORT zstdExports
-    )
+    add_library(zstd INTERFACE)
+    target_link_libraries(zstd INTERFACE libzstd_static zstd_seekable)
 endif()
 
 # ENet
@@ -493,4 +488,18 @@ if (ENABLE_VULKAN)
     if (ANDROID AND "arm64" IN_LIST ARCHITECTURE)
         add_subdirectory(libadrenotools)
     endif()
+endif()
+
+set(XXHASH_BUILD_XXHSUM OFF)
+add_subdirectory(xxHash/cmake_unofficial EXCLUDE_FROM_ALL)
+target_compile_definitions(xxhash PRIVATE XXH_FORCE_MEMORY_ACCESS=2)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SSE2)
+    message(STATUS "Enabling SSE2 for xxHash")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64|armv8")
+    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_NEON)
+    message(STATUS "Enabling NEON for xxHash")
+else()
+    target_compile_definitions(xxhash PRIVATE XXH_VECTOR=XXH_SCALAR)
+    message(STATUS "Disabling SIMD for xxHash")
 endif()

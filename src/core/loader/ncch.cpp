@@ -125,6 +125,23 @@ AppLoader_NCCH::LoadNew3dsHwCapabilities() {
     return std::make_pair(std::move(caps), ResultStatus::Success);
 }
 
+bool AppLoader_NCCH::IsN3DSExclusive() {
+    if (!is_loaded) {
+        ResultStatus res = base_ncch.Load();
+        if (res != ResultStatus::Success) {
+            return false;
+        }
+    }
+
+    std::vector<u8> smdh_buffer;
+    if (ReadIcon(smdh_buffer) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
+        SMDH* smdh = reinterpret_cast<SMDH*>(smdh_buffer.data());
+        return smdh->flags.n3ds_exclusive != 0;
+    }
+
+    return false;
+}
+
 ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process) {
     using Kernel::CodeSet;
 

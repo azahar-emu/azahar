@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,7 +42,7 @@ APT_S::APT_S(std::shared_ptr<Module> apt)
         {0x001D, &APT_S::CancelApplication, "CancelApplication"},
         {0x001E, &APT_S::StartLibraryApplet, "StartLibraryApplet"},
         {0x001F, &APT_S::StartSystemApplet, "StartSystemApplet"},
-        {0x0020, nullptr, "StartNewestHomeMenu"},
+        {0x0020, &APT_S::StartNewestHomeMenu, "StartNewestHomeMenu"},
         {0x0021, &APT_S::OrderToCloseApplication, "OrderToCloseApplication"},
         {0x0022, &APT_S::PrepareToCloseApplication, "PrepareToCloseApplication"},
         {0x0023, nullptr, "PrepareToJumpToApplication"},

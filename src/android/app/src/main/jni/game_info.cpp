@@ -25,6 +25,7 @@ struct GameInfoData {
     bool loaded = false;
     bool is_encrypted = false;
     std::string file_type = "";
+    bool is_insertable = false;
 };
 
 GameInfoData* GetNewGameInfoData(const std::string& path) {
@@ -89,6 +90,7 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
     gid->is_encrypted = is_encrypted;
     gid->title_id = program_id;
     gid->file_type = Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed());
+    gid->is_insertable = loader->GetFileType() == Loader::FileType::CCI;
 
     return gid;
 }
@@ -222,12 +224,15 @@ jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsVisibleSystemTitle(JNIEnv
         return false;
     }
 
-    return smdh->flags & Loader::SMDH::Flags::Visible;
+    return smdh->flags.visible;
 }
 
 jstring Java_org_citra_citra_1emu_model_GameInfo_getFileType(JNIEnv* env, jobject obj) {
     std::string& file_type = GetPointer(env, obj)->file_type;
 
     return ToJString(env, file_type);
+}
+jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsInsertable(JNIEnv* env, jobject obj) {
+    return GetPointer(env, obj)->is_insertable;
 }
 }

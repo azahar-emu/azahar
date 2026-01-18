@@ -69,6 +69,7 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
     ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.entry_point = entry_point;
 
+    setup.DoProgramCodeFixup();
     const u64 code_hash = setup.GetProgramCodeHash();
     const u64 swizzle_hash = setup.GetSwizzleDataHash();
     const u64 cache_key = Common::HashCombine(code_hash, swizzle_hash);
@@ -83,7 +84,7 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
         } else {
             // Compile synchronously and store the result
             auto shader = std::make_unique<JitShader>();
-            shader->Compile(&setup.program_code, &setup.swizzle_data);
+            shader->Compile(&setup.GetProgramCode(), &setup.GetSwizzleData());
             auto ready_future = std::make_shared<std::promise<std::unique_ptr<JitShader>>>();
             ready_future->set_value(std::move(shader));
             shader_future = ready_future->get_future().share();

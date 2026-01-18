@@ -125,7 +125,7 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isShrinkResources = true
+            isShrinkResources = true // TODO: Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
@@ -133,6 +133,22 @@ android {
                 "proguard-rules.pro"
             )
             isDefault = true
+        }
+
+        // Same as above, but with isDebuggable disabled.
+        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS) without constantly tripping over years-old and seemingly harmless memory bugs.
+        // We should fix those bugs eventually, but for now this exists as a workaround to allow other work to be done.
+        register("relWithDebInfoLite") {
+            initWith(getByName("relWithDebInfo"))
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            installation {
+                enableBaselineProfile = false // Disabled by default when isDebuggable is true
+            }
+            lint {
+                checkReleaseBuilds = false // Ditto
+                                           // The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+            }
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -147,6 +163,18 @@ android {
     }
 
     flavorDimensions.add("version")
+
+    productFlavors {
+        register("vanilla") {
+            isDefault = true
+            dimension = "version"
+            versionNameSuffix = "-vanilla"
+        }
+        register("googlePlay") {
+            dimension = "version"
+            versionNameSuffix = "-googleplay"
+        }
+    }
 
     externalNativeBuild {
         cmake {

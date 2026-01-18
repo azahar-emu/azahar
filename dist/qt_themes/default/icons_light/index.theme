@@ -1,13 +1,16 @@
 [Icon Theme]
 Name=default
 Comment=default theme
-Directories=16x16,48x48,256x256
+Directories=16x16,48x48,128x128,256x256
  
 [16x16]
 Size=16
 
 [48x48]
 Size=48
- 
+
+[128x128]
+Size=128
+
 [256x256]
 Size=256

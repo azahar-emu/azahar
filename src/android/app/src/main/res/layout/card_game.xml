@@ -28,6 +28,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <ImageView
+            android:id="@+id/image_cartridge"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/cartridge"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="0dp"

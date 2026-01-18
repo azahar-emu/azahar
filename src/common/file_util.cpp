@@ -304,20 +304,31 @@ bool DeleteDir(const std::string& filename) {
     return false;
 }
 
-bool Rename(const std::string& srcFilename, const std::string& destFilename) {
-    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilename, destFilename);
+bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFullPath, destFullPath);
 #ifdef _WIN32
-    if (_wrename(Common::UTF8ToUTF16W(srcFilename).c_str(),
-                 Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
+    if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
+                 Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
         return true;
 #elif ANDROID
-    if (AndroidStorage::RenameFile(srcFilename, std::string(GetFilename(destFilename))))
-        return true;
+    // srcFullPath and destFullPath are relative to the user directory
+    if (AndroidStorage::GetBuildFlavor() == AndroidStorage::AndroidBuildFlavors::GOOGLEPLAY) {
+        if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath))
+            return true;
+    } else {
+        std::optional<std::string> userDirLocation = AndroidStorage::GetUserDirectory();
+        if (userDirLocation && rename((*userDirLocation + srcFullPath).c_str(),
+                                      (*userDirLocation + destFullPath).c_str()) == 0) {
+            AndroidStorage::UpdateDocumentLocation(srcFullPath, destFullPath);
+            // ^ TODO: This shouldn't fail, but what should we do if it somehow does?
+            return true;
+        }
+    }
 #else
-    if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
+    if (rename(srcFullPath.c_str(), destFullPath.c_str()) == 0)
         return true;
 #endif
-    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
+    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFullPath, destFullPath,
               GetLastErrorMsg());
     return false;
 }
@@ -874,7 +885,6 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::LoadDir, user_path + LOAD_DIR DIR_SEP);
     g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
     g_paths.emplace(UserPath::IconsDir, user_path + ICONS_DIR DIR_SEP);
-    g_paths.emplace(UserPath::PlayTimeDir, user_path + LOG_DIR DIR_SEP);
     g_default_paths = g_paths;
 }
 

@@ -11,11 +11,13 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -30,7 +32,9 @@ import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.SetupAdapter
 import org.citra.citra_emu.databinding.FragmentSetupBinding
@@ -41,6 +45,7 @@ import org.citra.citra_emu.model.PageState
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
 import org.citra.citra_emu.ui.main.MainActivity
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.PermissionsHandler
@@ -142,7 +147,56 @@ class SetupFragment : Fragment() {
                     false,
                     0,
                     pageButtons = mutableListOf<PageButton>().apply {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (!BuildUtil.isGooglePlayBuild) {
+                            add(
+                                PageButton(
+                                    R.drawable.ic_folder,
+                                    R.string.filesystem_permission,
+                                    R.string.filesystem_permission_description,
+                                    buttonAction = {
+                                        pageButtonCallback = it
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                            manageExternalStoragePermissionLauncher.launch(
+                                                Intent(
+                                                    android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                                    Uri.fromParts(
+                                                        "package",
+                                                        requireActivity().packageName,
+                                                        null
+                                                    )
+                                                )
+                                            )
+                                        } else {
+                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                        }
+                                    },
+                                    buttonState = {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                            if (Environment.isExternalStorageManager()) {
+                                                ButtonState.BUTTON_ACTION_COMPLETE
+                                            } else {
+                                                ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            }
+                                        } else {
+                                            if (ContextCompat.checkSelfPermission(
+                                                    requireContext(),
+                                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                            ) {
+                                                ButtonState.BUTTON_ACTION_COMPLETE
+                                            } else {
+                                                ButtonState.BUTTON_ACTION_INCOMPLETE
+                                            }
+                                        }
+                                    },
+                                    isUnskippable = true,
+                                    hasWarning = true,
+                                    R.string.filesystem_permission_warning,
+                                    R.string.filesystem_permission_warning_description,
+                                )
+                            )
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                             add(
                                 PageButton(
                                     R.drawable.ic_notification,
@@ -214,18 +268,35 @@ class SetupFragment : Fragment() {
                         )
                     },
                 ) {
-                    if (
+                    var permissionsComplete =
+                        // Microphone
                         ContextCompat.checkSelfPermission(
                             requireContext(),
                             Manifest.permission.RECORD_AUDIO
                         ) == PackageManager.PERMISSION_GRANTED &&
+                        // Camera
                         ContextCompat.checkSelfPermission(
                             requireContext(),
                             Manifest.permission.CAMERA
                         ) == PackageManager.PERMISSION_GRANTED &&
+                        // Notifications
                         NotificationManagerCompat.from(requireContext())
                             .areNotificationsEnabled()
-                    ) {
+                    // External Storage
+                    if (!BuildUtil.isGooglePlayBuild) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            permissionsComplete =
+                                (permissionsComplete && Environment.isExternalStorageManager())
+                        } else {
+                            permissionsComplete =
+                                (permissionsComplete && ContextCompat.checkSelfPermission(
+                                    requireContext(),
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ) == PackageManager.PERMISSION_GRANTED)
+                        }
+                    }
+
+                    if (permissionsComplete) {
                         PageState.PAGE_STEPS_COMPLETE
                     } else {
                         PageState.PAGE_STEPS_INCOMPLETE
@@ -249,7 +320,7 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
                                     pageButtonCallback = it
-                                    openCitraDirectory.launch(null)
+                                    PermissionsHandler.compatibleSelectDirectory(openCitraDirectory)
                                 },
                                 buttonState = {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {
@@ -452,6 +523,19 @@ class SetupFragment : Fragment() {
         }
     }
 
+    private fun showPermissionDeniedSnackbar() {
+        Snackbar.make(binding.root, R.string.permission_denied, Snackbar.LENGTH_LONG)
+            .setAnchorView(binding.buttonNext)
+            .setAction(R.string.grid_menu_core_settings) {
+                val intent =
+                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", requireActivity().packageName, null)
+                intent.data = uri
+                startActivity(intent)
+            }
+            .show()
+    }
+
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
@@ -459,16 +543,20 @@ class SetupFragment : Fragment() {
                 return@registerForActivityResult
             }
 
-            Snackbar.make(binding.root, R.string.permission_denied, Snackbar.LENGTH_LONG)
-                .setAnchorView(binding.buttonNext)
-                .setAction(R.string.grid_menu_core_settings) {
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    val uri = Uri.fromParts("package", requireActivity().packageName, null)
-                    intent.data = uri
-                    startActivity(intent)
-                }
-                .show()
+            showPermissionDeniedSnackbar()
+        }
+
+    // We can't use permissionLauncher because MANAGE_EXTERNAL_STORAGE is a special snowflake
+    @RequiresApi(Build.VERSION_CODES.R)
+    private val manageExternalStoragePermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            BuildUtil.assertNotGooglePlay()
+            if (Environment.isExternalStorageManager()) {
+                checkForButtonState.invoke()
+                return@registerForActivityResult
+            }
+
+            showPermissionDeniedSnackbar()
         }
 
     private val openCitraDirectory = registerForActivityResult<Uri, Uri>(
@@ -476,6 +564,17 @@ class SetupFragment : Fragment() {
     ) { result: Uri? ->
         if (result == null) {
             return@registerForActivityResult
+        }
+
+        if (!BuildUtil.isGooglePlayBuild) {
+            if (NativeLibrary.getUserDirectory(result) == "") {
+                SelectUserDirectoryDialogFragment.newInstance(
+                    mainActivity,
+                    R.string.invalid_selection,
+                    R.string.invalid_user_directory
+                ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
+                return@registerForActivityResult
+            }
         }
 
         CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)

@@ -88,14 +88,31 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
 
     std::string file_path;
-    if (Settings::values.is_new_3ds) {
-        // Try the New 3DS specific variant first.
-        file_path = Service::AM::GetTitleContentPath(media_type, title_id | 0x20000000,
-                                                     openfile_path.content_index);
-    }
-    if (!Settings::values.is_new_3ds || !FileUtil::Exists(file_path)) {
-        file_path =
-            Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
+
+    if (media_type == Service::FS::MediaType::GameCard) {
+        const auto& cartridge = Core::System::GetInstance().GetCartridge();
+        if (cartridge.empty()) {
+            return ResultNotFound;
+        }
+
+        u64 card_program_id;
+        auto cartridge_loader = Loader::GetLoader(cartridge);
+        FileSys::NCCHContainer cartridge_ncch(cartridge);
+        if (cartridge_ncch.ReadProgramId(card_program_id) != Loader::ResultStatus::Success ||
+            card_program_id != title_id) {
+            return ResultNotFound;
+        }
+        file_path = cartridge;
+    } else {
+        if (Settings::values.is_new_3ds) {
+            // Try the New 3DS specific variant first.
+            file_path = Service::AM::GetTitleContentPath(media_type, title_id | 0x20000000,
+                                                         openfile_path.content_index);
+        }
+        if (!Settings::values.is_new_3ds || !FileUtil::Exists(file_path)) {
+            file_path =
+                Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
+        }
     }
 
     auto ncch_container = NCCHContainer(file_path, 0, openfile_path.content_index);
@@ -116,6 +133,15 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
 
         // Load NCCH .code or icon/banner/logo
         result = ncch_container.LoadSectionExeFS(openfile_path.exefs_filepath.data(), buffer);
+        if (result == Loader::ResultStatus::Success && Settings::values.apply_region_free_patch &&
+            std::memcmp(openfile_path.exefs_filepath.data(), "icon", 4) == 0 &&
+            buffer.size() >= sizeof(Loader::SMDH)) {
+            // Change the SMDH region lockout value to be region free
+            Loader::SMDH* smdh = reinterpret_cast<Loader::SMDH*>(buffer.data());
+            constexpr u32 REGION_LOCKOUT_REGION_FREE = 0x7FFFFFFF;
+
+            smdh->region_lockout = REGION_LOCKOUT_REGION_FREE;
+        }
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
         file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {

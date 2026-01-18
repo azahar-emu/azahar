@@ -158,6 +158,29 @@ HackManager hack_manager = {
                      0x0004013020003203, // New 3DS safe mode
                  },
          }},
+        {HackType::REQUIRES_SHADER_FIXUP,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             .affected_title_ids =
+                 {
+                     // 3D Thunder Blade
+                     0x0004000000128A00, // JPN
+                     0x0004000000158200, // EUR
+                     0x0004000000158C00, // USA
+
+                     // 3D After Burner II
+                     0x0004000000114200, // JPN
+                     0x0004000000157A00, // EUR
+                     0x0004000000158900, // USA
+
+                     // 3D Classics
+                     0x0004000000154000, // 1 (JPN)
+                     0x0004000000180E00, // 2 (JPN)
+                     0x000400000019A700, // 2 (EUR)
+                     0x0004000000185E00, // 2 (USA)
+                     0x00040000001AA300, // 3 (JPN)
+                 },
+         }},
 
     }};
 }

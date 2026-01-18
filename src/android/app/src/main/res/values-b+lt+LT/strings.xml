@@ -61,7 +61,6 @@
     <!-- Audio settings strings -->
     <string name="audio_volume">Garsumas</string>
     <string name="audio_stretch">Garso ištempimas</string>
-    <string name="realtime_audio">Įjungti realaus laiko garsą</string>
     <string name="layout_screen_orientation_auto_sensor">Automatinis</string>
     <string name="learn_more">Sužinoti daugiau</string>
     <string name="close">Uždaryti</string>

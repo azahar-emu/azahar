@@ -850,19 +850,25 @@ bool CIAFile::Close() {
         current_content_install_result.type = InstallResult::Type::NONE;
     }
 
-    bool complete =
-        from_cdn ? is_done
-                 : (install_state >= CIAInstallState::TMDLoaded &&
-                    content_written.size() == container.GetTitleMetadata().GetContentCount() &&
-                    std::all_of(content_written.begin(), content_written.end(),
-                                [this, i = 0](auto& bytes_written) mutable {
-                                    return bytes_written >=
-                                           container.GetContentSize(static_cast<u16>(i++));
-                                }));
+    bool complete;
+
+    if (is_cancel) {
+        complete = false;
+    } else {
+        complete =
+            from_cdn ? is_done
+                     : (install_state >= CIAInstallState::TMDLoaded &&
+                        content_written.size() == container.GetTitleMetadata().GetContentCount() &&
+                        std::all_of(content_written.begin(), content_written.end(),
+                                    [this, i = 0](auto& bytes_written) mutable {
+                                        return bytes_written >=
+                                               container.GetContentSize(static_cast<u16>(i++));
+                                    }));
+    }
 
     // Install aborted
     if (!complete) {
-        LOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
+        LOG_ERROR(Service_AM, "CIAFile closed prematurely or cancelled, aborting install...");
         if (!is_additional_content) {
             // Only delete the content folder as there may be user save data in the title folder.
             const std::string title_content_path =
@@ -1279,7 +1285,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, std:
         auto fs_user =
             Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
                 "fs:USER");
-        return fs_user->GetCurrentGamecardPath();
+        return fs_user->GetRegisteredGamecardPath();
     }
 
     std::string content_path = GetTitlePath(media_type, tid) + "content/";
@@ -1324,7 +1330,7 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
         auto fs_user =
             Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
                 "fs:USER");
-        return fs_user->GetCurrentGamecardPath();
+        return fs_user->GetRegisteredGamecardPath();
     }
 
     return "";
@@ -1345,7 +1351,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
         auto fs_user =
             Core::System::GetInstance().ServiceManager().GetService<Service::FS::FS_USER>(
                 "fs:USER");
-        return fs_user->GetCurrentGamecardPath();
+        return fs_user->GetRegisteredGamecardPath();
     }
 
     return "";
@@ -1408,39 +1414,52 @@ void Module::ScanForTitlesImpl(Service::FS::MediaType media_type) {
 
     LOG_DEBUG(Service_AM, "Starting title scan for media_type={}", static_cast<int>(media_type));
 
-    std::string title_path = GetMediaTitlePath(media_type);
-
-    FileUtil::FSTEntry entries;
-    FileUtil::ScanDirectoryTree(title_path, entries, 1, &stop_scan_flag);
-    for (const FileUtil::FSTEntry& tid_high : entries.children) {
-        if (stop_scan_flag) {
-            break;
+    if (media_type == FS::MediaType::GameCard) {
+        const auto& cartridge = system.GetCartridge();
+        if (!cartridge.empty()) {
+            u64 program_id = 0;
+            FileSys::NCCHContainer cartridge_ncch(cartridge);
+            Loader::ResultStatus res = cartridge_ncch.ReadProgramId(program_id);
+            if (res == Loader::ResultStatus::Success) {
+                am_title_list[static_cast<u32>(media_type)].push_back(program_id);
+            }
         }
-        for (const FileUtil::FSTEntry& tid_low : tid_high.children) {
+    } else {
+        std::string title_path = GetMediaTitlePath(media_type);
+
+        FileUtil::FSTEntry entries;
+        FileUtil::ScanDirectoryTree(title_path, entries, 1, &stop_scan_flag);
+        for (const FileUtil::FSTEntry& tid_high : entries.children) {
             if (stop_scan_flag) {
                 break;
             }
-            std::string tid_string = tid_high.virtualName + tid_low.virtualName;
+            for (const FileUtil::FSTEntry& tid_low : tid_high.children) {
+                if (stop_scan_flag) {
+                    break;
+                }
+                std::string tid_string = tid_high.virtualName + tid_low.virtualName;
 
-            if (tid_string.length() == TITLE_ID_VALID_LENGTH) {
-                const u64 tid = std::stoull(tid_string, nullptr, 16);
+                if (tid_string.length() == TITLE_ID_VALID_LENGTH) {
+                    const u64 tid = std::stoull(tid_string, nullptr, 16);
 
-                if (tid & TWL_TITLE_ID_FLAG) {
-                    // TODO(PabloMK7) Move to TWL Nand, for now only check that
-                    // the contents exists in CTR Nand as this is a SRL file
-                    // instead of NCCH.
-                    if (FileUtil::Exists(GetTitleContentPath(media_type, tid))) {
-                        am_title_list[static_cast<u32>(media_type)].push_back(tid);
-                    }
-                } else {
-                    FileSys::NCCHContainer container(GetTitleContentPath(media_type, tid));
-                    if (container.Load() == Loader::ResultStatus::Success) {
-                        am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                    if (tid & TWL_TITLE_ID_FLAG) {
+                        // TODO(PabloMK7) Move to TWL Nand, for now only check that
+                        // the contents exists in CTR Nand as this is a SRL file
+                        // instead of NCCH.
+                        if (FileUtil::Exists(GetTitleContentPath(media_type, tid))) {
+                            am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                        }
+                    } else {
+                        FileSys::NCCHContainer container(GetTitleContentPath(media_type, tid));
+                        if (container.Load() == Loader::ResultStatus::Success) {
+                            am_title_list[static_cast<u32>(media_type)].push_back(tid);
+                        }
                     }
                 }
             }
         }
     }
+
     LOG_DEBUG(Service_AM, "Finished title scan for media_type={}", static_cast<int>(media_type));
 }
 
@@ -1449,6 +1468,7 @@ void Module::ScanForAllTitles() {
         ScanForTicketsImpl();
         ScanForTitlesImpl(Service::FS::MediaType::NAND);
         ScanForTitlesImpl(Service::FS::MediaType::SDMC);
+        ScanForTitlesImpl(Service::FS::MediaType::GameCard);
     } else {
         scan_all_future = std::async([this]() {
             std::scoped_lock lock(am_lists_mutex);
@@ -1458,6 +1478,9 @@ void Module::ScanForAllTitles() {
             }
             if (!stop_scan_flag) {
                 ScanForTitlesImpl(Service::FS::MediaType::SDMC);
+            }
+            if (!stop_scan_flag) {
+                ScanForTitlesImpl(Service::FS::MediaType::GameCard);
             }
         });
     }
@@ -1981,30 +2004,75 @@ void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
     }
 }
 
-Result GetTitleInfoFromList(std::span<const u64> title_id_list, Service::FS::MediaType media_type,
+Result GetTitleInfoFromList(Core::System& system, std::span<const u64> title_id_list,
+                            Service::FS::MediaType media_type,
                             std::vector<TitleInfo>& title_info_out) {
     title_info_out.reserve(title_id_list.size());
     for (u32 i = 0; i < title_id_list.size(); i++) {
-        std::string tmd_path = GetTitleMetadataPath(media_type, title_id_list[i]);
+        if (media_type == Service::FS::MediaType::GameCard) {
+            auto& cartridge = system.GetCartridge();
+            if (cartridge.empty()) {
+                LOG_DEBUG(Service_AM, "cartridge not inserted");
+                return Result(ErrorDescription::NotFound, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
 
-        TitleInfo title_info = {};
-        title_info.tid = title_id_list[i];
+            FileSys::NCCHContainer ncch_container(cartridge);
+            if (ncch_container.Load() != Loader::ResultStatus::Success ||
+                !ncch_container.IsNCSD()) {
+                LOG_ERROR(Service_AM, "failed to load cartridge card");
+                return Result(ErrorDescription::NotFound, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
 
-        FileSys::TitleMetadata tmd;
-        if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-            // TODO(shinyquagsire23): This is the total size of all files this process owns,
-            // including savefiles and other content. This comes close but is off.
-            title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
-            title_info.version = tmd.GetTitleVersion();
-            title_info.type = tmd.GetTitleType();
+            // This is what Process9 does for getting the information, from disassembly.
+            // It is still unclear what do those values mean, like the title info type.
+            if (ncch_container.exheader_header.arm11_system_local_caps.program_id !=
+                title_id_list[i]) {
+                LOG_DEBUG(Service_AM,
+                          "cartridge has different title ID than requested title_id={:016X} != "
+                          "cartridge_title_id={:016X}",
+                          title_id_list[i],
+                          ncch_container.exheader_header.arm11_system_local_caps.program_id);
+                return Result(ErrorDescription::NotFound, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
+
+            TitleInfo title_info = {};
+            title_info.tid = title_id_list[i];
+            title_info.version =
+                (*reinterpret_cast<u16_le*>(
+                     &ncch_container.exheader_header.codeset_info.flags.remaster_version)
+                 << 10) &
+                0xFC00;
+            title_info.size = 0;
+            title_info.type = 0x40;
+
+            LOG_DEBUG(Service_AM, "found title_id={:016X} version={:04X}", title_id_list[i],
+                      title_info.version);
+            title_info_out.push_back(title_info);
         } else {
-            LOG_DEBUG(Service_AM, "not found title_id={:016X}", title_id_list[i]);
-            return Result(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
-                          ErrorLevel::Permanent);
+            std::string tmd_path = GetTitleMetadataPath(media_type, title_id_list[i]);
+
+            TitleInfo title_info = {};
+            title_info.tid = title_id_list[i];
+
+            FileSys::TitleMetadata tmd;
+            if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
+                // TODO(shinyquagsire23): This is the total size of all files this process owns,
+                // including savefiles and other content. This comes close but is off.
+                title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
+                title_info.version = tmd.GetTitleVersion();
+                title_info.type = tmd.GetTitleType();
+            } else {
+                LOG_DEBUG(Service_AM, "not found title_id={:016X}", title_id_list[i]);
+                return Result(ErrorDescription::NotFound, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
+            }
+            LOG_DEBUG(Service_AM, "found title_id={:016X} version={:04X}", title_id_list[i],
+                      title_info.version);
+            title_info_out.push_back(title_info);
         }
-        LOG_DEBUG(Service_AM, "found title_id={:016X} version={:04X}", title_id_list[i],
-                  title_info.version);
-        title_info_out.push_back(title_info);
     }
 
     return ResultSuccess;
@@ -2136,7 +2204,7 @@ void Module::Interface::GetProgramInfosImpl(Kernel::HLERequestContext& ctx, bool
                 }
 
                 if (async_data->res.IsSuccess()) {
-                    async_data->res = GetTitleInfoFromList(async_data->title_id_list,
+                    async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
                 }
                 return 0;
@@ -2350,7 +2418,7 @@ void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
                 }
 
                 if (async_data->res.IsSuccess()) {
-                    async_data->res = GetTitleInfoFromList(async_data->title_id_list,
+                    async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
                 }
                 return 0;
@@ -2497,7 +2565,7 @@ void Module::Interface::GetPatchTitleInfos(Kernel::HLERequestContext& ctx) {
                 }
 
                 if (async_data->res.IsSuccess()) {
-                    async_data->res = GetTitleInfoFromList(async_data->title_id_list,
+                    async_data->res = GetTitleInfoFromList(am->system, async_data->title_id_list,
                                                            async_data->media_type, async_data->out);
                 }
                 return 0;
@@ -3214,97 +3282,6 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     LOG_DEBUG(Service_AM, "tid={:016x}, content_index={}", tid, content_index);
 }
 
-void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
-
-    if (am->cia_installing) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
-        return;
-    }
-
-    // Create our CIAFile handle for the app to write to, and while the app writes
-    // Citra will store contents out to sdmc/nand
-    const FileSys::Path cia_path = {};
-    auto file = std::make_shared<Service::FS::File>(
-        am->system.Kernel(), std::make_unique<CIAFile>(am->system, media_type), cia_path);
-
-    am->cia_installing = true;
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess); // No error
-    rb.PushCopyObjects(file->Connect());
-
-    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
-}
-
-void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-
-    if (am->cia_installing) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
-                       ErrorLevel::Permanent));
-        return;
-    }
-
-    // Note: This function should register the title in the temp_i.db database, but we can get away
-    // with not doing that because we traverse the file system to detect installed titles.
-    // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
-    // contents out to sdmc/nand
-    const FileSys::Path cia_path = {};
-    std::shared_ptr<Service::FS::File> file;
-    {
-        auto cia_file = std::make_unique<CIAFile>(am->system, FS::MediaType::NAND);
-
-        AuthorizeCIAFileDecryption(cia_file.get(), ctx);
-
-        file =
-            std::make_shared<Service::FS::File>(am->system.Kernel(), std::move(cia_file), cia_path);
-    }
-    am->cia_installing = true;
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(ResultSuccess); // No error
-    rb.PushCopyObjects(file->Connect());
-
-    LOG_WARNING(Service_AM, "(STUBBED)");
-}
-
-void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
-
-    LOG_DEBUG(Service_AM, "");
-
-    am->ScanForAllTitles();
-
-    am->cia_installing = false;
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-}
-
-void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    [[maybe_unused]] const auto cia = rp.PopObject<Kernel::ClientSession>();
-
-    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
-    // files to keep track of installed titles.
-    am->ScanForAllTitles();
-
-    am->cia_installing = false;
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
-
-    LOG_WARNING(Service_AM, "(STUBBED)");
-}
-
-void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
-    CommitImportTitlesImpl(ctx, false, false);
-}
-
 /// Wraps all File operations to allow adding an offset to them.
 class AMFileWrapper : public FileSys::FileBackend {
 public:
@@ -3418,6 +3395,123 @@ ResultVal<T*> GetFileBackendFromSession(std::shared_ptr<Kernel::ClientSession> f
     // while they're at it, so not implemented.
     LOG_ERROR(Service_AM, "Given file handle does not have an HLE handler!");
     return Kernel::ResultNotImplemented;
+}
+
+void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+
+    if (am->cia_installing) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    // Create our CIAFile handle for the app to write to, and while the app writes
+    // Citra will store contents out to sdmc/nand
+    const FileSys::Path cia_path = {};
+    auto file = std::make_shared<Service::FS::File>(
+        am->system.Kernel(), std::make_unique<CIAFile>(am->system, media_type), cia_path);
+
+    am->cia_installing = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
+}
+
+void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    if (am->cia_installing) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(Result(ErrCodes::InvalidImportState, ErrorModule::AM, ErrorSummary::InvalidState,
+                       ErrorLevel::Permanent));
+        return;
+    }
+
+    // Note: This function should register the title in the temp_i.db database, but we can get away
+    // with not doing that because we traverse the file system to detect installed titles.
+    // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
+    // contents out to sdmc/nand
+    const FileSys::Path cia_path = {};
+    std::shared_ptr<Service::FS::File> file;
+    {
+        auto cia_file = std::make_unique<CIAFile>(am->system, FS::MediaType::NAND);
+
+        AuthorizeCIAFileDecryption(cia_file.get(), ctx);
+
+        file =
+            std::make_shared<Service::FS::File>(am->system.Kernel(), std::move(cia_file), cia_path);
+    }
+    am->cia_installing = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(ResultSuccess); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED)");
+}
+
+void Module::Interface::CancelImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    LOG_DEBUG(Service_AM, "");
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Cancel();
+    }
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    LOG_DEBUG(Service_AM, "");
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Close();
+    }
+
+    am->ScanForAllTitles();
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    auto cia_file = GetFileBackendFromSession<CIAFile>(cia);
+    if (cia_file.Succeeded()) {
+        cia_file.Unwrap()->Close();
+    }
+
+    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
+    // files to keep track of installed titles.
+    am->ScanForAllTitles();
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_AM, "(STUBBED)");
+}
+
+void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
+    CommitImportTitlesImpl(ctx, false, false);
 }
 
 void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
