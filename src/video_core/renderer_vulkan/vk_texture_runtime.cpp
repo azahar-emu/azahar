@@ -1322,11 +1322,6 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
     return image_view;
 }
 
-vk::ImageView Surface::FramebufferView() noexcept {
-    is_framebuffer = true;
-    return ImageView();
-}
-
 vk::ImageView Surface::DepthView() noexcept {
     if (depth_view) {
         return depth_view.get();
@@ -1422,42 +1417,19 @@ vk::Framebuffer Surface::Framebuffer() noexcept {
 }
 
 vk::ImageView Surface::AttachmentView() noexcept {
-    is_framebuffer = true;
-
-    // Return appropriate single-mip-level view based on surface type
-    const bool is_depth = type == SurfaceType::Depth || type == SurfaceType::DepthStencil;
-    if (is_depth) {
-        // For depth/stencil surfaces, we need to return a view suitable for attachments
-        // DepthView and StencilView use VK_REMAINING_MIP_LEVELS, so create a single-level view here
-        const vk::ImageViewCreateInfo view_info = {
-            .image = Image(),
-            .viewType = vk::ImageViewType::e2D,
-            .format = traits.native,
-            .subresourceRange{
-                .aspectMask = traits.aspect,
-                .baseMipLevel = 0,
-                .levelCount = 1, // Single mip level for framebuffer
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-        };
-        return instance->GetDevice().createImageViewUnique(view_info).release();
-    } else {
-        // For color surfaces, create a single-level view
-        const vk::ImageViewCreateInfo view_info = {
-            .image = Image(),
-            .viewType = vk::ImageViewType::e2D,
-            .format = traits.native,
-            .subresourceRange{
-                .aspectMask = traits.aspect,
-                .baseMipLevel = 0,
-                .levelCount = 1, // Single mip level for framebuffer
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-        };
-        return instance->GetDevice().createImageViewUnique(view_info).release();
-    }
+    const vk::ImageViewCreateInfo view_info = {
+        .image = Image(),
+        .viewType = vk::ImageViewType::e2D,
+        .format = traits.native,
+        .subresourceRange{
+            .aspectMask = traits.aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1, // Single mip level for framebuffer
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    return instance->GetDevice().createImageViewUnique(view_info).release();
 }
 
 void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
