@@ -28,8 +28,8 @@ object DirectoryInitialization {
     @Volatile
     private var directoryState: DirectoryInitializationState? = null
     var userPath: String? = null
-    val internalUserPath
-        get() = CitraApplication.appContext.getExternalFilesDir(null)!!.canonicalPath
+    val internalUserPath: String
+        get() = CitraApplication.appContext.filesDir.canonicalPath
     private val isCitraDirectoryInitializationRunning = AtomicBoolean(false)
 
     val context: Context get() = CitraApplication.appContext
