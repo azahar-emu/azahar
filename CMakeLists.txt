@@ -1,6 +1,10 @@
 # CMake >=3.12 required for 20 to be a valid value for CXX_STANDARD,
 # and >=3.25 required to make LTO work on Android.
-cmake_minimum_required(VERSION 3.25)
+if(ANDROID)
+  cmake_minimum_required(VERSION 3.25)
+else()
+  cmake_minimum_required(VERSION 3.23)
+endif()
 
 # Don't override the warning flags in MSVC:
 cmake_policy(SET CMP0092 NEW)
@@ -17,12 +21,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
 include(CMakeDependentOption)
-include(FindPkgConfig)
 
 project(citra LANGUAGES C CXX ASM)
+# must be invoked after project() command when using CMAKE_TOOLCHAIN_FILE
+include(FindPkgConfig)
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
 endif()
+
+option(ENABLE_LIBRETRO "Enable the LibRetro frontend" OFF)
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -30,7 +37,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-if (APPLE)
+if (APPLE AND NOT ENABLE_LIBRETRO)
     # Silence warnings on empty objects, for example when platform-specific code is #ifdef'd out.
     set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
     set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -300,6 +307,9 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
 # set up output paths for executable binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/$<CONFIG>)
 
+if (ENABLE_LIBRETRO)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # System imported libraries
 # ======================
@@ -359,7 +369,7 @@ if (APPLE)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
 
-    if (ENABLE_VULKAN)
+    if (ENABLE_VULKAN AND NOT ENABLE_LIBRETRO)
         if (NOT USE_SYSTEM_MOLTENVK)
             download_moltenvk()
         endif()

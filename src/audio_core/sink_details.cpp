@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,9 @@
 #include "audio_core/sink_details.h"
 #ifdef HAVE_SDL2
 #include "audio_core/sdl2_sink.h"
+#endif
+#ifdef HAVE_LIBRETRO
+#include "audio_core/libretro_sink.h"
 #endif
 #ifdef HAVE_CUBEB
 #include "audio_core/cubeb_sink.h"
@@ -23,6 +26,13 @@ namespace AudioCore {
 namespace {
 // sink_details is ordered in terms of desirability, with the best choice at the top.
 constexpr std::array sink_details = {
+#ifdef HAVE_LIBRETRO
+    SinkDetails{SinkType::LibRetro, "libretro",
+                [](std::string_view device_id) -> std::unique_ptr<Sink> {
+                    return std::make_unique<LibRetroSink>(std::string(device_id));
+                },
+                &ListLibretroSinkDevices},
+#endif
 #ifdef HAVE_CUBEB
     SinkDetails{SinkType::Cubeb, "Cubeb",
                 [](std::string_view device_id) -> std::unique_ptr<Sink> {

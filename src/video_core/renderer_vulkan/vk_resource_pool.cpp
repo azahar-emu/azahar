@@ -160,7 +160,8 @@ void DescriptorHeap::Allocate(std::size_t begin, std::size_t end) {
         if (result == vk::Result::eSuccess) {
             break;
         }
-        if (result == vk::Result::eErrorOutOfPoolMemory) {
+        if (result == vk::Result::eErrorOutOfPoolMemory ||
+            result == vk::Result::eErrorFragmentedPool) {
             current_pool++;
             if (current_pool == pools.size()) {
                 LOG_INFO(Render_Vulkan, "Run out of pools, creating new one!");
