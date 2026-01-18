@@ -38,6 +38,7 @@ add_library(audio_core STATIC
 
     $<$<BOOL:${ENABLE_SDL2}>:sdl2_sink.cpp sdl2_sink.h>
     $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h cubeb_input.cpp cubeb_input.h>
+    $<$<BOOL:${ENABLE_LIBRETRO}>:libretro_sink.cpp libretro_sink.h>
     $<$<BOOL:${ENABLE_OPENAL}>:openal_input.cpp openal_input.h openal_sink.cpp openal_sink.h>
 )
 

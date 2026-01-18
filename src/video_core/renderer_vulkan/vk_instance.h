@@ -36,9 +36,11 @@ struct FormatTraits {
 
 class Instance {
 public:
+    struct NoInit {};
     explicit Instance(bool validation = false, bool dump_command_buffers = false);
     explicit Instance(Frontend::EmuWindow& window, u32 physical_device_index);
-    ~Instance();
+    explicit Instance(NoInit) {} // For LibRetro inheritance - does minimal setup
+    virtual ~Instance();
 
     /// Returns the FormatTraits struct for the provided pixel format
     const FormatTraits& GetTraits(VideoCore::PixelFormat pixel_format) const;
@@ -52,7 +54,7 @@ public:
     std::string GetDriverVersionName();
 
     /// Returns the Vulkan instance
-    vk::Instance GetInstance() const {
+    virtual vk::Instance GetInstance() const {
         return *instance;
     }
 
@@ -62,7 +64,7 @@ public:
     }
 
     /// Returns the Vulkan device
-    vk::Device GetDevice() const {
+    virtual vk::Device GetDevice() const {
         return *device;
     }
 
@@ -248,6 +250,11 @@ public:
         return features.shaderSampledImageArrayDynamicIndexing;
     }
 
+    /// Returns true if layered rendering (array attachments) is supported
+    bool IsLayeredRenderingSupported() const {
+        return layered_rendering_supported;
+    }
+
     /// Returns the minimum vertex stride alignment
     u32 GetMinVertexStrideAlignment() const {
         return min_vertex_stride_alignment;
@@ -264,7 +271,7 @@ public:
                driver_id == vk::DriverIdKHR::eQualcommProprietary;
     }
 
-private:
+protected:
     /// Returns the optimal supported usage for the requested format
     [[nodiscard]] FormatTraits DetermineTraits(VideoCore::PixelFormat pixel_format,
                                                vk::Format format);
@@ -280,7 +287,7 @@ private:
     void CreateAttribTable();
 
     /// Creates the logical device opportunistically enabling extensions
-    bool CreateDevice();
+    bool CreateDevice(bool libretro);
 
     /// Creates the VMA allocator handle
     void CreateAllocator();
@@ -288,7 +295,7 @@ private:
     // Collects logging gpu info
     void CollectToolingInfo();
 
-private:
+protected:
     std::shared_ptr<Common::DynamicLibrary> library;
     vk::UniqueInstance instance;
     vk::PhysicalDevice physical_device;
@@ -322,6 +329,7 @@ private:
     bool shader_stencil_export{};
     bool external_memory_host{};
     u64 min_imported_host_pointer_alignment{};
+    bool layered_rendering_supported{true};
     bool tooling_info{};
     bool debug_utils_supported{};
     bool has_nsight_graphics{};

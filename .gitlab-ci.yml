@@ -1,0 +1,133 @@
+.core-defs:
+  variables:
+    JNI_PATH: .
+    CORENAME: azahar
+    API_LEVEL: 21
+    BASE_CORE_ARGS: -DENABLE_LIBRETRO=ON -DENABLE_SDL2=OFF -DENABLE_QT=OFF -DENABLE_TESTS=OFF -DENABLE_ROOM=OFF -DENABLE_WEB_SERVICE=OFF -DENABLE_SCRIPTING=OFF -DENABLE_CUBEB=OFF -DENABLE_OPENAL=OFF -DENABLE_LIBUSB=OFF -DCITRA_WARNINGS_AS_ERRORS=OFF
+    CORE_ARGS: ${BASE_CORE_ARGS}
+    EXTRA_PATH: bin/Release
+
+variables:
+  STATIC_RETROARCH_BRANCH: master
+  GIT_SUBMODULE_STRATEGY: recursive
+
+# Inclusion templates, required for the build to work
+include:
+  ################################## DESKTOPS ##############################  ##
+  # Windows 64-bit
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/windows-cmake-mingw.yml'
+
+  # Linux 64-bit
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/linux-cmake.yml'
+
+  # MacOS 64-bit
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/osx-cmake-x86.yml'
+
+  # MacOS arm64
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/osx-cmake-arm64.yml'
+
+  ################################## CELLULAR ##############################  ##
+  # Android
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/android-cmake.yml'
+
+  # iOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios-cmake.yml'
+
+  # tvOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/tvos-cmake.yml'
+
+  ################################## CONSOLES ##############################  ##
+
+# Stages for building
+stages:
+  - build-prepare
+  - build-shared
+  - build-static
+
+##############################################################################
+#################################### STAGES ##################################
+##############################################################################
+#
+################################### DESKTOPS #################################
+# Windows 64-bit
+libretro-build-windows-x64:
+  extends:
+    - .core-defs
+    - .libretro-windows-cmake-x86_64
+  variables:
+    EXTRA_PATH: bin/Release
+    CORE_ARGS: ${BASE_CORE_ARGS} -DENABLE_LTO=OFF -G Ninja
+  before_script:
+    - export NUMPROC=$(($(nproc)/5))
+    - sudo apt-get update -qy
+    - sudo apt-get install -qy software-properties-common
+    - sudo add-apt-repository -y ppa:savoury1/build-tools
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update -qy
+    - sudo apt-get install -qy glslang-tools
+
+# Linux 64-bit
+libretro-build-linux-x64:
+  extends:
+    - .core-defs
+    - .libretro-linux-cmake-x86_64
+  image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-amd64-ubuntu:backports
+  variables:
+    CORE_ARGS: ${BASE_CORE_ARGS} -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DENABLE_OPT=OFF
+
+# MacOS 64-bit
+libretro-build-osx-x64:
+  tags:
+    - mac-apple-silicon
+  variables:
+    CORE_ARGS: ${BASE_CORE_ARGS} -DCMAKE_OSX_ARCHITECTURES=x86_64
+    MACOSX_DEPLOYMENT_TARGET: "10.15"
+  extends:
+    - .core-defs
+    - .libretro-osx-cmake-x86_64
+
+# MacOS 64-bit
+libretro-build-osx-arm64:
+  extends:
+    - .core-defs
+    - .libretro-osx-cmake-arm64
+
+################################### CELLULAR #################################
+# Android ARMv8a
+android-arm64-v8a:
+  extends:
+    - .libretro-android-cmake-arm64-v8a
+    - .core-defs
+  variables:
+    ANDROID_NDK_VERSION: 26.2.11394342
+    NDK_ROOT: /android-sdk-linux/ndk/$ANDROID_NDK_VERSION
+
+# iOS arm64
+libretro-build-ios-arm64:
+  extends:
+    - .libretro-ios-cmake-arm64
+    - .core-defs
+  variables:
+    CORE_ARGS: ${BASE_CORE_ARGS} -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+    IOS_MINVER: "14.0"
+    EXTRA_PATH: bin/RelWithDebInfo
+
+# tvOS arm64
+libretro-build-tvos-arm64:
+  extends:
+    - .libretro-tvos-cmake-arm64
+    - .core-defs
+  variables:
+    CORE_ARGS: ${BASE_CORE_ARGS} -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+    MINVER: "14.0"
+    EXTRA_PATH: bin/RelWithDebInfo
+
+################################### CONSOLES #################################
+

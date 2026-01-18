@@ -58,8 +58,6 @@ add_library(citra_common STATIC
     aarch64/oaknut_abi.h
     aarch64/oaknut_util.h
     alignment.h
-    android_storage.h
-    android_storage.cpp
     announce_multiplayer_room.h
     arch.h
     archives.h
@@ -166,12 +164,20 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(citra_common PRIVATE gamemode)
 endif()
 
-if (APPLE)
+if (APPLE AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PUBLIC
     apple_authorization.h
     apple_authorization.cpp
     apple_utils.h
     apple_utils.mm
+  )
+endif()
+
+# Android storage is only used for non-libretro Android builds
+if (ANDROID AND NOT ENABLE_LIBRETRO)
+  target_sources(citra_common PRIVATE
+    android_storage.cpp
+    android_storage.h
   )
 endif()
 

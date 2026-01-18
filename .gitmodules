@@ -103,3 +103,6 @@
 [submodule "externals/xxHash"]
 	path = externals/xxHash
 	url = https://github.com/Cyan4973/xxHash.git
+[submodule "externals/libretro-common"]
+	path = externals/libretro-common
+	url = https://github.com/libretro/libretro-common.git

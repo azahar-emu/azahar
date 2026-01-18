@@ -2308,7 +2308,7 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
             break;
         }
     }
-#else
+#elif !defined(HAVE_LIBRETRO)
     struct ifaddrs* ifaddr;
     struct ifaddrs* ifa;
     if (getifaddrs(&ifaddr) == -1) {

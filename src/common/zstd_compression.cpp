@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include <format>
 #include <mutex>
 #include <sstream>
 #include <zstd.h>

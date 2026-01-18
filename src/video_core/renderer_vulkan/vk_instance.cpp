@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -159,7 +159,7 @@ Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
             VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion)));
     }
 
-    CreateDevice();
+    CreateDevice(false);
     CreateFormatTable();
     CollectToolingInfo();
     CreateCustomFormatTable();
@@ -394,7 +394,7 @@ void Instance::CreateAttribTable() {
     }
 }
 
-bool Instance::CreateDevice() {
+bool Instance::CreateDevice(bool libretro) {
     const vk::StructureChain feature_chain = physical_device.getFeatures2<
         vk::PhysicalDeviceFeatures2, vk::PhysicalDevicePortabilitySubsetFeaturesKHR,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
@@ -464,7 +464,9 @@ bool Instance::CreateDevice() {
     const bool has_custom_border_color =
         add_extension(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME, is_qualcomm,
                       "it is broken on most Qualcomm driver versions");
-    const bool has_index_type_uint8 = add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+    const bool has_index_type_uint8 =
+        add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME, is_moltenvk,
+                      "uint8 index conversion causes memory leaks in MoltenVK");
     const bool has_fragment_shader_interlock =
         add_extension(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
@@ -481,8 +483,8 @@ bool Instance::CreateDevice() {
         return false;
     }
 
-    bool graphics_queue_found = false;
-    for (std::size_t i = 0; i < family_properties.size(); i++) {
+    bool graphics_queue_found = libretro;
+    for (std::size_t i = 0; !libretro && i < family_properties.size(); i++) {
         const u32 index = static_cast<u32>(i);
         if (family_properties[i].queueFlags & vk::QueueFlagBits::eGraphics) {
             queue_family_index = index;
@@ -612,6 +614,10 @@ bool Instance::CreateDevice() {
 #undef PROP_GET
 #undef FEAT_SET
 
+    if (libretro) {
+        return true;
+    }
+
     try {
         device = physical_device.createDeviceUnique(device_chain.get());
     } catch (vk::ExtensionNotPresentError& err) {
@@ -636,9 +642,9 @@ void Instance::CreateAllocator() {
 
     const VmaAllocatorCreateInfo allocator_info = {
         .physicalDevice = physical_device,
-        .device = *device,
+        .device = GetDevice(),
         .pVulkanFunctions = &functions,
-        .instance = *instance,
+        .instance = GetInstance(),
         .vulkanApiVersion = TargetVulkanApiVersion,
     };
 
