@@ -90,7 +90,7 @@ namespace Service::FS {
 enum class MediaType : u32;
 }
 
-void LaunchQtFrontend(int argc, char* argv[]);
+int LaunchQtFrontend(int argc, char* argv[]);
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT

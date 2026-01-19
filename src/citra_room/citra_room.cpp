@@ -19,7 +19,6 @@
 
 #include "common/common_paths.h"
 #include "common/common_types.h"
-#include "common/detached_tasks.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -160,8 +159,7 @@ static void InitializeLogging(const std::string& log_file) {
 }
 
 /// Application entry point
-void LaunchRoom(int argc, char** argv, bool called_by_option) {
-    Common::DetachedTasks detached_tasks;
+int LaunchRoom(int argc, char** argv, bool called_by_option) {
     int option_index = 0;
     char* endarg;
 
@@ -251,20 +249,20 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
                 break;
             case 'h':
                 PrintHelp(argv[0]);
-                exit(0);
+                return 0;
             case 'v':
                 PrintVersion();
-                exit(0);
+                return 0;
             case 'e':
                 PrintRemovedOptionWarning(argv[0], "--enable-citra-mods/-e");
-                exit(255);
+                return 255;
             case 'g':
                 PrintRemovedOptionWarning(argv[0], "--preferred-game/-g");
-                exit(255);
+                return 255;
             case 0:
                 if (strcmp(long_options[option_index].name, "preferred-game-id") == 0) {
                     PrintRemovedOptionWarning(argv[0], "--preferred-game-id");
-                    exit(255);
+                    return 255;
                 }
             }
         }
@@ -273,12 +271,12 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
     if (room_name.empty()) {
         std::cout << "room name is empty!\n\n";
         PrintHelp(argv[0]);
-        exit(-1);
+        return -1;
     }
     if (preferred_game.empty()) {
         std::cout << "preferred application is empty!\n\n";
         PrintHelp(argv[0]);
-        exit(-1);
+        return -1;
     }
     if (preferred_game_id == 0) {
         std::cout
@@ -289,12 +287,12 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
         std::cout << "max_members needs to be in the range 2 - "
                   << Network::MaxConcurrentConnections << "!\n\n";
         PrintHelp(argv[0]);
-        exit(-1);
+        return -1;
     }
     if (port > 65535) {
         std::cout << "port needs to be in the range 0 - 65535!\n\n";
         PrintHelp(argv[0]);
-        exit(-1);
+        return -1;
     }
     if (ban_list_file.empty()) {
         std::cout << "Ban list file not set!\nThis should get set to load and save room ban "
@@ -351,7 +349,7 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
         if (!room->Create(room_name, room_description, "", port, password, max_members, username,
                           preferred_game, preferred_game_id, std::move(verify_backend), ban_list)) {
             std::cout << "Failed to create room: \n\n";
-            exit(-1);
+            return -1;
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
         auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>();
@@ -377,5 +375,5 @@ void LaunchRoom(int argc, char** argv, bool called_by_option) {
         room->Destroy();
     }
     Network::Shutdown();
-    detached_tasks.WaitForAllTasks();
+    return 0;
 }
