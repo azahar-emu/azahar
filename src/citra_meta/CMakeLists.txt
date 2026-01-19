@@ -17,6 +17,8 @@ if (APPLE)
 
     # Define app bundle metadata.
     include(GenerateBuildInfo)
+    set(SRC_DIR "${PROJECT_SOURCE_DIR}")
+    generate_build_info()
     set_target_properties(citra_meta PROPERTIES
         MACOSX_BUNDLE TRUE
         MACOSX_BUNDLE_INFO_PLIST "${DIST_DIR}/Info.plist.in"
