@@ -91,10 +91,6 @@ void CheatEngine::LoadCheatFile(u64 title_id) {
         FileUtil::CreateDir(cheat_dir);
     }
 
-    if (!FileUtil::Exists(filepath)) {
-        return;
-    }
-
     auto gateway_cheats = GatewayCheat::LoadFile(filepath);
     {
         std::unique_lock lock{cheats_list_mutex};
