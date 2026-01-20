@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,12 +23,15 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
 ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
-
+#ifdef USE_DISCORD_PRESENCE
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
+#endif
 }
 
 void ConfigureWeb::ApplyConfiguration() {
+#ifdef USE_DISCORD_PRESENCE
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
+#endif
 }
 
 void ConfigureWeb::RetranslateUI() {

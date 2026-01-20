@@ -83,12 +83,16 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
     Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
+#ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
+#endif
 
     Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
 
+#ifdef USE_DISCORD_PRESENCE
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
+#endif
 
     // Game List
     Settings::Setting<GameListIconSize> game_list_icon_size{GameListIconSize::LargeIcon,
