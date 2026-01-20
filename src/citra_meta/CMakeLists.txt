@@ -63,6 +63,7 @@ if (ENABLE_QT AND UNIX AND NOT APPLE)
 endif()
 
 if (ENABLE_QT AND APPLE)
+    find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
     target_link_libraries(citra_meta PRIVATE Qt6::GuiPrivate)
 endif()
 
