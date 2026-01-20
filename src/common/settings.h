@@ -515,7 +515,11 @@ struct Values {
     SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
     SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
     SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
+#ifdef ANDROID // TODO: Fuck this -OS
+    SwitchableSetting<bool> use_vsync{false, "use_vsync"};
+#else
     SwitchableSetting<bool> use_vsync{true, "use_vsync"};
+#endif
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
