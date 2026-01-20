@@ -571,6 +571,7 @@ void QtConfig::ReadMiscellaneousValues() {
 #endif
 #ifdef ENABLE_QT_UPDATE_CHECKER
     ReadBasicSetting(UISettings::values.check_for_update_on_start);
+    ReadBasicSetting(UISettings::values.update_check_channel);
 #endif
 
     qt_config->endGroup();
@@ -1148,6 +1149,7 @@ void QtConfig::SaveMiscellaneousValues() {
 #endif
 #ifdef ENABLE_QT_UPDATE_CHECKER
     WriteBasicSetting(UISettings::values.check_for_update_on_start);
+    WriteBasicSetting(UISettings::values.update_check_channel);
 #endif
     qt_config->endGroup();
 }
