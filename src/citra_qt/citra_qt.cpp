@@ -171,11 +171,20 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 #endif
 }
 
-bool IsPrerelease() {
+bool IsPrereleaseBuild() {
     return ((strstr(Common::g_build_fullname, "alpha") != NULL) ||
             (strstr(Common::g_build_fullname, "beta") != NULL) ||
             (strstr(Common::g_build_fullname, "rc") != NULL));
 }
+
+#ifdef ENABLE_QT_UPDATE_CHECKER
+bool ShouldCheckForPrereleaseUpdates() {
+    const bool update_channel = UISettings::values.update_check_channel.GetValue();
+    const bool using_prerelease_channel =
+        (update_channel == UISettings::UpdateCheckChannels::PRERELEASE);
+    return (IsPrereleaseBuild() || using_prerelease_channel);
+}
+#endif
 
 GMainWindow::GMainWindow(Core::System& system_)
     : ui{std::make_unique<Ui::MainWindow>()}, system{system_}, movie{system.Movie()},
@@ -406,7 +415,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     if (UISettings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
             const std::optional<std::string> latest_release_tag =
-                UpdateChecker::GetLatestRelease(IsPrerelease());
+                UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
+
             if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
                 return QString::fromStdString(latest_release_tag.value());
             }
@@ -4057,7 +4067,7 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
     update_prompt.exec();
     if (update_prompt.button(QMessageBox::Yes) == update_prompt.clickedButton()) {
         std::string update_page_url;
-        if (IsPrerelease()) {
+        if (ShouldCheckForPrereleaseUpdates()) {
             update_page_url = "https://github.com/azahar-emu/azahar/releases";
         } else {
             update_page_url = "https://azahar-emu.org/pages/download/";

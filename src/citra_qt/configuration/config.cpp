@@ -568,6 +568,7 @@ void QtConfig::ReadMiscellaneousValues() {
     ReadBasicSetting(Settings::values.log_regex_filter);
     ReadBasicSetting(Settings::values.enable_gamemode);
     ReadBasicSetting(UISettings::values.check_for_update_on_start);
+    ReadBasicSetting(UISettings::values.update_check_channel);
 
     qt_config->endGroup();
 }
@@ -1139,7 +1140,7 @@ void QtConfig::SaveMiscellaneousValues() {
     WriteBasicSetting(Settings::values.log_regex_filter);
     WriteBasicSetting(Settings::values.enable_gamemode);
     WriteBasicSetting(UISettings::values.check_for_update_on_start);
-
+    WriteBasicSetting(UISettings::values.update_check_channel);
     qt_config->endGroup();
 }
 

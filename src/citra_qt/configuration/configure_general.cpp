@@ -44,7 +44,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->toggle_gamemode->setVisible(false);
 #endif
 #ifndef ENABLE_QT_UPDATE_CHECKER
-    ui->toggle_update_checker->setVisible(false);
+    ui->updates_group->setVisible(false);
 #endif
 
     SetupPerGameUI();
@@ -92,6 +92,8 @@ void ConfigureGeneral::SetConfiguration() {
         ui->toggle_hide_mouse->setChecked(UISettings::values.hide_mouse.GetValue());
         ui->toggle_update_checker->setChecked(
             UISettings::values.check_for_update_on_start.GetValue());
+        ui->update_channel_combobox->setCurrentIndex(
+            UISettings::values.update_check_channel.GetValue());
 #ifdef __unix__
         ui->toggle_gamemode->setChecked(Settings::values.enable_gamemode.GetValue());
 #endif
@@ -179,6 +181,7 @@ void ConfigureGeneral::ApplyConfiguration() {
         UISettings::values.mute_when_in_background = ui->toggle_background_mute->isChecked();
         UISettings::values.hide_mouse = ui->toggle_hide_mouse->isChecked();
         UISettings::values.check_for_update_on_start = ui->toggle_update_checker->isChecked();
+        UISettings::values.update_check_channel = ui->update_channel_combobox->currentIndex();
 #ifdef __unix__
         Settings::values.enable_gamemode = ui->toggle_gamemode->isChecked();
 #endif
@@ -211,5 +214,5 @@ void ConfigureGeneral::SetupPerGameUI() {
     ui->general_group->setVisible(false);
     ui->button_reset_defaults->setVisible(false);
     ui->toggle_gamemode->setVisible(false);
-    ui->toggle_update_checker->setVisible(false);
+    ui->updates_group->setVisible(false);
 }
