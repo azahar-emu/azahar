@@ -1517,8 +1517,9 @@ void GMainWindow::ShutdownGame() {
 
 #ifdef USE_DISCORD_PRESENCE
     discord_rpc->Pause();
-    emu_thread->RequestStop();
 #endif
+
+    emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
     // This belongs after RequestStop() and before wait() because if emulation stops on a GPU
