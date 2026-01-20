@@ -59,6 +59,12 @@ enum class GameListText : s32 {
     ListEnd,       ///< Keep this at the end of the enum.
 };
 
+class UpdateCheckChannels {
+public:
+    static constexpr int STABLE = 0;
+    static constexpr int PRERELEASE = 1;
+};
+
 struct Values {
     QByteArray geometry;
     QByteArray state;
@@ -85,6 +91,8 @@ struct Values {
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
 #ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
+    Settings::Setting<int> update_check_channel{UpdateCheckChannels::STABLE,
+                                                "update_check_channel"};
 #endif
 
     Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
