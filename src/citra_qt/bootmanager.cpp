@@ -64,7 +64,7 @@ void EmuThread::run() {
     MicroProfileOnThreadCreate("EmuThread");
     const auto scope = core_context.Acquire();
 
-    if (Settings::values.preload_textures) {
+    if (Settings::values.custom_textures && Settings::values.preload_textures) {
         emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0);
         system.CustomTexManager().PreloadTextures(
             stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value,
