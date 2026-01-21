@@ -153,6 +153,8 @@ private:
     friend class GameListSearchField;
 
     const PlayTime::PlayTimeManager& play_time_manager;
+
+    std::chrono::time_point<std::chrono::steady_clock> time_last_refresh;
 };
 
 class GameListPlaceholder : public QWidget {
