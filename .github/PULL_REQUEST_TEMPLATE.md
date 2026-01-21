@@ -9,5 +9,5 @@ If you are a recurrent contributor, remove this entire
 block of text and proceed as normal.
 -->
 
-![Ignore Until Your PR has been created!](../blob/main/.github/ignore_unless_human.png?raw=true)
+![Ignore Until Your PR has been created!](../blob/master/.github/ignore_unless_human.png?raw=true)
 ---
