@@ -1119,7 +1119,7 @@ void GameList::RefreshGameDirectory() {
         return;
     }
 
-    const auto time_now = std::chrono::system_clock::now();
+    const auto time_now = std::chrono::steady_clock::now();
 
     // Max of 1 refresh every 1 second.
     if (time_last_refresh + std::chrono::seconds(1) > time_now) {
