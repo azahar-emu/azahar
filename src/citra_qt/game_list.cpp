@@ -1113,12 +1113,20 @@ const QStringList GameList::supported_file_extensions = {
 };
 
 void GameList::RefreshGameDirectory() {
-
     // Do not scan directories when the system is powered on, it will be
     // repopulated on shutdown anyways.
     if (Core::System::GetInstance().IsPoweredOn()) {
         return;
     }
+
+    const auto time_now = std::chrono::steady_clock::now();
+
+    // Max of 1 refresh every 1 second.
+    if (time_last_refresh + std::chrono::seconds(1) > time_now) {
+        return;
+    }
+
+    time_last_refresh = time_now;
 
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
         LOG_INFO(Frontend, "Change detected in the applications directory. Reloading game list.");
