@@ -330,9 +330,9 @@ private:
             }
             backend_thread.request_stop();
             backend_thread.join();
-            const auto signal_entry =
-                CreateEntry(Class::Log, Level::Critical, "?", 0, "?",
-                            fmt::vformat("Received signal {}", fmt::make_format_args(sig)));
+            const auto signal_entry = CreateEntry(
+                Class::Log, Level::Critical, "?", 0, "?",
+                fmt::vformat("Received signal {}", fmt::make_format_args(sig)), time_origin);
             ForEachBackend([&signal_entry](Backend& backend) {
                 backend.EnableForStacktrace();
                 backend.Write(signal_entry);
@@ -345,12 +345,13 @@ private:
                     abort();
                 }
                 line.pop_back(); // Remove newline
-                const auto frame_entry =
-                    CreateEntry(Class::Log, Level::Critical, "?", 0, "?", std::move(line));
+                const auto frame_entry = CreateEntry(Class::Log, Level::Critical, "?", 0, "?",
+                                                     std::move(line), time_origin);
                 ForEachBackend([&frame_entry](Backend& backend) { backend.Write(frame_entry); });
             }
             using namespace std::literals;
-            const auto rip_entry = CreateEntry(Class::Log, Level::Critical, "?", 0, "?", "RIP"s);
+            const auto rip_entry =
+                CreateEntry(Class::Log, Level::Critical, "?", 0, "?", "RIP"s, time_origin);
             ForEachBackend([&rip_entry](Backend& backend) {
                 backend.Write(rip_entry);
                 backend.Flush();
