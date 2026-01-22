@@ -894,6 +894,10 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         timing->UnlockEventQueue();
         cheat_engine.Connect(cheats_pid);
 
+        if (Settings::values.custom_textures) {
+            custom_tex_manager->FindCustomTextures();
+        }
+
         // Re-register gpu callback, because gsp service changed after service_manager got
         // serialized
         auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
@@ -902,6 +906,7 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
 
         // Apply per program settings and switch the shader cache to the title running when the
         // savestate was created.
+        // TODO(PabloMK7): Find better way to obtain the program ID.
         const u32 thread_id = gsp->GetActiveClientThreadId();
         if (thread_id != std::numeric_limits<u32>::max()) {
             const auto thread = kernel->GetThreadByID(thread_id);
