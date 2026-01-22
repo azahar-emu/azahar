@@ -55,6 +55,12 @@ HackManager hack_manager = {
                      0x00040000001D1400, // USA
                      0x00040000001D1500, // EUR
                      0x00040000001CA900, // JPN
+
+                     // Mario & Luigi: Paper Jam
+                     0x0004000000132600, // JPN
+                     0x0004000000132700, // USA
+                     0x0004000000132800, // EUR
+                     0x000400000018A100, // EUR (Demo)
                  },
          }},
 
