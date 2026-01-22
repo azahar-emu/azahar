@@ -403,8 +403,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
     kernel->UpdateCPUAndMemoryState(program_id, app_mem_mode, app_n3ds_hw_capabilities);
 
-    gpu->ReportLoadingProgramID(program_id);
-
     // Restore any parameters that should be carried through a reset.
     if (auto apt = Service::APT::GetModule(*this)) {
         if (restore_deliver_arg.has_value()) {
@@ -902,13 +900,15 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         gpu->SetInterruptHandler(
             [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
 
-        // Switch the shader cache to the title running when the savestate was created
+        // Apply per program settings and switch the shader cache to the title running when the
+        // savestate was created.
         const u32 thread_id = gsp->GetActiveClientThreadId();
         if (thread_id != std::numeric_limits<u32>::max()) {
             const auto thread = kernel->GetThreadByID(thread_id);
             if (thread) {
                 const std::shared_ptr<Kernel::Process> process = thread->owner_process.lock();
                 if (process) {
+                    gpu->ApplyPerProgramSettings(process->codeset->program_id);
                     gpu->Renderer().Rasterizer()->SwitchDiskResources(process->codeset->program_id);
                 }
             }
