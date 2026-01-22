@@ -50,7 +50,7 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
         val currentDisplayId = context.display.displayId
         val displays = dm.displays
         val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
-        return displays.firstOrNull {
+        val extDisplays = displays.filter {
             val isPresentable = presDisplays.any { pd -> pd.displayId == it.displayId }
             val isNotDefaultOrPresentable = it.displayId != Display.DEFAULT_DISPLAY || isPresentable
             isNotDefaultOrPresentable &&
@@ -59,6 +59,10 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
                     it.state != Display.STATE_OFF &&
                     it.isValid
         }
+        // if there is a display called Built-In Display or Built-In Screen, prioritize the OTHER screen
+        val selected = extDisplays.firstOrNull { ! it.name.contains("Built",true) }
+            ?: extDisplays.firstOrNull()
+        return selected
     }
 
     fun updateDisplay() {
