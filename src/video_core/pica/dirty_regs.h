@@ -16,6 +16,10 @@ union DirtyRegs {
         qwords[reg_id >> 6] |= 1ULL << (reg_id & 0x3f);
     }
 
+    void SetAllDirty() {
+        qwords.fill(UINT64_MAX);
+    }
+
     void Reset() {
         qwords.fill(0ULL);
     }

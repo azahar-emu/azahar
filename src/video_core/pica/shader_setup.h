@@ -168,6 +168,9 @@ private:
         ar & swizzle_data_hash;
         ar & requires_fixup;
         ar & has_fixup;
+        if (Archive::is_loading::value) {
+            uniforms_dirty = true;
+        }
     }
 };
 
