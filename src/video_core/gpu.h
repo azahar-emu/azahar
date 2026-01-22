@@ -94,7 +94,7 @@ public:
         return *right_eye_disabler;
     }
 
-    void ReportLoadingProgramID(u64 program_ID);
+    void ApplyPerProgramSettings(u64 program_ID);
 
 private:
     void SubmitCmdList(u32 index);

@@ -18,6 +18,7 @@
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/frontend/framebuffer_layout.h"
+#include "core/loader/loader.h"
 #include "core/perf_stats.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
@@ -77,6 +78,10 @@ void EmuThread::run() {
         });
 
     emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+
+    u64 program_id{};
+    system.GetAppLoader().ReadProgramId(program_id);
+    system.GPU().ApplyPerProgramSettings(program_id);
 
     system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {

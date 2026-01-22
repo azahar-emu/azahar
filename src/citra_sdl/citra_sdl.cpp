@@ -474,6 +474,10 @@ int LaunchSdlFrontend(int argc, char** argv) {
         }
     });
 
+    u64 program_id{};
+    system.GetAppLoader().ReadProgramId(program_id);
+    system.GPU().ApplyPerProgramSettings(program_id);
+
     std::atomic_bool stop_run;
     system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
         stop_run, [](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
