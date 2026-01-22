@@ -311,7 +311,7 @@ GraphicsDebugger& GPU::Debugger() {
     return impl->gpu_debugger;
 }
 
-void GPU::ReportLoadingProgramID(u64 program_ID) {
+void GPU::ApplyPerProgramSettings(u64 program_ID) {
     auto hack = Common::Hacks::hack_manager.GetHack(
         Common::Hacks::HackType::ACCURATE_MULTIPLICATION, program_ID);
     bool use_accurate_mul = Settings::values.shaders_accurate_mul.GetValue();

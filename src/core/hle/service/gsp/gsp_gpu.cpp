@@ -693,6 +693,7 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
             Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
 
     auto& gpu = system.GPU();
+    gpu.ApplyPerProgramSettings(process->codeset->program_id);
     gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
     gpu.PicaCore().vs_setup.requires_fixup = requires_shader_fixup;
     gpu.PicaCore().gs_setup.requires_fixup = requires_shader_fixup;
