@@ -84,13 +84,12 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
             currentDisplayId = -1
             vd.display
         } else if (preferredDisplayId >=0 && displays.any { it.displayId == preferredDisplayId }) {
-
             currentDisplayId = preferredDisplayId
             displays.first { it.displayId == preferredDisplayId }
         } else {
-            //TODO: re-enable the filter of "built-in displays" odin style to pick default
-            currentDisplayId = displays[0].displayId
-            displays[0]
+            // prioritize a display without the word "Built" in name if it exists
+            currentDisplayId = displays.firstOrNull{!it.name.contains("Built",true)}?.displayId ?: displays[0].displayId
+            displays.first{ it.displayId == currentDisplayId }
         }
 
         // if our presentation is already on the right display, ignore
