@@ -39,7 +39,7 @@ jobs:
             const displayName = (user.name || '').toLowerCase();
             
             // Make comment body lowercase and split words
-            const body = comment.body.toLowerCase().trim().split(/\s+/);
+            const body = comment.body.toLowerCase().trim().replace(/[^\p{L}\p{N}_-\s]/gu, '').split(/\s+/);
 
             // Check that the user verified themselves by writing a song about the NES and the SNES.
             const verified =
