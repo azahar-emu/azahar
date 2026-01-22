@@ -35,6 +35,7 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
       geometry_pipeline{regs.internal, gs_unit, gs_setup},
       shader_engine{CreateEngine(Settings::values.use_shader_jit.GetValue())} {
     InitializeRegs();
+    dirty_regs.SetAllDirty();
 
     const auto submit_vertex = [this](const AttributeBuffer& buffer) {
         const auto add_triangle = [this](const OutputVertex& v0, const OutputVertex& v1,
