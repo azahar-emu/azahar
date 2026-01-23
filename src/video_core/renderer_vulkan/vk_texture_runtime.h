@@ -151,6 +151,9 @@ public:
     /// Returns the depth view of the surface image
     vk::ImageView DepthView() noexcept;
 
+    /// Returns the framebuffer view of the surface image
+    vk::ImageView FramebufferView() noexcept;
+
     /// Returns the stencil view of the surface image
     vk::ImageView StencilView() noexcept;
 
@@ -159,9 +162,6 @@ public:
 
     /// Returns a framebuffer handle for rendering to this surface
     vk::Framebuffer Framebuffer() noexcept;
-
-    /// Returns a single-mip-level view suitable for framebuffer attachments
-    vk::ImageView AttachmentView() noexcept;
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
@@ -204,6 +204,7 @@ public:
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
+    vk::UniqueImageView framebuffer_view;
     bool is_framebuffer{};
     bool is_storage{};
 };
@@ -253,6 +254,7 @@ private:
     std::array<vk::ImageView, 2> image_views{};
     vk::UniqueFramebuffer framebuffer;
     vk::RenderPass render_pass;
+    vk::UniqueRenderPass shadow_render_pass;
     std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
