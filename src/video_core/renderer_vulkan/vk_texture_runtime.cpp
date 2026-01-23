@@ -1322,6 +1322,29 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
     return image_view;
 }
 
+vk::ImageView Surface::FramebufferView() noexcept {
+    if (framebuffer_view) {
+        return framebuffer_view.get();
+    }
+
+    is_framebuffer = true;
+
+    const vk::ImageViewCreateInfo view_info = {
+        .image = Image(),
+        .viewType = vk::ImageViewType::e2D,
+        .format = traits.native,
+        .subresourceRange{
+            .aspectMask = traits.aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1, // Single mip level for framebuffer attachment
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    framebuffer_view = instance->GetDevice().createImageViewUnique(view_info);
+    return framebuffer_view.get();
+}
+
 vk::ImageView Surface::DepthView() noexcept {
     if (depth_view) {
         return depth_view.get();
@@ -1397,8 +1420,6 @@ vk::ImageView Surface::StorageView() noexcept {
 }
 
 vk::Framebuffer Surface::Framebuffer() noexcept {
-    is_framebuffer = true;
-
     const u32 index = res_scale == 1 ? 0u : 1u;
     if (framebuffers[index]) {
         return framebuffers[index].get();
@@ -1409,27 +1430,11 @@ vk::Framebuffer Surface::Framebuffer() noexcept {
     const auto depth_format = is_depth ? pixel_format : PixelFormat::Invalid;
     const auto render_pass =
         runtime->renderpass_cache.GetRenderpass(color_format, depth_format, false);
-    // Use AttachmentView() to get single mip level view for framebuffer
-    const auto attachments = std::array{AttachmentView()};
+    // Use FramebufferView() to get single mip level view for framebuffer attachment
+    const auto attachments = std::array{FramebufferView()};
     framebuffers[index] = MakeFramebuffer(instance->GetDevice(), render_pass, GetScaledWidth(),
                                           GetScaledHeight(), attachments);
     return framebuffers[index].get();
-}
-
-vk::ImageView Surface::AttachmentView() noexcept {
-    const vk::ImageViewCreateInfo view_info = {
-        .image = Image(),
-        .viewType = vk::ImageViewType::e2D,
-        .format = traits.native,
-        .subresourceRange{
-            .aspectMask = traits.aspect,
-            .baseMipLevel = 0,
-            .levelCount = 1, // Single mip level for framebuffer
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-    };
-    return instance->GetDevice().createImageViewUnique(view_info).release();
 }
 
 void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
@@ -1540,9 +1545,9 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 }
 
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
-                         Surface* color, Surface* depth_stencil)
+                         Surface* color, Surface* depth)
     : VideoCore::FramebufferParams{params},
-      res_scale{color ? color->res_scale : (depth_stencil ? depth_stencil->res_scale : 1u)} {
+      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
     auto& renderpass_cache = runtime.GetRenderpassCache();
     if (shadow_rendering && !color) {
         return;
@@ -1559,42 +1564,56 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         }
         images[index] = surface->Image();
         aspects[index] = surface->Aspect();
-        // Use AttachmentView() for single-mip-level framebuffer attachment
-        image_views[index] = surface->AttachmentView();
+        image_views[index] = shadow_rendering ? surface->StorageView() : surface->FramebufferView();
     };
     boost::container::static_vector<vk::ImageView, 2> attachments;
 
-    if (!shadow_rendering) {
-        // Prepare the surfaces for use in framebuffer
+    if (shadow_rendering) {
+        // Get dimensions from color surface
+        const VideoCore::Extent extent = color->RealExtent();
+        width = extent.width;
+        height = extent.height;
+
+        // Store the storage view for descriptor binding
+        images[0] = color->Image();
+        aspects[0] = color->Aspect();
+        image_views[0] = color->StorageView();
+
+        // Create a render pass with no attachments for shadow rendering
+        const vk::SubpassDescription shadow_subpass = {
+            .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+            .inputAttachmentCount = 0,
+            .pInputAttachments = nullptr,
+            .colorAttachmentCount = 0,
+            .pColorAttachments = nullptr,
+            .pResolveAttachments = 0,
+            .pDepthStencilAttachment = nullptr,
+        };
+
+        const vk::RenderPassCreateInfo shadow_renderpass_info = {
+            .attachmentCount = 0,
+            .pAttachments = nullptr,
+            .subpassCount = 1,
+            .pSubpasses = &shadow_subpass,
+        };
+
+        const vk::Device device = runtime.GetInstance().GetDevice();
+        shadow_render_pass = device.createRenderPassUnique(shadow_renderpass_info);
+        render_pass = *shadow_render_pass;
+
+        framebuffer = MakeFramebuffer(device, render_pass, width, height, attachments);
+    } else {
         if (color) {
             prepare(0, color);
             attachments.emplace_back(image_views[0]);
         }
 
-        if (depth_stencil) {
-            prepare(1, depth_stencil);
+        if (depth) {
+            prepare(1, depth);
             attachments.emplace_back(image_views[1]);
         }
-    } else {
-        // For shadow rendering, just collect surface info without adding attachments
-        if (color) {
-            prepare(0, color);
-        }
-        if (depth_stencil) {
-            prepare(1, depth_stencil);
-        }
-    }
 
-    const vk::Device device = runtime.GetInstance().GetDevice();
-
-    if (shadow_rendering) {
-        // For shadow rendering, we don't need a framebuffer with attachments
-        // Just create a dummy render pass for the rendering pipeline
-        render_pass =
-            renderpass_cache.GetRenderpass(PixelFormat::Invalid, PixelFormat::Invalid, false);
-        // Don't create a framebuffer for shadow rendering
-        framebuffer.reset();
-    } else {
+        const vk::Device device = runtime.GetInstance().GetDevice();
         render_pass = renderpass_cache.GetRenderpass(formats[0], formats[1], false);
         framebuffer = MakeFramebuffer(device, render_pass, width, height, attachments);
     }
