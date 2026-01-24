@@ -204,7 +204,7 @@ public:
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
-    vk::UniqueImageView framebuffer_view;
+    std::array<vk::UniqueImageView, 2> framebuffer_view{};
     bool is_framebuffer{};
     bool is_storage{};
 };
