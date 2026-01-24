@@ -1323,8 +1323,10 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
 }
 
 vk::ImageView Surface::FramebufferView() noexcept {
-    if (framebuffer_view) {
-        return framebuffer_view.get();
+    const u32 index = res_scale == 1 ? 0u : 1u;
+
+    if (framebuffer_view[index]) {
+        return framebuffer_view[index].get();
     }
 
     is_framebuffer = true;
@@ -1341,8 +1343,8 @@ vk::ImageView Surface::FramebufferView() noexcept {
             .layerCount = 1,
         },
     };
-    framebuffer_view = instance->GetDevice().createImageViewUnique(view_info);
-    return framebuffer_view.get();
+    framebuffer_view[index] = instance->GetDevice().createImageViewUnique(view_info);
+    return framebuffer_view[index].get();
 }
 
 vk::ImageView Surface::DepthView() noexcept {
