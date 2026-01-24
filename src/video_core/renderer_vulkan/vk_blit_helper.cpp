@@ -1,7 +1,8 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/settings.h"
 #include "common/vector_math.h"
 #include "video_core/renderer_vulkan/vk_blit_helper.h"
 #include "video_core/renderer_vulkan/vk_descriptor_update_queue.h"
@@ -16,8 +17,19 @@
 #include "video_core/host_shaders/vulkan_blit_depth_stencil_frag.h"
 #include "video_core/host_shaders/vulkan_depth_to_buffer_comp.h"
 
+// Texture filtering shader includes
+#include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
+#include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
+#include "video_core/host_shaders/texture_filtering/refine_frag.h"
+#include "video_core/host_shaders/texture_filtering/scale_force_frag.h"
+#include "video_core/host_shaders/texture_filtering/x_gradient_frag.h"
+#include "video_core/host_shaders/texture_filtering/xbrz_freescale_frag.h"
+#include "video_core/host_shaders/texture_filtering/y_gradient_frag.h"
+#include "vk_blit_helper.h"
+
 namespace Vulkan {
 
+using Settings::TextureFilter;
 using VideoCore::PixelFormat;
 
 namespace {
@@ -55,8 +67,33 @@ constexpr std::array<vk::DescriptorSetLayoutBinding, 2> TWO_TEXTURES_BINDINGS = 
     {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
 }};
 
+// Texture filtering descriptor set bindings
+constexpr std::array<vk::DescriptorSetLayoutBinding, 1> SINGLE_TEXTURE_BINDINGS = {{
+    {0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+}};
+
+constexpr std::array<vk::DescriptorSetLayoutBinding, 3> THREE_TEXTURES_BINDINGS = {{
+    {0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+}};
+
+// Note: Removed FILTER_UTILITY_BINDINGS as texture filtering doesn't need shadow buffers
+
+// Push constant structure for texture filtering
+struct FilterPushConstants {
+    std::array<float, 2> tex_scale;
+    std::array<float, 2> tex_offset;
+    float res_scale; // For xBRZ filter
+};
+
+inline constexpr vk::PushConstantRange FILTER_PUSH_CONSTANT_RANGE{
+    .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+    .offset = 0,
+    .size = sizeof(FilterPushConstants),
+};
 inline constexpr vk::PushConstantRange PUSH_CONSTANT_RANGE{
-    .stageFlags = vk::ShaderStageFlagBits::eVertex,
+    .stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
     .offset = 0,
     .size = sizeof(PushConstants),
 };
@@ -104,12 +141,17 @@ constexpr vk::PipelineDynamicStateCreateInfo PIPELINE_DYNAMIC_STATE_CREATE_INFO{
     .dynamicStateCount = static_cast<u32>(DYNAMIC_STATES.size()),
     .pDynamicStates = DYNAMIC_STATES.data(),
 };
-constexpr vk::PipelineColorBlendStateCreateInfo PIPELINE_COLOR_BLEND_STATE_EMPTY_CREATE_INFO{
+
+constexpr vk::PipelineColorBlendAttachmentState COLOR_BLEND_ATTACHMENT{
+    .blendEnable = VK_FALSE,
+    .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                      vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA,
+};
+
+constexpr vk::PipelineColorBlendStateCreateInfo PIPELINE_COLOR_BLEND_STATE_CREATE_INFO{
     .logicOpEnable = VK_FALSE,
-    .logicOp = vk::LogicOp::eClear,
-    .attachmentCount = 0,
-    .pAttachments = nullptr,
-    .blendConstants = std::array{0.0f, 0.0f, 0.0f, 0.0f},
+    .attachmentCount = 1,
+    .pAttachments = &COLOR_BLEND_ATTACHMENT,
 };
 constexpr vk::PipelineDepthStencilStateCreateInfo PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO{
     .depthTestEnable = VK_TRUE,
@@ -128,9 +170,9 @@ inline constexpr vk::SamplerCreateInfo SAMPLER_CREATE_INFO{
     .magFilter = filter,
     .minFilter = filter,
     .mipmapMode = vk::SamplerMipmapMode::eNearest,
-    .addressModeU = vk::SamplerAddressMode::eClampToBorder,
-    .addressModeV = vk::SamplerAddressMode::eClampToBorder,
-    .addressModeW = vk::SamplerAddressMode::eClampToBorder,
+    .addressModeU = vk::SamplerAddressMode::eClampToEdge,
+    .addressModeV = vk::SamplerAddressMode::eClampToEdge,
+    .addressModeW = vk::SamplerAddressMode::eClampToEdge,
     .mipLodBias = 0.0f,
     .anisotropyEnable = VK_FALSE,
     .maxAnisotropy = 0.0f,
@@ -143,12 +185,14 @@ inline constexpr vk::SamplerCreateInfo SAMPLER_CREATE_INFO{
 };
 
 constexpr vk::PipelineLayoutCreateInfo PipelineLayoutCreateInfo(
-    const vk::DescriptorSetLayout* set_layout, bool compute = false) {
+    const vk::DescriptorSetLayout* set_layout, bool compute = false, bool filter = false) {
     return vk::PipelineLayoutCreateInfo{
         .setLayoutCount = 1,
         .pSetLayouts = set_layout,
         .pushConstantRangeCount = 1,
-        .pPushConstantRanges = (compute ? &COMPUTE_PUSH_CONSTANT_RANGE : &PUSH_CONSTANT_RANGE),
+        .pPushConstantRanges =
+            (compute ? &COMPUTE_PUSH_CONSTANT_RANGE
+                     : (filter ? &FILTER_PUSH_CONSTANT_RANGE : &PUSH_CONSTANT_RANGE)),
     };
 }
 
@@ -185,12 +229,20 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
       compute_provider{instance, scheduler.GetMasterSemaphore(), COMPUTE_BINDINGS},
       compute_buffer_provider{instance, scheduler.GetMasterSemaphore(), COMPUTE_BUFFER_BINDINGS},
       two_textures_provider{instance, scheduler.GetMasterSemaphore(), TWO_TEXTURES_BINDINGS, 16},
+      single_texture_provider{instance, scheduler.GetMasterSemaphore(), SINGLE_TEXTURE_BINDINGS,
+                              16},
+      three_textures_provider{instance, scheduler.GetMasterSemaphore(), THREE_TEXTURES_BINDINGS,
+                              16},
       compute_pipeline_layout{
           device.createPipelineLayout(PipelineLayoutCreateInfo(&compute_provider.Layout(), true))},
       compute_buffer_pipeline_layout{device.createPipelineLayout(
           PipelineLayoutCreateInfo(&compute_buffer_provider.Layout(), true))},
       two_textures_pipeline_layout{
           device.createPipelineLayout(PipelineLayoutCreateInfo(&two_textures_provider.Layout()))},
+      single_texture_pipeline_layout{device.createPipelineLayout(
+          PipelineLayoutCreateInfo(&single_texture_provider.Layout(), false, true))},
+      three_textures_pipeline_layout{device.createPipelineLayout(
+          PipelineLayoutCreateInfo(&three_textures_provider.Layout(), false, true))},
       full_screen_vert{Compile(HostShaders::FULL_SCREEN_TRIANGLE_VERT,
                                vk::ShaderStageFlagBits::eVertex, device)},
       d24s8_to_rgba8_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_COMP,
@@ -199,6 +251,14 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                                    vk::ShaderStageFlagBits::eCompute, device)},
       blit_depth_stencil_frag{Compile(HostShaders::VULKAN_BLIT_DEPTH_STENCIL_FRAG,
                                       vk::ShaderStageFlagBits::eFragment, device)},
+      // Texture filtering shader modules
+      bicubic_frag{Compile(HostShaders::BICUBIC_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      scale_force_frag{
+          Compile(HostShaders::SCALE_FORCE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      xbrz_frag{
+          Compile(HostShaders::XBRZ_FREESCALE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      mmpx_frag{Compile(HostShaders::MMPX_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
+      refine_frag{Compile(HostShaders::REFINE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       d24s8_to_rgba8_pipeline{MakeComputePipeline(d24s8_to_rgba8_comp, compute_pipeline_layout)},
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
@@ -230,10 +290,18 @@ BlitHelper::~BlitHelper() {
     device.destroyPipelineLayout(compute_pipeline_layout);
     device.destroyPipelineLayout(compute_buffer_pipeline_layout);
     device.destroyPipelineLayout(two_textures_pipeline_layout);
+    device.destroyPipelineLayout(single_texture_pipeline_layout);
+    device.destroyPipelineLayout(three_textures_pipeline_layout);
     device.destroyShaderModule(full_screen_vert);
     device.destroyShaderModule(d24s8_to_rgba8_comp);
     device.destroyShaderModule(depth_to_buffer_comp);
     device.destroyShaderModule(blit_depth_stencil_frag);
+    // Destroy texture filtering shader modules
+    device.destroyShaderModule(bicubic_frag);
+    device.destroyShaderModule(scale_force_frag);
+    device.destroyShaderModule(xbrz_frag);
+    device.destroyShaderModule(mmpx_frag);
+    device.destroyShaderModule(refine_frag);
     device.destroyPipeline(depth_to_buffer_pipeline);
     device.destroyPipeline(d24s8_to_rgba8_pipeline);
     device.destroyPipeline(depth_blit_pipeline);
@@ -242,7 +310,7 @@ BlitHelper::~BlitHelper() {
 }
 
 void BindBlitState(vk::CommandBuffer cmdbuf, vk::PipelineLayout layout,
-                   const VideoCore::TextureBlit& blit) {
+                   const VideoCore::TextureBlit& blit, const Surface& dest) {
     const vk::Offset2D offset{
         .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
         .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
@@ -272,8 +340,9 @@ void BindBlitState(vk::CommandBuffer cmdbuf, vk::PipelineLayout layout,
     };
     cmdbuf.setViewport(0, viewport);
     cmdbuf.setScissor(0, scissor);
-    cmdbuf.pushConstants(layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push_constants),
-                         &push_constants);
+    cmdbuf.pushConstants(layout,
+                         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, 0,
+                         sizeof(push_constants), &push_constants);
 }
 
 bool BlitHelper::BlitDepthStencil(Surface& source, Surface& dest,
@@ -300,12 +369,12 @@ bool BlitHelper::BlitDepthStencil(Surface& source, Surface& dest,
     };
     renderpass_cache.BeginRendering(depth_pass);
 
-    scheduler.Record([blit, descriptor_set, this](vk::CommandBuffer cmdbuf) {
+    scheduler.Record([blit, descriptor_set, &dest, this](vk::CommandBuffer cmdbuf) {
         const vk::PipelineLayout layout = two_textures_pipeline_layout;
 
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, depth_blit_pipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, descriptor_set, {});
-        BindBlitState(cmdbuf, layout, blit);
+        BindBlitState(cmdbuf, layout, blit, dest);
         cmdbuf.draw(3, 1, 0, 0);
     });
     scheduler.MakeDirty(StateFlags::Pipeline);
@@ -531,7 +600,7 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
         .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
         .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
         .pDepthStencilState = &PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-        .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_EMPTY_CREATE_INFO,
+        .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,
         .layout = two_textures_pipeline_layout,
         .renderPass = renderpass,
@@ -545,6 +614,282 @@ vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
         UNREACHABLE();
     }
     return VK_NULL_HANDLE;
+}
+
+bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const auto filter = Settings::values.texture_filter.GetValue();
+    const bool is_depth =
+        surface.type == VideoCore::SurfaceType::Depth ||
+        surface.type == VideoCore::SurfaceType::DepthStencil; // Skip filtering for depth textures
+                                                              // and when no filter is selected
+    if (filter == Settings::TextureFilter::NoFilter || is_depth) {
+        return false;
+    } // Only filter base mipmap level
+    if (blit.src_level != 0) {
+        return true;
+    }
+
+    switch (filter) {
+    case TextureFilter::Anime4K:
+        FilterAnime4K(surface, blit);
+        break;
+    case TextureFilter::Bicubic:
+        FilterBicubic(surface, blit);
+        break;
+    case TextureFilter::ScaleForce:
+        FilterScaleForce(surface, blit);
+        break;
+    case TextureFilter::xBRZ:
+        FilterXbrz(surface, blit);
+        break;
+    case TextureFilter::MMPX:
+        FilterMMPX(surface, blit);
+        break;
+    default:
+        LOG_ERROR(Render_Vulkan, "Unknown texture filter {}", filter);
+        return false;
+    }
+    return true;
+}
+
+void BlitHelper::FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(refine_frag, three_textures_pipeline_layout, color_format);
+    FilterPassThreeTextures(surface, surface, surface, surface, pipeline,
+                            three_textures_pipeline_layout, blit);
+}
+
+void BlitHelper::FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(bicubic_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
+}
+
+void BlitHelper::FilterScaleForce(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline =
+        MakeFilterPipeline(scale_force_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
+}
+
+void BlitHelper::FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(xbrz_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
+}
+
+void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit) {
+    const bool is_depth = surface.type == VideoCore::SurfaceType::Depth ||
+                          surface.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : surface.pixel_format;
+    auto pipeline = MakeFilterPipeline(mmpx_frag, single_texture_pipeline_layout, color_format);
+    FilterPass(surface, surface, pipeline, single_texture_pipeline_layout, blit);
+}
+
+vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
+                                            vk::PipelineLayout layout,
+                                            VideoCore::PixelFormat color_format) {
+    const std::array stages = MakeStages(full_screen_vert, fragment_shader);
+    // Use the provided color format for render pass compatibility
+    const auto renderpass =
+        renderpass_cache.GetRenderpass(color_format, VideoCore::PixelFormat::Invalid, false);
+
+    vk::GraphicsPipelineCreateInfo pipeline_info = {
+        .stageCount = static_cast<u32>(stages.size()),
+        .pStages = stages.data(),
+        .pVertexInputState = &PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .pInputAssemblyState = &PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pTessellationState = nullptr,
+        .pViewportState = &PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .pRasterizationState = &PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .pMultisampleState = &PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .pDepthStencilState = nullptr,
+        .pColorBlendState = &PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pDynamicState = &PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .layout = layout,
+        .renderPass = renderpass,
+    };
+
+    if (const auto result = device.createGraphicsPipeline({}, pipeline_info);
+        result.result == vk::Result::eSuccess) {
+        return result.value;
+    } else {
+        LOG_CRITICAL(Render_Vulkan, "Filter pipeline creation failed!");
+        UNREACHABLE();
+    }
+}
+
+void BlitHelper::FilterPass(Surface& source, Surface& dest, vk::Pipeline pipeline,
+                            vk::PipelineLayout layout, const VideoCore::TextureBlit& blit) {
+    const auto texture_descriptor_set = single_texture_provider.Commit();
+    update_queue.AddImageSampler(texture_descriptor_set, 0, 0, source.ImageView(0), linear_sampler,
+                                 vk::ImageLayout::eGeneral);
+
+    const bool is_depth = dest.type == VideoCore::SurfaceType::Depth ||
+                          dest.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : dest.pixel_format;
+    const auto depth_format = is_depth ? dest.pixel_format : VideoCore::PixelFormat::Invalid;
+    const auto renderpass = renderpass_cache.GetRenderpass(color_format, depth_format, false);
+
+    const RenderPass render_pass = {
+        .framebuffer = dest.Framebuffer(),
+        .render_pass = renderpass,
+        .render_area =
+            {
+                .offset = {0, 0},
+                .extent = {dest.GetScaledWidth(), dest.GetScaledHeight()},
+            },
+    };
+    renderpass_cache.BeginRendering(render_pass);
+    const float src_scale = static_cast<float>(source.GetResScale());
+    // Calculate normalized texture coordinates like OpenGL does
+    const auto src_extent = source.RealExtent(false); // Get unscaled texture extent
+    const float tex_scale_x =
+        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
+    const float tex_scale_y =
+        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
+    const float tex_offset_x =
+        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
+    const float tex_offset_y =
+        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
+
+    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
+                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
+        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
+                                                 .tex_offset = {tex_offset_x, tex_offset_y},
+                                                 .res_scale = src_scale};
+
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+
+        // Bind single texture descriptor set
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                  texture_descriptor_set, {});
+
+        cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
+                             FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
+                             &push_constants);
+
+        // Set up viewport and scissor for filtering (don't use BindBlitState as it overwrites push
+        // constants)
+        const vk::Offset2D offset{
+            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
+            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
+        };
+        const vk::Extent2D extent{
+            .width = blit.dst_rect.GetWidth(),
+            .height = blit.dst_rect.GetHeight(),
+        };
+        const vk::Viewport viewport{
+            .x = static_cast<float>(offset.x),
+            .y = static_cast<float>(offset.y),
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+        const vk::Rect2D scissor{
+            .offset = offset,
+            .extent = extent,
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+        cmdbuf.draw(3, 1, 0, 0);
+    });
+    scheduler.MakeDirty(StateFlags::Pipeline);
+}
+
+void BlitHelper::FilterPassThreeTextures(Surface& source1, Surface& source2, Surface& source3,
+                                         Surface& dest, vk::Pipeline pipeline,
+                                         vk::PipelineLayout layout,
+                                         const VideoCore::TextureBlit& blit) {
+    const auto texture_descriptor_set = three_textures_provider.Commit();
+
+    update_queue.AddImageSampler(texture_descriptor_set, 0, 0, source1.ImageView(0), linear_sampler,
+                                 vk::ImageLayout::eGeneral);
+    update_queue.AddImageSampler(texture_descriptor_set, 1, 0, source2.ImageView(0), linear_sampler,
+                                 vk::ImageLayout::eGeneral);
+    update_queue.AddImageSampler(texture_descriptor_set, 2, 0, source3.ImageView(0), linear_sampler,
+                                 vk::ImageLayout::eGeneral);
+
+    const bool is_depth = dest.type == VideoCore::SurfaceType::Depth ||
+                          dest.type == VideoCore::SurfaceType::DepthStencil;
+    const auto color_format = is_depth ? VideoCore::PixelFormat::Invalid : dest.pixel_format;
+    const auto depth_format = is_depth ? dest.pixel_format : VideoCore::PixelFormat::Invalid;
+    const auto renderpass = renderpass_cache.GetRenderpass(color_format, depth_format, false);
+
+    const RenderPass render_pass = {
+        .framebuffer = dest.Framebuffer(),
+        .render_pass = renderpass,
+        .render_area =
+            {
+                .offset = {0, 0},
+                .extent = {dest.GetScaledWidth(), dest.GetScaledHeight()},
+            },
+    };
+    renderpass_cache.BeginRendering(render_pass);
+
+    const float src_scale = static_cast<float>(source1.GetResScale());
+    // Calculate normalized texture coordinates like OpenGL does
+    const auto src_extent = source1.RealExtent(false); // Get unscaled texture extent
+    const float tex_scale_x =
+        static_cast<float>(blit.src_rect.GetWidth()) / static_cast<float>(src_extent.width);
+    const float tex_scale_y =
+        static_cast<float>(blit.src_rect.GetHeight()) / static_cast<float>(src_extent.height);
+    const float tex_offset_x =
+        static_cast<float>(blit.src_rect.left) / static_cast<float>(src_extent.width);
+    const float tex_offset_y =
+        static_cast<float>(blit.src_rect.bottom) / static_cast<float>(src_extent.height);
+
+    scheduler.Record([pipeline, layout, texture_descriptor_set, blit, tex_scale_x, tex_scale_y,
+                      tex_offset_x, tex_offset_y, src_scale](vk::CommandBuffer cmdbuf) {
+        const FilterPushConstants push_constants{.tex_scale = {tex_scale_x, tex_scale_y},
+                                                 .tex_offset = {tex_offset_x, tex_offset_y},
+                                                 .res_scale = src_scale};
+
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+
+        // Bind single texture descriptor set
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0,
+                                  texture_descriptor_set, {});
+
+        cmdbuf.pushConstants(layout, FILTER_PUSH_CONSTANT_RANGE.stageFlags,
+                             FILTER_PUSH_CONSTANT_RANGE.offset, FILTER_PUSH_CONSTANT_RANGE.size,
+                             &push_constants);
+
+        // Set up viewport and scissor using safe viewport like working filters
+        const vk::Offset2D offset{
+            .x = std::min<s32>(blit.dst_rect.left, blit.dst_rect.right),
+            .y = std::min<s32>(blit.dst_rect.bottom, blit.dst_rect.top),
+        };
+        const vk::Extent2D extent{
+            .width = blit.dst_rect.GetWidth(),
+            .height = blit.dst_rect.GetHeight(),
+        };
+        const vk::Viewport viewport{
+            .x = static_cast<float>(offset.x),
+            .y = static_cast<float>(offset.y),
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+        const vk::Rect2D scissor{
+            .offset = offset,
+            .extent = extent,
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+        cmdbuf.draw(3, 1, 0, 0);
+    });
+    scheduler.MakeDirty(StateFlags::Pipeline);
 }
 
 } // namespace Vulkan
