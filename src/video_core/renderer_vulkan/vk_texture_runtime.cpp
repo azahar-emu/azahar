@@ -1,9 +1,23 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "video_core/renderer_vulkan/vk_texture_runtime.h"
+
+#include <cmath>
+#include <limits>
+#include <span>
+#include <string>
 #include <boost/container/small_vector.hpp>
 #include <boost/container/static_vector.hpp>
+#include <vulkan/vulkan.hpp>
+#include "video_core/custom_textures/custom_tex_manager.h"
+#include "video_core/rasterizer_cache/pixel_format.h"
+#include "video_core/rasterizer_cache/surface_params.h"
+#include "video_core/renderer_base.h"
+#include "video_core/renderer_vulkan/vk_blit_helper.h"
+#include "video_core/renderer_vulkan/vk_descriptor_update_queue.h"
+#include "video_core/renderer_vulkan/vk_stream_buffer.h"
 
 #include "common/literals.h"
 #include "common/microprofile.h"
@@ -700,7 +714,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     : SurfaceBase{params}, runtime{&runtime_}, instance{&runtime_.GetInstance()},
       scheduler{&runtime_.GetScheduler()}, traits{instance->GetTraits(pixel_format)} {
 
-    if (pixel_format == VideoCore::PixelFormat::Invalid) {
+    if (pixel_format == VideoCore::PixelFormat::Invalid || !traits.transfer_support) {
         return;
     }
 
@@ -720,18 +734,25 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         flags |= vk::ImageCreateFlagBits::eMutableFormat;
     }
 
+    // Ensure color formats have the color attachment bit set for framebuffers
+    auto usage = traits.usage;
+    const bool is_color =
+        (traits.aspect & vk::ImageAspectFlagBits::eColor) != vk::ImageAspectFlags{};
+    if (is_color) {
+        usage |= vk::ImageUsageFlagBits::eColorAttachment;
+    }
+
     const bool need_format_list = is_mutable && instance->IsImageFormatListSupported();
-    handles[0] = MakeHandle(instance, width, height, levels, texture_type, format, traits.usage,
-                            flags, traits.aspect, need_format_list, DebugName(false));
+    handles[0] = MakeHandle(instance, width, height, levels, texture_type, format, usage, flags,
+                            traits.aspect, need_format_list, DebugName(false));
     raw_images.emplace_back(handles[0].image);
 
     if (res_scale != 1) {
         handles[1] =
             MakeHandle(instance, GetScaledWidth(), GetScaledHeight(), levels, texture_type, format,
-                       traits.usage, flags, traits.aspect, need_format_list, DebugName(true));
+                       usage, flags, traits.aspect, need_format_list, DebugName(true));
         raw_images.emplace_back(handles[1].image);
     }
-
     runtime->renderpass_cache.EndRendering();
     scheduler->Record([raw_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
         const auto barriers = MakeInitBarriers(aspect, raw_images);
@@ -786,6 +807,49 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
 
     custom_format = mat->format;
     material = mat;
+}
+
+Surface::Surface(TextureRuntime& runtime_, u32 width_, u32 height_, VideoCore::PixelFormat format_)
+    : SurfaceBase{{
+          .width = width_,
+          .height = height_,
+          .pixel_format = format_,
+          .type = VideoCore::SurfaceType::Texture,
+      }},
+      runtime{&runtime_}, instance{&runtime_.GetInstance()}, scheduler{&runtime_.GetScheduler()},
+      traits{instance->GetTraits(format_)} {
+
+    // Create texture with requested size and format
+    const vk::ImageUsageFlags usage =
+        vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst |
+        vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+    handles[0] = MakeHandle(instance, width_, height_, 1, VideoCore::TextureType::Texture2D,
+                            traits.native, usage, {}, traits.aspect, false, "Temporary Surface");
+
+    // Create image view
+    const vk::ImageViewCreateInfo view_info = {
+        .image = handles[0].image,
+        .viewType = vk::ImageViewType::e2D,
+        .format = traits.native,
+        .subresourceRange{
+            .aspectMask = traits.aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+
+    handles[0].image_view = instance->GetDevice().createImageViewUnique(view_info);
+
+    runtime->renderpass_cache.EndRendering();
+    scheduler->Record(
+        [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+            const auto barriers = MakeInitBarriers(aspect, raw_images);
+            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+                                   vk::PipelineStageFlagBits::eTopOfPipe,
+                                   vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
+        });
 }
 
 Surface::~Surface() {
@@ -876,14 +940,23 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
     runtime->upload_buffer.Commit(staging.size);
 
     if (res_scale != 1) {
-        const VideoCore::TextureBlit blit = {
-            .src_level = upload.texture_level,
-            .dst_level = upload.texture_level,
-            .src_rect = upload.texture_rect,
-            .dst_rect = upload.texture_rect * res_scale,
-        };
-
-        BlitScale(blit, true);
+        // Always ensure the scaled image exists
+        if (!handles[1].image) {
+            // This will create handles[1] and perform the initial scaling
+            ScaleUp(res_scale);
+        } else {
+            // Update the scaled version of the uploaded area
+            const VideoCore::TextureBlit blit = {
+                .src_level = upload.texture_level,
+                .dst_level = upload.texture_level,
+                .src_rect = upload.texture_rect,
+                .dst_rect = upload.texture_rect * res_scale,
+            };
+            // Only apply texture filtering when upscaling, matching OpenGL behavior
+            if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+                BlitScale(blit, true);
+            }
+        }
     }
 }
 
@@ -1249,11 +1322,6 @@ vk::ImageView Surface::ImageView(u32 index) const noexcept {
     return image_view;
 }
 
-vk::ImageView Surface::FramebufferView() noexcept {
-    is_framebuffer = true;
-    return ImageView();
-}
-
 vk::ImageView Surface::DepthView() noexcept {
     if (depth_view) {
         return depth_view.get();
@@ -1329,6 +1397,8 @@ vk::ImageView Surface::StorageView() noexcept {
 }
 
 vk::Framebuffer Surface::Framebuffer() noexcept {
+    is_framebuffer = true;
+
     const u32 index = res_scale == 1 ? 0u : 1u;
     if (framebuffers[index]) {
         return framebuffers[index].get();
@@ -1339,10 +1409,27 @@ vk::Framebuffer Surface::Framebuffer() noexcept {
     const auto depth_format = is_depth ? pixel_format : PixelFormat::Invalid;
     const auto render_pass =
         runtime->renderpass_cache.GetRenderpass(color_format, depth_format, false);
-    const auto attachments = std::array{ImageView()};
+    // Use AttachmentView() to get single mip level view for framebuffer
+    const auto attachments = std::array{AttachmentView()};
     framebuffers[index] = MakeFramebuffer(instance->GetDevice(), render_pass, GetScaledWidth(),
                                           GetScaledHeight(), attachments);
     return framebuffers[index].get();
+}
+
+vk::ImageView Surface::AttachmentView() noexcept {
+    const vk::ImageViewCreateInfo view_info = {
+        .image = Image(),
+        .viewType = vk::ImageViewType::e2D,
+        .format = traits.native,
+        .subresourceRange{
+            .aspectMask = traits.aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1, // Single mip level for framebuffer
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    return instance->GetDevice().createImageViewUnique(view_info).release();
 }
 
 void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
@@ -1353,9 +1440,16 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
         return;
     }
 
-    scheduler->Record([src_image = Image(!up_scale), aspect = Aspect(),
-                       filter = MakeFilter(pixel_format), dst_image = Image(up_scale),
+    // Always use consistent source and destination images for proper scaling
+    // When upscaling: source = unscaled (0), destination = scaled (1)
+    // When downscaling: source = scaled (1), destination = unscaled (0)
+    const vk::Image src_image = up_scale ? Image(0) : Image(1);
+    const vk::Image dst_image = up_scale ? Image(1) : Image(0);
+
+    scheduler->Record([src_image, aspect = Aspect(), filter = MakeFilter(pixel_format), dst_image,
+                       src_access = AccessFlags(), dst_access = AccessFlags(),
                        blit](vk::CommandBuffer render_cmdbuf) {
+        // Adjust blitting parameters for filtered upscaling
         const std::array source_offsets = {
             vk::Offset3D{static_cast<s32>(blit.src_rect.left),
                          static_cast<s32>(blit.src_rect.bottom), 0},
@@ -1389,7 +1483,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 
         const std::array read_barriers = {
             vk::ImageMemoryBarrier{
-                .srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+                .srcAccessMask = src_access,
                 .dstAccessMask = vk::AccessFlagBits::eTransferRead,
                 .oldLayout = vk::ImageLayout::eGeneral,
                 .newLayout = vk::ImageLayout::eTransferSrcOptimal,
@@ -1399,10 +1493,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
                 .subresourceRange = MakeSubresourceRange(aspect, blit.src_level),
             },
             vk::ImageMemoryBarrier{
-                .srcAccessMask = vk::AccessFlagBits::eShaderRead |
-                                 vk::AccessFlagBits::eDepthStencilAttachmentRead |
-                                 vk::AccessFlagBits::eColorAttachmentRead |
-                                 vk::AccessFlagBits::eTransferRead,
+                .srcAccessMask = dst_access,
                 .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
                 .oldLayout = vk::ImageLayout::eGeneral,
                 .newLayout = vk::ImageLayout::eTransferDstOptimal,
@@ -1449,9 +1540,9 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 }
 
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
-                         Surface* color, Surface* depth)
+                         Surface* color, Surface* depth_stencil)
     : VideoCore::FramebufferParams{params},
-      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
+      res_scale{color ? color->res_scale : (depth_stencil ? depth_stencil->res_scale : 1u)} {
     auto& renderpass_cache = runtime.GetRenderpassCache();
     if (shadow_rendering && !color) {
         return;
@@ -1468,27 +1559,41 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         }
         images[index] = surface->Image();
         aspects[index] = surface->Aspect();
-        image_views[index] = shadow_rendering ? surface->StorageView() : surface->FramebufferView();
+        // Use AttachmentView() for single-mip-level framebuffer attachment
+        image_views[index] = surface->AttachmentView();
     };
-
     boost::container::static_vector<vk::ImageView, 2> attachments;
 
-    if (color) {
-        prepare(0, color);
-        attachments.emplace_back(image_views[0]);
-    }
+    if (!shadow_rendering) {
+        // Prepare the surfaces for use in framebuffer
+        if (color) {
+            prepare(0, color);
+            attachments.emplace_back(image_views[0]);
+        }
 
-    if (depth) {
-        prepare(1, depth);
-        attachments.emplace_back(image_views[1]);
+        if (depth_stencil) {
+            prepare(1, depth_stencil);
+            attachments.emplace_back(image_views[1]);
+        }
+    } else {
+        // For shadow rendering, just collect surface info without adding attachments
+        if (color) {
+            prepare(0, color);
+        }
+        if (depth_stencil) {
+            prepare(1, depth_stencil);
+        }
     }
 
     const vk::Device device = runtime.GetInstance().GetDevice();
+
     if (shadow_rendering) {
+        // For shadow rendering, we don't need a framebuffer with attachments
+        // Just create a dummy render pass for the rendering pipeline
         render_pass =
             renderpass_cache.GetRenderpass(PixelFormat::Invalid, PixelFormat::Invalid, false);
-        framebuffer = MakeFramebuffer(device, render_pass, color->GetScaledWidth(),
-                                      color->GetScaledHeight(), {});
+        // Don't create a framebuffer for shadow rendering
+        framebuffer.reset();
     } else {
         render_pass = renderpass_cache.GetRenderpass(formats[0], formats[1], false);
         framebuffer = MakeFramebuffer(device, render_pass, width, height, attachments);

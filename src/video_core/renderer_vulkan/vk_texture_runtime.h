@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -110,6 +110,8 @@ public:
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
+    explicit Surface(TextureRuntime& runtime, u32 width_, u32 height_,
+                     VideoCore::PixelFormat format_);
     ~Surface();
 
     Surface(const Surface&) = delete;
@@ -128,11 +130,23 @@ public:
     /// Returns the image view at index, otherwise the base view
     vk::ImageView ImageView(u32 index = 1) const noexcept;
 
+    /// Returns width of the surface
+    u32 GetWidth() const noexcept {
+        return width;
+    }
+
+    /// Returns height of the surface
+    u32 GetHeight() const noexcept {
+        return height;
+    }
+
+    /// Returns resolution scale of the surface
+    u32 GetResScale() const noexcept {
+        return res_scale;
+    }
+
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
-
-    /// Returns the framebuffer view of the surface image
-    vk::ImageView FramebufferView() noexcept;
 
     /// Returns the depth view of the surface image
     vk::ImageView DepthView() noexcept;
@@ -145,6 +159,9 @@ public:
 
     /// Returns a framebuffer handle for rendering to this surface
     vk::Framebuffer Framebuffer() noexcept;
+
+    /// Returns a single-mip-level view suitable for framebuffer attachments
+    vk::ImageView AttachmentView() noexcept;
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
@@ -231,19 +248,12 @@ public:
         return res_scale;
     }
 
-    u32 Width() const noexcept {
-        return width;
-    }
-
-    u32 Height() const noexcept {
-        return height;
-    }
-
 private:
     std::array<vk::Image, 2> images{};
     std::array<vk::ImageView, 2> image_views{};
     vk::UniqueFramebuffer framebuffer;
     vk::RenderPass render_pass;
+    std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};
