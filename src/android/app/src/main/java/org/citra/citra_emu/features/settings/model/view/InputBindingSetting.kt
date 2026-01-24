@@ -255,7 +255,9 @@ class InputBindingSetting(
         } else {
             buttonCode
         }
-        writeAxisMapping(motionRange.axis, button, axisDir == '-')
+        // use UP (-) to map vertical, but use RIGHT (+) to map horizontal
+        val inverted = if (isHorizontalOrientation()) axisDir == '-' else axisDir == '+'
+        writeAxisMapping(motionRange.axis, button, inverted)
         val uiString = "${device.name}: Axis ${motionRange.axis}" + axisDir
         value = uiString
     }
