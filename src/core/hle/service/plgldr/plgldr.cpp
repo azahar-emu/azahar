@@ -115,9 +115,10 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         }
     }
     FileSys::Plugin3GXLoader plugin_loader;
+    const auto low_title_Id = plgldr_context.user_load_parameters.low_title_Id;
     if (plgldr_context.use_user_load_parameters &&
-        plgldr_context.user_load_parameters.low_title_Id ==
-            static_cast<u32>(process.codeset->program_id) &&
+        (low_title_Id == static_cast<u32>(process.codeset->program_id) ||
+         low_title_Id == 0 /* Should load for any title */) &&
         plgldr_context.user_load_parameters.path[0]) {
         std::string plugin_file = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
                                   std::string(plgldr_context.user_load_parameters.path + 1);
