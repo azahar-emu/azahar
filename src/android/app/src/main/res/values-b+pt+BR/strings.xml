@@ -119,8 +119,6 @@
     <string name="controller_dpad_axis_description">Alguns controles podem não ser capazes de mapear os D-pads para um eixo. Se esse for o caso, use a seção de D-Pad (Botões).</string>
     <string name="controller_dpad_button">D-Pad (Botão)</string>
     <string name="controller_dpad_button_description">Só mapeie o D-pad para isso se você se você estiver encontrando problemas com o mapeamento de botão do D-Pad (Eixo).</string>
-    <string name="controller_axis_vertical">Eixo vertical</string>
-    <string name="controller_axis_horizontal">Eixo horizontal</string>
     <string name="direction_up">Cima</string>
     <string name="direction_down">Baixo</string>
     <string name="direction_left">Esquerda</string>
@@ -129,8 +127,6 @@
     <string name="input_dialog_description">Pressione ou mova uma entrada.</string>
     <string name="input_binding">Mapeamento de controles</string>
     <string name="input_binding_description">Pressione ou mova um botão/alavanca para mapear para %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Mova o seu joystick para baixo</string>
-    <string name="input_binding_description_horizontal_axis">Mova o seu joystick para a direita</string>
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
     <string name="button_turbo">Turbo</string>

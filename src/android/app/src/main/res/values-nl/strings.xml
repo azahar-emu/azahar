@@ -83,8 +83,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="controller_dpad_axis_description">Sommige controllers kunnen hun D-pad mogelijk niet als as in kaart brengen. Als dat het geval is, gebruik dan de D-Pad (knoppen) sectie.</string>
     <string name="controller_dpad_button">D-Pad (Knop)</string>
     <string name="controller_dpad_button_description">Wijs het D-pad hier alleen aan toe als je problemen ondervindt met de toewijzing van de D-Pad (as)-knoppen.</string>
-    <string name="controller_axis_vertical">Op/neer-as</string>
-    <string name="controller_axis_horizontal">Links/rechts as</string>
     <string name="direction_up">Op</string>
     <string name="direction_down">Neer</string>
     <string name="direction_left">Links</string>

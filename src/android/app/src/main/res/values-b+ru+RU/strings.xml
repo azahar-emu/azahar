@@ -64,8 +64,6 @@
     <string name="controller_triggers">Триггеры</string>
     <string name="controller_trigger">Триггер</string>
     <string name="controller_dpad">Крестовина</string>
-    <string name="controller_axis_vertical">Ось вверх/вниз</string>
-    <string name="controller_axis_horizontal">Ось влево/вправо</string>
     <string name="input_dialog_title">Привязка %1$s %2$s</string>
     <string name="input_dialog_description">Нажмите или отклоните элемент управления.</string>
     <string name="input_binding">Привязки ввода</string>
