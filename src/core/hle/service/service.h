@@ -82,7 +82,6 @@ private:
 
     struct FunctionInfoBase {
         u32 command_id;
-        bool implemented;
         HandlerFnP<ServiceFrameworkBase> handler_callback;
         const char* name;
     };
@@ -96,8 +95,6 @@ private:
 
     void RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n);
     void ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info);
-
-    void Empty(Kernel::HLERequestContext& ctx) {}
 
     /// Identifier string used to connect to the service.
     std::string service_name;
@@ -137,11 +134,9 @@ protected:
          */
         constexpr FunctionInfo(u32 command_id, HandlerFnP<Self> handler_callback, const char* name)
             : FunctionInfoBase{
-                  command_id, handler_callback != nullptr,
+                  command_id,
                   // Type-erase member function pointer by casting it down to the base class.
-                  handler_callback ? static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback)
-                                   : &ServiceFrameworkBase::Empty,
-                  name} {}
+                  static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback), name} {}
     };
 
     /**
