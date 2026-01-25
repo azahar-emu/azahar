@@ -111,8 +111,6 @@
     <string name="controller_dpad_axis_description">Bazı oyun kolları D-pad\'lerini bir eksen olarak atayamayabilir. Durum buysa D-Pad (butonlar) bölümünü kullanın.</string>
     <string name="controller_dpad_button">D-pad (Buton)</string>
     <string name="controller_dpad_button_description">Sadece D-Pad (Eksen) atamasında sorun yaşıyorsanız D-Pad\'inizi bunlara atayın.</string>
-    <string name="controller_axis_vertical">Yukarı/Aşağı Eksen</string>
-    <string name="controller_axis_horizontal">Sol/Sağ Eksen</string>
     <string name="direction_up">Yukarı</string>
     <string name="direction_down">Aşağı</string>
     <string name="direction_left">Sol</string>

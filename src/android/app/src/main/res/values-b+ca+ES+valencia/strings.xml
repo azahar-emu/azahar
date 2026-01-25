@@ -112,8 +112,6 @@
     <string name="controller_dpad_axis_description">És possible que alguns controladors no puguen assignar el D-pad com un eix. Si aquest és el cas, utilitza la secció D-Pad (botons).</string>
     <string name="controller_dpad_button">D-Pad (Botó)</string>
     <string name="controller_dpad_button_description">Assigna només el D-pad a aquests si tens problemes amb les assignacions de botons del D-Pad (Eix).</string>
-    <string name="controller_axis_vertical">Eix Vertical</string>
-    <string name="controller_axis_horizontal">Eix Horitzontal</string>
     <string name="direction_up">Amunt</string>
     <string name="direction_down">Avall</string>
     <string name="direction_left">Esquerra</string>

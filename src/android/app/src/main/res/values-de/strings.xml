@@ -112,8 +112,6 @@
     <string name="controller_dpad_axis_description">Einige Controller sind nicht in der Lage, das Steuerkreuz als Achse zuzuordnen. Wenn das der Fall ist, dann nutze den Abschnitt: „Steuerkreuz (Knöpfe)“.</string>
     <string name="controller_dpad_button">Steuerkreuz (Knöpfe)</string>
     <string name="controller_dpad_button_description">Nutze diese Funktion nur, wenn du Probleme mit der Funktion „Steuerkreuz (Achse) hast“.</string>
-    <string name="controller_axis_vertical">Achse (Oben/Unten)</string>
-    <string name="controller_axis_horizontal">Achse (Links/Rechts)</string>
     <string name="direction_up">Hoch</string>
     <string name="direction_down">Runter</string>
     <string name="direction_left">Links</string>

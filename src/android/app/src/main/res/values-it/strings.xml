@@ -124,8 +124,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="controller_dpad_axis_description">Alcuni controller potrebbero non essere in grado di mappare i tasti direzionali come un asse. Se questo è il caso, usa la sezione Tasti direzionali (pulsante).</string>
     <string name="controller_dpad_button">Tasti direzionali (pulsante)</string>
     <string name="controller_dpad_button_description">Mappa i tasti direzionali in questa sezione solo se riscontri problemi con le mappature della sezione Tasti direzionali (asse).</string>
-    <string name="controller_axis_vertical">Asse verticale</string>
-    <string name="controller_axis_horizontal">Asse orizzontale</string>
     <string name="direction_up">Su</string>
     <string name="direction_down">Giù</string>
     <string name="direction_left">Sinistra</string>
@@ -134,8 +132,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="input_dialog_description">Premi o sposta un comando</string>
     <string name="input_binding">Assegnazione Input</string>
     <string name="input_binding_description">Premi o muovi un comando per assegnarlo a %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Sposta il joystick verso il basso</string>
-    <string name="input_binding_description_horizontal_axis">Sposta il joystick verso destra</string>
     <string name="button_home">Home</string>
     <string name="button_swap">Inverti schermi</string>
     <string name="button_turbo">Turbo</string>

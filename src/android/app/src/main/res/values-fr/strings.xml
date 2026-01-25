@@ -112,8 +112,6 @@
     <string name="controller_dpad_axis_description">Certaines manettes ne sont pas en mesure d\'affecter leur manette + à un axe. Dans ce cas, utilisez la section manette + (boutons).</string>
     <string name="controller_dpad_button">Manette + (bouton)</string>
     <string name="controller_dpad_button_description">N\'affectez la manette + à ces boutons que si vous rencontrez des problèmes avec l\'affectation des boutons de la manette + (axes).</string>
-    <string name="controller_axis_vertical">Axe Haut/Bas</string>
-    <string name="controller_axis_horizontal">Axe Gauche/Droite</string>
     <string name="direction_up">Haut</string>
     <string name="direction_down">Bas</string>
     <string name="direction_left">Gauche</string>
