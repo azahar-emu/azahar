@@ -1093,7 +1093,7 @@ private:
 
     std::shared_ptr<AppletManager> applet_manager;
 
-    std::vector<u8> wireless_reboot_info;
+    static inline std::vector<u8> wireless_reboot_info;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
