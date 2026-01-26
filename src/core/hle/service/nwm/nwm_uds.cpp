@@ -1270,7 +1270,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // on a real 3ds this is about 0.38 seconds
     static constexpr std::chrono::nanoseconds UDSBeaconScanInterval{300000000};
 
-    input_event = ctx.SleepClientThread("uds::RecvBeaconBroadcastData", UDSBeaconScanInterval,
+    ctx.SleepClientThread("uds::RecvBeaconBroadcastData", UDSBeaconScanInterval,
                                         std::make_shared<ThreadCallback>(0xF));
 
     // Retrieve all beacon frames that were received from the desired mac address.
