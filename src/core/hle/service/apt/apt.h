@@ -51,6 +51,9 @@ public:
 
     std::shared_ptr<AppletManager> GetAppletManager() const;
 
+    std::vector<u8> GetWirelessRebootInfoBuffer() const;
+    void SetWirelessRebootInfoBuffer(std::vector<u8> info_buf);
+
     class NSInterface : public ServiceFramework<NSInterface> {
     public:
         NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);

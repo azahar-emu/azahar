@@ -1493,6 +1493,14 @@ std::shared_ptr<AppletManager> Module::GetAppletManager() const {
     return applet_manager;
 }
 
+std::vector<u8> Module::GetWirelessRebootInfoBuffer() const {
+    return wireless_reboot_info;
+}
+
+void Module::SetWirelessRebootInfoBuffer(std::vector<u8> info_buf) {
+    wireless_reboot_info = info_buf;
+}
+
 std::shared_ptr<Module> GetModule(Core::System& system) {
     auto apt = system.ServiceManager().GetService<Service::APT::Module::APTInterface>("APT:A");
     if (!apt)

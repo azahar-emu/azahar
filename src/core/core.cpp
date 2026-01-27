@@ -413,6 +413,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             apt->GetAppletManager()->SetSysMenuArg(restore_sys_menu_arg.value());
             restore_sys_menu_arg.reset();
         }
+        apt->SetWirelessRebootInfoBuffer(restore_wireless_reboot_info);
     }
 
     if (restore_plugin_context.has_value()) {
@@ -737,6 +738,7 @@ void System::Reset() {
     if (auto apt = Service::APT::GetModule(*this)) {
         restore_deliver_arg = apt->GetAppletManager()->ReceiveDeliverArg();
         restore_sys_menu_arg = apt->GetAppletManager()->GetSysMenuArg();
+        restore_wireless_reboot_info = apt->GetWirelessRebootInfoBuffer();
     }
     if (auto plg_ldr = Service::PLGLDR::GetService(*this)) {
         restore_plugin_context = plg_ldr->GetPluginLoaderContext();

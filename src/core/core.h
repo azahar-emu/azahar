@@ -489,6 +489,7 @@ private:
     boost::optional<Service::APT::SysMenuArg> restore_sys_menu_arg;
     boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
     std::unique_ptr<IPCDebugger::Recorder> restore_ipc_recorder;
+    std::vector<u8> restore_wireless_reboot_info;
 
     std::vector<u64> lle_modules;
 
