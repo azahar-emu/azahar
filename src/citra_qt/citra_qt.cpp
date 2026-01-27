@@ -827,7 +827,7 @@ void GMainWindow::InitializeHotkeys() {
             ToggleFullscreen();
         }
     });
-    connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
+    connect_shortcut(QStringLiteral("Toggle Framerate Limit"), [&] {
         if (!hotkey_registry
                  .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
                  .isEmpty()) {
