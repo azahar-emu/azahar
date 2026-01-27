@@ -1271,7 +1271,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     static constexpr std::chrono::nanoseconds UDSBeaconScanInterval{300000000};
 
     ctx.SleepClientThread("uds::RecvBeaconBroadcastData", UDSBeaconScanInterval,
-                                        std::make_shared<ThreadCallback>(0xF));
+                          std::make_shared<ThreadCallback>(0xF));
 
     // Retrieve all beacon frames that were received from the desired mac address.
     auto beacons = GetReceivedBeacons(mac_address);
