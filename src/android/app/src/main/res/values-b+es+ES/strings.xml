@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
     <string name="theme_and_color_description">Modifica el aspecto de la app</string>
     <string name="install_cia_title">Instalar CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Los archivos cifrados y .3ds ya no son compatibles. Puede que sea necesario descifrarlos o renombrarlos a .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Más Información.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -364,8 +363,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancelando...</string>
-    <string name="important">Importante</string>
-    <string name="dont_show_again">No volver a mostrar</string>
     <string name="visibility">Visibilidad</string>
     <string name="information">Información</string>
 

@@ -4715,8 +4715,8 @@ Para ver um guia sobre como instalar o FFmpeg, pressione Ajuda.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3186"/>
-        <source>3DS ROM Files (*.cia *.cci *.3dsx *.cxi)</source>
-        <translation>Arquivos de ROM do 3DS (*.cia *.cci *.3dsx *.cxi)</translation>
+        <source>3DS ROM Files (*.cia *.cci *.3dsx *.cxi *.3ds)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3210"/>
@@ -5073,190 +5073,180 @@ Você gostaria de baixá-la?</translation>
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="399"/>
-        <source>IMPORTANT: Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Learn more.&lt;/a&gt;</source>
-        <translation>IMPORTANTE: Arquivos criptografados e arquivos .3ds não são mais suportados. Talvez seja necessário descriptografá-los e/ou renomeá-los para .cci. &lt;a href=&apos;https://azahar-emu.org/blog/game-loading-changes/&apos;&gt;Saiba mais.&lt;/a&gt;</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="406"/>
-        <source>Don&apos;t show again</source>
-        <translation>Não mostrar</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="605"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1041"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="571"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1007"/>
         <source>Compatibility</source>
         <translation>Compatibilidade</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="606"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1042"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="572"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1008"/>
         <source>Region</source>
         <translation>Região</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="607"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1043"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="573"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1009"/>
         <source>File type</source>
         <translation>Tipo de arquivo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="608"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1044"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="574"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1010"/>
         <source>Size</source>
         <translation>Tamanho</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="609"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1045"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="575"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1011"/>
         <source>Play time</source>
         <translation>Tempo de jogo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="649"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="615"/>
         <source>Favorite</source>
         <translation>Favorito</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="621"/>
         <source>Eject Cartridge</source>
         <translation>Ejetar Cartucho</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="655"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="621"/>
         <source>Insert Cartridge</source>
         <translation>Inserir Cartucho</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="658"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="624"/>
         <source>Open</source>
         <translation>Abrir</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="659"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="625"/>
         <source>Application Location</source>
         <translation>Local do Aplicativo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="661"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="627"/>
         <source>Save Data Location</source>
         <translation>Local de Dados Salvos</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="662"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="628"/>
         <source>Extra Data Location</source>
         <translation>Local de Dados Extras</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="663"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="629"/>
         <source>Update Data Location</source>
         <translation>Atualizar Local dos Dados</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="664"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="630"/>
         <source>DLC Data Location</source>
         <translation>Local de Dados de DLC&#xa0;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="666"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="632"/>
         <source>Texture Dump Location</source>
         <translation>Local de Dump de Texturas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="667"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="633"/>
         <source>Custom Texture Location</source>
         <translation>Local de Texturas Personalizadas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="668"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="634"/>
         <source>Mods Location</source>
         <translation>Diretório de Mods</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="670"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="636"/>
         <source>Dump RomFS</source>
         <translation>Extrair RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="672"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="638"/>
         <source>Disk Shader Cache</source>
         <translation>Cache de shaders em disco</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="673"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="639"/>
         <source>Open Shader Cache Location</source>
         <translation>Abrir local do cache dos shaders</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="677"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="643"/>
         <source>Delete OpenGL Shader Cache</source>
         <translation>Apagar cache de shaders do OpenGL</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="680"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="646"/>
         <source>Uninstall</source>
         <translation>Desinstalar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="681"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="647"/>
         <source>Everything</source>
         <translation>Tudo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="683"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="649"/>
         <source>Application</source>
         <translation>Aplicativo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="684"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="650"/>
         <source>Update</source>
         <translation>Atualização</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="685"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="651"/>
         <source>DLC</source>
         <translation>DLC</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="687"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="653"/>
         <source>Remove Play Time Data</source>
         <translation>Remover Dados de Tempo de Jogo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="690"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="656"/>
         <source>Create Shortcut</source>
         <translation>Criar Atalho</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="691"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="657"/>
         <source>Add to Desktop</source>
         <translation>Adicionar à Área de Trabalho</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="693"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="659"/>
         <source>Add to Applications Menu</source>
         <translation>Adicionar ao Menu Iniciar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="698"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="664"/>
         <source>Stress Test: App Launch</source>
         <translation>Teste de Estresse: Inicialização de Aplicativos</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="702"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="668"/>
         <source>Properties</source>
         <translation>Propriedades</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="840"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="863"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="873"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="885"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="806"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="829"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="839"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="851"/>
         <source>Azahar</source>
         <translation>Azahar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="841"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="807"/>
         <source>Are you sure you want to completely uninstall &apos;%1&apos;?
 
 This will delete the application if installed, as well as any installed updates or DLC.</source>
@@ -5265,64 +5255,64 @@ This will delete the application if installed, as well as any installed updates 
 Isso irá deletar o aplicativo caso ele esteja instalado, assim como qualquer atualização ou DLC instalada.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="852"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="879"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="818"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="845"/>
         <source>%1 (Update)</source>
         <translation>%1 (Atualização)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="856"/>
-        <location filename="../../src/citra_qt/game_list.cpp" line="891"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="822"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="857"/>
         <source>%1 (DLC)</source>
         <translation>%1 (DLC)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="863"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="829"/>
         <source>Are you sure you want to uninstall &apos;%1&apos;?</source>
         <translation>Tem certeza que quer desinstalar &apos;%1&apos;?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="874"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="840"/>
         <source>Are you sure you want to uninstall the update for &apos;%1&apos;?</source>
         <translation>Tem certeza que deseja desinstalar a atualização para &apos;%1&apos;?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="886"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="852"/>
         <source>Are you sure you want to uninstall all DLC for &apos;%1&apos;?</source>
         <translation>Tem certeza de que deseja desinstalar todas as DLCs de &apos;%1&apos;?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="910"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="876"/>
         <source>Scan Subfolders</source>
         <translation>Examinar Subpastas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="911"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="877"/>
         <source>Remove Application Directory</source>
         <translation>Remover Diretório de Aplicativos</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="930"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="896"/>
         <source>Move Up</source>
         <translation>Mover para cima</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="932"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="898"/>
         <source>Move Down</source>
         <translation>Mover para baixo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="933"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="899"/>
         <source>Open Directory Location</source>
         <translation>Abrir local da pasta</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="976"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="942"/>
         <source>Clear</source>
         <translation>Limpar</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1040"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1006"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
@@ -5413,7 +5403,7 @@ Tela Inicial.</translation>
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1217"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1183"/>
         <source>Double-click to add a new folder to the application list</source>
         <translation>Clique duas vezes para adicionar uma pasta à lista de aplicativos</translation>
     </message>
@@ -5436,12 +5426,12 @@ Tela Inicial.</translation>
         <translation>resultados</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1057"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1023"/>
         <source>Filter:</source>
         <translation>Filtro:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="1058"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="1024"/>
         <source>Enter pattern to filter</source>
         <translation>Insira o padrão para filtrar</translation>
     </message>

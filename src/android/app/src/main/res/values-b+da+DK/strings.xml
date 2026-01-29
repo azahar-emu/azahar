@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Ændrer de filer, som Azahar bruger til at indlæse applikationer</string>
     <string name="theme_and_color_description">Rediger appens udseende</string>
     <string name="install_cia_title">Installer CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Krypterede filer og .3ds filer understøttes ikke længere. Det kan være nødvendigt at dekryptere og/eller omdøbe til .cci.<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Lær mere.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Vælg GPU-driver</string>
@@ -373,8 +372,6 @@
     <string name="auto_select">Automatisk valg</string>
     <string name="start">Start</string>
     <string name="cancelling">Annullerer...</string>
-    <string name="important">Vigtig</string>
-    <string name="dont_show_again">Vis ikke igen</string>
     <string name="visibility">Sigtbarhed</string>
     <string name="information">Information</string>
 
