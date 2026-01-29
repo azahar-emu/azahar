@@ -36,7 +36,6 @@
     <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load applications</string>
     <string name="theme_and_color_description">Modify the look of the app</string>
     <string name="install_cia_title">Install CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Encrypted files and .3ds files are no longer supported. Decrypting and/or renaming to .cci may be necessary. <a href="https://azahar-emu.org/blog/game-loading-changes/">Learn more.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Select GPU driver</string>
@@ -398,8 +397,6 @@
     <string name="auto_select">Auto-Select</string>
     <string name="start">Start</string>
     <string name="cancelling">Cancelling…</string>
-    <string name="important">Important</string>
-    <string name="dont_show_again">Don\'t show again</string>
     <string name="visibility">Visibility</string>
     <string name="information">Information</string>
 
