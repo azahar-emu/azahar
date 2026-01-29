@@ -141,6 +141,9 @@ RasterizerVulkan::~RasterizerVulkan() = default;
 
 void RasterizerVulkan::TickFrame() {
     res_cache.TickFrame();
+    if (res_cache.ConfigurationChanged()) [[unlikely]] {
+        runtime.ClearRenderpassCache();
+    }
 }
 
 void RasterizerVulkan::LoadDefaultDiskResources(

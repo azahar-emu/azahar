@@ -136,6 +136,11 @@ public:
     /// Clear all cached resources tracked by this cache manager
     void ClearAll(bool flush);
 
+    /// Check if the texture configuration changed in the last frame
+    bool ConfigurationChanged() const {
+        return configuration_changed;
+    }
+
 private:
     /// Iterate over all page indices in a range
     template <typename Func>
@@ -230,6 +235,7 @@ private:
     Settings::TextureFilter filter;
     bool dump_textures;
     bool use_custom_textures;
+    bool configuration_changed{};
 };
 
 } // namespace VideoCore

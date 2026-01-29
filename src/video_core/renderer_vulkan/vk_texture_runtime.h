@@ -89,6 +89,9 @@ public:
     /// Returns true if the provided pixel format needs convertion
     bool NeedsConversion(VideoCore::PixelFormat format) const;
 
+    /// Clears the renderpass cache
+    void ClearRenderpassCache();
+
 private:
     /// Clears a partial texture rect using a clear rectangle
     void ClearTextureWithRenderpass(Surface& surface, const VideoCore::TextureClear& clear);

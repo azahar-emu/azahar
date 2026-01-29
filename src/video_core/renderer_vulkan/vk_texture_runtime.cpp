@@ -710,6 +710,10 @@ bool TextureRuntime::NeedsConversion(VideoCore::PixelFormat format) const {
            traits.aspect != (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
 }
 
+void TextureRuntime::ClearRenderpassCache() {
+    renderpass_cache.ClearRenderPassCache();
+}
+
 Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params)
     : SurfaceBase{params}, runtime{&runtime_}, instance{&runtime_.GetInstance()},
       scheduler{&runtime_.GetScheduler()}, traits{instance->GetTraits(pixel_format)} {
@@ -952,8 +956,9 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
                 .src_rect = upload.texture_rect,
                 .dst_rect = upload.texture_rect * res_scale,
             };
+            const bool is_render_target = True(flags & VideoCore::SurfaceFlagBits::RenderTarget);
             // Only apply texture filtering when upscaling, matching OpenGL behavior
-            if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+            if (res_scale != 1 && !is_render_target && !runtime->blit_helper.Filter(*this, blit)) {
                 BlitScale(blit, true);
             }
         }
