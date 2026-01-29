@@ -3183,7 +3183,7 @@ void GMainWindow::OnCompressFile() {
 
     QStringList filepaths =
         QFileDialog::getOpenFileNames(this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
-                                      tr("3DS ROM Files (*.cia *.cci *.3dsx *.cxi)") +
+                                      tr("3DS ROM Files (*.cia *.cci *.3dsx *.cxi *.3ds)") +
                                           QStringLiteral(";;") + tr("All Files (*.*)"));
 
     QString out_path;
@@ -3863,8 +3863,8 @@ static bool IsSingleFileDropEvent(const QMimeData* mime) {
     return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-static const std::array<std::string, 10> AcceptedExtensions = {
-    "cci", "cxi", "bin", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx"};
+static const std::array<std::string, 11> AcceptedExtensions = {
+    "cci", "cxi", "bin", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx", "3ds"};
 
 static bool IsCorrectFileExtension(const QMimeData* mime) {
     const QString& filename = mime->urls().at(0).toLocalFile();
