@@ -16,6 +16,7 @@
         <expanded-acronym>CTR Cart Image</expanded-acronym>
         <icon name="azahar"/>
         <glob pattern="*.cci"/>
+        <glob pattern="*.3ds"/>
         <magic><match value="NCSD" type="string" offset="256"/></magic>
     </mime-type>
 

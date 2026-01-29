@@ -7,16 +7,12 @@ package org.citra.citra_emu.fragments
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
-import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -50,7 +46,6 @@ class GamesFragment : Fragment() {
 
     private val gamesViewModel: GamesViewModel by activityViewModels()
     private val homeViewModel: HomeViewModel by activityViewModels()
-    private var show3DSFileWarning: Boolean = true
     private lateinit var gameAdapter: GameAdapter
 
     private val openImageLauncher = registerForActivityResult(
@@ -222,34 +217,6 @@ class GamesFragment : Fragment() {
         }
 
         setInsets()
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        if (show3DSFileWarning &&
-            !PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-                .getBoolean("show_3ds_files_warning", false)) {
-            val message = HtmlCompat.fromHtml(getString(R.string.warning_3ds_files),
-                HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-            context?.let {
-                val alert = MaterialAlertDialogBuilder(it)
-                    .setTitle(getString(R.string.important))
-                    .setMessage(message)
-                    .setPositiveButton(R.string.dont_show_again) { _, _ ->
-                        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-                            .edit() {
-                            putBoolean("show_3ds_files_warning", true)
-                        }
-                    }
-                    .show()
-
-                val alertMessage = alert.findViewById<View>(android.R.id.message) as TextView
-                alertMessage.movementMethod = LinkMovementMethod.getInstance()
-            }
-        }
-        show3DSFileWarning = false
     }
 
     override fun onDestroyView() {
