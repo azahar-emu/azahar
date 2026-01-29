@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Azahar\'ın uygulama yüklemek için kullandığı dosyaları değiştirir</string>
     <string name="theme_and_color_description">Uygulamanın görünüşünü değiştir</string>
     <string name="install_cia_title">CIA Yükle</string>
-    <string name="warning_3ds_files"><![CDATA[Şifrelenmiş dosyalar ve .3ds dosyaları artık desteklenmemektedir. Dosyanın şifresinin çözülmesi ve/veya .cci olarak yeniden adlandırması gerekli olabilir.<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Daha fazla öğren.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">GPU Sürücüsü seç</string>
@@ -327,8 +326,6 @@
     <string name="auto_select">Otomatik Seç</string>
     <string name="start">Başlat</string>
     <string name="cancelling">İptal ediliyor...</string>
-    <string name="important">Önemli</string>
-    <string name="dont_show_again">Tekrar gösterme</string>
     <string name="visibility">Görünürlük</string>
     <string name="information">Bilgi</string>
 

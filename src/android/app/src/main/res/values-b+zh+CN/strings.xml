@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">更改 Azahar 用于加载应用的相关文件</string>
     <string name="theme_and_color_description">更改应用程序的外观</string>
     <string name="install_cia_title">安装 CIA</string>
-    <string name="warning_3ds_files"><![CDATA[加密文件和 3ds 后缀名文件不再受支持。可能需要解密和/或重命名为 cci 后缀名。<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">了解详情。</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">选择 GPU 驱动</string>
@@ -356,8 +355,6 @@
     <string name="auto_select">自动选择</string>
     <string name="start">开始</string>
     <string name="cancelling">取消中…</string>
-    <string name="important">重要提示</string>
-    <string name="dont_show_again">不再显示</string>
     <string name="visibility">可见度</string>
     <string name="information">信息</string>
 

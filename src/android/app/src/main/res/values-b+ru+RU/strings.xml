@@ -19,6 +19,7 @@
     <string name="about_description">Версия сборки, разработчики и другое</string>
     <string name="theme_and_color_description">Настройка внешнего вида приложения</string>
     <string name="install_cia_title">Установить CIA</string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Выбрать драйвер GPU</string>
     <string name="select_gpu_driver_title">Заменить текущий драйвер GPU устройства?</string>

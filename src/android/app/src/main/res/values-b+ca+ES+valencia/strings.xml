@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Canvia els fitxers que Azahar utilitza per a carregar aplicacions</string>
     <string name="theme_and_color_description">Modifica l\'aspecte de l\'app</string>
     <string name="install_cia_title">Instal·lar CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Els fitxers encriptats .3ds ja no són compatibles. Pot ser que siga necessari desencriptar-los o canviar-los de nom a .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Més Informació.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -348,8 +347,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancel·lant</string>
-    <string name="important">Important</string>
-    <string name="dont_show_again">No tornar a mostrar</string>
     <string name="visibility">Visibilitat</string>
     <string name="information">Informació</string>
 

@@ -36,7 +36,6 @@ Controlla ancora questa opzione in futuro per controllare se il supporto è stat
     <string name="select_citra_user_folder_home_description">Cambia i file che Azahar usa per caricare le applicazioni</string>
     <string name="theme_and_color_description">Modifica l\'aspetto dell\'app</string>
     <string name="install_cia_title">Installa CIA</string>
-    <string name="warning_3ds_files"><![CDATA[File criptati e file .3ds non sono più supportati. Decriptare o rinominare i file in .cci potrebbe essere necessario <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Scopri di più.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleziona il driver GPU</string>
@@ -124,6 +123,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="controller_dpad_axis_description">Alcuni controller potrebbero non essere in grado di mappare i tasti direzionali come un asse. Se questo è il caso, usa la sezione Tasti direzionali (pulsante).</string>
     <string name="controller_dpad_button">Tasti direzionali (pulsante)</string>
     <string name="controller_dpad_button_description">Mappa i tasti direzionali in questa sezione solo se riscontri problemi con le mappature della sezione Tasti direzionali (asse).</string>
+    <string name="controller_axis_vertical">Asse verticale</string>
+    <string name="controller_axis_horizontal">Asse orizzontale</string>
     <string name="direction_up">Su</string>
     <string name="direction_down">Giù</string>
     <string name="direction_left">Sinistra</string>
@@ -378,8 +379,6 @@ Divertiti usando l\'emulatore!</string>
     <string name="auto_select">Seleziona automaticamente</string>
     <string name="start">Avvia</string>
     <string name="cancelling">Annullamento in corso...</string>
-    <string name="important">Importante</string>
-    <string name="dont_show_again">Non mostrare più</string>
     <string name="visibility">Visibilità</string>
     <string name="information">Informazione</string>
 

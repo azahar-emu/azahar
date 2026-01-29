@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Ändrar de filer som Azahar använder för att ladda applikationer</string>
     <string name="theme_and_color_description">Modifiera utseendet på appen</string>
     <string name="install_cia_title">Installera CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Krypterade filer och .3ds-filer stöds inte längre. Det kan vara nödvändigt att dekryptera och/eller byta namn till .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Läs mer.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Välj GPU-drivrutin</string>
@@ -119,6 +118,8 @@
     <string name="controller_dpad_axis_description">Vissa styrenheter kanske inte kan mappa sina riktningsknappar som en axel. Om så är fallet, använd avsnittet Riktningsknappar (knappar).</string>
     <string name="controller_dpad_button">Riktningsknappar (knapp)</string>
     <string name="controller_dpad_button_description">Mappa endast D-pad till dessa om du har problem med knappmappningarna för D-pad (axel).</string>
+    <string name="controller_axis_vertical">Vertikal axel</string>
+    <string name="controller_axis_horizontal">Horisontell axel</string>
     <string name="direction_up">Upp</string>
     <string name="direction_down">Ner</string>
     <string name="direction_left">Vänster</string>
@@ -127,6 +128,8 @@
     <string name="input_dialog_description">Tryck på eller flytta en inmatning.</string>
     <string name="input_binding">Inmatningsbindning</string>
     <string name="input_binding_description">Tryck eller flytta en inmatning för att binda den till %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Tryck UPP på din styrspak.</string>
+    <string name="input_binding_description_horizontal_axis">Tryck HÖGER på din styrspak.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Byt skärm</string>
     <string name="button_turbo">Turbo</string>
@@ -373,8 +376,6 @@
     <string name="auto_select">Autovälj</string>
     <string name="start">Starta</string>
     <string name="cancelling">Avbryter...</string>
-    <string name="important">Viktigt</string>
-    <string name="dont_show_again">Visa inte igen</string>
     <string name="visibility">Synlighet</string>
     <string name="information">Information</string>
 
