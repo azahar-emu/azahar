@@ -206,6 +206,7 @@ if (ENABLE_QT)
         "sdmc_directory"
         "game_id"
         "KeySeq"
+        "controller_keyseq"
         "gamedirs"
         "libvorbis"
         "Context"
