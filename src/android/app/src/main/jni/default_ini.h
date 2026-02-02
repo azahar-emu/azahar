@@ -13,30 +13,28 @@ namespace DefaultINI {
 
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
-constexpr std::array android_config_omitted_keys = {
-    Keys::enable_gamemode,
-    Keys::use_custom_storage,
-    Keys::init_time_offset,
-    Keys::physical_device,
-    Keys::use_gles, // Niche
-    Keys::dump_command_buffers,
-    Keys::use_display_refresh_rate_detection,
-    Keys::screen_top_stretch,
-    Keys::screen_top_leftright_padding,
-    Keys::screen_top_topbottom_padding,
-    Keys::screen_bottom_stretch,
-    Keys::screen_bottom_leftright_padding,
-    Keys::screen_bottom_topbottom_padding,
-    Keys::mono_render_option,
-    Keys::log_regex_filter, // Niche
-    Keys::video_encoder,
-    Keys::video_encoder_options,
-    Keys::video_bitrate,
-    Keys::audio_encoder,
-    Keys::audio_encoder_options,
-    Keys::audio_bitrate,
-    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
-};
+constexpr std::array android_config_omitted_keys = {Keys::enable_gamemode,
+                                                    Keys::use_custom_storage,
+                                                    Keys::init_time_offset,
+                                                    Keys::physical_device,
+                                                    Keys::use_gles, // Niche
+                                                    Keys::dump_command_buffers,
+                                                    Keys::use_display_refresh_rate_detection,
+                                                    Keys::screen_top_stretch,
+                                                    Keys::screen_top_leftright_padding,
+                                                    Keys::screen_top_topbottom_padding,
+                                                    Keys::screen_bottom_stretch,
+                                                    Keys::screen_bottom_leftright_padding,
+                                                    Keys::screen_bottom_topbottom_padding,
+                                                    Keys::mono_render_option,
+                                                    Keys::log_regex_filter, // Niche
+                                                    Keys::video_encoder,
+                                                    Keys::video_encoder_options,
+                                                    Keys::video_bitrate,
+                                                    Keys::audio_encoder,
+                                                    Keys::audio_encoder_options,
+                                                    Keys::audio_bitrate,
+                                                    Keys::last_artic_base_addr};
 
 // clang-format off
 
