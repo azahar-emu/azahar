@@ -99,4 +99,38 @@ struct HashableStruct {
     }
 };
 
+/// Helper struct that provides a hashable string with basic string API
+template <typename Hasher = HashAlgo64::XXH3>
+struct HashableString {
+    std::string value;
+
+    HashableString() = default;
+    HashableString(const std::string& s) : value(s) {}
+    HashableString(std::string&& s) noexcept : value(std::move(s)) {}
+
+    std::size_t Hash() const noexcept {
+        return ComputeHash64<Hasher>(value.data(), value.size());
+    }
+
+    bool empty() const noexcept {
+        return value.empty();
+    }
+
+    std::size_t size() const noexcept {
+        return value.size();
+    }
+
+    const char* data() const noexcept {
+        return value.data();
+    }
+
+    operator std::string_view() const noexcept {
+        return value;
+    }
+
+    operator std::string&&() && noexcept {
+        return std::move(value);
+    }
+};
+
 } // namespace Common
