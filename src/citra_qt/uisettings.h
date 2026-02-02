@@ -19,6 +19,7 @@ namespace UISettings {
 
 struct ContextualShortcut {
     QString keyseq;
+    QString controller_keyseq;
     int context;
 };
 
