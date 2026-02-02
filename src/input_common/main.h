@@ -37,6 +37,9 @@ std::string GenerateKeyboardParam(int key_code);
 std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
                                         int key_modifier, float modifier_scale);
 
+std::string AnalogToText(const Common::ParamPackage& param, const std::string& dir);
+std::string ButtonToText(const Common::ParamPackage& param);
+
 Common::ParamPackage GetControllerButtonBinds(const Common::ParamPackage& params, int button);
 Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params, int analog);
 

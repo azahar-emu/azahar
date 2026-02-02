@@ -49,6 +49,8 @@ enum class LayoutOption : u32 { // Shouldn't these have set numbers to prevent l
     CustomLayout,
 };
 
+enum class InputMappingType : u8 { AllControllers, Guid, GuidPort };
+
 /** Defines the layout option for mobile portrait */
 enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
@@ -449,6 +451,7 @@ struct InputProfile {
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+    InputMappingType maptype = Settings::InputMappingType::GuidPort;
 };
 
 struct TouchFromButtonMap {
