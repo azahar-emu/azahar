@@ -408,16 +408,18 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
         }
     }
 
-    const auto [it, new_config] = programmable_vertex_map.try_emplace(config);
+    const auto config_hash = config.Hash();
+
+    const auto [it, new_config] = programmable_vertex_map.try_emplace(config_hash);
     if (new_config) {
-        auto program = GLSL::GenerateVertexShader(setup, config, true);
+        auto program = Common::HashableString(GLSL::GenerateVertexShader(setup, config, true));
         if (program.empty()) {
             LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
-            programmable_vertex_map[config] = nullptr;
+            programmable_vertex_map[config_hash] = nullptr;
             return false;
         }
 
-        auto [iter, new_program] = programmable_vertex_cache.try_emplace(program, instance);
+        auto [iter, new_program] = programmable_vertex_cache.try_emplace(program.Hash(), instance);
         auto& shader = iter->second;
 
         if (new_program) {
@@ -456,7 +458,7 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     }
 
     const PicaFixedGSConfig gs_config{regs, instance.IsShaderClipDistanceSupported()};
-    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config, instance);
+    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config.Hash(), instance);
     auto& shader = it->second;
 
     if (new_shader) {
@@ -481,7 +483,7 @@ void PipelineCache::UseTrivialGeometryShader() {
 void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                                       const Pica::Shader::UserConfig& user) {
     const FSConfig fs_config{regs, user, profile};
-    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config, instance);
+    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config.Hash(), instance);
     auto& shader = it->second;
 
     if (new_shader) {
