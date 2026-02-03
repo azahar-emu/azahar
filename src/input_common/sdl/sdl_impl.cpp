@@ -187,9 +187,18 @@ public:
         state.buttons[button] = value;
     }
 
+    // no longer used, at least as a test
     bool GetButton(int button) const {
         std::lock_guard lock{mutex};
         return state.buttons.at(button);
+    }
+
+    // better than maintaining the state manually, and
+    // seems to have no effect on performance
+    bool GetButtonDirect(int button) const {
+        if (!sdl_joystick)
+            return false;
+        return SDL_JoystickGetButton(sdl_joystick.get(), button) != 0;
     }
 
     void SetAxis(int axis, Sint16 value) {
@@ -613,7 +622,7 @@ public:
         : joystick(std::move(joystick_)), button(button_) {}
 
     bool GetStatus() const override {
-        return joystick->GetButton(button);
+        return joystick->GetButtonDirect(button);
     }
 
 private:

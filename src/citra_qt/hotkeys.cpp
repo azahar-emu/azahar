@@ -36,9 +36,16 @@ void HotkeyRegistry::LoadHotkeys() {
             hk.controller_keyseq = shortcut.shortcut.controller_keyseq;
         }
         if (!hk.controller_keyseq.isEmpty()) {
-            hk.button_device =
-                Input::CreateDevice<Input::ButtonDevice>(hk.controller_keyseq.toStdString());
-            buttonMonitor.addButton(shortcut.name, &hk);
+            QStringList paramList = hk.controller_keyseq.split(QStringLiteral("||"));
+            if (paramList.length() > 0) {
+                hk.button_device =
+                    Input::CreateDevice<Input::ButtonDevice>(paramList.at(0).toStdString());
+                if (paramList.length() > 1) {
+                    hk.button_device2 =
+                        Input::CreateDevice<Input::ButtonDevice>(paramList.at(1).toStdString());
+                }
+                buttonMonitor.addButton(shortcut.name, &hk);
+            }
         }
         for (auto const& [_, hotkey_shortcut] : hk.shortcuts) {
             if (hotkey_shortcut) {
