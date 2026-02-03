@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <iostream>
 #include <QShortcut>
 #include <QTimer>
+#include <QWidget>
+#include "core/frontend/input.h"
 #include "hotkey_monitor.h"
 #include "hotkeys.h"
 
@@ -16,7 +19,10 @@ ControllerHotkeyMonitor::ControllerHotkeyMonitor() {
     m_buttons = std::make_unique<std::map<QString, ButtonState>>();
     m_timer = new QTimer();
     QObject::connect(m_timer, &QTimer::timeout, [this]() { checkAllButtons(); });
-    m_timer->start(16);
+}
+
+void ControllerHotkeyMonitor::start(const int msec) {
+    m_timer->start(msec);
 }
 
 ControllerHotkeyMonitor::~ControllerHotkeyMonitor() {
@@ -33,12 +39,18 @@ void ControllerHotkeyMonitor::removeButton(const QString& name) {
 
 void ControllerHotkeyMonitor::checkAllButtons() {
     for (auto& [name, it] : *m_buttons) {
-        bool currentStatus = it.hk->button_device.GetStatus();
+
+        bool currentStatus = it.hk->button_device->GetStatus();
         if (currentStatus != it.lastStatus) {
             if (it.lastStatus && !currentStatus) {
-                for (auto const& [_, hotkey_shortcut] : it.hk->shortcuts) {
-                    if (hotkey_shortcut) {
-                        hotkey_shortcut->activated();
+                std::cerr << "Detected button release" << std::endl;
+                for (auto const& [name, hotkey_shortcut] : it.hk->shortcuts) {
+                    if (hotkey_shortcut && hotkey_shortcut->isEnabled()) {
+                        QWidget* parent = qobject_cast<QWidget*>(hotkey_shortcut->parent());
+                        if (parent && parent->isActiveWindow()) {
+                            hotkey_shortcut->activated();
+                            break;
+                        }
                     }
                 }
             }

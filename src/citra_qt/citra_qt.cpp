@@ -768,7 +768,8 @@ void GMainWindow::InitializeSaveStateMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
-
+    hotkey_registry.buttonMonitor.start(32); // poll 60Hz
+    LOG_DEBUG(Frontend, "Initializing hotkeys");
     const QString main_window = QStringLiteral("Main Window");
     const QString fullscreen = QStringLiteral("Fullscreen");
 

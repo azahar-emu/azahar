@@ -29,7 +29,7 @@ void HotkeyRegistry::LoadHotkeys() {
     // beginGroup()
     for (auto shortcut : UISettings::values.shortcuts) {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
-        if (!shortcut.shortcut.keyseq.isEmpty()) {
+        if (!shortcut.shortcut.keyseq.isEmpty() || !shortcut.shortcut.controller_keyseq.isEmpty()) {
             hk.keyseq =
                 QKeySequence::fromString(shortcut.shortcut.keyseq, QKeySequence::NativeText);
             hk.context = static_cast<Qt::ShortcutContext>(shortcut.shortcut.context);
@@ -37,7 +37,7 @@ void HotkeyRegistry::LoadHotkeys() {
         }
         if (!hk.controller_keyseq.isEmpty()) {
             hk.button_device =
-                *Input::CreateDevice<Input::ButtonDevice>(hk.controller_keyseq.toStdString());
+                Input::CreateDevice<Input::ButtonDevice>(hk.controller_keyseq.toStdString());
             buttonMonitor.addButton(shortcut.name, &hk);
         }
         for (auto const& [_, hotkey_shortcut] : hk.shortcuts) {
