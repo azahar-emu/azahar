@@ -20,7 +20,7 @@ struct Hotkey {
     QString controller_keyseq;
     std::map<QString, QShortcut*> shortcuts;
     Qt::ShortcutContext context = Qt::WindowShortcut;
-    Input::ButtonDevice button_device;
+    std::unique_ptr<Input::ButtonDevice> button_device;
 };
 
 class HotkeyRegistry final {
