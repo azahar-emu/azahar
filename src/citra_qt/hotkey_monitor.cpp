@@ -12,7 +12,8 @@
 
 struct ControllerHotkeyMonitor::ButtonState {
     Hotkey* hk;
-    bool lastStatus;
+    bool lastStatus = false;
+    bool lastStatus2 = false;
 };
 
 ControllerHotkeyMonitor::ControllerHotkeyMonitor() {
@@ -39,22 +40,29 @@ void ControllerHotkeyMonitor::removeButton(const QString& name) {
 
 void ControllerHotkeyMonitor::checkAllButtons() {
     for (auto& [name, it] : *m_buttons) {
-
+        bool trigger = false;
         bool currentStatus = it.hk->button_device->GetStatus();
-        if (currentStatus != it.lastStatus) {
-            if (it.lastStatus && !currentStatus) {
-                std::cerr << "Detected button release" << std::endl;
-                for (auto const& [name, hotkey_shortcut] : it.hk->shortcuts) {
-                    if (hotkey_shortcut && hotkey_shortcut->isEnabled()) {
-                        QWidget* parent = qobject_cast<QWidget*>(hotkey_shortcut->parent());
-                        if (parent && parent->isActiveWindow()) {
-                            hotkey_shortcut->activated();
-                            break;
-                        }
+        if (it.hk->button_device2) {
+            // two buttons, need both pressed and one *just now* pressed
+            bool currentStatus2 = it.hk->button_device2->GetStatus();
+            trigger = currentStatus && currentStatus2 && (!it.lastStatus || !it.lastStatus2);
+            it.lastStatus = currentStatus;
+            it.lastStatus2 = currentStatus2;
+        } else {
+            // if only one button, trigger as soon as pressed
+            trigger = currentStatus && !it.lastStatus;
+            it.lastStatus = currentStatus;
+        }
+        if (trigger) {
+            for (auto const& [name, hotkey_shortcut] : it.hk->shortcuts) {
+                if (hotkey_shortcut && hotkey_shortcut->isEnabled()) {
+                    QWidget* parent = qobject_cast<QWidget*>(hotkey_shortcut->parent());
+                    if (parent && parent->isActiveWindow()) {
+                        hotkey_shortcut->activated();
+                        break;
                     }
                 }
             }
-            it.lastStatus = currentStatus;
         }
     }
 }
