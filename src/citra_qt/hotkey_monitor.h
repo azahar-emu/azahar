@@ -17,6 +17,7 @@ public:
     ~ControllerHotkeyMonitor();
     void addButton(const QString& name, Hotkey* hk);
     void removeButton(const QString& name);
+    void start(const int msec);
 
 private:
     void checkAllButtons();
