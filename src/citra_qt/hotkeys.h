@@ -5,6 +5,7 @@
 #pragma once
 
 #include <map>
+#include <QAction>
 #include <QKeySequence>
 #include <QString>
 #include "core/frontend/input.h"
@@ -22,6 +23,7 @@ struct Hotkey {
     Qt::ShortcutContext context = Qt::WindowShortcut;
     std::unique_ptr<Input::ButtonDevice> button_device = nullptr;
     std::unique_ptr<Input::ButtonDevice> button_device2 = nullptr;
+    QAction* action = nullptr;
 };
 
 class HotkeyRegistry final {
@@ -79,6 +81,15 @@ public:
      * @param action Name of the action (e.g. "Start Emulation", "Load Image").
      */
     Qt::ShortcutContext GetShortcutContext(const QString& group, const QString& action);
+
+    /**
+     * Stores a QAction into the appropriate hotkey, for triggering by controller
+     *
+     * @param group General group this shortcut context belongs to
+     * @param action_name Name of the action
+     * @param action The QAction to store
+     */
+    void SetAction(const QString& group, const QString& action_name, QAction* action);
 
 private:
     using HotkeyMap = std::map<QString, Hotkey>;

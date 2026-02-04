@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QAction>
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
@@ -76,4 +77,9 @@ Qt::ShortcutContext HotkeyRegistry::GetShortcutContext(const QString& group,
                                                        const QString& action) {
     Hotkey& hk = hotkey_groups[group][action];
     return hk.context;
+}
+
+void HotkeyRegistry::SetAction(const QString& group, const QString& action_name, QAction* action) {
+    Hotkey& hk = hotkey_groups[group][action_name];
+    hk.action = action;
 }
