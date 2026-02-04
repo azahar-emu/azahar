@@ -60,6 +60,9 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     configuration/configure_hotkeys.cpp
     configuration/configure_hotkeys.h
     configuration/configure_hotkeys.ui
+    configuration/configure_hotkeys_controller.cpp
+    configuration/configure_hotkeys_controller.h
+    configuration/configure_hotkeys_controller.ui
     configuration/configure_input.cpp
     configuration/configure_input.h
     configuration/configure_input.ui

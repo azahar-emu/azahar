@@ -29,6 +29,7 @@ struct Hotkey {
 class HotkeyRegistry final {
 public:
     friend class ConfigureHotkeys;
+    friend class ConfigureControllerHotkeys;
 
     explicit HotkeyRegistry();
     ~HotkeyRegistry();
