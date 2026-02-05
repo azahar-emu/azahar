@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -121,8 +122,8 @@ void MouseTracker::OnMouseMove(int deltaX, int deltaY) {
 }
 
 void MouseTracker::Restrict(int minX, int minY, int maxX, int maxY) {
-    x = std::min(std::max(minX, x), maxX);
-    y = std::min(std::max(minY, y), maxY);
+    x = std::clamp(x, minX, maxX);
+    y = std::clamp(y, minY, maxY);
 }
 
 void MouseTracker::Update(int bufferWidth, int bufferHeight,
@@ -146,11 +147,11 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
 
             // Use layout system to validate and map coordinates
             if (IsWithinTouchscreen(layout, newX, newY)) {
-                x = std::max(static_cast<int>(layout.bottom_screen.left),
-                             std::min(newX, static_cast<int>(layout.bottom_screen.right))) -
+                x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
+                               static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
-                y = std::max(static_cast<int>(layout.bottom_screen.top),
-                             std::min(newY, static_cast<int>(layout.bottom_screen.bottom))) -
+                y = std::clamp(newY, static_cast<int>(layout.bottom_screen.top),
+                               static_cast<int>(layout.bottom_screen.bottom)) -
                     layout.bottom_screen.top;
             }
         }
@@ -173,11 +174,11 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
 
             // Use layout system to validate and map coordinates
             if (IsWithinTouchscreen(layout, newX, newY)) {
-                x = std::max(static_cast<int>(layout.bottom_screen.left),
-                             std::min(newX, static_cast<int>(layout.bottom_screen.right))) -
+                x = std::clamp(newX, static_cast<int>(layout.bottom_screen.left),
+                               static_cast<int>(layout.bottom_screen.right)) -
                     layout.bottom_screen.left;
-                y = std::max(static_cast<int>(layout.bottom_screen.top),
-                             std::min(newY, static_cast<int>(layout.bottom_screen.bottom))) -
+                y = std::clamp(newY, static_cast<int>(layout.bottom_screen.top),
+                               static_cast<int>(layout.bottom_screen.bottom)) -
                     layout.bottom_screen.top;
             }
         }

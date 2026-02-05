@@ -20,7 +20,7 @@ namespace LibRetro {
 namespace {
 
 static retro_video_refresh_t video_cb;
-// static retro_audio_sample_t audio_cb;
+static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
@@ -100,6 +100,10 @@ bool GetCoreOptionsVersion(unsigned* version) {
     return environ_cb(RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION, version);
 }
 
+bool SetMemoryMaps(const retro_memory_map* map) {
+    return environ_cb(RETRO_ENVIRONMENT_SET_MEMORY_MAPS, (void*)map);
+}
+
 bool SetControllerInfo(const retro_controller_info info[]) {
     return environ_cb(RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)info);
 }
@@ -148,11 +152,14 @@ bool Shutdown() {
 
 /// Displays the specified message to the screen.
 bool DisplayMessage(const char* sg) {
-    LOG_CRITICAL(Frontend, "{}", sg);
     retro_message msg;
     msg.msg = sg;
     msg.frames = 60 * 10;
     return environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
+}
+
+bool SetSerializationQuirks(uint64_t quirks) {
+    return environ_cb(RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &quirks);
 }
 
 std::string FetchVariable(std::string key, std::string def) {
@@ -217,13 +224,21 @@ bool CanUseJIT() {
 void retro_get_system_info(struct retro_system_info* info) {
     memset(info, 0, sizeof(*info));
     info->library_name = "Azahar";
-    info->library_version = Common::g_scm_desc;
+    info->library_version = Common::g_build_fullname;
     info->need_fullpath = true;
-    info->valid_extensions = "3ds|3dsx|cia|elf";
+    info->valid_extensions = "3ds|3dsx|z3dsx|elf|axf|cci|zcci|cxi|zcxi|app";
+}
+
+void LibRetro::SubmitAudio(const int16_t* data, size_t frames) {
+    audio_batch_cb(data, frames);
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb) {
     // We don't need single audio sample callbacks.
+}
+
+void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) {
+    LibRetro::audio_batch_cb = cb;
 }
 
 void retro_set_input_poll(retro_input_poll_t cb) {

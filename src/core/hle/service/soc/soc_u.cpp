@@ -2308,7 +2308,9 @@ std::optional<SOC_U::InterfaceInfo> SOC_U::GetDefaultInterfaceInfo() {
             break;
         }
     }
-#elif !defined(HAVE_LIBRETRO)
+#elif !(defined(ANDROID) && defined(HAVE_LIBRETRO))
+    // Libretro Android builds target API 21, but getifaddrs() requires API 24+.
+    // Standalone Android (minSdk 29) and other platforms have getifaddrs().
     struct ifaddrs* ifaddr;
     struct ifaddrs* ifa;
     if (getifaddrs(&ifaddr) == -1) {

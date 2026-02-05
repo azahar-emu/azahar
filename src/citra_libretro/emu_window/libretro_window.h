@@ -45,6 +45,9 @@ public:
     /// Destroys a currently running OpenGL context.
     void DestroyContext();
 
+    /// When true, SwapBuffers() is suppressed (used during savestate drain loops)
+    bool suppressPresentation = false;
+
 private:
     /// Called when a configuration change affects the minimal size of the window
     void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;

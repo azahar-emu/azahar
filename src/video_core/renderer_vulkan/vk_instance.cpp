@@ -159,7 +159,7 @@ Instance::Instance(Frontend::EmuWindow& window, u32 physical_device_index)
             VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion)));
     }
 
-    CreateDevice(false);
+    CreateDevice();
     CreateFormatTable();
     CollectToolingInfo();
     CreateCustomFormatTable();
@@ -394,7 +394,7 @@ void Instance::CreateAttribTable() {
     }
 }
 
-bool Instance::CreateDevice(bool libretro) {
+bool Instance::CreateDevice() {
     const vk::StructureChain feature_chain = physical_device.getFeatures2<
         vk::PhysicalDeviceFeatures2, vk::PhysicalDevicePortabilitySubsetFeaturesKHR,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
@@ -483,8 +483,11 @@ bool Instance::CreateDevice(bool libretro) {
         return false;
     }
 
-    bool graphics_queue_found = libretro;
-    for (std::size_t i = 0; !libretro && i < family_properties.size(); i++) {
+#ifndef HAVE_LIBRETRO
+    // Find graphics queue family. LibRetro builds skip this since queue_family_index
+    // is already set by LibRetroVKInstance from the frontend-provided context.
+    bool graphics_queue_found = false;
+    for (std::size_t i = 0; i < family_properties.size(); i++) {
         const u32 index = static_cast<u32>(i);
         if (family_properties[i].queueFlags & vk::QueueFlagBits::eGraphics) {
             queue_family_index = index;
@@ -496,6 +499,7 @@ bool Instance::CreateDevice(bool libretro) {
         LOG_CRITICAL(Render_Vulkan, "Unable to find graphics and/or present queues.");
         return false;
     }
+#endif
 
     static constexpr std::array<f32, 1> queue_priorities = {1.0f};
 
@@ -614,10 +618,10 @@ bool Instance::CreateDevice(bool libretro) {
 #undef PROP_GET
 #undef FEAT_SET
 
-    if (libretro) {
-        return true;
-    }
-
+#ifdef HAVE_LIBRETRO
+    // LibRetro builds: device already created by frontend, just return after feature detection
+    return true;
+#else
     try {
         device = physical_device.createDeviceUnique(device_chain.get());
     } catch (vk::ExtensionNotPresentError& err) {
@@ -632,6 +636,7 @@ bool Instance::CreateDevice(bool libretro) {
 
     CreateAllocator();
     return true;
+#endif
 }
 
 void Instance::CreateAllocator() {

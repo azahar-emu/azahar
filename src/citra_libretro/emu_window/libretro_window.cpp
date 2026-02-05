@@ -65,6 +65,8 @@ EmuWindow_LibRetro::EmuWindow_LibRetro() {
 EmuWindow_LibRetro::~EmuWindow_LibRetro() {}
 
 void EmuWindow_LibRetro::SwapBuffers() {
+    if (suppressPresentation)
+        return;
     submittedFrame = true;
 
     switch (Settings::values.graphics_api.GetValue()) {
@@ -77,7 +79,6 @@ void EmuWindow_LibRetro::SwapBuffers() {
         }
         LibRetro::UploadVideoFrame(RETRO_HW_FRAME_BUFFER_VALID, static_cast<unsigned>(width),
                                    static_cast<unsigned>(height), 0);
-        ResetGLState();
         current_state.Apply();
 #endif
         break;

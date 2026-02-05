@@ -491,8 +491,8 @@ private:
         lambda(static_cast<Backend&>(file_backend));
 #ifdef ANDROID
         lambda(static_cast<Backend&>(lc_backend));
-#endif
-#endif
+#endif // ANDROID
+#endif // HAVE_LIBRETRO
     }
 
     static void Deleter(Impl* ptr) {

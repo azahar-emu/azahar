@@ -458,6 +458,8 @@ FileUtil::IOFile ShaderDiskCache::AppendTransferableFile() {
     const bool existed = FileUtil::Exists(transferable_path);
 
 #ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
     if (!existed) {
         FileUtil::CreateEmptyFile(transferable_path);
     }
@@ -485,6 +487,14 @@ FileUtil::IOFile ShaderDiskCache::AppendPrecompiledFile(bool write_header) {
 
     const auto precompiled_path{GetPrecompiledPath()};
     const bool existed = FileUtil::Exists(precompiled_path);
+
+#ifdef HAVE_LIBRETRO_VFS
+    // LibRetro's VFS maps "ab+" to RETRO_VFS_FILE_ACCESS_UPDATE_EXISTING, which
+    // uses "r+b" internally and fails if the file doesn't exist. Pre-create it.
+    if (!existed) {
+        FileUtil::CreateEmptyFile(precompiled_path);
+    }
+#endif
 
     FileUtil::IOFile file(precompiled_path, "ab+");
     if (!file.IsOpen()) {

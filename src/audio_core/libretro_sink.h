@@ -5,15 +5,9 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
+#include <string>
+#include <vector>
 #include "audio_core/sink.h"
-#include "libretro.h"
-
-namespace LibRetro {
-
-void SubmitAudio(const int16_t* data, size_t frames);
-
-} // namespace LibRetro
 
 namespace AudioCore {
 
@@ -24,19 +18,13 @@ public:
 
     unsigned int GetNativeSampleRate() const override;
 
-    void SetCallback(std::function<void(s16*, std::size_t)> cb) override;
+    // Not used for immediate submission sinks
+    void SetCallback(std::function<void(s16*, std::size_t)> cb) override {};
 
-    void OnAudioSubmission(std::size_t frames) override;
+    bool ImmediateSubmission() override { return true; }
 
-    struct Impl;
-
-private:
-    std::unique_ptr<Impl> impl;
+    void PushSamples(const void* data, std::size_t num_samples) override;
 };
-
-void audio_callback();
-
-void audio_set_state(bool new_state);
 
 std::vector<std::string> ListLibretroSinkDevices();
 

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstdint>
-#include "citra_libretro.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -64,6 +63,9 @@ Settings::GraphicsAPI GetPreferredRenderer();
 /// Displays information about the kinds of controllers that this Citra recreates.
 bool SetControllerInfo(const retro_controller_info info[]);
 
+/// Sets the memory maps for the core.
+bool SetMemoryMaps(const retro_memory_map* map);
+
 /// Sets the framebuffer pixel format.
 bool SetPixelFormat(const retro_pixel_format fmt);
 
@@ -109,6 +111,9 @@ bool Shutdown();
 
 /// Displays the specified message to the screen.
 bool DisplayMessage(const char* sg);
+
+/// Sets serialization quirks for the core.
+bool SetSerializationQuirks(uint64_t quirks);
 
 #ifdef HAVE_LIBRETRO_VFS
 void SetVFSCallback(struct retro_vfs_interface_info* vfs_iface_info);

@@ -13,7 +13,7 @@ enum CStickFunction { Both, CStick, Touchscreen };
 
 struct CoreSettings {
 
-    ::std::string file_path;
+    std::string file_path;
 
     float deadzone = 1.f;
 

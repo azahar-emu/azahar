@@ -1,10 +1,6 @@
 # CMake >=3.12 required for 20 to be a valid value for CXX_STANDARD,
 # and >=3.25 required to make LTO work on Android.
-if(ANDROID)
-  cmake_minimum_required(VERSION 3.25)
-else()
-  cmake_minimum_required(VERSION 3.23)
-endif()
+cmake_minimum_required(VERSION 3.25)
 
 # Don't override the warning flags in MSVC:
 cmake_policy(SET CMP0092 NEW)
@@ -29,7 +25,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
 endif()
 
-option(ENABLE_LIBRETRO "Enable the LibRetro frontend" OFF)
+option(ENABLE_LIBRETRO "Build as a LibRetro core" OFF)
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -97,6 +93,17 @@ else()
     set(DEFAULT_ENABLE_OPENGL ON)
 endif()
 
+# Track which options were explicitly set by the user (for libretro conflict detection)
+set(_LIBRETRO_INCOMPATIBLE_OPTIONS
+    ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING
+    ENABLE_OPENAL ENABLE_ROOM ENABLE_CUBEB ENABLE_LIBUSB)
+set(_USER_SET_OPTIONS "")
+foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+    if(DEFINED ${_opt})
+        list(APPEND _USER_SET_OPTIONS ${_opt})
+    endif()
+endforeach()
+
 option(ENABLE_SDL2 "Enable using SDL2" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" OFF "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
@@ -136,6 +143,31 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+
+# Handle incompatible options for libretro builds
+if(ENABLE_LIBRETRO)
+    # Check for explicitly-set conflicting options
+    set(_CONFLICTS "")
+    foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+        list(FIND _USER_SET_OPTIONS ${_opt} _idx)
+        if(NOT _idx EQUAL -1 AND ${_opt})
+            list(APPEND _CONFLICTS ${_opt})
+        endif()
+    endforeach()
+
+    if(_CONFLICTS)
+        string(REPLACE ";" ", " _CONFLICTS_STR "${_CONFLICTS}")
+        message(FATAL_ERROR
+            "ENABLE_LIBRETRO is incompatible with: ${_CONFLICTS_STR}\n"
+            "These options were explicitly enabled but are not supported for libretro builds.\n"
+            "Remove these options or set them to OFF.")
+    endif()
+
+    # Force disable incompatible options (handles defaulted-on options)
+    foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+        set(${_opt} OFF CACHE BOOL "Disabled for libretro" FORCE)
+    endforeach()
+endif()
 
 # Pass the following values to C++ land
 if (ENABLE_QT)

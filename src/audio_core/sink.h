@@ -5,7 +5,7 @@
 #pragma once
 
 #include <functional>
-#include "common/common_types.h"
+#include "audio_types.h"
 
 namespace AudioCore {
 
@@ -31,8 +31,22 @@ public:
      */
     virtual void SetCallback(std::function<void(s16*, std::size_t)> cb) = 0;
 
-    /// Optional callback to signify that a buffer has been written.
-    virtual void OnAudioSubmission(std::size_t frames) {}
+    /**
+     * Override and set this to true if the sink wants audio data submitted
+     * immediately rather than requesting audio on demand
+     * @return true if audio data should be pushed to the sink
+     */
+    virtual bool ImmediateSubmission() {
+        return false;
+    }
+
+    /**
+     * Push audio samples directly to the sink, bypassing the FIFO.
+     * Only called when ImmediateSubmission() returns true.
+     * @param data Pointer to stereo PCM16 samples (each sample is L+R pair)
+     * @param num_samples Number of stereo samples
+     */
+    virtual void PushSamples(const void* data, std::size_t num_samples) {}
 };
 
 } // namespace AudioCore

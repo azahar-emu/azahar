@@ -217,7 +217,6 @@ void System::LoadState(u32 slot) {
     ia&* this;
 }
 
-#ifdef HAVE_LIBRETRO
 std::vector<u8> System::SaveStateBuffer() const {
     std::ostringstream sstream{std::ios_base::binary};
     // Serialize
@@ -290,6 +289,5 @@ bool System::LoadStateBuffer(std::vector<u8> buffer) {
 
     return true;
 }
-#endif
 
 } // namespace Core

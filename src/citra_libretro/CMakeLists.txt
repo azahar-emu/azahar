@@ -1,20 +1,33 @@
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<CONFIG>)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-add_library(azahar_libretro SHARED
+# Object library for libretro code (can be linked into both shared lib and tests)
+add_library(azahar_libretro_common OBJECT
         emu_window/libretro_window.cpp
         emu_window/libretro_window.h
         input/input_factory.cpp
         input/input_factory.h
         input/mouse_tracker.cpp
         input/mouse_tracker.h
-        citra_libretro.cpp
-        citra_libretro.h
         $<$<BOOL:${ENABLE_VULKAN}>: libretro_vk.cpp libretro_vk.h>
         environment.cpp
         environment.h
         core_settings.cpp
         core_settings.h)
+
+target_compile_definitions(azahar_libretro_common PRIVATE HAVE_LIBRETRO)
+target_link_libraries(azahar_libretro_common PRIVATE citra_common citra_core video_core libretro robin_map)
+if(ENABLE_OPENGL)
+    target_link_libraries(azahar_libretro_common PRIVATE glad)
+endif()
+if(ENABLE_VULKAN)
+    target_link_libraries(azahar_libretro_common PRIVATE sirit vulkan-headers vma)
+endif()
+
+add_library(azahar_libretro SHARED
+        citra_libretro.cpp
+        citra_libretro.h
+        $<TARGET_OBJECTS:azahar_libretro_common>)
 
 create_target_directory_groups(azahar_libretro)
 
@@ -49,10 +62,12 @@ if(ANDROID)
   target_compile_definitions(citra_common PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(citra_core PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(video_core PRIVATE HAVE_LIBRETRO_VFS)
+  target_compile_definitions(azahar_libretro_common PRIVATE USING_GLES HAVE_LIBRETRO_VFS)
   target_compile_definitions(azahar_libretro PRIVATE USING_GLES HAVE_LIBRETRO_VFS)
   target_link_libraries(citra_common PRIVATE libretro_common)
   target_link_libraries(citra_core PRIVATE libretro_common)
   target_link_libraries(video_core PRIVATE libretro_common)
+  target_link_libraries(azahar_libretro_common PRIVATE libretro_common)
   target_link_libraries(azahar_libretro PRIVATE libretro_common)
   # Link Android log library for __android_log_print
   target_link_libraries(azahar_libretro PRIVATE log)
@@ -64,7 +79,13 @@ if(MINGW)
 endif()
 
 if(IOS)
+  target_compile_definitions(azahar_libretro_common PRIVATE IOS)
+  target_compile_definitions(azahar_libretro PRIVATE IOS)
   target_link_libraries(azahar_libretro PRIVATE "-framework CoreFoundation" "-framework Foundation")
+endif()
+
+if (SSE42_COMPILE_OPTION)
+  target_compile_definitions(azahar_libretro PRIVATE CITRA_HAS_SSE42)
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR

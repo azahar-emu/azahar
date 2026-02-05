@@ -9,10 +9,11 @@ on:
   workflow_dispatch:
 
 env:
-  CORE_ARGS: -DENABLE_LIBRETRO=ON -DENABLE_SDL2=OFF -DENABLE_QT=OFF -DENABLE_TESTS=OFF -DENABLE_ROOM=OFF -DENABLE_WEB_SERVICE=OFF -DENABLE_SCRIPTING=OFF -DENABLE_CUBEB=OFF -DENABLE_OPENAL=OFF -DENABLE_LIBUSB=OFF -DCITRA_WARNINGS_AS_ERRORS=OFF
+  CORE_ARGS: -DENABLE_LIBRETRO=ON
 
 jobs:
   android:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     env:
       OS: android
@@ -68,6 +69,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.so
   windows:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
       OS: windows
@@ -103,6 +105,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
   macos:
+    if: github.event_name != 'pull_request'
     runs-on: macos-14
     strategy:
       matrix:
@@ -150,6 +153,7 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
   tvos:
+    if: github.event_name != 'pull_request'
     runs-on: macos-14
     env:
       OS: tvos

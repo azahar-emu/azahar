@@ -274,7 +274,7 @@ LibRetroVKInstance::LibRetroVKInstance(Frontend::EmuWindow& window,
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vk::Device{vulkan_intf->device});
 
     // Now run device capability detection with dispatcher initialized
-    CreateDevice(true);
+    CreateDevice();
 
     // LibRetro-specific: Validate function pointers are actually available
     // LibRetro's device may not have loaded all extension functions even if extensions are

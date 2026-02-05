@@ -2,41 +2,22 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <list>
-#include <numeric>
-#include <libretro.h>
 #include "audio_core/libretro_sink.h"
-#include "audio_types.h"
-#include "common/settings.h"
-
-namespace LibRetro {
-static retro_audio_sample_batch_t audio_batch_cb;
-}
+#include "citra_libretro/environment.h"
 
 namespace AudioCore {
 
-struct LibRetroSink::Impl {
-    std::function<void(s16*, std::size_t)> cb;
-};
+LibRetroSink::LibRetroSink(std::string) {}
 
-LibRetroSink::LibRetroSink(std::string target_device_name) : impl(std::make_unique<Impl>()) {}
-
-LibRetroSink::~LibRetroSink() {}
+LibRetroSink::~LibRetroSink() = default;
 
 unsigned int LibRetroSink::GetNativeSampleRate() const {
-    return native_sample_rate; // We specify this.
+    return native_sample_rate;
 }
 
-void LibRetroSink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
-    this->impl->cb = cb;
-}
-
-void LibRetroSink::OnAudioSubmission(std::size_t frames) {
-    std::vector<s16> buffer(frames * 2);
-
-    this->impl->cb(buffer.data(), buffer.size() / 2);
-
-    LibRetro::SubmitAudio(buffer.data(), buffer.size() / 2);
+void LibRetroSink::PushSamples(const void* data, std::size_t num_samples) {
+    // libretro calls stereo pairs "frames", Azahar calls them "samples"
+    LibRetro::SubmitAudio(static_cast<const s16*>(data), num_samples);
 }
 
 std::vector<std::string> ListLibretroSinkDevices() {
@@ -44,11 +25,3 @@ std::vector<std::string> ListLibretroSinkDevices() {
 }
 
 } // namespace AudioCore
-
-void LibRetro::SubmitAudio(const int16_t* data, size_t frames) {
-    LibRetro::audio_batch_cb(data, frames);
-}
-
-void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) {
-    LibRetro::audio_batch_cb = cb;
-}

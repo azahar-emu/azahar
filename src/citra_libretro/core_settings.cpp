@@ -994,7 +994,7 @@ static void ParseInputOptions(void) {
 void ParseCoreOptions(void) {
     // Override default values that aren't user-selectable and aren't correct for the core
     Settings::values.enable_audio_stretching = false;
-    Settings::values.frame_limit = 10000;
+    Settings::values.frame_limit = 0;
 #if defined(USING_GLES)
     Settings::values.use_gles = true;
 #else

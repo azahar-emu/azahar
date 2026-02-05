@@ -32,6 +32,10 @@
 #include "citra_libretro/environment.h"
 #include "citra_libretro/input/input_factory.h"
 
+#include "common/arch.h"
+#if CITRA_ARCH(x86_64)
+#include "common/x64/cpu_detect.h"
+#endif
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/settings.h"
@@ -39,7 +43,9 @@
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/image_interface.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/process.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 
@@ -235,6 +241,8 @@ void retro_run() {
     // Check to see if we actually have any config updates to process.
     if (LibRetro::HasUpdatedConfig()) {
         LibRetro::ParseCoreOptions();
+        Core::System::GetInstance().ApplySettings();
+        emu_instance->emu_window->UpdateLayout();
     }
 
     // Check if the screen swap button is pressed
@@ -300,6 +308,68 @@ void retro_run() {
     }
 }
 
+static void setup_memory_maps() {
+    auto process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    if (!process)
+        return;
+
+    std::vector<retro_memory_descriptor> descs;
+
+    for (const auto& [addr, vma] : process->vm_manager.vma_map) {
+        if (vma.type != Kernel::VMAType::BackingMemory)
+            continue;
+        if (vma.size == 0 || !vma.backing_memory)
+            continue;
+
+        // Only expose the well-known user-accessible memory regions
+        uint64_t flags = 0;
+        if (vma.base >= Memory::HEAP_VADDR && vma.base < Memory::HEAP_VADDR_END) {
+            flags = RETRO_MEMDESC_SYSTEM_RAM;
+        } else if (vma.base >= Memory::LINEAR_HEAP_VADDR &&
+                   vma.base < Memory::LINEAR_HEAP_VADDR_END) {
+            flags = RETRO_MEMDESC_SYSTEM_RAM;
+        } else if (vma.base >= Memory::NEW_LINEAR_HEAP_VADDR &&
+                   vma.base < Memory::NEW_LINEAR_HEAP_VADDR_END) {
+            flags = RETRO_MEMDESC_SYSTEM_RAM;
+        } else if (vma.base >= Memory::VRAM_VADDR && vma.base < Memory::VRAM_VADDR_END) {
+            flags = RETRO_MEMDESC_VIDEO_RAM;
+        } else {
+            continue;
+        }
+
+        retro_memory_descriptor desc = {};
+        desc.flags = flags;
+        desc.ptr = const_cast<u8*>(vma.backing_memory.GetPtr());
+        desc.start = vma.base;
+        desc.len = vma.size;
+
+        // select=0 requires power-of-2 len AND start aligned to len.
+        // When that doesn't hold, compute a select mask instead.
+        bool need_select = (vma.size & (vma.size - 1)) != 0;
+        if (!need_select && (vma.base & (vma.size - 1)) != 0)
+            need_select = true;
+
+        if (need_select) {
+            uint64_t np2 = 1;
+            while (np2 < vma.size)
+                np2 <<= 1;
+            if (vma.base & (np2 - 1)) {
+                LOG_WARNING(Frontend, "VMA at 0x{:08X} size 0x{:X} not aligned, skipping", vma.base,
+                            vma.size);
+                continue;
+            }
+            desc.select = ~(np2 - 1);
+        }
+
+        descs.push_back(desc);
+    }
+
+    if (!descs.empty()) {
+        retro_memory_map map = {descs.data(), static_cast<unsigned>(descs.size())};
+        LibRetro::SetMemoryMaps(&map);
+    }
+}
+
 static bool do_load_game() {
     const Core::System::ResultStatus load_result{
         Core::System::GetInstance().Load(*emu_instance->emu_window, LibRetro::settings.file_path)};
@@ -331,7 +401,8 @@ static bool do_load_game() {
         LibRetro::DisplayMessage("Failed to determine system mode!");
         return false;
     default:
-        LibRetro::DisplayMessage("Unknown error");
+        LibRetro::DisplayMessage(
+            ("Unknown error: " + std::to_string(static_cast<int>(load_result))).c_str());
         return false;
     }
 
@@ -343,6 +414,8 @@ static bool do_load_game() {
         Core::System::GetInstance().GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
             false, nullptr);
     }
+
+    setup_memory_maps();
 
     return true;
 }
@@ -405,10 +478,6 @@ static void context_reset() {
         // Game is already loaded, just recreate the renderer for the new GL context
         if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::OpenGL) {
             Core::System::GetInstance().GPU().RecreateRenderer(*emu_instance->emu_window, nullptr);
-            if (Settings::values.use_disk_shader_cache) {
-                Core::System::GetInstance().GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
-                    false, nullptr);
-            }
         }
     }
 }
@@ -426,10 +495,7 @@ static void context_destroy() {
 void retro_reset() {
     LOG_DEBUG(Frontend, "retro_reset");
     Core::System::GetInstance().Shutdown();
-    if (Core::System::GetInstance().Load(*emu_instance->emu_window, LibRetro::settings.file_path) !=
-        Core::System::ResultStatus::Success) {
-        LOG_ERROR(Frontend, "Unable lo load on retro_reset");
-    }
+    emu_instance->game_loaded = do_load_game();
 }
 
 /**
@@ -437,6 +503,14 @@ void retro_reset() {
  */
 bool retro_load_game(const struct retro_game_info* info) {
     LOG_INFO(Frontend, "Starting Azahar RetroArch game...");
+
+#if CITRA_ARCH(x86_64) && CITRA_HAS_SSE42
+    if (!Common::GetCPUCaps().sse4_2) {
+        LOG_CRITICAL(Frontend, "This CPU does not support SSE4.2, which is required by this build");
+        LibRetro::DisplayMessage("This build requires a CPU with SSE4.2 support.");
+        return false;
+    }
+#endif
 
     UpdateSettings();
 
@@ -502,8 +576,14 @@ bool retro_load_game(const struct retro_game_info* info) {
         break;
     case Settings::GraphicsAPI::Software:
         emu_instance->game_loaded = do_load_game();
-        return emu_instance->game_loaded;
+        if (!emu_instance->game_loaded)
+            return false;
+        break;
     }
+
+    uint64_t quirks =
+        RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE | RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE;
+    LibRetro::SetSerializationQuirks(quirks);
 
     return true;
 }
@@ -522,14 +602,64 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info* i
     return retro_load_game(info);
 }
 
+/// Drain any pending async kernel operations by running the emulation loop.
+///
+/// Savestates are unsafe to create while RunAsync operations (file I/O, network, etc.)
+/// are in flight. The Qt frontend handles this by deferring serialization inside
+/// System::RunLoop(): it sets a request flag via SendSignal(Signal::Save), and RunLoop
+/// only performs the save when !kernel->AreAsyncOperationsPending() (see core.cpp).
+///
+/// The Qt frontend needs that indirection because its UI and emulation run on separate
+/// threads. In libretro, the frontend calls API entry points (retro_run, retro_serialize,
+/// etc.) sequentially, so we can call RunLoop() directly from here to drain pending ops,
+/// then call SaveStateBuffer()/LoadStateBuffer() ourselves.
+///
+/// Note: RunLoop() can itself start new async operations (CPU executes HLE service calls),
+/// so the pending count may not decrease monotonically. In practice games reach quiescent
+/// points between frames; the 5-second timeout (matching RunLoop's existing handler)
+/// covers the pathological case.
+static bool DrainAsyncOperations(Core::System& system) {
+    if (!system.KernelRunning() || !system.Kernel().AreAsyncOperationsPending()) {
+        return true;
+    }
+
+    emu_instance->emu_window->suppressPresentation = true;
+    auto start = std::chrono::steady_clock::now();
+
+    while (system.Kernel().AreAsyncOperationsPending()) {
+        if (std::chrono::steady_clock::now() - start > std::chrono::seconds(5)) {
+            LOG_ERROR(Frontend, "Timed out waiting for async operations to complete");
+            emu_instance->emu_window->suppressPresentation = false;
+            return false;
+        }
+        auto result = system.RunLoop();
+        if (result != Core::System::ResultStatus::Success) {
+            emu_instance->emu_window->suppressPresentation = false;
+            return false;
+        }
+    }
+
+    emu_instance->emu_window->suppressPresentation = false;
+    return true;
+}
+
 std::optional<std::vector<u8>> savestate = {};
 
 size_t retro_serialize_size() {
+    auto& system = Core::System::GetInstance();
+    if (!system.IsPoweredOn())
+        return 0;
+
+    if (!DrainAsyncOperations(system)) {
+        savestate.reset();
+        return 0;
+    }
+
     try {
-        savestate = Core::System::GetInstance().SaveStateBuffer();
-        return savestate.value().size();
+        savestate = system.SaveStateBuffer();
+        return savestate->size();
     } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error saving savestate: {}", e.what());
+        LOG_ERROR(Frontend, "Error saving state: {}", e.what());
         savestate.reset();
         return 0;
     }
@@ -538,36 +668,38 @@ size_t retro_serialize_size() {
 bool retro_serialize(void* data, size_t size) {
     if (!savestate.has_value())
         return false;
-
-    memcpy(data, (*savestate).data(), size);
+    if (size < savestate->size())
+        return false;
+    memcpy(data, savestate->data(), savestate->size());
     savestate.reset();
-
     return true;
 }
 
 bool retro_unserialize(const void* data, size_t size) {
-    try {
-        const std::vector<u8> buffer((const u8*)data, (const u8*)data + size);
+    auto& system = Core::System::GetInstance();
+    if (!system.IsPoweredOn())
+        return false;
 
-        return Core::System::GetInstance().LoadStateBuffer(buffer);
+    if (!DrainAsyncOperations(system)) {
+        return false;
+    }
+
+    std::vector<u8> buffer(static_cast<const u8*>(data), static_cast<const u8*>(data) + size);
+    try {
+        return system.LoadStateBuffer(std::move(buffer));
     } catch (const std::exception& e) {
-        LOG_ERROR(Core, "Error loading savestate: {}", e.what());
+        LOG_ERROR(Frontend, "Error loading state: {}", e.what());
         return false;
     }
 }
 
 void* retro_get_memory_data(unsigned id) {
-    if (id == RETRO_MEMORY_SYSTEM_RAM)
-        return Core::System::GetInstance().Memory().GetFCRAMPointer(
-            Core::System::GetInstance().Kernel().memory_regions[0]->base);
-
+    // Memory is exposed via RETRO_ENVIRONMENT_SET_MEMORY_MAPS instead,
+    // using virtual addresses for stable cheat/achievement support.
     return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id) {
-    if (id == RETRO_MEMORY_SYSTEM_RAM)
-        return Core::System::GetInstance().Kernel().memory_regions[0]->size;
-
     return 0;
 }
 
