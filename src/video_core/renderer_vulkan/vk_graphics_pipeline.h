@@ -167,9 +167,9 @@ struct Shader : public Common::AsyncHandle {
 class GraphicsPipeline : public Common::AsyncHandle {
 public:
     explicit GraphicsPipeline(const Instance& instance, RenderManager& renderpass_cache,
-                              const PipelineInfo& info, vk::PipelineCache pipeline_cache,
-                              vk::PipelineLayout layout, std::array<Shader*, 3> stages,
-                              Common::ThreadWorker* worker);
+                              const PipelineInfo& info, vk::RenderPass render_pass,
+                              vk::PipelineCache pipeline_cache, vk::PipelineLayout layout,
+                              std::array<Shader*, 3> stages, Common::ThreadWorker* worker);
     ~GraphicsPipeline();
 
     bool TryBuild(bool wait_built);
@@ -185,6 +185,7 @@ private:
     RenderManager& renderpass_cache;
     Common::ThreadWorker* worker;
 
+    vk::RenderPass render_pass;
     vk::UniquePipeline pipeline;
     vk::PipelineLayout pipeline_layout;
     vk::PipelineCache pipeline_cache;

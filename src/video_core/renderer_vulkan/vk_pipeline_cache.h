@@ -65,8 +65,10 @@ public:
     /// Stores the generated pipeline cache to disk
     void SaveDiskCache();
 
-    /// Binds a pipeline using the provided information
-    bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
+    /// Binds a pipeline using the provided information. render_pass must match the current
+    /// framebuffer's render pass (shadow vs normal)
+    bool BindPipeline(const PipelineInfo& info, vk::RenderPass render_pass,
+                      bool wait_built = false);
 
     /// Binds a PICA decompiled vertex shader
     bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,

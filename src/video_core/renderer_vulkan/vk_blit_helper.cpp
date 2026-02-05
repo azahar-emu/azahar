@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/hash.h"
 #include "common/settings.h"
 #include "common/vector_math.h"
 #include "video_core/renderer_vulkan/vk_blit_helper.h"
@@ -287,6 +288,10 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
 }
 
 BlitHelper::~BlitHelper() {
+    for (const auto& [_, pipeline] : filter_pipeline_cache) {
+        device.destroyPipeline(pipeline);
+    }
+    filter_pipeline_cache.clear();
     device.destroyPipelineLayout(compute_pipeline_layout);
     device.destroyPipelineLayout(compute_buffer_pipeline_layout);
     device.destroyPipelineLayout(two_textures_pipeline_layout);
@@ -697,6 +702,18 @@ void BlitHelper::FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit
 vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
                                             vk::PipelineLayout layout,
                                             VideoCore::PixelFormat color_format) {
+    const VkShaderModule c_shader = static_cast<VkShaderModule>(fragment_shader);
+    const VkPipelineLayout c_layout = static_cast<VkPipelineLayout>(layout);
+    const u64 cache_key = Common::HashCombine(
+        Common::HashCombine(static_cast<u64>(reinterpret_cast<uintptr_t>(c_shader)),
+                            static_cast<u64>(reinterpret_cast<uintptr_t>(c_layout))),
+        static_cast<u64>(color_format));
+
+    if (const auto it = filter_pipeline_cache.find(cache_key);
+        it != filter_pipeline_cache.end()) {
+        return it->second;
+    }
+
     const std::array stages = MakeStages(full_screen_vert, fragment_shader);
     // Use the provided color format for render pass compatibility
     const auto renderpass =
@@ -720,7 +737,9 @@ vk::Pipeline BlitHelper::MakeFilterPipeline(vk::ShaderModule fragment_shader,
 
     if (const auto result = device.createGraphicsPipeline({}, pipeline_info);
         result.result == vk::Result::eSuccess) {
-        return result.value;
+        const vk::Pipeline pipeline = result.value;
+        filter_pipeline_cache.emplace(cache_key, pipeline);
+        return pipeline;
     } else {
         LOG_CRITICAL(Render_Vulkan, "Filter pipeline creation failed!");
         UNREACHABLE();

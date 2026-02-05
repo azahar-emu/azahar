@@ -65,11 +65,12 @@ Shader::~Shader() {
 }
 
 GraphicsPipeline::GraphicsPipeline(const Instance& instance_, RenderManager& renderpass_cache_,
-                                   const PipelineInfo& info_, vk::PipelineCache pipeline_cache_,
-                                   vk::PipelineLayout layout_, std::array<Shader*, 3> stages_,
-                                   Common::ThreadWorker* worker_)
+                                   const PipelineInfo& info_, vk::RenderPass render_pass_,
+                                   vk::PipelineCache pipeline_cache_, vk::PipelineLayout layout_,
+                                   std::array<Shader*, 3> stages_, Common::ThreadWorker* worker_)
     : instance{instance_}, renderpass_cache{renderpass_cache_}, worker{worker_},
-      pipeline_layout{layout_}, pipeline_cache{pipeline_cache_}, info{info_}, stages{stages_} {}
+      render_pass{render_pass_}, pipeline_layout{layout_}, pipeline_cache{pipeline_cache_},
+      info{info_}, stages{stages_} {}
 
 GraphicsPipeline::~GraphicsPipeline() = default;
 
@@ -263,8 +264,7 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
         .pColorBlendState = &color_blending,
         .pDynamicState = &dynamic_info,
         .layout = pipeline_layout,
-        .renderPass =
-            renderpass_cache.GetRenderpass(info.attachments.color, info.attachments.depth, false),
+        .renderPass = render_pass,
     };
 
     if (fail_on_compile_required) {
