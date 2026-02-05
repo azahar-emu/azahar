@@ -806,7 +806,7 @@ static void ParseAudioOptions(void) {
     } else if (input_type == "static_noise") {
         Settings::values.input_type = AudioCore::InputType::Static;
     } else if (input_type == "frontend") {
-        Settings::values.input_type = AudioCore::InputType::Cubeb; // Use Cubeb as frontend input
+        Settings::values.input_type = AudioCore::InputType::LibRetro;
     } else {
         Settings::values.input_type = AudioCore::InputType::Auto;
     }

@@ -54,6 +54,10 @@ bool GetSensorInterface(struct retro_sensor_interface* sensor_interface) {
     return environ_cb(RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE, sensor_interface);
 }
 
+bool GetMicrophoneInterface(struct retro_microphone_interface* mic_interface) {
+    return environ_cb(RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE, mic_interface);
+}
+
 Settings::GraphicsAPI GetPreferredRenderer() {
     // try and maintain the current driver
     retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL;

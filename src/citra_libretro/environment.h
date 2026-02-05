@@ -31,6 +31,9 @@ void PollInput();
 /// Gets the sensor interface for motion input
 bool GetSensorInterface(struct retro_sensor_interface* sensor_interface);
 
+/// Gets the microphone interface for audio input
+bool GetMicrophoneInterface(struct retro_microphone_interface* mic_interface);
+
 /// Sets the environmental variables used for settings.
 bool SetVariables(const retro_variable vars[]);
 

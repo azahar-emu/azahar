@@ -21,7 +21,9 @@ public:
     // Not used for immediate submission sinks
     void SetCallback(std::function<void(s16*, std::size_t)> cb) override {};
 
-    bool ImmediateSubmission() override { return true; }
+    bool ImmediateSubmission() override {
+        return true;
+    }
 
     void PushSamples(const void* data, std::size_t num_samples) override;
 };

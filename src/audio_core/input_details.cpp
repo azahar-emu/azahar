@@ -16,7 +16,7 @@
 #include "audio_core/openal_input.h"
 #endif
 #ifdef HAVE_LIBRETRO
-// todo
+#include "audio_core/libretro_input.h"
 #endif
 #include "common/logging/log.h"
 #include "core/core.h"
@@ -33,11 +33,9 @@ constexpr std::array input_details = {
                                      "Microphone permission denied, falling back to null input.");
                          return std::make_unique<NullInput>();
                      }
-                     // todo
-                     return std::make_unique<NullInput>();
+                     return std::make_unique<LibRetroInput>();
                  },
-                 // todo
-                 [] { return std::vector<std::string>{"None"}; }},
+                 [] { return std::vector<std::string>{"LibRetro Microphone"}; }},
 #endif
 #ifdef HAVE_CUBEB
     InputDetails{InputType::Cubeb, "Real Device (Cubeb)", true,

@@ -16,6 +16,7 @@
 #endif
 #include "libretro.h"
 
+#include "audio_core/libretro_input.h"
 #include "audio_core/libretro_sink.h"
 #include "video_core/gpu.h"
 #ifdef ENABLE_OPENGL
@@ -243,6 +244,12 @@ void retro_run() {
         LibRetro::ParseCoreOptions();
         Core::System::GetInstance().ApplySettings();
         emu_instance->emu_window->UpdateLayout();
+    }
+
+    // Poll microphone input from the frontend and buffer it for the emulator
+    // This must be done from the main thread as LibRetro's mic interface is not thread-safe
+    if (auto* mic_input = AudioCore::GetLibRetroInput()) {
+        mic_input->PollMicrophone();
     }
 
     // Check if the screen swap button is pressed
