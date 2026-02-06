@@ -956,12 +956,12 @@ SDLState::~SDLState() {
     }
 }
 
-Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event) {
+Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event,
+                                                  const bool down = false) {
     Common::ParamPackage params({{"engine", "sdl"}});
-
+    auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
     switch (event.type) {
     case SDL_JOYAXISMOTION: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jaxis.which);
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("axis", event.jaxis.axis);
@@ -974,15 +974,14 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         }
         break;
     }
-    case SDL_JOYBUTTONUP: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jbutton.which);
+    case SDL_JOYBUTTONUP:
+    case SDL_JOYBUTTONDOWN: {
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("button", event.jbutton.button);
         break;
     }
     case SDL_JOYHATMOTION: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("hat", event.jhat.hat);
@@ -1005,6 +1004,8 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         break;
     }
     }
+    if (down)
+        params.Set("down", 1);
     return params;
 }
 
@@ -1057,6 +1058,7 @@ public:
 
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
+        bool down = false;
         while (state.event_queue.Pop(event)) {
             switch (event.type) {
             case SDL_JOYAXISMOTION:
@@ -1064,7 +1066,11 @@ public:
                     !axis_memory[event.jaxis.which].count(event.jaxis.axis)) {
                     axis_memory[event.jaxis.which][event.jaxis.axis] = event.jaxis.value;
                     axis_event_count[event.jaxis.which][event.jaxis.axis] = 1;
-                    break;
+                    if (IsAxisAtPole(event.jaxis.value)) {
+                        down = true;
+                    } else {
+                        break;
+                    }
                 } else {
                     axis_event_count[event.jaxis.which][event.jaxis.axis]++;
                     // The joystick and axis exist in our map if we take this branch, so no checks
@@ -1096,9 +1102,11 @@ public:
                         axis_event_count.clear();
                     }
                 }
+            case SDL_JOYBUTTONDOWN:
+                down = true;
             case SDL_JOYBUTTONUP:
             case SDL_JOYHATMOTION:
-                return SDLEventToButtonParamPackage(state, event);
+                return SDLEventToButtonParamPackage(state, event, down);
             }
         }
         return {};

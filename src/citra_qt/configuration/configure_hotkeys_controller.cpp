@@ -8,7 +8,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_hotkeys_controller.h"
 #include "citra_qt/hotkeys.h"
-#include "citra_qt/util/sequence_dialog/sequence_dialog.h"
+#include "citra_qt/util/sequence_dialog/controller_sequence_dialog.h"
 #include "ui_configure_hotkeys_controller.h"
 
 constexpr int name_column = 0;
@@ -24,7 +24,7 @@ ConfigureControllerHotkeys::ConfigureControllerHotkeys(QWidget* parent)
     model->setColumnCount(2);
     model->setHorizontalHeaderLabels({tr("Action"), tr("Controller Hotkey")});
     // TODO: re-enable and get profiles workin
-    ui->horizontalLayout_5->setEnabled(false);
+    ui->profileGroup->setEnabled(false);
     connect(ui->hotkey_list, &QTreeView::doubleClicked, this,
             &ConfigureControllerHotkeys::Configure);
     connect(ui->hotkey_list, &QTreeView::customContextMenuRequested, this,
@@ -60,7 +60,27 @@ void ConfigureControllerHotkeys::Populate(const HotkeyRegistry& registry) {
     ui->hotkey_list->expandAll();
 }
 
-void ConfigureControllerHotkeys::Configure(QModelIndex index) {}
+void ConfigureControllerHotkeys::Configure(QModelIndex index) {
+    if (!index.parent().isValid()) {
+        return;
+    }
+
+    // Swap to the hotkey column
+    index = index.sibling(index.row(), hotkey_column);
+    QModelIndex readableIndex = index.sibling(index.row(), readable_hotkey_column);
+
+    const auto previous_key = model->data(index);
+
+    ControllerSequenceDialog hotkey_dialog{this};
+
+    const int return_code = hotkey_dialog.exec();
+    const auto key_sequence = hotkey_dialog.GetSequence();
+    if (return_code == QDialog::Rejected || key_sequence.isEmpty()) {
+        return;
+    }
+    model->setData(index, key_sequence);
+    model->setData(readableIndex, CleanSequence(key_sequence));
+}
 
 void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
     for (int key_id = 0; key_id < model->rowCount(); key_id++) {

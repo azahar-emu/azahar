@@ -15,6 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+   <widget class="QGroupBox" name="profileGroup">
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
       <widget class="QLabel" name="label_7">
@@ -61,6 +62,7 @@
       </widget>
      </item>
     </layout>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
