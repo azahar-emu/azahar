@@ -127,7 +127,7 @@
         <item>
          <widget class="QLabel" name="image_source_label">
           <property name="toolTip">
-           <string>Select where the image of the emulated camera comes from. It may be an image or a real camera.</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select where the image of the emulated camera comes from. It may be an image or a real camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Camera Image Source</string>
@@ -137,7 +137,7 @@
         <item>
          <widget class="QComboBox" name="image_source">
           <property name="toolTip">
-           <string>Select where the image of the emulated camera comes from. It may be an image or a real camera.</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select where the image of the emulated camera comes from. It may be an image or a real camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <item>
            <property name="text">
