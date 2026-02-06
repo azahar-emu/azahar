@@ -30,12 +30,12 @@ public:
      * @param registry The HotkeyRegistry whose data is used to populate the list.
      */
     void Populate(const HotkeyRegistry& registry);
+    static QString CleanSequence(QString controller_keyseq);
 
 private:
     void Configure(QModelIndex index);
     void ClearAll();
     void PopupContextMenu(const QPoint& menu_location);
-    QString CleanSequence(QString controller_keyseq);
 
     std::unique_ptr<Ui::ConfigureControllerHotkeys> ui;
 
