@@ -821,6 +821,16 @@ void GMainWindow::InitializeHotkeys() {
     };
 
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
+
+    connect_shortcut(QStringLiteral("Toggle Previous Layout"), &GMainWindow::TogglePreviousLayout);
+
+    connect_shortcut(QStringLiteral("Use Original Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::Default); });
+    connect_shortcut(QStringLiteral("Use Single Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::SingleScreen); });
+    connect_shortcut(QStringLiteral("Use Large Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::LargeScreen); });
+    connect_shortcut(QStringLiteral("Use Side Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::SideScreen); });
+    connect_shortcut(QStringLiteral("Use Hybrid Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::HybridScreen); });
+    connect_shortcut(QStringLiteral("Use Custom Layout"), [&] { GMainWindow::SetLayout(Settings::LayoutOption::CustomLayout); });
+
     connect_shortcut(QStringLiteral("Exit Fullscreen"), [&] {
         if (emulation_running) {
             ui->action_Fullscreen->setChecked(false);
@@ -892,6 +902,25 @@ void GMainWindow::InitializeHotkeys() {
     const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
     add_secondary_window_hotkey(action_secondary_fullscreen, fullscreen_hotkey,
                                 SLOT(ToggleSecondaryFullscreen()));
+}
+
+void GMainWindow::SetLayout(Settings::LayoutOption option) {
+    Settings::LayoutOption old_option = Settings::values.layout_option.GetValue();
+    if (option != old_option)
+        Settings::values.previous_layout_option = old_option;
+    Settings::values.layout_option = option;
+    SyncMenuUISettings();
+    system.ApplySettings();
+    UpdateSecondaryWindowVisibility();
+}
+
+void GMainWindow::TogglePreviousLayout() {
+    Settings::LayoutOption temp = Settings::values.previous_layout_option.GetValue();
+    Settings::values.previous_layout_option = Settings::values.layout_option.GetValue();
+    Settings::values.layout_option = temp;
+    SyncMenuUISettings();
+    system.ApplySettings();
+    UpdateSecondaryWindowVisibility();
 }
 
 void GMainWindow::SetDefaultUIGeometry() {

@@ -531,6 +531,7 @@ struct Values {
                                                              "delay_game_render_thread_us"};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
+    SwitchableSetting<LayoutOption> previous_layout_option{LayoutOption::CustomLayout, "previous_layout_option"};
     SwitchableSetting<bool> swap_screen{false, "swap_screen"};
     SwitchableSetting<bool> upright_screen{false, "upright_screen"};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{SecondaryDisplayLayout::None,
