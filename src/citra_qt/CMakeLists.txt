@@ -189,6 +189,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     util/graphics_device_info.h
     util/sequence_dialog/sequence_dialog.cpp
     util/sequence_dialog/sequence_dialog.h
+    util/sequence_dialog/controller_sequence_dialog.cpp
+    util/sequence_dialog/controller_sequence_dialog.h
     util/spinbox.cpp
     util/spinbox.h
     util/util.cpp
