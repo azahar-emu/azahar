@@ -141,17 +141,23 @@ QString ConfigureControllerHotkeys::CleanSequence(QString controller_keyseq) {
     if (controller_keyseq.isEmpty())
         return controller_keyseq;
     QStringList keys = controller_keyseq.split(QStringLiteral("||"));
-
-    QString output = QStringLiteral("Button ").append(
-        keys.value(0).split(QStringLiteral(",")).value(0).split(QStringLiteral(":")).value(1));
+    Common::ParamPackage p1 = Common::ParamPackage(keys.value(0).toStdString());
+    QString output;
+    if (p1.Has("hat")) {
+        output = QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
+    } else if (p1.Has("button")) {
+        output = QString::fromStdString("Button " + p1.Get("button", ""));
+    }
 
     if (keys.length() > 1) {
-        output.append(QStringLiteral(" + Button "))
-            .append(keys.value(1)
-                        .split(QStringLiteral(","))
-                        .value(0)
-                        .split(QStringLiteral(":"))
-                        .value(1));
+        output.append(QStringLiteral(" + "));
+        p1 = Common::ParamPackage(keys.value(1).toStdString());
+        if (p1.Has("hat")) {
+            output +=
+                QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
+        } else if (p1.Has("button")) {
+            output += QString::fromStdString("Button " + p1.Get("button", ""));
+        }
     }
     return output;
 }

@@ -55,38 +55,35 @@ void ControllerSequenceDialog::LaunchPollers() {
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            if (params.Has("engine") && params.Has("button")) { // for now, no analog inputs
+            if (params.Has("engine") &&
+                (params.Has("hat") || params.Has("button"))) { // for now, no analog inputs
+                std::cerr << "controller hotkey event detected: " + params.Serialize() << std::endl;
                 if (params.Has("down")) {
-                    std::cerr << "button " + params.Get("button", "") + " down" << std::endl;
                     downCount++;
-                    if (downCount > 2) {
-                        // ignore third and fourth and fifth buttons
-                    } else if (downCount == 1) {
+                    if (downCount == 1) {
+                        // either the first press, or the first new press
                         key_sequence = QStringLiteral("");
                         params1 = params;
                         params2 = Common::ParamPackage();
-                        textBox->setText(ConfigureControllerHotkeys::CleanSequence(
-                                             QString::fromStdString(params1.Serialize())) +
+                        key_sequence = QString::fromStdString(params1.Serialize());
+                        textBox->setText(ConfigureControllerHotkeys::CleanSequence(key_sequence) +
                                          QStringLiteral("..."));
-                    } else if (downCount == 2) {
-                        // this is a second button while the first one is held down,
-                        // go ahead and set the key_sequence as the chord and clear params
+                    } else if (downCount == 2 && !params2.Has("engine")) {
+                        // this is a second button, currently only one button saved, so save it
                         params2 = params;
                         key_sequence = QString::fromStdString(params1.Serialize() + "||" +
                                                               params2.Serialize());
                         textBox->setText(ConfigureControllerHotkeys::CleanSequence(key_sequence));
                     }
+                    // if downCount == 3 or more, just ignore them - we have saved the first two
+                    // presses
                 } else { // button release
                     downCount--;
-                    std::cerr << "button " + params.Get("button", "") + " up" << std::endl;
-                    if (downCount == 0) {
-                        // all released, clear all saved params
+                    if (downCount <= 0) {
+                        // once all buttons are released, clear the params so the user can try again
+                        // if need be
                         params1 = Common::ParamPackage();
                         params2 = Common::ParamPackage();
-                    }
-                    if (key_sequence.isEmpty()) {
-                        key_sequence = QString::fromStdString(params.Serialize());
-                        textBox->setText(ConfigureControllerHotkeys::CleanSequence(key_sequence));
                     }
                 }
             }
