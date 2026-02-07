@@ -98,16 +98,16 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     }
     const auto [key_sequence_used, used_action] = IsUsedKey(key_sequence);
 
-    // Check for turbo/per-game speed conflict. Needed to prevent the user from binding both hotkeys
-    // to the same action. Which cuases problems resetting the frame limit.to the inititla value.
+    // Check for turbo/framerate limit conflict. Needed to prevent the user from binding both
+    // hotkeys to the same action, which causes problems when resetting the frame limit to the
+    // initital value
     const QString current_action =
         model->data(model->index(index.row(), 0, index.parent())).toString();
     const bool is_turbo = current_action == tr("Toggle Turbo Mode");
-    const bool is_per_game = current_action == tr("Toggle Per-Application Speed");
+    const bool is_frame_limit = current_action == tr("Toggle Framerate Limit");
 
-    if (is_turbo || is_per_game) {
-        QString other_action =
-            is_turbo ? tr("Toggle Per-Application Speed") : tr("Toggle Turbo Mode");
+    if (is_turbo || is_frame_limit) {
+        QString other_action = is_turbo ? tr("Toggle Framerate Limit") : tr("Toggle Turbo Mode");
         QKeySequence other_sequence;
 
         for (int r = 0; r < model->rowCount(); ++r) {
@@ -124,7 +124,7 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
         // Show warning if either hotkey is already set
         if (!key_sequence.isEmpty() && !other_sequence.isEmpty()) {
             QMessageBox::warning(this, tr("Conflicting Key Sequence"),
-                                 tr("The per-application speed and turbo speed hotkeys cannot be "
+                                 tr("The frame limit and turbo speed hotkeys cannot be "
                                     "bound at the same time."));
             return;
         }
