@@ -3998,14 +3998,35 @@ void GMainWindow::UpdateUITheme() {
 }
 
 void GMainWindow::LoadTranslation() {
+    bool loaded{false};
+
+    #ifdef _WIN32
+    // Set the language to the first option in "preferred languages" Windows' OS settings
+    if (UISettings::values.language.isEmpty()) {
+
+        const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+        for (const auto& lang : languages) {
+            // If the first language found is English, no need to install any translation
+            if (lang == QStringLiteral("en")) {
+                UISettings::values.language = lang;
+                return;
+            }
+            loaded = translator.load(lang, QStringLiteral(":/languages/"));
+            if (loaded) {
+                UISettings::values.language = lang;
+                break;
+            }
+        }
+    }
+    #endif
+
     // If the selected language is English, no need to install any translation
     if (UISettings::values.language == QStringLiteral("en")) {
         return;
     }
 
-    bool loaded;
 
-    if (UISettings::values.language.isEmpty()) {
+    if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
         loaded = translator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
     } else {
