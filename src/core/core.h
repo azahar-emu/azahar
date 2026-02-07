@@ -362,6 +362,10 @@ public:
 
     void LoadState(u32 slot);
 
+    std::vector<u8> SaveStateBuffer() const;
+
+    bool LoadStateBuffer(std::vector<u8> buffer);
+
     /// Self delete ncch
     bool SetSelfDelete(const std::string& file) {
         if (m_filepath == file) {

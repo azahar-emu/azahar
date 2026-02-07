@@ -9,6 +9,7 @@
 #include "core/core_timing.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hle/service/plgldr/plgldr.h"
+#include "core/loader/loader.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
 #include "video_core/gpu_debugger.h"
@@ -419,6 +420,53 @@ void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // Reschedule recurrent event
     impl->timing.ScheduleEvent(FRAME_TICKS - cycles_late, impl->vblank_event);
+}
+
+void GPU::RecreateRenderer(Frontend::EmuWindow& emu_window, Frontend::EmuWindow* secondary_window) {
+    // Reset the renderer (this will destroy OpenGL resources)
+    impl->renderer.reset();
+
+    // Create a new renderer
+    impl->renderer =
+        VideoCore::CreateRenderer(emu_window, secondary_window, impl->pica, impl->system);
+    impl->rasterizer = impl->renderer->Rasterizer();
+
+    // Rebind the rasterizer to the PICA GPU
+    impl->pica.BindRasterizer(impl->rasterizer);
+
+    // Update the sw_blitter with the new rasterizer
+    impl->sw_blitter = std::make_unique<SwRenderer::SwBlitter>(impl->memory, impl->rasterizer);
+
+    // Re-apply per-game configuration and reload disk shader cache
+    u64 program_id{};
+    impl->system.GetAppLoader().ReadProgramId(program_id);
+    ApplyPerProgramSettings(program_id);
+    if (Settings::values.use_disk_shader_cache) {
+        impl->renderer->Rasterizer()->LoadDefaultDiskResources(false, nullptr);
+    }
+
+    // Mark ALL GPU registers as dirty so current state gets uploaded to new renderer
+    impl->pica.dirty_regs.SetAllDirty();
+
+    // Also mark shader setups as dirty so uniforms get re-uploaded and
+    // stale pointers to the old rasterizer's JIT cache are cleared.
+    impl->pica.vs_setup.uniforms_dirty = true;
+    impl->pica.vs_setup.cached_shader = nullptr;
+    impl->pica.gs_setup.uniforms_dirty = true;
+    impl->pica.gs_setup.cached_shader = nullptr;
+
+    // Mark all cached LUT/table state in pica as dirty
+    impl->pica.lighting.lut_dirty = impl->pica.lighting.LutAllDirty;
+    impl->pica.fog.lut_dirty = true;
+    impl->pica.proctex.table_dirty = impl->pica.proctex.TableAllDirty;
+}
+
+void GPU::ReleaseRenderer() {
+    // Just reset the renderer to release OpenGL resources
+    // Don't null out rasterizer pointer as it will become dangling
+    impl->renderer.reset();
+    impl->sw_blitter.reset();
+    LOG_INFO(HW_GPU, "Renderer released for context destroy");
 }
 
 template <class Archive>

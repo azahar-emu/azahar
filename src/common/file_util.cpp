@@ -43,6 +43,12 @@
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #define fileno _fileno
+typedef struct _stat64 file_stat_t;
+#define fstat _fstat64
+#elif defined(HAVE_LIBRETRO)
+typedef struct _stat64 file_stat_t;
+#else
+typedef struct stat file_stat_t;
 #endif
 
 #else
@@ -56,6 +62,7 @@
 #include <dirent.h>
 #include <pwd.h>
 #include <unistd.h>
+typedef struct stat file_stat_t;
 #endif
 
 #if defined(__APPLE__)
@@ -75,7 +82,7 @@
 
 #endif
 
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
 #include "common/android_storage.h"
 #include "common/string_util.h"
 #endif
@@ -85,6 +92,36 @@
 
 #ifndef S_ISDIR
 #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+
+#ifdef HAVE_LIBRETRO_VFS
+#define SKIP_STDIO_REDEFINES
+#include <streams/file_stream.h>
+#include <streams/file_stream_transforms.h>
+
+#define FILE RFILE
+#define FTELL rftell
+#define FOPEN rfopen
+#define FCLOSE rfclose
+#define FSEEK rfseek
+#define FREAD rfread
+#define FWRITE rfwrite
+#define FEOF rfeof
+#define FERROR rferror
+#define FFLUSH rfflush
+
+#else
+
+#define FTELL ftello
+#define FOPEN fopen
+#define FCLOSE std::fclose
+#define FSEEK fseeko
+#define FREAD std::fread
+#define FWRITE std::fwrite
+#define FEOF feof
+#define FERROR ferror
+#define FFLUSH std::fflush
+
 #endif
 
 // This namespace has various generic functions related to files and paths.
@@ -119,7 +156,7 @@ bool Exists(const std::string& filename) {
         copy += DIR_SEP_CHR;
 
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     int result = AndroidStorage::FileExists(filename) ? 0 : -1;
 #else
     struct stat file_info;
@@ -130,7 +167,7 @@ bool Exists(const std::string& filename) {
 }
 
 bool IsDirectory(const std::string& filename) {
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     return AndroidStorage::IsDirectory(filename);
 #endif
 
@@ -178,7 +215,7 @@ bool Delete(const std::string& filename) {
         LOG_ERROR(Common_Filesystem, "DeleteFile failed on {}: {}", filename, GetLastErrorMsg());
         return false;
     }
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     if (!AndroidStorage::DeleteDocument(filename)) {
         LOG_ERROR(Common_Filesystem, "unlink failed on {}", filename);
         return false;
@@ -205,7 +242,7 @@ bool CreateDir(const std::string& path) {
     }
     LOG_ERROR(Common_Filesystem, "CreateDirectory failed on {}: {}", path, error);
     return false;
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     std::string directory = path;
     std::string filename = path;
     if (Common::EndsWith(path, "/")) {
@@ -292,7 +329,7 @@ bool DeleteDir(const std::string& filename) {
 #ifdef _WIN32
     if (::RemoveDirectoryW(Common::UTF8ToUTF16W(filename).c_str()))
         return true;
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     if (AndroidStorage::DeleteDocument(filename))
         return true;
 #else
@@ -310,7 +347,7 @@ bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
     if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
                  Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
         return true;
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     // srcFullPath and destFullPath are relative to the user directory
     if (AndroidStorage::GetBuildFlavor() == AndroidStorage::AndroidBuildFlavors::GOOGLEPLAY) {
         if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath))
@@ -343,36 +380,36 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
               GetLastErrorMsg());
     return false;
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     return AndroidStorage::CopyFile(srcFilename, std::string(GetParentPath(destFilename)),
                                     std::string(GetFilename(destFilename)));
 #else
 
     // Open input file
-    FILE* input = fopen(srcFilename.c_str(), "rb");
+    FILE* input = FOPEN(srcFilename.c_str(), "rb");
     if (!input) {
         LOG_ERROR(Common_Filesystem, "opening input failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
         return false;
     }
-    SCOPE_EXIT({ fclose(input); });
+    SCOPE_EXIT({ FCLOSE(input); });
 
     // open output file
-    FILE* output = fopen(destFilename.c_str(), "wb");
+    FILE* output = FOPEN(destFilename.c_str(), "wb");
     if (!output) {
         LOG_ERROR(Common_Filesystem, "opening output failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
         return false;
     }
-    SCOPE_EXIT({ fclose(output); });
+    SCOPE_EXIT({ FCLOSE(output); });
 
     // copy loop
     std::array<char, 1024> buffer;
-    while (!feof(input)) {
+    while (!FEOF(input)) {
         // read input
-        std::size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input);
+        std::size_t rnum = FREAD(buffer.data(), sizeof(char), buffer.size(), input);
         if (rnum != buffer.size()) {
-            if (ferror(input) != 0) {
+            if (FERROR(input) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, {} --> {}: {}",
                           srcFilename, destFilename, GetLastErrorMsg());
                 return false;
@@ -380,7 +417,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         }
 
         // write output
-        std::size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output);
+        std::size_t wnum = FWRITE(buffer.data(), sizeof(char), rnum, output);
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, {} --> {}: {}", srcFilename,
                       destFilename, GetLastErrorMsg());
@@ -408,7 +445,7 @@ u64 GetSize(const std::string& filename) {
 #ifdef _WIN32
     struct _stat64 buf;
     if (_wstat64(Common::UTF8ToUTF16W(filename).c_str(), &buf) == 0)
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     u64 result = AndroidStorage::GetSize(filename);
     LOG_TRACE(Common_Filesystem, "{}: {}", filename, result);
     return result;
@@ -425,7 +462,7 @@ u64 GetSize(const std::string& filename) {
 }
 
 u64 GetSize(const int fd) {
-    struct stat buf;
+    file_stat_t buf;
     if (fstat(fd, &buf) != 0) {
         LOG_ERROR(Common_Filesystem, "GetSize: stat failed {}: {}", fd, GetLastErrorMsg());
         return 0;
@@ -435,13 +472,13 @@ u64 GetSize(const int fd) {
 
 u64 GetSize(FILE* f) {
     // can't use off_t here because it can be 32-bit
-    u64 pos = ftello(f);
-    if (fseeko(f, 0, SEEK_END) != 0) {
+    u64 pos = FTELL(f);
+    if (FSEEK(f, 0, SEEK_END) != 0) {
         LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", fmt::ptr(f), GetLastErrorMsg());
         return 0;
     }
-    u64 size = ftello(f);
-    if ((size != pos) && (fseeko(f, pos, SEEK_SET) != 0)) {
+    u64 size = FTELL(f);
+    if ((size != pos) && (FSEEK(f, pos, SEEK_SET) != 0)) {
         LOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", fmt::ptr(f), GetLastErrorMsg());
         return 0;
     }
@@ -481,7 +518,7 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
     // windows loop
     do {
         const std::string virtual_name(Common::UTF16ToUTF8(ffd.cFileName));
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     // android loop
     auto result = AndroidStorage::GetFilesName(directory);
     for (auto virtual_name : result) {
@@ -508,7 +545,7 @@ bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
 #ifdef _WIN32
     } while (FindNextFileW(handle_find, &ffd) != 0);
     FindClose(handle_find);
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     }
 #else
     }
@@ -605,7 +642,7 @@ void CopyDir([[maybe_unused]] const std::string& source_path,
     if (!FileUtil::Exists(dest_path))
         FileUtil::CreateFullPath(dest_path);
 
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     auto result = AndroidStorage::GetFilesName(source_path);
     for (auto virtualName : result) {
 #else
@@ -635,7 +672,7 @@ void CopyDir([[maybe_unused]] const std::string& source_path,
             FileUtil::Copy(source, dest);
     }
 
-#ifndef ANDROID
+#if !(defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS))
     closedir(dirp);
 #endif // ANDROID
 #endif // _WIN32
@@ -811,7 +848,7 @@ void SetUserPath(const std::string& path) {
 
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
         user_path = "/";
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
@@ -1070,7 +1107,7 @@ std::string_view RemoveTrailingSlash(std::string_view path) {
 
 std::string SanitizePath(std::string_view path_, DirectorySeparator directory_separator) {
     std::string path(path_);
-#ifdef ANDROID
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     return std::string(RemoveTrailingSlash(path));
 #endif
     char type1 = directory_separator == DirectorySeparator::BackwardSlash ? '/' : '\\';
@@ -1137,7 +1174,7 @@ bool IOFile::Open() {
                       Common::UTF8ToUTF16W(openmode).c_str(), flags);
     m_good = m_file != nullptr;
 
-#elif ANDROID
+#elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     // Check whether filepath is startsWith content
     AndroidStorage::AndroidOpenMode android_open_mode = AndroidStorage::ParseOpenmode(openmode);
     if (android_open_mode == AndroidStorage::AndroidOpenMode::WRITE ||
@@ -1168,7 +1205,7 @@ bool IOFile::Open() {
 
     m_good = m_file != nullptr;
 #else
-    m_file = std::fopen(filename.c_str(), openmode.c_str());
+    m_file = FOPEN(filename.c_str(), openmode.c_str());
     m_good = m_file != nullptr;
 #endif
 
@@ -1176,7 +1213,7 @@ bool IOFile::Open() {
 }
 
 bool IOFile::Close() {
-    if (!IsOpen() || 0 != std::fclose(m_file))
+    if (!IsOpen() || 0 != FCLOSE(m_file))
         m_good = false;
 
     m_file = nullptr;
@@ -1191,7 +1228,7 @@ u64 IOFile::GetSize() const {
 }
 
 bool IOFile::SeekImpl(s64 off, int origin) {
-    if (!IsOpen() || 0 != fseeko(m_file, off, origin))
+    if (!IsOpen() || 0 != FSEEK(m_file, off, origin))
         m_good = false;
 
     return m_good;
@@ -1199,13 +1236,13 @@ bool IOFile::SeekImpl(s64 off, int origin) {
 
 u64 IOFile::TellImpl() const {
     if (IsOpen())
-        return ftello(m_file);
+        return FTELL(m_file);
 
     return std::numeric_limits<u64>::max();
 }
 
 bool IOFile::Flush() {
-    if (!IsOpen() || 0 != std::fflush(m_file))
+    if (!IsOpen() || 0 != FFLUSH(m_file))
         m_good = false;
 
     return m_good;
@@ -1223,7 +1260,7 @@ std::size_t IOFile::ReadImpl(void* data, std::size_t length, std::size_t data_si
 
     DEBUG_ASSERT(data != nullptr);
 
-    return std::fread(data, data_size, length, m_file);
+    return FREAD(data, data_size, length, m_file);
 }
 
 #ifdef _WIN32
@@ -1267,7 +1304,15 @@ std::size_t IOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_
 
     DEBUG_ASSERT(data != nullptr);
 
+#ifdef HAVE_LIBRETRO_VFS
+    int64_t pos = filestream_tell(m_file);
+    FSEEK(m_file, offset, RETRO_VFS_SEEK_POSITION_START);
+    int64_t rv = FREAD(data, data_size, length, m_file);
+    FSEEK(m_file, pos, RETRO_VFS_SEEK_POSITION_START);
+    return rv;
+#else
     return pread(fileno(m_file), data, data_size * length, offset);
+#endif
 }
 
 std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
@@ -1282,12 +1327,18 @@ std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t 
 
     DEBUG_ASSERT(data != nullptr);
 
+#if defined(HAVE_LIBRETRO_VFS)
+    return rfwrite(data, data_size, length, m_file) / data_size;
+#else
     return std::fwrite(data, data_size, length, m_file);
+#endif
 }
 
 bool IOFile::Resize(u64 size) {
     if (!IsOpen() || 0 !=
-#ifdef _WIN32
+#if defined(HAVE_LIBRETRO_VFS)
+                         filestream_truncate(m_file, size)
+#elif defined(_WIN32)
                          // ector: _chsize sucks, not 64-bit safe
                          // F|RES: changed to _chsize_s. i think it is 64-bit safe
                          _chsize_s(_fileno(m_file), size)
