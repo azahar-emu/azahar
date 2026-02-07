@@ -141,6 +141,7 @@ enum Values {
     Select,
     Debug,
     Gpio14,
+    Turbo,
 
     ZL,
     ZR,
@@ -178,6 +179,7 @@ static const std::array<const char*, NumButtons> mapping = {{
     "button_select",
     "button_debug",
     "button_gpio14",
+    "button_turbo",
     "button_zl",
     "button_zr",
     "button_home",

@@ -508,6 +508,9 @@ void GMainWindow::InitializeWidgets() {
     });
 
     InputCommon::Init();
+    turbo_poll_timer.setInterval(10);
+    connect(&turbo_poll_timer, &QTimer::timeout, this, &GMainWindow::PollTurboButton);
+    UpdateTurboButtonBinding(true);
     multiplayer_state = new MultiplayerState(system, this, game_list->GetModel(),
                                              ui->action_Leave_Room, ui->action_Show_Room);
     multiplayer_state->setVisible(false);
@@ -892,6 +895,8 @@ void GMainWindow::InitializeHotkeys() {
     const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
     add_secondary_window_hotkey(action_secondary_fullscreen, fullscreen_hotkey,
                                 SLOT(ToggleSecondaryFullscreen()));
+
+    UpdateTurboButtonBinding(true);
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -1594,6 +1599,7 @@ void GMainWindow::ShutdownGame() {
     UpdateSaveStates();
 
     emulation_running = false;
+    RefreshTurboPollingState();
 
     game_title.clear();
     UpdateWindowTitle();
@@ -2505,6 +2511,7 @@ void GMainWindow::OnStartGame() {
 
     UpdateSaveStates();
     UpdateStatusButtons();
+    UpdateTurboButtonBinding();
 }
 
 void GMainWindow::OnRestartGame() {
@@ -2713,6 +2720,54 @@ void GMainWindow::ReloadTurbo() {
     UpdateStatusBar();
 }
 
+void GMainWindow::UpdateTurboButtonBinding(bool force) {
+    const auto& binding =
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::Turbo];
+
+    if (!force && binding == turbo_button_binding) {
+        RefreshTurboPollingState();
+        return;
+    }
+
+    turbo_button_binding = binding;
+    if (!turbo_button_binding.empty()) {
+        turbo_button_device = Input::CreateDevice<Input::ButtonDevice>(turbo_button_binding);
+        if (!turbo_button_device) {
+            LOG_WARNING(Frontend, "Failed to create turbo controller device for binding {}",
+                        turbo_button_binding);
+        }
+    } else {
+        turbo_button_device.reset();
+    }
+
+    RefreshTurboPollingState();
+}
+
+void GMainWindow::RefreshTurboPollingState() {
+    if (emulation_running && turbo_button_device) {
+        turbo_button_was_pressed = turbo_button_device->GetStatus();
+        if (!turbo_poll_timer.isActive()) {
+            turbo_poll_timer.start();
+        }
+    } else {
+        turbo_poll_timer.stop();
+        turbo_button_was_pressed = false;
+    }
+}
+
+void GMainWindow::PollTurboButton() {
+    if (!emulation_running || !turbo_button_device) {
+        return;
+    }
+
+    const bool pressed = turbo_button_device->GetStatus();
+    if (pressed && !turbo_button_was_pressed) {
+        SetTurboEnabled(!IsTurboEnabled());
+    }
+
+    turbo_button_was_pressed = pressed;
+}
+
 // TODO: This should probably take in something more descriptive than a bool. -OS
 void GMainWindow::AdjustSpeedLimit(bool increase) {
     const int SPEED_LIMIT_STEP = 5;
@@ -2867,6 +2922,8 @@ void GMainWindow::OnConfigure() {
         Settings::values.touch_from_button_maps = old_touch_from_button_maps;
         Settings::LoadProfile(old_input_profile_index);
     }
+
+    UpdateTurboButtonBinding(true);
 }
 
 void GMainWindow::OnLoadAmiibo() {

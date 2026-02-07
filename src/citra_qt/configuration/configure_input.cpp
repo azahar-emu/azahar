@@ -170,8 +170,8 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
         ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
         ui->buttonL,      ui->buttonR,        ui->buttonStart,    ui->buttonSelect,
-        ui->buttonDebug,  ui->buttonGpio14,   ui->buttonZL,       ui->buttonZR,
-        ui->buttonHome,   ui->buttonPower,
+        ui->buttonDebug,  ui->buttonGpio14,   ui->buttonTurbo,    ui->buttonZL,
+        ui->buttonZR,     ui->buttonHome,     ui->buttonPower,
     };
 
     analog_map_buttons = {{
