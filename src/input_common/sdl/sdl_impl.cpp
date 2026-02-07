@@ -187,7 +187,8 @@ public:
         state.buttons[button] = value;
     }
 
-    // no longer used, at least as a test
+    // no longer used - creating state breaks hotkey detection, so
+    // poll sdl directly below
     bool GetButton(int button) const {
         std::lock_guard lock{mutex};
         return state.buttons.at(button);
@@ -233,9 +234,16 @@ public:
         state.hats[hat] = direction;
     }
 
+    // no longer used, poll directly instead
     bool GetHatDirection(int hat, Uint8 direction) const {
         std::lock_guard lock{mutex};
         return (state.hats.at(hat) & direction) != 0;
+    }
+
+    bool GetHatDirectionDirect(int hat, Uint8 direction) const {
+        if (!sdl_joystick)
+            return false;
+        return SDL_JoystickGetHat(sdl_joystick.get(), hat) == direction;
     }
 
     void SetAccel(const float x, const float y, const float z) {
@@ -636,7 +644,7 @@ public:
         : joystick(std::move(joystick_)), hat(hat_), direction(direction_) {}
 
     bool GetStatus() const override {
-        return joystick->GetHatDirection(hat, direction);
+        return joystick->GetHatDirectionDirect(hat, direction);
     }
 
 private:
@@ -897,6 +905,9 @@ SDLState::~SDLState() {
 Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event,
                                                   const bool down = false) {
     Common::ParamPackage params({{"engine", "sdl"}});
+    if (down) {
+        params.Set("down", "1");
+    }
     auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
     switch (event.type) {
     case SDL_JOYAXISMOTION: {
@@ -936,14 +947,16 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         case SDL_HAT_RIGHT:
             params.Set("direction", "right");
             break;
+        case SDL_HAT_CENTERED:
+            params.Set("direction", "centered");
+            break;
         default:
             return {};
         }
         break;
     }
     }
-    if (down)
-        params.Set("down", 1);
+
     return params;
 }
 
@@ -1016,11 +1029,18 @@ public:
                         axis_event_count.clear();
                     }
                 }
-            case SDL_JOYBUTTONDOWN:
-                down = true;
-            case SDL_JOYBUTTONUP:
-            case SDL_JOYHATMOTION:
                 return SDLEventToButtonParamPackage(state, event, down);
+                break;
+            case SDL_JOYBUTTONDOWN:
+                return SDLEventToButtonParamPackage(state, event, true);
+                break;
+            case SDL_JOYBUTTONUP:
+                return SDLEventToButtonParamPackage(state, event, false);
+                break;
+            case SDL_JOYHATMOTION:
+                return SDLEventToButtonParamPackage(state, event,
+                                                    event.jhat.value == SDL_HAT_CENTERED);
+                break;
             }
         }
         return {};
