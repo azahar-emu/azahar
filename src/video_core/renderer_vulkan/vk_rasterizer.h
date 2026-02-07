@@ -93,7 +93,7 @@ private:
     bool Draw(bool accelerate, bool is_indexed);
 
     /// Internal implementation for AccelerateDrawBatch
-    bool AccelerateDrawBatchInternal(bool is_indexed);
+    bool AccelerateDrawBatchInternal(bool is_indexed, const Framebuffer* framebuffer);
 
     /// Setup index array for AccelerateDrawBatch
     void SetupIndexArray();

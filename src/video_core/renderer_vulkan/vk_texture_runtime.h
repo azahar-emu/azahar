@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -89,6 +89,9 @@ public:
     /// Returns true if the provided pixel format needs convertion
     bool NeedsConversion(VideoCore::PixelFormat format) const;
 
+    /// Clears the renderpass cache
+    void ClearRenderpassCache();
+
 private:
     /// Clears a partial texture rect using a clear rectangle
     void ClearTextureWithRenderpass(Surface& surface, const VideoCore::TextureClear& clear);
@@ -110,6 +113,8 @@ public:
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
+    explicit Surface(TextureRuntime& runtime, u32 width_, u32 height_,
+                     VideoCore::PixelFormat format_);
     ~Surface();
 
     Surface(const Surface&) = delete;
@@ -128,14 +133,29 @@ public:
     /// Returns the image view at index, otherwise the base view
     vk::ImageView ImageView(u32 index = 1) const noexcept;
 
+    /// Returns width of the surface
+    u32 GetWidth() const noexcept {
+        return width;
+    }
+
+    /// Returns height of the surface
+    u32 GetHeight() const noexcept {
+        return height;
+    }
+
+    /// Returns resolution scale of the surface
+    u32 GetResScale() const noexcept {
+        return res_scale;
+    }
+
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
 
-    /// Returns the framebuffer view of the surface image
-    vk::ImageView FramebufferView() noexcept;
-
     /// Returns the depth view of the surface image
     vk::ImageView DepthView() noexcept;
+
+    /// Returns the framebuffer view of the surface image
+    vk::ImageView FramebufferView() noexcept;
 
     /// Returns the stencil view of the surface image
     vk::ImageView StencilView() noexcept;
@@ -187,6 +207,7 @@ public:
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
+    std::array<vk::UniqueImageView, 2> framebuffer_view{};
     bool is_framebuffer{};
     bool is_storage{};
 };
@@ -231,19 +252,13 @@ public:
         return res_scale;
     }
 
-    u32 Width() const noexcept {
-        return width;
-    }
-
-    u32 Height() const noexcept {
-        return height;
-    }
-
 private:
     std::array<vk::Image, 2> images{};
     std::array<vk::ImageView, 2> image_views{};
     vk::UniqueFramebuffer framebuffer;
     vk::RenderPass render_pass;
+    vk::UniqueRenderPass shadow_render_pass;
+    std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};

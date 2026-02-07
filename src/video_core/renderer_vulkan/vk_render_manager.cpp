@@ -153,6 +153,16 @@ vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
     return *renderpass;
 }
 
+void RenderManager::ClearRenderPassCache() {
+    for (auto& color_arr : cached_renderpasses) {
+        for (auto& depth_arr : color_arr) {
+            for (auto& renderpass : depth_arr) {
+                renderpass.reset();
+            }
+        }
+    }
+}
+
 vk::UniqueRenderPass RenderManager::CreateRenderPass(vk::Format color, vk::Format depth,
                                                      vk::AttachmentLoadOp load_op) const {
     u32 attachment_count = 0;

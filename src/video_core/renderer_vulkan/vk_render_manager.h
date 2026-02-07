@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -55,6 +55,9 @@ public:
     vk::RenderPass GetRenderpass(VideoCore::PixelFormat color, VideoCore::PixelFormat depth,
                                  bool is_clear);
 
+    /// Clears the renderpass cache
+    void ClearRenderPassCache();
+
 private:
     /// Creates a renderpass configured appropriately and stores it in cached_renderpasses
     vk::UniqueRenderPass CreateRenderPass(vk::Format color, vk::Format depth,
@@ -63,7 +66,9 @@ private:
 private:
     const Instance& instance;
     Scheduler& scheduler;
-    vk::UniqueRenderPass cached_renderpasses[NumColorFormats + 1][NumDepthFormats + 1][2];
+    std::array<std::array<std::array<vk::UniqueRenderPass, 2>, NumDepthFormats + 1>,
+               NumColorFormats + 1>
+        cached_renderpasses;
     std::mutex cache_mutex;
     std::array<vk::Image, 2> images;
     std::array<vk::ImageAspectFlags, 2> aspects;

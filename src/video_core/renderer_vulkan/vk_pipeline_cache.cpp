@@ -239,7 +239,8 @@ void PipelineCache::SaveDiskCache() {
     }
 }
 
-bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
+bool PipelineCache::BindPipeline(const PipelineInfo& info, vk::RenderPass render_pass,
+                                 bool wait_built) {
     MICROPROFILE_SCOPE(Vulkan_Bind);
 
     u64 shader_hash = 0;
@@ -248,13 +249,16 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     }
 
     const u64 info_hash = info.Hash(instance);
-    const u64 pipeline_hash = Common::HashCombine(shader_hash, info_hash);
+    const VkRenderPass c_render_pass = static_cast<VkRenderPass>(render_pass);
+    const u64 render_pass_hash = static_cast<u64>(reinterpret_cast<uintptr_t>(c_render_pass));
+    const u64 pipeline_hash =
+        Common::HashCombine(Common::HashCombine(shader_hash, info_hash), render_pass_hash);
 
     auto [it, new_pipeline] = graphics_pipelines.try_emplace(pipeline_hash);
     if (new_pipeline) {
-        it.value() =
-            std::make_unique<GraphicsPipeline>(instance, renderpass_cache, info, *pipeline_cache,
-                                               *pipeline_layout, current_shaders, &workers);
+        it.value() = std::make_unique<GraphicsPipeline>(
+            instance, renderpass_cache, info, render_pass, *pipeline_cache, *pipeline_layout,
+            current_shaders, &workers);
     }
 
     GraphicsPipeline* const pipeline{it->second.get()};

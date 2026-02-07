@@ -141,6 +141,9 @@ RasterizerVulkan::~RasterizerVulkan() = default;
 
 void RasterizerVulkan::TickFrame() {
     res_cache.TickFrame();
+    if (res_cache.ConfigurationChanged()) [[unlikely]] {
+        runtime.ClearRenderpassCache();
+    }
 }
 
 void RasterizerVulkan::LoadDefaultDiskResources(
@@ -454,13 +457,14 @@ bool RasterizerVulkan::AccelerateDrawBatch(bool is_indexed) {
     return Draw(true, is_indexed);
 }
 
-bool RasterizerVulkan::AccelerateDrawBatchInternal(bool is_indexed) {
+bool RasterizerVulkan::AccelerateDrawBatchInternal(bool is_indexed,
+                                                   const Framebuffer* framebuffer) {
     if (is_indexed) {
         SetupIndexArray();
     }
 
     const bool wait_built = !async_shaders || regs.pipeline.num_vertices <= 6;
-    if (!pipeline_cache.BindPipeline(pipeline_info, wait_built)) {
+    if (!pipeline_cache.BindPipeline(pipeline_info, framebuffer->RenderPass(), wait_built)) {
         return true;
     }
 
@@ -596,9 +600,9 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
     // Draw the vertex batch
     bool succeeded = true;
     if (accelerate) {
-        succeeded = AccelerateDrawBatchInternal(is_indexed);
+        succeeded = AccelerateDrawBatchInternal(is_indexed, framebuffer);
     } else {
-        pipeline_cache.BindPipeline(pipeline_info, true);
+        pipeline_cache.BindPipeline(pipeline_info, framebuffer->RenderPass(), true);
 
         const u32 vertex_count = static_cast<u32>(vertex_batch.size());
         const u32 vertex_size = vertex_count * sizeof(HardwareVertex);

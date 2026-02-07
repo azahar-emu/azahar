@@ -89,24 +89,23 @@ void RasterizerCache<T>::TickFrame() {
     custom_tex_manager.TickFrame();
     RunGarbageCollector();
 
-    const auto new_filter = Settings::values.texture_filter.GetValue();
-    if (filter != new_filter) [[unlikely]] {
-        filter = new_filter;
-        UnregisterAll();
-    }
-
     const u32 scale_factor = renderer.GetResolutionScaleFactor();
     const bool resolution_scale_changed = resolution_scale_factor != scale_factor;
     const bool use_custom_texture_changed =
         Settings::values.custom_textures.GetValue() != use_custom_textures;
+    const bool texture_filter_changed = Settings::values.texture_filter.GetValue() != filter;
+    configuration_changed =
+        resolution_scale_changed || use_custom_texture_changed || texture_filter_changed;
 
-    if (resolution_scale_changed || use_custom_texture_changed) {
+    if (configuration_changed) [[unlikely]] {
         resolution_scale_factor = scale_factor;
+        filter = Settings::values.texture_filter.GetValue();
         use_custom_textures = Settings::values.custom_textures.GetValue();
         if (use_custom_textures) {
             custom_tex_manager.FindCustomTextures();
         }
         UnregisterAll();
+        ClearAll(false);
     }
 }
 
