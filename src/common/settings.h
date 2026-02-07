@@ -511,6 +511,7 @@ struct Values {
     SwitchableSetting<bool> spirv_shader_gen{true, "spirv_shader_gen"};
     SwitchableSetting<bool> disable_spirv_optimizer{true, "disable_spirv_optimizer"};
     SwitchableSetting<bool> async_shader_compilation{false, "async_shader_compilation"};
+    SwitchableSetting<bool> async_gpu{true, "async_gpu"};
     SwitchableSetting<bool> async_presentation{true, "async_presentation"};
     SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
     SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};

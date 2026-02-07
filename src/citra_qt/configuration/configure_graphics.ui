@@ -241,6 +241,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_async_gpu">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Process GPU commands asynchronously on a separate thread, similar to real 3DS hardware. Improves performance in CPU-bound scenarios. Works with OpenGL and Software renderers (disabled with Vulkan due to rendering thread requirements).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Enable async GPU</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

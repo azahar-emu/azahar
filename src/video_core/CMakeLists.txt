@@ -11,6 +11,8 @@ add_library(video_core STATIC
     debug_utils/debug_utils.h
     gpu.cpp
     gpu.h
+    gpu_command_queue.cpp
+    gpu_command_queue.h
     gpu_debugger.h
     gpu_impl.h
     pica_types.h
