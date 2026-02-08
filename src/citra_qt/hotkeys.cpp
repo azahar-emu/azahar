@@ -24,7 +24,22 @@ void HotkeyRegistry::SaveHotkeys() {
         }
     }
 }
-
+void HotkeyRegistry::UpdateControllerHotkey(QString name, Hotkey& hk) {
+    if (hk.controller_keyseq.isEmpty()) {
+        buttonMonitor.removeButton(name);
+    } else {
+        QStringList paramList = hk.controller_keyseq.split(QStringLiteral("||"));
+        if (paramList.length() > 0) {
+            hk.button_device =
+                Input::CreateDevice<Input::ButtonDevice>(paramList.value(0).toStdString());
+            if (paramList.length() > 1) {
+                hk.button_device2 =
+                    Input::CreateDevice<Input::ButtonDevice>(paramList.value(1).toStdString());
+            }
+            buttonMonitor.addButton(name, &hk);
+        }
+    }
+}
 void HotkeyRegistry::LoadHotkeys() {
     // Make sure NOT to use a reference here because it would become invalid once we call
     // beginGroup()
@@ -36,18 +51,8 @@ void HotkeyRegistry::LoadHotkeys() {
             hk.context = static_cast<Qt::ShortcutContext>(shortcut.shortcut.context);
             hk.controller_keyseq = shortcut.shortcut.controller_keyseq;
         }
-        if (!hk.controller_keyseq.isEmpty()) {
-            QStringList paramList = hk.controller_keyseq.split(QStringLiteral("||"));
-            if (paramList.length() > 0) {
-                hk.button_device =
-                    Input::CreateDevice<Input::ButtonDevice>(paramList.at(0).toStdString());
-                if (paramList.length() > 1) {
-                    hk.button_device2 =
-                        Input::CreateDevice<Input::ButtonDevice>(paramList.at(1).toStdString());
-                }
-                buttonMonitor.addButton(shortcut.name, &hk);
-            }
-        }
+        UpdateControllerHotkey(shortcut.name, hk);
+
         for (auto const& [_, hotkey_shortcut] : hk.shortcuts) {
             if (hotkey_shortcut) {
                 hotkey_shortcut->disconnect();

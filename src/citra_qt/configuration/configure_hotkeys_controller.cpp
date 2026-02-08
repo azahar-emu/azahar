@@ -95,6 +95,7 @@ void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
                     if (action_name != action->text())
                         continue;
                     hotkey.controller_keyseq = controller_keyseq->text();
+                    registry.UpdateControllerHotkey(action_name, hotkey);
                 }
             }
         }
@@ -147,6 +148,8 @@ QString ConfigureControllerHotkeys::CleanSequence(QString controller_keyseq) {
         output = QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
     } else if (p1.Has("button")) {
         output = QString::fromStdString("Button " + p1.Get("button", ""));
+    } else if (p1.Has("axis")) {
+        output += QString::fromStdString("Axis " + p1.Get("axis", "") + p1.Get("direction", ""));
     }
 
     if (keys.length() > 1) {
@@ -157,6 +160,9 @@ QString ConfigureControllerHotkeys::CleanSequence(QString controller_keyseq) {
                 QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
         } else if (p1.Has("button")) {
             output += QString::fromStdString("Button " + p1.Get("button", ""));
+        } else if (p1.Has("axis")) {
+            output +=
+                QString::fromStdString("Axis " + p1.Get("axis", "") + p1.Get("direction", ""));
         }
     }
     return output;
