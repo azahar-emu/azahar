@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QAction>
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
@@ -17,8 +18,9 @@ void HotkeyRegistry::SaveHotkeys() {
         for (const auto& hotkey : group.second) {
             UISettings::values.shortcuts.push_back(
                 {hotkey.first, group.first,
-                 UISettings::ContextualShortcut(
-                     {hotkey.second.keyseq.toString(), hotkey.second.context})});
+                 UISettings::ContextualShortcut({hotkey.second.keyseq.toString(),
+                                                 hotkey.second.controller_keyseq,
+                                                 hotkey.second.context})});
         }
     }
 }
@@ -28,10 +30,23 @@ void HotkeyRegistry::LoadHotkeys() {
     // beginGroup()
     for (auto shortcut : UISettings::values.shortcuts) {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
-        if (!shortcut.shortcut.keyseq.isEmpty()) {
+        if (!shortcut.shortcut.keyseq.isEmpty() || !shortcut.shortcut.controller_keyseq.isEmpty()) {
             hk.keyseq =
                 QKeySequence::fromString(shortcut.shortcut.keyseq, QKeySequence::NativeText);
             hk.context = static_cast<Qt::ShortcutContext>(shortcut.shortcut.context);
+            hk.controller_keyseq = shortcut.shortcut.controller_keyseq;
+        }
+        if (!hk.controller_keyseq.isEmpty()) {
+            QStringList paramList = hk.controller_keyseq.split(QStringLiteral("||"));
+            if (paramList.length() > 0) {
+                hk.button_device =
+                    Input::CreateDevice<Input::ButtonDevice>(paramList.at(0).toStdString());
+                if (paramList.length() > 1) {
+                    hk.button_device2 =
+                        Input::CreateDevice<Input::ButtonDevice>(paramList.at(1).toStdString());
+                }
+                buttonMonitor.addButton(shortcut.name, &hk);
+            }
         }
         for (auto const& [_, hotkey_shortcut] : hk.shortcuts) {
             if (hotkey_shortcut) {
@@ -62,4 +77,9 @@ Qt::ShortcutContext HotkeyRegistry::GetShortcutContext(const QString& group,
                                                        const QString& action) {
     Hotkey& hk = hotkey_groups[group][action];
     return hk.context;
+}
+
+void HotkeyRegistry::SetAction(const QString& group, const QString& action_name, QAction* action) {
+    Hotkey& hk = hotkey_groups[group][action_name];
+    hk.action = action;
 }

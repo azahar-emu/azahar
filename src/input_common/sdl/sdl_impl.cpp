@@ -187,9 +187,19 @@ public:
         state.buttons[button] = value;
     }
 
+    // no longer used - creating state breaks hotkey detection, so
+    // poll sdl directly below
     bool GetButton(int button) const {
         std::lock_guard lock{mutex};
         return state.buttons.at(button);
+    }
+
+    // better than maintaining the state manually, and
+    // seems to have no effect on performance
+    bool GetButtonDirect(int button) const {
+        if (!sdl_joystick)
+            return false;
+        return SDL_JoystickGetButton(sdl_joystick.get(), button) != 0;
     }
 
     void SetAxis(int axis, Sint16 value) {
@@ -224,9 +234,16 @@ public:
         state.hats[hat] = direction;
     }
 
+    // no longer used, poll directly instead
     bool GetHatDirection(int hat, Uint8 direction) const {
         std::lock_guard lock{mutex};
         return (state.hats.at(hat) & direction) != 0;
+    }
+
+    bool GetHatDirectionDirect(int hat, Uint8 direction) const {
+        if (!sdl_joystick)
+            return false;
+        return SDL_JoystickGetHat(sdl_joystick.get(), hat) == direction;
     }
 
     void SetAccel(const float x, const float y, const float z) {
@@ -613,7 +630,7 @@ public:
         : joystick(std::move(joystick_)), button(button_) {}
 
     bool GetStatus() const override {
-        return joystick->GetButton(button);
+        return joystick->GetButtonDirect(button);
     }
 
 private:
@@ -627,7 +644,7 @@ public:
         : joystick(std::move(joystick_)), hat(hat_), direction(direction_) {}
 
     bool GetStatus() const override {
-        return joystick->GetHatDirection(hat, direction);
+        return joystick->GetHatDirectionDirect(hat, direction);
     }
 
 private:
@@ -885,12 +902,15 @@ SDLState::~SDLState() {
     }
 }
 
-Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event) {
+Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Event& event,
+                                                  const bool down = false) {
     Common::ParamPackage params({{"engine", "sdl"}});
-
+    if (down) {
+        params.Set("down", "1");
+    }
+    auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
     switch (event.type) {
     case SDL_JOYAXISMOTION: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jaxis.which);
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("axis", event.jaxis.axis);
@@ -903,15 +923,14 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         }
         break;
     }
-    case SDL_JOYBUTTONUP: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jbutton.which);
+    case SDL_JOYBUTTONUP:
+    case SDL_JOYBUTTONDOWN: {
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("button", event.jbutton.button);
         break;
     }
     case SDL_JOYHATMOTION: {
-        auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
         params.Set("port", joystick->GetPort());
         params.Set("guid", joystick->GetGUID());
         params.Set("hat", event.jhat.hat);
@@ -928,12 +947,16 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         case SDL_HAT_RIGHT:
             params.Set("direction", "right");
             break;
+        case SDL_HAT_CENTERED:
+            params.Set("direction", "centered");
+            break;
         default:
             return {};
         }
         break;
     }
     }
+
     return params;
 }
 
@@ -962,6 +985,7 @@ public:
 
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
+        bool down = false;
         while (state.event_queue.Pop(event)) {
             switch (event.type) {
             case SDL_JOYAXISMOTION:
@@ -969,7 +993,11 @@ public:
                     !axis_memory[event.jaxis.which].count(event.jaxis.axis)) {
                     axis_memory[event.jaxis.which][event.jaxis.axis] = event.jaxis.value;
                     axis_event_count[event.jaxis.which][event.jaxis.axis] = 1;
-                    break;
+                    if (IsAxisAtPole(event.jaxis.value)) {
+                        down = true;
+                    } else {
+                        break;
+                    }
                 } else {
                     axis_event_count[event.jaxis.which][event.jaxis.axis]++;
                     // The joystick and axis exist in our map if we take this branch, so no checks
@@ -1001,9 +1029,18 @@ public:
                         axis_event_count.clear();
                     }
                 }
+                return SDLEventToButtonParamPackage(state, event, down);
+                break;
+            case SDL_JOYBUTTONDOWN:
+                return SDLEventToButtonParamPackage(state, event, true);
+                break;
             case SDL_JOYBUTTONUP:
+                return SDLEventToButtonParamPackage(state, event, false);
+                break;
             case SDL_JOYHATMOTION:
-                return SDLEventToButtonParamPackage(state, event);
+                return SDLEventToButtonParamPackage(state, event,
+                                                    event.jhat.value == SDL_HAT_CENTERED);
+                break;
             }
         }
         return {};

@@ -5,20 +5,36 @@
 #pragma once
 
 #include <map>
+#include <QAction>
 #include <QKeySequence>
 #include <QString>
+#include "core/frontend/input.h"
+#include "hotkey_monitor.h"
 
 class QDialog;
 class QSettings;
 class QShortcut;
 class QWidget;
 
+struct Hotkey {
+    QKeySequence keyseq;
+    QString controller_keyseq;
+    std::map<QString, QShortcut*> shortcuts;
+    Qt::ShortcutContext context = Qt::WindowShortcut;
+    std::unique_ptr<Input::ButtonDevice> button_device = nullptr;
+    std::unique_ptr<Input::ButtonDevice> button_device2 = nullptr;
+    QAction* action = nullptr;
+};
+
 class HotkeyRegistry final {
 public:
     friend class ConfigureHotkeys;
+    friend class ConfigureControllerHotkeys;
 
     explicit HotkeyRegistry();
     ~HotkeyRegistry();
+
+    ControllerHotkeyMonitor buttonMonitor;
 
     /**
      * Loads hotkeys from the settings file.
@@ -67,14 +83,16 @@ public:
      */
     Qt::ShortcutContext GetShortcutContext(const QString& group, const QString& action);
 
-private:
-    struct Hotkey {
-        QKeySequence keyseq;
-        QString controller_keyseq;
-        std::map<QString, QShortcut*> shortcuts;
-        Qt::ShortcutContext context = Qt::WindowShortcut;
-    };
+    /**
+     * Stores a QAction into the appropriate hotkey, for triggering by controller
+     *
+     * @param group General group this shortcut context belongs to
+     * @param action_name Name of the action
+     * @param action The QAction to store
+     */
+    void SetAction(const QString& group, const QString& action_name, QAction* action);
 
+private:
     using HotkeyMap = std::map<QString, Hotkey>;
     using HotkeyGroupMap = std::map<QString, HotkeyMap>;
 
