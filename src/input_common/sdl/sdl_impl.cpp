@@ -1002,9 +1002,6 @@ public:
             auto value = event.jaxis.value;
             switch (event.type) {
             case SDL_JOYAXISMOTION:
-                std::cerr << "axis" << event.jaxis.axis << " down event, has value "
-                          << event.jaxis.value << " and timestamp " << event.jaxis.timestamp
-                          << std::endl;
                 // if a button has been pressed down within 50ms of this axis movement,
                 // assume they are actually the same thing and skip this axis
                 if (buttonDownTimestamp && ((event.jaxis.timestamp >= buttonDownTimestamp &&
@@ -1012,8 +1009,6 @@ public:
                                             (event.jaxis.timestamp < buttonDownTimestamp &&
                                              buttonDownTimestamp - event.jaxis.timestamp <= 50))) {
                     axis_skip[id][axis] = true;
-                    std::cerr << "skipping axis " << axis
-                              << " because a button happened simultaneously";
                     break;
                 }
 
@@ -1059,7 +1054,6 @@ public:
                             32767, axis_memory[id][axis] - axis_center_value[id][axis]));
                         axis_memory[id][axis] = 0;
                         axis_event_count[id][axis] = 0;
-                        std::cerr << "sending up signal for axis " << axis;
                         return SDLEventToButtonParamPackage(state, event, false);
                     } else if (IsAxisAtCenter(axis_memory[id][axis], id, axis) &&
                                IsAxisPastThreshold(event.jaxis.value, id, axis)) {
@@ -1067,26 +1061,20 @@ public:
                             std::copysign(32767, event.jaxis.value - axis_center_value[id][axis]));
                         // make this the start of the new event
                         axis_memory[id][axis] = event.jaxis.value;
-                        std::cerr << "sending down signal for axis " << axis;
                         return SDLEventToButtonParamPackage(state, event, true);
                     }
                 }
                 break;
             case SDL_JOYBUTTONDOWN:
-                std::cerr << "button " << event.jbutton.button << " down event, has axis "
-                          << event.jaxis.axis << " and timestamp " << event.jbutton.timestamp
-                          << std::endl;
                 buttonDownTimestamp = event.jbutton.timestamp;
                 return SDLEventToButtonParamPackage(state, event, true);
                 break;
             case SDL_JOYBUTTONUP:
-                std::cerr << "button " << event.jbutton.button << " up event, timestamp "
-                          << event.jbutton.timestamp;
                 return SDLEventToButtonParamPackage(state, event, false);
                 break;
             case SDL_JOYHATMOTION:
                 return SDLEventToButtonParamPackage(state, event,
-                                                    event.jhat.value == SDL_HAT_CENTERED);
+                                                    event.jhat.value != SDL_HAT_CENTERED);
                 break;
             }
         }
