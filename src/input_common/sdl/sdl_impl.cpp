@@ -6,6 +6,7 @@
 #include <atomic>
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <mutex>
 #include <string>
@@ -187,6 +188,7 @@ public:
         state.buttons[button] = value;
     }
 
+    // TODO: remove if all goes well
     // no longer used - creating state breaks hotkey detection, so
     // poll sdl directly below
     bool GetButton(int button) const {
@@ -207,9 +209,16 @@ public:
         state.axes[axis] = value;
     }
 
+    // TODO: remove if all goes well
     float GetAxis(int axis) const {
         std::lock_guard lock{mutex};
         return state.axes.at(axis) / 32767.0f;
+    }
+
+    float GetAxisDirect(int axis) const {
+        if (!sdl_joystick)
+            return 0.0;
+        return SDL_JoystickGetAxis(sdl_joystick.get(), axis) / 32767.0f;
     }
 
     std::tuple<float, float> GetAnalog(int axis_x, int axis_y) const {
@@ -235,6 +244,7 @@ public:
     }
 
     // no longer used, poll directly instead
+    // TODO: remove if all goes well
     bool GetHatDirection(int hat, Uint8 direction) const {
         std::lock_guard lock{mutex};
         return (state.hats.at(hat) & direction) != 0;
@@ -661,7 +671,7 @@ public:
           trigger_if_greater(trigger_if_greater_) {}
 
     bool GetStatus() const override {
-        float axis_value = joystick->GetAxis(axis);
+        float axis_value = joystick->GetAxisDirect(axis);
         if (trigger_if_greater)
             return axis_value > threshold;
         return axis_value < threshold;
@@ -968,6 +978,7 @@ public:
 
     void Start() override {
         state.event_queue.Clear();
+
         state.polling = true;
     }
 
@@ -985,56 +996,92 @@ public:
 
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
-        bool down = false;
         while (state.event_queue.Pop(event)) {
+            auto axis = event.jaxis.axis;
+            auto id = event.jaxis.which;
+            auto value = event.jaxis.value;
             switch (event.type) {
             case SDL_JOYAXISMOTION:
-                if (!axis_memory.count(event.jaxis.which) ||
-                    !axis_memory[event.jaxis.which].count(event.jaxis.axis)) {
-                    axis_memory[event.jaxis.which][event.jaxis.axis] = event.jaxis.value;
-                    axis_event_count[event.jaxis.which][event.jaxis.axis] = 1;
-                    if (IsAxisAtPole(event.jaxis.value)) {
-                        down = true;
-                    } else {
-                        break;
+                std::cerr << "axis" << event.jaxis.axis << " down event, has value "
+                          << event.jaxis.value << " and timestamp " << event.jaxis.timestamp
+                          << std::endl;
+                // if a button has been pressed down within 50ms of this axis movement,
+                // assume they are actually the same thing and skip this axis
+                if (buttonDownTimestamp && ((event.jaxis.timestamp >= buttonDownTimestamp &&
+                                             event.jaxis.timestamp - buttonDownTimestamp <= 50) ||
+                                            (event.jaxis.timestamp < buttonDownTimestamp &&
+                                             buttonDownTimestamp - event.jaxis.timestamp <= 50))) {
+                    axis_skip[id][axis] = true;
+                    std::cerr << "skipping axis " << axis
+                              << " because a button happened simultaneously";
+                    break;
+                }
+
+                // skipping this axis
+                if (axis_skip[id][axis])
+                    break;
+                if (!axis_memory.count(id) || !axis_memory[id].count(axis)) {
+                    // starting a new movement.
+                    axisStartTimestamps[id][axis] = event.jaxis.timestamp;
+                    axis_event_count[id][axis] = 1;
+                    if (IsAxisAtExtreme(value)) {
+                        // a single event with a value right at the extreme.
+                        // Assume this is a digital "axis" and send the down
+                        // signal with center set to 0.
+                        event.jaxis.value = std::copysign(32767, value);
+                        axis_center_value[id][axis] = 0;
+                        return SDLEventToButtonParamPackage(state, event, true);
                     }
+                    // otherwise, this is our first event, identify the center
+                    if (value < -28000)
+                        axis_center_value[id][axis] = -32768;
+                    else if (value > 28000)
+                        axis_center_value[id][axis] = 32767;
+                    else
+                        axis_center_value[id][axis] = 0;
+
+                    axis_memory[id][axis] = axis_center_value[id][axis];
+                    break;
                 } else {
-                    axis_event_count[event.jaxis.which][event.jaxis.axis]++;
-                    // The joystick and axis exist in our map if we take this branch, so no checks
-                    // needed
-                    if (std::abs(
-                            (event.jaxis.value - axis_memory[event.jaxis.which][event.jaxis.axis]) /
-                            32767.0) < 0.5) {
-                        break;
-                    } else {
-                        if (axis_event_count[event.jaxis.which][event.jaxis.axis] == 2 &&
-                            IsAxisAtPole(event.jaxis.value) &&
-                            IsAxisAtPole(axis_memory[event.jaxis.which][event.jaxis.axis])) {
-                            // If we have exactly two events and both are near a pole, this is
-                            // likely a digital input masquerading as an analog axis; Instead of
-                            // trying to look at the direction the axis travelled, assume the first
-                            // event was press and the second was release; This should handle most
-                            // digital axes while deferring to the direction of travel for analog
-                            // axes
-                            event.jaxis.value = static_cast<Sint16>(std::copysign(
-                                32767, axis_memory[event.jaxis.which][event.jaxis.axis]));
-                        } else {
-                            // There are more than two events, so this is likely a true analog axis,
-                            // check the direction it travelled
-                            event.jaxis.value = static_cast<Sint16>(std::copysign(
-                                32767, event.jaxis.value -
-                                           axis_memory[event.jaxis.which][event.jaxis.axis]));
-                        }
-                        axis_memory.clear();
-                        axis_event_count.clear();
+                    axis_event_count[id][axis]++;
+                    // only two events, second one at center, means this is a digital release
+                    if (axis_event_count[id][axis] == 2 && IsAxisAtCenter(value, id, axis) &&
+                        IsAxisAtExtreme(axis_memory[id][axis])) {
+                        // send the up signal for this digital axis, and clear.
+                        axis_event_count[id][axis] = 0;
+                        axis_memory[id][axis] = 0;
+                        return SDLEventToButtonParamPackage(state, event, false);
+                    }
+                    if (IsAxisAtCenter(value, id, axis) &&
+                        IsAxisPastThreshold(axis_memory[id][axis], id, axis)) {
+                        // returned to center, send the up signal
+                        event.jaxis.value = static_cast<Sint16>(std::copysign(
+                            32767, axis_memory[id][axis] - axis_center_value[id][axis]));
+                        axis_memory[id][axis] = 0;
+                        axis_event_count[id][axis] = 0;
+                        std::cerr << "sending up signal for axis " << axis;
+                        return SDLEventToButtonParamPackage(state, event, false);
+                    } else if (IsAxisAtCenter(axis_memory[id][axis], id, axis) &&
+                               IsAxisPastThreshold(event.jaxis.value, id, axis)) {
+                        event.jaxis.value = static_cast<Sint16>(
+                            std::copysign(32767, event.jaxis.value - axis_center_value[id][axis]));
+                        // make this the start of the new event
+                        axis_memory[id][axis] = event.jaxis.value;
+                        std::cerr << "sending down signal for axis " << axis;
+                        return SDLEventToButtonParamPackage(state, event, true);
                     }
                 }
-                return SDLEventToButtonParamPackage(state, event, down);
                 break;
             case SDL_JOYBUTTONDOWN:
+                std::cerr << "button " << event.jbutton.button << " down event, has axis "
+                          << event.jaxis.axis << " and timestamp " << event.jbutton.timestamp
+                          << std::endl;
+                buttonDownTimestamp = event.jbutton.timestamp;
                 return SDLEventToButtonParamPackage(state, event, true);
                 break;
             case SDL_JOYBUTTONUP:
+                std::cerr << "button " << event.jbutton.button << " up event, timestamp "
+                          << event.jbutton.timestamp;
                 return SDLEventToButtonParamPackage(state, event, false);
                 break;
             case SDL_JOYHATMOTION:
@@ -1047,14 +1094,28 @@ public:
     }
 
 private:
-    // Determine whether an axis value is close to an extreme or center
-    // Some controllers have a digital D-Pad as a pair of analog sticks, with 3 possible values per
-    // axis, which is why the center must be considered a pole
-    bool IsAxisAtPole(int16_t value) {
-        return std::abs(value) >= 32767 || std::abs(value) < 327;
+    bool IsAxisAtCenter(int16_t value, SDL_JoystickID id, uint8_t axis) {
+        return std::abs(value - axis_center_value[id][axis]) < 367;
     }
+
+    bool IsAxisPastThreshold(int16_t value, SDL_JoystickID id, uint8_t axis) {
+        return std::abs(value - axis_center_value[id][axis]) > 32767 / 2;
+    }
+
+    bool IsAxisAtExtreme(int16_t value) {
+        return std::abs(value) > 32766;
+    }
+
+    bool IsValueNear(int16_t value1, int16_t value2) {}
+    /** Holds the first received value for the axis. Used to
+     *  identify situations where "released" is -32768 (some triggers)
+     */
+    std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, int16_t>> axis_center_value;
     std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, int16_t>> axis_memory;
     std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, uint32_t>> axis_event_count;
+    std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, bool>> axis_skip;
+    int buttonDownTimestamp = 0;
+    std::unordered_map<SDL_JoystickID, std::unordered_map<uint8_t, int>> axisStartTimestamps;
 };
 
 class SDLAnalogPoller final : public SDLPoller {

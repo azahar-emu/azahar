@@ -53,14 +53,19 @@ public:
     void SaveHotkeys();
 
     /**
+     * Updates the button devices for a hotkey based on the controller_keyseq value
+     */
+    void UpdateControllerHotkey(QString name, Hotkey& hk);
+
+    /**
      * Returns a QShortcut object whose activated() signal can be connected to other QObjects'
      * slots.
      *
      * @param group  General group this hotkey belongs to (e.g. "Main Window", "Debugger").
      * @param action Name of the action (e.g. "Start Emulation", "Load Image").
      * @param widget Parent widget of the returned QShortcut.
-     * @warning If multiple QWidgets' call this function for the same action, the returned QShortcut
-     *          will be the same. Thus, you shouldn't rely on the caller really being the
+     * @warning If multiple QWidgets' call this function for the same action, the returned
+     * QShortcut will be the same. Thus, you shouldn't rely on the caller really being the
      *          QShortcut's parent.
      */
     QShortcut* GetHotkey(const QString& group, const QString& action, QObject* widget);

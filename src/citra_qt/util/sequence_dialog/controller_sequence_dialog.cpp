@@ -27,7 +27,7 @@ ControllerSequenceDialog::ControllerSequenceDialog(QWidget* parent)
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-    LaunchPollers(); // Fixed: added semicolon
+    LaunchPollers();
 }
 
 ControllerSequenceDialog::~ControllerSequenceDialog() = default;
@@ -55,8 +55,7 @@ void ControllerSequenceDialog::LaunchPollers() {
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            if (params.Has("engine") &&
-                (params.Has("hat") || params.Has("button"))) { // for now, no analog inputs
+            if (params.Has("engine")) {
                 std::cerr << "controller hotkey event detected: " + params.Serialize() << std::endl;
                 if (params.Has("down")) {
                     downCount++;
