@@ -45,6 +45,10 @@ void ControllerHotkeyMonitor::checkAllButtons() {
         if (it.hk->button_device2) {
             // two buttons, need both pressed and one *just now* pressed
             bool currentStatus2 = it.hk->button_device2->GetStatus();
+            if (currentStatus)
+                std::cerr << "button one pressed" << std::endl;
+            if (currentStatus2)
+                std::cerr << "button two pressed" << std::endl;
             trigger = currentStatus && currentStatus2 && (!it.lastStatus || !it.lastStatus2);
             it.lastStatus = currentStatus;
             it.lastStatus2 = currentStatus2;

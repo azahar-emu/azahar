@@ -407,8 +407,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            // skip button downs and only process button ups to maintain former behavior
-            if (params.Has("engine") && !params.Has("down")) {
+            if (params.Has("engine")) {
                 SetPollingResult(params, false);
                 return;
             }
