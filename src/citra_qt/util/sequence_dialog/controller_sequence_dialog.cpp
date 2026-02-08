@@ -56,7 +56,6 @@ void ControllerSequenceDialog::LaunchPollers() {
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
             if (params.Has("engine")) {
-                std::cerr << "controller hotkey event detected: " + params.Serialize() << std::endl;
                 if (params.Has("down")) {
                     downCount++;
                     if (downCount == 1) {
