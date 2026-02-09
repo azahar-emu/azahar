@@ -318,6 +318,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="toggle_display_refresh_rate_detection">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When enabled, this setting detects when the refresh rate of the screen is below that of the 3DS, and when it is, disables VSync automatically to avoid emulation speed being forced below 100%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Enable display refresh rate detection</string>
+        </property>
+       </widget>
+      </item>
+      <item>
         <widget class="QWidget" name="delay_render_layout" native="true">
           <layout class="QHBoxLayout" name="delay_render_layout_inner">
             <property name="leftMargin">
