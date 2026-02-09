@@ -7,6 +7,7 @@
 #include <QStandardItemModel>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_hotkeys_controller.h"
+#include "citra_qt/configuration/configure_input.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/util/sequence_dialog/controller_sequence_dialog.h"
 #include "ui_configure_hotkeys_controller.h"
@@ -48,8 +49,8 @@ void ConfigureControllerHotkeys::Populate(const HotkeyRegistry& registry) {
         for (const auto& hotkey : group.second) {
             QStandardItem* action = new QStandardItem(hotkey.first);
             QStandardItem* controller_keyseq = new QStandardItem(hotkey.second.controller_keyseq);
-            QStandardItem* readable_keyseq =
-                new QStandardItem(CleanSequence(hotkey.second.controller_keyseq));
+            QStandardItem* readable_keyseq = new QStandardItem(
+                HotkeyRegistry::SequenceToString(hotkey.second.controller_keyseq));
             action->setEditable(false);
             controller_keyseq->setEditable(false);
             parent_item->appendRow({action, readable_keyseq, controller_keyseq});
@@ -79,7 +80,7 @@ void ConfigureControllerHotkeys::Configure(QModelIndex index) {
         return;
     }
     model->setData(index, key_sequence);
-    model->setData(readableIndex, CleanSequence(key_sequence));
+    model->setData(readableIndex, HotkeyRegistry::SequenceToString(key_sequence));
 }
 
 void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
@@ -136,34 +137,4 @@ void ConfigureControllerHotkeys::PopupContextMenu(const QPoint& menu_location) {
 
 void ConfigureControllerHotkeys::RetranslateUI() {
     ui->retranslateUi(this);
-}
-
-QString ConfigureControllerHotkeys::CleanSequence(QString controller_keyseq) {
-    if (controller_keyseq.isEmpty())
-        return controller_keyseq;
-    QStringList keys = controller_keyseq.split(QStringLiteral("||"));
-    Common::ParamPackage p1 = Common::ParamPackage(keys.value(0).toStdString());
-    QString output;
-    if (p1.Has("hat")) {
-        output = QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
-    } else if (p1.Has("button")) {
-        output = QString::fromStdString("Button " + p1.Get("button", ""));
-    } else if (p1.Has("axis")) {
-        output += QString::fromStdString("Axis " + p1.Get("axis", "") + p1.Get("direction", ""));
-    }
-
-    if (keys.length() > 1) {
-        output.append(QStringLiteral(" + "));
-        p1 = Common::ParamPackage(keys.value(1).toStdString());
-        if (p1.Has("hat")) {
-            output +=
-                QString::fromStdString("Hat " + p1.Get("hat", "") + " " + p1.Get("direction", ""));
-        } else if (p1.Has("button")) {
-            output += QString::fromStdString("Button " + p1.Get("button", ""));
-        } else if (p1.Has("axis")) {
-            output +=
-                QString::fromStdString("Axis " + p1.Get("axis", "") + p1.Get("direction", ""));
-        }
-    }
-    return output;
 }
