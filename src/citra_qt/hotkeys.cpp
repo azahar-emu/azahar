@@ -7,6 +7,7 @@
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/uisettings.h"
+#include "input_common/main.h"
 
 HotkeyRegistry::HotkeyRegistry() = default;
 
@@ -87,4 +88,19 @@ Qt::ShortcutContext HotkeyRegistry::GetShortcutContext(const QString& group,
 void HotkeyRegistry::SetAction(const QString& group, const QString& action_name, QAction* action) {
     Hotkey& hk = hotkey_groups[group][action_name];
     hk.action = action;
+}
+
+QString HotkeyRegistry::SequenceToString(QString controller_keyseq) {
+    if (controller_keyseq.isEmpty())
+        return controller_keyseq;
+    QStringList keys = controller_keyseq.split(QStringLiteral("||"));
+    Common::ParamPackage p1 = Common::ParamPackage(keys.value(0).toStdString());
+    QString output = QString::fromStdString(InputCommon::ButtonToText(p1));
+
+    if (keys.length() > 1) {
+        output.append(QStringLiteral(" + "));
+        p1 = Common::ParamPackage(keys.value(1).toStdString());
+        output.append(QString::fromStdString(InputCommon::ButtonToText(p1)));
+    }
+    return output;
 }

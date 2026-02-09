@@ -11,6 +11,7 @@
 #include "common/settings.h"
 #include "common/threadsafe_queue.h"
 #include "input_common/sdl/sdl.h"
+#include "input_common/sdl/sdl_joystick.h"
 
 union SDL_Event;
 using SDL_Joystick = struct _SDL_Joystick;
@@ -19,8 +20,6 @@ using SDL_GameController = struct _SDL_GameController;
 
 namespace InputCommon::SDL {
 
-class SDLJoystick;
-class SDLGameController;
 class SDLButtonFactory;
 class SDLAnalogFactory;
 class SDLMotionFactory;

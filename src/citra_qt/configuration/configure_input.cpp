@@ -70,88 +70,15 @@ static void SetAnalogButton(const Common::ParamPackage& input_param,
 }
 
 static QString ButtonToText(const Common::ParamPackage& param) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
-    }
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "keyboard") {
+    if (param.Get("engine", "") == "keyboard") {
         return GetKeyName(param.Get("code", 0));
+    } else {
+        return QString::fromStdString(InputCommon::ButtonToText(param));
     }
-
-    if (engine_str == "sdl") {
-        if (param.Has("hat")) {
-            const QString hat_str = QString::fromStdString(param.Get("hat", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Hat %1 %2").arg(hat_str, direction_str);
-        }
-
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Axis %1%2").arg(axis_str, direction_str);
-        }
-
-        if (param.Has("button")) {
-            const QString button_str = QString::fromStdString(param.Get("button", ""));
-
-            return QObject::tr("Button %1").arg(button_str);
-        }
-
-        return {};
-    }
-
-    if (engine_str == "gcpad") {
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("GC Axis %1%2").arg(axis_str, direction_str);
-        }
-        if (param.Has("button")) {
-            const QString button_str = QString::number(int(std::log2(param.Get("button", 0))));
-            return QObject::tr("GC Button %1").arg(button_str);
-        }
-        return GetKeyName(param.Get("code", 0));
-    }
-
-    return QObject::tr("[unknown]");
 }
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
-    }
-
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "analog_from_button") {
-        return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
-    }
-
-    const QString axis_x_str{QString::fromStdString(param.Get("axis_x", ""))};
-    const QString axis_y_str{QString::fromStdString(param.Get("axis_y", ""))};
-    static const QString plus_str{QString::fromStdString("+")};
-    static const QString minus_str{QString::fromStdString("-")};
-    if (engine_str == "sdl" || engine_str == "gcpad") {
-        if (dir == "modifier") {
-            return QObject::tr("[unused]");
-        }
-        if (dir == "left") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, minus_str);
-        }
-        if (dir == "right") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, plus_str);
-        }
-        if (dir == "up") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, plus_str);
-        }
-        if (dir == "down") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, minus_str);
-        }
-        return {};
-    }
-    return QObject::tr("[unknown]");
+    return QString::fromStdString(InputCommon::AnalogToText(param, dir));
 }
 
 ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
@@ -407,7 +334,8 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            if (params.Has("engine")) {
+            // skip button downs and only process button ups to maintain former behavior
+            if (params.Has("engine") && !params.Has("down")) {
                 SetPollingResult(params, false);
                 return;
             }

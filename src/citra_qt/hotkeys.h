@@ -97,6 +97,13 @@ public:
      */
     void SetAction(const QString& group, const QString& action_name, QAction* action);
 
+    /**
+     * Takes a controller keysequene for a hotkey and returns a readable string
+     *
+     *
+     */
+    static QString SequenceToString(QString controller_keyseq);
+
 private:
     using HotkeyMap = std::map<QString, Hotkey>;
     using HotkeyGroupMap = std::map<QString, HotkeyMap>;

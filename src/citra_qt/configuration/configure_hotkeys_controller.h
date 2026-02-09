@@ -30,7 +30,6 @@ public:
      * @param registry The HotkeyRegistry whose data is used to populate the list.
      */
     void Populate(const HotkeyRegistry& registry);
-    static QString CleanSequence(QString controller_keyseq);
 
 private:
     void Configure(QModelIndex index);

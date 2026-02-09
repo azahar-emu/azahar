@@ -7,8 +7,10 @@
 #include <QLabel>
 #include <QTimer>
 #include <QVBoxLayout>
+#include "citra_qt/hotkeys.h"
 #include "common/param_package.h"
 #include "configuration/configure_hotkeys_controller.h"
+#include "configuration/configure_input.h"
 #include "controller_sequence_dialog.h"
 #include "util/sequence_dialog/controller_sequence_dialog.h"
 
@@ -64,22 +66,22 @@ void ControllerSequenceDialog::LaunchPollers() {
                         params1 = params;
                         params2 = Common::ParamPackage();
                         key_sequence = QString::fromStdString(params1.Serialize());
-                        textBox->setText(ConfigureControllerHotkeys::CleanSequence(key_sequence) +
+                        textBox->setText(HotkeyRegistry::SequenceToString(key_sequence) +
                                          QStringLiteral("..."));
                     } else if (downCount == 2 && !params2.Has("engine")) {
                         // this is a second button, currently only one button saved, so save it
                         params2 = params;
                         key_sequence = QString::fromStdString(params1.Serialize() + "||" +
                                                               params2.Serialize());
-                        textBox->setText(ConfigureControllerHotkeys::CleanSequence(key_sequence));
+                        textBox->setText(HotkeyRegistry::SequenceToString(key_sequence));
                     }
                     // if downCount == 3 or more, just ignore them - we have saved the first two
                     // presses
                 } else { // button release
                     downCount--;
                     if (downCount <= 0) {
-                        // once all buttons are released, clear the params so the user can try again
-                        // if need be
+                        // buttons all released, show the saved sequence and prepare to start again
+                        textBox->setText(HotkeyRegistry::SequenceToString(key_sequence));
                         params1 = Common::ParamPackage();
                         params2 = Common::ParamPackage();
                     }
