@@ -153,7 +153,13 @@ void RasterizerVulkan::LoadDefaultDiskResources(
     }
 
     pipeline_cache.SetProgramID(program_id);
+    pipeline_cache.SetAccurateMul(accurate_mul);
+    pipeline_cache.LoadPipelineDiskCache(stop_loading, callback);
     pipeline_cache.LoadDiskCache(stop_loading, callback);
+
+    if (callback) {
+        callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
 }
 
 void RasterizerVulkan::SyncDrawState() {
@@ -399,7 +405,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
 bool RasterizerVulkan::SetupVertexShader() {
     MICROPROFILE_SCOPE(Vulkan_VS);
     return pipeline_cache.UseProgrammableVertexShader(regs, pica.vs_setup,
-                                                      pipeline_info.vertex_layout, accurate_mul);
+                                                      pipeline_info.vertex_layout);
 }
 
 bool RasterizerVulkan::SetupGeometryShader() {
@@ -985,6 +991,7 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
 
 void RasterizerVulkan::SwitchDiskResources(u64 title_id) {
     std::atomic_bool stop_loading = false;
+    pipeline_cache.SetAccurateMul(accurate_mul);
     pipeline_cache.SwitchPipelineCache(title_id, stop_loading, switch_disk_resources_callback);
 }
 

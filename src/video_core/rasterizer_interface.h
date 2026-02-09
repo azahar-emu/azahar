@@ -26,7 +26,8 @@ enum class LoadCallbackStage {
     Build,
     Complete,
 };
-using DiskResourceLoadCallback = std::function<void(LoadCallbackStage, std::size_t, std::size_t)>;
+using DiskResourceLoadCallback =
+    std::function<void(LoadCallbackStage, std::size_t, std::size_t, const std::string&)>;
 
 class RasterizerInterface {
 public:

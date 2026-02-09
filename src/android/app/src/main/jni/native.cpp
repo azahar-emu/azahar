@@ -130,12 +130,13 @@ static bool HandleCoreError(Core::System::ResultStatus result, const std::string
                                         env->NewStringUTF(details.c_str())) != JNI_FALSE;
 }
 
-static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progress, int max) {
+static void LoadDiskCacheProgress(VideoCore::LoadCallbackStage stage, int progress, int max,
+                                  const std::string& object) {
     JNIEnv* env = IDCache::GetEnvForThread();
     env->CallStaticVoidMethod(IDCache::GetDiskCacheProgressClass(),
                               IDCache::GetDiskCacheLoadProgress(),
                               IDCache::GetJavaLoadCallbackStage(stage), static_cast<jint>(progress),
-                              static_cast<jint>(max));
+                              static_cast<jint>(max), env->NewStringUTF(object.c_str()));
 }
 
 static Camera::NDK::Factory* g_ndk_factory{};
@@ -217,7 +218,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                                                                       true, shared_context);
 
 #elif ENABLE_VULKAN
-        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library);
+        window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library, false);
         secondary_window =
             std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
 #else
@@ -267,7 +268,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     stop_run = false;
     pause_emulation = false;
 
-    LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+    LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 
     system.GPU().ApplyPerProgramSettings(program_id);
 
@@ -275,7 +276,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(stop_run,
                                                                    &LoadDiskCacheProgress);
 
-    LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
+    LoadDiskCacheProgress(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
 
     SCOPE_EXIT({ TryShutdown(); });
 

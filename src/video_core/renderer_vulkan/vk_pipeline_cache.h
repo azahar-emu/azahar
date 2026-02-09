@@ -10,6 +10,7 @@
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
+#include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/profile.h"
 #include "video_core/shader/generator/shader_gen.h"
@@ -59,6 +60,9 @@ public:
     }
 
     /// Loads the pipeline cache stored to disk
+    void LoadPipelineDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                               const VideoCore::DiskResourceLoadCallback& callback = {});
+
     void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
                        const VideoCore::DiskResourceLoadCallback& callback = {});
 
@@ -68,9 +72,12 @@ public:
     /// Binds a pipeline using the provided information
     bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
 
+    Pica::Shader::Generator::ExtraVSConfig CalcExtraConfig(
+        const Pica::Shader::Generator::PicaVSConfig& config);
+
     /// Binds a PICA decompiled vertex shader
     bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                                     const VertexLayout& layout, bool accurate_mul);
+                                     const VertexLayout& layout);
 
     /// Binds a passthrough vertex shader
     void UseTrivialVertexShader();
@@ -98,7 +105,13 @@ public:
         current_program_id = program_id;
     }
 
+    void SetAccurateMul(bool _accurate_mul) {
+        accurate_mul = _accurate_mul;
+    }
+
 private:
+    friend ShaderDiskCache;
+
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
 
@@ -136,13 +149,13 @@ private:
     std::array<u64, MAX_SHADER_STAGES> shader_hashes;
     std::array<Shader*, MAX_SHADER_STAGES> current_shaders;
 
-    std::unordered_map<size_t, Shader*> programmable_vertex_map;
-    std::unordered_map<size_t, Shader> programmable_vertex_cache;
     std::unordered_map<size_t, Shader> fixed_geometry_shaders;
     std::unordered_map<size_t, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
 
     u64 current_program_id{0};
+    bool accurate_mul{false};
+    std::unique_ptr<ShaderDiskCache> disk_cache;
 };
 
 } // namespace Vulkan

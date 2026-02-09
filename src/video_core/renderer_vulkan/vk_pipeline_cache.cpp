@@ -128,18 +128,18 @@ PipelineCache::~PipelineCache() {
     SaveDiskCache();
 }
 
-void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
-                                  const VideoCore::DiskResourceLoadCallback& callback) {
+void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
+                                          const VideoCore::DiskResourceLoadCallback& callback) {
     vk::PipelineCacheCreateInfo cache_info{};
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1);
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "");
     }
 
-    auto load_cache = [this, &cache_info, &callback](bool allow_fallback) {
+    auto load_cache = [this, &cache_info](bool allow_fallback) {
         const vk::Device device = instance.GetDevice();
         try {
             pipeline_cache = device.createPipelineCacheUnique(cache_info);
@@ -156,9 +156,6 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
                               err.what());
                 }
             }
-        }
-        if (callback) {
-            callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
         }
     };
 
@@ -208,6 +205,12 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
     cache_info.initialDataSize = cache_file_size;
     cache_info.pInitialData = cache_data.data();
     load_cache(true);
+}
+
+void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+    disk_cache = std::make_unique<ShaderDiskCache>(*this, accurate_mul);
+    disk_cache->Init(GetProgramID(), stop_loading, callback);
 }
 
 void PipelineCache::SaveDiskCache() {
@@ -383,67 +386,54 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     return true;
 }
 
-bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
-                                                Pica::ShaderSetup& setup,
-                                                const VertexLayout& layout, bool accurate_mul) {
+ExtraVSConfig PipelineCache::CalcExtraConfig(const PicaVSConfig& config) {
+    auto res = ExtraVSConfig();
+
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
     // We also don't need the geometry shader if we have the barycentric extension.
-    const bool use_geometry_shader = instance.UseGeometryShaders() && !regs.lighting.disable &&
+    const bool use_geometry_shader = instance.UseGeometryShaders() &&
+                                     !config.state.lighting_disable &&
                                      !instance.IsFragmentShaderBarycentricSupported();
-    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(), use_geometry_shader,
-                        accurate_mul};
 
-    for (u32 i = 0; i < layout.attribute_count; i++) {
-        const VertexAttribute& attr = layout.attributes[i];
-        const FormatTraits& traits = instance.GetTraits(attr.type, attr.size);
-        const u32 location = attr.location.Value();
-        AttribLoadFlags& flags = config.state.load_flags[location];
+    res.use_clip_planes = instance.IsShaderClipDistanceSupported();
+    res.use_geometry_shader = use_geometry_shader;
+    res.sanitize_mul = accurate_mul;
+    res.separable_shader = true;
+    res.load_flags.fill(AttribLoadFlags::Float);
+
+    for (u32 i = 0; i < config.state.used_input_vertex_attributes; i++) {
+        const auto& attr = config.state.input_vertex_attributes[i];
+        const u32 location = attr.location;
+        const Pica::PipelineRegs::VertexAttributeFormat type =
+            static_cast<Pica::PipelineRegs::VertexAttributeFormat>(attr.type);
+        const FormatTraits& traits = instance.GetTraits(type, attr.size);
+        AttribLoadFlags& flags = res.load_flags[location];
 
         if (traits.needs_conversion) {
-            flags = MakeAttribLoadFlag(attr.type);
+            flags = MakeAttribLoadFlag(type);
         }
         if (traits.needs_emulation) {
             flags |= AttribLoadFlags::ZeroW;
         }
     }
 
-    const auto config_hash = config.Hash();
+    return res;
+}
 
-    const auto [it, new_config] = programmable_vertex_map.try_emplace(config_hash);
-    if (new_config) {
-        auto program = Common::HashableString(GLSL::GenerateVertexShader(setup, config, true));
-        if (program.empty()) {
-            LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
-            programmable_vertex_map[config_hash] = nullptr;
-            return false;
-        }
+bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
+                                                Pica::ShaderSetup& setup,
+                                                const VertexLayout& layout) {
 
-        auto [iter, new_program] = programmable_vertex_cache.try_emplace(program.Hash(), instance);
-        auto& shader = iter->second;
+    auto res = disk_cache->UseProgrammableVertexShader(regs, setup, layout);
 
-        if (new_program) {
-            shader.program = std::move(program);
-            const vk::Device device = instance.GetDevice();
-            workers.QueueWork([device, &shader] {
-                shader.module = Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
-                shader.MarkDone();
-            });
-        }
-
-        it->second = &shader;
+    if (res.has_value()) {
+        current_shaders[ProgramType::VS] = (*res).second;
+        shader_hashes[ProgramType::VS] = (*res).first;
+        return true;
     }
 
-    Shader* const shader{it->second};
-    if (!shader) {
-        LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
-        return false;
-    }
-
-    current_shaders[ProgramType::VS] = shader;
-    shader_hashes[ProgramType::VS] = config.Hash();
-
-    return true;
+    return false;
 }
 
 void PipelineCache::UseTrivialVertexShader() {
@@ -457,14 +447,20 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
         return true;
     }
 
-    const PicaFixedGSConfig gs_config{regs, instance.IsShaderClipDistanceSupported()};
+    const PicaFixedGSConfig gs_config{regs};
+
     auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config.Hash(), instance);
     auto& shader = it->second;
 
     if (new_shader) {
-        workers.QueueWork([gs_config, device = instance.GetDevice(), &shader]() {
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
-            shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
+        workers.QueueWork([gs_config, this, &shader]() {
+            ExtraFixedGSConfig extra;
+            extra.use_clip_planes = instance.IsShaderClipDistanceSupported();
+            extra.separable_shader = true;
+
+            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, extra);
+            shader.module = CompileSPV(CompileGLSL(code, vk::ShaderStageFlagBits::eGeometry),
+                                       instance.GetDevice());
             shader.MarkDone();
         });
     }
@@ -494,8 +490,8 @@ void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                 shader.module = CompileSPV(code, instance.GetDevice());
             } else {
                 const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
-                shader.module =
-                    Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
+                shader.module = CompileSPV(CompileGLSL(code, vk::ShaderStageFlagBits::eFragment),
+                                           instance.GetDevice());
             }
             shader.MarkDone();
         });
@@ -579,10 +575,10 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
     }
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1);
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "");
     }
 
     // Make sure we have a valid pipeline cache before switching
@@ -603,10 +599,11 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
 
     // Update program ID and load the new pipeline cache
     SetProgramID(title_id);
-    LoadDiskCache(stop_loading, nullptr);
+    LoadPipelineDiskCache(stop_loading, nullptr);
+    LoadDiskCache(stop_loading, callback);
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
     }
 }
 

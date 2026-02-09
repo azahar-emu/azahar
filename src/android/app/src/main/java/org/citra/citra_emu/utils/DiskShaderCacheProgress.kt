@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,7 +23,7 @@ object DiskShaderCacheProgress {
     }
 
     @JvmStatic
-    fun loadProgress(stage: LoadCallbackStage, progress: Int, max: Int) {
+    fun loadProgress(stage: LoadCallbackStage, progress: Int, max: Int, obj: String) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         if (emulationActivity == null) {
             Log.error("[DiskShaderCacheProgress] EmulationActivity not present")

@@ -108,10 +108,11 @@ signals:
 
     void ErrorThrown(Core::System::ResultStatus, std::string);
 
-    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total);
+    void LoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                      const std::string& object);
 
     void SwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
-                             std::size_t total);
+                             std::size_t total, const std::string& object);
 
     void HideLoadingScreen();
 };

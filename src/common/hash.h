@@ -54,8 +54,14 @@ static inline u64 ComputeStructHash64(const T& data) noexcept {
  * Combines the seed parameter with the provided hash, producing a new unique hash
  * Implementation from: http://boost.sourceforge.net/doc/html/boost/hash_combine.html
  */
-[[nodiscard]] inline u64 HashCombine(const u64 seed, const u64 hash) {
-    return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+[[nodiscard]] constexpr u64 HashCombine(u64 seed) {
+    return seed;
+}
+
+template <typename... Ts>
+[[nodiscard]] constexpr u64 HashCombine(u64 seed, u64 hash, Ts... rest) {
+    seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return HashCombine(seed, rest...);
 }
 
 template <typename T>

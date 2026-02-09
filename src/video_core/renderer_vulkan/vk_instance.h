@@ -30,8 +30,10 @@ struct FormatTraits {
     bool needs_conversion = false;
     bool needs_emulation = false;
     vk::ImageUsageFlags usage{};
-    vk::ImageAspectFlags aspect;
+    vk::ImageAspectFlags aspect{};
     vk::Format native = vk::Format::eUndefined;
+
+    auto operator<=>(const FormatTraits&) const = default;
 };
 
 class Instance {
@@ -47,6 +49,10 @@ public:
     /// Returns the FormatTraits struct for the provided attribute format and count
     const FormatTraits& GetTraits(Pica::PipelineRegs::VertexAttributeFormat format,
                                   u32 count) const;
+
+    const std::array<FormatTraits, 16>& GetAllTraits() const {
+        return attrib_table;
+    }
 
     /// Returns a formatted string for the driver version
     std::string GetDriverVersionName();
