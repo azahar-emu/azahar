@@ -39,7 +39,7 @@ void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
     }
 }
 
-std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseProgrammableVertexShader(
+std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseProgrammableVertexShader(
     const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, const VertexLayout& layout) {
 
     PicaVSConfig config{regs, setup};
@@ -71,7 +71,7 @@ std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseProgrammable
             return {};
         }
 
-        const size_t spirv_id = program.Hash();
+        const u64 spirv_id = program.Hash();
 
         auto [iter_prog, new_program] =
             programmable_vertex_cache.try_emplace(spirv_id, parent.instance);
@@ -103,7 +103,7 @@ std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseProgrammable
     return std::make_pair(config_hash, shader);
 }
 
-std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseFragmentShader(
+std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFragmentShader(
     const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user) {
 
     const FSConfig fs_config{regs};
@@ -324,17 +324,13 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
     return false;
 }
 
-std::string ShaderDiskCache::GetTransferableDir() const {
-    return parent.GetVulkanDir() + DIR_SEP + "transferable";
-}
-
 std::string ShaderDiskCache::GetVSFile(u64 title_id, bool is_temp) const {
-    return GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_vs", title_id) +
+    return parent.GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_vs", title_id) +
            (is_temp ? "_temp" : "") + ".vkch";
 }
 
 std::string ShaderDiskCache::GetFSFile(u64 title_id, bool is_temp) const {
-    return GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_fs", title_id) +
+    return parent.GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_fs", title_id) +
            (is_temp ? "_temp" : "") + ".vkch";
 }
 
@@ -374,7 +370,7 @@ bool ShaderDiskCache::RecreateCache(CacheFile& file, CacheFileType type) {
 bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
     std::vector<size_t> pending_configs;
-    std::unordered_map<size_t, size_t> pending_programs;
+    std::unordered_map<u64, size_t> pending_programs;
     std::unique_ptr<Pica::ShaderSetup> shader_setup;
     std::unique_ptr<CacheFile> regenerate_file;
 
@@ -514,8 +510,8 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
     // entries to memory to prevent having to read them from disk on every config entry, but program
     // entries are pretty big (around 50KB each). A LRU cache is a middle point between disk access
     // and memory usage.
-    std::unique_ptr<Common::StaticLRUCache<size_t, VSProgramEntry, 10>> program_lru =
-        std::make_unique<Common::StaticLRUCache<size_t, VSProgramEntry, 10>>();
+    std::unique_ptr<Common::StaticLRUCache<u64, VSProgramEntry, 10>> program_lru =
+        std::make_unique<Common::StaticLRUCache<u64, VSProgramEntry, 10>>();
 
     for (auto& offset : pending_configs) {
         if (callback) {
@@ -710,7 +706,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
 
 bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
-    std::vector<std::pair<size_t, size_t>> pending_configs;
+    std::vector<std::pair<u64, size_t>> pending_configs;
     std::unique_ptr<CacheFile> regenerate_file;
 
     auto cleanup_on_error = [&]() {

@@ -131,6 +131,9 @@ private:
     /// Returns the pipeline cache storage dir
     std::string GetPipelineCacheDir() const;
 
+    /// Returns the transferable shader dir
+    std::string GetTransferableDir() const;
+
 private:
     const Instance& instance;
     Scheduler& scheduler;

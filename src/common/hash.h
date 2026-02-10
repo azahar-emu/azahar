@@ -101,7 +101,7 @@ struct HashableStruct {
         return !(*this == o);
     };
 
-    std::size_t Hash() const noexcept {
+    u64 Hash() const noexcept {
         return Common::ComputeStructHash64<T, Hasher>(state);
     }
 };
@@ -115,7 +115,7 @@ struct HashableString {
     HashableString(const std::string& s) : value(s) {}
     HashableString(std::string&& s) noexcept : value(std::move(s)) {}
 
-    std::size_t Hash() const noexcept {
+    u64 Hash() const noexcept {
         return ComputeHash64<Hasher>(value.data(), value.size());
     }
 

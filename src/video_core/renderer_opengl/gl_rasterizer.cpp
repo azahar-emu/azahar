@@ -211,14 +211,14 @@ void RasterizerOpenGL::SwitchDiskResources(u64 title_id) {
             render_window, driver, title_id, !driver.IsOpenGLES()));
 
         if (switch_disk_resources_callback) {
-            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
         }
 
         std::atomic_bool stop_loading;
         new_manager->LoadDiskCache(stop_loading, switch_disk_resources_callback, accurate_mul);
 
         if (switch_disk_resources_callback) {
-            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
+            switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
         }
     }
 

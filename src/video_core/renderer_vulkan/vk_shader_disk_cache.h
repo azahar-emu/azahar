@@ -28,9 +28,9 @@ public:
     void Init(const std::atomic_bool& stop_loading,
               const VideoCore::DiskResourceLoadCallback& callback);
 
-    std::optional<std::pair<size_t, Shader* const>> UseProgrammableVertexShader(
+    std::optional<std::pair<u64, Shader* const>> UseProgrammableVertexShader(
         const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, const VertexLayout& layout);
-    std::optional<std::pair<size_t, Shader* const>> UseFragmentShader(
+    std::optional<std::pair<u64, Shader* const>> UseFragmentShader(
         const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
     u64 GetProgramID() const {
@@ -259,7 +259,6 @@ private:
         size_t biggest_entry_id = SIZE_MAX;
     };
 
-    std::string GetTransferableDir() const;
     std::string GetVSFile(u64 title_id, bool is_temp) const;
     std::string GetFSFile(u64 title_id, bool is_temp) const;
 
@@ -286,11 +285,11 @@ private:
     PipelineCache& parent;
     u64 title_id;
 
-    std::unordered_map<size_t, Shader> programmable_vertex_cache;
-    std::unordered_map<size_t, Shader*> programmable_vertex_map;
-    std::unordered_set<size_t> known_vertex_programs;
+    std::unordered_map<u64, Shader> programmable_vertex_cache;
+    std::unordered_map<u64, Shader*> programmable_vertex_map;
+    std::unordered_set<u64> known_vertex_programs;
 
-    std::unordered_map<size_t, Shader> fragment_shaders;
+    std::unordered_map<u64, Shader> fragment_shaders;
 };
 
 } // namespace Vulkan

@@ -155,7 +155,7 @@ void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
         callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "");
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Pipeline");
     }
 
     auto load_cache = [this, &cache_info](bool allow_fallback) {
@@ -564,7 +564,8 @@ bool PipelineCache::EnsureDirectories() const {
     };
 
     return create_dir(FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir)) &&
-           create_dir(GetVulkanDir()) && create_dir(GetPipelineCacheDir());
+           create_dir(GetVulkanDir()) && create_dir(GetPipelineCacheDir()) &&
+           create_dir(GetTransferableDir());
 }
 
 std::string PipelineCache::GetVulkanDir() const {
@@ -573,6 +574,10 @@ std::string PipelineCache::GetVulkanDir() const {
 
 std::string PipelineCache::GetPipelineCacheDir() const {
     return GetVulkanDir() + "pipeline" + DIR_SEP;
+}
+
+std::string PipelineCache::GetTransferableDir() const {
+    return GetVulkanDir() + DIR_SEP + "transferable";
 }
 
 void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& stop_loading,
@@ -588,7 +593,7 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
         callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "");
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Pipeline");
     }
 
     // Make sure we have a valid pipeline cache before switching
