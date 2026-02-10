@@ -11,7 +11,10 @@
 #include "common/file_util.h"
 #include "video_core/pica/shader_setup.h"
 #include "video_core/rasterizer_interface.h"
+#include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
+#include "video_core/shader/generator/pica_fs_config.h"
+#include "video_core/shader/generator/profile.h"
 #include "video_core/shader/generator/shader_gen.h"
 
 namespace Vulkan {
@@ -20,14 +23,19 @@ class PipelineCache;
 
 class ShaderDiskCache {
 public:
-    ShaderDiskCache(PipelineCache& _parent, bool _accurate_mul)
-        : parent(_parent), accurate_mul(_accurate_mul) {}
+    ShaderDiskCache(PipelineCache& _parent, u64 _title_id) : parent(_parent), title_id(_title_id) {}
 
-    void Init(u64 title_id, const std::atomic_bool& stop_loading,
+    void Init(const std::atomic_bool& stop_loading,
               const VideoCore::DiskResourceLoadCallback& callback);
 
     std::optional<std::pair<size_t, Shader* const>> UseProgrammableVertexShader(
         const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, const VertexLayout& layout);
+    std::optional<std::pair<size_t, Shader* const>> UseFragmentShader(
+        const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
+
+    u64 GetProgramID() const {
+        return title_id;
+    }
 
 private:
     static constexpr std::size_t SOURCE_FILE_HASH_LENGTH = 64;
@@ -43,10 +51,17 @@ private:
     };
 
     enum class CacheEntryType : u16 {
+        // Common
         FILE_INFO = 0,
+
+        // VS_CACHE
         VS_CONFIG = 1,
         VS_PROGRAM = 2,
         VS_SPIRV = 3,
+
+        // FS_CACHE
+        FS_CONFIG = 4,
+        FS_SPIRV = 5,
 
         MAX,
     };
@@ -62,21 +77,9 @@ private:
         SourceFileCacheVersionHash source_hash;
         std::array<char, 0x20> build_name;
 
-        struct VSProgramDriverUserSettings {
-            u8 accurate_mul;
-            u8 disable_spirv_optimize;
-            u8 clip_distance_supported;
-            u8 use_geometry_shaders;
-            u8 fragment_barycentric_supported;
-            std::array<FormatTraits, 16> traits{};
-
-            auto operator<=>(const VSProgramDriverUserSettings&) const = default;
-        };
-        static_assert(sizeof(VSProgramDriverUserSettings) == 328);
-
         union {
             u8 reserved[0x400];
-            VSProgramDriverUserSettings vs_settings;
+            Pica::Shader::Profile profile;
         };
     };
     static_assert(sizeof(FileInfoEntry) == 1144);
@@ -102,10 +105,18 @@ private:
     };
     static_assert(sizeof(VSProgramEntry) == 32780);
 
+    struct FSConfigEntry {
+        static constexpr u8 EXPECTED_VERSION = 0;
+
+        u8 version; // Surprise tool that can help us later
+        Pica::Shader::FSConfig fs_config;
+    };
+    static_assert(sizeof(FSConfigEntry) == 276);
+
     class CacheFile;
     class CacheEntry {
     public:
-        static constexpr u32 MAX_ENTRY_SIZE = 1 * 1024 * 1024;
+        static constexpr u32 MAX_ENTRY_SIZE = 4 * 1024 * 1024;
 
         struct CacheEntryFooter {
             static constexpr u8 ENTRY_VERSION = 0x24;
@@ -248,30 +259,38 @@ private:
         size_t biggest_entry_id = SIZE_MAX;
     };
 
-    std::string GetFSDir() const;
-    std::string GetVSDir() const;
+    std::string GetTransferableDir() const;
     std::string GetVSFile(u64 title_id, bool is_temp) const;
+    std::string GetFSFile(u64 title_id, bool is_temp) const;
 
-    bool RecreateVSCache(CacheFile& file);
-    bool InitVSCache(u64 title_id, const std::atomic_bool& stop_loading,
+    bool RecreateCache(CacheFile& file, CacheFileType type);
+
+    bool InitVSCache(const std::atomic_bool& stop_loading,
+                     const VideoCore::DiskResourceLoadCallback& callback);
+
+    bool InitFSCache(const std::atomic_bool& stop_loading,
                      const VideoCore::DiskResourceLoadCallback& callback);
 
     bool AppendVSConfigProgram(CacheFile& file, const Pica::Shader::Generator::PicaVSConfig& config,
                                const Pica::ShaderSetup& setup, u64 config_id, u64 program_id);
-
     bool AppendVSProgram(CacheFile& file, const VSProgramEntry& entry, u64 program_id);
     bool AppendVSConfig(CacheFile& file, const VSConfigEntry& entry, u64 config_id);
-
     bool AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
 
+    bool AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id);
+    bool AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
+
     CacheFile vs_cache;
+    CacheFile fs_cache;
 
     PipelineCache& parent;
-    bool accurate_mul;
+    u64 title_id;
 
     std::unordered_map<size_t, Shader> programmable_vertex_cache;
     std::unordered_map<size_t, Shader*> programmable_vertex_map;
     std::unordered_set<size_t> known_vertex_programs;
+
+    std::unordered_map<size_t, Shader> fragment_shaders;
 };
 
 } // namespace Vulkan

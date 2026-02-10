@@ -106,11 +106,15 @@ public:
     }
 
     void SetAccurateMul(bool _accurate_mul) {
-        accurate_mul = _accurate_mul;
+        profile.enable_accurate_mul = _accurate_mul;
     }
 
 private:
     friend ShaderDiskCache;
+
+    /// Switches the disk cache at runtime to use a different title ID
+    void SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
+                         const VideoCore::DiskResourceLoadCallback& callback);
 
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
@@ -154,8 +158,8 @@ private:
     Shader trivial_vertex_shader;
 
     u64 current_program_id{0};
-    bool accurate_mul{false};
-    std::unique_ptr<ShaderDiskCache> disk_cache;
+    std::vector<std::shared_ptr<ShaderDiskCache>> disk_caches;
+    std::shared_ptr<ShaderDiskCache> curr_disk_cache{};
 };
 
 } // namespace Vulkan

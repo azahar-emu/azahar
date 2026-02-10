@@ -7,6 +7,9 @@
 #include "common/hash.h"
 #include "video_core/pica/regs_rasterizer.h"
 
+#define LAYOUT_HASH static_cast<u64>(sizeof(T)), static_cast<u64>(alignof(T))
+#define FIELD_HASH(x) static_cast<u64>(offsetof(T, x)), static_cast<u64>(sizeof(x))
+
 namespace Pica {
 struct RegsInternal;
 struct ShaderSetup;
@@ -73,22 +76,19 @@ struct PicaGSConfigState {
     };
     std::array<SemanticMap, 24> GetSemanticMaps() const;
 
-    static constexpr u64 StructHash() {
+    static consteval u64 StructHash() {
         constexpr u64 STRUCT_VERSION = 0;
 
         using T = PicaGSConfigState;
-        return Common::HashCombine(
-            STRUCT_VERSION,
+        return Common::HashCombine(STRUCT_VERSION,
 
-            // layout
-            sizeof(T), alignof(T),
+                                   // layout
+                                   LAYOUT_HASH,
 
-            // fields
-            offsetof(T, vs_output_attributes_count), sizeof(vs_output_attributes_count),
-            offsetof(T, gs_output_attributes_count), sizeof(gs_output_attributes_count),
-            offsetof(T, vs_output_total), sizeof(vs_output_total),
-
-            offsetof(T, vs_output_attributes), sizeof(vs_output_attributes));
+                                   // fields
+                                   FIELD_HASH(vs_output_attributes_count),
+                                   FIELD_HASH(gs_output_attributes_count),
+                                   FIELD_HASH(vs_output_total), FIELD_HASH(vs_output_attributes));
     }
 };
 
@@ -120,32 +120,24 @@ struct PicaVSConfigState {
 
     PicaGSConfigState gs_state;
 
-    static constexpr u64 StructHash() {
+    static consteval u64 StructHash() {
         constexpr u64 STRUCT_VERSION = 0;
 
         using T = PicaVSConfigState;
-        return Common::HashCombine(
-            STRUCT_VERSION,
+        return Common::HashCombine(STRUCT_VERSION,
 
-            // layout
-            sizeof(T), alignof(T),
+                                   // layout
+                                   LAYOUT_HASH,
 
-            // fields
-            offsetof(T, lighting_disable), sizeof(lighting_disable), offsetof(T, program_hash),
-            sizeof(program_hash), offsetof(T, swizzle_hash), sizeof(swizzle_hash),
-            offsetof(T, main_offset), sizeof(main_offset),
+                                   // fields
+                                   FIELD_HASH(lighting_disable), FIELD_HASH(program_hash),
+                                   FIELD_HASH(swizzle_hash), FIELD_HASH(main_offset),
+                                   FIELD_HASH(num_outputs), FIELD_HASH(output_map),
+                                   FIELD_HASH(used_input_vertex_attributes),
+                                   FIELD_HASH(input_vertex_attributes), FIELD_HASH(gs_state),
 
-            offsetof(T, num_outputs), sizeof(num_outputs),
-
-            offsetof(T, output_map), sizeof(output_map),
-
-            offsetof(T, used_input_vertex_attributes), sizeof(used_input_vertex_attributes),
-            offsetof(T, input_vertex_attributes), sizeof(input_vertex_attributes),
-
-            offsetof(T, gs_state), sizeof(gs_state),
-
-            // nested layout
-            PicaGSConfigState::StructHash());
+                                   // nested layout
+                                   PicaGSConfigState::StructHash());
     }
 };
 
@@ -201,3 +193,6 @@ struct hash<Pica::Shader::Generator::PicaFixedGSConfig> {
     }
 };
 } // namespace std
+
+#undef FIELD_HASH
+#undef LAYOUT_HASH

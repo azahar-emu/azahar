@@ -95,6 +95,7 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
           GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)} {
     scheduler.RegisterOnDispatch([this] { update_queue.Flush(); });
     profile = Pica::Shader::Profile{
+        .enable_accurate_mul = false,
         .has_separable_shaders = true,
         .has_clip_planes = instance.IsShaderClipDistanceSupported(),
         .has_geometry_shader = instance.UseGeometryShaders(),
@@ -104,8 +105,26 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
         .has_blend_minmax_factor = false,
         .has_minus_one_to_one_range = false,
         .has_logic_op = !instance.NeedsLogicOpEmulation(),
+        .vk_disable_spirv_optimizer = Settings::values.disable_spirv_optimizer.GetValue(),
+        .vk_use_spirv_generator = Settings::values.spirv_shader_gen.GetValue(),
         .is_vulkan = true,
     };
+
+    const auto& traits = instance.GetAllTraits();
+    size_t i = 0;
+    for (const auto& it : traits) {
+        profile.vk_format_traits[i].transfer_support = it.transfer_support;
+        profile.vk_format_traits[i].blit_support = it.blit_support;
+        profile.vk_format_traits[i].attachment_support = it.attachment_support;
+        profile.vk_format_traits[i].storage_support = it.storage_support;
+        profile.vk_format_traits[i].needs_conversion = it.needs_conversion;
+        profile.vk_format_traits[i].needs_emulation = it.needs_emulation;
+        profile.vk_format_traits[i].usage_flags = static_cast<u32>(it.usage);
+        profile.vk_format_traits[i].aspect_flags = static_cast<u32>(it.aspect);
+        profile.vk_format_traits[i].native_format = static_cast<u32>(it.native);
+        ++i;
+    }
+
     BuildLayout();
 }
 
@@ -209,8 +228,12 @@ void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
 
 void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
-    disk_cache = std::make_unique<ShaderDiskCache>(*this, accurate_mul);
-    disk_cache->Init(GetProgramID(), stop_loading, callback);
+
+    disk_caches.clear();
+    curr_disk_cache =
+        disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, GetProgramID()));
+
+    curr_disk_cache->Init(stop_loading, callback);
 }
 
 void PipelineCache::SaveDiskCache() {
@@ -398,7 +421,7 @@ ExtraVSConfig PipelineCache::CalcExtraConfig(const PicaVSConfig& config) {
 
     res.use_clip_planes = instance.IsShaderClipDistanceSupported();
     res.use_geometry_shader = use_geometry_shader;
-    res.sanitize_mul = accurate_mul;
+    res.sanitize_mul = profile.enable_accurate_mul;
     res.separable_shader = true;
     res.load_flags.fill(AttribLoadFlags::Float);
 
@@ -425,7 +448,7 @@ bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
                                                 Pica::ShaderSetup& setup,
                                                 const VertexLayout& layout) {
 
-    auto res = disk_cache->UseProgrammableVertexShader(regs, setup, layout);
+    auto res = curr_disk_cache->UseProgrammableVertexShader(regs, setup, layout);
 
     if (res.has_value()) {
         current_shaders[ProgramType::VS] = (*res).second;
@@ -448,8 +471,9 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     }
 
     const PicaFixedGSConfig gs_config{regs};
+    const auto gs_config_hash = gs_config.Hash();
 
-    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config.Hash(), instance);
+    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config_hash, instance);
     auto& shader = it->second;
 
     if (new_shader) {
@@ -466,7 +490,7 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
     }
 
     current_shaders[ProgramType::GS] = &shader;
-    shader_hashes[ProgramType::GS] = gs_config.Hash();
+    shader_hashes[ProgramType::GS] = gs_config_hash;
 
     return true;
 }
@@ -478,27 +502,13 @@ void PipelineCache::UseTrivialGeometryShader() {
 
 void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                                       const Pica::Shader::UserConfig& user) {
-    const FSConfig fs_config{regs, user, profile};
-    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config.Hash(), instance);
-    auto& shader = it->second;
 
-    if (new_shader) {
-        workers.QueueWork([fs_config, this, &shader]() {
-            const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-            if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
-                const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
-                shader.module = CompileSPV(code, instance.GetDevice());
-            } else {
-                const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
-                shader.module = CompileSPV(CompileGLSL(code, vk::ShaderStageFlagBits::eFragment),
-                                           instance.GetDevice());
-            }
-            shader.MarkDone();
-        });
+    auto res = curr_disk_cache->UseFragmentShader(regs, user);
+
+    if (res.has_value()) {
+        current_shaders[ProgramType::FS] = (*res).second;
+        shader_hashes[ProgramType::FS] = (*res).first;
     }
-
-    current_shaders[ProgramType::FS] = &shader;
-    shader_hashes[ProgramType::FS] = fs_config.Hash();
 }
 
 bool PipelineCache::IsCacheValid(std::span<const u8> data) const {
@@ -600,10 +610,76 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
     // Update program ID and load the new pipeline cache
     SetProgramID(title_id);
     LoadPipelineDiskCache(stop_loading, nullptr);
-    LoadDiskCache(stop_loading, callback);
+    SwitchDiskCache(title_id, stop_loading, callback);
 
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
+}
+
+void PipelineCache::SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
+                                    const VideoCore::DiskResourceLoadCallback& callback) {
+    // NOTE: curr_disk_cache can be null if emulation restarted without calling
+    // LoadDefaultDiskResources
+
+    // Check if the current cache is for the specified TID.
+    if (curr_disk_cache && curr_disk_cache->GetProgramID() == title_id) {
+        return;
+    }
+
+    // Search for an existing manager
+    size_t new_pos = 0;
+    for (new_pos = 0; new_pos < disk_caches.size(); new_pos++) {
+        if (disk_caches[new_pos]->GetProgramID() == title_id) {
+            break;
+        }
+    }
+    // Manager does not exist, create it and append to the end
+    if (new_pos >= disk_caches.size()) {
+        new_pos = disk_caches.size();
+        auto& new_manager =
+            disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, title_id));
+
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+        }
+
+        new_manager->Init(stop_loading, callback);
+
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+        }
+    }
+
+    auto is_applet = [](u64 tid) {
+        constexpr u32 APPLET_TID_HIGH = 0x00040030;
+        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
+    };
+
+    bool prev_applet = curr_disk_cache ? is_applet(curr_disk_cache->GetProgramID()) : false;
+    bool new_applet = is_applet(disk_caches[new_pos]->GetProgramID());
+    curr_disk_cache = disk_caches[new_pos];
+
+    if (prev_applet) {
+        // If we came from an applet, clean up all other applets
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache ||
+                !is_applet((*it)->GetProgramID())) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
+    }
+    if (!new_applet) {
+        // If we are going into a non-applet, clean up everything
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
     }
 }
 

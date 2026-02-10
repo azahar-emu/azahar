@@ -12,8 +12,10 @@
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
 #include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
+#include "video_core/shader/generator/glsl_fs_shader_gen.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 #include "video_core/shader/generator/shader_gen.h"
+#include "video_core/shader/generator/spv_fs_shader_gen.h"
 
 #define MALFORMED_DISK_CACHE                                                                       \
     do {                                                                                           \
@@ -25,11 +27,15 @@
 namespace Vulkan {
 
 using namespace Pica::Shader::Generator;
+using namespace Pica::Shader;
 
-void ShaderDiskCache::Init(u64 title_id, const std::atomic_bool& stop_loading,
+void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) {
-    if (!InitVSCache(title_id, stop_loading, callback)) {
-        RecreateVSCache(vs_cache);
+    if (!InitVSCache(stop_loading, callback)) {
+        RecreateCache(vs_cache, CacheFileType::VS_CACHE);
+    }
+    if (!InitFSCache(stop_loading, callback)) {
+        RecreateCache(fs_cache, CacheFileType::FS_CACHE);
     }
 }
 
@@ -95,6 +101,42 @@ std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseProgrammable
     }
 
     return std::make_pair(config_hash, shader);
+}
+
+std::optional<std::pair<size_t, Shader* const>> ShaderDiskCache::UseFragmentShader(
+    const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user) {
+
+    const FSConfig fs_config{regs};
+    const auto fs_config_hash = fs_config.Hash();
+    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config_hash, parent.instance);
+    auto& shader = it->second;
+
+    if (new_shader) {
+        parent.workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
+            std::vector<u32> spirv;
+            const bool use_spirv = parent.profile.vk_use_spirv_generator;
+            if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
+                spirv = SPIRV::GenerateFragmentShader(fs_config, parent.profile);
+                shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+            } else {
+                const std::string code =
+                    GLSL::GenerateFragmentShader(fs_config, user, parent.profile);
+                spirv = CompileGLSL(code, vk::ShaderStageFlagBits::eFragment);
+                shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+            }
+            shader.MarkDone();
+
+            if (user.IsCacheable()) {
+                // Only cache to disk if the user config is cacheable
+                AppendFSSPIRV(fs_cache, spirv, fs_config_hash);
+                FSConfigEntry entry{.version = FSConfigEntry::EXPECTED_VERSION,
+                                    .fs_config = fs_config};
+                AppendFSConfig(fs_cache, entry, fs_config_hash);
+            }
+        });
+    }
+
+    return std::make_pair(fs_config_hash, &shader);
 }
 
 ShaderDiskCache::SourceFileCacheVersionHash ShaderDiskCache::GetSourceFileCacheVersionHash() {
@@ -282,48 +324,54 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
     return false;
 }
 
-std::string ShaderDiskCache::GetVSDir() const {
-    return parent.GetVulkanDir() + DIR_SEP + "vertex";
-}
-
-std::string ShaderDiskCache::GetFSDir() const {
-    return parent.GetVulkanDir() + DIR_SEP + "fragment";
+std::string ShaderDiskCache::GetTransferableDir() const {
+    return parent.GetVulkanDir() + DIR_SEP + "transferable";
 }
 
 std::string ShaderDiskCache::GetVSFile(u64 title_id, bool is_temp) const {
-    return GetVSDir() + DIR_SEP + fmt::format("{:016X}", title_id) + (is_temp ? "_temp" : "") +
-           ".vkch";
+    return GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_vs", title_id) +
+           (is_temp ? "_temp" : "") + ".vkch";
 }
 
-bool ShaderDiskCache::RecreateVSCache(CacheFile& file) {
+std::string ShaderDiskCache::GetFSFile(u64 title_id, bool is_temp) const {
+    return GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_fs", title_id) +
+           (is_temp ? "_temp" : "") + ".vkch";
+}
+
+bool ShaderDiskCache::RecreateCache(CacheFile& file, CacheFileType type) {
     file.SwitchMode(CacheFile::CacheOpMode::RECREATE);
 
     std::array<char, 0x20> build_name{};
     size_t name_len = std::strlen(Common::g_build_fullname);
     memcpy(build_name.data(), Common::g_build_fullname, std::min(name_len, build_name.size()));
 
+    auto get_hash = [](CacheFileType type) {
+        switch (type) {
+        case CacheFileType::VS_CACHE:
+            return PicaVSConfigState::StructHash();
+        case CacheFileType::FS_CACHE:
+            return FSConfig::StructHash();
+        default:
+            UNREACHABLE();
+            return u64{};
+        };
+    };
+
     FileInfoEntry entry{
         .cache_magic = FileInfoEntry::CACHE_FILE_MAGIC,
         .file_version = FileInfoEntry::CACHE_FILE_VERSION,
-        .config_struct_hash = PicaVSConfigState::StructHash(),
-        .file_type = CacheFileType::VS_CACHE,
+        .config_struct_hash = get_hash(type),
+        .file_type = type,
         .source_hash = GetSourceFileCacheVersionHash(),
         .build_name = build_name,
-        .vs_settings = {.accurate_mul = accurate_mul,
-                        .disable_spirv_optimize =
-                            Settings::values.disable_spirv_optimizer.GetValue(),
-                        .clip_distance_supported = parent.instance.IsShaderClipDistanceSupported(),
-                        .use_geometry_shaders = parent.instance.UseGeometryShaders(),
-                        .fragment_barycentric_supported =
-                            parent.instance.IsFragmentShaderBarycentricSupported(),
-                        .traits = parent.instance.GetAllTraits()},
+        .profile = parent.profile,
     };
 
     file.Append(CacheEntryType::FILE_INFO, 0, entry, false);
     return true;
 }
 
-bool ShaderDiskCache::InitVSCache(u64 title_id, const std::atomic_bool& stop_loading,
+bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                                   const VideoCore::DiskResourceLoadCallback& callback) {
     std::vector<size_t> pending_configs;
     std::unordered_map<size_t, size_t> pending_programs;
@@ -344,7 +392,7 @@ bool ShaderDiskCache::InitVSCache(u64 title_id, const std::atomic_bool& stop_loa
     vs_cache.SetFilePath(GetVSFile(title_id, false));
 
     if (!vs_cache.SwitchMode(CacheFile::CacheOpMode::READ)) {
-        LOG_INFO(Render_Vulkan, "Missing shader disk cache for title {:016X}", title_id);
+        LOG_INFO(Render_Vulkan, "Missing VS disk shader cache for title {:016X}", title_id);
         cleanup_on_error();
         return false;
     }
@@ -374,25 +422,14 @@ bool ShaderDiskCache::InitVSCache(u64 title_id, const std::atomic_bool& stop_loa
         regenerate_file = std::make_unique<CacheFile>(GetVSFile(title_id, true));
     }
 
-    {
-        const FileInfoEntry::VSProgramDriverUserSettings settings{
-            .accurate_mul = accurate_mul,
-            .disable_spirv_optimize = Settings::values.disable_spirv_optimizer.GetValue(),
-            .clip_distance_supported = parent.instance.IsShaderClipDistanceSupported(),
-            .use_geometry_shaders = parent.instance.UseGeometryShaders(),
-            .fragment_barycentric_supported =
-                parent.instance.IsFragmentShaderBarycentricSupported(),
-            .traits = parent.instance.GetAllTraits()};
-
-        if (file_info->vs_settings != settings && !regenerate_file) {
-            LOG_INFO(Render_Vulkan,
-                     "Cache has driver and user settings mismatch, cache needs regeneration.");
-            regenerate_file = std::make_unique<CacheFile>(GetVSFile(title_id, true));
-        }
+    if (file_info->profile != parent.profile && !regenerate_file) {
+        LOG_INFO(Render_Vulkan,
+                 "Cache has driver and user settings mismatch, cache needs regeneration.");
+        regenerate_file = std::make_unique<CacheFile>(GetVSFile(title_id, true));
     }
 
     if (regenerate_file) {
-        RecreateVSCache(*regenerate_file);
+        RecreateCache(*regenerate_file, CacheFileType::VS_CACHE);
     }
 
     CacheEntry::CacheEntryHeader curr_header = curr.Header();
@@ -671,6 +708,215 @@ bool ShaderDiskCache::InitVSCache(u64 title_id, const std::atomic_bool& stop_loa
     return true;
 }
 
+bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+    std::vector<std::pair<size_t, size_t>> pending_configs;
+    std::unique_ptr<CacheFile> regenerate_file;
+
+    auto cleanup_on_error = [&]() {
+        fragment_shaders.clear();
+        if (regenerate_file) {
+            regenerate_file->SwitchMode(CacheFile::CacheOpMode::DELETE);
+        }
+    };
+
+    LOG_INFO(Render_Vulkan, "Loading FS disk shader cache for title {:016X}", title_id);
+
+    fs_cache.SetFilePath(GetFSFile(title_id, false));
+
+    if (!fs_cache.SwitchMode(CacheFile::CacheOpMode::READ)) {
+        LOG_INFO(Render_Vulkan, "Missing FS disk shader cache for title {:016X}", title_id);
+        cleanup_on_error();
+        return false;
+    }
+
+    u32 tot_entries = fs_cache.GetTotalEntries();
+    auto curr = fs_cache.ReadFirst();
+    if (!curr.Valid() || curr.Type() != CacheEntryType::FILE_INFO) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    const FileInfoEntry* file_info = curr.Payload<FileInfoEntry>();
+    if (!file_info || file_info->cache_magic != FileInfoEntry::CACHE_FILE_MAGIC ||
+        file_info->file_version != FileInfoEntry::CACHE_FILE_VERSION ||
+        file_info->file_type != CacheFileType::FS_CACHE) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    if (file_info->config_struct_hash != FSConfig::StructHash()) {
+        LOG_ERROR(Render_Vulkan, "Cache was created for a different FSConfig, resetting...");
+        cleanup_on_error();
+        return false;
+    }
+
+    if (file_info->source_hash != GetSourceFileCacheVersionHash()) {
+        LOG_INFO(Render_Vulkan, "Cache contains old fragment program, cache needs regeneration.");
+        regenerate_file = std::make_unique<CacheFile>(GetFSFile(title_id, true));
+    }
+
+    if (file_info->profile != parent.profile && !regenerate_file) {
+        LOG_INFO(Render_Vulkan,
+                 "Cache has driver and user settings mismatch, cache needs regeneration.");
+        regenerate_file = std::make_unique<CacheFile>(GetFSFile(title_id, true));
+    }
+
+    if (regenerate_file) {
+        RecreateCache(*regenerate_file, CacheFileType::FS_CACHE);
+    }
+
+    CacheEntry::CacheEntryHeader curr_header = curr.Header();
+    size_t curr_offset = curr.Position();
+
+    size_t current_callback_index = 0;
+    size_t tot_callback_index = tot_entries - 1;
+
+    // Scan the entire file first, while keeping track of configs.
+    // SPIRV can be compiled directly, if a config has a missing
+    // SPIRV entry it can be regenerated later.
+    for (int i = 1; i < tot_entries; i++) {
+
+        std::tie(curr_offset, curr_header) = fs_cache.ReadNextHeader(curr_header, curr_offset);
+
+        if (!curr_header.Valid()) {
+            MALFORMED_DISK_CACHE;
+        }
+
+        LOG_DEBUG(Render_Vulkan, "Processing ID: {:016X} (type {})", curr_header.Id(),
+                  curr_header.Type());
+
+        if (curr_header.Type() == CacheEntryType::FS_CONFIG) {
+            pending_configs.push_back({curr_header.Id(), curr_offset});
+        } else if (curr_header.Type() == CacheEntryType::FS_SPIRV) {
+
+            // Only use SPIRV entries if we are not regenerating the cache, as the driver or
+            // user settings do not match, which could lead to different SPIRV.
+            // These will be regenerated from the cached config later.
+            if (!regenerate_file) {
+                LOG_DEBUG(Render_Vulkan, "    processing SPIRV.");
+
+                curr = fs_cache.ReadAt(curr_offset);
+                if (!curr.Valid() || curr.Type() != CacheEntryType::FS_SPIRV) {
+                    MALFORMED_DISK_CACHE;
+                }
+
+                const u8* spirv_data = curr.Data().data();
+                const size_t spirv_size = curr.Data().size();
+
+                auto [iter_spirv, new_program] =
+                    fragment_shaders.try_emplace(curr.Id(), parent.instance);
+                if (new_program) {
+                    LOG_DEBUG(Render_Vulkan, "    compiling SPIRV.");
+
+                    const auto spirv = std::span<const u32>(
+                        reinterpret_cast<const u32*>(spirv_data), spirv_size / sizeof(u32));
+
+                    iter_spirv->second.module = CompileSPV(spirv, parent.instance.GetDevice());
+                    iter_spirv->second.MarkDone();
+
+                    if (!iter_spirv->second.module) {
+                        // Compilation failed for some reason, remove from cache to let it
+                        // be regenerated at runtime or during config processing.
+                        LOG_ERROR(Render_Vulkan, "Unexpected program compilation failure");
+                        fragment_shaders.erase(iter_spirv);
+                    }
+                }
+            }
+
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                         tot_callback_index, "Fragment Shader");
+            }
+        } else {
+            MALFORMED_DISK_CACHE;
+        }
+    }
+
+    // Once we have all the shader instances created from SPIRV, we can link them to the FS configs.
+    LOG_DEBUG(Render_Vulkan, "Linking with config entries.");
+
+    for (auto& offset : pending_configs) {
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                     tot_callback_index, "Fragment Shader");
+        }
+
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+
+        if (fragment_shaders.find(offset.first) != fragment_shaders.end()) {
+            // SPIRV of config was already compiled, no need to regenerate
+            // it from the cache. This can only happen if we are not regenerating
+            // the cache.
+            LOG_DEBUG(Render_Vulkan, "    linked with existing SPIRV.");
+            continue;
+        }
+
+        // Cached SPIRV not found, need to recompile. Should only happen if
+        // we are regenerating the cache.
+
+        curr = fs_cache.ReadAt(offset.second);
+        const FSConfigEntry* entry;
+
+        if (!curr.Valid() || curr.Type() != CacheEntryType::FS_CONFIG ||
+            !(entry = curr.Payload<FSConfigEntry>()) ||
+            entry->version != FSConfigEntry::EXPECTED_VERSION) {
+            MALFORMED_DISK_CACHE;
+        }
+
+        const auto fs_config_hash = entry->fs_config.Hash();
+        if (curr.Id() != fs_config_hash) {
+            LOG_ERROR(Render_Vulkan, "Unexpected FSConfig hash mismatch");
+            continue;
+        }
+
+        const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config_hash, parent.instance);
+        auto& shader = it->second;
+
+        std::vector<u32> spirv;
+        if (parent.profile.vk_use_spirv_generator &&
+            !entry->fs_config.UsesSpirvIncompatibleConfig()) {
+            // Use SPIRV generator directly
+
+            spirv = SPIRV::GenerateFragmentShader(entry->fs_config, parent.profile);
+            shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+        } else {
+            // Use GLSL generator then convert to SPIRV
+
+            UserConfig user{};
+            const std::string code_glsl =
+                GLSL::GenerateFragmentShader(entry->fs_config, user, parent.profile);
+
+            if (code_glsl.empty()) {
+                LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
+                fragment_shaders.erase(it);
+                continue;
+            }
+
+            spirv = CompileGLSL(code_glsl, vk::ShaderStageFlagBits::eFragment);
+            shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+        }
+        shader.MarkDone();
+
+        if (regenerate_file) {
+            // Append the config and SPIRV to the new file.
+            AppendFSSPIRV(*regenerate_file, spirv, fs_config_hash);
+            AppendFSConfig(*regenerate_file, *entry, fs_config_hash);
+        }
+
+        LOG_DEBUG(Render_Vulkan, "    linked with new SPIRV.");
+    }
+
+    if (regenerate_file) {
+        // If we are regenerating, replace the old file with the new one.
+        fs_cache.SwitchMode(CacheFile::CacheOpMode::DELETE);
+        regenerate_file.reset();
+        FileUtil::Rename(GetFSFile(title_id, true), GetFSFile(title_id, false));
+    }
+
+    // Switch to append mode to receiving new entries.
+    fs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
+    return true;
+}
+
 bool ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
                                             const Pica::Shader::Generator::PicaVSConfig& config,
                                             const Pica::ShaderSetup& setup, u64 config_id,
@@ -686,14 +932,14 @@ bool ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
     bool new_entry = known_vertex_programs.emplace(entry.program_entry_id).second;
     bool prog_res = true;
     if (new_entry) {
-        VSProgramEntry prog_entry;
-        prog_entry.version = VSProgramEntry::EXPECTED_VERSION;
-        prog_entry.program_len = setup.GetBiggestProgramSize();
-        prog_entry.program_code = setup.GetProgramCode();
-        prog_entry.swizzle_len = setup.GetBiggestSwizzleSize();
-        prog_entry.swizzle_code = setup.GetSwizzleData();
+        std::unique_ptr<VSProgramEntry> prog_entry = std::make_unique<VSProgramEntry>();
+        prog_entry->version = VSProgramEntry::EXPECTED_VERSION;
+        prog_entry->program_len = setup.GetBiggestProgramSize();
+        prog_entry->program_code = setup.GetProgramCode();
+        prog_entry->swizzle_len = setup.GetBiggestSwizzleSize();
+        prog_entry->swizzle_code = setup.GetSwizzleData();
 
-        prog_res = AppendVSProgram(file, prog_entry, entry.program_entry_id);
+        prog_res = AppendVSProgram(file, *prog_entry, entry.program_entry_id);
     }
 
     return AppendVSConfig(file, entry, config_id) && prog_res;
@@ -710,6 +956,16 @@ bool ShaderDiskCache::AppendVSConfig(CacheFile& file, const VSConfigEntry& entry
 
 bool ShaderDiskCache::AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
     return file.Append(CacheEntryType::VS_SPIRV, program_id,
+                       {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
+                       true);
+}
+
+bool ShaderDiskCache::AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id) {
+    return file.Append(CacheEntryType::FS_CONFIG, config_id, entry, true);
+}
+
+bool ShaderDiskCache::AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
+    return file.Append(CacheEntryType::FS_SPIRV, program_id,
                        {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
                        true);
 }

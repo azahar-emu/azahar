@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma once
+
 #include "common/thread_worker.h"
 #include "video_core/pica/regs_pipeline.h"
 #include "video_core/pica/regs_rasterizer.h"
