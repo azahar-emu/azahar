@@ -112,19 +112,12 @@ public:
     }
 
     void SetSDLJoystick(SDL_Joystick* joystick, SDL_GameController* controller) {
-        if (sdl_controller) {
-            sdl_controller.reset(controller);
-        } else {
-            sdl_joystick.reset(joystick);
-            sdl_controller.reset(controller);
-        }
+        sdl_joystick.reset(joystick);
+        sdl_controller.reset(controller);
     }
 
 private:
     struct State {
-        std::unordered_map<int, bool> buttons;
-        std::unordered_map<int, Sint16> axes;
-        std::unordered_map<int, Uint8> hats;
         Common::Vec3<float> accel;
         Common::Vec3<float> gyro;
     } state;

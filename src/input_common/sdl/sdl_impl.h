@@ -52,7 +52,7 @@ public:
 
 private:
     void InitJoystick(int joystick_index);
-    void CloseJoystick(SDL_Joystick* sdl_joystick);
+    void CloseJoystick(SDL_JoystickID instance_id);
 
     /// Needs to be called before SDL_QuitSubSystem.
     void CloseJoysticks();

@@ -117,11 +117,15 @@ static int SDLEventWatcher(void* userdata, SDL_Event* event) {
     case SDL_JOYBUTTONDOWN:
     case SDL_JOYBUTTONUP:
     case SDL_JOYHATMOTION:
-    case SDL_JOYDEVICEADDED:
-    case SDL_JOYDEVICEREMOVED:
-        // if handling as a game controller, skip joystick events
-        auto joystick = sdl_state->GetSDLJoystickBySDLID(event->jaxis.which);
+    case SDL_JOYDEVICEREMOVED: {
+        auto joystick = sdl_state->GetSDLJoystickBySDLID(event->jdevice.which);
         if (joystick && joystick->GetSDLGameController()) {
+            return 0;
+        }
+        break;
+    }
+    case SDL_JOYDEVICEADDED:
+        if (SDL_IsGameController(event->jdevice.which)) {
             return 0;
         }
         break;
@@ -219,30 +223,22 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& g
 }
 
 /**
- * Check how many identical joysticks (by guid) were connected before the one with sdl_id and so tie
- * it to a SDLJoystick with the same guid and that port
+ * Find the most up-to-date SDLJoystick object from an instance id
  */
 std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_id) {
-    auto sdl_joystick = SDL_JoystickFromInstanceID(sdl_id);
-    const std::string guid = GetGUID(sdl_joystick);
-
+    // rewriting this method, the old version was more fragile
     std::lock_guard lock{joystick_map_mutex};
-    auto map_it = joystick_map.find(guid);
 
-    if (map_it == joystick_map.end()) {
-        return nullptr;
+    for (auto& [guid, joystick_list] : joystick_map) {
+        for (auto& joystick : joystick_list) {
+            SDL_Joystick* sdl_joy = joystick->GetSDLJoystick();
+            if (sdl_joy && SDL_JoystickInstanceID(sdl_joy) == sdl_id) {
+                return joystick;
+            }
+        }
     }
 
-    const auto vec_it = std::find_if(map_it->second.begin(), map_it->second.end(),
-                                     [&sdl_joystick](const auto& joystick) {
-                                         return joystick->GetSDLJoystick() == sdl_joystick;
-                                     });
-
-    if (vec_it == map_it->second.end()) {
-        return nullptr;
-    }
-
-    return *vec_it;
+    return nullptr;
 }
 
 Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
@@ -412,24 +408,17 @@ void SDLState::InitJoystick(int joystick_index) {
     joystick_guid_list.emplace_back(std::move(joystick));
 }
 
-void SDLState::CloseJoystick(SDL_Joystick* sdl_joystick) {
-    const auto guid = GetGUID(sdl_joystick);
-
-    std::scoped_lock lock{joystick_map_mutex};
-    // This call to guid is safe since the joystick is guaranteed to be in the map
-    const auto& joystick_guid_list = joystick_map[guid];
-    const auto joystick_it = std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
-                                          [&sdl_joystick](const auto& joystick) {
-                                              return joystick->GetSDLJoystick() == sdl_joystick;
-                                          });
-
-    if (joystick_it != joystick_guid_list.end()) {
-        (*joystick_it)->SetSDLJoystick(nullptr, nullptr);
+void SDLState::CloseJoystick(SDL_JoystickID instance_id) {
+    auto joystick = GetSDLJoystickBySDLID(instance_id);
+    if (joystick) {
+        LOG_DEBUG(Input, "Closing joystick with instance ID {}", instance_id);
+        joystick->SetSDLJoystick(nullptr, nullptr);
+    } else {
+        LOG_DEBUG(Input, "Joystick with instance ID {} already closed or not found", instance_id);
     }
 }
 
 void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
-    // removed button/axis handling here, polling directly instead
     switch (event.type) {
 
 #if SDL_VERSION_ATLEAST(2, 0, 14)
@@ -451,10 +440,11 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
         break;
     }
 #endif
+    // this event will get called twice
     case SDL_CONTROLLERDEVICEREMOVED:
     case SDL_JOYDEVICEREMOVED:
         LOG_DEBUG(Input, "Device removed with Instance_ID {}", event.jdevice.which);
-        CloseJoystick(SDL_JoystickFromInstanceID(event.jdevice.which));
+        CloseJoystick(event.jdevice.which);
         break;
 
     case SDL_CONTROLLERDEVICEADDED:
