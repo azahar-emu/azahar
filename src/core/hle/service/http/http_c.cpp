@@ -1773,9 +1773,8 @@ void HTTP_C::SetClientCertContext(Kernel::HLERequestContext& ctx) {
 void HTTP_C::GetSSLError(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const u32 context_handle = rp.Pop<u32>();
-    const u32 unk = rp.Pop<u32>();
 
-    LOG_WARNING(Service_HTTP, "(STUBBED) called, context_handle={}, unk={}", context_handle, unk);
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, context_handle={}", context_handle);
 
     [[maybe_unused]] Context& http_context = GetContext(context_handle);
 

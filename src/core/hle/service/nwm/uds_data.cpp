@@ -290,7 +290,7 @@ std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, ConnectionType conn_
                                         const NodeInfo& node_info) {
     EAPoLStartPacket eapol_start{};
     eapol_start.association_id = association_id;
-    eapol_start.conn_type = conn_type;
+    eapol_start.connection_type = conn_type;
     eapol_start.node.friend_code_seed = node_info.friend_code_seed;
 
     std::copy(node_info.username.begin(), node_info.username.end(),
