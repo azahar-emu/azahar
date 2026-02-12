@@ -5,14 +5,17 @@
 #pragma once
 
 #include "core/hle/service/service.h"
+#include "dlp_base.h"
 
 namespace Service::DLP {
 
-class DLP_SRVR final : public ServiceFramework<DLP_SRVR> {
+class DLP_SRVR final : public ServiceFramework<DLP_SRVR>, public DLP_Base {
 public:
     DLP_SRVR();
     ~DLP_SRVR() = default;
 
+    virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
+    virtual bool IsHost() {return true;}
 private:
     void IsChild(Kernel::HLERequestContext& ctx);
 

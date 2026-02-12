@@ -5,16 +5,34 @@
 #pragma once
 
 #include "core/hle/service/service.h"
+#include "dlp_clt_base.h"
 
 namespace Service::DLP {
 
-class DLP_CLNT final : public ServiceFramework<DLP_CLNT> {
+class DLP_CLNT final : public ServiceFramework<DLP_CLNT>, public DLP_Clt_Base {
 public:
     DLP_CLNT();
-    ~DLP_CLNT() = default;
-
+    virtual ~DLP_CLNT() = default;
+    
+    virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
 private:
     SERVICE_SERIALIZATION_SIMPLE
+    
+    virtual bool IsFKCL() {return false;}
+    
+    bool is_preparing_for_update = false;
+    bool is_updating = false;
+    Network::MacAddress mac_addr_update;
+    
+    u32 ClientNeedsDup();
+    
+    void Initialize(Kernel::HLERequestContext& ctx);
+    void Finalize(Kernel::HLERequestContext& ctx);
+    void GetCupVersion(Kernel::HLERequestContext& ctx);
+    void StartTitleDownload(Kernel::HLERequestContext& ctx);
+    void PrepareForSystemDownload(Kernel::HLERequestContext& ctx);
+    void StartSystemDownload(Kernel::HLERequestContext& ctx);
+    void GetDupAvailability(Kernel::HLERequestContext& ctx);
 };
 
 } // namespace Service::DLP

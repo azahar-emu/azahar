@@ -31,6 +31,12 @@ class Event;
 class SharedMemory;
 } // namespace Kernel
 
+namespace Service::DLP {
+class DLP_Base;
+class DLP_Clt_Base;
+class DLP_SRVR;
+} // namespace Service::DLP
+
 // Local-WLAN service
 
 namespace Service::NWM {
@@ -430,6 +436,16 @@ private:
     void EjectClient(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::EjectSpectators Disconnects all spectators and prevents them from rejoining.
+     *  Inputs:
+     *      0 : Command header
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void EjectSpectators(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::DecryptBeaconData service function.
      * Decrypts the encrypted data tags contained in the 802.11 beacons.
      *  Inputs:
@@ -452,11 +468,24 @@ private:
         u32 sharedmem_size, const NodeInfo& node, u16 version,
         std::shared_ptr<Kernel::SharedMemory> sharedmem);
 
+    void ShutdownHLE();
+    int PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_buff_size_aligned, std::vector<u8>& output_buffer, void *secure_data_out);
+    ConnectionStatus GetConnectionStatusHLE();
+    int DisconnectNetworkHLE();
+    std::pair<int, std::shared_ptr<Kernel::Event>> BindHLE(u32 bind_node_id, u32 recv_buffer_size, u8 data_channel, u16 network_node_id);
+    void UnbindHLE(u32 bind_node_id);
+    std::unique_ptr<NodeInfo> GetNodeInformationHLE(u16 network_node_id);
+    int SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags, std::vector<u8> input_buffer);
+    Result UpdateNetworkAttributeHLE(u16 bitmask, u8 flag);
+    
     Result BeginHostingNetwork(std::span<const u8> network_info_buffer, std::vector<u8> passphrase);
 
     void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
                           std::span<const u8> network_info_buffer, u8 connection_type,
                           std::vector<u8> passphrase);
+
+    void ConnectToNetworkHLE(NetworkInfo net_info,
+                             u8 connection_type, std::vector<u8> passphrase);
 
     void BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late);
 
@@ -576,7 +605,7 @@ private:
 
     // Mutex to synchronize access to the connection status between the emulation thread and the
     // network thread.
-    std::mutex connection_status_mutex;
+    std::recursive_mutex connection_status_mutex;
 
     std::shared_ptr<Kernel::Event> connection_event;
 
@@ -590,6 +619,9 @@ private:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
     friend class boost::serialization::access;
+    friend class Service::DLP::DLP_Base;
+    friend class Service::DLP::DLP_Clt_Base;
+    friend class Service::DLP::DLP_SRVR;
 };
 
 } // namespace Service::NWM
