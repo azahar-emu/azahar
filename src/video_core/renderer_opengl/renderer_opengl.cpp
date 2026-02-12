@@ -797,6 +797,12 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
                                top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
     }
+    default: {
+        const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
+        DrawSingleScreen(screen_infos[eye], top_screen_left, top_screen_top, top_screen_width,
+                         top_screen_height, orientation);
+        break;
+    }
     }
 }
 
@@ -857,6 +863,11 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreenStereo(screen_infos[2], screen_infos[2], bottom_screen_left,
                                bottom_screen_top, bottom_screen_width, bottom_screen_height,
                                orientation);
+        break;
+    }
+    default: {
+        DrawSingleScreen(screen_infos[2], bottom_screen_left, bottom_screen_top,
+                         bottom_screen_width, bottom_screen_height, orientation);
         break;
     }
     }

@@ -89,7 +89,8 @@ enum class StereoMode(val int: Int) {
     ANAGLYPH(3),
     INTERLACED(4),
     REVERSE_INTERLACED (5),
-    CARDBOARD_VR (6);
+    CARDBOARD_VR (6),
+    WIGGLEGRAM(7);
 
     companion object {
         fun from(int: Int): StereoMode {

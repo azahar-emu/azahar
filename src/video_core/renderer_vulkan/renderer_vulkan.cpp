@@ -817,6 +817,12 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
                                top_screen_width, top_screen_height, orientation);
         break;
     }
+    default: {
+        const int eye = static_cast<int>(Settings::values.mono_render_option.GetValue());
+        DrawSingleScreen(eye, top_screen_left, top_screen_top, top_screen_width, top_screen_height,
+                         orientation);
+        break;
+    }
     }
 }
 
@@ -874,6 +880,11 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     case Settings::StereoRenderOption::ReverseInterlaced: {
         DrawSingleScreenStereo(2, 2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
                                bottom_screen_height, orientation);
+        break;
+    }
+    default: {
+        DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
+                         bottom_screen_height, orientation);
         break;
     }
     }

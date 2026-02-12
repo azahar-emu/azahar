@@ -977,6 +977,20 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 SliderSetting(
+                    IntSetting.STEREOSCOPIC_3D_WIGGLE_INTERVAL,
+                    R.string.wiggle_interval,
+                    R.string.wiggle_interval_description,
+                    16,
+                    1000,
+                    " ms",
+                    IntSetting.STEREOSCOPIC_3D_WIGGLE_INTERVAL.key,
+                    IntSetting.STEREOSCOPIC_3D_WIGGLE_INTERVAL.defaultValue.toFloat(),
+                    isEnabled = IntSetting.STEREOSCOPIC_3D_MODE.int == StereoMode.WIGGLEGRAM.int
+                )
+            )
+
+            add(
+                SliderSetting(
                     IntSetting.STEREOSCOPIC_3D_DEPTH,
                     R.string.factor3d,
                     R.string.factor3d_description,

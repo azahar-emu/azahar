@@ -125,7 +125,9 @@ void ConfigureEnhancements::ApplyConfiguration() {
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {
         Settings::values.anaglyph_shader_name =
             ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
-    } else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Off) {
+    } else if (Settings::values.render_3d.GetValue() != Settings::StereoRenderOption::Interlaced &&
+               Settings::values.render_3d.GetValue() !=
+                   Settings::StereoRenderOption::ReverseInterlaced) {
         Settings::values.pp_shader_name =
             ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     }

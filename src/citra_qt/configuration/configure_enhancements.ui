@@ -256,6 +256,11 @@
           </item>
           <item>
            <property name="text">
+            <string>Cardboard VR</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>Wigglegram</string>
            </property>
           </item>
