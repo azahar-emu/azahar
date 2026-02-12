@@ -27,8 +27,6 @@
 #include "core/hle/service/dlp/dlp_base.h"
 #include "core/memory.h"
 
-#include <fstream>
-
 SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS)
 SERVICE_CONSTRUCT_IMPL(Service::NWM::NWM_UDS)
 
@@ -754,7 +752,7 @@ void NWM_UDS::InitializeDeprecated(Kernel::HLERequestContext& ctx) {
 
 ConnectionStatus NWM_UDS::GetConnectionStatusHLE() {
     std::scoped_lock lock(connection_status_mutex);
-    ConnectionStatus cs_out = connection_status;
+    ConnectionStatus& cs_out = connection_status;
 
     // Reset the bitmask of changed nodes after each call to this
     // function to prevent falsely informing games of outstanding
