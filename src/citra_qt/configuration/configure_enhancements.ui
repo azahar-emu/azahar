@@ -254,6 +254,11 @@
             <string>Reverse Interlaced</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Wigglegram</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
@@ -280,6 +285,33 @@
           </property>
           <property name="value">
            <number>0</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="wiggle_layout">
+        <item>
+         <widget class="QLabel" name="wiggle_interval_label">
+          <property name="text">
+           <string>Wiggle Interval (ms)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="wiggle_interval">
+          <property name="suffix">
+           <string> ms</string>
+          </property>
+          <property name="minimum">
+           <number>16</number>
+          </property>
+          <property name="maximum">
+           <number>1000</number>
+          </property>
+          <property name="value">
+           <number>100</number>
           </property>
          </widget>
         </item>

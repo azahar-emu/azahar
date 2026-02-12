@@ -76,7 +76,8 @@ enum class StereoRenderOption : u32 {
     Anaglyph = 3,
     Interlaced = 4,
     ReverseInterlaced = 5,
-    CardboardVR = 6
+    CardboardVR = 6,
+    Wigglegram = 7,
 };
 
 // Which eye to render when 3d is off. 800px wide mode could be added here in the future, when
@@ -576,6 +577,7 @@ struct Values {
 
     SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
     SwitchableSetting<u32> factor_3d{0, "factor_3d"};
+    SwitchableSetting<u32> wiggle_interval{100, "wiggle_interval"};
     SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
 
     SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None,

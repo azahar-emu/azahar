@@ -59,6 +59,7 @@ void ConfigureEnhancements::SetConfiguration() {
         static_cast<int>(Settings::values.render_3d.GetValue()));
     ui->swap_eyes_3d->setChecked(Settings::values.swap_eyes_3d.GetValue());
     ui->factor_3d->setValue(Settings::values.factor_3d.GetValue());
+    ui->wiggle_interval->setValue(Settings::values.wiggle_interval.GetValue());
     ui->mono_rendering_eye->setCurrentIndex(
         static_cast<int>(Settings::values.mono_render_option.GetValue()));
     updateShaders(Settings::values.render_3d.GetValue());
@@ -73,6 +74,10 @@ void ConfigureEnhancements::SetConfiguration() {
 void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
     ui->shader_combobox->clear();
     ui->shader_combobox->setEnabled(true);
+
+    const bool is_wiggle = stereo_option == Settings::StereoRenderOption::Wigglegram;
+    ui->wiggle_interval_label->setVisible(is_wiggle);
+    ui->wiggle_interval->setVisible(is_wiggle);
 
     if (stereo_option == Settings::StereoRenderOption::Interlaced ||
         stereo_option == Settings::StereoRenderOption::ReverseInterlaced) {
@@ -114,6 +119,7 @@ void ConfigureEnhancements::ApplyConfiguration() {
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.swap_eyes_3d = ui->swap_eyes_3d->isChecked();
     Settings::values.factor_3d = ui->factor_3d->value();
+    Settings::values.wiggle_interval = ui->wiggle_interval->value();
     Settings::values.mono_render_option =
         static_cast<Settings::MonoRenderOption>(ui->mono_rendering_eye->currentIndex());
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph) {

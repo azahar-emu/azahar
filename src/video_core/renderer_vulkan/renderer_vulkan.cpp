@@ -15,6 +15,8 @@
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
+#include <chrono>
+
 #include "video_core/host_shaders/vulkan_present_anaglyph_frag.h"
 #include "video_core/host_shaders/vulkan_present_frag.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag.h"
@@ -794,6 +796,20 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
             top_screen_top, top_screen_width, top_screen_height, orientation);
         break;
     }
+    case Settings::StereoRenderOption::Wigglegram: {
+        u32 interval = Settings::values.wiggle_interval.GetValue();
+        if (interval == 0) {
+            interval = 100;
+        }
+        const auto now = std::chrono::steady_clock::now();
+        const auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+        const bool show_right = (duration / interval) % 2;
+        const u32 screen_id = show_right ? rightside : leftside;
+        DrawSingleScreen(screen_id, top_screen_left, top_screen_top, top_screen_width,
+                         top_screen_height, orientation);
+        break;
+    }
     case Settings::StereoRenderOption::Anaglyph:
     case Settings::StereoRenderOption::Interlaced:
     case Settings::StereoRenderOption::ReverseInterlaced: {
@@ -819,7 +835,8 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
                                                : Layout::DisplayOrientation::Portrait;
 
     switch (layout.render_3d_mode) {
-    case Settings::StereoRenderOption::Off: {
+    case Settings::StereoRenderOption::Off:
+    case Settings::StereoRenderOption::Wigglegram: {
         DrawSingleScreen(2, bottom_screen_left, bottom_screen_top, bottom_screen_width,
                          bottom_screen_height, orientation);
 

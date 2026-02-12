@@ -108,6 +108,7 @@ void LogSettings() {
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
+    log_setting("Stereoscopy_WiggleInterval", values.wiggle_interval.GetValue());
     log_setting("Stereoscopy_Swap_Eyes", values.swap_eyes_3d.GetValue());
     log_setting("Stereoscopy_Render_3d_to_which_display",
                 values.render_3d_which_display.GetValue());
@@ -224,6 +225,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.render_3d.SetGlobal(true);
     values.swap_eyes_3d.SetGlobal(true);
     values.factor_3d.SetGlobal(true);
+    values.wiggle_interval.SetGlobal(true);
     values.filter_mode.SetGlobal(true);
     values.pp_shader_name.SetGlobal(true);
     values.anaglyph_shader_name.SetGlobal(true);
