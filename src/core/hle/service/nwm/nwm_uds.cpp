@@ -752,7 +752,7 @@ void NWM_UDS::InitializeDeprecated(Kernel::HLERequestContext& ctx) {
 
 ConnectionStatus NWM_UDS::GetConnectionStatusHLE() {
     std::scoped_lock lock(connection_status_mutex);
-    ConnectionStatus& cs_out = connection_status;
+    ConnectionStatus cs_out = connection_status;
 
     // Reset the bitmask of changed nodes after each call to this
     // function to prevent falsely informing games of outstanding

@@ -10,7 +10,8 @@
 namespace Service::DLP {
 
 using DLP_Username = std::array<u16_le, 10>;
-constexpr u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
+constexpr inline u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
+constexpr inline u32 content_fragment_size = 1440;
 
 struct DLPTitleInfo {
     u32 unique_id; // games look at this to make sure it's their title info
@@ -85,15 +86,23 @@ struct DLPPacketHeader {
 
 static_assert(sizeof(DLPPacketHeader) == 0x10);
 
+constexpr u32 broad_title_size_diff = 111360;
+
+#pragma pack(push, 2)
 struct DLPBroadcastPacket1 {
     DLPPacketHeader head;
     u64 child_title_id; // title id of the child being broadcasted
-	std::array<u8, 40> unk4; // unk raw data
+    u64 unk1;
+    u64 unk2;
+    u64 unk3;
+    u64 unk4; // all 0s
+    u64 size; // size minus broad_title_size_diff
 	std::array<u16, 64> title_short;
 	std::array<u16, 128> title_long;
 	std::array<u8, 0x138> icon_part;
 	u64 unk;
 };
+#pragma pack(pop)
 
 static_assert(sizeof(DLPBroadcastPacket1) == 768);
 
@@ -163,8 +172,9 @@ static_assert(sizeof(DLPClt_StartDistributionAck_NoContentNeeded) == 0x18);
 struct DLPClt_StartDistributionAck_ContentNeeded {
     DLPPacketHeader head;
     u32 unk1; // 0x1
-    u16 unk2; // 0x0
-    u16 unk3; // BE 0x20 unk important!
+    // TODO: combine unk2 & unk3 into a single dword
+    u16 unk2; // BE 0x20 unk important!
+    u16 unk3; // 0x0
     u32 unk4; // 0x1
     u32 unk5; // 0x0
     std::array<u8, 0x18> unk_body;
@@ -173,9 +183,14 @@ struct DLPClt_StartDistributionAck_ContentNeeded {
 static_assert(sizeof(DLPClt_StartDistributionAck_ContentNeeded) == 0x38);
 
 // perform distribution of content
+// packet_index is 1
 struct DLPSrvr_ContentDistributionFragment {
     DLPPacketHeader head;
-    std::array<u8, 1452> unk_body; // unk
+    u32 content_magic; // extra magic value
+    u32 unk1; // 0x1 BE
+    u16 frag_index; // BE % dlp_content_block_length
+    u16 frag_size; // 0x5 0xa2
+    std::array<u8, content_fragment_size> content_fragment;
 };
 
 static_assert(sizeof(DLPSrvr_ContentDistributionFragment) == 1468);
@@ -184,18 +199,22 @@ static_assert(sizeof(DLPSrvr_ContentDistributionFragment) == 1468);
 struct DLPSrvr_FinishContentUpload {
     DLPPacketHeader head;
     u32 unk1; // 0x1
-    u32 unk2; // 0x0
+    u32 seq_num; // BE starts at 0x0 and copies whatever number the ack gives it
 };
 
 static_assert(sizeof(DLPSrvr_FinishContentUpload) == 0x18);
 
 // it sends this to clients during distribution
+#pragma pack(push, 2)
 struct DLPClt_FinishContentUploadAck {
     DLPPacketHeader head;
     u32 unk1; // 0x1
-    u32 unk2; // 0x1
-    u32 unk3; // 0x0
+    u8 unk2; // 0x1
+    u8 unk3; // 0x1 if downloading conetnt
+    u32 seq_ack; // BE client increments this every ack
+    u16 unk4; // 0x0
 };
+#pragma pack(pop)
 
 static_assert(sizeof(DLPClt_FinishContentUploadAck) == 0x1C);
 
@@ -259,6 +278,8 @@ protected:
     std::vector<u8> dlp_password_buf;
     std::array<u8, 9> wireless_reboot_passphrase;
     
+    const u32 dlp_content_block_length = 182;
+    
     std::shared_ptr<CFG::Module> GetCFG();
     std::shared_ptr<NWM::NWM_UDS> GetUDS();
     
@@ -277,6 +298,8 @@ protected:
     static DLPNodeInfo UDSToDLPNodeInfo(NWM::NodeInfo node_info);
     static u16 d_htons(u16);
     static u16 d_ntohs(u16);
+    static u32 d_htonl(u32 n);
+    static u32 d_ntohl(u32 n);
     static u64 d_ntohll(u64);
     static u64 d_htonll(u64);
     template <typename T>
