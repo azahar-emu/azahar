@@ -96,7 +96,8 @@ struct DLPBroadcastPacket1 {
     u64 unk2;
     u64 unk3;
     u64 unk4; // all 0s
-    u64 size; // size minus broad_title_size_diff
+    u32 size; // size minus broad_title_size_diff
+    u32 unk5;
 	std::array<u16, 64> title_short;
 	std::array<u16, 128> title_long;
 	std::array<u8, 0x138> icon_part;
