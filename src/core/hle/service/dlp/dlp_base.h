@@ -37,11 +37,11 @@ struct DLPTitleInfo {
 static_assert(sizeof(DLPTitleInfo) == 5032, "DLPTitleInfo is the wrong size");
 
 struct DLPNodeInfo {
-	u64 friend_code_seed;
-	std::array<u16, 2> pad;
-	DLP_Username username;
-	u32 unk1;
-	u32 network_node_id;
+    u64 friend_code_seed;
+    std::array<u16, 2> pad;
+    DLP_Username username;
+    u32 unk1;
+    u32 network_node_id;
 };
 
 static_assert(sizeof(DLPNodeInfo) == 0x28);
@@ -78,10 +78,10 @@ struct DLPPacketHeader {
         };
     };
     u16 size; // size of the whole packet, including the header
-	std::array<u8, 2> unk1; // always 0x02 0x00
-	u32 checksum; // always calculate
-	u8 packet_index; // starts at 0
-	std::array<u8, 3> resp_id; // copies this from host packet when responding to it
+    std::array<u8, 2> unk1; // always 0x02 0x00
+    u32 checksum; // always calculate
+    u8 packet_index; // starts at 0
+    std::array<u8, 3> resp_id; // copies this from host packet when responding to it
 };
 
 static_assert(sizeof(DLPPacketHeader) == 0x10);
@@ -98,41 +98,41 @@ struct DLPBroadcastPacket1 {
     u64 unk4; // all 0s
     u32 size; // size minus broad_title_size_diff
     u32 unk5;
-	std::array<u16, 64> title_short;
-	std::array<u16, 128> title_long;
-	std::array<u8, 0x138> icon_part;
-	u64 unk;
+    std::array<u16, 64> title_short;
+    std::array<u16, 128> title_long;
+    std::array<u8, 0x138> icon_part;
+    u64 unk;
 };
 #pragma pack(pop)
 
 static_assert(sizeof(DLPBroadcastPacket1) == 768);
 
 struct DLPBroadcastPacket2 {
-	DLPPacketHeader head;
-	std::array<u8, 0x598> icon_part;
+    DLPPacketHeader head;
+    std::array<u8, 0x598> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket2) == 1448);
 
 struct DLPBroadcastPacket3 {
-	DLPPacketHeader head;
-	std::array<u8, 0x598> icon_part;
+    DLPPacketHeader head;
+    std::array<u8, 0x598> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket3) == 1448);
 
 struct DLPBroadcastPacket4 {
-	DLPPacketHeader head;
-	std::array<u8, 0x598> icon_part;
+    DLPPacketHeader head;
+    std::array<u8, 0x598> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket4) == 1448);
 
 struct DLPBroadcastPacket5 {
-	DLPPacketHeader head;
-	std::array<u8, 0x8> unk1;
-	std::array<u8, 0x8> unk2;
-	std::array<u8, 0x598> unk3;
+    DLPPacketHeader head;
+    std::array<u8, 0x8> unk1;
+    std::array<u8, 0x8> unk2;
+    std::array<u8, 0x598> unk3;
 };
 
 static_assert(sizeof(DLPBroadcastPacket5) == 1464);
@@ -256,43 +256,43 @@ public:
 protected:
     DLP_Base(Core::System& s);
     virtual ~DLP_Base() = default;
-    
+
     virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr() = 0;
     virtual bool IsHost() = 0;
 
-	Core::System& system;
-    
-	std::shared_ptr<Kernel::SharedMemory> dlp_sharedmem;
-	std::shared_ptr<Kernel::SharedMemory> uds_sharedmem;
-	
-	std::shared_ptr<Kernel::Event> dlp_status_event; // out
-	std::shared_ptr<Kernel::Event> uds_status_event; // in
-    
+    Core::System& system;
+
+    std::shared_ptr<Kernel::SharedMemory> dlp_sharedmem;
+    std::shared_ptr<Kernel::SharedMemory> uds_sharedmem;
+
+    std::shared_ptr<Kernel::Event> dlp_status_event; // out
+    std::shared_ptr<Kernel::Event> uds_status_event; // in
+
     const u32 uds_sharedmem_size = 0x4000;
     const u32 uds_version = 0x400;
     const u32 recv_buffer_size = 0x3c00;
     const u32 dlp_channel = 0x10;
     const u8 num_broadcast_packets = 5;
     u32 dlp_sharedmem_size{};
-    
+
     DLP_Username username;
     std::vector<u8> dlp_password_buf;
     std::array<u8, 9> wireless_reboot_passphrase;
-    
+
     const u32 dlp_content_block_length = 182;
-    
+
     std::shared_ptr<CFG::Module> GetCFG();
     std::shared_ptr<NWM::NWM_UDS> GetUDS();
-    
+
     void GetEventDescription(Kernel::HLERequestContext& ctx);
-    
+
     void InitializeDlpBase(u32 shared_mem_size, std::shared_ptr<Kernel::SharedMemory> shared_mem, std::shared_ptr<Kernel::Event> event, DLP_Username username);
     void FinalizeDlpBase();
-    
+
     bool ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type, std::vector<u8> passphrase);
     int RecvFrom(u16 node_id, std::vector<u8>& buffer);
     bool SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 flags = 0);
-    
+
     static std::u16string DLPUsernameAsString16(DLP_Username uname);
     static DLP_Username String16AsDLPUsername(std::u16string str);
     static std::string MacAddrToString(Network::MacAddress);
@@ -307,17 +307,20 @@ protected:
     static T *GetPacketBody(std::vector<u8>& b) {
         if (b.size() < sizeof(T)) {
             LOG_CRITICAL(Service_DLP, "Packet size is too small to fit content {} < {}", b.size(), sizeof(T));
+            return nullptr;
         }
         return reinterpret_cast<T*>(b.data());
     }
     static DLPPacketHeader *GetPacketHead(std::vector<u8>& b) {
         if (b.size() < sizeof(DLPPacketHeader)) {
             LOG_CRITICAL(Service_DLP, "Packet is too small to fit a DLP header");
+            return nullptr;
         }
         return reinterpret_cast<DLPPacketHeader*>(b.data());
     }
-    void GeneratePKChecksum(void *output_word, void *input_buffer, u32 packet_size);
-    
+
+    static void GeneratePKChecksum(u32 aes_value, void *output_word, void *input_buffer, u32 packet_size);
+
     template <typename T>
     T *PGen_SetPK(std::array<u8, 4> magic, u8 packet_index, std::array<u8, 3> resp_id) {
         sm_packet_sender_session.acquire();
@@ -330,41 +333,21 @@ protected:
         ph->packet_index = packet_index;
         return GetPacketBody<T>(send_packet_ctx);
     }
-    void PGen_SendPK(u16 node_id, u8 data_channel, u8 flags = 0) {
+    void PGen_SendPK(u32 aes, u16 node_id, u8 data_channel, u8 flags = 0) {
         auto ph = GetPacketHead(send_packet_ctx);
         ph->checksum = 0;
-        GeneratePKChecksum(&ph->checksum, ph, d_ntohs(ph->size));
+        GeneratePKChecksum(aes, &ph->checksum, ph, d_ntohs(ph->size));
         SendTo(node_id, data_channel, send_packet_ctx, flags);
         send_packet_ctx.clear();
         sm_packet_sender_session.release();
     }
     // input the host mac address
-    void GenDLPChecksumKey(Network::MacAddress mac_addr);
+    u32 GenDLPChecksumKey(Network::MacAddress mac_addr);
     static void DLPEncryptCTR(void *out, size_t size, const u8 *iv_ctr);
-    bool ValidatePacket(void *pk, size_t sz, bool checksum = true);
+    static bool ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum = true);
 private:
     std::binary_semaphore sm_packet_sender_session{1};
     std::vector<u8> send_packet_ctx;
-    u32 aes_value = 0;
 };
 
 } // namespace Service::DLP
-
-
-template <typename T>
-inline std::string FmtArray(T a, size_t max_print = -1) {
-    std::string fmt;
-    for (int i = 0; auto c : a) {
-        if (i == max_print) {
-            break;
-        }
-        if (i % 16 == 0) {
-            fmt += "\n";
-        }
-        fmt += std::format("{:2x} ", c);
-        i++;
-    }
-    if (fmt.size())
-        fmt.pop_back();
-    return fmt;
-}

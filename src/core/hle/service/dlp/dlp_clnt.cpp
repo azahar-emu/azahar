@@ -22,23 +22,23 @@ u32 DLP_CLNT::ClientNeedsDup() {
 
 void DLP_CLNT::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    
+
     u32 shared_mem_size = rp.Pop<u32>();
 	u32 max_beacons = rp.Pop<u32>();
     u32 constant_mem_size = rp.Pop<u32>();
 	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
-    
+
     InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, String16AsDLPUsername(GetCFG()->GetUsername()));
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
 
 void DLP_CLNT::Finalize(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     FinalizeCltBase();
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
@@ -46,18 +46,18 @@ void DLP_CLNT::Finalize(Kernel::HLERequestContext& ctx) {
 // returns the version of the currently joined server
 void DLP_CLNT::GetCupVersion(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     [[maybe_unused]] auto mac_addr = rp.PopRaw<Network::MacAddress>();
     [[maybe_unused]] u32 tid_low = rp.PopRaw<u32>();
     [[maybe_unused]] u32 tid_high = rp.PopRaw<u32>();
-    
+
     LOG_WARNING(Service_DLP, "(STUBBED) called");
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    
+
     // TODO: someone decipher this version code
     u64 version_num = 0x0;
-    
+
     rb.Push(ResultSuccess);
     rb.Push(version_num);
 }
@@ -66,17 +66,17 @@ void DLP_CLNT::GetCupVersion(Kernel::HLERequestContext& ctx) {
 // the dlp app uses this to check whether or not we need the update data
 void DLP_CLNT::PrepareForSystemDownload(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     mac_addr_update = rp.PopRaw<Network::MacAddress>();
     u32 tid_low = rp.PopRaw<u32>();
     u32 tid_high = rp.PopRaw<u32>();
-    
+
     if (ClientNeedsDup()) {
         is_preparing_for_update = true;
     }
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    
+
     rb.Push(ResultSuccess);
     rb.Push(ClientNeedsDup());
 }
@@ -85,11 +85,11 @@ void DLP_CLNT::PrepareForSystemDownload(Kernel::HLERequestContext& ctx) {
 // download the update
 void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     LOG_WARNING(Service_DLP, "(STUBBED) called");
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    
+
     if (!is_preparing_for_update) {
         // error
         LOG_ERROR(Service_DLP, "Called without preparing first. We don't have a mac address!");
@@ -97,15 +97,15 @@ void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
         rb.Push(0xD960AC02);
         return;
     }
-    
+
     is_preparing_for_update = false;
     is_updating = true;
-    
+
     // TODO: figure out what comes after when
     // hw starts downloading update data via dlp.
     // it could set some missing client states
     // in GetCltState
-    
+
     rb.Push(ResultSuccess);
 }
 
@@ -113,18 +113,18 @@ void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
 // can download the update data?
 void DLP_CLNT::GetDupAvailability(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     mac_addr_update = rp.PopRaw<Network::MacAddress>();
     u32 tid_low = rp.PopRaw<u32>();
     u32 tid_high = rp.PopRaw<u32>();
-    
+
     LOG_WARNING(Service_DLP, "(STUBBED) called");
-    
+
     constexpr u32 dup_is_available = 0x1;
     constexpr u32 dup_is_not_available = 0x0;
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    
+
     rb.Push(ResultSuccess);
     rb.Push(dup_is_not_available);
 }

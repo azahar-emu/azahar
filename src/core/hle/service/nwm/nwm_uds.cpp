@@ -647,7 +647,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     ASSERT(out_buffer.GetSize() == out_buffer_size);
 
     std::size_t cur_buffer_size = sizeof(BeaconDataReplyHeader);
-    
+
     auto beacons = GetReceivedBeacons(mac_address);
 
     BeaconDataReplyHeader data_reply_header{};
@@ -851,7 +851,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     u16 network_node_id = rp.Pop<u16>();
 
     auto [ret, event] = BindHLE(bind_node_id, recv_buffer_size, data_channel, network_node_id);
-	
+
 	switch (ret) {
     case -1: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1072,20 +1072,20 @@ void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
 
 Result NWM_UDS::UpdateNetworkAttributeHLE(u16 node_bitmask, u8 flag) {
     constexpr u8 flag_disconnect_and_block_non_bitmasked_nodes = 0x1;
-    
+
     // stubbed
-    
+
     return ResultSuccess;
 }
 
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    
+
     u16 bitmask = rp.Pop<u16>();
     u8 flag = rp.Pop<u8>();
-    
+
     auto res = UpdateNetworkAttributeHLE(bitmask, flag);
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
@@ -1145,7 +1145,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     int res = SendToHLE(dest_node_id, data_channel, data_size, flags, input_buffer);
-	
+
 	switch (res) {
 		case -4:
 			rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS, ErrorSummary::WrongArgument,
@@ -1169,7 +1169,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
 int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags, std::vector<u8> input_buffer) {
     ASSERT(input_buffer.size() >= data_size);
     input_buffer.resize(data_size);
-	
+
 	std::scoped_lock lock(connection_status_mutex);
     if (connection_status.status != NetworkStatus::ConnectedAsClient &&
         connection_status.status != NetworkStatus::ConnectedAsHost) {
@@ -1220,7 +1220,7 @@ int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flag
     packet.type = Network::WifiPacket::PacketType::Data;
 
     SendPacket(packet);
-	
+
 	return 0;
 }
 
@@ -1231,11 +1231,11 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     u32 max_out_buff_size_aligned = rp.Pop<u32>();
     u32 max_out_buff_size = rp.Pop<u32>();
 	std::vector<u8> output_buffer;
-	
+
 	SecureDataHeader secure_data;
-	
+
 	auto ret = PullPacketHLE(bind_node_id, max_out_buff_size, max_out_buff_size_aligned, output_buffer, &secure_data);
-	
+
     switch (ret) {
     case -1: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1296,7 +1296,7 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
 
     auto secure_data = ParseSecureDataHeader(next_packet);
     auto data_size = secure_data.GetActualDataSize();
-	
+
 	if (secure_data_out) {
 		*reinterpret_cast<SecureDataHeader*>(secure_data_out) = secure_data;
 	}
@@ -1306,7 +1306,7 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
         return -3;
     }
 	output_buffer.resize(buff_size);
-	
+
     // Write the actual data.
     std::memcpy(output_buffer.data(),
                 next_packet.data() + sizeof(LLCHeader) + sizeof(SecureDataHeader), data_size);
@@ -1448,7 +1448,7 @@ int NWM_UDS::DisconnectNetworkHLE() {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
-    
+
     return 0;
 }
 
@@ -1464,7 +1464,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
                        ErrorLevel::Status));
         return;
     }
-    
+
     rb.Push(ResultSuccess);
 }
 
@@ -1579,11 +1579,11 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 
 void NWM_UDS::EjectSpectators(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    
+
     LOG_WARNING(Service_NWM, "(STUBBED) called");
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    
+
     rb.Push(ResultSuccess);
 }
 

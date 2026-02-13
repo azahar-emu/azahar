@@ -18,10 +18,10 @@ namespace Service::DLP {
 void DLP_Base::DLPEncryptCTR(void *_out, size_t size, const u8 *iv_ctr) {
     auto out = reinterpret_cast<u8*>(_out);
     memset(out, 0, size);
-    
+
     HW::AES::SelectDlpNfcKeyYIndex(HW::AES::DlpNfcKeyY::Dlp);
     HW::AES::AESKey key = HW::AES::GetNormalKey(HW::AES::DLPNFCDataKey);
-    
+
     // AlgorithmType::CTR_Encrypt
     CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption aes;
     aes.SetKeyWithIV(key.data(), CryptoPP::AES::BLOCKSIZE, iv_ctr);

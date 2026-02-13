@@ -28,39 +28,39 @@ std::shared_ptr<Kernel::SessionRequestHandler> DLP_FKCL::GetServiceFrameworkShar
 
 void DLP_FKCL::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    
+
     u32 shared_mem_size = rp.Pop<u32>();
 	u32 max_beacons = rp.Pop<u32>();
     constexpr u32 constant_mem_size = 0;
 	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
-    
+
     InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, String16AsDLPUsername(GetCFG()->GetUsername()));
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
 
 void DLP_FKCL::InitializeWithName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    
+
     u32 shared_mem_size = rp.Pop<u32>();
 	u32 max_beacons = rp.Pop<u32>();
     constexpr u32 constant_mem_size = 0;
     auto username = rp.PopRaw<std::array<u16_le, 10>>();
     rp.Skip(1, false); // possible null terminator or unk flags
 	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
-    
+
     InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, username);
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
 
 void DLP_FKCL::Finalize(Kernel::HLERequestContext& ctx) {
 	IPC::RequestParser rp(ctx);
-    
+
     FinalizeCltBase();
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
