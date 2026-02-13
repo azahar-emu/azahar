@@ -40,16 +40,16 @@ using namespace Pica::Shader;
 
 void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) {
-    if (!InitVSCache(stop_loading, callback)) {
+    if (!stop_loading && !InitVSCache(stop_loading, callback)) {
         RecreateCache(vs_cache, CacheFileType::VS_CACHE);
     }
-    if (!InitFSCache(stop_loading, callback)) {
+    if (!stop_loading && !InitFSCache(stop_loading, callback)) {
         RecreateCache(fs_cache, CacheFileType::FS_CACHE);
     }
-    if (!InitGSCache(stop_loading, callback)) {
+    if (!stop_loading && !InitGSCache(stop_loading, callback)) {
         RecreateCache(gs_cache, CacheFileType::GS_CACHE);
     }
-    if (!InitPLCache(stop_loading, callback)) {
+    if (!stop_loading && !InitPLCache(stop_loading, callback)) {
         RecreateCache(pl_cache, CacheFileType::PL_CACHE);
     }
 }
@@ -534,6 +534,11 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
     // later.
     for (int i = 1; i < tot_entries; i++) {
 
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
+
         std::tie(curr_offset, curr_header) = vs_cache.ReadNextHeader(curr_header, curr_offset);
 
         if (!curr_header.Valid()) {
@@ -609,6 +614,11 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
         std::make_unique<Common::StaticLRUCache<u64, VSProgramEntry, 10>>();
 
     for (auto& offset : pending_configs) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
+
         if (callback) {
             callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
                      tot_callback_index, "Vertex Shader");
@@ -865,6 +875,10 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
     // SPIRV can be compiled directly, if a config has a missing
     // SPIRV entry it can be regenerated later.
     for (int i = 1; i < tot_entries; i++) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
 
         std::tie(curr_offset, curr_header) = fs_cache.ReadNextHeader(curr_header, curr_offset);
 
@@ -926,6 +940,11 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
     LOG_DEBUG(Render_Vulkan, "Linking with config entries.");
 
     for (auto& offset : pending_configs) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
+
         if (callback) {
             callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
                      tot_callback_index, "Fragment Shader");
@@ -1075,6 +1094,10 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
     // SPIRV can be compiled directly, if a config has a missing
     // SPIRV entry it can be regenerated later.
     for (int i = 1; i < tot_entries; i++) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
 
         std::tie(curr_offset, curr_header) = gs_cache.ReadNextHeader(curr_header, curr_offset);
 
@@ -1136,6 +1159,11 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
     LOG_DEBUG(Render_Vulkan, "Linking with config entries.");
 
     for (auto& offset : pending_configs) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
+
         if (callback) {
             callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
                      tot_callback_index, "Geometry Shader");
@@ -1252,6 +1280,10 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
     // There is only one entry type in the pipeline info cache,
     // no need to keep track of anything.
     for (int i = 1; i < tot_entries; i++) {
+        if (stop_loading) {
+            cleanup_on_error();
+            return true;
+        }
 
         curr = pl_cache.ReadNext(curr);
 
