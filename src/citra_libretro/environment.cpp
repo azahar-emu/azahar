@@ -7,6 +7,8 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/libretro_sink.h"
 #include "common/scm_rev.h"
+#include "core/3ds.h"
+#include "emu_window/libretro_window.h"
 #include "environment.h"
 
 #ifdef HAVE_LIBRETRO_VFS
@@ -264,12 +266,16 @@ void retro_set_input_state(retro_input_state_t cb) {
 }
 
 void retro_get_system_av_info(struct retro_system_av_info* info) {
-    // These are placeholders until we get control.
     info->timing.fps = 60.0;
     info->timing.sample_rate = AudioCore::native_sample_rate;
-    info->geometry.base_width = 400;
-    info->geometry.base_height = 480;
-    info->geometry.max_width = 400 * 10;
-    info->geometry.max_height = 480 * 10;
-    info->geometry.aspect_ratio = 0;
+
+    // Compute geometry from current settings so the frontend allocates the
+    // correct framebuffer on first use.
+    auto geom = ComputeLayoutGeometry();
+    info->geometry.base_width = geom.width;
+    info->geometry.base_height = geom.height;
+    // Max must cover the largest possible layout (SideScreen at 10x = 7200).
+    info->geometry.max_width = (Core::kScreenBottomWidth + Core::kScreenTopWidth) * 10;
+    info->geometry.max_height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * 10;
+    info->geometry.aspect_ratio = (float)geom.width / (float)geom.height;
 }

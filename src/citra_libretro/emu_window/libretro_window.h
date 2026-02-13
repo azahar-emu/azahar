@@ -9,6 +9,15 @@
 #include "citra_libretro/input/mouse_tracker.h"
 #include "core/frontend/emu_window.h"
 
+struct LayoutGeometry {
+    unsigned width;
+    unsigned height;
+    bool emulated_pointer;
+};
+
+/// Compute framebuffer dimensions from current layout/scaling/swap settings.
+LayoutGeometry ComputeLayoutGeometry();
+
 void ResetGLState();
 
 class EmuWindow_LibRetro : public Frontend::EmuWindow {

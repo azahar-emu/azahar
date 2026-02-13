@@ -180,17 +180,13 @@ void EmuWindow_LibRetro::DoneCurrent() {
 
 void EmuWindow_LibRetro::OnMinimalClientAreaChangeRequest(std::pair<u32, u32> _minimal_size) {}
 
-void EmuWindow_LibRetro::UpdateLayout() {
-    // TODO: Handle custom layouts
-    // TODO: Extract this ugly thing somewhere else
+LayoutGeometry ComputeLayoutGeometry() {
     unsigned baseX;
     unsigned baseY;
+    bool emulated_pointer = true;
 
     float scaling = Settings::values.resolution_factor.GetValue();
-
     bool swapped = Settings::values.swap_screen.GetValue();
-
-    enableEmulatedPointer = true;
 
     switch (Settings::values.layout_option.GetValue()) {
     case Settings::LayoutOption::SingleScreen:
@@ -200,7 +196,7 @@ void EmuWindow_LibRetro::UpdateLayout() {
         } else { // Top screen visible
             baseX = Core::kScreenTopWidth;
             baseY = Core::kScreenTopHeight;
-            enableEmulatedPointer = false;
+            emulated_pointer = false;
         }
         baseX *= scaling;
         baseY *= scaling;
@@ -238,6 +234,15 @@ void EmuWindow_LibRetro::UpdateLayout() {
         baseY *= scaling;
         break;
     }
+
+    return {baseX, baseY, emulated_pointer};
+}
+
+void EmuWindow_LibRetro::UpdateLayout() {
+    auto geom = ComputeLayoutGeometry();
+    unsigned baseX = geom.width;
+    unsigned baseY = geom.height;
+    enableEmulatedPointer = geom.emulated_pointer;
 
     // Update Libretro with our status
     struct retro_system_av_info info{};
