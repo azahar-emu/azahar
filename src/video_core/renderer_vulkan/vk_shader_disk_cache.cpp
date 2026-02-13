@@ -24,6 +24,15 @@
         return false;                                                                              \
     } while (0)
 
+// Enable to debug when new cache objects are created.
+// #define ENABLE_LOG_NEW_OBJECT
+
+#ifdef ENABLE_LOG_NEW_OBJECT
+#define LOG_NEW_OBJECT LOG_DEBUG
+#else
+#define LOG_NEW_OBJECT(...) ((void)0)
+#endif
+
 namespace Vulkan {
 
 using namespace Pica::Shader::Generator;
@@ -36,6 +45,12 @@ void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
     }
     if (!InitFSCache(stop_loading, callback)) {
         RecreateCache(fs_cache, CacheFileType::FS_CACHE);
+    }
+    if (!InitGSCache(stop_loading, callback)) {
+        RecreateCache(gs_cache, CacheFileType::GS_CACHE);
+    }
+    if (!InitPLCache(stop_loading, callback)) {
+        RecreateCache(pl_cache, CacheFileType::PL_CACHE);
     }
 }
 
@@ -60,6 +75,8 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseProgrammableVer
     const auto [iter_config, new_config] = programmable_vertex_map.try_emplace(config_hash);
     if (new_config) {
 
+        LOG_NEW_OBJECT(Render_Vulkan, "New VS config {:016X}", config_hash);
+
         ExtraVSConfig extra_config = parent.CalcExtraConfig(config);
 
         auto program =
@@ -78,6 +95,8 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseProgrammableVer
         auto& shader = iter_prog->second;
 
         if (new_program) {
+            LOG_NEW_OBJECT(Render_Vulkan, "New VS SPIRV {:016X}", spirv_id);
+
             shader.program = std::move(program);
             const vk::Device device = parent.instance.GetDevice();
             parent.workers.QueueWork([device, &shader, this, spirv_id] {
@@ -112,6 +131,8 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFragmentShader(
     auto& shader = it->second;
 
     if (new_shader) {
+        LOG_NEW_OBJECT(Render_Vulkan, "New FS config {:016X}", fs_config_hash);
+
         parent.workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
             std::vector<u32> spirv;
             const bool use_spirv = parent.profile.vk_use_spirv_generator;
@@ -137,6 +158,66 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFragmentShader(
     }
 
     return std::make_pair(fs_config_hash, &shader);
+}
+
+std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFixedGeometryShader(
+    const Pica::RegsInternal& regs) {
+
+    const PicaFixedGSConfig gs_config{regs};
+    const auto gs_config_hash = gs_config.Hash();
+
+    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config_hash, parent.instance);
+    auto& shader = it->second;
+
+    if (new_shader) {
+        LOG_NEW_OBJECT(Render_Vulkan, "New GS config {:016X}", gs_config_hash);
+
+        parent.workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
+            ExtraFixedGSConfig extra;
+            extra.use_clip_planes = parent.profile.has_clip_planes;
+            extra.separable_shader = true;
+
+            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, extra);
+            const auto spirv = CompileGLSL(code, vk::ShaderStageFlagBits::eGeometry);
+            shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+            shader.MarkDone();
+
+            AppendGSSPIRV(gs_cache, spirv, gs_config_hash);
+            GSConfigEntry entry{
+                .version = GSConfigEntry::EXPECTED_VERSION,
+                .gs_config = gs_config,
+            };
+            AppendGSConfig(gs_cache, entry, gs_config_hash);
+        });
+    }
+
+    return std::make_pair(gs_config_hash, &shader);
+}
+
+GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
+
+    u64 hash = info.Hash();
+    u64 optimized_hash = info.state.OptimizedHash(parent.instance);
+
+    auto [it, new_pipeline] = graphics_pipelines.try_emplace(optimized_hash);
+    if (new_pipeline) {
+        it.value() = std::make_unique<GraphicsPipeline>(
+            parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
+            *parent.pipeline_layout, parent.current_shaders, &parent.workers);
+    }
+
+    if (known_graphic_pipelines.emplace(hash).second) {
+        LOG_NEW_OBJECT(Render_Vulkan, "New Pipeline {:016X}", hash);
+
+        PLConfigEntry entry{
+            .version = PLConfigEntry::EXPECTED_VERSION,
+            .pl_info = info.state,
+        };
+
+        AppendPLConfig(pl_cache, entry, hash);
+    }
+
+    return it.value().get();
 }
 
 ShaderDiskCache::SourceFileCacheVersionHash ShaderDiskCache::GetSourceFileCacheVersionHash() {
@@ -334,6 +415,16 @@ std::string ShaderDiskCache::GetFSFile(u64 title_id, bool is_temp) const {
            (is_temp ? "_temp" : "") + ".vkch";
 }
 
+std::string ShaderDiskCache::GetGSFile(u64 title_id, bool is_temp) const {
+    return parent.GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_gs", title_id) +
+           (is_temp ? "_temp" : "") + ".vkch";
+}
+
+std::string ShaderDiskCache::GetPLFile(u64 title_id, bool is_temp) const {
+    return parent.GetTransferableDir() + DIR_SEP + fmt::format("{:016X}_pl", title_id) +
+           (is_temp ? "_temp" : "") + ".vkch";
+}
+
 bool ShaderDiskCache::RecreateCache(CacheFile& file, CacheFileType type) {
     file.SwitchMode(CacheFile::CacheOpMode::RECREATE);
 
@@ -347,6 +438,10 @@ bool ShaderDiskCache::RecreateCache(CacheFile& file, CacheFileType type) {
             return PicaVSConfigState::StructHash();
         case CacheFileType::FS_CACHE:
             return FSConfig::StructHash();
+        case CacheFileType::GS_CACHE:
+            return PicaGSConfigState::StructHash();
+        case CacheFileType::PL_CACHE:
+            return StaticPipelineInfo::StructHash();
         default:
             UNREACHABLE();
             return u64{};
@@ -699,7 +794,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
         FileUtil::Rename(GetVSFile(title_id, true), GetVSFile(title_id, false));
     }
 
-    // Switch to append mode to receiving new entries.
+    // Switch to append mode to receive new entries.
     vs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
     return true;
 }
@@ -908,8 +1003,346 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
         FileUtil::Rename(GetFSFile(title_id, true), GetFSFile(title_id, false));
     }
 
-    // Switch to append mode to receiving new entries.
+    // Switch to append mode to receive new entries.
     fs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
+    return true;
+}
+
+bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+    std::vector<std::pair<u64, size_t>> pending_configs;
+    std::unique_ptr<CacheFile> regenerate_file;
+
+    auto cleanup_on_error = [&]() {
+        fixed_geometry_shaders.clear();
+        if (regenerate_file) {
+            regenerate_file->SwitchMode(CacheFile::CacheOpMode::DELETE);
+        }
+    };
+
+    LOG_INFO(Render_Vulkan, "Loading GS disk shader cache for title {:016X}", title_id);
+
+    gs_cache.SetFilePath(GetGSFile(title_id, false));
+
+    if (!gs_cache.SwitchMode(CacheFile::CacheOpMode::READ)) {
+        LOG_INFO(Render_Vulkan, "Missing GS disk shader cache for title {:016X}", title_id);
+        cleanup_on_error();
+        return false;
+    }
+
+    u32 tot_entries = gs_cache.GetTotalEntries();
+    auto curr = gs_cache.ReadFirst();
+    if (!curr.Valid() || curr.Type() != CacheEntryType::FILE_INFO) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    const FileInfoEntry* file_info = curr.Payload<FileInfoEntry>();
+    if (!file_info || file_info->cache_magic != FileInfoEntry::CACHE_FILE_MAGIC ||
+        file_info->file_version != FileInfoEntry::CACHE_FILE_VERSION ||
+        file_info->file_type != CacheFileType::GS_CACHE) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    if (file_info->config_struct_hash != PicaGSConfigState::StructHash()) {
+        LOG_ERROR(Render_Vulkan,
+                  "Cache was created for a different PicaGSConfigState, resetting...");
+        cleanup_on_error();
+        return false;
+    }
+
+    if (file_info->source_hash != GetSourceFileCacheVersionHash()) {
+        LOG_INFO(Render_Vulkan, "Cache contains old fragment program, cache needs regeneration.");
+        regenerate_file = std::make_unique<CacheFile>(GetGSFile(title_id, true));
+    }
+
+    if (file_info->profile != parent.profile && !regenerate_file) {
+        LOG_INFO(Render_Vulkan,
+                 "Cache has driver and user settings mismatch, cache needs regeneration.");
+        regenerate_file = std::make_unique<CacheFile>(GetGSFile(title_id, true));
+    }
+
+    if (regenerate_file) {
+        RecreateCache(*regenerate_file, CacheFileType::GS_CACHE);
+    }
+
+    CacheEntry::CacheEntryHeader curr_header = curr.Header();
+    size_t curr_offset = curr.Position();
+
+    size_t current_callback_index = 0;
+    size_t tot_callback_index = tot_entries - 1;
+
+    // Scan the entire file first, while keeping track of configs.
+    // SPIRV can be compiled directly, if a config has a missing
+    // SPIRV entry it can be regenerated later.
+    for (int i = 1; i < tot_entries; i++) {
+
+        std::tie(curr_offset, curr_header) = gs_cache.ReadNextHeader(curr_header, curr_offset);
+
+        if (!curr_header.Valid()) {
+            MALFORMED_DISK_CACHE;
+        }
+
+        LOG_DEBUG(Render_Vulkan, "Processing ID: {:016X} (type {})", curr_header.Id(),
+                  curr_header.Type());
+
+        if (curr_header.Type() == CacheEntryType::GS_CONFIG) {
+            pending_configs.push_back({curr_header.Id(), curr_offset});
+        } else if (curr_header.Type() == CacheEntryType::GS_SPIRV) {
+
+            // Only use SPIRV entries if we are not regenerating the cache, as the driver or
+            // user settings do not match, which could lead to different SPIRV.
+            // These will be regenerated from the cached config later.
+            if (!regenerate_file) {
+                LOG_DEBUG(Render_Vulkan, "    processing SPIRV.");
+
+                curr = gs_cache.ReadAt(curr_offset);
+                if (!curr.Valid() || curr.Type() != CacheEntryType::GS_SPIRV) {
+                    MALFORMED_DISK_CACHE;
+                }
+
+                const u8* spirv_data = curr.Data().data();
+                const size_t spirv_size = curr.Data().size();
+
+                auto [iter_spirv, new_program] =
+                    fixed_geometry_shaders.try_emplace(curr.Id(), parent.instance);
+                if (new_program) {
+                    LOG_DEBUG(Render_Vulkan, "    compiling SPIRV.");
+
+                    const auto spirv = std::span<const u32>(
+                        reinterpret_cast<const u32*>(spirv_data), spirv_size / sizeof(u32));
+
+                    iter_spirv->second.module = CompileSPV(spirv, parent.instance.GetDevice());
+                    iter_spirv->second.MarkDone();
+
+                    if (!iter_spirv->second.module) {
+                        // Compilation failed for some reason, remove from cache to let it
+                        // be regenerated at runtime or during config processing.
+                        LOG_ERROR(Render_Vulkan, "Unexpected program compilation failure");
+                        fixed_geometry_shaders.erase(iter_spirv);
+                    }
+                }
+            }
+
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                         tot_callback_index, "Geometry Shader");
+            }
+        } else {
+            MALFORMED_DISK_CACHE;
+        }
+    }
+
+    // Once we have all the shader instances created from SPIRV, we can link them to the FS configs.
+    LOG_DEBUG(Render_Vulkan, "Linking with config entries.");
+
+    for (auto& offset : pending_configs) {
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                     tot_callback_index, "Geometry Shader");
+        }
+
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+
+        if (fixed_geometry_shaders.find(offset.first) != fixed_geometry_shaders.end()) {
+            // SPIRV of config was already compiled, no need to regenerate
+            // it from the cache. This can only happen if we are not regenerating
+            // the cache.
+            LOG_DEBUG(Render_Vulkan, "    linked with existing SPIRV.");
+            continue;
+        }
+
+        // Cached SPIRV not found, need to recompile. Should only happen if
+        // we are regenerating the cache.
+
+        curr = gs_cache.ReadAt(offset.second);
+        const GSConfigEntry* entry;
+
+        if (!curr.Valid() || curr.Type() != CacheEntryType::GS_CONFIG ||
+            !(entry = curr.Payload<GSConfigEntry>()) ||
+            entry->version != GSConfigEntry::EXPECTED_VERSION) {
+            MALFORMED_DISK_CACHE;
+        }
+
+        const auto gs_config_hash = entry->gs_config.Hash();
+        if (curr.Id() != gs_config_hash) {
+            LOG_ERROR(Render_Vulkan, "Unexpected PicaGSConfigState hash mismatch");
+            continue;
+        }
+
+        const auto [it, new_shader] =
+            fixed_geometry_shaders.try_emplace(gs_config_hash, parent.instance);
+        auto& shader = it->second;
+
+        std::vector<u32> spirv;
+        ExtraFixedGSConfig extra;
+        extra.use_clip_planes = parent.profile.has_clip_planes;
+        extra.separable_shader = true;
+
+        const auto code_glsl = GLSL::GenerateFixedGeometryShader(entry->gs_config, extra);
+
+        if (code_glsl.empty()) {
+            LOG_ERROR(Render_Vulkan, "Failed to retrieve fixed geometry shader");
+            fixed_geometry_shaders.erase(it);
+            continue;
+        }
+
+        spirv = CompileGLSL(code_glsl, vk::ShaderStageFlagBits::eGeometry);
+        shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+        shader.MarkDone();
+
+        if (regenerate_file) {
+            // Append the config and SPIRV to the new file.
+            AppendGSSPIRV(*regenerate_file, spirv, gs_config_hash);
+            AppendGSConfig(*regenerate_file, *entry, gs_config_hash);
+        }
+
+        LOG_DEBUG(Render_Vulkan, "    linked with new SPIRV.");
+    }
+
+    if (regenerate_file) {
+        // If we are regenerating, replace the old file with the new one.
+        gs_cache.SwitchMode(CacheFile::CacheOpMode::DELETE);
+        regenerate_file.reset();
+        FileUtil::Rename(GetGSFile(title_id, true), GetGSFile(title_id, false));
+    }
+
+    // Switch to append mode to receive new entries.
+    gs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
+    return true;
+}
+
+bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+
+    auto cleanup_on_error = [&]() { graphics_pipelines.clear(); };
+
+    LOG_INFO(Render_Vulkan, "Loading PL disk shader cache for title {:016X}", title_id);
+
+    pl_cache.SetFilePath(GetPLFile(title_id, false));
+
+    if (!pl_cache.SwitchMode(CacheFile::CacheOpMode::READ)) {
+        LOG_INFO(Render_Vulkan, "Missing PL disk shader cache for title {:016X}", title_id);
+        cleanup_on_error();
+        return false;
+    }
+
+    u32 tot_entries = pl_cache.GetTotalEntries();
+    auto curr = pl_cache.ReadFirst();
+    if (!curr.Valid() || curr.Type() != CacheEntryType::FILE_INFO) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    const FileInfoEntry* file_info = curr.Payload<FileInfoEntry>();
+    if (!file_info || file_info->cache_magic != FileInfoEntry::CACHE_FILE_MAGIC ||
+        file_info->file_version != FileInfoEntry::CACHE_FILE_VERSION ||
+        file_info->file_type != CacheFileType::PL_CACHE) {
+        MALFORMED_DISK_CACHE;
+    }
+
+    if (file_info->config_struct_hash != StaticPipelineInfo::StructHash()) {
+        LOG_ERROR(Render_Vulkan,
+                  "Cache was created for a different StaticPipelineInfo, resetting...");
+        cleanup_on_error();
+        return false;
+    }
+
+    size_t current_callback_index = 0;
+    size_t tot_callback_index = tot_entries - 1;
+
+    // There is only one entry type in the pipeline info cache,
+    // no need to keep track of anything.
+    for (int i = 1; i < tot_entries; i++) {
+
+        curr = pl_cache.ReadNext(curr);
+
+        if (!curr.Valid()) {
+            MALFORMED_DISK_CACHE;
+        }
+
+        LOG_DEBUG(Render_Vulkan, "Processing ID: {:016X} (type {})", curr.Id(), curr.Type());
+
+        if (curr.Type() == CacheEntryType::PL_CONFIG) {
+
+            const PLConfigEntry* entry;
+
+            if (!(entry = curr.Payload<PLConfigEntry>()) ||
+                entry->version != PLConfigEntry::EXPECTED_VERSION) {
+                MALFORMED_DISK_CACHE;
+            }
+
+            if (callback) {
+                callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                         tot_callback_index, "Pipeline");
+            }
+
+            known_graphic_pipelines.emplace(curr.Id());
+            auto pl_hash_opt = entry->pl_info.OptimizedHash(parent.instance);
+
+            if (graphics_pipelines.find(pl_hash_opt) != graphics_pipelines.end()) {
+                // Multiple entries can have the same optimized hash. Skip if that's the case.
+                LOG_DEBUG(Render_Vulkan, "    skipping.", curr.Id());
+                continue;
+            }
+
+            // Fetch all the shaders used in the pipeline,
+            // if any is missing we cannot build it.
+            std::array<Shader*, MAX_SHADER_STAGES> shaders;
+
+            if (entry->pl_info.shader_ids[ProgramType::VS]) {
+                auto it_vs =
+                    programmable_vertex_map.find(entry->pl_info.shader_ids[ProgramType::VS]);
+                if (it_vs == programmable_vertex_map.end()) {
+                    LOG_ERROR(Render_Vulkan, "Missing vertex shader {:016X} for pipeline {:016X}",
+                              entry->pl_info.shader_ids[ProgramType::VS], curr.Id());
+                    continue;
+                }
+                shaders[ProgramType::VS] = it_vs->second;
+            } else {
+                shaders[ProgramType::VS] = &parent.trivial_vertex_shader;
+            }
+
+            auto it_fs = fragment_shaders.find(entry->pl_info.shader_ids[ProgramType::FS]);
+            if (it_fs == fragment_shaders.end()) {
+                LOG_ERROR(Render_Vulkan, "Missing fragment shader {:016X} for pipeline {:016X}",
+                          entry->pl_info.shader_ids[ProgramType::FS], curr.Id());
+                continue;
+            }
+            shaders[ProgramType::FS] = &it_fs->second;
+
+            if (entry->pl_info.shader_ids[ProgramType::GS]) {
+                auto it_gs =
+                    fixed_geometry_shaders.find(entry->pl_info.shader_ids[ProgramType::GS]);
+                if (it_gs == fixed_geometry_shaders.end()) {
+                    LOG_ERROR(Render_Vulkan, "Missing geometry shader {:016X} for pipeline {:016X}",
+                              entry->pl_info.shader_ids[ProgramType::GS], curr.Id());
+                    continue;
+                }
+                shaders[ProgramType::GS] = &it_gs->second;
+            } else {
+                shaders[ProgramType::GS] = nullptr;
+            }
+
+            // Build the pipeline using the cached pipeline info.
+            // The dynamic state can be left default initialized.
+            PipelineInfo info{};
+            info.state = entry->pl_info;
+
+            auto [it_pl, _] = graphics_pipelines.try_emplace(pl_hash_opt);
+            it_pl.value() = std::make_unique<GraphicsPipeline>(
+                parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
+                *parent.pipeline_layout, shaders, &parent.workers);
+
+            it_pl.value()->Build();
+
+            LOG_DEBUG(Render_Vulkan, "    built.");
+
+        } else {
+            MALFORMED_DISK_CACHE;
+        }
+    }
+
+    // Switch to append mode to receive new entries.
+    pl_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
     return true;
 }
 
@@ -964,6 +1397,20 @@ bool ShaderDiskCache::AppendFSSPIRV(CacheFile& file, std::span<const u32> progra
     return file.Append(CacheEntryType::FS_SPIRV, program_id,
                        {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
                        true);
+}
+
+bool ShaderDiskCache::AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id) {
+    return file.Append(CacheEntryType::GS_CONFIG, config_id, entry, true);
+}
+
+bool ShaderDiskCache::AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
+    return file.Append(CacheEntryType::GS_SPIRV, program_id,
+                       {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
+                       true);
+}
+
+bool ShaderDiskCache::AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id) {
+    return file.Append(CacheEntryType::PL_CONFIG, config_id, entry, true);
 }
 
 } // namespace Vulkan

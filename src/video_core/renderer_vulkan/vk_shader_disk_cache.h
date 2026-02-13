@@ -7,6 +7,8 @@
 #include <mutex>
 #include <optional>
 #include <unordered_set>
+#include <tsl/robin_map.h>
+
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "video_core/pica/shader_setup.h"
@@ -32,6 +34,10 @@ public:
         const Pica::RegsInternal& regs, Pica::ShaderSetup& setup, const VertexLayout& layout);
     std::optional<std::pair<u64, Shader* const>> UseFragmentShader(
         const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
+    std::optional<std::pair<u64, Shader* const>> UseFixedGeometryShader(
+        const Pica::RegsInternal& regs);
+
+    GraphicsPipeline* GetPipeline(const PipelineInfo& info);
 
     u64 GetProgramID() const {
         return title_id;
@@ -46,6 +52,8 @@ private:
     enum class CacheFileType : u32 {
         VS_CACHE = 0,
         FS_CACHE = 1,
+        GS_CACHE = 2,
+        PL_CACHE = 3,
 
         MAX,
     };
@@ -62,6 +70,13 @@ private:
         // FS_CACHE
         FS_CONFIG = 4,
         FS_SPIRV = 5,
+
+        // GS_CACHE
+        GS_CONFIG = 6,
+        GS_SPIRV = 7,
+
+        // PL_CACHE
+        PL_CONFIG = 8,
 
         MAX,
     };
@@ -112,6 +127,22 @@ private:
         Pica::Shader::FSConfig fs_config;
     };
     static_assert(sizeof(FSConfigEntry) == 276);
+
+    struct GSConfigEntry {
+        static constexpr u8 EXPECTED_VERSION = 0;
+
+        u8 version; // Surprise tool that can help us later
+        Pica::Shader::Generator::PicaFixedGSConfig gs_config;
+    };
+    static_assert(sizeof(GSConfigEntry) == 44);
+
+    struct PLConfigEntry {
+        static constexpr u8 EXPECTED_VERSION = 0;
+
+        u8 version; // Surprise tool that can help us later
+        StaticPipelineInfo pl_info;
+    };
+    static_assert(sizeof(PLConfigEntry) == 152);
 
     class CacheFile;
     class CacheEntry {
@@ -261,6 +292,8 @@ private:
 
     std::string GetVSFile(u64 title_id, bool is_temp) const;
     std::string GetFSFile(u64 title_id, bool is_temp) const;
+    std::string GetGSFile(u64 title_id, bool is_temp) const;
+    std::string GetPLFile(u64 title_id, bool is_temp) const;
 
     bool RecreateCache(CacheFile& file, CacheFileType type);
 
@@ -268,6 +301,12 @@ private:
                      const VideoCore::DiskResourceLoadCallback& callback);
 
     bool InitFSCache(const std::atomic_bool& stop_loading,
+                     const VideoCore::DiskResourceLoadCallback& callback);
+
+    bool InitGSCache(const std::atomic_bool& stop_loading,
+                     const VideoCore::DiskResourceLoadCallback& callback);
+
+    bool InitPLCache(const std::atomic_bool& stop_loading,
                      const VideoCore::DiskResourceLoadCallback& callback);
 
     bool AppendVSConfigProgram(CacheFile& file, const Pica::Shader::Generator::PicaVSConfig& config,
@@ -279,8 +318,15 @@ private:
     bool AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id);
     bool AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
 
+    bool AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id);
+    bool AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
+
+    bool AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id);
+
     CacheFile vs_cache;
     CacheFile fs_cache;
+    CacheFile gs_cache;
+    CacheFile pl_cache;
 
     PipelineCache& parent;
     u64 title_id;
@@ -290,6 +336,12 @@ private:
     std::unordered_set<u64> known_vertex_programs;
 
     std::unordered_map<u64, Shader> fragment_shaders;
+
+    std::unordered_map<size_t, Shader> fixed_geometry_shaders;
+
+    tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
+        graphics_pipelines;
+    std::unordered_set<u64> known_graphic_pipelines;
 };
 
 } // namespace Vulkan

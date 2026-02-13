@@ -155,7 +155,7 @@ void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
         callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Pipeline");
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
     }
 
     auto load_cache = [this, &cache_info](bool allow_fallback) {
@@ -265,25 +265,14 @@ void PipelineCache::SaveDiskCache() {
     }
 }
 
-bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
+bool PipelineCache::BindPipeline(PipelineInfo& info, bool wait_built) {
     MICROPROFILE_SCOPE(Vulkan_Bind);
 
-    u64 shader_hash = 0;
     for (u32 i = 0; i < MAX_SHADER_STAGES; i++) {
-        shader_hash = Common::HashCombine(shader_hash, shader_hashes[i]);
+        info.state.shader_ids[i] = shader_hashes[i];
     }
 
-    const u64 info_hash = info.Hash(instance);
-    const u64 pipeline_hash = Common::HashCombine(shader_hash, info_hash);
-
-    auto [it, new_pipeline] = graphics_pipelines.try_emplace(pipeline_hash);
-    if (new_pipeline) {
-        it.value() =
-            std::make_unique<GraphicsPipeline>(instance, renderpass_cache, info, *pipeline_cache,
-                                               *pipeline_layout, current_shaders, &workers);
-    }
-
-    GraphicsPipeline* const pipeline{it->second.get()};
+    GraphicsPipeline* const pipeline = curr_disk_cache->GetPipeline(info);
     if (!pipeline->IsDone() && !pipeline->TryBuild(wait_built)) {
         return false;
     }
@@ -291,12 +280,12 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     const bool is_dirty = scheduler.IsStateDirty(StateFlags::Pipeline);
     const bool pipeline_dirty = (current_pipeline != pipeline) || is_dirty;
     scheduler.Record([this, is_dirty, pipeline_dirty, pipeline,
-                      current_dynamic = current_info.dynamic, dynamic = info.dynamic,
+                      current_dynamic = current_info.dynamic_info, dynamic = info.dynamic_info,
                       descriptor_sets = bound_descriptor_sets, offsets = offsets,
-                      current_rasterization = current_info.rasterization,
-                      current_depth_stencil = current_info.depth_stencil,
-                      rasterization = info.rasterization,
-                      depth_stencil = info.depth_stencil](vk::CommandBuffer cmdbuf) {
+                      current_rasterization = current_info.state.rasterization,
+                      current_depth_stencil = current_info.state.depth_stencil,
+                      rasterization = info.state.rasterization,
+                      depth_stencil = info.state.depth_stencil](vk::CommandBuffer cmdbuf) {
         if (dynamic.viewport != current_dynamic.viewport || is_dirty) {
             const vk::Viewport vk_viewport = {
                 .x = static_cast<f32>(dynamic.viewport.left),
@@ -470,29 +459,15 @@ bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
         return true;
     }
 
-    const PicaFixedGSConfig gs_config{regs};
-    const auto gs_config_hash = gs_config.Hash();
+    auto res = curr_disk_cache->UseFixedGeometryShader(regs);
 
-    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config_hash, instance);
-    auto& shader = it->second;
-
-    if (new_shader) {
-        workers.QueueWork([gs_config, this, &shader]() {
-            ExtraFixedGSConfig extra;
-            extra.use_clip_planes = instance.IsShaderClipDistanceSupported();
-            extra.separable_shader = true;
-
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, extra);
-            shader.module = CompileSPV(CompileGLSL(code, vk::ShaderStageFlagBits::eGeometry),
-                                       instance.GetDevice());
-            shader.MarkDone();
-        });
+    if (res.has_value()) {
+        current_shaders[ProgramType::GS] = (*res).second;
+        shader_hashes[ProgramType::GS] = (*res).first;
+        return true;
     }
 
-    current_shaders[ProgramType::GS] = &shader;
-    shader_hashes[ProgramType::GS] = gs_config_hash;
-
-    return true;
+    return false;
 }
 
 void PipelineCache::UseTrivialGeometryShader() {
@@ -593,7 +568,7 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
         callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Pipeline");
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
     }
 
     // Make sure we have a valid pipeline cache before switching

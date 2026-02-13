@@ -5,7 +5,6 @@
 #pragma once
 
 #include <bitset>
-#include <tsl/robin_map.h>
 
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
@@ -70,7 +69,7 @@ public:
     void SaveDiskCache();
 
     /// Binds a pipeline using the provided information
-    bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
+    bool BindPipeline(PipelineInfo& info, bool wait_built = false);
 
     Pica::Shader::Generator::ExtraVSConfig CalcExtraConfig(
         const Pica::Shader::Generator::PicaVSConfig& config);
@@ -147,8 +146,6 @@ private:
     Common::ThreadWorker workers;
     PipelineInfo current_info{};
     GraphicsPipeline* current_pipeline{};
-    tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
-        graphics_pipelines;
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;
     std::array<vk::DescriptorSet, NumRasterizerSets> bound_descriptor_sets{};
     std::array<u32, NumDynamicOffsets> offsets{};
@@ -156,8 +153,6 @@ private:
     std::array<u64, MAX_SHADER_STAGES> shader_hashes;
     std::array<Shader*, MAX_SHADER_STAGES> current_shaders;
 
-    std::unordered_map<size_t, Shader> fixed_geometry_shaders;
-    std::unordered_map<size_t, Shader> fragment_shaders;
     Shader trivial_vertex_shader;
 
     u64 current_program_id{0};
