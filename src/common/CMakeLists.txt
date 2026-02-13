@@ -68,6 +68,7 @@ add_library(citra_common STATIC
     detached_tasks.cpp
     detached_tasks.h
     bit_field.h
+    bit_field.natvis
     bit_set.h
     bounded_threadsafe_queue.h
     cityhash.cpp
