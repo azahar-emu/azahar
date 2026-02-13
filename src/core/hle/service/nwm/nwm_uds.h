@@ -477,7 +477,7 @@ private:
     std::unique_ptr<NodeInfo> GetNodeInformationHLE(u16 network_node_id);
     int SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags, std::vector<u8> input_buffer);
     Result UpdateNetworkAttributeHLE(u16 bitmask, u8 flag);
-    
+
     Result BeginHostingNetwork(std::span<const u8> network_info_buffer, std::vector<u8> passphrase);
 
     void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,

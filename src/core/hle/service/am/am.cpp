@@ -873,6 +873,7 @@ bool CIAFile::Close() {
             // Only delete the content folder as there may be user save data in the title folder.
             const std::string title_content_path =
                 GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()) + "content/";
+            current_content_file.reset();
             FileUtil::DeleteDirRecursively(title_content_path);
         }
         return true;

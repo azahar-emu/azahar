@@ -13,19 +13,19 @@ class DLP_CLNT final : public ServiceFramework<DLP_CLNT>, public DLP_Clt_Base {
 public:
     DLP_CLNT();
     virtual ~DLP_CLNT() = default;
-    
+
     virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
 private:
     SERVICE_SERIALIZATION_SIMPLE
-    
+
     virtual bool IsFKCL() {return false;}
-    
+
     bool is_preparing_for_update = false;
     bool is_updating = false;
     Network::MacAddress mac_addr_update;
-    
+
     u32 ClientNeedsDup();
-    
+
     void Initialize(Kernel::HLERequestContext& ctx);
     void Finalize(Kernel::HLERequestContext& ctx);
     void GetCupVersion(Kernel::HLERequestContext& ctx);

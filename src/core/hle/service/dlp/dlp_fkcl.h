@@ -17,9 +17,9 @@ public:
     virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
 private:
     SERVICE_SERIALIZATION_SIMPLE
-    
+
     virtual bool IsFKCL() {return true;}
-    
+
     void Initialize(Kernel::HLERequestContext& ctx);
     void Finalize(Kernel::HLERequestContext& ctx);
     void InitializeWithName(Kernel::HLERequestContext& ctx);
