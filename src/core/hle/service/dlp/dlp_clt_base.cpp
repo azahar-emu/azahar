@@ -5,6 +5,7 @@
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/am/am.h"
 #include "common/timer.h"
+#include "common/alignment.h"
 
 #include <fstream>
 
@@ -561,6 +562,8 @@ void DLP_Clt_Base::BeaconScanCallback(std::uintptr_t user_data, s64 cycles_late)
         // unique id should be the title id without the tid high shifted 1 byte right
         c_title_info.unique_id = (d_ntohll(broad_pk1->child_title_id) & 0xFFFFFFFF) >> 8;
         
+        c_title_info.size = d_ntohl(broad_pk1->size) + broad_title_size_diff;
+        
         // copy over the icon data
         auto memcpy_u16_ntohs = [](void *_d, const void *_s, size_t n) {
             auto d = reinterpret_cast<char*>(_d);
@@ -577,7 +580,7 @@ void DLP_Clt_Base::BeaconScanCallback(std::uintptr_t user_data, s64 cycles_late)
         loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk3->icon_part.data(), broad_pk3->icon_part.size());
         loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk4->icon_part.data(), broad_pk4->icon_part.size());
         
-        LOG_INFO(Service_DLP, "Got title info!");
+        LOG_INFO(Service_DLP, "Got title info! sz 0x{:x} ({})", c_title_info.size, c_title_info.size);
         
         scanned_title_info.emplace_back(c_title_info, c_server_info);
     }
@@ -645,6 +648,8 @@ void DLP_Clt_Base::ClientConnectionManager() {
     u32 dlp_poll_rate_ms = dlp_poll_rate_normal;
     bool got_corrupted_packets = false;
     
+    std::set<ReceivedFragment> received_fragments;
+    
     while (sleep_poll(dlp_poll_rate_ms), is_connected) {
         std::vector<u8> recv_buf;
         
@@ -662,7 +667,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
             std::scoped_lock cs_lock(clt_state_mutex);
             if (p_head->type == dl_pk_type_auth) {
                 //LOG_INFO(Service_DLP, "recvd auth");
-                //clt_state = DLP_Clt_State::Accepted; TODO: research and test this out!
+                //clt_state = DLP_Clt_State::Accepted; TODO: research and test this out! games work without it, though.
                 auto r_pbody = GetPacketBody<DLPSrvr_Auth>(recv_buf);
                 auto s_body = PGen_SetPK<DLPClt_AuthAck>(dl_pk_head_auth_header, 0, p_head->resp_id);
                 s_body->unk1 = {0x01};
@@ -677,27 +682,88 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     auto s_body = PGen_SetPK<DLPClt_StartDistributionAck_NoContentNeeded>(dl_pk_head_start_dist_header, 0, p_head->resp_id);
                     s_body->unk1 = {0x1};
                     s_body->unk2 = 0x0;
+                    is_downloading_content = false;
                 } else {
                     // send content needed ack
-                    LOG_INFO(Service_DLP, "Requesting game files");
                     auto s_body = PGen_SetPK<DLPClt_StartDistributionAck_ContentNeeded>(dl_pk_head_start_dist_header, 0, p_head->resp_id);
                     s_body->unk1 = 0x1;
-                    s_body->unk2 = 0x0;
-                    s_body->unk3 = 0x20 << 24;
+                     // figure out what these are. seems like magic values
+                    s_body->unk2 = d_htons(0x20);
+                    s_body->unk3 = 0x0;
                     s_body->unk4 = 0x1;
                     s_body->unk5 = 0x0;
                     s_body->unk_body = {}; // all zeros
+                    is_downloading_content = true;
+                    
+                    if (!TitleInfoIsCached(host_mac_address)) {
+                        LOG_CRITICAL(Service_DLP, "Tried to request content download, but title info was not cached");
+                        break;
+                    }
+                    
+                    auto tinfo = scanned_title_info[GetCachedTitleInfoIdx(host_mac_address)].first;
+                    
+                    dlp_units_downloaded = 0;
+                    dlp_units_total = Common::AlignUp(tinfo.size - broad_title_size_diff, content_fragment_size)/content_fragment_size;
+                    dlp_poll_rate_ms = dlp_poll_rate_distribute;
+                    current_content_block = 0;
+                    LOG_INFO(Service_DLP, "Requesting game files");
                 }
                 PGen_SendPK(dlp_host_network_node_id, dlp_client_data_channel);
             } else if (p_head->type == dl_pk_type_distribute) {
-                LOG_INFO(Service_DLP, "recvd distribute frag");
+                //LOG_INFO(Service_DLP, "recvd distribute frag");
+                if (is_downloading_content) {
+                    auto r_pbody = GetPacketBody<DLPSrvr_ContentDistributionFragment>(recv_buf);
+                    auto& cf = r_pbody->content_fragment;
+                    ReceivedFragment frag{
+                        .index = static_cast<u32>(d_ntohs(r_pbody->frag_index) + dlp_content_block_length*current_content_block),
+                        .content{cf.begin(), cf.begin() + d_ntohs(r_pbody->frag_size)}
+                    };
+                    received_fragments.insert(frag);
+                    dlp_units_downloaded++;
+                    if (dlp_units_downloaded == dlp_units_total) {
+                        dlp_poll_rate_ms = dlp_poll_rate_normal;
+                        is_downloading_content = false;
+                        LOG_INFO(Service_DLP, "Finished downloading content");
+                        // now install content as encrypted CIA
+                        auto cia_file = std::make_unique<AM::CIAFile>(system, FS::MediaType::NAND);
+                        cia_file->decryption_authorized = true;
+                        bool install_errored = false;
+                        for (u64 nb = 0; auto& frag : received_fragments) {
+                            auto res = cia_file->Write(nb, frag.content.size(), true, false, frag.content.data());
+                            
+                            if (res.Failed()) {
+                                LOG_ERROR(Service_DLP, "Could not install CIA. Error code {:08x}", res.Code().raw);
+                                install_errored = true;
+                                break;
+                            }
+                            
+                            nb += frag.content.size();
+                        }
+                        cia_file->Close();
+                        if (!install_errored) {
+                            LOG_INFO(Service_DLP, "Successfully installed DLP CIA.");
+                        }
+                    }
+                } else {
+                    LOG_ERROR(Service_DLP, "Received content fragment without requesting it");
+                }
             } else if (p_head->type == dl_pk_type_finish_dist) {
                 //LOG_INFO(Service_DLP, "recvd finish distrib");
-                auto s_body = PGen_SetPK<DLPClt_FinishContentUploadAck>(dl_pk_head_finish_dist_header, 0, p_head->resp_id);
-                s_body->unk1 = 0x1;
-                s_body->unk2 = 0x1;
-                s_body->unk3 = 0x0;
-                PGen_SendPK(dlp_host_network_node_id, dlp_client_data_channel);
+                if (p_head->packet_index == 0) {
+                    LOG_ERROR(Service_DLP, "Received finish dist packet, but packet index was 0");
+                } else if (p_head->packet_index == 1) {
+                    auto r_pbody = GetPacketBody<DLPSrvr_FinishContentUpload>(recv_buf);
+                    auto s_body = PGen_SetPK<DLPClt_FinishContentUploadAck>(dl_pk_head_finish_dist_header, 0, p_head->resp_id);
+                    if (is_downloading_content) {
+                        current_content_block++;
+                    }
+                    s_body->unk1 = 0x1;
+                    s_body->unk2 = 0x1;
+                    s_body->unk3 = is_downloading_content;
+                    s_body->seq_ack = d_htonl(d_ntohl(r_pbody->seq_num) + 1);
+                    s_body->unk4 = 0x0;
+                    PGen_SendPK(dlp_host_network_node_id, dlp_client_data_channel);
+                }
             } else if (p_head->type == dl_pk_type_start_game) {
                 //LOG_INFO(Service_DLP, "recvd start game");
                 if (p_head->packet_index == 0) {
@@ -723,7 +789,405 @@ void DLP_Clt_Base::ClientConnectionManager() {
 }
 
 bool DLP_Clt_Base::NeedsContentDownload(Network::MacAddress mac_addr) {
-    return false;
+    std::scoped_lock lock(title_info_mutex);
+    if (!TitleInfoIsCached(mac_addr)) {
+        LOG_ERROR(Service_DLP, "title info was not cached");
+        return false;
+    }
+    auto tinfo = scanned_title_info[GetCachedTitleInfoIdx(mac_addr)].first;
+    u64 title_id = DLP_CHILD_TID_HIGH | (tinfo.unique_id << 8);
+    return !FileUtil::Exists(AM::GetTitleContentPath(FS::MediaType::NAND, title_id));
 }
 
 } // namespace Service::DLP
+
+/*
+[ 146.138901] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 146.138939] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b1 ee 1 2 99 80
+1 0 0 0 0 0 0 0
+[ 146.146827] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 146.146866] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b1 ee 1 2 99 80
+1 0 0 0 0 0 0 0
+[ 146.150607] Service.AM <Info> core/hle/service/am/am.cpp:AuthorizeCIAFileDecryption:415: Authorized encrypted CIA installation.
+[ 146.150647] Service.AM <Warning> core/hle/service/am/am.cpp:BeginImportProgramTemporarily:3456: (STUBBED)
+[ 146.188095] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 146.188145] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 1e 0 2 99 80
+1 0 0 0 1 1 0 0 0 1 0 0
+[ 146.189936] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 146.189975] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 1e 0 2 99 80
+1 0 0 0 1 1 0 0 0 1 0 0
+[ 146.196132] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 146.196161] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b1 ee 1 2 99 80
+1 0 0 0 0 0 0 0
+[ 146.197396] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 146.197440] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 1e 0 2 99 80
+1 0 0 0 1 1 0 0 0 1 0 0
+[ 146.735131] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 146.735170] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b1 ee 1 3 99 80
+1 0 0 0 0 0 0 1
+[ 146.744906] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 146.744942] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b1 ee 1 3 99 80
+1 0 0 0 0 0 0 1
+[ 146.746069] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 146.746094] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 2e 0 3 99 80
+1 0 0 0 1 1 0 0 0 2 0 0
+[ 146.746374] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 146.746394] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 2e 0 3 99 80
+1 0 0 0 1 1 0 0 0 2 0 0
+[ 147.309070] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 147.309124] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f1 fe 1 4 99 80
+1 0 0 0 0 0 0 2
+[ 147.309999] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 147.310033] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f1 fe 1 4 99 80
+1 0 0 0 0 0 0 2
+[ 147.322017] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 147.322065] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 3e 0 4 99 80
+1 0 0 0 1 1 0 0 0 3 0 0
+[ 147.322687] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 147.322713] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 3e 0 4 99 80
+1 0 0 0 1 1 0 0 0 3 0 0
+[ 147.839084] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 147.839111] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f1 fe 1 5 99 80
+1 0 0 0 0 0 0 3
+[ 147.847621] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 147.847664] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 4e 0 5 99 80
+1 0 0 0 1 1 0 0 0 4 0 0
+[ 147.852497] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 147.852526] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f1 fe 1 5 99 80
+1 0 0 0 0 0 0 3
+[ 147.853543] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 147.853572] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 4e 0 5 99 80
+1 0 0 0 1 1 0 0 0 4 0 0
+[ 148.354663] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 148.354691] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 e 1 6 99 80
+1 0 0 0 0 0 0 4
+[ 148.366912] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 148.366963] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 5e 0 6 99 80
+1 0 0 0 1 1 0 0 0 5 0 0
+[ 148.367988] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 148.368031] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 e 1 6 99 80
+1 0 0 0 0 0 0 4
+[ 148.368874] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 148.368899] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 5e 0 6 99 80
+1 0 0 0 1 1 0 0 0 5 0 0
+[ 148.902449] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 148.902480] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 e 1 7 99 80
+1 0 0 0 0 0 0 5
+[ 148.905233] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 148.905259] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 e 1 7 99 80
+1 0 0 0 0 0 0 5
+[ 148.914550] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 148.914587] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 6e 0 7 99 80
+1 0 0 0 1 1 0 0 0 6 0 0
+[ 148.917086] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 148.917125] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 6e 0 7 99 80
+1 0 0 0 1 1 0 0 0 6 0 0
+[ 149.408541] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 149.408567] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 1e 1 8 99 80
+1 0 0 0 0 0 0 6
+[ 149.505213] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 149.505247] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 1e 1 8 99 80
+1 0 0 0 0 0 0 6
+[ 149.507711] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 149.507746] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 1e 1 8 99 80
+1 0 0 0 0 0 0 6
+[ 149.508107] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 149.508133] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 7e 0 8 99 80
+1 0 0 0 1 1 0 0 0 7 0 0
+[ 149.508948] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 149.508977] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 7e 0 8 99 80
+1 0 0 0 1 1 0 0 0 7 0 0
+[ 149.509886] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 149.509915] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 7e 0 8 99 80
+1 0 0 0 1 1 0 0 0 7 0 0
+[ 150.022751] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 150.022785] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 1e 1 9 99 80
+1 0 0 0 0 0 0 7
+[ 150.023616] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 150.023647] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 1e 1 9 99 80
+1 0 0 0 0 0 0 7
+[ 150.033712] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 150.033753] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 8e 0 9 99 80
+1 0 0 0 1 1 0 0 0 8 0 0
+[ 150.036542] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 150.036568] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 8e 0 9 99 80
+1 0 0 0 1 1 0 0 0 8 0 0
+[ 150.521049] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 150.521090] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b0 2e 1 a 99 80
+1 0 0 0 0 0 0 8
+[ 150.533208] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 150.533249] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 9e 0 a 99 80
+1 0 0 0 1 1 0 0 0 9 0 0
+[ 150.533502] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 150.533522] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b0 2e 1 a 99 80
+1 0 0 0 0 0 0 8
+[ 150.536446] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 150.536476] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 9e 0 a 99 80
+1 0 0 0 1 1 0 0 0 9 0 0
+[ 151.054152] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 151.054191] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b0 2e 1 b 99 80
+1 0 0 0 0 0 0 9
+[ 151.062507] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 151.062540] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ae 0 b 99 80
+1 0 0 0 1 1 0 0 0 a 0 0
+[ 151.064118] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 151.064159] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 77 b0 2e 1 b 99 80
+1 0 0 0 0 0 0 9
+[ 151.064877] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 151.064910] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ae 0 b 99 80
+1 0 0 0 1 1 0 0 0 a 0 0
+[ 151.552408] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 151.552479] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f0 3e 1 c 99 80
+1 0 0 0 0 0 0 a
+[ 151.561533] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 151.561568] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f0 3e 1 c 99 80
+1 0 0 0 0 0 0 a
+[ 151.562439] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 151.562479] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 be 0 c 99 80
+1 0 0 0 1 1 0 0 0 b 0 0
+[ 151.563191] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 151.563215] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 be 0 c 99 80
+1 0 0 0 1 1 0 0 0 b 0 0
+[ 152.061529] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 152.061566] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f0 3e 1 d 99 80
+1 0 0 0 0 0 0 b
+[ 152.073416] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 152.073461] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 ce 0 d 99 80
+1 0 0 0 1 1 0 0 0 c 0 0
+[ 152.074858] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 152.074881] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 77 f0 3e 1 d 99 80
+1 0 0 0 0 0 0 b
+[ 152.075251] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 152.075271] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b0 ce 0 d 99 80
+1 0 0 0 1 1 0 0 0 c 0 0
+[ 152.580100] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 152.580128] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 4e 1 e 99 80
+1 0 0 0 0 0 0 c
+[ 152.589057] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 152.589105] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 de 0 e 99 80
+1 0 0 0 1 1 0 0 0 d 0 0
+[ 152.590418] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 152.590452] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 4e 1 e 99 80
+1 0 0 0 0 0 0 c
+[ 152.590952] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 152.590983] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b0 de 0 e 99 80
+1 0 0 0 1 1 0 0 0 d 0 0
+[ 153.062540] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 153.062576] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 4e 1 f 99 80
+1 0 0 0 0 0 0 d
+[ 153.070805] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 153.070850] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ee 0 f 99 80
+1 0 0 0 1 1 0 0 0 e 0 0
+[ 153.075159] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 153.075184] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 77 b0 4e 1 f 99 80
+1 0 0 0 0 0 0 d
+[ 153.076096] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 153.076119] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ee 0 f 99 80
+1 0 0 0 1 1 0 0 0 e 0 0
+[ 153.561982] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 153.562017] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 5e 1 10 99 80
+1 0 0 0 0 0 0 e
+[ 153.571008] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 153.571048] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 fe 0 10 99 80
+1 0 0 0 1 1 0 0 0 f 0 0
+[ 153.572645] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 153.572677] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 5e 1 10 99 80
+1 0 0 0 0 0 0 e
+[ 153.573076] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 153.573098] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b0 fe 0 10 99 80
+1 0 0 0 1 1 0 0 0 f 0 0
+[ 154.097287] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 154.097315] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 5e 1 11 99 80
+1 0 0 0 0 0 0 f
+[ 154.110414] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 154.110468] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b3 e 0 11 99 80
+1 0 0 0 1 1 0 0 0 10 0 0
+[ 154.110697] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 154.110717] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 4d 77 f0 5e 1 11 99 80
+1 0 0 0 0 0 0 f
+[ 154.111852] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 154.111878] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b3 e 0 11 99 80
+1 0 0 0 1 1 0 0 0 10 0 0
+[ 154.615670] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 154.615710] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 75 b0 6e 1 12 99 80
+1 0 0 0 0 0 0 10
+[ 154.626243] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 154.626293] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 75 b0 6e 1 12 99 80
+1 0 0 0 0 0 0 10
+[ 154.626409] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 154.626427] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b3 1e 0 12 99 80
+1 0 0 0 1 1 0 0 0 11 0 0
+[ 154.627378] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 154.627402] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b3 1e 0 12 99 80
+1 0 0 0 1 1 0 0 0 11 0 0
+[ 155.144014] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 155.144043] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 75 b0 6e 1 13 99 80
+1 0 0 0 0 0 0 11
+[ 155.156212] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 155.156246] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 8d 75 b0 6e 1 13 99 80
+1 0 0 0 0 0 0 11
+[ 155.156568] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 155.156611] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b3 2e 0 13 99 80
+1 0 0 0 1 1 0 0 0 12 0 0
+[ 155.157608] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 155.157637] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b3 2e 0 13 99 80
+1 0 0 0 1 1 0 0 0 12 0 0
+[ 155.660763] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 155.660828] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 75 f0 7e 1 14 99 80
+1 0 0 0 0 0 0 12
+[ 155.669774] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 155.669808] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 75 f0 7e 1 14 99 80
+1 0 0 0 0 0 0 12
+[ 155.670107] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 155.670129] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b3 3e 0 14 99 80
+1 0 0 0 1 1 0 0 0 13 0 0
+[ 155.670940] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 155.670964] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 cd 77 b3 3e 0 14 99 80
+1 0 0 0 1 1 0 0 0 13 0 0
+[ 156.225562] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 156.225590] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 75 f0 7e 1 15 99 80
+1 0 0 0 0 0 0 13
+[ 156.234878] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 156.234914] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b3 4e 0 15 99 80
+1 0 0 0 1 1 0 0 0 14 0 0
+[ 156.237093] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 156.237128] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 cd 75 f0 7e 1 15 99 80
+1 0 0 0 0 0 0 13
+[ 156.237618] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 156.237642] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 d 77 b3 4e 0 15 99 80
+1 0 0 0 1 1 0 0 0 14 0 0
+[ 156.726891] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 156.726932] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 75 b0 8e 1 16 99 80
+1 0 0 0 0 0 0 14
+[ 156.737589] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 156.737623] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 75 b0 8e 1 16 99 80
+1 0 0 0 0 0 0 14
+[ 156.739229] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 156.739254] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b3 5e 0 16 99 80
+1 0 0 0 1 1 0 0 0 15 0 0
+[ 156.739752] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 156.739773] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 4d 77 b3 5e 0 16 99 80
+1 0 0 0 1 1 0 0 0 15 0 0
+[ 157.206910] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 157.206948] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 75 b0 8e 1 17 99 80
+1 0 0 0 0 0 0 15
+[ 157.207401] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 24 magic v: 0x5
+[ 157.207429] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+5 2 0 0 0 18 2 0 d 75 b0 8e 1 17 99 80
+1 0 0 0 0 0 0 15
+[ 157.220333] Service.AM <Warning> core/hle/service/am/am.cpp:EndImportProgramWithoutCommit:3510: (STUBBED)
+[ 157.227986] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 157.228034] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ae 0 17 99 80
+1 0 0 0 1 0 0 0 0 0 0 0
+[ 157.228998] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 28 ch: 2, magic v: 0x5
+[ 157.229025] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+5 2 0 0 0 1c 2 0 8d 77 b0 ae 0 17 99 80
+1 0 0 0 1 0 0 0 0 0 0 0
+[ 157.270220] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 32 magic v: 0x6
+[ 157.270254] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+6 2 0 0 0 20 2 0 8c a5 f7 ee 1 18 99 80
+1 0 0 0 33 33 37 34 30 65 62 62 0 9 0 0
+[ 157.273406] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 24 ch: 2, magic v: 0x6
+[ 157.273433] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+6 2 0 0 0 18 2 0 4d 77 a8 9e 0 18 99 80
+1 0 0 0 9 0 0 0
+[ 157.290820] Service.APT <Warning> core/hle/service/apt/apt.cpp:SetWirelessRebootInfo:77: called size=16
+[ 157.290924] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1410: r sz 32 magic v: 0x6
+[ 157.290962] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:PullPacketHLE:1411:
+6 2 0 0 0 20 2 0 8c a5 f7 ee 1 18 99 80
+1 0 0 0 33 33 37 34 30 65 62 62 0 9 0 0
+[ 157.293528] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1259: s sz 24 ch: 2, magic v: 0x6
+[ 157.293559] Service.NWM <Info> core/hle/service/nwm/nwm_uds.cpp:SendToHLE:1260:
+6 2 0 0 0 18 2 0 4d 77 a8 9e 0 18 99 80
+1 0 0 0 9 0 0 0
+*/

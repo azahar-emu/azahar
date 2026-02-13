@@ -14,9 +14,9 @@
 extern "C" {
 extern u16 htons(u16);
 extern u16 ntohs(u16);
+extern u32 htonl(u32);
+extern u32 ntohl(u32);
 }
-
-#include <fstream>
 
 namespace Service::DLP {
 
@@ -68,6 +68,14 @@ u16 DLP_Base::d_htons(u16 n) {
 
 u16 DLP_Base::d_ntohs(u16 n) {
     return ntohs(n);
+}
+
+u32 DLP_Base::d_htonl(u32 n) {
+    return htonl(n);
+}
+
+u32 DLP_Base::d_ntohl(u32 n) {
+    return ntohl(n);
 }
 
 u64 DLP_Base::d_ntohll(u64 n) {
@@ -197,7 +205,6 @@ bool DLP_Base::SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 
     return GetUDS()->SendToHLE(node_id, data_channel, buffer.size(), flags, buffer) >= 0;
 }
 
-// taken from ghidra
 void DLP_Base::GeneratePKChecksum(void *output_word, void *_input_buffer, u32 packet_size) {
     auto input_buffer = reinterpret_cast<u8*>(_input_buffer);
 

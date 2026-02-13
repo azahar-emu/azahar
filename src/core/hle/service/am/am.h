@@ -46,6 +46,10 @@ namespace IPC {
 class RequestParser;
 }
 
+namespace Service::DLP {
+class DLP_Clt_Base;
+}
+
 namespace Service::AM {
 
 namespace ErrCodes {
@@ -235,6 +239,7 @@ public:
 
 private:
     friend void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ctx);
+    friend class DLP::DLP_Clt_Base;
     Core::System& system;
 
     // Sections (tik, tmd, contents) are being imported individually
