@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright Citra Emulator Project / Azahar Emulator Project -->
+<!-- Licensed under GPLv2 or any later version -->
+<!-- Refer to the license.txt file included. -->
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="BitField&lt;*,*,*,*&gt;">
+    <DisplayString>
+      {((unsigned long long)storage &gt;&gt; $T1) &amp; (((unsigned long long)1 &lt;&lt; $T2) - 1)}
+    </DisplayString>
+    <Expand>
+      <Item Name="UnsignedValue">
+        ((unsigned long long)storage &gt;&gt; $T1) &amp; (((unsigned long long)1 &lt;&lt; $T2) - 1)
+      </Item>
+      <Item Name="SignedValue">
+        (long long)((((unsigned long long)storage &gt;&gt; $T1) &amp; ((1ULL &lt;&lt; $T2)-1)) &amp; (1ULL &lt;&lt; ($T2-1))
+        ? -((1ULL &lt;&lt; $T2) - (((unsigned long long)storage &gt;&gt; $T1) &amp; ((1ULL &lt;&lt; $T2)-1)))
+        : (((unsigned long long)storage &gt;&gt; $T1) &amp; ((1ULL &lt;&lt; $T2)-1)))
+      </Item>
+      <Item Name="Position">
+        $T1
+      </Item>
+      <Item Name="Bits">
+        $T2
+      </Item>
+      <Item Name="RawStorage">storage</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>
