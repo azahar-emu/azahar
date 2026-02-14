@@ -95,25 +95,73 @@ void EmuWindow_LibRetro::SwapBuffers() {
     }
     case Settings::GraphicsAPI::Software: {
         retro_framebuffer fb;
-        void* data;
+        u8* data;
+        size_t pitch;
         bool did_malloc = false;
         if (LibRetro::GetSoftwareFramebuffer(&fb, width, height)) {
-            data = fb.data;
+            data = static_cast<u8*>(fb.data);
+            pitch = fb.pitch;
         } else {
-            data = calloc(1, width * height * 4);
+            pitch = static_cast<size_t>(width) * 4;
+            data = static_cast<u8*>(calloc(1, pitch * height));
             did_malloc = true;
         }
 
+        std::memset(data, 0, pitch * height);
+
         auto& system = Core::System::GetInstance();
         const auto& renderer = static_cast<SwRenderer::RendererSoftware&>(system.GPU().Renderer());
+        const auto& layout = GetFramebufferLayout();
 
-        const auto& tl_info = renderer.Screen(VideoCore::ScreenId::TopLeft);
-        // this is not correct, I just did this to see if I could see anything at all
-        std::memcpy(data, tl_info.pixels.data(), tl_info.pixels.size());
-        const auto& b_info = renderer.Screen(VideoCore::ScreenId::Bottom);
-        // this is also not correct
-        std::memcpy(((uint8_t*)data) + tl_info.pixels.size(), b_info.pixels.data(),
-                    b_info.pixels.size());
+        // Blit a single screen from ScreenInfo (column-major RGBA) to the
+        // output buffer (row-major XRGB8888), rotating and scaling as needed.
+        // The 3DS framebuffer is portrait-oriented; ScreenInfo stores pixels
+        // column-major so the transpose gives us the landscape orientation:
+        //   display (dx, dy) -> ScreenInfo (x=dy, y=dx)
+        auto blit_screen = [&](VideoCore::ScreenId screen_id,
+                               const Common::Rectangle<u32>& rect) {
+            const auto& info = renderer.Screen(screen_id);
+            if (info.pixels.empty())
+                return;
+
+            const u32 rect_w = rect.GetWidth();
+            const u32 rect_h = rect.GetHeight();
+            if (rect_w == 0 || rect_h == 0)
+                return;
+
+            // Landscape display dimensions (transposed from portrait storage)
+            const u32 native_w = info.height;
+            const u32 native_h = info.width;
+
+            for (u32 oy = 0; oy < rect_h; oy++) {
+                for (u32 ox = 0; ox < rect_w; ox++) {
+                    const u32 dx = ox * native_w / rect_w;
+                    const u32 dy = oy * native_h / rect_h;
+
+                    const u32 src_off = (dy * info.height + dx) * 4;
+                    if (src_off + 3 >= info.pixels.size())
+                        continue;
+
+                    const u8* src = info.pixels.data() + src_off;
+                    const size_t dst_off =
+                        static_cast<size_t>(rect.top + oy) * pitch +
+                        static_cast<size_t>(rect.left + ox) * 4;
+
+                    // RGBA -> XRGB8888 (little-endian: B, G, R, 0)
+                    data[dst_off + 0] = src[2];
+                    data[dst_off + 1] = src[1];
+                    data[dst_off + 2] = src[0];
+                    data[dst_off + 3] = 0;
+                }
+            }
+        };
+
+        if (layout.top_screen_enabled) {
+            blit_screen(VideoCore::ScreenId::TopLeft, layout.top_screen);
+        }
+        if (layout.bottom_screen_enabled) {
+            blit_screen(VideoCore::ScreenId::Bottom, layout.bottom_screen);
+        }
 
         // Software cursor rendering with framebuffer access
         if (enableEmulatedPointer && tracker) {
@@ -121,7 +169,7 @@ void EmuWindow_LibRetro::SwapBuffers() {
         }
 
         LibRetro::UploadVideoFrame(data, static_cast<unsigned>(width),
-                                   static_cast<unsigned>(height), 0);
+                                   static_cast<unsigned>(height), pitch);
         if (did_malloc)
             free(data);
         break;
@@ -147,6 +195,15 @@ void EmuWindow_LibRetro::SetupFramebuffer() {
 }
 
 void EmuWindow_LibRetro::PollEvents() {
+    // The software renderer doesn't call render_window.SwapBuffers() — standalone
+    // frontends (Qt/SDL) use separate presentation threads that pull from screen_infos
+    // instead. In libretro there's no such thread, so we present here: PollEvents is
+    // called from EndFrame() during each VBlank, right after PrepareRenderTarget has
+    // filled the screen pixel buffers.
+    if (Settings::values.graphics_api.GetValue() == Settings::GraphicsAPI::Software) {
+        SwapBuffers();
+    }
+
     LibRetro::PollInput();
 
     // TODO: Poll for right click for motion emu
