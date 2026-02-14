@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include <SDL.h>
 #include "sdl_impl.h"
 
@@ -9,6 +10,11 @@ public:
         : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick, &SDL_JoystickClose},
           sdl_controller{game_controller, &SDL_GameControllerClose} {
         EnableMotion();
+        CreateControllerButtonMap();
+    }
+
+    bool IsButtonMappedToController(int button) const {
+        return mapped_joystick_buttons.count(button) > 0;
     }
 
     void EnableMotion() {
@@ -37,31 +43,31 @@ public:
         return has_gyro || has_accel;
     }
 
-    bool GetButton(int button) const {
+    bool GetButton(int button, bool isController) const {
         if (!sdl_joystick)
             return false;
-        if (sdl_controller)
+        if (isController)
             return SDL_GameControllerGetButton(sdl_controller.get(),
                                                static_cast<SDL_GameControllerButton>(button));
         return SDL_JoystickGetButton(sdl_joystick.get(), button) != 0;
     }
 
-    float GetAxis(int axis) const {
+    float GetAxis(int axis, bool isController) const {
         if (!sdl_joystick)
             return 0.0;
         // if we are using the game controller api, assume axis was the gamepad axis not the
         // joystick axis
 
-        if (sdl_controller)
+        if (isController)
             return SDL_GameControllerGetAxis(sdl_controller.get(),
                                              static_cast<SDL_GameControllerAxis>(axis)) /
                    32767.0f;
         return SDL_JoystickGetAxis(sdl_joystick.get(), axis) / 32767.0f;
     }
 
-    std::tuple<float, float> GetAnalog(int axis_x, int axis_y) const {
-        float x = GetAxis(axis_x);
-        float y = GetAxis(axis_y);
+    std::tuple<float, float> GetAnalog(int axis_x, int axis_y, bool isController) const {
+        float x = GetAxis(axis_x, isController);
+        float y = GetAxis(axis_y, isController);
         y = -y; // 3DS uses an y-axis inverse from SDL
 
         // Make sure the coordinates are in the unit circle,
@@ -139,5 +145,36 @@ private:
     std::unique_ptr<SDL_Joystick, decltype(&SDL_JoystickClose)> sdl_joystick;
     std::unique_ptr<SDL_GameController, decltype(&SDL_GameControllerClose)> sdl_controller;
     mutable std::mutex mutex;
+    std::unordered_set<int> mapped_joystick_buttons;
+    void CreateControllerButtonMap() {
+        mapped_joystick_buttons.clear();
+
+        if (!sdl_controller) {
+            return; // Not a controller, no mapped buttons
+        }
+
+        // Check all controller buttons
+        for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++) {
+            auto bind = SDL_GameControllerGetBindForButton(
+                sdl_controller.get(), static_cast<SDL_GameControllerButton>(i));
+
+            if (bind.bindType == SDL_CONTROLLER_BINDTYPE_BUTTON) {
+                mapped_joystick_buttons.insert(bind.value.button);
+            }
+        }
+
+        // Also check trigger axes that might be buttons
+        auto lt_bind =
+            SDL_GameControllerGetBindForAxis(sdl_controller.get(), SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        if (lt_bind.bindType == SDL_CONTROLLER_BINDTYPE_BUTTON) {
+            mapped_joystick_buttons.insert(lt_bind.value.button);
+        }
+
+        auto rt_bind = SDL_GameControllerGetBindForAxis(sdl_controller.get(),
+                                                        SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+        if (rt_bind.bindType == SDL_CONTROLLER_BINDTYPE_BUTTON) {
+            mapped_joystick_buttons.insert(rt_bind.value.button);
+        }
+    }
 };
 } // namespace InputCommon::SDL
