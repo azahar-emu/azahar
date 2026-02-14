@@ -83,13 +83,13 @@ std::string ButtonToText(const Common::ParamPackage& param) {
     if (engine_str == "sdl") {
         if (param.Has("hat")) {
             return "Hat " + param.Get("hat", "") + " " + param.Get("direction", "");
-        } else if (param.Has("button")) {
+        } else if (param.Has("button") || param.Has("cbutton")) {
             if (param.Get("name", "") != "")
                 return param.Get("name", "");
             else
                 return "Button " + param.Get("button", "");
 
-        } else if (param.Has("axis")) {
+        } else if (param.Has("axis") || param.Has("caxis")) {
             auto name = param.Get("name", "");
             if (name == "LT" || name == "RT")
                 return name;
