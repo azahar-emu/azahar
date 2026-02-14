@@ -40,12 +40,22 @@ public:
     bool GetButton(int button) const {
         if (!sdl_joystick)
             return false;
+        if (sdl_controller)
+            return SDL_GameControllerGetButton(sdl_controller.get(),
+                                               static_cast<SDL_GameControllerButton>(button));
         return SDL_JoystickGetButton(sdl_joystick.get(), button) != 0;
     }
 
     float GetAxis(int axis) const {
         if (!sdl_joystick)
             return 0.0;
+        // if we are using the game controller api, assume axis was the gamepad axis not the
+        // joystick axis
+
+        if (sdl_controller)
+            return SDL_GameControllerGetAxis(sdl_controller.get(),
+                                             static_cast<SDL_GameControllerAxis>(axis)) /
+                   32767.0f;
         return SDL_JoystickGetAxis(sdl_joystick.get(), axis) / 32767.0f;
     }
 
@@ -67,6 +77,7 @@ public:
     }
 
     bool GetHatDirection(int hat, Uint8 direction) const {
+        // no need to worry about gamecontroller here - that api treats hats as buttons
         if (!sdl_joystick)
             return false;
         return SDL_JoystickGetHat(sdl_joystick.get(), hat) == direction;

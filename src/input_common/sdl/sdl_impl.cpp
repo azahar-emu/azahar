@@ -247,7 +247,6 @@ Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
     params.Set("guid", guid);
     params.Set("port", port);
     SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
-    SDL_GameControllerButtonBind button_bind;
 
     if (!controller) {
         LOG_WARNING(Input, "failed to open controller {}", guid);
@@ -255,76 +254,22 @@ Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
     }
 
     auto mapped_button = xinput_to_3ds_mapping[static_cast<int>(button)];
-    if (mapped_button == SDL_CONTROLLER_BUTTON_INVALID) {
-        if (button == Settings::NativeButton::Values::ZL) {
-            button_bind =
-                SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-        } else if (button == Settings::NativeButton::Values::ZR) {
-            button_bind =
-                SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-        } else {
-            return {{}};
-        }
+
+    if (button == Settings::NativeButton::Values::ZL) {
+        params.Set("axis", SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        params.Set("name", axis_names.at(SDL_CONTROLLER_AXIS_TRIGGERLEFT));
+        params.Set("direction", "+");
+        params.Set("threshold", 0.5f);
+    } else if (button == Settings::NativeButton::Values::ZR) {
+        params.Set("axis", SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+        params.Set("name", axis_names.at(SDL_CONTROLLER_AXIS_TRIGGERRIGHT));
+        params.Set("direction", "+");
+        params.Set("threshold", 0.5f);
+    } else if (mapped_button == SDL_CONTROLLER_BUTTON_INVALID) {
+        return {{}};
     } else {
-        button_bind = SDL_GameControllerGetBindForButton(controller, mapped_button);
-    }
-
-    switch (button_bind.bindType) {
-    case SDL_CONTROLLER_BINDTYPE_BUTTON:
-        params.Set("button", button_bind.value.button);
-        params.Set("name", button_names.at(button_bind.value.button));
-        break;
-    case SDL_CONTROLLER_BINDTYPE_HAT:
-        params.Set("hat", button_bind.value.hat.hat);
-        params.Set("name", button_names.at(button_bind.value.button));
-        switch (button_bind.value.hat.hat_mask) {
-        case SDL_HAT_UP:
-            params.Set("direction", "up");
-            break;
-        case SDL_HAT_DOWN:
-            params.Set("direction", "down");
-            break;
-        case SDL_HAT_LEFT:
-            params.Set("direction", "left");
-            break;
-        case SDL_HAT_RIGHT:
-            params.Set("direction", "right");
-            break;
-        default:
-            return {{}};
-        }
-        break;
-    case SDL_CONTROLLER_BINDTYPE_AXIS:
-        params.Set("axis", button_bind.value.axis);
-        params.Set("name", axis_names.at(button_bind.value.axis));
-
-#if SDL_VERSION_ATLEAST(2, 0, 6)
-        {
-            if (mapped_button != SDL_CONTROLLER_BUTTON_INVALID) {
-                const SDL_ExtendedGameControllerBind extended_bind =
-                    controller->bindings[mapped_button];
-                if (extended_bind.input.axis.axis_max < extended_bind.input.axis.axis_min) {
-                    params.Set("direction", "-");
-                } else {
-                    params.Set("direction", "+");
-                }
-                params.Set("threshold", (extended_bind.input.axis.axis_min +
-                                         (extended_bind.input.axis.axis_max -
-                                          extended_bind.input.axis.axis_min) /
-                                             2.0f) /
-                                            SDL_JOYSTICK_AXIS_MAX);
-            }
-        }
-#else
-        params.Set("direction", "+"); // lacks extended_bind, so just a guess
-#endif
-        break;
-    case SDL_CONTROLLER_BINDTYPE_NONE:
-        LOG_WARNING(Input, "Button not bound: {}", Settings::NativeButton::mapping[button]);
-        return {{}};
-    default:
-        LOG_WARNING(Input, "unknown SDL bind type {}", button_bind.bindType);
-        return {{}};
+        params.Set("button", mapped_button);
+        params.Set("name", button_names.at(mapped_button));
     }
 
     return params;
@@ -336,33 +281,28 @@ Common::ParamPackage SDLState::GetSDLControllerAnalogBindByGUID(
     params.Set("guid", guid);
     params.Set("port", port);
     SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
-    SDL_GameControllerButtonBind button_bind_x;
-    SDL_GameControllerButtonBind button_bind_y;
-
+    SDL_GameControllerAxis button_bind_x;
+    SDL_GameControllerAxis button_bind_y;
     if (!controller) {
         LOG_WARNING(Input, "failed to open controller {}", guid);
         return {{}};
     }
 
     if (analog == Settings::NativeAnalog::Values::CirclePad) {
-        button_bind_x = SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
-        button_bind_y = SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_LEFTY);
+        button_bind_x = SDL_CONTROLLER_AXIS_LEFTX;
+        button_bind_y = SDL_CONTROLLER_AXIS_LEFTY;
     } else if (analog == Settings::NativeAnalog::Values::CStick) {
-        button_bind_x = SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX);
-        button_bind_y = SDL_GameControllerGetBindForAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY);
+        button_bind_x = SDL_CONTROLLER_AXIS_RIGHTX;
+        button_bind_y = SDL_CONTROLLER_AXIS_RIGHTY;
     } else {
         LOG_WARNING(Input, "analog value out of range {}", analog);
         return {{}};
     }
 
-    if (button_bind_x.bindType != SDL_CONTROLLER_BINDTYPE_AXIS ||
-        button_bind_y.bindType != SDL_CONTROLLER_BINDTYPE_AXIS) {
-        return {{}};
-    }
-    params.Set("axis_x", button_bind_x.value.axis);
-    params.Set("name_x", axis_names.at(button_bind_x.value.axis));
-    params.Set("axis_y", button_bind_y.value.axis);
-    params.Set("name_y", axis_names.at(button_bind_y.value.axis));
+    params.Set("axis_x", button_bind_x);
+    params.Set("name_x", axis_names.at(button_bind_x));
+    params.Set("axis_y", button_bind_y);
+    params.Set("name_y", axis_names.at(button_bind_y));
     return params;
 }
 
