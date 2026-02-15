@@ -454,10 +454,6 @@ void PipelineCache::UseTrivialVertexShader() {
 }
 
 bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
-    if (!instance.UseGeometryShaders()) {
-        UseTrivialGeometryShader();
-        return true;
-    }
 
     auto res = curr_disk_cache->UseFixedGeometryShader(regs);
 

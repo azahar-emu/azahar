@@ -187,32 +187,49 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFixedGeometrySh
     const PicaFixedGSConfig gs_config{regs};
     const auto gs_config_hash = gs_config.Hash();
 
-    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config_hash, parent.instance);
-    auto& shader = it->second;
+    if (!parent.instance.UseGeometryShaders() ||
+        parent.instance.IsFragmentShaderBarycentricSupported()) {
+        // Even if we don't support geometry shaders, we still need to cache them
+        // so that the shader cache is transferable. There is no need to cache
+        // or build the SPIRV.
 
-    if (new_shader) {
-        LOG_NEW_OBJECT(Render_Vulkan, "New GS config {:016X}", gs_config_hash);
-
-        parent.workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
-            ExtraFixedGSConfig extra;
-            extra.use_clip_planes = parent.profile.has_clip_planes;
-            extra.separable_shader = true;
-
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, extra);
-            const auto spirv = CompileGLSL(code, vk::ShaderStageFlagBits::eGeometry);
-            shader.module = CompileSPV(spirv, parent.instance.GetDevice());
-            shader.MarkDone();
-
-            AppendGSSPIRV(gs_cache, spirv, gs_config_hash);
+        if (known_geometry_shaders.emplace(gs_config_hash).second) {
             GSConfigEntry entry{
                 .version = GSConfigEntry::EXPECTED_VERSION,
                 .gs_config = gs_config,
             };
             AppendGSConfig(gs_cache, entry, gs_config_hash);
-        });
-    }
+        }
 
-    return std::make_pair(gs_config_hash, &shader);
+        return std::make_pair(gs_config_hash, nullptr);
+    } else {
+        auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config_hash, parent.instance);
+        auto& shader = it->second;
+
+        if (new_shader) {
+            LOG_NEW_OBJECT(Render_Vulkan, "New GS config {:016X}", gs_config_hash);
+
+            parent.workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
+                ExtraFixedGSConfig extra;
+                extra.use_clip_planes = parent.profile.has_clip_planes;
+                extra.separable_shader = true;
+
+                const auto code = GLSL::GenerateFixedGeometryShader(gs_config, extra);
+                const auto spirv = CompileGLSL(code, vk::ShaderStageFlagBits::eGeometry);
+                shader.module = CompileSPV(spirv, parent.instance.GetDevice());
+                shader.MarkDone();
+
+                AppendGSSPIRV(gs_cache, spirv, gs_config_hash);
+                GSConfigEntry entry{
+                    .version = GSConfigEntry::EXPECTED_VERSION,
+                    .gs_config = gs_config,
+                };
+                AppendGSConfig(gs_cache, entry, gs_config_hash);
+            });
+        }
+
+        return std::make_pair(gs_config_hash, &shader);
+    }
 }
 
 GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
@@ -222,6 +239,14 @@ GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
 
     auto [it, new_pipeline] = graphics_pipelines.try_emplace(optimized_hash);
     if (new_pipeline) {
+        if (!parent.instance.UseGeometryShaders() ||
+            parent.instance.IsFragmentShaderBarycentricSupported()) {
+            // If we don't need geometry shaders disable
+            // them before building the pipeline. It's done here
+            // so that the shader ID could be hashed and saved with
+            // the pipeline info so that it is transferable.
+            parent.UseTrivialGeometryShader();
+        }
         it.value() = std::make_unique<GraphicsPipeline>(
             parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
             *parent.pipeline_layout, parent.current_shaders, &parent.workers);
@@ -1090,12 +1115,17 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
         return false;
     }
 
-    if (file_info->source_hash != GetSourceFileCacheVersionHash()) {
+    // There is no need to load geometry shaders if we don't support them.
+    // We can just load the known IDs and skip SPIRV and cache regeneration.
+    const auto geo_shaders_needed = parent.instance.UseGeometryShaders() &&
+                                    !parent.instance.IsFragmentShaderBarycentricSupported();
+
+    if (geo_shaders_needed && file_info->source_hash != GetSourceFileCacheVersionHash()) {
         LOG_INFO(Render_Vulkan, "Cache contains old fragment program, cache needs regeneration.");
         regenerate_file = std::make_unique<CacheFile>(GetGSFile(title_id, true));
     }
 
-    if (file_info->profile != parent.profile && !regenerate_file) {
+    if (geo_shaders_needed && file_info->profile != parent.profile && !regenerate_file) {
         LOG_INFO(Render_Vulkan,
                  "Cache has driver and user settings mismatch, cache needs regeneration.");
         regenerate_file = std::make_unique<CacheFile>(GetGSFile(title_id, true));
@@ -1130,13 +1160,23 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
                   curr_header.Type());
 
         if (curr_header.Type() == CacheEntryType::GS_CONFIG) {
-            pending_configs.push_back({curr_header.Id(), curr_offset});
+            if (geo_shaders_needed) {
+                pending_configs.push_back({curr_header.Id(), curr_offset});
+            } else {
+                known_geometry_shaders.emplace(curr_header.Id());
+
+                if (callback) {
+                    callback(VideoCore::LoadCallbackStage::Build, current_callback_index++,
+                             tot_callback_index, "Geometry Shader");
+                }
+            }
         } else if (curr_header.Type() == CacheEntryType::GS_SPIRV) {
 
             // Only use SPIRV entries if we are not regenerating the cache, as the driver or
             // user settings do not match, which could lead to different SPIRV.
             // These will be regenerated from the cached config later.
-            if (!regenerate_file) {
+            // Also, only use SPIRV entries if we support geometry shaders on this device.
+            if (geo_shaders_needed && !regenerate_file) {
                 LOG_DEBUG(Render_Vulkan, "    processing SPIRV.");
 
                 curr = gs_cache.ReadAt(curr_offset);
@@ -1362,7 +1402,9 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
             }
             shaders[ProgramType::FS] = &it_fs->second;
 
-            if (entry->pl_info.shader_ids[ProgramType::GS]) {
+            if (parent.instance.UseGeometryShaders() &&
+                !parent.instance.IsFragmentShaderBarycentricSupported() &&
+                entry->pl_info.shader_ids[ProgramType::GS]) {
                 auto it_gs =
                     fixed_geometry_shaders.find(entry->pl_info.shader_ids[ProgramType::GS]);
                 if (it_gs == fixed_geometry_shaders.end()) {

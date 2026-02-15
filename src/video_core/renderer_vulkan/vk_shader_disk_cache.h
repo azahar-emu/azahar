@@ -338,6 +338,7 @@ private:
     std::unordered_map<u64, Shader> fragment_shaders;
 
     std::unordered_map<size_t, Shader> fixed_geometry_shaders;
+    std::unordered_set<u64> known_geometry_shaders;
 
     tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
         graphics_pipelines;
