@@ -38,11 +38,24 @@ u64 StaticPipelineInfo::OptimizedHash(const Instance& instance) const {
         Common::ComputeStructHash64(attachments), Common::ComputeStructHash64(blending));
 
     if (!instance.IsExtendedDynamicStateSupported()) {
-        Common::HashCombine(info_hash, Common::ComputeStructHash64(rasterization),
-                            Common::ComputeStructHash64(depth_stencil));
+        info_hash = Common::HashCombine(info_hash, Common::ComputeStructHash64(rasterization),
+                                        Common::ComputeStructHash64(depth_stencil));
     }
 
     return info_hash;
+}
+
+u16 PipelineInfo::GetFinalColorWriteMask(const Instance& instance) {
+    u16 color_write_mask = state.blending.color_write_mask;
+    const bool is_logic_op_emulated =
+        instance.NeedsLogicOpEmulation() && !state.blending.blend_enable;
+    const bool is_logic_op_noop = state.blending.logic_op == Pica::FramebufferRegs::LogicOp::NoOp;
+    if (is_logic_op_emulated && is_logic_op_noop) {
+        // Color output is disabled by logic operation. We use color write mask to skip
+        // color but allow depth write.
+        color_write_mask = 0;
+    }
+    return color_write_mask;
 }
 
 Shader::Shader(const Instance& instance) : device{instance.GetDevice()} {}
@@ -154,17 +167,6 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
         .sampleShadingEnable = false,
     };
 
-    auto color_write_mask = info.state.blending.color_write_mask;
-    const bool is_logic_op_emulated =
-        instance.NeedsLogicOpEmulation() && !info.state.blending.blend_enable;
-    const bool is_logic_op_noop =
-        info.state.blending.logic_op == Pica::FramebufferRegs::LogicOp::NoOp;
-    if (is_logic_op_emulated && is_logic_op_noop) {
-        // Color output is disabled by logic operation. We use color write mask to skip
-        // color but allow depth write.
-        color_write_mask = 0;
-    }
-
     const vk::PipelineColorBlendAttachmentState colorblend_attachment = {
         .blendEnable = info.state.blending.blend_enable,
         .srcColorBlendFactor = PicaToVK::BlendFunc(info.state.blending.src_color_blend_factor),
@@ -173,7 +175,8 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
         .srcAlphaBlendFactor = PicaToVK::BlendFunc(info.state.blending.src_alpha_blend_factor),
         .dstAlphaBlendFactor = PicaToVK::BlendFunc(info.state.blending.dst_alpha_blend_factor),
         .alphaBlendOp = PicaToVK::BlendEquation(info.state.blending.alpha_blend_eq),
-        .colorWriteMask = static_cast<vk::ColorComponentFlags>(color_write_mask),
+        .colorWriteMask =
+            static_cast<vk::ColorComponentFlags>(info.GetFinalColorWriteMask(instance)),
     };
 
     const vk::PipelineColorBlendStateCreateInfo color_blending = {

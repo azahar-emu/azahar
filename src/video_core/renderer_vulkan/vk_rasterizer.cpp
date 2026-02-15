@@ -536,7 +536,7 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
     const bool has_stencil = regs.framebuffer.HasStencil();
 
-    const bool write_color_fb = shadow_rendering || pipeline_info.state.blending.color_write_mask;
+    const bool write_color_fb = shadow_rendering || pipeline_info.GetFinalColorWriteMask(instance);
     const bool write_depth_fb = pipeline_info.IsDepthWriteEnabled();
     const bool using_color_fb =
         regs.framebuffer.framebuffer.GetColorBufferPhysicalAddress() != 0 && write_color_fb;

@@ -292,6 +292,8 @@ struct PipelineInfo : Common::HashableStruct<StaticPipelineInfo> {
 
         return depth_write || stencil_write;
     }
+
+    [[nodiscard]] u16 GetFinalColorWriteMask(const Instance& instance);
 };
 
 struct Shader : public Common::AsyncHandle {
