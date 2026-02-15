@@ -38,18 +38,39 @@ namespace Vulkan {
 using namespace Pica::Shader::Generator;
 using namespace Pica::Shader;
 
+static VideoCore::DiskResourceLoadCallback MakeThrottledCallback(
+    VideoCore::DiskResourceLoadCallback original) {
+
+    if (!original)
+        return nullptr;
+
+    auto last_call = std::chrono::steady_clock::now() - std::chrono::milliseconds(10);
+
+    return [original, last_call](VideoCore::LoadCallbackStage stage, std::size_t current,
+                                 std::size_t total, const std::string& name) mutable {
+        const auto now = std::chrono::steady_clock::now();
+        if (now - last_call >= std::chrono::milliseconds(10)) {
+            last_call = now;
+            original(stage, current, total, name);
+        }
+    };
+}
+
 void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) {
-    if (!stop_loading && !InitVSCache(stop_loading, callback)) {
+
+    auto new_callback = MakeThrottledCallback(callback);
+
+    if (!stop_loading && !InitVSCache(stop_loading, new_callback)) {
         RecreateCache(vs_cache, CacheFileType::VS_CACHE);
     }
-    if (!stop_loading && !InitFSCache(stop_loading, callback)) {
+    if (!stop_loading && !InitFSCache(stop_loading, new_callback)) {
         RecreateCache(fs_cache, CacheFileType::FS_CACHE);
     }
-    if (!stop_loading && !InitGSCache(stop_loading, callback)) {
+    if (!stop_loading && !InitGSCache(stop_loading, new_callback)) {
         RecreateCache(gs_cache, CacheFileType::GS_CACHE);
     }
-    if (!stop_loading && !InitPLCache(stop_loading, callback)) {
+    if (!stop_loading && !InitPLCache(stop_loading, new_callback)) {
         RecreateCache(pl_cache, CacheFileType::PL_CACHE);
     }
 }
