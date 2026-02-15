@@ -1364,7 +1364,7 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
                 parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
                 *parent.pipeline_layout, shaders, &parent.workers);
 
-            it_pl.value()->Build();
+            it_pl.value()->TryBuild(false);
 
             LOG_DEBUG(Render_Vulkan, "    built.");
 
