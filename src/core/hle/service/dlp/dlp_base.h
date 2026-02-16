@@ -177,7 +177,6 @@ static_assert(sizeof(DLPClt_StartDistributionAck_NoContentNeeded) == 0x18);
 struct DLPClt_StartDistributionAck_ContentNeeded {
     DLPPacketHeader head;
     u32 unk1; // 0x1
-    // TODO: combine unk2 & unk3 into a single dword
     u16 unk2; // BE 0x20 unk important!
     u16 unk3; // 0x0
     u32 unk4; // 0x1
@@ -194,7 +193,7 @@ struct DLPSrvr_ContentDistributionFragment {
     u32 content_magic; // extra magic value
     u32 unk1; // 0x1 BE
     u16 frag_index; // BE % dlp_content_block_length
-    u16 frag_size; // 0x5 0xa2
+    u16 frag_size; // BE
     std::array<u8, content_fragment_size> content_fragment;
 };
 
@@ -256,7 +255,6 @@ static_assert(sizeof(DLPSrvr_BeginGameFinal) == 0x20);
 // END BIG ENDIAN
 
 class DLP_Base {
-public:
 protected:
     DLP_Base(Core::System& s);
     virtual ~DLP_Base() = default;
@@ -325,7 +323,7 @@ protected:
         return reinterpret_cast<DLPPacketHeader*>(b.data());
     }
 
-    static void GeneratePKChecksum(u32 aes_value, void *output_word, void *input_buffer, u32 packet_size);
+    static u32 GeneratePKChecksum(u32 aes_value, void *input_buffer, u32 packet_size);
 
     template <typename T>
     T *PGen_SetPK(std::array<u8, 4> magic, u8 packet_index, std::array<u8, 3> resp_id) {
@@ -345,7 +343,7 @@ protected:
     void PGen_SendPK(u32 aes, u16 node_id, u8 data_channel, u8 flags = 0) {
         auto ph = GetPacketHead(send_packet_ctx);
         ph->checksum = 0;
-        GeneratePKChecksum(aes, &ph->checksum, ph, d_ntohs(ph->size));
+        ph->checksum = GeneratePKChecksum(aes, ph, d_ntohs(ph->size));
         SendTo(node_id, data_channel, send_packet_ctx, flags);
         send_packet_ctx.clear();
         sm_packet_sender_session.release();
@@ -355,7 +353,7 @@ protected:
     static void DLPEncryptCTR(void *out, size_t size, const u8 *iv_ctr);
     static bool ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum = true);
 
-    u32 GetNumFragmentsFromTitleSize(u32 tsize);
+    static u32 GetNumFragmentsFromTitleSize(u32 tsize);
 private:
     std::binary_semaphore sm_packet_sender_session{1};
     std::vector<u8> send_packet_ctx;
