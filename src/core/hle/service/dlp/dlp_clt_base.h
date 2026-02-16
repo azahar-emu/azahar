@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #pragma once
 
 #include "dlp_base.h"
@@ -9,7 +13,7 @@ namespace Service::DLP {
 enum class DLP_Clt_State : u32 {
     NotInitialized = 0, // TODO: check on hardware. it probably just errors
     Initialized = 1,
-    Scanning = 2, // overwrites idle when scanning
+    Scanning = 2,
     Joined = 5,
     Downloading = 6,
     WaitingForServerReady = 7,

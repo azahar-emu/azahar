@@ -102,4 +102,6 @@ std::pair<AESKey, AESIV> GetOTPKeyIV();
 
 const AESKey& GetMovableKey(bool cmac_key);
 
+const AESIV& GetDlpChecksumModIv();
+
 } // namespace HW::AES

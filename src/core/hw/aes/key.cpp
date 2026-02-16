@@ -133,6 +133,9 @@ AESIV nfc_iv;
 AESKey otp_key;
 AESIV otp_iv;
 
+// gets xor'd with the mac address to produce the final iv
+AESIV dlp_checksum_mod_iv;
+
 KeySlot movable_key;
 KeySlot movable_cmac;
 
@@ -247,6 +250,10 @@ void LoadPresetKeys() {
         if (name == "nfcIv") {
             nfc_iv = key;
             continue;
+        }
+
+        if (name == "dlpChecksumModIv") {
+            dlp_checksum_mod_iv = key;
         }
 
         const auto key_slot = ParseKeySlotName(name);
@@ -369,6 +376,10 @@ std::pair<AESKey, AESIV> GetOTPKeyIV() {
 
 const AESKey& GetMovableKey(bool cmac_key) {
     return cmac_key ? movable_cmac.normal.value() : movable_key.normal.value();
+}
+
+const AESIV& GetDlpChecksumModIv() {
+    return dlp_checksum_mod_iv;
 }
 
 } // namespace HW::AES

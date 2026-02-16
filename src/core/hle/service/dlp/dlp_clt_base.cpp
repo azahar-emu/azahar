@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include "dlp_clt_base.h"
 
 #include "core/hle/ipc_helpers.h"
@@ -6,8 +10,6 @@
 #include "core/hle/service/am/am.h"
 #include "common/timer.h"
 #include "common/alignment.h"
-
-#include <fstream>
 
 namespace Service::DLP {
 
@@ -35,10 +37,12 @@ void DLP_Clt_Base::InitializeCltBase(u32 shared_mem_size, u32 max_beacons, u32 c
     clt_state = DLP_Clt_State::Initialized;
     max_title_info = max_beacons;
 
-    LOG_INFO(Service_DLP, "shared mem size: 0x{:x}, max beacons: {}, constant mem size: 0x{:x}, username: {}", shared_mem_size, max_beacons, constant_mem_size, Common::UTF16ToUTF8(DLPUsernameAsString16(username)));
+    LOG_INFO(Service_DLP, "shared mem size: 0x{:x}, max beacons: {}, constant mem size: 0x{:x}, username: {}", shared_mem_size, max_beacons, constant_mem_size, Common::UTF16ToUTF8(DLPUsernameAsString16(username)).c_str());
 }
 
 void DLP_Clt_Base::FinalizeCltBase() {
+    clt_state = DLP_Clt_State::Initialized;
+
     if (is_connected) {
         DisconnectFromServer();
     }
@@ -514,7 +518,7 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
     while (beacon_parse_timer.GetTimeElapsed().count() < max_beacon_recv_time_out_ms) {
         if (int sz = RecvFrom(dlp_host_network_node_id, recv_buf)) {
             auto p_head = reinterpret_cast<DLPPacketHeader*>(recv_buf.data());
-            if (!ValidatePacket(aes, p_head, sz) ||
+            if (!ValidatePacket(aes, p_head, sz, should_verify_checksum) ||
                 p_head->packet_index >= num_broadcast_packets) {
                 ignore_servers_list[beacon.transmitter_address] = true;
                 break; // corrupted info
@@ -585,7 +589,7 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
     loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk3->icon_part.data(), broad_pk3->icon_part.size());
     loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk4->icon_part.data(), broad_pk4->icon_part.size());
 
-    LOG_INFO(Service_DLP, "Got title info!");
+    LOG_INFO(Service_DLP, "Got title info");
 
     scanned_title_info.emplace_back(c_title_info, c_server_info);
 
@@ -658,7 +662,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
         if (int sz = RecvFrom(dlp_host_network_node_id, recv_buf)) {
             auto p_head = GetPacketHead(recv_buf);
             // validate packet header
-            if (!ValidatePacket(aes, p_head, sz)) {
+            if (!ValidatePacket(aes, p_head, sz, should_verify_checksum)) {
                 got_corrupted_packets = true;
                 LOG_ERROR(Service_DLP, "Could not validate DLP packet header");
                 break;
@@ -671,10 +675,15 @@ void DLP_Clt_Base::ClientConnectionManager() {
                 auto s_body = PGen_SetPK<DLPClt_AuthAck>(dl_pk_head_auth_header, 0, p_head->resp_id);
                 s_body->unk1 = {0x01};
                 s_body->unk2 = {0x00, 0x00};
-                // TODO: find out what this is. this changes each session. could be loosly based on mac address?
+                // TODO: find out what this is. this changes each session.
+                // placeholder
                 s_body->resp_id = {0x01, 0x02};
                 PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
             } else if (p_head->type == dl_pk_type_start_dist) {
+                // poll rate on non-downloading clients still needs to
+                // be quick enough to eat broadcast content frag packets
+                dlp_poll_rate_ms = dlp_poll_rate_distribute;
+
                 if (IsFKCL() || !NeedsContentDownload(host_mac_address)) {
                     auto s_body = PGen_SetPK<DLPClt_StartDistributionAck_NoContentNeeded>(dl_pk_head_start_dist_header, 0, p_head->resp_id);
                     s_body->unk1 = {0x1};
@@ -702,8 +711,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     auto tinfo = scanned_title_info[GetCachedTitleInfoIdx(host_mac_address)].first;
 
                     dlp_units_downloaded = 0;
-                    dlp_units_total = Common::AlignUp(tinfo.size - broad_title_size_diff, content_fragment_size)/content_fragment_size;
-                    dlp_poll_rate_ms = dlp_poll_rate_distribute;
+                    dlp_units_total = GetNumFragmentsFromTitleSize(tinfo.size);
                     current_content_block = 0;
                     LOG_INFO(Service_DLP, "Requesting game file");
                 }
@@ -719,7 +727,6 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     received_fragments.insert(frag);
                     dlp_units_downloaded++;
                     if (dlp_units_downloaded == dlp_units_total) {
-                        dlp_poll_rate_ms = dlp_poll_rate_normal;
                         is_downloading_content = false;
                         clt_state = DLP_Clt_State::WaitingForServerReady;
                         LOG_INFO(Service_DLP, "Finished downloading content. Installing...");
@@ -730,13 +737,9 @@ void DLP_Clt_Base::ClientConnectionManager() {
                             LOG_INFO(Service_DLP, "Successfully installed DLP encrypted content");
                         }
                     }
-                } else {
-                    LOG_ERROR(Service_DLP, "Received content fragment without requesting it");
                 }
             } else if (p_head->type == dl_pk_type_finish_dist) {
-                if (p_head->packet_index == 0) {
-                    LOG_ERROR(Service_DLP, "Received finish dist packet, but packet index was 0");
-                } else if (p_head->packet_index == 1) {
+                if (p_head->packet_index == 1) {
                     auto r_pbody = GetPacketBody<DLPSrvr_FinishContentUpload>(recv_buf);
                     auto s_body = PGen_SetPK<DLPClt_FinishContentUploadAck>(dl_pk_head_finish_dist_header, 0, p_head->resp_id);
                     if (is_downloading_content) {
@@ -748,9 +751,12 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     s_body->seq_ack = d_htonl(d_ntohl(r_pbody->seq_num) + 1);
                     s_body->unk4 = 0x0;
                     PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
+                } else {
+                    LOG_ERROR(Service_DLP, "Received finish dist packet, but packet index was {}", p_head->packet_index);
                 }
             } else if (p_head->type == dl_pk_type_start_game) {
                 if (p_head->packet_index == 0) {
+                    dlp_poll_rate_ms = dlp_poll_rate_normal;
                     auto s_body = PGen_SetPK<DLPClt_BeginGameAck>(dl_pk_head_start_game_header, 0, p_head->resp_id);
                     s_body->unk1 = 0x1;
                     s_body->unk2 = 0x9;
