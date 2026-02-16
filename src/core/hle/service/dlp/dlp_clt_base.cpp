@@ -510,7 +510,7 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
     auto [ret, data_available_event] =
         uds->BindHLE(dlp_bind_node_id, dlp_recv_buffer_size, dlp_broadcast_data_channel,
                      dlp_host_network_node_id);
-    if (ret != 0) {
+    if (ret != NWM::ResultStatus::ResultSuccess) {
         LOG_ERROR(Service_DLP, "Could not bind on node id 0x{:x}", dlp_bind_node_id);
         return;
     }
@@ -658,7 +658,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
 
     auto [ret, data_available_event] = uds->BindHLE(
         dlp_bind_node_id, dlp_recv_buffer_size, dlp_client_data_channel, dlp_host_network_node_id);
-    if (ret != 0) {
+    if (ret != NWM::ResultStatus::ResultSuccess) {
         LOG_ERROR(Service_DLP, "Could not bind on node id 0x{:x}", dlp_bind_node_id);
         return;
     }
