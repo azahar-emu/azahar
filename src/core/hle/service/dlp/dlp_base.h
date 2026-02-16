@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
-#include "core/hle/service/cfg/cfg.h"
 #include "core/core.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/nwm/nwm_uds.h"
+#include "core/hle/service/service.h"
 
 #include <semaphore>
 
@@ -25,7 +25,7 @@ struct DLPTitleInfo {
     std::array<u8, 16> age_ratings;
     std::array<u16, 64> short_description; // UTF-16
     std::array<u16, 128> long_description; // UTF-16
-    std::array<u8, 0x1200> icon;  // 48x48, RGB565
+    std::array<u8, 0x1200> icon;           // 48x48, RGB565
     u32 size;
     u8 unk2;
     u8 unk3;
@@ -58,19 +58,19 @@ static_assert(sizeof(DLPEventDescription) == 0x18);
 
 // START BIG ENDIAN
 
-constexpr inline u8 dl_pk_type_broadcast   = 0x01;
-constexpr inline u8 dl_pk_type_auth        = 0x02;
-constexpr inline u8 dl_pk_type_start_dist  = 0x03;
-constexpr inline u8 dl_pk_type_distribute  = 0x04;
+constexpr inline u8 dl_pk_type_broadcast = 0x01;
+constexpr inline u8 dl_pk_type_auth = 0x02;
+constexpr inline u8 dl_pk_type_start_dist = 0x03;
+constexpr inline u8 dl_pk_type_distribute = 0x04;
 constexpr inline u8 dl_pk_type_finish_dist = 0x05;
-constexpr inline u8 dl_pk_type_start_game  = 0x06;
+constexpr inline u8 dl_pk_type_start_game = 0x06;
 
-constexpr inline std::array<u8, 4> dl_pk_head_broadcast_header   = {dl_pk_type_broadcast,   0x02};
-constexpr inline std::array<u8, 4> dl_pk_head_auth_header        = {dl_pk_type_auth,        0x02};
-constexpr inline std::array<u8, 4> dl_pk_head_start_dist_header  = {dl_pk_type_start_dist,  0x02};
-constexpr inline std::array<u8, 4> dl_pk_head_distribute_header  = {dl_pk_type_distribute,  0x02};
+constexpr inline std::array<u8, 4> dl_pk_head_broadcast_header = {dl_pk_type_broadcast, 0x02};
+constexpr inline std::array<u8, 4> dl_pk_head_auth_header = {dl_pk_type_auth, 0x02};
+constexpr inline std::array<u8, 4> dl_pk_head_start_dist_header = {dl_pk_type_start_dist, 0x02};
+constexpr inline std::array<u8, 4> dl_pk_head_distribute_header = {dl_pk_type_distribute, 0x02};
 constexpr inline std::array<u8, 4> dl_pk_head_finish_dist_header = {dl_pk_type_finish_dist, 0x02};
-constexpr inline std::array<u8, 4> dl_pk_head_start_game_header  = {dl_pk_type_start_game,  0x02};
+constexpr inline std::array<u8, 4> dl_pk_head_start_game_header = {dl_pk_type_start_game, 0x02};
 
 struct DLPPacketHeader {
     union {
@@ -81,10 +81,10 @@ struct DLPPacketHeader {
             u16 unk; // usually 0x00 0x00
         };
     };
-    u16 size; // size of the whole packet, including the header
-    std::array<u8, 2> unk1; // always 0x02 0x00
-    u32 checksum; // always calculate
-    u8 packet_index; // starts at 0
+    u16 size;                  // size of the whole packet, including the header
+    std::array<u8, 2> unk1;    // always 0x02 0x00
+    u32 checksum;              // always calculate
+    u8 packet_index;           // starts at 0
     std::array<u8, 3> resp_id; // copies this from host packet when responding to it
 };
 
@@ -151,8 +151,8 @@ static_assert(sizeof(DLPSrvr_Auth) == 0x14);
 
 struct DLPClt_AuthAck {
     DLPPacketHeader head;
-    std::array<u8, 4> unk1; // 0x1
-    std::array<u8, 2> unk2; // 0x0 could be padding
+    std::array<u8, 4> unk1;    // 0x1
+    std::array<u8, 2> unk2;    // 0x0 could be padding
     std::array<u8, 2> resp_id; // very important! game specific?
 };
 
@@ -169,7 +169,7 @@ static_assert(sizeof(DLPSrvr_StartDistribution) == 0x14);
 struct DLPClt_StartDistributionAck_NoContentNeeded {
     DLPPacketHeader head;
     std::array<u8, 4> unk1; // 0x1
-    u32 unk2; // 0x0
+    u32 unk2;               // 0x0
 };
 
 static_assert(sizeof(DLPClt_StartDistributionAck_NoContentNeeded) == 0x18);
@@ -191,9 +191,9 @@ static_assert(sizeof(DLPClt_StartDistributionAck_ContentNeeded) == 0x38);
 struct DLPSrvr_ContentDistributionFragment {
     DLPPacketHeader head;
     u32 content_magic; // extra magic value
-    u32 unk1; // 0x1 BE
-    u16 frag_index; // BE % dlp_content_block_length
-    u16 frag_size; // BE
+    u32 unk1;          // 0x1 BE
+    u16 frag_index;    // BE % dlp_content_block_length
+    u16 frag_size;     // BE
     std::array<u8, content_fragment_size> content_fragment;
 };
 
@@ -202,7 +202,7 @@ static_assert(sizeof(DLPSrvr_ContentDistributionFragment) == 1468);
 // finish receiving content
 struct DLPSrvr_FinishContentUpload {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
+    u32 unk1;    // 0x1
     u32 seq_num; // BE starts at 0x0 and copies whatever number the ack gives it
 };
 
@@ -212,11 +212,11 @@ static_assert(sizeof(DLPSrvr_FinishContentUpload) == 0x18);
 #pragma pack(push, 2)
 struct DLPClt_FinishContentUploadAck {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
-    u8 unk2; // 0x1
-    u8 unk3; // 0x1 if downloading conetnt
+    u32 unk1;    // 0x1
+    u8 unk2;     // 0x1
+    u8 unk3;     // 0x1 if downloading conetnt
     u32 seq_ack; // BE client increments this every ack
-    u16 unk4; // 0x0
+    u16 unk4;    // 0x0
 };
 #pragma pack(pop)
 
@@ -246,7 +246,7 @@ struct DLPSrvr_BeginGameFinal {
     DLPPacketHeader head;
     u32 unk1; // 0x1
     std::array<u8, 9> wireless_reboot_passphrase;
-    u8 unk2; // 0x09 could be server state
+    u8 unk2;     // 0x09 could be server state
     u16 padding; // 0x00 0x00
 };
 
@@ -290,10 +290,12 @@ protected:
 
     void GetEventDescription(Kernel::HLERequestContext& ctx);
 
-    void InitializeDlpBase(u32 shared_mem_size, std::shared_ptr<Kernel::SharedMemory> shared_mem, std::shared_ptr<Kernel::Event> event, DLP_Username username);
+    void InitializeDlpBase(u32 shared_mem_size, std::shared_ptr<Kernel::SharedMemory> shared_mem,
+                           std::shared_ptr<Kernel::Event> event, DLP_Username username);
     void FinalizeDlpBase();
 
-    bool ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type, std::vector<u8> passphrase);
+    bool ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type,
+                               std::vector<u8> passphrase);
     int RecvFrom(u16 node_id, std::vector<u8>& buffer);
     bool SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 flags = 0);
 
@@ -308,14 +310,15 @@ protected:
     static u64 d_ntohll(u64);
     static u64 d_htonll(u64);
     template <typename T>
-    static T *GetPacketBody(std::vector<u8>& b) {
+    static T* GetPacketBody(std::vector<u8>& b) {
         if (b.size() < sizeof(T)) {
-            LOG_CRITICAL(Service_DLP, "Packet size is too small to fit content {} < {}", b.size(), sizeof(T));
+            LOG_CRITICAL(Service_DLP, "Packet size is too small to fit content {} < {}", b.size(),
+                         sizeof(T));
             return nullptr;
         }
         return reinterpret_cast<T*>(b.data());
     }
-    static DLPPacketHeader *GetPacketHead(std::vector<u8>& b) {
+    static DLPPacketHeader* GetPacketHead(std::vector<u8>& b) {
         if (b.size() < sizeof(DLPPacketHeader)) {
             LOG_CRITICAL(Service_DLP, "Packet is too small to fit a DLP header");
             return nullptr;
@@ -323,12 +326,13 @@ protected:
         return reinterpret_cast<DLPPacketHeader*>(b.data());
     }
 
-    static u32 GeneratePKChecksum(u32 aes_value, void *input_buffer, u32 packet_size);
+    static u32 GeneratePKChecksum(u32 aes_value, void* input_buffer, u32 packet_size);
 
     template <typename T>
-    T *PGen_SetPK(std::array<u8, 4> magic, u8 packet_index, std::array<u8, 3> resp_id) {
+    T* PGen_SetPK(std::array<u8, 4> magic, u8 packet_index, std::array<u8, 3> resp_id) {
         if (!sm_packet_sender_session.try_acquire()) {
-            LOG_ERROR(Service_DLP, "Tried to send 2 packets concurrently, causing blocking on this thread");
+            LOG_ERROR(Service_DLP,
+                      "Tried to send 2 packets concurrently, causing blocking on this thread");
             sm_packet_sender_session.acquire();
         }
         send_packet_ctx.resize(sizeof(T));
@@ -350,10 +354,11 @@ protected:
     }
     // input the host mac address
     u32 GenDLPChecksumKey(Network::MacAddress mac_addr);
-    static void DLPEncryptCTR(void *out, size_t size, const u8 *iv_ctr);
-    static bool ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum = true);
+    static void DLPEncryptCTR(void* out, size_t size, const u8* iv_ctr);
+    static bool ValidatePacket(u32 aes, void* pk, size_t sz, bool checksum = true);
 
     static u32 GetNumFragmentsFromTitleSize(u32 tsize);
+
 private:
     std::binary_semaphore sm_packet_sender_session{1};
     std::vector<u8> send_packet_ctx;

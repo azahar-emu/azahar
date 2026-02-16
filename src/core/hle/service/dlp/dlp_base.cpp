@@ -6,14 +6,14 @@
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
-#include "core/hle/service/service.h"
-#include "core/hw/unique_data.h"
-#include "core/hle/service/nwm/uds_data.h"
+#include "common/alignment.h"
+#include "common/swap.h"
 #include "common/timer.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/service/nwm/uds_data.h"
+#include "core/hle/service/service.h"
 #include "core/hw/aes/key.h"
-#include "common/swap.h"
-#include "common/alignment.h"
+#include "core/hw/unique_data.h"
 
 namespace Service::DLP {
 
@@ -38,7 +38,7 @@ std::u16string DLP_Base::DLPUsernameAsString16(DLP_Username uname) {
 DLP_Username DLP_Base::String16AsDLPUsername(std::u16string str) {
     DLP_Username out{};
     u32 num_chars_copy = std::min<u32>(out.size(), str.size());
-    memcpy(out.data(), str.data(), num_chars_copy*sizeof(u16_le));
+    memcpy(out.data(), str.data(), num_chars_copy * sizeof(u16_le));
     return out;
 }
 
@@ -60,7 +60,7 @@ DLPNodeInfo DLP_Base::UDSToDLPNodeInfo(NWM::NodeInfo node_info) {
 }
 
 u16 DLP_Base::d_htons(u16 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap16(n);
     } else {
         return n;
@@ -68,7 +68,7 @@ u16 DLP_Base::d_htons(u16 n) {
 }
 
 u16 DLP_Base::d_ntohs(u16 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap16(n);
     } else {
         return n;
@@ -76,7 +76,7 @@ u16 DLP_Base::d_ntohs(u16 n) {
 }
 
 u32 DLP_Base::d_htonl(u32 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap32(n);
     } else {
         return n;
@@ -84,7 +84,7 @@ u32 DLP_Base::d_htonl(u32 n) {
 }
 
 u32 DLP_Base::d_ntohl(u32 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap32(n);
     } else {
         return n;
@@ -92,7 +92,7 @@ u32 DLP_Base::d_ntohl(u32 n) {
 }
 
 u64 DLP_Base::d_ntohll(u64 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap64(n);
     } else {
         return n;
@@ -100,7 +100,7 @@ u64 DLP_Base::d_ntohll(u64 n) {
 }
 
 u64 DLP_Base::d_htonll(u64 n) {
-    if constexpr(std::endian::native == std::endian::little) {
+    if constexpr (std::endian::native == std::endian::little) {
         return Common::swap64(n);
     } else {
         return n;
@@ -120,17 +120,20 @@ void DLP_Base::GetEventDescription(Kernel::HLERequestContext& ctx) {
     rb.PushRaw(desc);
 }
 
-void DLP_Base::InitializeDlpBase(u32 shared_mem_size, std::shared_ptr<Kernel::SharedMemory> shared_mem, std::shared_ptr<Kernel::Event> event, DLP_Username uname) {
+void DLP_Base::InitializeDlpBase(u32 shared_mem_size,
+                                 std::shared_ptr<Kernel::SharedMemory> shared_mem,
+                                 std::shared_ptr<Kernel::Event> event, DLP_Username uname) {
     dlp_sharedmem_size = shared_mem_size;
     dlp_sharedmem = shared_mem;
     dlp_status_event = event;
     username = uname;
 
-    uds_sharedmem = system.Kernel()
-                    .CreateSharedMemory(nullptr, uds_sharedmem_size, Kernel::MemoryPermission::ReadWrite,
-                                        Kernel::MemoryPermission::ReadWrite, 0,
-                                        Kernel::MemoryRegion::BASE, "NWM::UDS:SharedMemory")
-                    .Unwrap();
+    uds_sharedmem =
+        system.Kernel()
+            .CreateSharedMemory(nullptr, uds_sharedmem_size, Kernel::MemoryPermission::ReadWrite,
+                                Kernel::MemoryPermission::ReadWrite, 0, Kernel::MemoryRegion::BASE,
+                                "NWM::UDS:SharedMemory")
+            .Unwrap();
 
     auto dlp_pass = "0km@tsa$uhmy1a0sa";
     dlp_password_buf.resize(sizeof(dlp_pass));
@@ -151,11 +154,13 @@ void DLP_Base::FinalizeDlpBase() {
     username = DLP_Username{};
 }
 
-bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type, std::vector<u8> passphrase) {
+bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type,
+                                     std::vector<u8> passphrase) {
     auto uds = GetUDS();
 
     // we need to make this event manually
-    uds->connection_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "dlp_connect_to_beacon");
+    uds->connection_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "dlp_connect_to_beacon");
 
     uds->ConnectToNetworkHLE(net_info, static_cast<u8>(conn_type), passphrase);
 
@@ -176,7 +181,8 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     }
 
     if (timed_out) {
-        // TODO: fix unlikely race cond, timeout happens, we disconnect, then server registers our connection
+        // TODO: fix unlikely race cond, timeout happens, we disconnect, then server registers our
+        // connection
         uds->DisconnectNetworkHLE();
         LOG_ERROR(Service_DLP, "Timed out when trying to connect to beacon");
         return false;
@@ -185,7 +191,8 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     if (uds->GetConnectionStatusHLE().status != NWM::NetworkStatus::ConnectedAsSpectator &&
         uds->GetConnectionStatusHLE().status != NWM::NetworkStatus::ConnectedAsClient) {
         // error!
-        LOG_ERROR(Service_DLP, "Could not connect spec to network, connected as 0x{:x}", static_cast<u32>(uds->GetConnectionStatusHLE().status));
+        LOG_ERROR(Service_DLP, "Could not connect spec to network, connected as 0x{:x}",
+                  static_cast<u32>(uds->GetConnectionStatusHLE().status));
         return false;
     }
 
@@ -202,7 +209,9 @@ int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer) {
         LOG_ERROR(Service_DLP, "Could not get get pointer to UDS service!");
         return 0;
     }
-    int ret = uds->PullPacketHLE(node_id, max_pullpacket_size, static_cast<u32>(max_pullpacket_size) >> 2, buffer_out, &secure_data);
+    int ret =
+        uds->PullPacketHLE(node_id, max_pullpacket_size, static_cast<u32>(max_pullpacket_size) >> 2,
+                           buffer_out, &secure_data);
 
     if (ret <= 0) {
         return 0;
@@ -215,22 +224,27 @@ int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer) {
 bool DLP_Base::SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 flags) {
     constexpr u32 max_sendto_size = 0x3c00;
 
+    if (buffer.size() > max_sendto_size) {
+        LOG_WARNING(Service_DLP, "Packet size is larger than 0x{:x}", max_sendto_size);
+    }
+
     return GetUDS()->SendToHLE(node_id, data_channel, buffer.size(), flags, buffer) >= 0;
 }
 
-u32 DLP_Base::GeneratePKChecksum(u32 aes_value, void *_input_buffer, u32 packet_size) {
+u32 DLP_Base::GeneratePKChecksum(u32 aes_value, void* _input_buffer, u32 packet_size) {
     auto input_buffer = reinterpret_cast<u8*>(_input_buffer);
 
     u32 working_hash = 0;
     // add all word aligned bytes
-    for (u32 i = 0; i < packet_size/sizeof(u32); i++) {
+    for (u32 i = 0; i < packet_size / sizeof(u32); i++) {
         u32 inp_buf_word = reinterpret_cast<u32*>(input_buffer)[i];
         working_hash += Common::swap32(inp_buf_word);
     }
     // add any remaining non word-aligned bytes
     if (u32 num_bytes_non_aligned = packet_size & 3; num_bytes_non_aligned != 0) {
         u32 non_aligned = 0;
-        memcpy(&non_aligned, input_buffer + packet_size - num_bytes_non_aligned, num_bytes_non_aligned);
+        memcpy(&non_aligned, input_buffer + packet_size - num_bytes_non_aligned,
+               num_bytes_non_aligned);
         working_hash += Common::swap32(non_aligned);
     }
     // hash by the aes value
@@ -238,7 +252,9 @@ u32 DLP_Base::GeneratePKChecksum(u32 aes_value, void *_input_buffer, u32 packet_
     u8 num_shift_extra_hash = (reinterpret_cast<u8*>(&aes_value)[2] & 0b1111) + 4;
     u32 aes_swap = Common::swap32(aes_value);
     for (u8 i = 0; i < num_extra_hash; i++) {
-        working_hash = (working_hash >> num_shift_extra_hash | working_hash << num_shift_extra_hash) ^ aes_swap;
+        working_hash =
+            (working_hash >> num_shift_extra_hash | working_hash << num_shift_extra_hash) ^
+            aes_swap;
     }
     return Common::swap32(working_hash);
 }
@@ -256,7 +272,7 @@ u32 DLP_Base::GenDLPChecksumKey(Network::MacAddress mac_addr) {
     return val_out;
 }
 
-bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
+bool DLP_Base::ValidatePacket(u32 aes, void* pk, size_t sz, bool checksum) {
     if (sz < sizeof(DLPPacketHeader)) {
         LOG_ERROR(Service_DLP, "Packet size is too small");
         return false;
@@ -278,7 +294,8 @@ bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
         ph_cpy->checksum = 0;
         u32 new_checksum = GeneratePKChecksum(aes, pk_copy.data(), pk_copy.size());
         if (new_checksum != ph->checksum) {
-            LOG_ERROR(Service_DLP, "Could not verify packet checksum 0x{:x} != 0x{:x}", new_checksum, ph->checksum);
+            LOG_ERROR(Service_DLP, "Could not verify packet checksum 0x{:x} != 0x{:x}",
+                      new_checksum, ph->checksum);
             return false;
         }
     }
@@ -286,7 +303,8 @@ bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
 }
 
 u32 DLP_Base::GetNumFragmentsFromTitleSize(u32 tsize) {
-    return Common::AlignUp(tsize - broad_title_size_diff, content_fragment_size)/content_fragment_size;
+    return Common::AlignUp(tsize - broad_title_size_diff, content_fragment_size) /
+           content_fragment_size;
 }
 
 } // namespace Service::DLP

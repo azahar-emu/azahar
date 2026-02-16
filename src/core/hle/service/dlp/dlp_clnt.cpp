@@ -15,7 +15,7 @@ std::shared_ptr<Kernel::SessionRequestHandler> DLP_CLNT::GetServiceFrameworkShar
 }
 
 u32 DLP_CLNT::ClientNeedsDup() {
-    constexpr u32 res_needs_system_update = 0x1;
+    [[maybe_unused]] constexpr u32 res_needs_system_update = 0x1;
     constexpr u32 res_does_not_need_update = 0x0;
     return res_does_not_need_update;
 }
@@ -24,18 +24,19 @@ void DLP_CLNT::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     u32 shared_mem_size = rp.Pop<u32>();
-	u32 max_beacons = rp.Pop<u32>();
+    u32 max_beacons = rp.Pop<u32>();
     u32 constant_mem_size = rp.Pop<u32>();
-	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
+    auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
 
-    InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, String16AsDLPUsername(GetCFG()->GetUsername()));
+    InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event,
+                      String16AsDLPUsername(GetCFG()->GetUsername()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
 }
 
 void DLP_CLNT::Finalize(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     FinalizeCltBase();
 
@@ -45,7 +46,7 @@ void DLP_CLNT::Finalize(Kernel::HLERequestContext& ctx) {
 
 // returns the version of the currently joined server
 void DLP_CLNT::GetCupVersion(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     [[maybe_unused]] auto mac_addr = rp.PopRaw<Network::MacAddress>();
     [[maybe_unused]] u32 tid_low = rp.PopRaw<u32>();
@@ -65,11 +66,11 @@ void DLP_CLNT::GetCupVersion(Kernel::HLERequestContext& ctx) {
 // tells us which server to connect to and download an update from
 // the dlp app uses this to check whether or not we need the update data
 void DLP_CLNT::PrepareForSystemDownload(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     mac_addr_update = rp.PopRaw<Network::MacAddress>();
-    u32 tid_low = rp.PopRaw<u32>();
-    u32 tid_high = rp.PopRaw<u32>();
+    [[maybe_unused]] u32 tid_low = rp.PopRaw<u32>();
+    [[maybe_unused]] u32 tid_high = rp.PopRaw<u32>();
 
     if (ClientNeedsDup()) {
         is_preparing_for_update = true;
@@ -84,7 +85,7 @@ void DLP_CLNT::PrepareForSystemDownload(Kernel::HLERequestContext& ctx) {
 // runs after the user accepts the license agreement to
 // download the update
 void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     LOG_WARNING(Service_DLP, "(STUBBED) called");
 
@@ -93,7 +94,7 @@ void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
     if (!is_preparing_for_update) {
         // error
         LOG_ERROR(Service_DLP, "Called without preparing first. We don't have a mac address!");
-         // TODO: verify this on hw
+        // TODO: verify this on hw
         rb.Push(0xD960AC02);
         return;
     }
@@ -112,15 +113,15 @@ void DLP_CLNT::StartSystemDownload(Kernel::HLERequestContext& ctx) {
 // i'm assuming this is a secondary check whether or not we
 // can download the update data?
 void DLP_CLNT::GetDupAvailability(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     mac_addr_update = rp.PopRaw<Network::MacAddress>();
-    u32 tid_low = rp.PopRaw<u32>();
-    u32 tid_high = rp.PopRaw<u32>();
+    [[maybe_unused]] u32 tid_low = rp.PopRaw<u32>();
+    [[maybe_unused]] u32 tid_high = rp.PopRaw<u32>();
 
     LOG_WARNING(Service_DLP, "(STUBBED) called");
 
-    constexpr u32 dup_is_available = 0x1;
+    [[maybe_unused]] constexpr u32 dup_is_available = 0x1;
     constexpr u32 dup_is_not_available = 0x0;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -129,7 +130,8 @@ void DLP_CLNT::GetDupAvailability(Kernel::HLERequestContext& ctx) {
     rb.Push(dup_is_not_available);
 }
 
-DLP_CLNT::DLP_CLNT() : ServiceFramework("dlp:CLNT", 1), DLP_Clt_Base(Core::System::GetInstance(), "CLNT") {
+DLP_CLNT::DLP_CLNT()
+    : ServiceFramework("dlp:CLNT", 1), DLP_Clt_Base(Core::System::GetInstance(), "CLNT") {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &DLP_CLNT::Initialize, "Initialize"},

@@ -33,7 +33,7 @@
 namespace Loader {
 
 using namespace Common::Literals;
-static constexpr u64 UPDATE_TID_HIGH    = 0x0004000e00000000;
+static constexpr u64 UPDATE_TID_HIGH = 0x0004000e00000000;
 static constexpr u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
 
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile* file) {

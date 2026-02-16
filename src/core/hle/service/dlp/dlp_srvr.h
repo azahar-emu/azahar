@@ -15,7 +15,10 @@ public:
     ~DLP_SRVR() = default;
 
     virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
-    virtual bool IsHost() {return true;}
+    virtual bool IsHost() {
+        return true;
+    }
+
 private:
     void IsChild(Kernel::HLERequestContext& ctx);
 

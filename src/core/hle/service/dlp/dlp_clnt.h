@@ -15,10 +15,13 @@ public:
     virtual ~DLP_CLNT() = default;
 
     virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
+
 private:
     SERVICE_SERIALIZATION_SIMPLE
 
-    virtual bool IsFKCL() {return false;}
+    virtual bool IsFKCL() {
+        return false;
+    }
 
     bool is_preparing_for_update = false;
     bool is_updating = false;

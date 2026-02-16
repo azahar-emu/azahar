@@ -5,10 +5,10 @@
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
-#include "core/core.h"
 #include "core/hle/service/fs/fs_user.h"
 
 SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_SRVR)
@@ -39,7 +39,9 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
         child = (progIdS[1] & 0xFFFFC000) == 0x40000 && (progIdS[1] & 0xFFFF) == 0x1;
     } else { // child not found
         child = false;
-        LOG_ERROR(Service_DLP, "Could not determine program id from process id. (process id not found: {:x})", processId);
+        LOG_ERROR(Service_DLP,
+                  "Could not determine program id from process id. (process id not found: {:x})",
+                  processId);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);

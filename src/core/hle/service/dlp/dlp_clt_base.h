@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "dlp_base.h"
-#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/shared_memory.h"
+#include "dlp_base.h"
 
 namespace Service::DLP {
 
@@ -36,7 +36,7 @@ struct DLPServerInfo {
     DLPSignalStrength signal_strength;
     u8 max_clients;
     u8 clients_joined;
-    u16 unk3; // node bitmask?
+    u16 unk3;    // node bitmask?
     u32 padding; // all zeros
     std::array<DLPNodeInfo, 16> node_info;
     u32 unk4;
@@ -50,14 +50,18 @@ protected:
     DLP_Clt_Base(Core::System& s, std::string unique_string_id);
     virtual ~DLP_Clt_Base();
 
-    virtual bool IsHost() {return false;}
+    virtual bool IsHost() {
+        return false;
+    }
 
     class ThreadCallback;
     bool OnConnectCallback();
     void ClientConnectionManager();
 
     virtual bool IsFKCL() = 0;
-    bool IsCLNT() {return !IsFKCL();}
+    bool IsCLNT() {
+        return !IsFKCL();
+    }
 
     DLP_Clt_State clt_state = DLP_Clt_State::NotInitialized;
     u16 dlp_channel_handle{};
@@ -65,11 +69,13 @@ protected:
     u32 dlp_units_downloaded = 0x0, dlp_units_total = 0x0;
     u64 dlp_download_child_tid = 0x0;
     u32 title_info_index = 0;
-    u32 max_title_info = 0; ///< once we receive x beacons, we will no longer parse any other beacons until at least one tinfo buf element is cleared
+    u32 max_title_info = 0; ///< once we receive x beacons, we will no longer parse any other
+                            ///< beacons until at least one tinfo buf element is cleared
     bool is_scanning = false;
     constexpr static inline int beacon_scan_interval_ms = 1000;
     std::vector<std::pair<DLPTitleInfo, DLPServerInfo>> scanned_title_info;
-    std::map<Network::MacAddress, bool> ignore_servers_list; // ignore servers which give us bad broadcast data
+    std::map<Network::MacAddress, bool>
+        ignore_servers_list; // ignore servers which give us bad broadcast data
     u64 scan_title_id_filter;
     Network::MacAddress scan_mac_address_filter;
     Network::MacAddress host_mac_address;
@@ -80,7 +86,7 @@ protected:
     constexpr static inline u8 dlp_client_data_channel = 0x2;
     constexpr static inline u8 dlp_host_network_node_id = 0x1;
 
-    Core::TimingEventType *beacon_scan_event;
+    Core::TimingEventType* beacon_scan_event;
 
     std::mutex beacon_mutex;
     std::recursive_mutex title_info_mutex;
@@ -98,7 +104,9 @@ protected:
     };
     u16 current_content_block;
 
-    void InitializeCltBase(u32 shared_mem_size, u32 max_beacons, u32 constant_mem_size, std::shared_ptr<Kernel::SharedMemory> shared_mem, std::shared_ptr<Kernel::Event> event, DLP_Username username);
+    void InitializeCltBase(u32 shared_mem_size, u32 max_beacons, u32 constant_mem_size,
+                           std::shared_ptr<Kernel::SharedMemory> shared_mem,
+                           std::shared_ptr<Kernel::Event> event, DLP_Username username);
     void FinalizeCltBase();
     void GenerateChannelHandle();
     u32 GetCltState();
