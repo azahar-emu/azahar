@@ -35,7 +35,7 @@ struct RenderPass {
 };
 
 class RenderManager {
-    static constexpr u32 NumColorFormats = 13;
+    static constexpr u32 NumColorFormats = 14;
     static constexpr u32 NumDepthFormats = 4;
 
 public:

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <deque>
 #include <span>
 #include "video_core/rasterizer_cache/framebuffer_base.h"
 #include "video_core/rasterizer_cache/rasterizer_cache_base.h"
@@ -26,10 +25,60 @@ class RenderManager;
 class Surface;
 class DescriptorUpdateQueue;
 
+enum Type {
+    Current = -1,
+    Base = 0,
+    Scaled,
+    Custom,
+    Copy,
+    Num,
+};
+
+enum ViewType {
+    Sample = 0,
+    Mip0,
+    Storage,
+    Depth,
+    Stencil,
+    Max,
+};
+
 struct Handle {
-    VmaAllocation alloc;
-    vk::Image image;
-    vk::UniqueImageView image_view;
+    explicit Handle() = default;
+
+    Handle(Handle&& other)
+        : allocation{std::exchange(other.allocation, VK_NULL_HANDLE)}, image{other.image},
+          image_views{other.image_views}, framebuffer{other.framebuffer}, width{other.width},
+          height{other.height}, levels{other.levels}, layers{other.layers} {}
+    Handle& operator=(Handle&& other) {
+        allocation = std::exchange(other.allocation, VK_NULL_HANDLE);
+        image = other.image;
+        image_views = other.image_views;
+        framebuffer = other.framebuffer;
+        width = other.width;
+        height = other.height;
+        levels = other.levels;
+        layers = other.layers;
+        return *this;
+    }
+
+    void Create(const Instance* instance, u32 width, u32 height, u32 levels,
+                VideoCore::TextureType type, vk::Format format, vk::ImageUsageFlags usage,
+                vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect, bool need_format_list,
+                std::string_view debug_name = {});
+
+    operator bool() const {
+        return allocation;
+    }
+
+    VmaAllocation allocation{};
+    vk::Image image{};
+    std::array<vk::ImageView, ViewType::Max> image_views{};
+    vk::Framebuffer framebuffer{};
+    u32 width;
+    u32 height;
+    u32 levels;
+    u32 layers;
 };
 
 /**
@@ -125,10 +174,16 @@ public:
     }
 
     /// Returns the image at index, otherwise the base image
-    vk::Image Image(u32 index = 1) const noexcept;
+    vk::Image Image(Type type = Type::Current) const noexcept {
+        return handles[type == Type::Current ? current : type].image;
+    }
 
     /// Returns the image view at index, otherwise the base view
-    vk::ImageView ImageView(u32 index = 1) const noexcept;
+    vk::ImageView ImageView(ViewType view_type = ViewType::Sample,
+                            Type type = Type::Current) noexcept;
+
+    /// Returns a framebuffer handle for rendering to this surface
+    vk::Framebuffer Framebuffer(Type type = Type::Current) noexcept;
 
     /// Returns width of the surface
     u32 GetWidth() const noexcept {
@@ -147,21 +202,6 @@ public:
 
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
-
-    /// Returns the depth view of the surface image
-    vk::ImageView DepthView() noexcept;
-
-    /// Returns the framebuffer view of the surface image
-    vk::ImageView FramebufferView() noexcept;
-
-    /// Returns the stencil view of the surface image
-    vk::ImageView StencilView() noexcept;
-
-    /// Returns the R32 image view used for atomic load/store
-    vk::ImageView StorageView() noexcept;
-
-    /// Returns a framebuffer handle for rendering to this surface
-    vk::Framebuffer Framebuffer() noexcept;
 
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
@@ -198,13 +238,11 @@ public:
     const Instance* instance;
     Scheduler* scheduler;
     FormatTraits traits;
-    std::array<Handle, 3> handles{};
-    std::array<vk::UniqueFramebuffer, 2> framebuffers{};
-    Handle copy_handle;
+    std::array<Handle, Type::Num> handles;
+    Type current{};
     vk::UniqueImageView depth_view;
     vk::UniqueImageView stencil_view;
     vk::UniqueImageView storage_view;
-    std::array<vk::UniqueImageView, 2> framebuffer_view{};
     bool is_framebuffer{};
     bool is_storage{};
 };
@@ -230,7 +268,7 @@ public:
     }
 
     [[nodiscard]] vk::Framebuffer Handle() const noexcept {
-        return framebuffer.get();
+        return framebuffer;
     }
 
     [[nodiscard]] std::array<vk::Image, 2> Images() const noexcept {
@@ -252,15 +290,14 @@ public:
 private:
     std::array<vk::Image, 2> images{};
     std::array<vk::ImageView, 2> image_views{};
-    vk::UniqueFramebuffer framebuffer;
+    vk::Framebuffer framebuffer;
     vk::RenderPass render_pass;
-    vk::UniqueRenderPass shadow_render_pass;
     std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};
-    u32 width{};
-    u32 height{};
+    u32 width;
+    u32 height;
     u32 res_scale{1};
 };
 

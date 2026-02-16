@@ -50,15 +50,14 @@ private:
     void FilterXbrz(Surface& surface, const VideoCore::TextureBlit& blit);
     void FilterMMPX(Surface& surface, const VideoCore::TextureBlit& blit);
 
-    void FilterPass(Surface& source, Surface& dest, vk::Pipeline pipeline,
-                    vk::PipelineLayout layout, const VideoCore::TextureBlit& blit);
+    void FilterPass(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
+                    const VideoCore::TextureBlit& blit);
 
-    void FilterPassThreeTextures(Surface& source1, Surface& source2, Surface& source3,
-                                 Surface& dest, vk::Pipeline pipeline, vk::PipelineLayout layout,
+    void FilterPassThreeTextures(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
                                  const VideoCore::TextureBlit& blit);
 
-    void FilterPassYGradient(Surface& source, Surface& dest, vk::Pipeline pipeline,
-                             vk::PipelineLayout layout, const VideoCore::TextureBlit& blit);
+    void FilterPassYGradient(Surface& surface, vk::Pipeline pipeline, vk::PipelineLayout layout,
+                             const VideoCore::TextureBlit& blit);
 
 private:
     const Instance& instance;
