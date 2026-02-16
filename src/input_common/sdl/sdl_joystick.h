@@ -55,9 +55,6 @@ public:
     float GetAxis(int axis, bool isController) const {
         if (!sdl_joystick)
             return 0.0;
-        // if we are using the game controller api, assume axis was the gamepad axis not the
-        // joystick axis
-
         if (isController)
             return SDL_GameControllerGetAxis(sdl_controller.get(),
                                              static_cast<SDL_GameControllerAxis>(axis)) /
