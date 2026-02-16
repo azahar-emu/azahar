@@ -22,8 +22,6 @@
 #include "video_core/shader/generator/glsl_shader_gen.h"
 #include "video_core/shader/generator/profile.h"
 
-#pragma optimize("", off)
-
 using namespace Pica::Shader::Generator;
 using Pica::Shader::FSConfig;
 
@@ -721,5 +719,3 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
 }
 
 } // namespace OpenGL
-
-#pragma optimize("", on)

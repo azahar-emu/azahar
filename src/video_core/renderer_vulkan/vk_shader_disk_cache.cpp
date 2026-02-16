@@ -277,35 +277,11 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadFirst() {
     return ReadAt(0);
 }
 
-ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadLast() {
-    const size_t file_size = file.GetSize();
-    CacheEntry::CacheEntryFooter footer{};
-
-    if (file.ReadAtArray(&footer, 1, file_size - sizeof(footer)) == sizeof(footer) &&
-        footer.version == CacheEntry::CacheEntryFooter::ENTRY_VERSION) {
-        return ReadAt(file_size - footer.entry_size);
-    }
-
-    return CacheEntry();
-}
-
 ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadNext(const CacheEntry& previous) {
     if (!previous.valid)
         return CacheEntry();
 
     return ReadAt(previous.position + previous.header.entry_size);
-}
-
-ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadPrevious(const CacheEntry& next) {
-    CacheEntry::CacheEntryFooter footer{};
-
-    if (!next.valid || next.position < sizeof(footer))
-        return CacheEntry();
-
-    if (file.ReadAtArray(&footer, 1, next.position - sizeof(footer)) == sizeof(footer) &&
-        footer.version == CacheEntry::CacheEntryFooter::ENTRY_VERSION) {
-        return ReadAt(next.position - footer.entry_size);
-    }
 }
 
 std::pair<size_t, ShaderDiskCache::CacheEntry::CacheEntryHeader>

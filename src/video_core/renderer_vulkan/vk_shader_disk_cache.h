@@ -255,9 +255,7 @@ private:
         }
 
         CacheEntry ReadFirst();
-        CacheEntry ReadLast();
         CacheEntry ReadNext(const CacheEntry& previous);
-        CacheEntry ReadPrevious(const CacheEntry& next);
 
         CacheEntry ReadAt(size_t position);
 
