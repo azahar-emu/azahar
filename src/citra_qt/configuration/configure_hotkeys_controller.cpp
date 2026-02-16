@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <vector>
 #include <QMenu>
 #include <QMessageBox>
 #include <QStandardItemModel>
@@ -20,12 +21,12 @@ ConfigureControllerHotkeys::ConfigureControllerHotkeys(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureControllerHotkeys>()) {
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
-
+    ui->comboBoxMappingType->setCurrentIndex(
+        static_cast<int>(Settings::values.controller_hotkey_maptype.GetValue()));
     model = new QStandardItemModel(this);
     model->setColumnCount(2);
     model->setHorizontalHeaderLabels({tr("Action"), tr("Controller Hotkey")});
-    // TODO: re-enable and get profiles workin
-    ui->profileGroup->setEnabled(false);
+
     connect(ui->hotkey_list, &QTreeView::doubleClicked, this,
             &ConfigureControllerHotkeys::Configure);
     connect(ui->hotkey_list, &QTreeView::customContextMenuRequested, this,
@@ -84,19 +85,44 @@ void ConfigureControllerHotkeys::Configure(QModelIndex index) {
 }
 
 void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
+    Settings::InputMappingType maptype = Settings::values.controller_hotkey_maptype =
+        static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
+
     for (int key_id = 0; key_id < model->rowCount(); key_id++) {
         QStandardItem* parent = model->item(key_id, 0);
         for (int key_column_id = 0; key_column_id < parent->rowCount(); key_column_id++) {
             const QStandardItem* action = parent->child(key_column_id, name_column);
             const QStandardItem* controller_keyseq = parent->child(key_column_id, hotkey_column);
+            if (controller_keyseq->text().isEmpty())
+                continue;
+            const QStringList sequences = controller_keyseq->text().split(QStringLiteral("||"));
+            std::vector<Common::ParamPackage> params;
+            std::transform(sequences.begin(), sequences.end(), std::back_inserter(params),
+                           [](const QString& s) { return Common::ParamPackage(s.toStdString()); });
+            if (maptype == Settings::InputMappingType::AllControllers) {
+                for (auto& param : params)
+                    param.Set("maptype", "all");
+            } else if (maptype == Settings::InputMappingType::Guid) {
+                for (auto& param : params)
+                    param.Set("maptype", "guid");
+            } else {
+                for (auto& param : params)
+                    param.Set("maptype", "guid+port");
+            }
+
             for (auto& [group, sub_actions] : registry.hotkey_groups) {
                 if (group != parent->text())
                     continue;
                 for (auto& [action_name, hotkey] : sub_actions) {
-                    if (action_name != action->text())
-                        continue;
-                    hotkey.controller_keyseq = controller_keyseq->text();
-                    registry.UpdateControllerHotkey(action_name, hotkey);
+                    if (action_name == action->text()) {
+                        QStringList parts;
+                        for (const auto& param : params) {
+                            parts.append(QString::fromStdString(param.Serialize()));
+                        }
+                        hotkey.controller_keyseq = parts.join(QStringLiteral("||"));
+                        registry.UpdateControllerHotkey(action_name, hotkey);
+                        break;
+                    }
                 }
             }
         }

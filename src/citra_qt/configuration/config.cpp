@@ -332,6 +332,7 @@ void QtConfig::ReadControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     ReadBasicSetting(Settings::values.use_artic_base_controller);
+    ReadBasicSetting(Settings::values.controller_hotkey_maptype);
 
     int num_touch_from_button_maps =
         qt_config->beginReadArray(QStringLiteral("touch_from_button_maps"));
@@ -372,6 +373,8 @@ void QtConfig::ReadControlValues() {
         Settings::InputProfile profile;
         profile.name =
             ReadSetting(QStringLiteral("name"), QStringLiteral("Default")).toString().toStdString();
+        profile.maptype = static_cast<Settings::InputMappingType>(
+            ReadSetting(QStringLiteral("maptype"), 2).toInt());
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -976,7 +979,7 @@ void QtConfig::SaveControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     WriteBasicSetting(Settings::values.use_artic_base_controller);
-
+    WriteBasicSetting(Settings::values.controller_hotkey_maptype);
     WriteSetting(QStringLiteral("profile"), Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray(QStringLiteral("profiles"));
     for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
@@ -984,6 +987,8 @@ void QtConfig::SaveControlValues() {
         const auto& profile = Settings::values.input_profiles[p];
         WriteSetting(QStringLiteral("name"), QString::fromStdString(profile.name),
                      QStringLiteral("default"));
+        WriteSetting(QStringLiteral("maptype"), static_cast<int>(profile.maptype),
+                     static_cast<int>(Settings::InputMappingType::GuidPort));
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             WriteSetting(QString::fromStdString(Settings::NativeButton::mapping[i]),

@@ -351,12 +351,34 @@ void ConfigureInput::ApplyConfiguration() {
 
     Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
 
+    Settings::values.current_input_profile.maptype =
+        static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [](Common::ParamPackage& param) {
+                       if (Settings::values.current_input_profile.maptype ==
+                           Settings::InputMappingType::AllControllers)
+                           param.Set("maptype", "all");
+                       else if (Settings::values.current_input_profile.maptype ==
+                                Settings::InputMappingType::Guid)
+                           param.Set("maptype", "guid");
+                       else
+                           param.Set("maptype", "guid+port");
+                       return param.Serialize();
+                   });
     std::transform(analogs_param.begin(), analogs_param.end(),
                    Settings::values.current_input_profile.analogs.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [](Common::ParamPackage& param) {
+                       if (Settings::values.current_input_profile.maptype ==
+                           Settings::InputMappingType::AllControllers)
+                           param.Set("maptype", "all");
+                       else if (Settings::values.current_input_profile.maptype ==
+                                Settings::InputMappingType::Guid)
+                           param.Set("maptype", "guid");
+                       else
+                           param.Set("maptype", "guid+port");
+                       return param.Serialize();
+                   });
 }
 
 void ConfigureInput::ApplyProfile() {
@@ -397,6 +419,8 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 void ConfigureInput::LoadConfiguration() {
 
     ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
+    ui->comboBoxMappingType->setCurrentIndex(
+        static_cast<int>(Settings::values.current_input_profile.maptype));
     ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
 
     std::transform(Settings::values.current_input_profile.buttons.begin(),
