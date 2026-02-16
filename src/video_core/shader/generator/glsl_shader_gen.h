@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -27,7 +27,9 @@ struct ShaderSetup;
 
 namespace Pica::Shader::Generator {
 struct PicaVSConfig;
+struct ExtraVSConfig;
 struct PicaFixedGSConfig;
+struct ExtraFixedGSConfig;
 } // namespace Pica::Shader::Generator
 
 namespace Pica::Shader::Generator::GLSL {
@@ -44,12 +46,13 @@ std::string GenerateTrivialVertexShader(bool use_clip_planes, bool separable_sha
  * @returns String of the shader source code; empty on failure
  */
 std::string GenerateVertexShader(const Pica::ShaderSetup& setup, const PicaVSConfig& config,
-                                 bool separable_shader);
+                                 const ExtraVSConfig& extra);
 
 /**
  * Generates the GLSL fixed geometry shader program source code for non-GS PICA pipeline
  * @returns String of the shader source code
  */
-std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader);
+std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config,
+                                        const ExtraFixedGSConfig& extra_config);
 
 } // namespace Pica::Shader::Generator::GLSL

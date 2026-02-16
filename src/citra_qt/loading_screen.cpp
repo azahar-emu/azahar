@@ -68,8 +68,7 @@ const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> stage
      QT_TRANSLATE_NOOP("LoadingScreen", "Preloading Textures %1 / %2")},
     {VideoCore::LoadCallbackStage::Decompile,
      QT_TRANSLATE_NOOP("LoadingScreen", "Preparing Shaders %1 / %2")},
-    {VideoCore::LoadCallbackStage::Build,
-     QT_TRANSLATE_NOOP("LoadingScreen", "Loading Shaders %1 / %2")},
+    {VideoCore::LoadCallbackStage::Build, QT_TRANSLATE_NOOP("LoadingScreen", "Loading %3 %1 / %2")},
     {VideoCore::LoadCallbackStage::Complete, QT_TRANSLATE_NOOP("LoadingScreen", "Launching...")},
 };
 const static std::unordered_map<VideoCore::LoadCallbackStage, const char*> progressbar_style{
@@ -131,7 +130,7 @@ void LoadingScreen::Prepare(Loader::AppLoader& loader) {
     }
     ui->title->setText(tr("Now Loading\n%1").arg(QString::fromStdString(title)));
     eta_shown = false;
-    OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+    OnLoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 }
 
 void LoadingScreen::OnLoadComplete() {
@@ -139,7 +138,7 @@ void LoadingScreen::OnLoadComplete() {
 }
 
 void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size_t value,
-                                   std::size_t total) {
+                                   std::size_t total, const std::string& object) {
     using namespace std::chrono;
     const auto now = high_resolution_clock::now();
     // reset the timer if the stage changes
@@ -184,7 +183,7 @@ void LoadingScreen::OnLoadProgress(VideoCore::LoadCallbackStage stage, std::size
     }
 
     // update labels and progress bar
-    ui->stage->setText(GetStageTranslation(stage, value, total));
+    ui->stage->setText(GetStageTranslation(stage, value, total, object));
     ui->value->setText(estimate);
     ui->progress_bar->setValue(static_cast<int>(value));
     previous_time = now;
@@ -199,11 +198,12 @@ void LoadingScreen::paintEvent(QPaintEvent* event) {
 }
 
 QString LoadingScreen::GetStageTranslation(VideoCore::LoadCallbackStage stage, std::size_t value,
-                                           std::size_t total) {
+                                           std::size_t total, const std::string& object) {
     const auto& stg = tr(stage_translations.at(stage));
-    if (stage == VideoCore::LoadCallbackStage::Decompile ||
-        stage == VideoCore::LoadCallbackStage::Build ||
-        stage == VideoCore::LoadCallbackStage::Preload) {
+    if (stage == VideoCore::LoadCallbackStage::Build) {
+        return stg.arg(value).arg(total).arg(QString::fromStdString(object));
+    } else if (stage == VideoCore::LoadCallbackStage::Decompile ||
+               stage == VideoCore::LoadCallbackStage::Preload) {
         return stg.arg(value).arg(total);
     } else {
         return stg;

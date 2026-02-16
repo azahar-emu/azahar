@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,7 +6,7 @@
 
 namespace Pica::Shader {
 
-FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs, const Profile& profile) {
+FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs) {
     const auto& output_merger = regs.framebuffer.output_merger;
     scissor_test_mode.Assign(regs.rasterizer.scissor_test.mode);
     depthmap_enable.Assign(regs.rasterizer.depthmap_enable);
@@ -15,31 +15,43 @@ FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs, const Profi
                                ? output_merger.alpha_test.func.Value()
                                : Pica::FramebufferRegs::CompareFunc::Always);
 
-    // Emulate logic op in the shader if needed and not supported.
+    alphablend_enable.Assign(output_merger.alphablend_enable);
+    requested_logic_op = output_merger.logic_op;
+
     logic_op.Assign(Pica::FramebufferRegs::LogicOp::Copy);
-    if (!profile.has_logic_op && !regs.framebuffer.output_merger.alphablend_enable) {
-        logic_op.Assign(regs.framebuffer.output_merger.logic_op);
+
+    if (alphablend_enable) {
+        rgb_blend.eq = output_merger.alpha_blending.blend_equation_rgb.Value();
+        rgb_blend.src_factor = output_merger.alpha_blending.factor_source_rgb;
+        rgb_blend.dst_factor = output_merger.alpha_blending.factor_dest_rgb;
+
+        alpha_blend.eq = output_merger.alpha_blending.blend_equation_a.Value();
+        alpha_blend.src_factor = output_merger.alpha_blending.factor_source_a;
+        alpha_blend.dst_factor = output_merger.alpha_blending.factor_dest_a;
+    }
+}
+
+void FramebufferConfig::ApplyProfile(const Profile& profile) {
+    // Emulate logic op in the shader if needed and not supported.
+    if (!profile.has_logic_op && !alphablend_enable) {
+        logic_op.Assign(requested_logic_op);
     }
 
-    const auto alpha_eq = output_merger.alpha_blending.blend_equation_a.Value();
-    const auto rgb_eq = output_merger.alpha_blending.blend_equation_rgb.Value();
-    if (!profile.has_blend_minmax_factor && output_merger.alphablend_enable) {
-        if (rgb_eq == Pica::FramebufferRegs::BlendEquation::Max ||
-            rgb_eq == Pica::FramebufferRegs::BlendEquation::Min) {
-            rgb_blend.eq = rgb_eq;
-            rgb_blend.src_factor = output_merger.alpha_blending.factor_source_rgb;
-            rgb_blend.dst_factor = output_merger.alpha_blending.factor_dest_rgb;
+    // Min/max blend emulation
+    if (!profile.has_blend_minmax_factor && alphablend_enable) {
+        if (rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Min &&
+            rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Max) {
+            rgb_blend = {};
         }
-        if (alpha_eq == Pica::FramebufferRegs::BlendEquation::Max ||
-            alpha_eq == Pica::FramebufferRegs::BlendEquation::Min) {
-            alpha_blend.eq = alpha_eq;
-            alpha_blend.src_factor = output_merger.alpha_blending.factor_source_a;
-            alpha_blend.dst_factor = output_merger.alpha_blending.factor_dest_a;
+
+        if (alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Min &&
+            alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Max) {
+            alpha_blend = {};
         }
     }
 }
 
-TextureConfig::TextureConfig(const Pica::TexturingRegs& regs, const Profile& profile) {
+TextureConfig::TextureConfig(const Pica::TexturingRegs& regs) {
     texture0_type.Assign(regs.texture0.type);
     texture2_use_coord1.Assign(regs.main_config.texture2_use_coord1 != 0);
     combiner_buffer_input.Assign(regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
@@ -48,16 +60,13 @@ TextureConfig::TextureConfig(const Pica::TexturingRegs& regs, const Profile& pro
     fog_flip.Assign(regs.fog_flip != 0);
     shadow_texture_orthographic.Assign(regs.shadow.orthographic != 0);
 
-    // Emulate custom border color if needed and not supported.
     const auto pica_textures = regs.GetTextures();
     for (u32 tex_index = 0; tex_index < 3; tex_index++) {
-        const auto& config = pica_textures[tex_index].config;
-        texture_border_color[tex_index].enable_s.Assign(
-            !profile.has_custom_border_color &&
-            config.wrap_s == Pica::TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
-        texture_border_color[tex_index].enable_t.Assign(
-            !profile.has_custom_border_color &&
-            config.wrap_t == Pica::TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
+        requested_wrap[tex_index].s = pica_textures[tex_index].config.wrap_s;
+        requested_wrap[tex_index].t = pica_textures[tex_index].config.wrap_t;
+
+        texture_border_color[tex_index].enable_s.Assign(false);
+        texture_border_color[tex_index].enable_t.Assign(false);
     }
 
     const auto& stages = regs.GetTevStages();
@@ -72,6 +81,21 @@ TextureConfig::TextureConfig(const Pica::TexturingRegs& regs, const Profile& pro
             tev_stages[i].modifiers_raw &= 0xFFF;
             tev_stages[i].ops_raw &= 0xF;
         }
+    }
+}
+
+void TextureConfig::ApplyProfile(const Profile& profile) {
+    // Emulate custom border color if needed and not supported.
+    if (profile.has_custom_border_color) {
+        return;
+    }
+
+    for (u32 i = 0; i < 3; i++) {
+        texture_border_color[i].enable_s.Assign(
+            requested_wrap[i].s == Pica::TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
+
+        texture_border_color[i].enable_t.Assign(
+            requested_wrap[i].t == Pica::TexturingRegs::TextureConfig::WrapMode::ClampToBorder);
     }
 }
 
@@ -116,48 +140,48 @@ LightConfig::LightConfig(const Pica::LightingRegs& regs) {
     if (lut_d0.enable) {
         lut_d0.abs_input.Assign(regs.abs_lut_input.disable_d0 == 0);
         lut_d0.type.Assign(regs.lut_input.d0.Value());
-        lut_d0.scale = regs.lut_scale.GetScale(regs.lut_scale.d0);
+        lut_d0.SetScale(regs.lut_scale.GetScale(regs.lut_scale.d0));
     }
 
     lut_d1.enable.Assign(regs.config1.disable_lut_d1 == 0);
     if (lut_d1.enable) {
         lut_d1.abs_input.Assign(regs.abs_lut_input.disable_d1 == 0);
         lut_d1.type.Assign(regs.lut_input.d1.Value());
-        lut_d1.scale = regs.lut_scale.GetScale(regs.lut_scale.d1);
+        lut_d1.SetScale(regs.lut_scale.GetScale(regs.lut_scale.d1));
     }
 
     // This is a dummy field due to lack of the corresponding register
     lut_sp.enable.Assign(1);
     lut_sp.abs_input.Assign(regs.abs_lut_input.disable_sp == 0);
     lut_sp.type.Assign(regs.lut_input.sp.Value());
-    lut_sp.scale = regs.lut_scale.GetScale(regs.lut_scale.sp);
+    lut_sp.SetScale(regs.lut_scale.GetScale(regs.lut_scale.sp));
 
     lut_fr.enable.Assign(regs.config1.disable_lut_fr == 0);
     if (lut_fr.enable) {
         lut_fr.abs_input.Assign(regs.abs_lut_input.disable_fr == 0);
         lut_fr.type.Assign(regs.lut_input.fr.Value());
-        lut_fr.scale = regs.lut_scale.GetScale(regs.lut_scale.fr);
+        lut_fr.SetScale(regs.lut_scale.GetScale(regs.lut_scale.fr));
     }
 
     lut_rr.enable.Assign(regs.config1.disable_lut_rr == 0);
     if (lut_rr.enable) {
         lut_rr.abs_input.Assign(regs.abs_lut_input.disable_rr == 0);
         lut_rr.type.Assign(regs.lut_input.rr.Value());
-        lut_rr.scale = regs.lut_scale.GetScale(regs.lut_scale.rr);
+        lut_rr.SetScale(regs.lut_scale.GetScale(regs.lut_scale.rr));
     }
 
     lut_rg.enable.Assign(regs.config1.disable_lut_rg == 0);
     if (lut_rg.enable) {
         lut_rg.abs_input.Assign(regs.abs_lut_input.disable_rg == 0);
         lut_rg.type.Assign(regs.lut_input.rg.Value());
-        lut_rg.scale = regs.lut_scale.GetScale(regs.lut_scale.rg);
+        lut_rg.SetScale(regs.lut_scale.GetScale(regs.lut_scale.rg));
     }
 
     lut_rb.enable.Assign(regs.config1.disable_lut_rb == 0);
     if (lut_rb.enable) {
         lut_rb.abs_input.Assign(regs.abs_lut_input.disable_rb == 0);
         lut_rb.type.Assign(regs.lut_input.rb.Value());
-        lut_rb.scale = regs.lut_scale.GetScale(regs.lut_scale.rb);
+        lut_rb.SetScale(regs.lut_scale.GetScale(regs.lut_scale.rb));
     }
 }
 
@@ -186,8 +210,8 @@ ProcTexConfig::ProcTexConfig(const Pica::TexturingRegs& regs) {
     lut_filter.Assign(regs.proctex_lut.filter);
 }
 
-FSConfig::FSConfig(const Pica::RegsInternal& regs, const UserConfig& user_, const Profile& profile)
-    : framebuffer{regs, profile}, texture{regs.texturing, profile}, lighting{regs.lighting},
-      proctex{regs.texturing}, user{user_} {}
+FSConfig::FSConfig(const Pica::RegsInternal& regs)
+    : framebuffer{regs}, texture{regs.texturing}, lighting{regs.lighting}, proctex{regs.texturing} {
+}
 
 } // namespace Pica::Shader

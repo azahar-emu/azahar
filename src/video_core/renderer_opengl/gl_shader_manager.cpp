@@ -9,6 +9,7 @@
 #include <thread>
 #include <unordered_map>
 #include <variant>
+#include "common/hash.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
 #include "video_core/pica/shader_setup.h"
@@ -92,12 +93,7 @@ static std::tuple<PicaVSConfig, Pica::ShaderSetup> BuildVSConfigFromRaw(
     setup.UpdateProgramCode(program_code);
     setup.UpdateSwizzleData(swizzle_data);
 
-    // Enable the geometry-shader only if we are actually doing per-fragment lighting
-    // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
-    const bool use_geometry_shader = !raw.GetRawShaderConfig().lighting.disable;
-    return {PicaVSConfig{raw.GetRawShaderConfig(), setup, driver.HasClipCullDistance(),
-                         use_geometry_shader, accurate_mul},
-            setup};
+    return {PicaVSConfig{raw.GetRawShaderConfig(), setup}, setup};
 }
 
 /**
@@ -163,31 +159,31 @@ public:
     ~ShaderCache() = default;
 
     template <typename... Args>
-    std::tuple<GLuint, std::optional<std::string>> Get(const KeyConfigType& config,
-                                                       Args&&... args) {
-        auto [iter, new_shader] = shaders.emplace(config, OGLShaderStage{separable});
+    std::tuple<u64, GLuint, std::optional<std::string>> Get(const KeyConfigType& config,
+                                                            Args&&... args) {
+        auto [iter, new_shader] = shaders.emplace(config.Hash(), OGLShaderStage{separable});
         OGLShaderStage& cached_shader = iter->second;
         std::optional<std::string> result{};
         if (new_shader) {
             result = CodeGenerator(config, args...);
             cached_shader.Create(result->c_str(), ShaderType);
         }
-        return {cached_shader.GetHandle(), std::move(result)};
+        return {iter->first, cached_shader.GetHandle(), std::move(result)};
     }
 
     void Inject(const KeyConfigType& key, OGLProgram&& program) {
         OGLShaderStage stage{separable};
         stage.Inject(std::move(program));
-        shaders.emplace(key, std::move(stage));
+        shaders.emplace(key.Hash(), std::move(stage));
     }
 
     void Inject(const KeyConfigType& key, OGLShaderStage&& stage) {
-        shaders.emplace(key, std::move(stage));
+        shaders.emplace(key.Hash(), std::move(stage));
     }
 
 private:
     bool separable;
-    std::unordered_map<KeyConfigType, OGLShaderStage> shaders;
+    std::unordered_map<u64, OGLShaderStage> shaders;
 };
 
 // This is a cache designed for shaders translated from PICA shaders. The first cache matches the
@@ -195,62 +191,68 @@ private:
 // GLSL code. The configuration is like this because there might be leftover code in the PICA shader
 // program buffer from the previous shader, which is hashed into the config, resulting several
 // different config values from the same shader program.
-template <typename KeyConfigType,
-          std::string (*CodeGenerator)(const Pica::ShaderSetup&, const KeyConfigType&, bool),
+template <typename KeyConfigType, typename ExtraConfigType,
+          std::string (*CodeGenerator)(const Pica::ShaderSetup&, const KeyConfigType&,
+                                       const ExtraConfigType&),
           GLenum ShaderType>
 class ShaderDoubleCache {
 public:
-    explicit ShaderDoubleCache(bool separable) : separable(separable) {}
-    std::tuple<GLuint, std::optional<std::string>> Get(const KeyConfigType& key,
-                                                       const Pica::ShaderSetup& setup) {
+    explicit ShaderDoubleCache(bool _separable) : separable{_separable} {}
+    std::tuple<u64, GLuint, std::optional<std::string>> Get(const KeyConfigType& key,
+                                                            const ExtraConfigType& extra,
+                                                            const Pica::ShaderSetup& setup) {
         std::optional<std::string> result{};
-        auto map_it = shader_map.find(key);
+        const size_t key_hash = key.Hash();
+        auto map_it = shader_map.find(key_hash);
         if (map_it == shader_map.end()) {
-            auto program = CodeGenerator(setup, key, separable);
+            auto program = Common::HashableString(CodeGenerator(setup, key, extra));
             if (program.empty()) {
-                shader_map[key] = nullptr;
-                return {0, std::nullopt};
+                shader_map[key_hash] = nullptr;
+                return {0, 0, std::nullopt};
             }
 
-            auto [iter, new_shader] = shader_cache.emplace(program, OGLShaderStage{separable});
+            auto [iter, new_shader] =
+                shader_cache.emplace(program.Hash(), OGLShaderStage{separable});
             OGLShaderStage& cached_shader = iter->second;
             if (new_shader) {
-                result = program;
-                cached_shader.Create(program.c_str(), ShaderType);
+                result = std::move(program);
+                cached_shader.Create((*result).c_str(), ShaderType);
             }
-            shader_map[key] = &cached_shader;
-            return {cached_shader.GetHandle(), std::move(result)};
+            shader_map[key_hash] = &cached_shader;
+            return {key_hash, cached_shader.GetHandle(), std::move(result)};
         }
 
         if (map_it->second == nullptr) {
-            return {0, std::nullopt};
+            return {0, 0, std::nullopt};
         }
 
-        return {map_it->second->GetHandle(), std::nullopt};
+        return {key_hash, map_it->second->GetHandle(), std::nullopt};
     }
 
     void Inject(const KeyConfigType& key, std::string decomp, OGLProgram&& program) {
         OGLShaderStage stage{separable};
         stage.Inject(std::move(program));
-        const auto iter = shader_cache.emplace(std::move(decomp), std::move(stage)).first;
+        auto decomp_hash = Common::HashableString(std::move(decomp));
+        const auto iter = shader_cache.emplace(decomp_hash.Hash(), std::move(stage)).first;
         OGLShaderStage& cached_shader = iter->second;
-        shader_map.insert_or_assign(key, &cached_shader);
+        shader_map.insert_or_assign(key.Hash(), &cached_shader);
     }
 
     void Inject(const KeyConfigType& key, std::string decomp, OGLShaderStage&& stage) {
-        const auto iter = shader_cache.emplace(std::move(decomp), std::move(stage)).first;
+        auto decomp_hash = Common::HashableString(std::move(decomp));
+        const auto iter = shader_cache.emplace(decomp_hash.Hash(), std::move(stage)).first;
         OGLShaderStage& cached_shader = iter->second;
-        shader_map.insert_or_assign(key, &cached_shader);
+        shader_map.insert_or_assign(key.Hash(), &cached_shader);
     }
 
 private:
     bool separable;
-    std::unordered_map<KeyConfigType, OGLShaderStage*> shader_map;
-    std::unordered_map<std::string, OGLShaderStage> shader_cache;
+    std::unordered_map<u64, OGLShaderStage*> shader_map;
+    std::unordered_map<u64, OGLShaderStage> shader_cache;
 };
 
 using ProgrammableVertexShaders =
-    ShaderDoubleCache<PicaVSConfig, &GLSL::GenerateVertexShader, GL_VERTEX_SHADER>;
+    ShaderDoubleCache<PicaVSConfig, ExtraVSConfig, &GLSL::GenerateVertexShader, GL_VERTEX_SHADER>;
 
 using FixedGeometryShaders =
     ShaderCache<PicaFixedGSConfig, &GLSL::GenerateFixedGeometryShader, GL_GEOMETRY_SHADER>;
@@ -326,6 +328,23 @@ public:
     std::unordered_map<u64, OGLProgram> program_cache;
     OGLPipeline pipeline;
     ShaderDiskCache disk_cache;
+
+    Pica::Shader::Generator::ExtraVSConfig CalcExtraConfig(
+        const Pica::Shader::Generator::PicaVSConfig& config, bool accurate_mul) {
+        auto res = ExtraVSConfig();
+
+        // Enable the geometry-shader only if we are actually doing per-fragment lighting
+        // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
+        const bool use_geometry_shader = !config.state.lighting_disable;
+
+        res.use_clip_planes = profile.has_clip_planes;
+        res.use_geometry_shader = use_geometry_shader;
+        res.sanitize_mul = accurate_mul;
+        res.separable_shader = separable;
+        res.load_flags.fill(AttribLoadFlags::Float);
+
+        return res;
+    }
 };
 
 ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, const Driver& driver_,
@@ -339,17 +358,15 @@ ShaderProgramManager::~ShaderProgramManager() = default;
 bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
                                                        Pica::ShaderSetup& setup,
                                                        bool accurate_mul) {
-    // Enable the geometry-shader only if we are actually doing per-fragment lighting
-    // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders
-    const bool use_geometry_shader = !regs.lighting.disable;
 
-    PicaVSConfig config{regs, setup, driver.HasClipCullDistance(), use_geometry_shader,
-                        accurate_mul};
-    auto [handle, result] = impl->programmable_vertex_shaders.Get(config, setup);
+    PicaVSConfig config{regs, setup};
+    ExtraVSConfig extra = impl->CalcExtraConfig(config, accurate_mul);
+
+    auto [hash, handle, result] = impl->programmable_vertex_shaders.Get(config, extra, setup);
     if (handle == 0)
         return false;
     impl->current.vs = handle;
-    impl->current.vs_hash = config.Hash();
+    impl->current.vs_hash = hash;
 
     // Save VS to the disk cache if its a new shader
     if (result) {
@@ -373,10 +390,15 @@ void ShaderProgramManager::UseTrivialVertexShader() {
 }
 
 void ShaderProgramManager::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
-    PicaFixedGSConfig gs_config(regs, driver.HasClipCullDistance());
-    auto [handle, _] = impl->fixed_geometry_shaders.Get(gs_config, impl->separable);
+    PicaFixedGSConfig gs_config(regs);
+    ExtraFixedGSConfig extra{
+        .use_clip_planes = driver.HasClipCullDistance(),
+        .separable_shader = impl->separable,
+    };
+
+    auto [hash, handle, _] = impl->fixed_geometry_shaders.Get(gs_config, extra);
     impl->current.gs = handle;
-    impl->current.gs_hash = gs_config.Hash();
+    impl->current.gs_hash = hash;
 }
 
 void ShaderProgramManager::UseTrivialGeometryShader() {
@@ -386,10 +408,10 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
 
 void ShaderProgramManager::UseFragmentShader(const Pica::RegsInternal& regs,
                                              const Pica::Shader::UserConfig& user) {
-    const FSConfig fs_config{regs, user, impl->profile};
-    auto [handle, result] = impl->fragment_shaders.Get(fs_config, impl->profile);
+    const FSConfig fs_config{regs};
+    auto [hash, handle, result] = impl->fragment_shaders.Get(fs_config, user, impl->profile);
     impl->current.fs = handle;
-    impl->current.fs_hash = fs_config.Hash();
+    impl->current.fs_hash = hash;
     // Save FS to the disk cache if its a new shader
     if (result) {
         auto& disk_cache = impl->disk_cache;
@@ -457,7 +479,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     std::mutex mutex;
     std::atomic_bool compilation_failed = false;
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Decompile, 0, raws.size());
+        callback(VideoCore::LoadCallbackStage::Decompile, 0, raws.size(), "");
     }
     std::vector<std::size_t> load_raws_index;
     // Loads both decompiled and precompiled shaders from the cache. If either one is missing for
@@ -513,7 +535,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                                                              std::move(shader));
                 } else if (raw.GetProgramType() == ProgramType::FS) {
                     // TODO: Support UserConfig in disk shader cache
-                    const FSConfig conf(raw.GetRawShaderConfig(), {}, impl->profile);
+                    const FSConfig conf(raw.GetRawShaderConfig());
                     std::scoped_lock lock(mutex);
                     impl->fragment_shaders.Inject(conf, std::move(shader));
                 } else {
@@ -530,7 +552,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 load_raws_index.push_back(i);
             }
             if (callback) {
-                callback(VideoCore::LoadCallbackStage::Decompile, i, raw_cache.size());
+                callback(VideoCore::LoadCallbackStage::Decompile, i, raw_cache.size(), "");
             }
         }
     };
@@ -561,7 +583,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
                 break;
             }
             if (callback) {
-                callback(VideoCore::LoadCallbackStage::Decompile, ++i, dump_map.size());
+                callback(VideoCore::LoadCallbackStage::Decompile, ++i, dump_map.size(), "");
             }
         }
     };
@@ -590,7 +612,7 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
     const std::size_t load_raws_size = load_all_raws ? raws.size() : load_raws_index.size();
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, load_raws_size);
+        callback(VideoCore::LoadCallbackStage::Build, 0, load_raws_size, "Shader");
     }
 
     compilation_failed = false;
@@ -615,17 +637,18 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             // precompiled file
             if (raw.GetProgramType() == ProgramType::VS) {
                 auto [conf, setup] = BuildVSConfigFromRaw(raw, driver, accurate_mul);
-                code = GLSL::GenerateVertexShader(setup, conf, impl->separable);
+                ExtraVSConfig extra = impl->CalcExtraConfig(conf, accurate_mul);
+                code = GLSL::GenerateVertexShader(setup, conf, extra);
                 OGLShaderStage stage{impl->separable};
                 stage.Create(code.c_str(), GL_VERTEX_SHADER);
                 handle = stage.GetHandle();
-                sanitize_mul = conf.state.sanitize_mul;
+                sanitize_mul = accurate_mul;
                 std::scoped_lock lock(mutex);
                 impl->programmable_vertex_shaders.Inject(conf, code, std::move(stage));
             } else if (raw.GetProgramType() == ProgramType::FS) {
                 // TODO: Support UserConfig in disk shader cache
-                const FSConfig fs_config{raw.GetRawShaderConfig(), {}, impl->profile};
-                code = GLSL::GenerateFragmentShader(fs_config, impl->profile);
+                const FSConfig fs_config{raw.GetRawShaderConfig()};
+                code = GLSL::GenerateFragmentShader(fs_config, {}, impl->profile);
                 OGLShaderStage stage{impl->separable};
                 stage.Create(code.c_str(), GL_FRAGMENT_SHADER);
                 handle = stage.GetHandle();
@@ -653,7 +676,8 @@ void ShaderProgramManager::LoadDiskCache(const std::atomic_bool& stop_loading,
             }
 
             if (callback) {
-                callback(VideoCore::LoadCallbackStage::Build, ++built_shaders, load_raws_size);
+                callback(VideoCore::LoadCallbackStage::Build, ++built_shaders, load_raws_size,
+                         "Shader");
             }
         }
     };

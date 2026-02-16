@@ -95,6 +95,7 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
           GLSL::GenerateTrivialVertexShader(instance.IsShaderClipDistanceSupported(), true)} {
     scheduler.RegisterOnDispatch([this] { update_queue.Flush(); });
     profile = Pica::Shader::Profile{
+        .enable_accurate_mul = false,
         .has_separable_shaders = true,
         .has_clip_planes = instance.IsShaderClipDistanceSupported(),
         .has_geometry_shader = instance.UseGeometryShaders(),
@@ -104,8 +105,26 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
         .has_blend_minmax_factor = false,
         .has_minus_one_to_one_range = false,
         .has_logic_op = !instance.NeedsLogicOpEmulation(),
+        .vk_disable_spirv_optimizer = Settings::values.disable_spirv_optimizer.GetValue(),
+        .vk_use_spirv_generator = Settings::values.spirv_shader_gen.GetValue(),
         .is_vulkan = true,
     };
+
+    const auto& traits = instance.GetAllTraits();
+    size_t i = 0;
+    for (const auto& it : traits) {
+        profile.vk_format_traits[i].transfer_support = it.transfer_support;
+        profile.vk_format_traits[i].blit_support = it.blit_support;
+        profile.vk_format_traits[i].attachment_support = it.attachment_support;
+        profile.vk_format_traits[i].storage_support = it.storage_support;
+        profile.vk_format_traits[i].needs_conversion = it.needs_conversion;
+        profile.vk_format_traits[i].needs_emulation = it.needs_emulation;
+        profile.vk_format_traits[i].usage_flags = static_cast<u32>(it.usage);
+        profile.vk_format_traits[i].aspect_flags = static_cast<u32>(it.aspect);
+        profile.vk_format_traits[i].native_format = static_cast<u32>(it.native);
+        ++i;
+    }
+
     BuildLayout();
 }
 
@@ -128,18 +147,18 @@ PipelineCache::~PipelineCache() {
     SaveDiskCache();
 }
 
-void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
-                                  const VideoCore::DiskResourceLoadCallback& callback) {
+void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
+                                          const VideoCore::DiskResourceLoadCallback& callback) {
     vk::PipelineCacheCreateInfo cache_info{};
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1);
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
     }
 
-    auto load_cache = [this, &cache_info, &callback](bool allow_fallback) {
+    auto load_cache = [this, &cache_info](bool allow_fallback) {
         const vk::Device device = instance.GetDevice();
         try {
             pipeline_cache = device.createPipelineCacheUnique(cache_info);
@@ -156,9 +175,6 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
                               err.what());
                 }
             }
-        }
-        if (callback) {
-            callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
         }
     };
 
@@ -210,6 +226,16 @@ void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
     load_cache(true);
 }
 
+void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+
+    disk_caches.clear();
+    curr_disk_cache =
+        disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, GetProgramID()));
+
+    curr_disk_cache->Init(stop_loading, callback);
+}
+
 void PipelineCache::SaveDiskCache() {
     // Save Vulkan pipeline cache
     if (!Settings::values.use_disk_shader_cache || !pipeline_cache) {
@@ -239,25 +265,14 @@ void PipelineCache::SaveDiskCache() {
     }
 }
 
-bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
+bool PipelineCache::BindPipeline(PipelineInfo& info, bool wait_built) {
     MICROPROFILE_SCOPE(Vulkan_Bind);
 
-    u64 shader_hash = 0;
     for (u32 i = 0; i < MAX_SHADER_STAGES; i++) {
-        shader_hash = Common::HashCombine(shader_hash, shader_hashes[i]);
+        info.state.shader_ids[i] = shader_hashes[i];
     }
 
-    const u64 info_hash = info.Hash(instance);
-    const u64 pipeline_hash = Common::HashCombine(shader_hash, info_hash);
-
-    auto [it, new_pipeline] = graphics_pipelines.try_emplace(pipeline_hash);
-    if (new_pipeline) {
-        it.value() =
-            std::make_unique<GraphicsPipeline>(instance, renderpass_cache, info, *pipeline_cache,
-                                               *pipeline_layout, current_shaders, &workers);
-    }
-
-    GraphicsPipeline* const pipeline{it->second.get()};
+    GraphicsPipeline* const pipeline = curr_disk_cache->GetPipeline(info);
     if (!pipeline->IsDone() && !pipeline->TryBuild(wait_built)) {
         return false;
     }
@@ -265,12 +280,12 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     const bool is_dirty = scheduler.IsStateDirty(StateFlags::Pipeline);
     const bool pipeline_dirty = (current_pipeline != pipeline) || is_dirty;
     scheduler.Record([this, is_dirty, pipeline_dirty, pipeline,
-                      current_dynamic = current_info.dynamic, dynamic = info.dynamic,
+                      current_dynamic = current_info.dynamic_info, dynamic = info.dynamic_info,
                       descriptor_sets = bound_descriptor_sets, offsets = offsets,
-                      current_rasterization = current_info.rasterization,
-                      current_depth_stencil = current_info.depth_stencil,
-                      rasterization = info.rasterization,
-                      depth_stencil = info.depth_stencil](vk::CommandBuffer cmdbuf) {
+                      current_rasterization = current_info.state.rasterization,
+                      current_depth_stencil = current_info.state.depth_stencil,
+                      rasterization = info.state.rasterization,
+                      depth_stencil = info.state.depth_stencil](vk::CommandBuffer cmdbuf) {
         if (dynamic.viewport != current_dynamic.viewport || is_dirty) {
             const vk::Viewport vk_viewport = {
                 .x = static_cast<f32>(dynamic.viewport.left),
@@ -383,67 +398,54 @@ bool PipelineCache::BindPipeline(const PipelineInfo& info, bool wait_built) {
     return true;
 }
 
-bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
-                                                Pica::ShaderSetup& setup,
-                                                const VertexLayout& layout, bool accurate_mul) {
+ExtraVSConfig PipelineCache::CalcExtraConfig(const PicaVSConfig& config) {
+    auto res = ExtraVSConfig();
+
     // Enable the geometry-shader only if we are actually doing per-fragment lighting
     // and care about proper quaternions. Otherwise just use standard vertex+fragment shaders.
     // We also don't need the geometry shader if we have the barycentric extension.
-    const bool use_geometry_shader = instance.UseGeometryShaders() && !regs.lighting.disable &&
+    const bool use_geometry_shader = instance.UseGeometryShaders() &&
+                                     !config.state.lighting_disable &&
                                      !instance.IsFragmentShaderBarycentricSupported();
-    PicaVSConfig config{regs, setup, instance.IsShaderClipDistanceSupported(), use_geometry_shader,
-                        accurate_mul};
 
-    for (u32 i = 0; i < layout.attribute_count; i++) {
-        const VertexAttribute& attr = layout.attributes[i];
-        const FormatTraits& traits = instance.GetTraits(attr.type, attr.size);
-        const u32 location = attr.location.Value();
-        AttribLoadFlags& flags = config.state.load_flags[location];
+    res.use_clip_planes = instance.IsShaderClipDistanceSupported();
+    res.use_geometry_shader = use_geometry_shader;
+    res.sanitize_mul = profile.enable_accurate_mul;
+    res.separable_shader = true;
+    res.load_flags.fill(AttribLoadFlags::Float);
+
+    for (u32 i = 0; i < config.state.used_input_vertex_attributes; i++) {
+        const auto& attr = config.state.input_vertex_attributes[i];
+        const u32 location = attr.location;
+        const Pica::PipelineRegs::VertexAttributeFormat type =
+            static_cast<Pica::PipelineRegs::VertexAttributeFormat>(attr.type);
+        const FormatTraits& traits = instance.GetTraits(type, attr.size);
+        AttribLoadFlags& flags = res.load_flags[location];
 
         if (traits.needs_conversion) {
-            flags = MakeAttribLoadFlag(attr.type);
+            flags = MakeAttribLoadFlag(type);
         }
         if (traits.needs_emulation) {
             flags |= AttribLoadFlags::ZeroW;
         }
     }
 
-    const auto config_hash = config.Hash();
+    return res;
+}
 
-    const auto [it, new_config] = programmable_vertex_map.try_emplace(config_hash);
-    if (new_config) {
-        auto program = Common::HashableString(GLSL::GenerateVertexShader(setup, config, true));
-        if (program.empty()) {
-            LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
-            programmable_vertex_map[config_hash] = nullptr;
-            return false;
-        }
+bool PipelineCache::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
+                                                Pica::ShaderSetup& setup,
+                                                const VertexLayout& layout) {
 
-        auto [iter, new_program] = programmable_vertex_cache.try_emplace(program.Hash(), instance);
-        auto& shader = iter->second;
+    auto res = curr_disk_cache->UseProgrammableVertexShader(regs, setup, layout);
 
-        if (new_program) {
-            shader.program = std::move(program);
-            const vk::Device device = instance.GetDevice();
-            workers.QueueWork([device, &shader] {
-                shader.module = Compile(shader.program, vk::ShaderStageFlagBits::eVertex, device);
-                shader.MarkDone();
-            });
-        }
-
-        it->second = &shader;
+    if (res.has_value()) {
+        current_shaders[ProgramType::VS] = (*res).second;
+        shader_hashes[ProgramType::VS] = (*res).first;
+        return true;
     }
 
-    Shader* const shader{it->second};
-    if (!shader) {
-        LOG_ERROR(Render_Vulkan, "Failed to retrieve programmable vertex shader");
-        return false;
-    }
-
-    current_shaders[ProgramType::VS] = shader;
-    shader_hashes[ProgramType::VS] = config.Hash();
-
-    return true;
+    return false;
 }
 
 void PipelineCache::UseTrivialVertexShader() {
@@ -452,27 +454,16 @@ void PipelineCache::UseTrivialVertexShader() {
 }
 
 bool PipelineCache::UseFixedGeometryShader(const Pica::RegsInternal& regs) {
-    if (!instance.UseGeometryShaders()) {
-        UseTrivialGeometryShader();
+
+    auto res = curr_disk_cache->UseFixedGeometryShader(regs);
+
+    if (res.has_value()) {
+        current_shaders[ProgramType::GS] = (*res).second;
+        shader_hashes[ProgramType::GS] = (*res).first;
         return true;
     }
 
-    const PicaFixedGSConfig gs_config{regs, instance.IsShaderClipDistanceSupported()};
-    auto [it, new_shader] = fixed_geometry_shaders.try_emplace(gs_config.Hash(), instance);
-    auto& shader = it->second;
-
-    if (new_shader) {
-        workers.QueueWork([gs_config, device = instance.GetDevice(), &shader]() {
-            const auto code = GLSL::GenerateFixedGeometryShader(gs_config, true);
-            shader.module = Compile(code, vk::ShaderStageFlagBits::eGeometry, device);
-            shader.MarkDone();
-        });
-    }
-
-    current_shaders[ProgramType::GS] = &shader;
-    shader_hashes[ProgramType::GS] = gs_config.Hash();
-
-    return true;
+    return false;
 }
 
 void PipelineCache::UseTrivialGeometryShader() {
@@ -482,27 +473,13 @@ void PipelineCache::UseTrivialGeometryShader() {
 
 void PipelineCache::UseFragmentShader(const Pica::RegsInternal& regs,
                                       const Pica::Shader::UserConfig& user) {
-    const FSConfig fs_config{regs, user, profile};
-    const auto [it, new_shader] = fragment_shaders.try_emplace(fs_config.Hash(), instance);
-    auto& shader = it->second;
 
-    if (new_shader) {
-        workers.QueueWork([fs_config, this, &shader]() {
-            const bool use_spirv = Settings::values.spirv_shader_gen.GetValue();
-            if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
-                const std::vector code = SPIRV::GenerateFragmentShader(fs_config, profile);
-                shader.module = CompileSPV(code, instance.GetDevice());
-            } else {
-                const std::string code = GLSL::GenerateFragmentShader(fs_config, profile);
-                shader.module =
-                    Compile(code, vk::ShaderStageFlagBits::eFragment, instance.GetDevice());
-            }
-            shader.MarkDone();
-        });
+    auto res = curr_disk_cache->UseFragmentShader(regs, user);
+
+    if (res.has_value()) {
+        current_shaders[ProgramType::FS] = (*res).second;
+        shader_hashes[ProgramType::FS] = (*res).first;
     }
-
-    current_shaders[ProgramType::FS] = &shader;
-    shader_hashes[ProgramType::FS] = fs_config.Hash();
 }
 
 bool PipelineCache::IsCacheValid(std::span<const u8> data) const {
@@ -558,7 +535,8 @@ bool PipelineCache::EnsureDirectories() const {
     };
 
     return create_dir(FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir)) &&
-           create_dir(GetVulkanDir()) && create_dir(GetPipelineCacheDir());
+           create_dir(GetVulkanDir()) && create_dir(GetPipelineCacheDir()) &&
+           create_dir(GetTransferableDir());
 }
 
 std::string PipelineCache::GetVulkanDir() const {
@@ -567,6 +545,10 @@ std::string PipelineCache::GetVulkanDir() const {
 
 std::string PipelineCache::GetPipelineCacheDir() const {
     return GetVulkanDir() + "pipeline" + DIR_SEP;
+}
+
+std::string PipelineCache::GetTransferableDir() const {
+    return GetVulkanDir() + DIR_SEP + "transferable";
 }
 
 void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& stop_loading,
@@ -579,10 +561,10 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
     }
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
     }
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1);
+        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
     }
 
     // Make sure we have a valid pipeline cache before switching
@@ -603,10 +585,77 @@ void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& st
 
     // Update program ID and load the new pipeline cache
     SetProgramID(title_id);
-    LoadDiskCache(stop_loading, nullptr);
+    LoadPipelineDiskCache(stop_loading, nullptr);
+    SwitchDiskCache(title_id, stop_loading, callback);
 
     if (callback) {
-        callback(VideoCore::LoadCallbackStage::Complete, 0, 0);
+        callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
+}
+
+void PipelineCache::SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
+                                    const VideoCore::DiskResourceLoadCallback& callback) {
+    // NOTE: curr_disk_cache can be null if emulation restarted without calling
+    // LoadDefaultDiskResources
+
+    // Check if the current cache is for the specified TID.
+    if (curr_disk_cache && curr_disk_cache->GetProgramID() == title_id) {
+        return;
+    }
+
+    // Search for an existing manager
+    size_t new_pos = 0;
+    for (new_pos = 0; new_pos < disk_caches.size(); new_pos++) {
+        if (disk_caches[new_pos]->GetProgramID() == title_id) {
+            break;
+        }
+    }
+    // Manager does not exist, create it and append to the end
+    if (new_pos >= disk_caches.size()) {
+        new_pos = disk_caches.size();
+        auto& new_manager =
+            disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, title_id));
+
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+        }
+
+        new_manager->Init(stop_loading, callback);
+
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+        }
+    }
+
+    auto is_applet = [](u64 tid) {
+        constexpr u32 APPLET_TID_HIGH = 0x00040030;
+        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
+    };
+
+    bool prev_applet = curr_disk_cache ? is_applet(curr_disk_cache->GetProgramID()) : false;
+    bool new_applet = is_applet(disk_caches[new_pos]->GetProgramID());
+    curr_disk_cache = disk_caches[new_pos];
+
+    if (prev_applet) {
+        // If we came from an applet, clean up all other applets
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache ||
+                !is_applet((*it)->GetProgramID())) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
+    }
+    if (!new_applet) {
+        // If we are going into a non-applet, clean up everything
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
     }
 }
 

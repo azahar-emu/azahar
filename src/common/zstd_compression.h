@@ -41,6 +41,15 @@ namespace Common::Compression {
 [[nodiscard]] std::vector<u8> CompressDataZSTDDefault(std::span<const u8> source);
 
 /**
+ * Gets the decompressed size of the specified Zstandard compressed memory region.
+ *
+ * @param compressed the compressed source memory region.
+ *
+ * @return the size of the decompressed data.
+ */
+[[nodiscard]] std::size_t GetDecompressedSize(std::span<const u8> compressed);
+
+/**
  * Decompresses a source memory region with Zstandard and returns the uncompressed data in a vector.
  *
  * @param compressed the compressed source memory region.

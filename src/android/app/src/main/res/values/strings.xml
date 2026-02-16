@@ -571,7 +571,7 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparing Shaders</string>
-    <string name="building_shaders">Building Shaders</string>
+    <string name="building_shaders">Building %s</string>
 
     <!-- About Game Dialog -->
     <string name="play">Play</string>

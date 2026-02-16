@@ -4093,14 +4093,15 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
 #endif
 
 void GMainWindow::OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
-                                        std::size_t total) {
+                                        std::size_t total, const std::string& object) {
     if (stage == VideoCore::LoadCallbackStage::Prepare) {
         loading_shaders_label->setText(QString());
         loading_shaders_label->setVisible(true);
     } else if (stage == VideoCore::LoadCallbackStage::Complete) {
         loading_shaders_label->setVisible(false);
     } else {
-        loading_shaders_label->setText(loading_screen->GetStageTranslation(stage, value, total));
+        loading_shaders_label->setText(
+            loading_screen->GetStageTranslation(stage, value, total, object));
     }
 }
 
