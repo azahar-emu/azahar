@@ -23,25 +23,25 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
     auto fs = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
 
     IPC::RequestParser rp(ctx);
-    u32 processId = rp.Pop<u32>();
+    u32 process_id = rp.Pop<u32>();
 
     bool child;
     if (!fs) {
         LOG_CRITICAL(Service_DLP, "Could not get direct pointer fs:USER (sm returned null)");
     }
-    auto titleInfo = fs->GetProgramLaunchInfo(processId);
+    auto title_info = fs->GetProgramLaunchInfo(process_id);
 
-    if (titleInfo) {
-        // check if progid corresponds to dlp filter
-        u32 progIdS[2];
-        memcpy(progIdS, &titleInfo->program_id, sizeof(progIdS));
-        LOG_INFO(Service_DLP, "Checked on tid high: {:x} (low {:x})", progIdS[1], progIdS[0]);
-        child = (progIdS[1] & 0xFFFFC000) == 0x40000 && (progIdS[1] & 0xFFFF) == 0x1;
+    if (title_info) {
+        // check if tid corresponds to dlp filter
+        u32 tid[2];
+        memcpy(tid, &title_info->program_id, sizeof(tid));
+        LOG_INFO(Service_DLP, "Checked on tid high: {:x} (low {:x})", tid[1], tid[0]);
+        child = (tid[1] & 0xFFFFC000) == 0x40000 && (tid[1] & 0xFFFF) == 0x1;
     } else { // child not found
         child = false;
         LOG_ERROR(Service_DLP,
                   "Could not determine program id from process id. (process id not found: {:x})",
-                  processId);
+                  process_id);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
