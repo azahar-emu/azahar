@@ -772,7 +772,7 @@ std::unique_ptr<FileUtil::IOFile> NCCHContainer::Reopen(
     const std::unique_ptr<FileUtil::IOFile>& orig_file, const std::string& new_filename) {
     if (!orig_file)
         return nullptr;
-    
+
     const bool is_compressed = orig_file->IsCompressed();
     const bool is_crypto = orig_file->IsCrypto();
     const std::string filename = new_filename.empty() ? orig_file->Filename() : new_filename;

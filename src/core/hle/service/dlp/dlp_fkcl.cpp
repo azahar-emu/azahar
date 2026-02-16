@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/archives.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/dlp/dlp_fkcl.h"
-#include "core/core.h"
 
 SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_FKCL)
 
@@ -19,11 +19,12 @@ void DLP_FKCL::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     u32 shared_mem_size = rp.Pop<u32>();
-	u32 max_beacons = rp.Pop<u32>();
+    u32 max_beacons = rp.Pop<u32>();
     constexpr u32 constant_mem_size = 0;
-	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
+    auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
 
-    InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, String16AsDLPUsername(GetCFG()->GetUsername()));
+    InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event,
+                      String16AsDLPUsername(GetCFG()->GetUsername()));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
@@ -33,11 +34,11 @@ void DLP_FKCL::InitializeWithName(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     u32 shared_mem_size = rp.Pop<u32>();
-	u32 max_beacons = rp.Pop<u32>();
+    u32 max_beacons = rp.Pop<u32>();
     constexpr u32 constant_mem_size = 0;
     auto username = rp.PopRaw<std::array<u16_le, 10>>();
     rp.Skip(1, false); // possible null terminator or unk flags
-	auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
+    auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
 
     InitializeCltBase(shared_mem_size, max_beacons, constant_mem_size, shared_mem, event, username);
 
@@ -46,7 +47,7 @@ void DLP_FKCL::InitializeWithName(Kernel::HLERequestContext& ctx) {
 }
 
 void DLP_FKCL::Finalize(Kernel::HLERequestContext& ctx) {
-	IPC::RequestParser rp(ctx);
+    IPC::RequestParser rp(ctx);
 
     FinalizeCltBase();
 
@@ -54,7 +55,8 @@ void DLP_FKCL::Finalize(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
-DLP_FKCL::DLP_FKCL() : ServiceFramework("dlp:FKCL", 1), DLP_Clt_Base(Core::System::GetInstance(), "FKCL") {
+DLP_FKCL::DLP_FKCL()
+    : ServiceFramework("dlp:FKCL", 1), DLP_Clt_Base(Core::System::GetInstance(), "FKCL") {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, &DLP_FKCL::Initialize, "Initialize"},

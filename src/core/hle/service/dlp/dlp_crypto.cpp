@@ -8,14 +8,14 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/service/dlp/dlp_base.h"
 #include "core/hle/service/ssl/ssl_c.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
-#include "core/hle/service/dlp/dlp_base.h"
 
 namespace Service::DLP {
 
-void DLP_Base::DLPEncryptCTR(void *_out, size_t size, const u8 *iv_ctr) {
+void DLP_Base::DLPEncryptCTR(void* _out, size_t size, const u8* iv_ctr) {
     auto out = reinterpret_cast<u8*>(_out);
     memset(out, 0, size);
 
@@ -28,4 +28,4 @@ void DLP_Base::DLPEncryptCTR(void *_out, size_t size, const u8 *iv_ctr) {
     aes.ProcessData(out, out, size);
 }
 
-}
+} // namespace Service::DLP
