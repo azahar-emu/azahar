@@ -210,32 +210,29 @@ bool DLP_Base::SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 
     return GetUDS()->SendToHLE(node_id, data_channel, buffer.size(), flags, buffer) >= 0;
 }
 
-void DLP_Base::GeneratePKChecksum(u32 aes_value, void *output_word, void *_input_buffer, u32 packet_size) {
+u32 DLP_Base::GeneratePKChecksum(u32 aes_value, void *_input_buffer, u32 packet_size) {
     auto input_buffer = reinterpret_cast<u8*>(_input_buffer);
 
-    u32 value1 = ((aes_value >> 0x10) << 0x18 | (aes_value >> 0x18) << 0x10) >> 0x10 |
-               ((aes_value & 0xff) << 8 | aes_value >> 8 & 0xff) << 0x10;
     u32 working_hash = 0;
-    // hash all word aligned bytes
-    for (size_t i = 0; i < packet_size/sizeof(u32); i++) {
+    // add all word aligned bytes
+    for (u32 i = 0; i < packet_size/sizeof(u32); i++) {
         u32 inp_buf_word = reinterpret_cast<u32*>(input_buffer)[i];
-        working_hash = (((inp_buf_word >> 0x10) << 0x18 | (inp_buf_word >> 0x18) << 0x10) >> 0x10 |
-                 ((inp_buf_word & 0xff) << 8 | inp_buf_word >> 8 & 0xff) << 0x10) + working_hash;
+        working_hash += Common::swap32(inp_buf_word);
     }
-    // hash any remaining non word-aligned bytes
+    // add any remaining non word-aligned bytes
     if (u32 num_bytes_non_aligned = packet_size & 3; num_bytes_non_aligned != 0) {
         u32 non_aligned = 0;
         memcpy(&non_aligned, input_buffer + packet_size - num_bytes_non_aligned, num_bytes_non_aligned);
-        working_hash = (((non_aligned >> 0x10) << 0x18 | (non_aligned >> 0x18) << 0x10) >> 0x10 |
-                 ((non_aligned & 0xff) << 8 | non_aligned >> 8 & 0xff) << 0x10) + working_hash;
+        working_hash += Common::swap32(non_aligned);
     }
-    u32 unk1_u32 = (*(reinterpret_cast<u8*>(&aes_value) + 3) & 7) + 2;
-    s8 unk2_s8 = (*(reinterpret_cast<u8*>(&aes_value) + 2) & 0xf) + 4;
-    for (size_t i = 0; i < unk1_u32; i++) {
-        working_hash = (working_hash >> unk2_s8 | working_hash << unk2_s8) ^ value1;
+    // hash by the aes value
+    u8 num_extra_hash = (reinterpret_cast<u8*>(&aes_value)[3] & 0b0111) + 2;
+    u8 num_shift_extra_hash = (reinterpret_cast<u8*>(&aes_value)[2] & 0b1111) + 4;
+    u32 aes_swap = Common::swap32(aes_value);
+    for (u8 i = 0; i < num_extra_hash; i++) {
+        working_hash = (working_hash >> num_shift_extra_hash | working_hash << num_shift_extra_hash) ^ aes_swap;
     }
-    *(u32*)output_word = ((working_hash >> 0x10) << 0x18 | (working_hash >> 0x18) << 0x10) >> 0x10 |
-                ((working_hash & 0xff) << 8 | working_hash >> 8 & 0xff) << 0x10;
+    return Common::swap32(working_hash);
 }
 
 u32 DLP_Base::GenDLPChecksumKey(Network::MacAddress mac_addr) {
@@ -271,8 +268,7 @@ bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
     if (checksum) {
         auto ph_cpy = reinterpret_cast<DLPPacketHeader*>(pk_copy.data());
         ph_cpy->checksum = 0;
-        u32 new_checksum = 0;
-        GeneratePKChecksum(aes, &new_checksum, pk_copy.data(), pk_copy.size());
+        u32 new_checksum = GeneratePKChecksum(aes, pk_copy.data(), pk_copy.size());
         if (new_checksum != ph->checksum) {
             LOG_ERROR(Service_DLP, "Could not verify packet checksum 0x{:x} != 0x{:x}", new_checksum, ph->checksum);
             return false;
