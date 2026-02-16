@@ -15,14 +15,6 @@
 #include "common/swap.h"
 #include "common/alignment.h"
 
-// winsock pollutes this namespace
-extern "C" {
-extern u16 htons(u16);
-extern u16 ntohs(u16);
-extern u32 htonl(u32);
-extern u32 ntohl(u32);
-}
-
 namespace Service::DLP {
 
 DLP_Base::DLP_Base(Core::System& s) : system(s) {}
@@ -68,19 +60,35 @@ DLPNodeInfo DLP_Base::UDSToDLPNodeInfo(NWM::NodeInfo node_info) {
 }
 
 u16 DLP_Base::d_htons(u16 n) {
-    return htons(n);
+    if constexpr(std::endian::native == std::endian::little) {
+        return Common::swap16(n);
+    } else {
+        return n;
+    }
 }
 
 u16 DLP_Base::d_ntohs(u16 n) {
-    return ntohs(n);
+    if constexpr(std::endian::native == std::endian::little) {
+        return Common::swap16(n);
+    } else {
+        return n;
+    }
 }
 
 u32 DLP_Base::d_htonl(u32 n) {
-    return htonl(n);
+    if constexpr(std::endian::native == std::endian::little) {
+        return Common::swap32(n);
+    } else {
+        return n;
+    }
 }
 
 u32 DLP_Base::d_ntohl(u32 n) {
-    return ntohl(n);
+    if constexpr(std::endian::native == std::endian::little) {
+        return Common::swap32(n);
+    } else {
+        return n;
+    }
 }
 
 u64 DLP_Base::d_ntohll(u64 n) {
