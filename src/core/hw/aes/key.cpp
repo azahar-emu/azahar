@@ -254,6 +254,7 @@ void LoadPresetKeys() {
 
         if (name == "dlpChecksumModIv") {
             dlp_checksum_mod_iv = key;
+            continue;
         }
 
         const auto key_slot = ParseKeySlotName(name);
