@@ -36,11 +36,14 @@ public:
     /// Handle SDL_Events for joysticks from SDL_PollEvent
     void HandleGameControllerEvent(const SDL_Event& event);
 
+    // returns a pointer to a vector of joysticks that match the needs of this device.
+    // will be a pointer because it will be updated when new joysticks are added
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> GetJoysticksByGUID(
+        const std::string& guid);
     std::shared_ptr<SDLJoystick> GetSDLJoystickBySDLID(SDL_JoystickID sdl_id);
-    std::shared_ptr<SDLJoystick> GetSDLJoystickByGUID(const std::string& guid, int port);
 
-    Common::ParamPackage GetSDLControllerButtonBindByGUID(const std::string& guid, int port,
-                                                          Settings::NativeButton::Values button);
+    Common::ParamPackage GetSDLControllerButtonBind(const std::string& guid, int port,
+                                                    Settings::NativeButton::Values button);
     Common::ParamPackage GetSDLControllerAnalogBindByGUID(const std::string& guid, int port,
                                                           Settings::NativeAnalog::Values analog);
 
@@ -59,7 +62,11 @@ private:
     void CloseJoysticks();
 
     /// Map of GUID of a list of corresponding virtual Joysticks
-    std::unordered_map<std::string, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
+    std::unordered_map<std::string, std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>>>
+        joystick_map;
+    // This vector keeps a list of all joysticks, ignoring guid
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joystick_vector =
+        std::make_shared<std::vector<std::shared_ptr<SDLJoystick>>>();
     std::mutex joystick_map_mutex;
 
     std::shared_ptr<SDLTouchFactory> touch_factory;

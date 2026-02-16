@@ -336,6 +336,11 @@ void QtConfig::ReadControlValues() {
 
     ReadBasicSetting(Settings::values.use_artic_base_controller);
 
+    Settings::values.controller_hotkey_maptype = static_cast<Settings::InputMappingType>(
+        ReadSetting(QString::fromStdString(Settings::Keys::controller_hotkey_maptype),
+                    static_cast<int>(Settings::InputMappingType::AllControllers))
+            .toInt());
+
     int num_touch_from_button_maps =
         qt_config->beginReadArray(Settings::QKeys::touch_from_button_maps);
 
@@ -374,6 +379,8 @@ void QtConfig::ReadControlValues() {
         Settings::InputProfile profile;
         profile.name =
             ReadSetting(Settings::QKeys::name, QStringLiteral("Default")).toString().toStdString();
+        profile.maptype = static_cast<Settings::InputMappingType>(
+            ReadSetting(QString::fromStdString(Settings::Keys::input_maptype), 2).toInt());
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -741,7 +748,7 @@ void QtConfig::ReadShortcutValues() {
         UISettings::values.shortcuts.push_back(
             {name,
              group,
-             {ReadSetting(Settings::QKeys::KeySeq shortcut.keyseq).toString(),
+             {ReadSetting(Settings::QKeys::KeySeq, shortcut.keyseq).toString(),
               ReadSetting(Settings::QKeys::controller_keyseq, shortcut.controller_keyseq)
                   .toString(),
               shortcut.context}});
@@ -986,7 +993,9 @@ void QtConfig::SaveControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     WriteBasicSetting(Settings::values.use_artic_base_controller);
-
+    WriteSetting(QString::fromStdString(Settings::Keys::controller_hotkey_maptype),
+                 static_cast<int>(Settings::values.controller_hotkey_maptype.GetValue()),
+                 static_cast<int>(Settings::InputMappingType::GuidPort));
     WriteSetting(Settings::QKeys::profile, Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray(QStringLiteral("profiles"));
     for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
@@ -994,6 +1003,9 @@ void QtConfig::SaveControlValues() {
         const auto& profile = Settings::values.input_profiles[p];
         WriteSetting(Settings::QKeys::name, QString::fromStdString(profile.name),
                      QStringLiteral("default"));
+        WriteSetting(QString::fromStdString(Settings::Keys::input_maptype),
+                     static_cast<int>(profile.maptype),
+                     static_cast<int>(Settings::InputMappingType::GuidPort));
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             WriteSetting(QString::fromStdString(Settings::NativeButton::mapping[i]),

@@ -209,21 +209,26 @@ struct SDLJoystickDeleter {
     }
 };
 /**
- * Get the nth joystick with the corresponding GUID
+ * Return a list of matching joysticks. All joysticks with GUID are reported, port will be handled
+ * elsewhere.
  */
-std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& guid, int port) {
+std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> SDLState::GetJoysticksByGUID(
+    const std::string& guid) {
     std::lock_guard lock{joystick_map_mutex};
-    const auto it = joystick_map.find(guid);
-    if (it != joystick_map.end()) {
-        while (it->second.size() <= static_cast<std::size_t>(port)) {
-            auto joystick = std::make_shared<SDLJoystick>(guid, static_cast<int>(it->second.size()),
-                                                          nullptr, nullptr);
-            it->second.emplace_back(std::move(joystick));
+    if (guid.empty() || guid == "0") {
+        return joystick_vector;
+    } else {
+        const auto it = joystick_map.find(guid);
+        if (it != joystick_map.end()) {
+            return it->second;
         }
-        return it->second[static_cast<std::size_t>(port)];
+        // if no joysticks with this GUID exists, add a fake one to avoid crashes (yuck)
+        auto vec = std::make_shared<std::vector<std::shared_ptr<SDLJoystick>>>();
+        auto joystick = std::make_shared<SDLJoystick>(guid, 0, nullptr, nullptr);
+        vec->emplace_back(joystick);
+        joystick_map[guid] = vec;
+        return vec;
     }
-    auto joystick = std::make_shared<SDLJoystick>(guid, 0, nullptr, nullptr);
-    return joystick_map[guid].emplace_back(std::move(joystick));
 }
 
 /**
@@ -234,7 +239,7 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
     std::lock_guard lock{joystick_map_mutex};
 
     for (auto& [guid, joystick_list] : joystick_map) {
-        for (auto& joystick : joystick_list) {
+        for (auto& joystick : *joystick_list) {
             SDL_Joystick* sdl_joy = joystick->GetSDLJoystick();
             if (sdl_joy && SDL_JoystickInstanceID(sdl_joy) == sdl_id) {
                 return joystick;
@@ -245,17 +250,11 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
     return nullptr;
 }
 
-Common::ParamPackage SDLState::GetSDLControllerButtonBindByGUID(
-    const std::string& guid, int port, Settings::NativeButton::Values button) {
+Common::ParamPackage SDLState::GetSDLControllerButtonBind(const std::string& guid, int port,
+                                                          Settings::NativeButton::Values button) {
     Common::ParamPackage params({{"engine", "sdl"}});
     params.Set("guid", guid);
     params.Set("port", port);
-    SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
-
-    if (!controller) {
-        LOG_WARNING(Input, "failed to open controller {}", guid);
-        return {{}};
-    }
 
     auto mapped_button = xinput_to_3ds_mapping[static_cast<int>(button)];
     params.Set("api", "controller");
@@ -284,13 +283,9 @@ Common::ParamPackage SDLState::GetSDLControllerAnalogBindByGUID(
     Common::ParamPackage params({{"engine", "sdl"}});
     params.Set("guid", guid);
     params.Set("port", port);
-    SDL_GameController* controller = GetSDLJoystickByGUID(guid, port)->GetSDLGameController();
+
     SDL_GameControllerAxis button_bind_x;
     SDL_GameControllerAxis button_bind_y;
-    if (!controller) {
-        LOG_WARNING(Input, "failed to open controller {}", guid);
-        return {{}};
-    }
 
     if (analog == Settings::NativeAnalog::Values::CirclePad) {
         button_bind_x = SDL_CONTROLLER_AXIS_LEFTX;
@@ -334,22 +329,27 @@ void SDLState::InitJoystick(int joystick_index) {
     if (joystick_map.find(guid) == joystick_map.end()) {
         auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick, sdl_gamecontroller);
         joystick->EnableMotion();
-        joystick_map[guid].emplace_back(std::move(joystick));
+        auto vec = std::make_shared<std::vector<std::shared_ptr<SDLJoystick>>>();
+        vec->emplace_back(joystick);
+        joystick_map[guid] = vec;
+        joystick_vector->emplace_back(joystick);
         return;
     }
 
     auto& joystick_guid_list = joystick_map[guid];
-    const auto it = std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
+    const auto it = std::find_if(joystick_guid_list->begin(), joystick_guid_list->end(),
                                  [](const auto& joystick) { return !joystick->GetSDLJoystick(); });
-    if (it != joystick_guid_list.end()) {
+    if (it != joystick_guid_list->end()) {
         (*it)->SetSDLJoystick(sdl_joystick, sdl_gamecontroller);
         (*it)->EnableMotion();
+        joystick_vector->emplace_back(*it);
         return;
     }
-    const int port = static_cast<int>(joystick_guid_list.size());
+    const int port = static_cast<int>(joystick_guid_list->size());
     auto joystick = std::make_shared<SDLJoystick>(guid, port, sdl_joystick, sdl_gamecontroller);
     joystick->EnableMotion();
-    joystick_guid_list.emplace_back(std::move(joystick));
+    joystick_guid_list->emplace_back(joystick);
+    joystick_vector->emplace_back(joystick);
 }
 
 void SDLState::CloseJoystick(SDL_JoystickID instance_id) {
@@ -415,84 +415,136 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
 void SDLState::CloseJoysticks() {
     std::lock_guard lock{joystick_map_mutex};
     joystick_map.clear();
+    joystick_vector->clear();
 }
 
 class SDLButton final : public Input::ButtonDevice {
 public:
-    explicit SDLButton(std::shared_ptr<SDLJoystick> joystick_, int button_,
-                       bool isController_ = true)
-        : joystick(std::move(joystick_)), button(button_), isController(isController_) {}
+    explicit SDLButton(std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks_,
+                       int button_, int port_ = -1, bool isController_ = true)
+        : joysticks(joysticks_), button(button_), isController(isController_), port(port_) {}
 
     bool GetStatus() const override {
-        return joystick->GetButton(button, isController);
+        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+            return joysticks->at(port)->GetButton(button, isController);
+        }
+        for (const auto& joystick : *joysticks) {
+            if (joystick && joystick->GetButton(button, isController)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 private:
-    std::shared_ptr<SDLJoystick> joystick;
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks;
     int button;
     bool isController = true;
+    int port;
 };
 
 class SDLDirectionButton final : public Input::ButtonDevice {
 public:
-    explicit SDLDirectionButton(std::shared_ptr<SDLJoystick> joystick_, int hat_, Uint8 direction_)
-        : joystick(std::move(joystick_)), hat(hat_), direction(direction_) {}
+    explicit SDLDirectionButton(
+        std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks_, int hat_,
+        Uint8 direction_, int port_ = -1)
+        : joysticks(joysticks_), hat(hat_), direction(direction_), port(port_) {}
 
     bool GetStatus() const override {
-        return joystick->GetHatDirection(hat, direction);
+        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+            return joysticks->at(port)->GetHatDirection(hat, direction);
+        }
+        for (const auto& joystick : *joysticks) {
+            if (joystick && joystick->GetHatDirection(hat, direction))
+                return true;
+        }
+        return false;
     }
 
 private:
-    std::shared_ptr<SDLJoystick> joystick;
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks;
     int hat;
+    int port;
     Uint8 direction;
 };
 
 class SDLAxisButton final : public Input::ButtonDevice {
 public:
-    explicit SDLAxisButton(std::shared_ptr<SDLJoystick> joystick_, int axis_, float threshold_,
-                           bool trigger_if_greater_, bool isController_ = true)
-        : joystick(std::move(joystick_)), axis(axis_), threshold(threshold_),
-          trigger_if_greater(trigger_if_greater_), isController(isController_) {}
+    explicit SDLAxisButton(std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks_,
+                           int axis_, float threshold_, bool trigger_if_greater_, int port_ = -1,
+                           bool isController_ = true)
+        : joysticks(joysticks_), axis(axis_), threshold(threshold_),
+          trigger_if_greater(trigger_if_greater_), isController(isController_), port(port_) {}
 
     bool GetStatus() const override {
-        float axis_value = joystick->GetAxis(axis, isController);
-        if (trigger_if_greater)
-            return axis_value > threshold;
-        return axis_value < threshold;
+        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+            return joysticks->at(port)->GetAxis(axis, isController);
+        }
+        for (const auto& joystick : *joysticks) {
+            if (!joystick)
+                continue;
+            float axis_value = joystick->GetAxis(axis, isController);
+            if (trigger_if_greater && axis_value > threshold)
+                return true;
+            else if (!trigger_if_greater && axis_value < threshold)
+                return true;
+        }
+        return false;
     }
 
 private:
-    std::shared_ptr<SDLJoystick> joystick;
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks;
     int axis;
     float threshold;
     bool trigger_if_greater;
     bool isController = true;
+    int port;
 };
 
 class SDLAnalog final : public Input::AnalogDevice {
 public:
-    SDLAnalog(std::shared_ptr<SDLJoystick> joystick_, int axis_x_, int axis_y_, float deadzone_,
-              bool isController_)
-        : joystick(std::move(joystick_)), axis_x(axis_x_), axis_y(axis_y_), deadzone(deadzone_),
-          isController(isController_) {}
+    SDLAnalog(std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks_, int axis_x_,
+              int axis_y_, float deadzone_, int port_ = -1, bool isController_ = true)
+        : joysticks(joysticks_), axis_x(axis_x_), axis_y(axis_y_), deadzone(deadzone_),
+          isController(isController_), port(port_) {}
 
     std::tuple<float, float> GetStatus() const override {
-        const auto [x, y] = joystick->GetAnalog(axis_x, axis_y, isController);
-        const float r = std::sqrt((x * x) + (y * y));
-        if (r > deadzone) {
-            return std::make_tuple(x / r * (r - deadzone) / (1 - deadzone),
-                                   y / r * (r - deadzone) / (1 - deadzone));
+        float rMax = 0.0f, xMax = 0.0f, yMax = 0.0f;
+        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+            const auto [x, y] = joysticks->at(port)->GetAnalog(axis_x, axis_y, isController);
+            const float r = std::sqrt((x * x) + (y * y));
+            if (r > deadzone) {
+                return std::make_tuple(x / r * (r - deadzone) / (1 - deadzone),
+                                       y / r * (r - deadzone) / (1 - deadzone));
+            }
+            return std::make_tuple<float, float>(0.0f, 0.0f);
+        }
+        // if more than 1, return the value of whichever joystick is greatest
+        for (const auto& joystick : *joysticks) {
+            if (!joystick)
+                continue;
+            const auto [x, y] = joystick->GetAnalog(axis_x, axis_y, isController);
+            const float r = std::sqrt((x * x) + (y * y));
+            if (r > rMax) {
+                xMax = x;
+                yMax = y;
+                rMax = r;
+            }
+        }
+        if (rMax > deadzone) {
+            return std::make_tuple(xMax / rMax * (rMax - deadzone) / (1 - deadzone),
+                                   yMax / rMax * (rMax - deadzone) / (1 - deadzone));
         }
         return std::make_tuple<float, float>(0.0f, 0.0f);
     }
 
 private:
-    std::shared_ptr<SDLJoystick> joystick;
+    std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks;
     const int axis_x;
     const int axis_y;
     const float deadzone;
     bool isController;
+    int port;
 };
 
 class SDLMotion final : public Input::MotionDevice {
@@ -500,6 +552,8 @@ public:
     explicit SDLMotion(std::shared_ptr<SDLJoystick> joystick_) : joystick(std::move(joystick_)) {}
 
     std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const override {
+        if (!joystick)
+            return std::make_tuple(Common::Vec3<float>(0, 0, 0), Common::Vec3<float>(0, 0, 0));
         return joystick->GetMotion();
     }
 
@@ -533,6 +587,8 @@ public:
      *     - "guid": the guid of the joystick to bind
      *     - "port": the nth joystick of the same type to bind
      *     - "button"(optional): the index of the joystick button to bind
+     *     - "maptype" (optional): can be "guid+port, "guid", "all" - which components should be
+     *          used for binding
      *     - "hat"(optional): the index of the hat to bind as direction buttons
      *     - "axis"(optional): the index of the joystick or controller axis to bind
      *     - "direction"(only used for hat): the direction name of the hat to bind. Can be "up",
@@ -540,15 +596,16 @@ public:
      *     - "threshold"(only used for axis): a float value in (-1.0, 1.0) which the button is
      *         triggered if the axis value crosses
      *     - "direction"(only used for axis): "+" means the button is triggered when the axis
-     * value is greater than the threshold; "-" means the button is triggered when the axis
-     * value is smaller than the threshold
+     *          value is greater than the threshold; "-" means the button is triggered when the axis
+     *          value is smaller than the threshold
      */
     std::unique_ptr<Input::ButtonDevice> Create(const Common::ParamPackage& params) override {
-        const std::string guid = params.Get("guid", "0");
-        const int port = params.Get("port", 0);
+        const std::string maptype = params.Get("maptype", "guid+port");
+        const int port = maptype == "guid+port" ? params.Get("port", -1) : -1;
+        const bool controller = params.Get("api", "joystick") == "controller";
+        const std::string guid = (controller && maptype == "all") ? "" : params.Get("guid", "");
 
-        auto joystick = state.GetSDLJoystickByGUID(guid, port);
-
+        auto joysticks = state.GetJoysticksByGUID(guid);
         if (params.Has("hat")) {
             const int hat = params.Get("hat", 0);
             const std::string direction_name = params.Get("direction", "");
@@ -564,8 +621,7 @@ public:
             } else {
                 direction = 0;
             }
-            // This is necessary so accessing GetHat with hat won't crash
-            return std::make_unique<SDLDirectionButton>(joystick, hat, direction);
+            return std::make_unique<SDLDirectionButton>(joysticks, hat, direction, port);
         }
 
         if (params.Has("axis")) {
@@ -582,12 +638,11 @@ public:
                 trigger_if_greater = true;
                 LOG_ERROR(Input, "Unknown direction {}", direction_name);
             }
-            return std::make_unique<SDLAxisButton>(joystick, axis, threshold, trigger_if_greater,
-                                                   controller);
+            return std::make_unique<SDLAxisButton>(joysticks, axis, threshold, trigger_if_greater,
+                                                   port, controller);
         }
-        const bool controller = params.Get("api", "joystick") == "controller";
         const int button = params.Get("button", 0);
-        return std::make_unique<SDLButton>(joystick, button, controller);
+        return std::make_unique<SDLButton>(joysticks, button, port, controller);
     }
 
 private:
@@ -602,22 +657,25 @@ public:
      * Creates analog device from joystick axes
      * @param params contains parameters for creating the device:
      *     - "api": either "controller" or "joystick" based on API used
-     *     - "guid": the guid of the joystick to bind
+     *     - "guid": the guid of the joystick to bind or all controllers (when possible))
      *     - "port": the nth joystick of the same type
+     *     - "maptype": could be "guid+port", "guid", or "all"
      *     - "axis_x": the index of the axis to be bind as x-axis
      *     - "axis_y": the index of the axis to be bind as y-axis
      */
     std::unique_ptr<Input::AnalogDevice> Create(const Common::ParamPackage& params) override {
-        const std::string guid = params.Get("guid", "0");
-        const int port = params.Get("port", 0);
-        bool controller = params.Get("api", "joystick") == "controller";
+        const std::string maptype = params.Get("maptype", "guid+port");
+        const bool controller = params.Get("api", "joystick") == "controller";
+        const std::string guid = (controller && maptype == "all") ? "" : params.Get("guid", "0");
         const int axis_x = params.Get("axis_x", 0);
         const int axis_y = params.Get("axis_y", 1);
+        const int port = maptype == "guid+port" ? params.Get("port", -1) : -1;
+
         float deadzone = std::clamp(params.Get("deadzone", 0.0f), 0.0f, .99f);
 
-        auto joystick = state.GetSDLJoystickByGUID(guid, port);
+        auto joysticks = state.GetJoysticksByGUID(guid);
 
-        return std::make_unique<SDLAnalog>(joystick, axis_x, axis_y, deadzone, controller);
+        return std::make_unique<SDLAnalog>(joysticks, axis_x, axis_y, deadzone, port, controller);
     }
 
 private:
@@ -631,9 +689,10 @@ public:
     std::unique_ptr<Input::MotionDevice> Create(const Common::ParamPackage& params) override {
         const std::string guid = params.Get("guid", "0");
         const int port = params.Get("port", 0);
-
-        auto joystick = state.GetSDLJoystickByGUID(guid, port);
-
+        auto joysticks = state.GetJoysticksByGUID(guid);
+        if (joysticks->empty())
+            return std::make_unique<SDLMotion>(nullptr);
+        auto joystick = joysticks->size() > port ? joysticks->at(port) : joysticks->at(0);
         return std::make_unique<SDLMotion>(joystick);
     }
 
@@ -742,6 +801,7 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
     if (down) {
         params.Set("down", "1");
     }
+    // is it safe to always use event.jhat.which here regardless of event type?
     auto joystick = state.GetSDLJoystickBySDLID(event.jhat.which);
     if (!joystick)
         return {};
@@ -885,6 +945,7 @@ public:
                 timestamp = event.caxis.timestamp;
                 value = event.caxis.value;
                 controller = true;
+                [[fallthrough]];
             }
             case SDL_JOYAXISMOTION: {
                 // if a button has been pressed down within 50ms of this axis movement,
@@ -1004,7 +1065,6 @@ private:
         return std::abs(value) > 32766;
     }
 
-    bool IsValueNear(int16_t value1, int16_t value2) {}
     /** Holds the first received value for the axis. Used to
      *  identify situations where "released" is -32768 (some triggers)
      */
@@ -1031,11 +1091,12 @@ public:
 
     Common::ParamPackage GetNextInput() override {
         SDL_Event event{};
-        auto which = event.type == SDL_JOYAXISMOTION ? event.jaxis.which : event.caxis.which;
+        SDL_JoystickID which = -1;
         while (state.event_queue.Pop(event)) {
             if ((event.type != SDL_JOYAXISMOTION && event.type != SDL_CONTROLLERAXISMOTION)) {
                 continue;
             }
+            which = event.type == SDL_JOYAXISMOTION ? event.jaxis.which : event.caxis.which;
             auto value = event.type == SDL_JOYAXISMOTION ? event.jaxis.value : event.caxis.value;
 
             if (std::abs(value / 32767.0) < 0.5)
@@ -1043,6 +1104,7 @@ public:
             // An analog device needs two axes, so we need to store the axis for later and wait
             // for a second SDL event. The axes also must be from the same joystick.
             int axis = event.type == SDL_JOYAXISMOTION ? event.jaxis.axis : event.caxis.axis;
+
             if (analog_xaxis == -1) {
                 analog_xaxis = axis;
                 analog_axes_joystick = which;
@@ -1052,7 +1114,7 @@ public:
             }
         }
         Common::ParamPackage params;
-        if (analog_xaxis != -1 && analog_yaxis != -1) {
+        if (which != -1 && analog_xaxis != -1 && analog_yaxis != -1) {
             auto joystick = state.GetSDLJoystickBySDLID(which);
             params.Set("engine", "sdl");
             params.Set("port", joystick->GetPort());
@@ -1062,7 +1124,7 @@ public:
             if (event.type == SDL_JOYAXISMOTION) {
                 params.Set("api", "joystick");
             } else {
-                params.Set("api", "conroller");
+                params.Set("api", "controller");
                 params.Set("name_x", axis_names.at(analog_xaxis));
                 params.Set("name_y", axis_names.at(analog_yaxis));
             }
