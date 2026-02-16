@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,13 +30,20 @@ enum class PixelFormat : u32 {
     A4 = 11,
     ETC1 = 12,
     ETC1A4 = 13,
+
     D16 = 14,
     D24 = 16,
     D24S8 = 17,
+
     MaxPixelFormat = 18,
+
+    NumColorFormat = (ETC1A4 - RGBA8) + 1,
+    NumDepthFormat = (D24S8 - D16) + 1,
+
     Invalid = std::numeric_limits<u32>::max(),
 };
 constexpr std::size_t PIXEL_FORMAT_COUNT = static_cast<std::size_t>(PixelFormat::MaxPixelFormat);
+DECLARE_ENUM_ARITHMETIC_OPERATORS(PixelFormat)
 
 enum class SurfaceType : u32 {
     Color = 0,

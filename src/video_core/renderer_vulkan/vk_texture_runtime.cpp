@@ -727,7 +727,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         handles[Type::Scaled].Create(instance, GetScaledWidth(), GetScaledHeight(), levels,
                                      texture_type, format, usage, flags, traits.aspect,
                                      need_format_list, DebugName(true));
-        raw_images[num_images++] = handles[1].image;
+        raw_images[num_images++] = handles[Type::Scaled].image;
     }
 
     current = res_scale != 1 ? Type::Scaled : Type::Base;
@@ -764,18 +764,18 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
     const std::string debug_name = DebugName(false, true);
     handles[Type::Base].Create(instance, mat->width, mat->height, levels, texture_type, format,
                                traits.usage, flags, traits.aspect, false, debug_name);
-    raw_images[num_images++] = handles[0].image;
+    raw_images[num_images++] = handles[Type::Base].image;
 
     if (res_scale != 1) {
         handles[Type::Scaled].Create(instance, mat->width, mat->height, levels, texture_type,
                                      vk::Format::eR8G8B8A8Unorm, traits.usage, flags, traits.aspect,
                                      false, debug_name);
-        raw_images[num_images++] = handles[1].image;
+        raw_images[num_images++] = handles[Type::Scaled].image;
     }
     if (has_normal) {
         handles[Type::Custom].Create(instance, mat->width, mat->height, levels, texture_type,
                                      format, traits.usage, flags, traits.aspect, false, debug_name);
-        raw_images[num_images++] = handles[2].image;
+        raw_images[num_images++] = handles[Type::Custom].image;
     }
 
     current = res_scale != 1 ? Type::Scaled : Type::Base;

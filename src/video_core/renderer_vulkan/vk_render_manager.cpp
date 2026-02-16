@@ -136,7 +136,9 @@ vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
     const u32 color_index =
         color == VideoCore::PixelFormat::Invalid ? NumColorFormats : static_cast<u32>(color);
     const u32 depth_index =
-        depth == VideoCore::PixelFormat::Invalid ? NumDepthFormats : (static_cast<u32>(depth) - 14);
+        depth == VideoCore::PixelFormat::Invalid
+            ? NumDepthFormats
+            : (static_cast<u32>(depth - VideoCore::PixelFormat::NumColorFormat));
 
     ASSERT_MSG(color_index <= NumColorFormats && depth_index <= NumDepthFormats,
                "Invalid color index {} and/or depth_index {}", color_index, depth_index);
