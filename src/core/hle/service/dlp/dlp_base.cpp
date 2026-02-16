@@ -209,16 +209,16 @@ int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer) {
         LOG_ERROR(Service_DLP, "Could not get get pointer to UDS service!");
         return 0;
     }
-    int ret =
+    auto ret =
         uds->PullPacketHLE(node_id, max_pullpacket_size, static_cast<u32>(max_pullpacket_size) >> 2,
                            buffer_out, &secure_data);
 
-    if (ret <= 0) {
+    if (!ret) {
         return 0;
     }
 
     buffer = buffer_out;
-    return ret; // size
+    return *ret; // size
 }
 
 bool DLP_Base::SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 flags) {
@@ -228,7 +228,8 @@ bool DLP_Base::SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 
         LOG_WARNING(Service_DLP, "Packet size is larger than 0x{:x}", max_sendto_size);
     }
 
-    return GetUDS()->SendToHLE(node_id, data_channel, buffer.size(), flags, buffer) >= 0;
+    return GetUDS()->SendToHLE(node_id, data_channel, buffer.size(), flags, buffer) ==
+           NWM::ResultStatus::ResultSuccess;
 }
 
 u32 DLP_Base::GeneratePKChecksum(u32 aes_value, void* _input_buffer, u32 packet_size) {

@@ -41,6 +41,21 @@ class DLP_SRVR;
 
 namespace Service::NWM {
 
+enum class ResultStatus {
+    ResultSuccess = 0,
+    BindError_ArgsZero,
+    BindError_MaxBinds,
+    BindError_RecvBufferTooLarge,
+    DisconError_CalledAsHost,
+    SendError_NotConnected,
+    SendError_BadNode,
+    SendError_BadMacAddress,
+    SendError_PacketSizeTooLarge,
+    RecvError_NotConnected,
+    RecvError_BadNode,
+    RecvError_PacketSizeTooLarge,
+};
+
 using MacAddress = std::array<u8, 6>;
 
 const std::size_t ApplicationDataSize = 0xC8;
@@ -469,16 +484,20 @@ private:
         std::shared_ptr<Kernel::SharedMemory> sharedmem);
 
     void ShutdownHLE();
-    int PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_buff_size_aligned,
-                      std::vector<u8>& output_buffer, void* secure_data_out);
+    Common::Expected<int, ResultStatus> PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size,
+                                                      u32 max_out_buff_size_aligned,
+                                                      std::vector<u8>& output_buffer,
+                                                      void* secure_data_out);
     ConnectionStatus GetConnectionStatusHLE();
-    int DisconnectNetworkHLE();
-    std::pair<int, std::shared_ptr<Kernel::Event>> BindHLE(u32 bind_node_id, u32 recv_buffer_size,
-                                                           u8 data_channel, u16 network_node_id);
+    ResultStatus DisconnectNetworkHLE();
+    std::pair<ResultStatus, std::shared_ptr<Kernel::Event>> BindHLE(u32 bind_node_id,
+                                                                    u32 recv_buffer_size,
+                                                                    u8 data_channel,
+                                                                    u16 network_node_id);
     void UnbindHLE(u32 bind_node_id);
     std::unique_ptr<NodeInfo> GetNodeInformationHLE(u16 network_node_id);
-    int SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags,
-                  std::vector<u8> input_buffer);
+    ResultStatus SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags,
+                           std::vector<u8> input_buffer);
     Result UpdateNetworkAttributeHLE(u16 bitmask, u8 flag);
 
     Result BeginHostingNetwork(std::span<const u8> network_info_buffer, std::vector<u8> passphrase);

@@ -811,26 +811,26 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-std::pair<int, std::shared_ptr<Kernel::Event>> NWM_UDS::BindHLE(u32 bind_node_id,
-                                                                u32 recv_buffer_size,
-                                                                u8 data_channel,
-                                                                u16 network_node_id) {
+std::pair<ResultStatus, std::shared_ptr<Kernel::Event>> NWM_UDS::BindHLE(u32 bind_node_id,
+                                                                         u32 recv_buffer_size,
+                                                                         u8 data_channel,
+                                                                         u16 network_node_id) {
     if (data_channel == 0 || bind_node_id == 0) {
         LOG_WARNING(Service_NWM, "data_channel = {}, bind_node_id = {}", data_channel,
                     bind_node_id);
-        return std::make_pair<int, std::shared_ptr<Kernel::Event>>(-1, nullptr);
+        return std::make_pair(ResultStatus::BindError_ArgsZero, nullptr);
     }
 
     constexpr std::size_t MaxBindNodes = 16;
     if (channel_data.size() >= MaxBindNodes) {
         LOG_WARNING(Service_NWM, "max bind nodes");
-        return std::make_pair<int, std::shared_ptr<Kernel::Event>>(-2, nullptr);
+        return std::make_pair(ResultStatus::BindError_MaxBinds, nullptr);
     }
 
     constexpr u32 MinRecvBufferSize = 0x5F4;
     if (recv_buffer_size < MinRecvBufferSize) {
         LOG_WARNING(Service_NWM, "MinRecvBufferSize");
-        return std::make_pair<int, std::shared_ptr<Kernel::Event>>(-3, nullptr);
+        return std::make_pair(ResultStatus::BindError_RecvBufferTooLarge, nullptr);
     }
 
     // Create a new event for this bind node.
@@ -841,7 +841,7 @@ std::pair<int, std::shared_ptr<Kernel::Event>> NWM_UDS::BindHLE(u32 bind_node_id
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO(B3N30): Support more than one bind node per channel.
     channel_data[data_channel] = {bind_node_id, data_channel, network_node_id, event};
-    return std::make_pair<int, std::shared_ptr<Kernel::Event>>(0, std::move(event));
+    return std::make_pair(ResultStatus::ResultSuccess, std::move(event));
 }
 
 void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
@@ -855,24 +855,25 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     auto [ret, event] = BindHLE(bind_node_id, recv_buffer_size, data_channel, network_node_id);
 
     switch (ret) {
-    case -1: {
+    case ResultStatus::BindError_ArgsZero: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                        ErrorSummary::WrongArgument, ErrorLevel::Usage));
         return;
     }
-    case -2: {
+    case ResultStatus::BindError_MaxBinds: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::OutOfMemory, ErrorModule::UDS, ErrorSummary::OutOfResource,
                        ErrorLevel::Status));
         return;
     }
-    case -3: {
+    case ResultStatus::BindError_RecvBufferTooLarge: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS, ErrorSummary::WrongArgument,
                        ErrorLevel::Usage));
         return;
     }
+    default:;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -1129,8 +1130,6 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-static std::atomic_int np = 0;
-
 void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -1145,30 +1144,30 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    int res = SendToHLE(dest_node_id, data_channel, data_size, flags, input_buffer);
+    auto res = SendToHLE(dest_node_id, data_channel, data_size, flags, input_buffer);
 
     switch (res) {
-    case -4:
+    case ResultStatus::SendError_PacketSizeTooLarge:
         rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS, ErrorSummary::WrongArgument,
                        ErrorLevel::Usage));
         return;
-    case -5:
+    case ResultStatus::SendError_NotConnected:
         rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                        ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
-    case -1:
-    case -2:
-    case -3:
+    case ResultStatus::SendError_BadNode:
+    case ResultStatus::SendError_BadMacAddress:
         rb.Push(Result(ErrorDescription::NotFound, ErrorModule::UDS, ErrorSummary::WrongArgument,
                        ErrorLevel::Status));
         return;
+    default:;
     }
 
     rb.Push(ResultSuccess);
 }
 
-int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags,
-                       std::vector<u8> input_buffer) {
+ResultStatus NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags,
+                                std::vector<u8> input_buffer) {
     ASSERT(input_buffer.size() >= data_size);
     input_buffer.resize(data_size);
 
@@ -1178,18 +1177,18 @@ int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flag
         LOG_ERROR(Service_NWM,
                   "You are not connected as a client or a host. (you are connected as type {})",
                   connection_status.status);
-        return -5;
+        return ResultStatus::SendError_NotConnected;
     }
 
     // There should never be a dest_node_id of 0
     if (dest_node_id == 0) {
         LOG_ERROR(Service_NWM, "dest_node_id is 0");
-        return -1;
+        return ResultStatus::SendError_BadNode;
     }
 
     if (dest_node_id == connection_status.network_node_id) {
         LOG_ERROR(Service_NWM, "tried to send packet to itself");
-        return -2;
+        return ResultStatus::SendError_BadNode;
     }
 
     if (flags >> 2) {
@@ -1199,14 +1198,14 @@ int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flag
     auto dest_address = GetNodeMacAddress(dest_node_id, flags);
     if (!dest_address) {
         LOG_ERROR(Service_NWM, "Destination address was 0");
-        return -3;
+        return ResultStatus::SendError_BadMacAddress;
     }
 
     constexpr std::size_t MaxSize = 0x5C6;
     if (data_size > MaxSize) {
         LOG_ERROR(Service_NWM, "Data size was greater than the max packet size {} > {}", data_size,
                   MaxSize);
-        return -4;
+        return ResultStatus::SendError_PacketSizeTooLarge;
     }
     // TODO(B3N30): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
@@ -1226,7 +1225,7 @@ int NWM_UDS::SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flag
 
     SendPacket(packet);
 
-    return 0;
+    return ResultStatus::ResultSuccess;
 }
 
 void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
@@ -1242,37 +1241,40 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     auto ret = PullPacketHLE(bind_node_id, max_out_buff_size, max_out_buff_size_aligned,
                              output_buffer, &secure_data);
 
-    switch (ret) {
-    case -1: {
+    switch (ret.error()) {
+    case ResultStatus::RecvError_NotConnected: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                        ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
-    case -2: {
+    case ResultStatus::RecvError_BadNode: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::WrongArgument, ErrorLevel::Usage));
+                       ErrorSummary::InvalidState, ErrorLevel::Status));
         return;
     }
-    case -3: {
+    case ResultStatus::RecvError_PacketSizeTooLarge: {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(Result(ErrorDescription::TooLarge, ErrorModule::UDS, ErrorSummary::WrongArgument,
                        ErrorLevel::Usage));
         return;
     }
+    default:;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
 
     rb.Push(ResultSuccess);
-    rb.Push<u32>(ret); // return is data size if gt/eq to 0
+    rb.Push<u32>(*ret); // return is data size if gt/eq to 0
     rb.Push<u16>(secure_data.src_node_id);
     rb.PushStaticBuffer(std::move(output_buffer), 0);
 }
 
-int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_buff_size_aligned,
-                           std::vector<u8>& output_buffer, void* secure_data_out) {
+Common::Expected<int, ResultStatus> NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size,
+                                                           u32 max_out_buff_size_aligned,
+                                                           std::vector<u8>& output_buffer,
+                                                           void* secure_data_out) {
     // This size is hard coded into the uds module. We don't know the meaning yet.
     u32 buff_size = std::min<u32>(max_out_buff_size_aligned, 0x172) << 2;
 
@@ -1281,7 +1283,7 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
         connection_status.status != NetworkStatus::ConnectedAsClient &&
         connection_status.status != NetworkStatus::ConnectedAsSpectator) {
         LOG_ERROR(Service_NWM, "Not connected yet.");
-        return -1;
+        return Common::Unexpected(ResultStatus::RecvError_NotConnected);
     }
 
     auto channel =
@@ -1291,12 +1293,12 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
 
     if (channel == channel_data.end()) {
         LOG_ERROR(Service_NWM, "Could not find channel bn 0x{:x}.", bind_node_id);
-        return -2;
+        return Common::Unexpected(ResultStatus::RecvError_BadNode);
     }
 
     if (channel->second.received_packets.empty()) {
         output_buffer.resize(buff_size);
-        return 0;
+        return int(0);
     }
 
     const auto& next_packet = channel->second.received_packets.front();
@@ -1310,7 +1312,7 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
 
     if (data_size > max_out_buff_size) {
         LOG_ERROR(Service_NWM, "Data size was too large.");
-        return -3;
+        return Common::Unexpected(ResultStatus::RecvError_PacketSizeTooLarge);
     }
     output_buffer.resize(buff_size);
 
@@ -1319,7 +1321,7 @@ int NWM_UDS::PullPacketHLE(u32 bind_node_id, u32 max_out_buff_size, u32 max_out_
                 next_packet.data() + sizeof(LLCHeader) + sizeof(SecureDataHeader), data_size);
 
     channel->second.received_packets.pop_front();
-    return data_size;
+    return int(data_size);
 }
 
 void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
@@ -1421,7 +1423,7 @@ void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-int NWM_UDS::DisconnectNetworkHLE() {
+ResultStatus NWM_UDS::DisconnectNetworkHLE() {
     using Network::WifiPacket;
     WifiPacket deauth;
     {
@@ -1433,7 +1435,7 @@ int NWM_UDS::DisconnectNetworkHLE() {
             connection_status.status = NetworkStatus::ConnectedAsHost;
             connection_status.network_node_id = tmp_node_id;
             node_map.clear();
-            return -1;
+            return ResultStatus::DisconError_CalledAsHost;
         }
         u16_le tmp_node_id = connection_status.network_node_id;
         connection_status = {};
@@ -1456,7 +1458,7 @@ int NWM_UDS::DisconnectNetworkHLE() {
     }
     channel_data.clear();
 
-    return 0;
+    return ResultStatus::ResultSuccess;
 }
 
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
@@ -1464,8 +1466,8 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    int ret = DisconnectNetworkHLE();
-    if (ret == -1) {
+    auto res = DisconnectNetworkHLE();
+    if (res == ResultStatus::DisconError_CalledAsHost) {
         LOG_DEBUG(Service_NWM, "called as a host");
         rb.Push(Result(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
                        ErrorLevel::Status));
