@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include "dlp_base.h"
 
 #include <cryptopp/aes.h>
@@ -9,6 +13,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hw/aes/key.h"
 #include "common/swap.h"
+#include "common/alignment.h"
 
 // winsock pollutes this namespace
 extern "C" {
@@ -234,10 +239,7 @@ void DLP_Base::GeneratePKChecksum(u32 aes_value, void *output_word, void *_input
 }
 
 u32 DLP_Base::GenDLPChecksumKey(Network::MacAddress mac_addr) {
-    constexpr std::array<u8, 0x10> dlp_iv_ctr_buf = {
-        0xFE, 0x44, 0x9A, 0xC1, 0x3A, 0xE3, 0xB4, 0x09,
-        0x50, 0x11, 0xD1, 0x89, 0x44, 0x10, 0x78, 0x33
-    };
+    auto dlp_iv_ctr_buf = HW::AES::GetDlpChecksumModIv();
 
     std::array<u8, 0x10> ctr_encrypt_buf{};
     for (u32 i = 0; i < 0x10; i++) {
@@ -261,7 +263,7 @@ bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
         LOG_ERROR(Service_DLP, "Packet size in header does not match size received");
         return false;
     }
-    // verify checksum
+
     std::vector<u8> pk_copy;
     pk_copy.resize(sz);
     memcpy(pk_copy.data(), pk, sz);
@@ -277,6 +279,10 @@ bool DLP_Base::ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum) {
         }
     }
     return true;
+}
+
+u32 DLP_Base::GetNumFragmentsFromTitleSize(u32 tsize) {
+    return Common::AlignUp(tsize - broad_title_size_diff, content_fragment_size)/content_fragment_size;
 }
 
 } // namespace Service::DLP

@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #pragma once
 
 #include "core/hle/service/service.h"
@@ -268,6 +272,8 @@ protected:
     std::shared_ptr<Kernel::Event> dlp_status_event; // out
     std::shared_ptr<Kernel::Event> uds_status_event; // in
 
+    bool should_verify_checksum = false;
+
     const u32 uds_sharedmem_size = 0x4000;
     const u32 uds_version = 0x400;
     const u32 recv_buffer_size = 0x3c00;
@@ -323,7 +329,10 @@ protected:
 
     template <typename T>
     T *PGen_SetPK(std::array<u8, 4> magic, u8 packet_index, std::array<u8, 3> resp_id) {
-        sm_packet_sender_session.acquire();
+        if (!sm_packet_sender_session.try_acquire()) {
+            LOG_ERROR(Service_DLP, "Tried to send 2 packets concurrently, causing blocking on this thread");
+            sm_packet_sender_session.acquire();
+        }
         send_packet_ctx.resize(sizeof(T));
         auto ph = GetPacketHead(send_packet_ctx);
         ph->magic = magic;
@@ -345,6 +354,8 @@ protected:
     u32 GenDLPChecksumKey(Network::MacAddress mac_addr);
     static void DLPEncryptCTR(void *out, size_t size, const u8 *iv_ctr);
     static bool ValidatePacket(u32 aes, void *pk, size_t sz, bool checksum = true);
+
+    u32 GetNumFragmentsFromTitleSize(u32 tsize);
 private:
     std::binary_semaphore sm_packet_sender_session{1};
     std::vector<u8> send_packet_ctx;

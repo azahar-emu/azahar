@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -8,7 +8,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
-#include "core/core.h" // class System
+#include "core/core.h"
 #include "core/hle/service/fs/fs_user.h"
 
 SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_SRVR)
