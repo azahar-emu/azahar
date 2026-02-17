@@ -396,7 +396,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         } else if (caps.avx2) {
             cpu_string += '2';
         }
-        if (caps.fma || caps.fma4) {
+        if (caps.fma) {
             cpu_string += " | FMA";
         }
     }
