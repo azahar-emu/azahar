@@ -304,8 +304,6 @@
     <string name="fatal_error_message">Возникла критическая ошибка. Откройте лог для получения информации.\nВозобновление эмуляции может привести к сбоям и вылетам.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Подготовка шейдеров</string>
-    <string name="building_shaders">Построение шейдеров</string>
-
     <!-- Cheats -->
     <string name="cheats">Чит-коды</string>
     <string name="cheats_add">Добавить чит-код</string>

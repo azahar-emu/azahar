@@ -481,8 +481,6 @@
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
-    <string name="building_shaders">Gölgelendiriciler Oluşturuluyor</string>
-
     <!-- About Game Dialog -->
     <string name="play">Oyna</string>
     <string name="uninstall_cia">Uygulamayı Sil</string>

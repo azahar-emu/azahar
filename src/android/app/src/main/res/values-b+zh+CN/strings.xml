@@ -528,8 +528,6 @@
     <string name="unsupported_encrypted">不支持的加密应用</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">正在准备着色器</string>
-    <string name="building_shaders">正在构建着色器</string>
-
     <!-- About Game Dialog -->
     <string name="play">开始游戏</string>
     <string name="uninstall_cia">卸载应用</string>

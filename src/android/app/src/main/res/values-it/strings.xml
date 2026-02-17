@@ -143,11 +143,11 @@ Divertiti usando l\'emulatore!</string>
     <string name="turbo_disabled_toast">Velocità Turbo disabilitata</string>
 
     <!-- System files strings -->
-    <string name="setup_system_files">File di Sistema</string>
+    <string name="setup_system_files">File di sistema</string>
     <string name="setup_system_files_description">Esegui operazioni sui file di sistema come installare file di sistema o avviare il Menu Home</string>
     <string name="setup_tool_connect">Connettiti a Artic Setup Tool </string>
     <string name="setup_system_files_preamble"><![CDATA[Azahar necessita di dati unici della console e file firmware provenienti da una console reale per poter utilizzare alcune delle sue funzionalità. Questi file e dati possono essere configurati con <a href=https://github.com/azahar-emu/ArticSetupTool>Azahar Artic Setup Tool</a>.<br>Note: <ul><li><b>Questa operazione installerà dati unici della console su Azahar, non condividere le tue cartelle utente o NAND dopo aver completato il processo di configurazione!</b></li><li>Durante il processo di configurazione, Azahar si collegherà alla console che sta eseguendo lo strumento di configurazione. Puoi scollegare la console in seguito dalla scheda \"File di sistema\" nel menu delle opzioni dell\'emulatore.</li><li>Non andare online contemporaneamente con Azahar e la tua console 3DS dopo aver configurato i file di sistema, poiché ciò potrebbe causare problemi.</li><li>La configurazione del vecchio 3DS è necessaria affinché la configurazione del nuovo 3DS funzioni (si consiglia di configurare entrambi).</li><li>Entrambe le modalità di configurazione funzioneranno indipendentemente dal modello della console che esegue lo strumento di configurazione.</li></ul>]]></string>
-    <string name="setup_system_files_detect">Recupero dello stato attuale dei file di sistema, per favore attendi...</string>
+    <string name="setup_system_files_detect">Recupero dello stato attuale dei file di sistema, attendere...</string>
     <string name="delete_system_files">Scollega i dati univoci della console</string>
     <string name="delete_system_files_description"><![CDATA[Questa azione scollegherà la tua console reale da Azahar, con le seguenti conseguenze:<br><ul><li>il tuo OTP, SecureInfo e LocalFriendCodeSeed verranno rimossi da Azahar.</li><li>La tua lista amici verrà reimpostata e verrai disconnesso dal tuo account NNID/PNID.</li><li>I file di sistema e i titoli eshop ottenuti tramite Azahar diventeranno inaccessibili finché la stessa console non verrà nuovamente collegata tramite lo strumento di configurazione (i dati di salvataggio non andranno persi).</li></ul><br>Continuare?]]></string>
     <string name="setup_system_files_o3ds">Setup Old 3DS</string>
@@ -553,8 +553,6 @@ Divertiti usando l\'emulatore!</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparazione degli shader</string>
-    <string name="building_shaders">Compilazione degli shader</string>
-
     <!-- About Game Dialog -->
     <string name="play">Riproduci</string>
     <string name="uninstall_cia">Disinstalla applicazione</string>

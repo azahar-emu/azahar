@@ -503,8 +503,6 @@
     <string name="unsupported_encrypted">Nicht unterstützte verschlüsselte Anwendung</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
-    <string name="building_shaders">Shader werden erstellt</string>
-
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
     <string name="uninstall_cia">Anwendung deinstallieren</string>

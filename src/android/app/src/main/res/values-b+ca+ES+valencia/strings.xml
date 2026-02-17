@@ -511,8 +511,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="unsupported_encrypted">Aplicació cifrada no suportada</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparant ombrejadors</string>
-    <string name="building_shaders">Construint ombrejadors</string>
-
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
     <string name="uninstall_cia">Desinstal·lar Aplicació</string>
