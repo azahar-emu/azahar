@@ -144,24 +144,59 @@ void PipelineCache::BuildLayout() {
 }
 
 PipelineCache::~PipelineCache() {
-    SaveDiskCache();
+    workers.WaitForRequests();
+    SaveDriverPipelineDiskCache();
 }
 
-void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
-                                          const VideoCore::DiskResourceLoadCallback& callback) {
+void PipelineCache::LoadCache(const std::atomic_bool& stop_loading,
+                              const VideoCore::DiskResourceLoadCallback& callback) {
+    LoadDriverPipelineDiskCache(stop_loading, callback);
+    LoadDiskCache(stop_loading, callback);
+}
+
+void PipelineCache::SwitchCache(u64 title_id, const std::atomic_bool& stop_loading,
+                                const VideoCore::DiskResourceLoadCallback& callback) {
+    if (GetProgramID() == title_id) {
+        LOG_DEBUG(Render_Vulkan,
+                  "Skipping pipeline cache switch - already using cache for title_id={:016X}",
+                  title_id);
+        return;
+    }
+
+    // Make sure we have a valid pipeline cache before switching
+    if (!driver_pipeline_cache) {
+        vk::PipelineCacheCreateInfo cache_info{};
+        try {
+            driver_pipeline_cache = instance.GetDevice().createPipelineCacheUnique(cache_info);
+        } catch (const vk::SystemError& err) {
+            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
+            return;
+        }
+    }
+
+    LOG_INFO(Render_Vulkan, "Switching pipeline cache to title_id={:016X}", title_id);
+
+    // Save current driver cache, update program ID and load the new driver cache
+    SaveDriverPipelineDiskCache();
+    SetProgramID(title_id);
+    LoadDriverPipelineDiskCache(stop_loading, nullptr);
+
+    // Switch the disk shader cache after driver cache is switched
+    SwitchDiskCache(title_id, stop_loading, callback);
+}
+
+void PipelineCache::LoadDriverPipelineDiskCache(
+    const std::atomic_bool& stop_loading, const VideoCore::DiskResourceLoadCallback& callback) {
     vk::PipelineCacheCreateInfo cache_info{};
 
-    if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
-    }
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
     }
 
-    auto load_cache = [this, &cache_info](bool allow_fallback) {
+    auto load_cache = [this, &cache_info, &callback](bool allow_fallback) {
         const vk::Device device = instance.GetDevice();
         try {
-            pipeline_cache = device.createPipelineCacheUnique(cache_info);
+            driver_pipeline_cache = device.createPipelineCacheUnique(cache_info);
         } catch (const vk::SystemError& err) {
             LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
             if (allow_fallback) {
@@ -169,12 +204,15 @@ void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
                 cache_info.initialDataSize = 0;
                 cache_info.pInitialData = nullptr;
                 try {
-                    pipeline_cache = device.createPipelineCacheUnique(cache_info);
+                    driver_pipeline_cache = device.createPipelineCacheUnique(cache_info);
                 } catch (const vk::SystemError& err) {
                     LOG_ERROR(Render_Vulkan, "Failed to create fallback pipeline cache: {}",
                               err.what());
                 }
             }
+        }
+        if (callback) {
+            callback(VideoCore::LoadCallbackStage::Build, 1, 1, "Driver Pipeline Cache");
         }
     };
 
@@ -226,19 +264,9 @@ void PipelineCache::LoadPipelineDiskCache(const std::atomic_bool& stop_loading,
     load_cache(true);
 }
 
-void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
-                                  const VideoCore::DiskResourceLoadCallback& callback) {
-
-    disk_caches.clear();
-    curr_disk_cache =
-        disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, GetProgramID()));
-
-    curr_disk_cache->Init(stop_loading, callback);
-}
-
-void PipelineCache::SaveDiskCache() {
+void PipelineCache::SaveDriverPipelineDiskCache() {
     // Save Vulkan pipeline cache
-    if (!Settings::values.use_disk_shader_cache || !pipeline_cache) {
+    if (!Settings::values.use_disk_shader_cache || !driver_pipeline_cache) {
         return;
     }
 
@@ -258,10 +286,78 @@ void PipelineCache::SaveDiskCache() {
     }
 
     const vk::Device device = instance.GetDevice();
-    const auto cache_data = device.getPipelineCacheData(*pipeline_cache);
+    const auto cache_data = device.getPipelineCacheData(*driver_pipeline_cache);
     if (cache_file.WriteBytes(cache_data.data(), cache_data.size()) != cache_data.size()) {
         LOG_ERROR(Render_Vulkan, "Error during pipeline cache write");
         return;
+    }
+}
+
+void PipelineCache::LoadDiskCache(const std::atomic_bool& stop_loading,
+                                  const VideoCore::DiskResourceLoadCallback& callback) {
+
+    disk_caches.clear();
+    curr_disk_cache =
+        disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, GetProgramID()));
+
+    curr_disk_cache->Init(stop_loading, callback);
+}
+
+void PipelineCache::SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
+                                    const VideoCore::DiskResourceLoadCallback& callback) {
+    // NOTE: curr_disk_cache can be null if emulation restarted without calling
+    // LoadDefaultDiskResources
+
+    // Check if the current cache is for the specified TID.
+    if (curr_disk_cache && curr_disk_cache->GetProgramID() == title_id) {
+        return;
+    }
+
+    // Search for an existing manager
+    size_t new_pos = 0;
+    for (new_pos = 0; new_pos < disk_caches.size(); new_pos++) {
+        if (disk_caches[new_pos]->GetProgramID() == title_id) {
+            break;
+        }
+    }
+    // Manager does not exist, create it and append to the end
+    if (new_pos >= disk_caches.size()) {
+        new_pos = disk_caches.size();
+        auto& new_manager =
+            disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, title_id));
+
+        new_manager->Init(stop_loading, callback);
+    }
+
+    auto is_applet = [](u64 tid) {
+        constexpr u32 APPLET_TID_HIGH = 0x00040030;
+        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
+    };
+
+    bool prev_applet = curr_disk_cache ? is_applet(curr_disk_cache->GetProgramID()) : false;
+    bool new_applet = is_applet(disk_caches[new_pos]->GetProgramID());
+    curr_disk_cache = disk_caches[new_pos];
+
+    if (prev_applet) {
+        // If we came from an applet, clean up all other applets
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache ||
+                !is_applet((*it)->GetProgramID())) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
+    }
+    if (!new_applet) {
+        // If we are going into a non-applet, clean up everything
+        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
+            if (it == disk_caches.begin() || *it == curr_disk_cache) {
+                it++;
+                continue;
+            }
+            it = disk_caches.erase(it);
+        }
     }
 }
 
@@ -549,114 +645,6 @@ std::string PipelineCache::GetPipelineCacheDir() const {
 
 std::string PipelineCache::GetTransferableDir() const {
     return GetVulkanDir() + DIR_SEP + "transferable";
-}
-
-void PipelineCache::SwitchPipelineCache(u64 title_id, const std::atomic_bool& stop_loading,
-                                        const VideoCore::DiskResourceLoadCallback& callback) {
-    if (!Settings::values.use_disk_shader_cache || GetProgramID() == title_id) {
-        LOG_DEBUG(Render_Vulkan,
-                  "Skipping pipeline cache switch - already using cache for title_id={:016X}",
-                  title_id);
-        return;
-    }
-
-    if (callback) {
-        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
-    }
-    if (callback) {
-        callback(VideoCore::LoadCallbackStage::Build, 0, 1, "Driver Pipeline Cache");
-    }
-
-    // Make sure we have a valid pipeline cache before switching
-    if (!pipeline_cache) {
-        vk::PipelineCacheCreateInfo cache_info{};
-        try {
-            pipeline_cache = instance.GetDevice().createPipelineCacheUnique(cache_info);
-        } catch (const vk::SystemError& err) {
-            LOG_ERROR(Render_Vulkan, "Failed to create pipeline cache: {}", err.what());
-            return;
-        }
-    }
-
-    LOG_INFO(Render_Vulkan, "Switching pipeline cache to title_id={:016X}", title_id);
-
-    // Save current cache before switching
-    SaveDiskCache();
-
-    // Update program ID and load the new pipeline cache
-    SetProgramID(title_id);
-    LoadPipelineDiskCache(stop_loading, nullptr);
-    SwitchDiskCache(title_id, stop_loading, callback);
-
-    if (callback) {
-        callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
-    }
-}
-
-void PipelineCache::SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
-                                    const VideoCore::DiskResourceLoadCallback& callback) {
-    // NOTE: curr_disk_cache can be null if emulation restarted without calling
-    // LoadDefaultDiskResources
-
-    // Check if the current cache is for the specified TID.
-    if (curr_disk_cache && curr_disk_cache->GetProgramID() == title_id) {
-        return;
-    }
-
-    // Search for an existing manager
-    size_t new_pos = 0;
-    for (new_pos = 0; new_pos < disk_caches.size(); new_pos++) {
-        if (disk_caches[new_pos]->GetProgramID() == title_id) {
-            break;
-        }
-    }
-    // Manager does not exist, create it and append to the end
-    if (new_pos >= disk_caches.size()) {
-        new_pos = disk_caches.size();
-        auto& new_manager =
-            disk_caches.emplace_back(std::make_shared<ShaderDiskCache>(*this, title_id));
-
-        if (callback) {
-            callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
-        }
-
-        new_manager->Init(stop_loading, callback);
-
-        if (callback) {
-            callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
-        }
-    }
-
-    auto is_applet = [](u64 tid) {
-        constexpr u32 APPLET_TID_HIGH = 0x00040030;
-        return static_cast<u32>(tid >> 32) == APPLET_TID_HIGH;
-    };
-
-    bool prev_applet = curr_disk_cache ? is_applet(curr_disk_cache->GetProgramID()) : false;
-    bool new_applet = is_applet(disk_caches[new_pos]->GetProgramID());
-    curr_disk_cache = disk_caches[new_pos];
-
-    if (prev_applet) {
-        // If we came from an applet, clean up all other applets
-        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
-            if (it == disk_caches.begin() || *it == curr_disk_cache ||
-                !is_applet((*it)->GetProgramID())) {
-                it++;
-                continue;
-            }
-            it = disk_caches.erase(it);
-        }
-    }
-    if (!new_applet) {
-        // If we are going into a non-applet, clean up everything
-        for (auto it = disk_caches.begin(); it != disk_caches.end();) {
-            if (it == disk_caches.begin() || *it == curr_disk_cache) {
-                it++;
-                continue;
-            }
-            it = disk_caches.erase(it);
-        }
-    }
 }
 
 } // namespace Vulkan

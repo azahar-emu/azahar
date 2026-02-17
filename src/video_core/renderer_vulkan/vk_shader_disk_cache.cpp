@@ -59,6 +59,9 @@ static VideoCore::DiskResourceLoadCallback MakeThrottledCallback(
 void ShaderDiskCache::Init(const std::atomic_bool& stop_loading,
                            const VideoCore::DiskResourceLoadCallback& callback) {
 
+    if (!Settings::values.use_disk_shader_cache)
+        return;
+
     auto new_callback = MakeThrottledCallback(callback);
 
     if (!stop_loading && !InitVSCache(stop_loading, new_callback)) {
@@ -248,7 +251,7 @@ GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
             parent.UseTrivialGeometryShader();
         }
         it.value() = std::make_unique<GraphicsPipeline>(
-            parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
+            parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
             *parent.pipeline_layout, parent.current_shaders, &parent.workers);
     }
 
@@ -339,86 +342,129 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) 
 }
 
 size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
-    if (biggest_entry_id != SIZE_MAX) {
-        return biggest_entry_id + 1;
+    if (!file.IsGood()) {
+        next_entry_id = SIZE_MAX;
+        return next_entry_id;
+    }
+
+    if (next_entry_id != SIZE_MAX) {
+        return next_entry_id;
     }
 
     const size_t file_size = file.GetSize();
+    if (file_size == 0) {
+        next_entry_id = 0;
+        return next_entry_id;
+    }
+
     CacheEntry::CacheEntryFooter footer{};
 
     if (file.ReadAtArray(&footer, 1, file_size - sizeof(footer)) == sizeof(footer) &&
         footer.version == CacheEntry::CacheEntryFooter::ENTRY_VERSION) {
-        biggest_entry_id = footer.entry_id;
+        next_entry_id = footer.entry_id + 1;
+    } else {
+        return SIZE_MAX;
     }
 
-    return biggest_entry_id + 1;
+    return next_entry_id;
 }
 
-bool ShaderDiskCache::CacheFile::Append(CacheEntryType type, u64 id, std::span<const u8> data,
+void ShaderDiskCache::CacheFile::Append(CacheEntryType type, u64 id, std::span<const u8> data,
                                         bool compress) {
-    std::scoped_lock lock(mutex);
-
-    std::span<const u8> data_final;
-    std::vector<u8> data_compress;
-
-    CacheEntry::CacheEntryHeader header{};
-    CacheEntry::CacheEntryFooter footer{};
-
-    constexpr u32 headers_size =
-        sizeof(CacheEntry::CacheEntryHeader) + sizeof(CacheEntry::CacheEntryFooter);
-
-    if (compress) {
-        data_compress = Common::Compression::CompressDataZSTDDefault(data);
-        data_final = data_compress;
-        header.zstd_compressed.Assign(true);
-    } else {
-        data_final = data;
+    if (curr_mode != CacheOpMode::APPEND) {
+        return;
     }
-    header.entry_version = CacheEntry::CacheEntryHeader::ENTRY_VERSION;
-    footer.version.Assign(CacheEntry::CacheEntryFooter::ENTRY_VERSION);
-    header.entry_size = footer.entry_size = data_final.size() + headers_size;
-    footer.entry_id.Assign(biggest_entry_id++);
 
-    header.type = type;
-    header.id = id;
+    std::vector<u8> copy_data(data.begin(), data.end());
 
-    std::vector<u8> out_data(data_final.size() + headers_size);
-    memcpy(out_data.data(), &header, sizeof(header));
-    memcpy(out_data.data() + sizeof(header), data_final.data(), data_final.size());
-    memcpy(out_data.data() + sizeof(header) + data_final.size(), &footer, sizeof(footer));
+    append_worker.QueueWork([this, type, id, compress, data = std::move(copy_data)]() {
+        if (next_entry_id == SIZE_MAX || !file.IsGood()) {
+            return;
+        }
 
-    return file.WriteBytes(out_data.data(), out_data.size()) == out_data.size();
+        std::span<const u8> data_final;
+        std::vector<u8> data_compress;
+
+        CacheEntry::CacheEntryHeader header{};
+        CacheEntry::CacheEntryFooter footer{};
+
+        constexpr u32 headers_size =
+            sizeof(CacheEntry::CacheEntryHeader) + sizeof(CacheEntry::CacheEntryFooter);
+
+        if (compress) {
+            data_compress = Common::Compression::CompressDataZSTDDefault(data);
+            data_final = data_compress;
+            header.zstd_compressed.Assign(true);
+        } else {
+            data_final = data;
+        }
+        header.entry_version = CacheEntry::CacheEntryHeader::ENTRY_VERSION;
+        footer.version.Assign(CacheEntry::CacheEntryFooter::ENTRY_VERSION);
+        header.entry_size = footer.entry_size = data_final.size() + headers_size;
+        footer.entry_id.Assign(next_entry_id++);
+
+        header.type = type;
+        header.id = id;
+
+        std::vector<u8> out_data(data_final.size() + headers_size);
+        memcpy(out_data.data(), &header, sizeof(header));
+        memcpy(out_data.data() + sizeof(header), data_final.data(), data_final.size());
+        memcpy(out_data.data() + sizeof(header) + data_final.size(), &footer, sizeof(footer));
+
+        file.WriteBytes(out_data.data(), out_data.size());
+        if (file.IsGood()) {
+            file.Flush();
+        }
+    });
 }
 
 bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
+    if (curr_mode == mode) {
+        return true;
+    }
+    if (curr_mode == CacheOpMode::APPEND) {
+        append_worker.WaitForRequests();
+    }
+
     switch (mode) {
     case CacheOpMode::READ: {
+        next_entry_id = SIZE_MAX; // Force reading entries agains
         file = FileUtil::IOFile(filepath, "rb");
-        bool is_open = file.IsOpen();
+        bool is_open = file.IsGood();
         if (is_open) {
             GetTotalEntries();
         }
+        curr_mode = mode;
         return is_open;
     }
     case CacheOpMode::APPEND: {
-        GetTotalEntries();
+        if (!SwitchMode(CacheOpMode::READ)) {
+            curr_mode = mode;
+            return false;
+        }
         file.Close();
-        if (biggest_entry_id == SIZE_MAX) {
+        curr_mode = mode;
+        if (next_entry_id == SIZE_MAX) {
             // Cannot append if getting total items fails
             return false;
         }
 
         file = FileUtil::IOFile(filepath, "ab");
-        return file.IsOpen();
+        return file.IsGood();
     }
     case CacheOpMode::DELETE: {
-        biggest_entry_id = 0;
+        next_entry_id = SIZE_MAX;
         file.Close();
-        FileUtil::Delete(filepath);
-        return true;
+        curr_mode = mode;
+        return FileUtil::Delete(filepath);
     }
     case CacheOpMode::RECREATE: {
-        SwitchMode(CacheOpMode::DELETE);
+        if (!SwitchMode(CacheOpMode::DELETE)) {
+            return false;
+        }
+        if (!FileUtil::CreateEmptyFile(filepath)) {
+            return false;
+        }
         return SwitchMode(CacheOpMode::APPEND);
     }
     default:
@@ -827,8 +873,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
     }
 
     // Switch to append mode to receive new entries.
-    vs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
-    return true;
+    return vs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
 }
 
 bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
@@ -1045,8 +1090,7 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
     }
 
     // Switch to append mode to receive new entries.
-    fs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
-    return true;
+    return fs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
 }
 
 bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
@@ -1272,8 +1316,7 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
     }
 
     // Switch to append mode to receive new entries.
-    gs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
-    return true;
+    return gs_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
 }
 
 bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
@@ -1400,7 +1443,7 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
 
             auto [it_pl, _] = graphics_pipelines.try_emplace(pl_hash_opt);
             it_pl.value() = std::make_unique<GraphicsPipeline>(
-                parent.instance, parent.renderpass_cache, info, *parent.pipeline_cache,
+                parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
                 *parent.pipeline_layout, shaders, &parent.workers);
 
             it_pl.value()->TryBuild(false);
@@ -1413,11 +1456,10 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
     }
 
     // Switch to append mode to receive new entries.
-    pl_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
-    return true;
+    return pl_cache.SwitchMode(CacheFile::CacheOpMode::APPEND);
 }
 
-bool ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
+void ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
                                             const Pica::Shader::Generator::PicaVSConfig& config,
                                             const Pica::ShaderSetup& setup, u64 config_id,
                                             u64 spirv_id) {
@@ -1430,7 +1472,6 @@ bool ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
         Common::HashCombine(config.state.program_hash, config.state.swizzle_hash);
 
     bool new_entry = known_vertex_programs.emplace(entry.program_entry_id).second;
-    bool prog_res = true;
     if (new_entry) {
         std::unique_ptr<VSProgramEntry> prog_entry = std::make_unique<VSProgramEntry>();
         prog_entry->version = VSProgramEntry::EXPECTED_VERSION;
@@ -1439,49 +1480,46 @@ bool ShaderDiskCache::AppendVSConfigProgram(CacheFile& file,
         prog_entry->swizzle_len = setup.GetBiggestSwizzleSize();
         prog_entry->swizzle_code = setup.GetSwizzleData();
 
-        prog_res = AppendVSProgram(file, *prog_entry, entry.program_entry_id);
+        AppendVSProgram(file, *prog_entry, entry.program_entry_id);
     }
 
-    return AppendVSConfig(file, entry, config_id) && prog_res;
+    AppendVSConfig(file, entry, config_id);
 }
 
-bool ShaderDiskCache::AppendVSProgram(CacheFile& file, const VSProgramEntry& entry,
+void ShaderDiskCache::AppendVSProgram(CacheFile& file, const VSProgramEntry& entry,
                                       u64 program_id) {
-    return file.Append(CacheEntryType::VS_PROGRAM, program_id, entry, true);
+    file.Append(CacheEntryType::VS_PROGRAM, program_id, entry, true);
 }
 
-bool ShaderDiskCache::AppendVSConfig(CacheFile& file, const VSConfigEntry& entry, u64 config_id) {
-    return file.Append(CacheEntryType::VS_CONFIG, config_id, entry, true);
+void ShaderDiskCache::AppendVSConfig(CacheFile& file, const VSConfigEntry& entry, u64 config_id) {
+    file.Append(CacheEntryType::VS_CONFIG, config_id, entry, true);
 }
 
-bool ShaderDiskCache::AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
-    return file.Append(CacheEntryType::VS_SPIRV, program_id,
-                       {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
-                       true);
+void ShaderDiskCache::AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
+    file.Append(CacheEntryType::VS_SPIRV, program_id,
+                {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)}, true);
 }
 
-bool ShaderDiskCache::AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id) {
-    return file.Append(CacheEntryType::FS_CONFIG, config_id, entry, true);
+void ShaderDiskCache::AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id) {
+    file.Append(CacheEntryType::FS_CONFIG, config_id, entry, true);
 }
 
-bool ShaderDiskCache::AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
-    return file.Append(CacheEntryType::FS_SPIRV, program_id,
-                       {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
-                       true);
+void ShaderDiskCache::AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
+    file.Append(CacheEntryType::FS_SPIRV, program_id,
+                {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)}, true);
 }
 
-bool ShaderDiskCache::AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id) {
-    return file.Append(CacheEntryType::GS_CONFIG, config_id, entry, true);
+void ShaderDiskCache::AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id) {
+    file.Append(CacheEntryType::GS_CONFIG, config_id, entry, true);
 }
 
-bool ShaderDiskCache::AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
-    return file.Append(CacheEntryType::GS_SPIRV, program_id,
-                       {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)},
-                       true);
+void ShaderDiskCache::AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id) {
+    file.Append(CacheEntryType::GS_SPIRV, program_id,
+                {reinterpret_cast<const u8*>(program.data()), program.size() * sizeof(u32)}, true);
 }
 
-bool ShaderDiskCache::AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id) {
-    return file.Append(CacheEntryType::PL_CONFIG, config_id, entry, true);
+void ShaderDiskCache::AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id) {
+    file.Append(CacheEntryType::PL_CONFIG, config_id, entry, true);
 }
 
 } // namespace Vulkan

@@ -183,8 +183,7 @@ private:
     bool Open() override;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;
@@ -250,8 +249,7 @@ private:
     bool Open() override;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;

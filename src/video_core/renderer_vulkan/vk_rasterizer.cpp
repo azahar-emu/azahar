@@ -152,10 +152,13 @@ void RasterizerVulkan::LoadDefaultDiskResources(
         program_id = 0;
     }
 
+    if (callback) {
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+    }
+
     pipeline_cache.SetProgramID(program_id);
     pipeline_cache.SetAccurateMul(accurate_mul);
-    pipeline_cache.LoadPipelineDiskCache(stop_loading, callback);
-    pipeline_cache.LoadDiskCache(stop_loading, callback);
+    pipeline_cache.LoadCache(stop_loading, callback);
 
     if (callback) {
         callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
@@ -985,8 +988,17 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
 
 void RasterizerVulkan::SwitchDiskResources(u64 title_id) {
     std::atomic_bool stop_loading = false;
+
+    if (switch_disk_resources_callback) {
+        switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+    }
+
     pipeline_cache.SetAccurateMul(accurate_mul);
-    pipeline_cache.SwitchPipelineCache(title_id, stop_loading, switch_disk_resources_callback);
+    pipeline_cache.SwitchCache(title_id, stop_loading, switch_disk_resources_callback);
+
+    if (switch_disk_resources_callback) {
+        switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
 }
 
 } // namespace Vulkan

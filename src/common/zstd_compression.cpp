@@ -357,8 +357,7 @@ std::size_t Z3DSWriteIOFile::ReadImpl(void* data, std::size_t length, std::size_
     return 0;
 }
 
-std::size_t Z3DSWriteIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                        std::size_t offset) {
+std::size_t Z3DSWriteIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
     // Stubbed
     UNIMPLEMENTED();
     return 0;
@@ -619,12 +618,12 @@ bool Z3DSReadIOFile::Open() {
 }
 
 std::size_t Z3DSReadIOFile::ReadImpl(void* data, std::size_t length, std::size_t data_size) {
-    return impl->Read(data, length * data_size);
+    size_t res = impl->Read(data, length * data_size);
+    return res == std::numeric_limits<size_t>::max() ? res : (res / data_size);
 }
 
-std::size_t Z3DSReadIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                       std::size_t offset) {
-    return impl->ReadAt(data, length * data_size, offset);
+std::size_t Z3DSReadIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
+    return impl->ReadAt(data, byte_count, offset);
 }
 
 std::size_t Z3DSReadIOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
