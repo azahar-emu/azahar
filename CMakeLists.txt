@@ -223,7 +223,7 @@ function(check_submodules_present)
     foreach(module ${gitmodules})
         string(REGEX REPLACE "path *= *" "" module ${module})
         if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${module}/.git")
-            message(SEND_ERROR "Git submodule ${module} not found."
+            message(SEND_ERROR "Git submodule ${module} not found.\n"
                     "Please run: git submodule update --init --recursive")
         endif()
     endforeach()
