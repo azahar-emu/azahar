@@ -11,6 +11,7 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/thread_worker.h"
 #include "video_core/pica/shader_setup.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
@@ -241,6 +242,7 @@ private:
     class CacheFile {
     public:
         enum class CacheOpMode {
+            NONE = 0,
             READ,
             APPEND,
             DELETE,
@@ -249,6 +251,9 @@ private:
 
         CacheFile() = default;
         CacheFile(const std::string& _filepath) : filepath(_filepath) {}
+        ~CacheFile() {
+            append_worker.WaitForRequests();
+        }
 
         void SetFilePath(const std::string& path) {
             filepath = path;
@@ -268,24 +273,25 @@ private:
         size_t GetTotalEntries();
 
         template <typename T>
-        bool Append(CacheEntryType type, u64 id, const T& object, bool compress) {
+        void Append(CacheEntryType type, u64 id, const T& object, bool compress) {
             static_assert(std::is_trivially_copyable_v<T>);
 
             auto bytes = std::as_bytes(std::span{&object, 1});
             auto u8_span =
                 std::span<const u8>(reinterpret_cast<const u8*>(bytes.data()), bytes.size());
-            return Append(type, id, u8_span, compress);
+            Append(type, id, u8_span, compress);
         }
 
-        bool Append(CacheEntryType type, u64 id, std::span<const u8> data, bool compress);
+        void Append(CacheEntryType type, u64 id, std::span<const u8> data, bool compress);
 
         bool SwitchMode(CacheOpMode mode);
 
     private:
+        CacheOpMode curr_mode = CacheOpMode::NONE;
         std::string filepath;
-        std::mutex mutex;
         FileUtil::IOFile file{};
-        size_t biggest_entry_id = SIZE_MAX;
+        std::atomic<size_t> next_entry_id = SIZE_MAX;
+        Common::ThreadWorker append_worker{1, "Disk Shader Cache Append Worker"};
     };
 
     std::string GetVSFile(u64 title_id, bool is_temp) const;
@@ -307,19 +313,19 @@ private:
     bool InitPLCache(const std::atomic_bool& stop_loading,
                      const VideoCore::DiskResourceLoadCallback& callback);
 
-    bool AppendVSConfigProgram(CacheFile& file, const Pica::Shader::Generator::PicaVSConfig& config,
+    void AppendVSConfigProgram(CacheFile& file, const Pica::Shader::Generator::PicaVSConfig& config,
                                const Pica::ShaderSetup& setup, u64 config_id, u64 program_id);
-    bool AppendVSProgram(CacheFile& file, const VSProgramEntry& entry, u64 program_id);
-    bool AppendVSConfig(CacheFile& file, const VSConfigEntry& entry, u64 config_id);
-    bool AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
+    void AppendVSProgram(CacheFile& file, const VSProgramEntry& entry, u64 program_id);
+    void AppendVSConfig(CacheFile& file, const VSConfigEntry& entry, u64 config_id);
+    void AppendVSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
 
-    bool AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id);
-    bool AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
+    void AppendFSConfig(CacheFile& file, const FSConfigEntry& entry, u64 config_id);
+    void AppendFSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
 
-    bool AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id);
-    bool AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
+    void AppendGSConfig(CacheFile& file, const GSConfigEntry& entry, u64 config_id);
+    void AppendGSSPIRV(CacheFile& file, std::span<const u32> program, u64 program_id);
 
-    bool AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id);
+    void AppendPLConfig(CacheFile& file, const PLConfigEntry& entry, u64 config_id);
 
     CacheFile vs_cache;
     CacheFile fs_cache;

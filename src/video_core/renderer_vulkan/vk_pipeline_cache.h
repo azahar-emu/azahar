@@ -58,15 +58,13 @@ public:
         offsets[binding] = offset;
     }
 
-    /// Loads the pipeline cache stored to disk
-    void LoadPipelineDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
-                               const VideoCore::DiskResourceLoadCallback& callback = {});
+    /// Loads the driver pipeline cache and the disk shader cache
+    void LoadCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                   const VideoCore::DiskResourceLoadCallback& callback = {});
 
-    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
-                       const VideoCore::DiskResourceLoadCallback& callback = {});
-
-    /// Stores the generated pipeline cache to disk
-    void SaveDiskCache();
+    /// Switches the driver pipeline cache and the shader disk cache to the specified title
+    void SwitchCache(u64 title_id, const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                     const VideoCore::DiskResourceLoadCallback& callback = {});
 
     /// Binds a pipeline using the provided information
     bool BindPipeline(PipelineInfo& info, bool wait_built = false);
@@ -90,11 +88,6 @@ public:
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
-    /// Switches the shader disk cache to the specified title
-    void SwitchPipelineCache(u64 title_id,
-                             const std::atomic_bool& stop_loading = std::atomic_bool{false},
-                             const VideoCore::DiskResourceLoadCallback& callback = {});
-
     /// Gets the current program ID
     u64 GetProgramID() const {
         return current_program_id;
@@ -110,6 +103,17 @@ public:
 
 private:
     friend ShaderDiskCache;
+
+    /// Loads the driver pipeline cache
+    void LoadDriverPipelineDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                                     const VideoCore::DiskResourceLoadCallback& callback = {});
+
+    /// Stores the generated pipeline cache
+    void SaveDriverPipelineDiskCache();
+
+    /// Loads the shader disk cache
+    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                       const VideoCore::DiskResourceLoadCallback& callback = {});
 
     /// Switches the disk cache at runtime to use a different title ID
     void SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
@@ -140,7 +144,7 @@ private:
     DescriptorUpdateQueue& update_queue;
 
     Pica::Shader::Profile profile{};
-    vk::UniquePipelineCache pipeline_cache;
+    vk::UniquePipelineCache driver_pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
     std::size_t num_worker_threads;
     Common::ThreadWorker workers;
