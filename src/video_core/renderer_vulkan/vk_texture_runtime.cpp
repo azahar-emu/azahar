@@ -167,6 +167,7 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
                     vk::Format format, vk::ImageUsageFlags usage, vk::ImageCreateFlags flags,
                     vk::ImageAspectFlags aspect, bool need_format_list,
                     std::string_view debug_name) {
+    this->instance = instance;
     this->width = width;
     this->height = height;
     this->levels = levels;
@@ -237,6 +238,44 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
         SetObjectName(instance->GetDevice(), image_views[ViewType::Sample], "{} View({})",
                       debug_name, vk::to_string(aspect));
     }
+}
+
+void Handle::Destroy() {
+    if (!allocation || !instance) {
+        return;
+    }
+
+    const auto device = instance->GetDevice();
+    const auto allocator = instance->GetAllocator();
+
+    // Image views
+    if (auto view = image_views[ViewType::Sample]) {
+        device.destroyImageView(view);
+    }
+    if (auto view = image_views[ViewType::Mip0]; view && view != image_views[ViewType::Sample]) {
+        device.destroyImageView(view);
+    }
+    if (auto view = image_views[ViewType::Storage]) {
+        device.destroyImageView(view);
+    }
+    if (auto view = image_views[ViewType::Depth]) {
+        device.destroyImageView(view);
+    }
+    if (auto view = image_views[ViewType::Stencil]) {
+        device.destroyImageView(view);
+    }
+
+    image_views = {};
+
+    if (framebuffer) {
+        device.destroyFramebuffer(framebuffer);
+        framebuffer = VK_NULL_HANDLE;
+    }
+
+    vmaDestroyImage(allocator, image, allocation);
+
+    image = VK_NULL_HANDLE;
+    allocation = VK_NULL_HANDLE;
 }
 
 TextureRuntime::TextureRuntime(const Instance& instance, Scheduler& scheduler,
@@ -794,36 +833,6 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
 
     custom_format = mat->format;
     material = mat;
-}
-
-Surface::~Surface() {
-    const auto device = instance->GetDevice();
-    for (const auto& handle : handles) {
-        if (!handle) {
-            continue;
-        }
-        vmaDestroyImage(instance->GetAllocator(), handle.image, handle.allocation);
-        auto& image_views = handle.image_views;
-        if (auto image_view = image_views[ViewType::Sample]) {
-            device.destroyImageView(image_view);
-        }
-        if (auto image_view = image_views[ViewType::Mip0];
-            image_view && image_view != image_views[ViewType::Sample]) {
-            device.destroyImageView(image_view);
-        }
-        if (auto image_view = image_views[ViewType::Storage]) {
-            device.destroyImageView(image_view);
-        }
-        if (auto image_view = image_views[ViewType::Depth]) {
-            device.destroyImageView(image_view);
-        }
-        if (auto image_view = image_views[ViewType::Stencil]) {
-            device.destroyImageView(image_view);
-        }
-        if (handle.framebuffer) {
-            device.destroyFramebuffer(handle.framebuffer);
-        }
-    }
 }
 
 void Surface::Upload(const VideoCore::BufferTextureCopy& upload,

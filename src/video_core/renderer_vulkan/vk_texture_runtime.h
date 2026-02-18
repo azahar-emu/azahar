@@ -46,19 +46,31 @@ enum ViewType {
 struct Handle {
     explicit Handle() = default;
 
-    Handle(Handle&& other)
-        : allocation{std::exchange(other.allocation, VK_NULL_HANDLE)}, image{other.image},
-          image_views{other.image_views}, framebuffer{other.framebuffer}, width{other.width},
-          height{other.height}, levels{other.levels}, layers{other.layers} {}
-    Handle& operator=(Handle&& other) {
+    ~Handle() {
+        Destroy();
+    }
+
+    Handle(Handle&& other) noexcept
+        : allocation(std::exchange(other.allocation, VK_NULL_HANDLE)),
+          image(std::exchange(other.image, VK_NULL_HANDLE)),
+          image_views(std::exchange(other.image_views, {})),
+          framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
+          width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
+          levels(std::exchange(other.levels, 0)), layers(std::exchange(other.layers, 0)) {}
+
+    Handle& operator=(Handle&& other) noexcept {
+        if (this == &other)
+            return *this;
+
         allocation = std::exchange(other.allocation, VK_NULL_HANDLE);
-        image = other.image;
-        image_views = other.image_views;
-        framebuffer = other.framebuffer;
-        width = other.width;
-        height = other.height;
-        levels = other.levels;
-        layers = other.layers;
+        image = std::exchange(other.image, VK_NULL_HANDLE);
+        image_views = std::exchange(other.image_views, {});
+        framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);
+        width = std::exchange(other.width, 0);
+        height = std::exchange(other.height, 0);
+        levels = std::exchange(other.levels, 0);
+        layers = std::exchange(other.layers, 0);
+
         return *this;
     }
 
@@ -67,18 +79,22 @@ struct Handle {
                 vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect, bool need_format_list,
                 std::string_view debug_name = {});
 
+    void Destroy();
+
     operator bool() const {
         return allocation;
     }
 
-    VmaAllocation allocation{};
-    vk::Image image{};
+    const Instance* instance{nullptr};
+
+    VmaAllocation allocation{VK_NULL_HANDLE};
+    vk::Image image{VK_NULL_HANDLE};
     std::array<vk::ImageView, ViewType::Max> image_views{};
-    vk::Framebuffer framebuffer{};
-    u32 width;
-    u32 height;
-    u32 levels;
-    u32 layers;
+    vk::Framebuffer framebuffer{VK_NULL_HANDLE};
+    u32 width{};
+    u32 height{};
+    u32 levels{};
+    u32 layers{};
 };
 
 /**
@@ -159,9 +175,6 @@ public:
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
-    explicit Surface(TextureRuntime& runtime, u32 width_, u32 height_,
-                     VideoCore::PixelFormat format_);
-    ~Surface();
 
     Surface(const Surface&) = delete;
     Surface& operator=(const Surface&) = delete;
