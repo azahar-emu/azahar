@@ -67,6 +67,7 @@ private:
     std::mutex cache_mutex;
     std::array<vk::Image, 2> images;
     std::array<vk::ImageAspectFlags, 2> aspects;
+    bool shadow_rendering{};
     RenderPass pass{};
     u32 num_draws{};
 };

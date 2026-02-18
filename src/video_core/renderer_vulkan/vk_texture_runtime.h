@@ -203,6 +203,28 @@ public:
     /// Returns a copy of the upscaled image handle, used for feedback loops.
     vk::ImageView CopyImageView() noexcept;
 
+    /// Returns the framebuffer view of the surface image
+    vk::ImageView FramebufferView() noexcept {
+        is_framebuffer = true;
+        return ImageView(ViewType::Mip0);
+    }
+
+    /// Returns the depth view of the surface image
+    vk::ImageView DepthView() noexcept {
+        return ImageView(ViewType::Depth);
+    }
+
+    /// Returns the stencil view of the surface image
+    vk::ImageView StencilView() noexcept {
+        return ImageView(ViewType::Stencil);
+    }
+
+    /// Returns the R32 image view used for atomic load/store.
+    vk::ImageView StorageView() noexcept {
+        is_storage = true;
+        return ImageView(ViewType::Storage);
+    }
+
     /// Uploads pixel data in staging to a rectangle region of the surface texture
     void Upload(const VideoCore::BufferTextureCopy& upload, const VideoCore::StagingData& staging);
 

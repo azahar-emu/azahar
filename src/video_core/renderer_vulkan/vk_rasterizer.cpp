@@ -131,7 +131,7 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore&
     }
 
     const auto utility_set = pipeline_cache.Acquire(DescriptorHeapType::Utility);
-    update_queue.AddStorageImage(utility_set, 0, null_surface.ImageView(ViewType::Storage));
+    update_queue.AddStorageImage(utility_set, 0, null_surface.StorageView());
     update_queue.AddImageSampler(utility_set, 1, 0, null_surface.ImageView(),
                                  null_sampler.Handle());
     update_queue.Flush();
@@ -648,8 +648,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
                 Surface& surface = res_cache.GetTextureSurface(texture);
                 Sampler& sampler = res_cache.GetSampler(texture.config);
                 surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
-                update_queue.AddImageSampler(texture_set, texture_index, 0,
-                                             surface.ImageView(ViewType::Storage),
+                update_queue.AddImageSampler(texture_set, texture_index, 0, surface.StorageView(),
                                              sampler.Handle());
                 continue;
             }
@@ -670,7 +669,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
         Surface& surface = res_cache.GetTextureSurface(texture);
         Sampler& sampler = res_cache.GetSampler(texture.config);
         const vk::ImageView color_view = framebuffer->ImageView(SurfaceType::Color);
-        const bool is_feedback_loop = color_view == surface.ImageView();
+        const bool is_feedback_loop = color_view == surface.FramebufferView();
         const vk::ImageView texture_view =
             is_feedback_loop ? surface.CopyImageView() : surface.ImageView();
         update_queue.AddImageSampler(texture_set, texture_index, 0, texture_view, sampler.Handle());
@@ -705,7 +704,7 @@ void RasterizerVulkan::BindShadowCube(const Pica::TexturingRegs::FullTextureConf
         const VideoCore::SurfaceId surface_id = res_cache.GetTextureSurface(info);
         Surface& surface = res_cache.GetSurface(surface_id);
         surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
-        update_queue.AddImageSampler(texture_set, 0, binding, surface.ImageView(ViewType::Storage),
+        update_queue.AddImageSampler(texture_set, 0, binding, surface.StorageView(),
                                      sampler.Handle());
     }
 }

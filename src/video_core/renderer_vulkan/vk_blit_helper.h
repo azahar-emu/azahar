@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
 
@@ -94,6 +96,9 @@ private:
     vk::Pipeline depth_blit_pipeline;
     vk::Sampler linear_sampler;
     vk::Sampler nearest_sampler;
+
+    /// Cache of texture filter pipelines (keyed by shader+layout+format hash)
+    std::unordered_map<std::uint64_t, vk::Pipeline> filter_pipeline_cache;
 };
 
 } // namespace Vulkan

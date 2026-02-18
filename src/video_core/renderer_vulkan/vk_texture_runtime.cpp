@@ -228,6 +228,9 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
         },
     };
     image_views[ViewType::Sample] = instance->GetDevice().createImageView(view_info);
+    if (levels == 1) {
+        image_views[ViewType::Mip0] = image_views[ViewType::Mip0];
+    }
 
     if (!debug_name.empty() && instance->HasDebuggingToolAttached()) {
         SetObjectName(instance->GetDevice(), image, debug_name);
@@ -800,10 +803,22 @@ Surface::~Surface() {
             continue;
         }
         vmaDestroyImage(instance->GetAllocator(), handle.image, handle.allocation);
-        for (auto image_view : handle.image_views) {
-            if (image_view) {
-                device.destroyImageView(image_view);
-            }
+        auto& image_views = handle.image_views;
+        if (auto image_view = image_views[ViewType::Sample]) {
+            device.destroyImageView(image_view);
+        }
+        if (auto image_view = image_views[ViewType::Mip0];
+            image_view && image_view != image_views[ViewType::Sample]) {
+            device.destroyImageView(image_view);
+        }
+        if (auto image_view = image_views[ViewType::Storage]) {
+            device.destroyImageView(image_view);
+        }
+        if (auto image_view = image_views[ViewType::Depth]) {
+            device.destroyImageView(image_view);
+        }
+        if (auto image_view = image_views[ViewType::Stencil]) {
+            device.destroyImageView(image_view);
         }
         if (handle.framebuffer) {
             device.destroyFramebuffer(handle.framebuffer);
@@ -1428,7 +1443,7 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         formats[index] = surface->pixel_format;
         images[index] = surface->Image();
         aspects[index] = surface->Aspect();
-        image_views[index] = surface->ImageView(ViewType::Mip0);
+        image_views[index] = surface->FramebufferView();
     };
 
     if (shadow_rendering) {
@@ -1437,7 +1452,9 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         height = extent.height;
         render_pass =
             renderpass_cache.GetRenderpass(PixelFormat::Invalid, PixelFormat::Invalid, false);
-        image_views[0] = color->ImageView(ViewType::Storage);
+        images[0] = color->Image();
+        image_views[0] = color->StorageView();
+        aspects[0] = vk::ImageAspectFlagBits::eColor;
     } else {
         if (color) {
             prepare(0, color);
