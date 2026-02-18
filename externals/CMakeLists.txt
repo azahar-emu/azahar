@@ -514,4 +514,6 @@ else()
 endif()
 
 # rcheevos
-add_subdirectory(rcheevos)
+if (ENABLE_RETROACHIEVEMENTS)
+    add_subdirectory(rcheevos)
+endif()
