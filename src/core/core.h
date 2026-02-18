@@ -18,6 +18,7 @@
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/movie.h"
 #include "core/perf_stats.h"
+#include "rcheevos_integration/rcheevos_integration.h"
 
 namespace Frontend {
 class EmuWindow;
@@ -438,6 +439,9 @@ private:
 
     /// Cheats manager
     Cheats::CheatEngine cheat_engine;
+
+    /// RetroAchievements
+    RcheevosClient rcheevos_client;
 
     /// Video dumper backend
     std::shared_ptr<VideoDumper::Backend> video_dumper;

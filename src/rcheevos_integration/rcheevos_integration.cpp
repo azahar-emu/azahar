@@ -1,10 +1,14 @@
 #include "rcheevos_integration.h"
 
+#include <cstring>
+#include <string>
+
+#include <httplib.h>
 #include <rc_client.h>
+#include <rc_error.h>
 
 #include "common/logging/log.h"
-
-rc_client_t* g_client = NULL;
+#include "common/scm_rev.h"
 
 // This is the function the rc_client will use to read memory for the emulator. we don't need it yet,
 // so just provide a dummy function that returns "no memory read".
@@ -16,56 +20,34 @@ static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_byte
   return 0;
 }
 
-// // This is the callback function for the asynchronous HTTP call (which is not provided in this example)
-// static void http_callback(int status_code, const char* content, size_t content_size, void* userdata, const char* error_message)
-// {
-//   // Prepare a data object to pass the HTTP response to the callback
-//   rc_api_server_response_t server_response;
-//   memset(&server_response, 0, sizeof(server_response));
-//   server_response.body = content;
-//   server_response.body_length = content_size;
-//   server_response.http_status_code = status_code;
-
-//   // handle non-http errors (socket timeout, no internet available, etc)
-//   if (status_code == 0 && error_message) {
-//       // assume no server content and pass the error through instead
-//       server_response.body = error_message;
-//       server_response.body_length = strlen(error_message);
-//       // Let rc_client know the error was not catastrophic and could be retried. It may decide to retry or just
-//       // immediately pass the error to the callback. To prevent possible retries, use RC_API_SERVER_RESPONSE_CLIENT_ERROR.
-//       server_response.http_status_code = RC_API_SERVER_RESPONSE_RETRYABLE_CLIENT_ERROR;
-//   }
-
-//   // Get the rc_client callback and call it
-//   async_callback_data* async_data = (async_callback_data*)userdata;
-//   async_data->callback(&server_response, async_data->callback_data);
-
-//   // Release the captured rc_client callback data
-//   free(async_data);
-// }
-
-// This is the HTTP request dispatcher that is provided to the rc_client. Whenever the client
-// needs to talk to the server, it will call this function.
-static void server_call(const rc_api_request_t* request,
-    rc_client_server_callback_t callback, void* callback_data, rc_client_t* client)
+static void server_call(const rc_api_request_t* request, rc_client_server_callback_t callback, void* callback_data, rc_client_t* rc_client)
 {
   LOG_DEBUG(Rcheevos, "Attempting to call server.");
 
-  // // RetroAchievements may not allow hardcore unlocks if we don't properly identify ourselves.
-  // const char* user_agent = "MyClient/1.2";
+  std::string user_agent = std::string("Azahar/") + Common::g_build_fullname; // TODO: Make this a numeric version as per https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
 
-  // // callback must be called with callback_data, regardless of the outcome of the HTTP call.
-  // // Since we're making the HTTP call asynchronously, we need to capture them and pass it
-  // // through the async HTTP code.
-  // async_callback_data* async_data = malloc(sizeof(async_callback_data));
-  // async_data->callback = callback;
-  // async_data->callback_data = callback_data;
+  // TODO: Should make this async?
+  // TODO: Use a persistent client since base URL will maybe be the same? Or instead just need to parse the URL into scheme-host-port and path.
 
-  // // If post data is provided, we need to make a POST request, otherwise, a GET request will suffice.
-  // if (request->post_data)
-  //   async_http_post(request->url, request->post_data, user_agent, http_callback, async_data);
-  // else
-  //   async_http_get(request->url, user_agent, http_callback, async_data);
+  // httplib::Client client(request->url);
+  httplib::Client client("https://retroachievements.org");
+
+  httplib::Result result;
+  if (request->post_data) {
+    result = client.Post("/dorequest.php", request->post_data, std::strlen(request->post_data), request->content_type);
+  } else {
+    result = client.Get("...");
+  }
+
+  if (result) {
+    LOG_DEBUG(Rcheevos, "Status: {}", result->status);
+    LOG_DEBUG(Rcheevos, "Body: {}", result->body);
+
+    rc_api_server_response_t server_response = { .body = result->body.c_str(), .body_length = result->body.length(), .http_status_code = result->status };
+    callback(&server_response, callback_data);
+  } else {
+    LOG_DEBUG(Rcheevos, "HTTP error {}", result.error());
+  }
 }
 
 // Write log messages to the console
@@ -74,29 +56,50 @@ static void log_message(const char* message, const rc_client_t* client)
   LOG_DEBUG(Rcheevos, "Rcheevos internal message: \"{}\"", message);
 }
 
-void initialize_retroachievements_client()
-{
-  LOG_DEBUG(Rcheevos, "Initializing RA client.");
+RcheevosClient::RcheevosClient(const Core::System& _system) : system{_system} {}
 
-  // Create the client instance (using a global variable simplifies this example)
-  g_client = rc_client_create(read_memory, server_call);
-
-  // Provide a logging function to simplify debugging
-  rc_client_enable_logging(g_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
-
-  // Disable hardcore - if we goof something up in the implementation, we don't want our
-  // account disabled for cheating.
-  rc_client_set_hardcore_enabled(g_client, 0);
-}
-
-void shutdown_retroachievements_client()
-{
-  LOG_DEBUG(Rcheevos, "Shutting down RA client.");
-
-  if (g_client)
-  {
-    // Release resources associated to the client instance
-    rc_client_destroy(g_client);
-    g_client = NULL;
+RcheevosClient::~RcheevosClient() {
+  if (rc_client) {
+    rc_client_destroy(rc_client);
+    rc_client = NULL;
   }
 }
+
+void RcheevosClient::InitializeClient() {
+  LOG_DEBUG(Rcheevos, "Initializing RetroAchievements client.");
+
+  rc_client = rc_client_create(read_memory, server_call);
+  rc_client_enable_logging(rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
+  rc_client_set_hardcore_enabled(rc_client, 0);
+}
+
+static void login_callback(int result, const char* error_message, rc_client_t* client, void* userdata)
+{
+  // If not successful, just report the error and bail.
+  if (result != RC_OK)
+  {
+    LOG_ERROR(Rcheevos, "Login failed.");
+    return;
+  }
+
+  // Login was successful. Capture the token for future logins so we don't have to store the password anywhere.
+  const rc_client_user_t* user = rc_client_get_user_info(client);
+  // store_retroachievements_credentials(user->username, user->token);
+
+  // Inform user of successful login
+  LOG_INFO(Rcheevos, "Logged in as {} ({} points)", user->display_name, user->score);
+}
+
+
+void RcheevosClient::LoginRetroachievementsUser(const char* username, const char* password)
+{
+  rc_client_begin_login_with_password(rc_client, username, password, login_callback, NULL);
+}
+
+// void login_remembered_retroachievements_user(const char* username, const char* token)
+// {
+//   // This is exactly the same functionality as rc_client_begin_login_with_password, but
+//   // uses the token captured from the first login instead of a password.
+//   // Note that it uses the same callback.
+//   rc_client_begin_login_with_token(rc_client, username, token, login_callback, NULL);
+// }

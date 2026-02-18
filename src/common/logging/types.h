@@ -105,8 +105,8 @@ enum class Class : u8 {
     Movie,           ///< Movie (Input Recording) Playback
     WebService,      ///< Interface to Citra Web Services
     RPC_Server,      ///< RPC server
-    Count,           ///< Total number of logging classes
     Rcheevos,        ///< RetroAchievements
+    Count,           ///< Total number of logging classes
 };
 
 } // namespace Common::Log
