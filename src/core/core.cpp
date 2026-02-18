@@ -50,6 +50,7 @@
 #include "core/rpc/server.h"
 #endif
 #include "network/network.h"
+#include "rcheevos_integration/rcheevos_integration.h"
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -73,9 +74,13 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this} {}
+System::System() : movie{*this}, cheat_engine{*this} {
+    initialize_retroachievements_client();
+}
 
-System::~System() = default;
+System::~System() {
+    shutdown_retroachievements_client();
+}
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
