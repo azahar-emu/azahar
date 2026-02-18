@@ -1291,14 +1291,13 @@ static std::size_t pread(int fd, void* buf, std::size_t count, uint64_t offset) 
 #define pread ::pread
 #endif
 
-std::size_t IOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                               std::size_t offset) {
+std::size_t IOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
     if (!IsOpen()) {
         m_good = false;
         return std::numeric_limits<std::size_t>::max();
     }
 
-    if (length == 0) {
+    if (byte_count == 0) {
         return 0;
     }
 
@@ -1307,11 +1306,11 @@ std::size_t IOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_
 #ifdef HAVE_LIBRETRO_VFS
     int64_t pos = filestream_tell(m_file);
     FSEEK(m_file, offset, RETRO_VFS_SEEK_POSITION_START);
-    int64_t rv = FREAD(data, data_size, length, m_file);
+    int64_t rv = FREAD(data, 1, byte_count, m_file);
     FSEEK(m_file, pos, RETRO_VFS_SEEK_POSITION_START);
     return rv;
 #else
-    return pread(fileno(m_file), data, data_size * length, offset);
+    return pread(fileno(m_file), data, byte_count, offset);
 #endif
 }
 
@@ -1366,19 +1365,19 @@ struct CryptoIOFileImpl {
         std::size_t res = f.IOFile::ReadImpl(data, length, data_size);
         if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
             d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), length * data_size);
+                          reinterpret_cast<CryptoPP::byte*>(data), res * data_size);
             e.Seek(f.IOFile::Tell());
         }
         return res;
     }
 
-    std::size_t ReadAtImpl(CryptoIOFile& f, void* data, std::size_t length, std::size_t data_size,
+    std::size_t ReadAtImpl(CryptoIOFile& f, void* data, std::size_t byte_count,
                            std::size_t offset) {
-        std::size_t res = f.IOFile::ReadAtImpl(data, length, data_size, offset);
+        std::size_t res = f.IOFile::ReadAtImpl(data, byte_count, offset);
         if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
             d.Seek(offset);
             d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), length * data_size);
+                          reinterpret_cast<CryptoPP::byte*>(data), res);
             e.Seek(f.IOFile::Tell());
         }
         return res;
@@ -1429,9 +1428,8 @@ std::size_t CryptoIOFile::ReadImpl(void* data, std::size_t length, std::size_t d
     return impl->ReadImpl(*this, data, length, data_size);
 }
 
-std::size_t CryptoIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                     std::size_t offset) {
-    return impl->ReadAtImpl(*this, data, length, data_size, offset);
+std::size_t CryptoIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
+    return impl->ReadAtImpl(*this, data, byte_count, offset);
 }
 
 std::size_t CryptoIOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {

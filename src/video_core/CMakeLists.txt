@@ -189,6 +189,8 @@ if (ENABLE_VULKAN)
         $<$<NOT:$<BOOL:${ENABLE_LIBRETRO}>>:renderer_vulkan/vk_present_window.h>
         renderer_vulkan/vk_render_manager.cpp
         renderer_vulkan/vk_render_manager.h
+        renderer_vulkan/vk_shader_disk_cache.cpp
+        renderer_vulkan/vk_shader_disk_cache.h
         renderer_vulkan/vk_shader_util.cpp
         renderer_vulkan/vk_shader_util.h
         renderer_vulkan/vk_stream_buffer.cpp

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,10 +14,9 @@ namespace Vulkan {
  * @brief Creates a vulkan shader module from GLSL by converting it to SPIR-V using glslang.
  * @param code The string containing GLSL code.
  * @param stage The pipeline stage the shader will be used in.
- * @param device The vulkan device handle.
  */
-vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device,
-                         std::string_view premable = "");
+std::vector<u32> CompileGLSL(std::string_view code, vk::ShaderStageFlagBits stage,
+                             std::string_view premable = "");
 
 /**
  * @brief Creates a vulkan shader module from SPIR-V bytecode.
@@ -25,5 +24,8 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
  * @param device The vulkan device handle
  */
 vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device);
+
+vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device,
+                         std::string_view premable = "");
 
 } // namespace Vulkan

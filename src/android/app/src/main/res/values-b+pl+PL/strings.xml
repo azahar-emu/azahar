@@ -550,7 +550,7 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Przygotowanie shaderów</string>
-    <string name="building_shaders">Tworzenie shaderów</string>
+    <string name="building_shaders">Tworzenie%s</string>
 
     <!-- About Game Dialog -->
     <string name="play">Odtwórz</string>

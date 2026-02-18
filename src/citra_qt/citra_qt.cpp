@@ -396,7 +396,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         } else if (caps.avx2) {
             cpu_string += '2';
         }
-        if (caps.fma || caps.fma4) {
+        if (caps.fma) {
             cpu_string += " | FMA";
         }
     }
@@ -1918,7 +1918,9 @@ bool GMainWindow::CreateShortcutLink(const std::filesystem::path& shortcut_path,
         LOG_ERROR(Frontend, "Failed to get IPersistFile interface");
         return false;
     }
-    hres = persist_file->Save(std::filesystem::path{shortcut_path / (name + ".lnk")}.c_str(), TRUE);
+    hres = persist_file->Save(
+        std::filesystem::path{shortcut_path / (Common::UTF8ToUTF16W(name) + L".lnk")}.c_str(),
+        TRUE);
     if (FAILED(hres)) {
         LOG_ERROR(Frontend, "Failed to save shortcut");
         return false;
@@ -4093,14 +4095,15 @@ void GMainWindow::OnEmulatorUpdateAvailable() {
 #endif
 
 void GMainWindow::OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
-                                        std::size_t total) {
+                                        std::size_t total, const std::string& object) {
     if (stage == VideoCore::LoadCallbackStage::Prepare) {
         loading_shaders_label->setText(QString());
         loading_shaders_label->setVisible(true);
     } else if (stage == VideoCore::LoadCallbackStage::Complete) {
         loading_shaders_label->setVisible(false);
     } else {
-        loading_shaders_label->setText(loading_screen->GetStageTranslation(stage, value, total));
+        loading_shaders_label->setText(
+            loading_screen->GetStageTranslation(stage, value, total, object));
     }
 }
 

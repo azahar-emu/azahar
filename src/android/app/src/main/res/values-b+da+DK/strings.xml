@@ -118,6 +118,8 @@
     <string name="controller_dpad_axis_description">Nogle kontrollere er muligvis ikke i stand til at tilknytte deres D-Pad som en akse. Hvis det er tilfældet, skal du bruge afsnittet D-Pad (knapper).</string>
     <string name="controller_dpad_button">D-Pad (knapper)</string>
     <string name="controller_dpad_button_description">Udfyld kun disse D-Pad, hvis du har problemer med opsætningen af D-Pad (akser).</string>
+    <string name="controller_axis_vertical">Vertikal akse</string>
+    <string name="controller_axis_horizontal">Horisontal akse</string>
     <string name="direction_up">Op</string>
     <string name="direction_down">Ned</string>
     <string name="direction_left">Venstre</string>
@@ -126,6 +128,8 @@
     <string name="input_dialog_description">Tryk på eller flyt et input.</string>
     <string name="input_binding">Inputbinding</string>
     <string name="input_binding_description">Tryk på eller flyt et input for at binde det til %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Tryk OP på dit joystick.</string>
+    <string name="input_binding_description_horizontal_axis">Tryk HØJRE på dit joystick.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Byt skærme</string>
     <string name="button_turbo">Turbo</string>
@@ -546,8 +550,6 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Forberedelse af shaders</string>
-    <string name="building_shaders">Bygning af shaders</string>
-
     <!-- About Game Dialog -->
     <string name="play">Spil</string>
     <string name="uninstall_cia">Afinstaller applikation</string>

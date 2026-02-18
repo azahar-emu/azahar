@@ -550,8 +550,6 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Förbereder shaders</string>
-    <string name="building_shaders">Bygger shaders</string>
-
     <!-- About Game Dialog -->
     <string name="play">Spela</string>
     <string name="uninstall_cia">Avinstallera applikation</string>

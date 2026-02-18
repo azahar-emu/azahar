@@ -52,9 +52,12 @@ std::vector<u8> CompressDataZSTDDefault(std::span<const u8> source) {
     return CompressDataZSTD(source, ZSTD_CLEVEL_DEFAULT);
 }
 
+std::size_t GetDecompressedSize(std::span<const u8> compressed) {
+    return ZSTD_getFrameContentSize(compressed.data(), compressed.size());
+}
+
 std::vector<u8> DecompressDataZSTD(std::span<const u8> compressed) {
-    const std::size_t decompressed_size =
-        ZSTD_getFrameContentSize(compressed.data(), compressed.size());
+    const std::size_t decompressed_size = GetDecompressedSize(compressed);
 
     if (decompressed_size == ZSTD_CONTENTSIZE_UNKNOWN) {
         LOG_ERROR(Common, "ZSTD decompressed size could not be determined.");
@@ -353,8 +356,7 @@ std::size_t Z3DSWriteIOFile::ReadImpl(void* data, std::size_t length, std::size_
     return 0;
 }
 
-std::size_t Z3DSWriteIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                        std::size_t offset) {
+std::size_t Z3DSWriteIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
     // Stubbed
     UNIMPLEMENTED();
     return 0;
@@ -615,12 +617,12 @@ bool Z3DSReadIOFile::Open() {
 }
 
 std::size_t Z3DSReadIOFile::ReadImpl(void* data, std::size_t length, std::size_t data_size) {
-    return impl->Read(data, length * data_size);
+    size_t res = impl->Read(data, length * data_size);
+    return res == std::numeric_limits<size_t>::max() ? res : (res / data_size);
 }
 
-std::size_t Z3DSReadIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                       std::size_t offset) {
-    return impl->ReadAt(data, length * data_size, offset);
+std::size_t Z3DSReadIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
+    return impl->ReadAt(data, byte_count, offset);
 }
 
 std::size_t Z3DSReadIOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {

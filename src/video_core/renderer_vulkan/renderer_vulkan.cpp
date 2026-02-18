@@ -61,6 +61,10 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
 namespace {
 static bool IsLowRefreshRate() {
 #if (defined(__APPLE__) || defined(ENABLE_SDL2)) && !defined(HAVE_LIBRETRO)
+    if (!Settings::values.use_display_refresh_rate_detection) {
+        LOG_INFO(Render_Vulkan, "Refresh rate detection is currently disabled via settings");
+        return false;
+    }
 #ifdef __APPLE__
     // Apple's low power mode sometimes limits applications to 30fps without changing the refresh
     // rate, meaning the above code doesn't catch it.

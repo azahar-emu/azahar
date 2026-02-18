@@ -550,8 +550,6 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Préparation des shaders</string>
-    <string name="building_shaders">Construction des shaders</string>
-
     <!-- About Game Dialog -->
     <string name="play">Jouer</string>
     <string name="uninstall_cia">Désinstaller l\'application</string>

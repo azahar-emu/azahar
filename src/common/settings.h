@@ -520,6 +520,8 @@ struct Values {
 #else
     SwitchableSetting<bool> use_vsync{true, "use_vsync"};
 #endif
+    SwitchableSetting<bool> use_display_refresh_rate_detection{
+        true, "use_display_refresh_rate_detection"};
     Setting<bool> use_shader_jit{true, "use_shader_jit"};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
