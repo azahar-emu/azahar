@@ -18,7 +18,6 @@
 #include "core/hle/service/plgldr/plgldr.h"
 #include "core/movie.h"
 #include "core/perf_stats.h"
-#include "rcheevos_integration/rcheevos_integration.h"
 
 namespace Frontend {
 class EmuWindow;
@@ -70,6 +69,10 @@ class DebugContext;
 namespace Loader {
 class AppLoader;
 }
+
+#ifdef ENABLE_RETROACHIEVEMENTS
+class RcheevosClient;
+#endif
 
 namespace Core {
 
@@ -278,6 +281,14 @@ public:
     /// Gets a const reference to the cheat engine
     [[nodiscard]] const Cheats::CheatEngine& CheatEngine() const;
 
+#ifdef ENABLE_RETROACHIEVEMENTS
+    // Gets a reference to the Rcheevos client
+    [[nodiscard]] RcheevosClient &GetRcheevosClient();
+
+    // Gets a const reference to the Rcheevos client
+    [[nodiscard]] const RcheevosClient &GetRcheevosClient() const;
+#endif
+
     /// Gets a reference to the custom texture cache system
     [[nodiscard]] VideoCore::CustomTexManager& CustomTexManager();
 
@@ -442,7 +453,7 @@ private:
 
 #ifdef ENABLE_RETROACHIEVEMENTS
     /// RetroAchievements
-    RcheevosClient rcheevos_client;
+    std::unique_ptr<RcheevosClient> rcheevos_client;
 #endif
 
     /// Video dumper backend
