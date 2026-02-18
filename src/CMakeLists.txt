@@ -188,6 +188,7 @@ add_subdirectory(video_core)
 add_subdirectory(audio_core)
 add_subdirectory(network)
 add_subdirectory(input_common)
+add_subdirectory(rcheevos_integration)
 
 if (ENABLE_TESTS)
     add_subdirectory(tests)

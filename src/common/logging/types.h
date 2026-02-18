@@ -106,6 +106,7 @@ enum class Class : u8 {
     WebService,      ///< Interface to Citra Web Services
     RPC_Server,      ///< RPC server
     Count,           ///< Total number of logging classes
+    Rcheevos,        ///< RetroAchievements
 };
 
 } // namespace Common::Log
