@@ -73,7 +73,11 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this}, rcheevos_client{*this} {}
+System::System() : movie{*this}, cheat_engine{*this}
+#ifdef ENABLE_RETROACHIEVEMENTS
+    , rcheevos_client{*this}
+#endif
+{}
 
 System::~System() = default;
 
@@ -591,8 +595,10 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
     }
 
+#ifdef ENABLE_RETROACHIEVEMENTS
     rcheevos_client.InitializeClient();
     rcheevos_client.LoginRetroachievementsUser("", "");
+#endif
 
     LOG_DEBUG(Core, "Initialized OK");
 

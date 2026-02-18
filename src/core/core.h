@@ -440,8 +440,10 @@ private:
     /// Cheats manager
     Cheats::CheatEngine cheat_engine;
 
+#ifdef ENABLE_RETROACHIEVEMENTS
     /// RetroAchievements
     RcheevosClient rcheevos_client;
+#endif
 
     /// Video dumper backend
     std::shared_ptr<VideoDumper::Backend> video_dumper;

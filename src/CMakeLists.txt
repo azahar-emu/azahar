@@ -182,13 +182,17 @@ if(ENABLE_DEVELOPER_OPTIONS)
     add_compile_definitions(ENABLE_DEVELOPER_OPTIONS)
 endif()
 
+if (ENABLE_RETROACHIEVEMENTS)
+    add_compile_definitions(ENABLE_RETROACHIEVEMENTS)
+    add_subdirectory(rcheevos_integration)
+endif()
+
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(video_core)
 add_subdirectory(audio_core)
 add_subdirectory(network)
 add_subdirectory(input_common)
-add_subdirectory(rcheevos_integration)
 
 if (ENABLE_TESTS)
     add_subdirectory(tests)
