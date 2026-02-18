@@ -50,6 +50,9 @@
 #include "core/rpc/server.h"
 #endif
 #include "network/network.h"
+#ifdef ENABLE_RETROACHIEVEMENTS
+#include "rcheevos_integration/rcheevos_integration.h"
+#endif
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -73,11 +76,12 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this}
+System::System() : movie{*this}, cheat_engine{*this} {
 #ifdef ENABLE_RETROACHIEVEMENTS
-    , rcheevos_client{*this}
+    rcheevos_client = std::make_unique<RcheevosClient>(*this);
+    rcheevos_client->InitializeClient();
 #endif
-{}
+}
 
 System::~System() = default;
 
@@ -595,11 +599,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
     }
 
-#ifdef ENABLE_RETROACHIEVEMENTS
-    rcheevos_client.InitializeClient();
-    rcheevos_client.LoginRetroachievementsUser("", "");
-#endif
-
     LOG_DEBUG(Core, "Initialized OK");
 
     is_powered_on = true;
@@ -662,6 +661,16 @@ Cheats::CheatEngine& System::CheatEngine() {
 const Cheats::CheatEngine& System::CheatEngine() const {
     return cheat_engine;
 }
+
+#ifdef ENABLE_RETROACHIEVEMENTS
+RcheevosClient &System::GetRcheevosClient() {
+    return *rcheevos_client;
+}
+
+const RcheevosClient &System::GetRcheevosClient() const {
+    return *rcheevos_client;
+}
+#endif
 
 void System::RegisterVideoDumper(std::shared_ptr<VideoDumper::Backend> dumper) {
     video_dumper = std::move(dumper);

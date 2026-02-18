@@ -506,6 +506,7 @@ target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt lodepng ope
 
 if (ENABLE_RETROACHIEVEMENTS)
     target_link_libraries(citra_core PUBLIC rcheevos_integration)
+    target_compile_definitions(citra_core PUBLIC ENABLE_RETROACHIEVEMENTS)
 endif()
 
 if (ENABLE_WEB_SERVICE)

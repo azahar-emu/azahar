@@ -91,7 +91,7 @@ static void login_callback(int result, const char* error_message, rc_client_t* c
 }
 
 
-void RcheevosClient::LoginRetroachievementsUser(const char* username, const char* password)
+void RcheevosClient::LogInRetroachievementsUser(const char* username, const char* password)
 {
   rc_client_begin_login_with_password(rc_client, username, password, login_callback, NULL);
 }

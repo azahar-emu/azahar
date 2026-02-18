@@ -295,7 +295,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="screenshot_dir_label">
+            <widget class="QLabel">
              <property name="text">
               <string>Save Screenshots To</string>
              </property>
@@ -313,6 +313,78 @@
            </item>
           </layout>
          </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="retro_achievements_group">
+       <property name="title">
+        <string>RetroAchievements</string>
+       </property>
+       <layout class="QVBoxLayout">
+        <item>
+         <widget class="QWidget" name="widget_retro_achievements_username" native="true">
+          <layout class="QHBoxLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel">
+             <property name="text">
+              <string>Username</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="retro_achievements_username_input"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="widget_retro_achievements_password" native="true">
+          <layout class="QHBoxLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel">
+             <property name="text">
+              <string>Password</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="retro_achievements_password_input"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="retro_achievements_log_in_button">
+         <property name="text">
+          <string>Log In</string>
+         </property>
+        </widget>
         </item>
        </layout>
       </widget>

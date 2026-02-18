@@ -12,7 +12,7 @@ public:
     ~RcheevosClient();
 
     void InitializeClient();
-    void LoginRetroachievementsUser(const char* username, const char* password);
+    void LogInRetroachievementsUser(const char* username, const char* password);
 private:
     const Core::System& system;
     rc_client_t* rc_client = nullptr;
