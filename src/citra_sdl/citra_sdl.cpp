@@ -25,7 +25,6 @@
 #include "SDL_messagebox.h"
 #include "citra_meta/common_strings.h"
 #include "common/common_paths.h"
-#include "common/detached_tasks.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -171,11 +170,10 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
 }
 
 /// Application entry point
-void LaunchSdlFrontend(int argc, char** argv) {
+int LaunchSdlFrontend(int argc, char** argv) {
     Common::Log::Initialize();
     Common::Log::SetColorConsoleBackendEnabled(true);
     Common::Log::Start();
-    Common::DetachedTasks detached_tasks;
     SdlConfig config;
     int option_index = 0;
     bool use_gdbstub = Settings::values.use_gdbstub.GetValue();
@@ -192,7 +190,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
 
     if (argv_w == nullptr) {
         LOG_CRITICAL(Frontend, "Failed to get command line arguments");
-        exit(-1);
+        return -1;
     }
 #endif
     std::string filepath;
@@ -238,12 +236,12 @@ void LaunchSdlFrontend(int argc, char** argv) {
                     errno = EINVAL;
                 if (errno != 0) {
                     perror("--gdbport");
-                    exit(1);
+                    return 1;
                 }
                 break;
             case 'h':
                 PrintHelp(argv[0]);
-                exit(0);
+                return 0;
             case 'i': {
                 const auto cia_progress = [](std::size_t written, std::size_t total) {
                     LOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
@@ -252,7 +250,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
                     Service::AM::InstallStatus::Success)
                     errno = EINVAL;
                 if (errno != 0)
-                    exit(1);
+                    return 1;
                 break;
             }
             case 'p':
@@ -273,7 +271,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
                 if (!std::regex_match(str_arg, re)) {
                     std::cout << "Wrong format for option --multiplayer\n";
                     PrintHelp(argv[0]);
-                    exit(0);
+                    return 0;
                 }
 
                 std::smatch match;
@@ -288,11 +286,11 @@ void LaunchSdlFrontend(int argc, char** argv) {
                 if (!std::regex_match(nickname, nickname_re)) {
                     std::cout
                         << "Nickname is not valid. Must be 4 to 20 alphanumeric characters.\n";
-                    exit(0);
+                    return 0;
                 }
                 if (address.empty()) {
                     std::cout << "Address to room must not be empty.\n";
-                    exit(0);
+                    return 0;
                 }
                 break;
             }
@@ -300,7 +298,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
                 const std::string version_string =
                     std::string("Azahar ") + Common::g_build_fullname;
                 ShowCommandOutput("Version", version_string);
-                exit(0);
+                return 0;
             }
         } else {
 #ifdef _WIN32
@@ -321,12 +319,12 @@ void LaunchSdlFrontend(int argc, char** argv) {
 
     if (filepath.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
-        exit(-1);
+        return -1;
     }
 
     if (!movie_record.empty() && !movie_play.empty()) {
         LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
-        exit(-1);
+        return -1;
     }
 
     auto& system = Core::System::GetInstance();
@@ -401,10 +399,10 @@ void LaunchSdlFrontend(int argc, char** argv) {
     switch (load_result) {
     case Core::System::ResultStatus::ErrorGetLoader:
         LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filepath);
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::ErrorLoader:
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
         LOG_CRITICAL(Frontend,
                      "The application that you are trying to load must be decrypted before "
@@ -412,16 +410,16 @@ void LaunchSdlFrontend(int argc, char** argv) {
                      "decrypting applications, please refer to: "
                      "https://web.archive.org/web/20240304210021/https://citra-emu.org/"
                      "wiki/dumping-game-cartridges/");
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
         LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::ErrorNotInitialized:
         LOG_CRITICAL(Frontend, "CPUCore not initialized");
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::ErrorSystemMode:
         LOG_CRITICAL(Frontend, "Failed to determine system mode!");
-        exit(-1);
+        return -1;
     case Core::System::ResultStatus::Success:
         break; // Expected case
     default:
@@ -441,7 +439,7 @@ void LaunchSdlFrontend(int argc, char** argv) {
                          Network::NoPreferredMac, password);
         } else {
             LOG_ERROR(Network, "Could not access RoomMember");
-            exit(0);
+            return 0;
         }
     }
 
@@ -475,6 +473,10 @@ void LaunchSdlFrontend(int argc, char** argv) {
             secondary_window->Present();
         }
     });
+
+    u64 program_id{};
+    system.GetAppLoader().ReadProgramId(program_id);
+    system.GPU().ApplyPerProgramSettings(program_id);
 
     std::atomic_bool stop_run;
     system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
@@ -524,6 +526,5 @@ void LaunchSdlFrontend(int argc, char** argv) {
     Common::Linux::StopGamemode();
 #endif
 
-    detached_tasks.WaitForAllTasks();
-    exit(0);
+    return 0;
 }

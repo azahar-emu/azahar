@@ -134,10 +134,10 @@ use_shader_jit =
 # 0 (default): Game Controlled, 1: Nearest Neighbor, 2: Linear
 texture_sampling =
 
-# Forces VSync on the display thread. Usually doesn't impact performance, but on some drivers it can
-# so only turn this off if you notice a speed difference.
-# 0: Off, 1 (default): On
-use_vsync_new =
+# Forces VSync on the display thread. Can cause input delay, so only turn this on
+# if you have screen tearing, which is unusual on Android
+# 0 (default): Off, 1: On
+use_vsync =
 
 # Reduce stuttering by storing and loading generated shaders to disk
 # 0: Off, 1 (default. On)
@@ -147,10 +147,6 @@ use_disk_shader_cache =
 # 0: Auto (scales resolution to window size), 1: Native 3DS screen resolution, Otherwise a scale
 # factor for the 3DS resolution
 resolution_factor =
-
-# Whether to enable V-Sync (caps the framerate at 60FPS) or not.
-# 0 (default): Off, 1: On
-vsync_enabled =
 
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)
@@ -170,13 +166,26 @@ bg_red =
 bg_blue =
 bg_green =
 
+# Opacity of second layer when using custom layout option (bottom screen unless swapped). Useful if positioning on top of the first layer.
+custom_second_layer_opacity =
+
 # Whether and how Stereoscopic 3D should be rendered
-# 0 (default): Off, 1: Side by Side, 2: Reverse Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
+# 0: Off, 1: Half Width Side by Side, 2 (default): Full Width Side by Side, 3: Anaglyph, 4: Interlaced, 5: Reverse Interlaced, 6: Cardboard VR
+# 0 is no longer supported in the interface, as using render_3d_which_display = 0 has the same effect, but supported here for backwards compatibility
 render_3d =
 
 # Change 3D Intensity
 # 0 - 255: Intensity. 0 (default)
 factor_3d =
+
+# Swap Eyes in 3d
+# true: Swap eyes, false (default): Do not swap eyes
+swap_eyes_3d =
+
+# Which Display to render 3d mode to
+# 0 (default) - None. Equivalent to render_3d=0
+# 1: Both, 2: Primary Only, 3: Secondary Only
+render_3d_which_display =
 
 # The name of the post processing shader to apply.
 # Loaded from shaders if render_3d is off or side by side.
@@ -287,6 +296,15 @@ swap_screen =
 # Expands the display area to include the cutout (or notch) area
 # 0 (default): Off, 1: On
 expand_to_cutout_area =
+
+# Secondary Display Layout
+# What the game should do if a secondary display is connected physically or using
+# Miracast / Chromecast screen mirroring
+# 0 (default) - Use System Default (mirror)
+# 1 - Show Top Screen Only
+# 2 - Show Bottom Screen Only
+# 3 - Show both screens side by side
+secondary_display_layout =
 
 # Screen placement settings when using Cardboard VR (render3d = 4)
 # 30 - 100: Screen size as a percentage of the viewport. 85 (default)
@@ -404,6 +422,11 @@ steps_per_hour =
 # You can also set if homebrew apps are allowed to enable the plugin loader
 plugin_loader =
 allow_plugin_loader =
+
+# Apply region free patch to installed applications
+# Patches the region of installed applications to be region free, so that they always appear on the home menu.
+# 0: Disabled, 1 (default): Enabled
+apply_region_free_patch =
 
 [Camera]
 # Which camera engine to use for the right outer camera

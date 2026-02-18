@@ -8,12 +8,8 @@
     <string name="controller_c">C-Spak</string>
     <string name="controller_triggers">Utløser</string>
     <string name="controller_dpad">Kontrollpluss</string>
-    <string name="controller_axis_vertical">Opp/Ned Akse</string>
-    <string name="controller_axis_horizontal">Venstre/Høyre Akse</string>
     <string name="input_binding">Inngangsinnbinding</string>
     <string name="input_binding_description">Trykk eller flytt en inngang for å binde den til %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Beveg Joystick opp eller ned</string>
-    <string name="input_binding_description_horizontal_axis">Beveg Joystick venstre eller høyre</string>
     <string name="input_message_analog_only">Denne kontrollen må være bundet til en håndkontroller\'s analog spak eller kontrollpluss akse!</string>
     <string name="input_message_button_only">Denne kontrollen må være bundet til en håndkontroller knapp!</string>
     <!-- Generic buttons (Shared with lots of stuff) -->
@@ -40,7 +36,6 @@
     <string name="texture_filter_name">Tekstur Filter</string>
     <string name="shaders_accurate_mul">Aktiver nøyaktig shader-multiplikasjon</string>
     <string name="shaders_accurate_mul_description">Bruker mer nøyaktig multiplikasjon i maskinvare shaders, som kan fikse noen grafiske feil. Når dette er aktivert, reduseres ytelsen.</string>
-    <string name="asynchronous_gpu">Aktiver asynkron GPU-emulering</string>
     <string name="asynchronous_gpu_description">Bruker en egen tråd for å emulere GPU asynkront. Når dette er aktivert, forbedres ytelsen.</string>
     <string name="frame_limit_enable">Aktiver fartsbegrensning</string>
     <string name="frame_limit_slider">Begrens fartsprosent </string>
@@ -56,7 +51,6 @@
     <string name="hw_shaders">Aktiver maskinvare shader</string>
     <string name="hw_shaders_description">Bruker maskinvare for å etterligne 3DS shaders. Når dette er aktivert, vil spillytelsen bli betydelig forbedret.</string>
     <string name="vsync">Aktiver V-Sync</string>
-    <string name="vsync_description">Synkroniserer spillrammefrekvensen med oppdateringsfrekvensen på enheten din.</string>
     <!-- Miscellaneous -->
     <string name="clear">Tøm</string>
     <string name="slider_default">Standard</string>

@@ -25,14 +25,24 @@ struct GameInfoData {
     bool loaded = false;
     bool is_encrypted = false;
     std::string file_type = "";
+    bool is_insertable = false;
 };
 
 GameInfoData* GetNewGameInfoData(const std::string& path) {
     std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(path);
     u64 program_id = 0;
     bool is_encrypted = false;
+    Loader::ResultStatus result{};
+    if (loader) {
+        result = loader->ReadProgramId(program_id);
+        if (result == Loader::ResultStatus::ErrorNotImplemented) {
+            // This can happen for 3DSX and ELF files.
+            program_id = 0;
+            result = Loader::ResultStatus::Success;
+        }
+    }
 
-    if (!loader || loader->ReadProgramId(program_id) != Loader::ResultStatus::Success) {
+    if (!loader || result != Loader::ResultStatus::Success) {
         GameInfoData* gid = new GameInfoData();
         memset(&gid->smdh, 0, sizeof(Loader::SMDH));
         return gid;
@@ -80,6 +90,7 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
     gid->is_encrypted = is_encrypted;
     gid->title_id = program_id;
     gid->file_type = Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed());
+    gid->is_insertable = loader->GetFileType() == Loader::FileType::CCI;
 
     return gid;
 }
@@ -213,12 +224,15 @@ jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsVisibleSystemTitle(JNIEnv
         return false;
     }
 
-    return smdh->flags & Loader::SMDH::Flags::Visible;
+    return smdh->flags.visible;
 }
 
 jstring Java_org_citra_citra_1emu_model_GameInfo_getFileType(JNIEnv* env, jobject obj) {
     std::string& file_type = GetPointer(env, obj)->file_type;
 
     return ToJString(env, file_type);
+}
+jboolean Java_org_citra_citra_1emu_model_GameInfo_getIsInsertable(JNIEnv* env, jobject obj) {
+    return GetPointer(env, obj)->is_insertable;
 }
 }

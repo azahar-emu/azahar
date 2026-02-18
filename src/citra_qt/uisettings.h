@@ -59,6 +59,12 @@ enum class GameListText : s32 {
     ListEnd,       ///< Keep this at the end of the enum.
 };
 
+class UpdateCheckChannels {
+public:
+    static constexpr int STABLE = 0;
+    static constexpr int PRERELEASE = 1;
+};
+
 struct Values {
     QByteArray geometry;
     QByteArray state;
@@ -83,10 +89,18 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
     Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
+#ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
+    Settings::Setting<int> update_check_channel{UpdateCheckChannels::STABLE,
+                                                "update_check_channel"};
+#endif
 
+    Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
+
+#ifdef USE_DISCORD_PRESENCE
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
+#endif
 
     // Game List
     Settings::Setting<GameListIconSize> game_list_icon_size{GameListIconSize::LargeIcon,
@@ -95,7 +109,6 @@ struct Values {
     Settings::Setting<GameListText> game_list_row_2{GameListText::FileName, "row2"};
     Settings::Setting<bool> game_list_hide_no_icon{false, "hideNoIcon"};
     Settings::Setting<bool> game_list_single_line_mode{false, "singleLineMode"};
-    Settings::Setting<bool> show_3ds_files_warning{true, "show_3ds_files_warning"};
 
     // Compatibility List
     Settings::Setting<bool> show_compat_column{true, "show_compat_column"};

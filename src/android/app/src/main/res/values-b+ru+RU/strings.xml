@@ -19,6 +19,7 @@
     <string name="about_description">Версия сборки, разработчики и другое</string>
     <string name="theme_and_color_description">Настройка внешнего вида приложения</string>
     <string name="install_cia_title">Установить CIA</string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Выбрать драйвер GPU</string>
     <string name="select_gpu_driver_title">Заменить текущий драйвер GPU устройства?</string>
@@ -64,14 +65,10 @@
     <string name="controller_triggers">Триггеры</string>
     <string name="controller_trigger">Триггер</string>
     <string name="controller_dpad">Крестовина</string>
-    <string name="controller_axis_vertical">Ось вверх/вниз</string>
-    <string name="controller_axis_horizontal">Ось влево/вправо</string>
     <string name="input_dialog_title">Привязка %1$s %2$s</string>
     <string name="input_dialog_description">Нажмите или отклоните элемент управления.</string>
     <string name="input_binding">Привязки ввода</string>
     <string name="input_binding_description">Нажмите или отклоните орган управления для привязки %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Наклоните джойстик вверх или вниз.</string>
-    <string name="input_binding_description_horizontal_axis">Наклоните джойстик влево или вправо.</string>
     <string name="button_home">HOME</string>
     <string name="input_message_analog_only">Данный элемент управления должен быть привязан к аналоговому стику или крестовине геймпада!</string>
     <string name="input_message_button_only">Данный элемент управления должен быть привязан к кнопке геймпада!</string>
@@ -120,14 +117,12 @@
     <string name="graphics_api">Графический API</string>
     <string name="spirv_shader_gen">Вкл. генерацию шейдеров на SPIR-V</string>
     <string name="spirv_shader_gen_description">Запускать фрагментный шейдер, используемый для эмуляции PICA на SPIR-V вместо GLSL.</string>
-    <string name="async_shaders">Вкл. асинхронную компиляцию шейдеров</string>
     <string name="async_shaders_description">Компилировать шейдеры в фоновом потоке для уменьшения лагов во время игры. При включении возможны временные сбои графики.</string>
     <string name="linear_filtering">Линейное сглаживание</string>
     <string name="linear_filtering_description">Вкл. линейное сглаживание для смягчения графики в играх.</string>
     <string name="texture_filter_name">Сглаживание текстур</string>
     <string name="shaders_accurate_mul">Точное умножение</string>
     <string name="shaders_accurate_mul_description">Исп. более точное умножение для аппаратных шейдеров. Может исправлять некоторые графические баги, но при включении снижает производительность.</string>
-    <string name="asynchronous_gpu">Вкл. асинхронную эмуляцию GPU</string>
     <string name="asynchronous_gpu_description">Использовать отдельный поток для асинхронной эмуляции GPU. При включении повышает производительность.</string>
     <string name="frame_limit_enable">Ограничивать скорость</string>
     <string name="frame_limit_slider">Процент ограничения скорости</string>
@@ -172,7 +167,6 @@
     <string name="hw_shaders_description">Эмулировать шейдеры 3DS аппаратными средствами. При включении существенно повышает производительность в играх.</string>
     <string name="cpu_clock_speed">Скорость процессора</string>
     <string name="vsync">Вкл. V-Sync</string>
-    <string name="vsync_description">Синхронизирует кадровую частоту в играх с частотой обновления устройства.</string>
     <string name="renderer_debug">Отладка рендера</string>
     <string name="renderer_debug_description">Логировать расширенную отладочную информацию по графике. При включении существенно снижает производительность.</string>
     <!-- Miscellaneous -->
@@ -310,8 +304,6 @@
     <string name="fatal_error_message">Возникла критическая ошибка. Откройте лог для получения информации.\nВозобновление эмуляции может привести к сбоям и вылетам.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Подготовка шейдеров</string>
-    <string name="building_shaders">Построение шейдеров</string>
-
     <!-- Cheats -->
     <string name="cheats">Чит-коды</string>
     <string name="cheats_add">Добавить чит-код</string>

@@ -7,10 +7,12 @@ package org.citra.citra_emu
 import android.Manifest.permission
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -18,11 +20,16 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.RemovableStorageHelper
+import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -96,6 +103,24 @@ object NativeLibrary {
      */
     external fun onTouchMoved(xAxis: Float, yAxis: Float)
 
+    /**
+     * Handles touch events on the secondary display.
+     *
+     * @param xAxis  The value of the x-axis.
+     * @param yAxis  The value of the y-axis.
+     * @param pressed To identify if the touch held down or released.
+     * @return true if the pointer is within the touchscreen
+     */
+    external fun onSecondaryTouchEvent(xAxis: Float, yAxis: Float, pressed: Boolean): Boolean
+
+    /**
+     * Handles touch movement on the secondary display.
+     *
+     * @param xAxis The value of the instantaneous x-axis.
+     * @param yAxis The value of the instantaneous y-axis.
+     */
+    external fun onSecondaryTouchMoved(xAxis: Float, yAxis: Float)
+
     external fun reloadSettings()
 
     external fun getTitleId(filename: String): Long
@@ -115,6 +140,12 @@ object NativeLibrary {
     external fun logUserDirectory(directory: String)
 
     /**
+     * Set the inserted cartridge that will appear
+     * in the home menu. Empty string to clear.
+     */
+    external fun setInsertedCartridge(path: String)
+
+    /**
      * Begins emulation.
      */
     external fun run(path: String)
@@ -123,6 +154,10 @@ object NativeLibrary {
     external fun surfaceChanged(surf: Surface)
     external fun surfaceDestroyed()
     external fun doFrame()
+
+    // Second window
+    external fun secondarySurfaceChanged(secondary_surface: Surface)
+    external fun secondarySurfaceDestroyed()
 
     /**
      * Unpauses emulation from a paused state.
@@ -242,6 +277,12 @@ object NativeLibrary {
             CoreError.ErrorArticDisconnected -> {
                 title = emulationActivity.getString(R.string.artic_base)
                 message = emulationActivity.getString(R.string.artic_server_comm_error)
+                canContinue = false
+            }
+
+            CoreError.ErrorN3DSApplication -> {
+                title = emulationActivity.getString(R.string.invalid_system_mode)
+                message = emulationActivity.getString(R.string.invalid_system_mode_message)
                 canContinue = false
             }
 
@@ -567,6 +608,47 @@ object NativeLibrary {
      */
     external fun logDeviceInfo()
 
+    enum class CompressStatus(val value: Int) {
+        SUCCESS(0),
+        COMPRESS_UNSUPPORTED(1),
+        COMPRESS_ALREADY_COMPRESSED(2),
+        COMPRESS_FAILED(3),
+        DECOMPRESS_UNSUPPORTED(4),
+        DECOMPRESS_NOT_COMPRESSED(5),
+        DECOMPRESS_FAILED(6),
+        INSTALLED_APPLICATION(7);
+
+        companion object {
+            fun fromValue(value: Int): CompressStatus =
+                CompressStatus.entries.first { it.value == value }
+        }
+    }
+
+    // Compression / Decompression
+    private external fun compressFileNative(inputPath: String?, outputPath: String): Int
+
+    fun compressFile(inputPath: String?, outputPath: String): CompressStatus {
+        return CompressStatus.fromValue(
+            compressFileNative(inputPath, outputPath)
+        )
+    }
+
+    private external fun decompressFileNative(inputPath: String?, outputPath: String): Int
+
+    fun decompressFile(inputPath: String?, outputPath: String): CompressStatus {
+        return CompressStatus.fromValue(
+            decompressFileNative(inputPath, outputPath)
+        )
+    }
+
+    external fun getRecommendedExtension(inputPath: String?, shouldCompress: Boolean): String
+
+    @Keep
+    @JvmStatic
+    fun onCompressProgress(total: Long, current: Long) {
+        CompressProgressDialogViewModel.update(total, current)
+    }
+
     @Keep
     @JvmStatic
     fun createFile(directory: String, filename: String): Boolean =
@@ -609,12 +691,48 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun getUserDirectory(uriOverride: Uri? = null): String {
+        BuildUtil.assertNotGooglePlay()
+
+        val preferences: SharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+
+        val dirSep = "/"
+        val udUri = uriOverride ?:
+                    preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
+        val udPathSegment = udUri.lastPathSegment!!
+        val udVirtualPath = udPathSegment.substringAfter(":")
+
+        if (udPathSegment.startsWith("primary:")) { // User directory is located in primary storage
+            val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+            return primaryStoragePath + dirSep + udVirtualPath + dirSep
+        } else { // User directory probably located on a removable storage device
+            val storageIdString = udPathSegment.substringBefore(":")
+            val udRemovablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
+
+            if (udRemovablePath == null) {
+                android.util.Log.e("NativeLibrary",
+                    "Unknown mount location for storage device '$storageIdString' (URI: $udUri)"
+                )
+                return ""
+            }
+            return udRemovablePath + dirSep + udVirtualPath + dirSep
+        }
+
+    }
+
+    @Keep
+    @JvmStatic
     fun getSize(path: String): Long =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.getFileSize(path)
         } else {
             FileUtil.getFileSize(path)
         }
+
+    @Keep
+    @JvmStatic
+    fun getBuildFlavor(): String = BuildConfig.FLAVOR
 
     @Keep
     @JvmStatic
@@ -669,6 +787,24 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
+    fun updateDocumentLocation(sourcePath: String, destinationPath: String): Boolean =
+        CitraApplication.documentsTree.updateDocumentLocation(sourcePath, destinationPath)
+
+    @Keep
+    @JvmStatic
+    fun moveFile(filename: String, sourceDirPath: String, destinationDirPath: String): Boolean =
+        if (FileUtil.isNativePath(sourceDirPath)) {
+            try {
+                CitraApplication.documentsTree.moveFile(filename, sourceDirPath, destinationDirPath)
+            } catch (e: Exception) {
+                false
+            }
+        } else {
+            FileUtil.moveFile(filename, sourceDirPath, destinationDirPath)
+        }
+
+    @Keep
+    @JvmStatic
     fun deleteDocument(path: String): Boolean =
         if (FileUtil.isNativePath(path)) {
             CitraApplication.documentsTree.deleteDocument(path)
@@ -680,6 +816,7 @@ object NativeLibrary {
         ErrorSystemFiles,
         ErrorSavestate,
         ErrorArticDisconnected,
+        ErrorN3DSApplication,
         ErrorUnknown
     }
 

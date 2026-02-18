@@ -35,6 +35,7 @@
                 <string>cci</string>
                 <string>cxi</string>
                 <string>cia</string>
+                <string>3ds</string>
             </array>
             <key>CFBundleTypeName</key>
             <string>Nintendo 3DS File</string>
@@ -75,6 +76,9 @@
     <true/>
     <key>NSHighResolutionCapable</key>
     <string>True</string>
+    <key>UIDesignRequiresCompatibility</key>
+    <true/> <!-- Remove when Qt Liquid Glass issues are fixed upstream:
+                 https://bugreports.qt.io/browse/QTBUG-138942 -->
     <key>UIFileSharingEnabled</key>
     <true/>
     <key>UILaunchStoryboardName</key>

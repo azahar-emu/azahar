@@ -1,0 +1,51 @@
+name: Detect first-time contributors
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    if: >-
+      (github.repository == 'azahar-emu/azahar') &&
+      (github.event.pull_request.author_association != 'COLLABORATOR') &&
+      (github.event.pull_request.author_association != 'CONTRIBUTOR') &&
+      (github.event.pull_request.author_association != 'MANNEQUIN') &&
+      (github.event.pull_request.author_association != 'MEMBER') &&
+      (github.event.pull_request.author_association != 'OWNER')
+    steps:
+      - name: Detect PR if author is first-time contributor
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+
+            // Add needs verification label so that the reopen action runs on comment.
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pr.number,
+              labels: ['needs verification'],
+            });
+
+            // Close the pull request and wait for verification.
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: pr.number,
+              state: 'closed',
+            });
+            
+            // Show the new contributor how to verify (they need to write a short poem about the Wii and 3DS being lovers)
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body: 'Welcome to the Azahar Emulator repository! Due to the surge of AI bots we have decided to add an extra verification step to new contributors. Please follow the exact instructions in your own written Pull Request description to reopen it.',
+            });

@@ -5,11 +5,11 @@
 #pragma once
 
 #include <bitset>
-#include <tsl/robin_map.h>
 
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
 #include "video_core/renderer_vulkan/vk_resource_pool.h"
+#include "video_core/renderer_vulkan/vk_shader_disk_cache.h"
 #include "video_core/shader/generator/pica_fs_config.h"
 #include "video_core/shader/generator/profile.h"
 #include "video_core/shader/generator/shader_gen.h"
@@ -58,19 +58,23 @@ public:
         offsets[binding] = offset;
     }
 
-    /// Loads the pipeline cache stored to disk
-    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
-                       const VideoCore::DiskResourceLoadCallback& callback = {});
+    /// Loads the driver pipeline cache and the disk shader cache
+    void LoadCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                   const VideoCore::DiskResourceLoadCallback& callback = {});
 
-    /// Stores the generated pipeline cache to disk
-    void SaveDiskCache();
+    /// Switches the driver pipeline cache and the shader disk cache to the specified title
+    void SwitchCache(u64 title_id, const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                     const VideoCore::DiskResourceLoadCallback& callback = {});
 
     /// Binds a pipeline using the provided information
-    bool BindPipeline(const PipelineInfo& info, bool wait_built = false);
+    bool BindPipeline(PipelineInfo& info, bool wait_built = false);
+
+    Pica::Shader::Generator::ExtraVSConfig CalcExtraConfig(
+        const Pica::Shader::Generator::PicaVSConfig& config);
 
     /// Binds a PICA decompiled vertex shader
     bool UseProgrammableVertexShader(const Pica::RegsInternal& regs, Pica::ShaderSetup& setup,
-                                     const VertexLayout& layout, bool accurate_mul);
+                                     const VertexLayout& layout);
 
     /// Binds a passthrough vertex shader
     void UseTrivialVertexShader();
@@ -84,11 +88,6 @@ public:
     /// Binds a fragment shader generated from PICA state
     void UseFragmentShader(const Pica::RegsInternal& regs, const Pica::Shader::UserConfig& user);
 
-    /// Switches the shader disk cache to the specified title
-    void SwitchPipelineCache(u64 title_id,
-                             const std::atomic_bool& stop_loading = std::atomic_bool{false},
-                             const VideoCore::DiskResourceLoadCallback& callback = {});
-
     /// Gets the current program ID
     u64 GetProgramID() const {
         return current_program_id;
@@ -98,7 +97,28 @@ public:
         current_program_id = program_id;
     }
 
+    void SetAccurateMul(bool _accurate_mul) {
+        profile.enable_accurate_mul = _accurate_mul;
+    }
+
 private:
+    friend ShaderDiskCache;
+
+    /// Loads the driver pipeline cache
+    void LoadDriverPipelineDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                                     const VideoCore::DiskResourceLoadCallback& callback = {});
+
+    /// Stores the generated pipeline cache
+    void SaveDriverPipelineDiskCache();
+
+    /// Loads the shader disk cache
+    void LoadDiskCache(const std::atomic_bool& stop_loading = std::atomic_bool{false},
+                       const VideoCore::DiskResourceLoadCallback& callback = {});
+
+    /// Switches the disk cache at runtime to use a different title ID
+    void SwitchDiskCache(u64 title_id, const std::atomic_bool& stop_loading,
+                         const VideoCore::DiskResourceLoadCallback& callback);
+
     /// Builds the rasterizer pipeline layout
     void BuildLayout();
 
@@ -108,8 +128,14 @@ private:
     /// Create pipeline cache directories. Returns true on success.
     bool EnsureDirectories() const;
 
+    /// Returns the Vulkan shader directory
+    std::string GetVulkanDir() const;
+
     /// Returns the pipeline cache storage dir
     std::string GetPipelineCacheDir() const;
+
+    /// Returns the transferable shader dir
+    std::string GetTransferableDir() const;
 
 private:
     const Instance& instance;
@@ -118,27 +144,24 @@ private:
     DescriptorUpdateQueue& update_queue;
 
     Pica::Shader::Profile profile{};
-    vk::UniquePipelineCache pipeline_cache;
+    vk::UniquePipelineCache driver_pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
     std::size_t num_worker_threads;
     Common::ThreadWorker workers;
     PipelineInfo current_info{};
     GraphicsPipeline* current_pipeline{};
-    tsl::robin_map<u64, std::unique_ptr<GraphicsPipeline>, Common::IdentityHash<u64>>
-        graphics_pipelines;
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;
     std::array<vk::DescriptorSet, NumRasterizerSets> bound_descriptor_sets{};
     std::array<u32, NumDynamicOffsets> offsets{};
 
     std::array<u64, MAX_SHADER_STAGES> shader_hashes;
     std::array<Shader*, MAX_SHADER_STAGES> current_shaders;
-    std::unordered_map<Pica::Shader::Generator::PicaVSConfig, Shader*> programmable_vertex_map;
-    std::unordered_map<std::string, Shader> programmable_vertex_cache;
-    std::unordered_map<Pica::Shader::Generator::PicaFixedGSConfig, Shader> fixed_geometry_shaders;
-    std::unordered_map<Pica::Shader::FSConfig, Shader> fragment_shaders;
+
     Shader trivial_vertex_shader;
 
     u64 current_program_id{0};
+    std::vector<std::shared_ptr<ShaderDiskCache>> disk_caches;
+    std::shared_ptr<ShaderDiskCache> curr_disk_cache{};
 };
 
 } // namespace Vulkan

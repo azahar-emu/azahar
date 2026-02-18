@@ -51,7 +51,7 @@ class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter
 
     override fun onLongClick(clicked: View): Boolean {
         if (setting.isEditable) {
-            adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
+            adapter.onInputBindingLongClick(setting, bindingAdapterPosition)
         } else {
             adapter.onClickDisabledSetting(!setting.isEditable)
         }

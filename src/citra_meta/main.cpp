@@ -4,6 +4,9 @@
 
 #include <iostream>
 
+#include "common/detached_tasks.h"
+#include "common/scope_exit.h"
+
 #ifdef ENABLE_QT
 #include "citra_qt/citra_qt.h"
 #endif
@@ -69,6 +72,9 @@ static bool CheckAndReportSSE42() {
 #endif
 
 int main(int argc, char* argv[]) {
+    Common::DetachedTasks detached_tasks;
+    SCOPE_EXIT({ detached_tasks.WaitForAllTasks(); });
+
 #if CITRA_HAS_SSE42
     if (!CheckAndReportSSE42()) {
         return 1;
@@ -84,8 +90,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (launch_room) {
-        LaunchRoom(argc, argv, true);
-        return 0;
+        return LaunchRoom(argc, argv, true);
     }
 #endif
 
@@ -98,13 +103,12 @@ int main(int argc, char* argv[]) {
     }
 
     if (!no_gui) {
-        LaunchQtFrontend(argc, argv);
-        return 0;
+        return LaunchQtFrontend(argc, argv);
     }
 #endif
 
 #if ENABLE_SDL2_FRONTEND
-    LaunchSdlFrontend(argc, argv);
+    return LaunchSdlFrontend(argc, argv);
 #else
     std::cout << "Cannot use SDL frontend as it was disabled at compile time. Exiting."
               << std::endl;

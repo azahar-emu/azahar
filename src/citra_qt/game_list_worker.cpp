@@ -92,7 +92,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             if (Loader::IsValidSMDH(smdh)) {
                 if (system_title) {
                     auto smdh_struct = reinterpret_cast<Loader::SMDH*>(smdh.data());
-                    if (!(smdh_struct->flags & Loader::SMDH::Flags::Visible)) {
+                    if (!smdh_struct->flags.visible) {
                         // Skip system titles without the visible flag.
                         return true;
                     }
@@ -113,7 +113,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 {
                     new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
                                          extdata_id, media_type,
-                                         res == Loader::ResultStatus::ErrorEncrypted),
+                                         res == Loader::ResultStatus::ErrorEncrypted,
+                                         loader->GetFileType() == Loader::FileType::CCI),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
                     new GameListItem(QString::fromStdString(Loader::GetFileTypeString(

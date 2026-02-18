@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -31,8 +31,6 @@ class AppletManager;
 /// Each APT service can only have up to 2 sessions connected at the same time.
 static const u32 MaxAPTSessions = 2;
 
-constexpr std::size_t SysMenuArgSize = 0x40;
-
 enum class StartupArgumentType : u32 {
     OtherApp = 0,
     Restart = 1,
@@ -52,6 +50,9 @@ public:
     ~Module();
 
     std::shared_ptr<AppletManager> GetAppletManager() const;
+
+    std::vector<u8> GetWirelessRebootInfoBuffer() const;
+    void SetWirelessRebootInfoBuffer(std::vector<u8> info_buf);
 
     class NSInterface : public ServiceFramework<NSInterface> {
     public:
@@ -73,6 +74,8 @@ public:
          *     0 : Result of function, 0 on success, otherwise error code
          */
         void SetWirelessRebootInfo(Kernel::HLERequestContext& ctx);
+
+        void CardUpdateInitialize(Kernel::HLERequestContext& ctx);
 
         /**
          * NS::ShutdownAsync service function.
@@ -546,6 +549,21 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          */
         void StartSystemApplet(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::StartNewestHomeMenu service function
+         *  Inputs:
+         *      0 : Command header [0x00200044]
+         *      1 : Partameters size
+         *      2 : 0x0
+         *      3 : Handle parameter
+         *      4 : (Parameters Size << 14) | 2
+         *      5 : void*, Parameters
+         *  Outputs:
+         *      0 : Return header
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void StartNewestHomeMenu(Kernel::HLERequestContext& ctx);
 
         /**
          * APT::OrderToCloseApplication service function
@@ -1072,8 +1090,6 @@ private:
     bool shared_font_relocated = false;
 
     u32 cpu_percent = 0; ///< CPU time available to the running application
-
-    std::array<u8, SysMenuArgSize> sys_menu_arg_buffer;
 
     ScreencapPostPermission screen_capture_post_permission =
         ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value

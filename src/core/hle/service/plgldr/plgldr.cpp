@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+// Originally MIT-licensed code from The Pixellizer Group
+
 // Copyright 2022 The Pixellizer Group
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -70,6 +72,9 @@ void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
     ar & plugin_loaded;
     ar & is_default_path;
     ar & plugin_path;
+    ar & memory_region;
+    ar & memory_block;
+    ar & plugin_process_id;
     ar & use_user_load_parameters;
     ar & user_load_parameters;
     ar & plg_event;
@@ -79,7 +84,6 @@ void PLG_LDR::PluginLoaderContext::serialize(Archive& ar, const unsigned int) {
     ar & exe_load_checksum;
     ar & load_exe_func;
     ar & load_exe_args;
-    ar & plugin_fb_addr;
 }
 SERIALIZE_IMPL(PLG_LDR::PluginLoaderContext)
 
@@ -111,9 +115,10 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
         }
     }
     FileSys::Plugin3GXLoader plugin_loader;
+    const auto low_title_Id = plgldr_context.user_load_parameters.low_title_Id;
     if (plgldr_context.use_user_load_parameters &&
-        plgldr_context.user_load_parameters.low_title_Id ==
-            static_cast<u32>(process.codeset->program_id) &&
+        (low_title_Id == static_cast<u32>(process.codeset->program_id) ||
+         low_title_Id == 0 /* Should load for any title */) &&
         plgldr_context.user_load_parameters.path[0]) {
         std::string plugin_file = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
                                   std::string(plgldr_context.user_load_parameters.path + 1);
@@ -148,12 +153,22 @@ void PLG_LDR::OnProcessRun(Kernel::Process& process, Kernel::KernelSystem& kerne
 }
 
 void PLG_LDR::OnProcessExit(Kernel::Process& process, Kernel::KernelSystem& kernel) {
-    if (plgldr_context.plugin_loaded) {
+    if (plgldr_context.plugin_loaded && process.process_id == plgldr_context.plugin_process_id) {
         u32 status = kernel.memory.Read32(FileSys::Plugin3GXLoader::_3GX_exe_load_addr - 0xC);
         if (status == 0) {
             LOG_CRITICAL(Service_PLGLDR, "Failed to launch {}: Checksum failed",
                          plgldr_context.plugin_path);
         }
+        if (plgldr_context.memory_region != static_cast<Kernel::MemoryRegion>(0)) {
+            kernel.GetMemoryRegion(plgldr_context.memory_region)
+                ->Free(plgldr_context.memory_block.first, plgldr_context.memory_block.second);
+            plgldr_context.memory_region = static_cast<Kernel::MemoryRegion>(0);
+        }
+        plgldr_context.plugin_loaded = false;
+        plgldr_context.plugin_process_id = UINT32_MAX;
+        plgldr_context.memory_changed_handle = 0;
+        kernel.memory.Plugin3GXFramebufferAddress() = 0;
+        LOG_INFO(Service_PLGLDR, "Plugin unloaded successfully.");
     }
 }
 

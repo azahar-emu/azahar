@@ -24,6 +24,7 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="about_description">Bouwversie, credits en meer</string>
     <string name="theme_and_color_description">Wijzig het uiterlijk van de app</string>
     <string name="install_cia_title">Installeer CIA</string>
+
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Selecteer GPU-stuurprogramma</string>
     <string name="select_gpu_driver_title">Wilt u uw huidige GPU-driver vervangen?</string>
@@ -83,8 +84,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="controller_dpad_axis_description">Sommige controllers kunnen hun D-pad mogelijk niet als as in kaart brengen. Als dat het geval is, gebruik dan de D-Pad (knoppen) sectie.</string>
     <string name="controller_dpad_button">D-Pad (Knop)</string>
     <string name="controller_dpad_button_description">Wijs het D-pad hier alleen aan toe als je problemen ondervindt met de toewijzing van de D-Pad (as)-knoppen.</string>
-    <string name="controller_axis_vertical">Op/neer-as</string>
-    <string name="controller_axis_horizontal">Links/rechts as</string>
     <string name="direction_up">Op</string>
     <string name="direction_down">Neer</string>
     <string name="direction_left">Links</string>
@@ -93,8 +92,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="input_dialog_description">Druk op of verplaats een invoer.</string>
     <string name="input_binding">Invoerbinding</string>
     <string name="input_binding_description">Druk op of verplaats een invoer waaraan u deze wilt koppelen %1$s</string>
-    <string name="input_binding_description_vertical_axis">Beweeg je joystick naar boven of beneden.</string>
-    <string name="input_binding_description_horizontal_axis">Beweeg je joystick naar links of rechts.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Verwissel Schermen</string>
     <string name="input_message_analog_only">Deze besturing moet worden gekoppeld aan een analoge gamepad-stick of D-pad-as!</string>

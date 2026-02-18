@@ -107,6 +107,9 @@ signals:
     void AddDirectory();
     void ShowList(bool show);
     void PopulatingCompleted();
+#ifdef ENABLE_DEVELOPER_OPTIONS
+    void StartingLaunchStressTest(const QString& game_path);
+#endif
 
 private slots:
     void OnItemExpanded(const QModelIndex& item);
@@ -123,7 +126,7 @@ private:
     void PopupContextMenu(const QPoint& menu_location);
     void PopupHeaderContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, const QString& path, const QString& name, u64 program_id,
-                      u64 extdata_id, Service::FS::MediaType media_type);
+                      u64 extdata_id, Service::FS::MediaType media_type, bool can_insert);
     void AddCustomDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddPermDirPopup(QMenu& context_menu, QModelIndex selected);
     void AddFavoritesPopup(QMenu& context_menu);
@@ -134,10 +137,6 @@ private:
     void changeEvent(QEvent*) override;
     void RetranslateUI();
 
-    QHBoxLayout* warning_layout = nullptr;
-    QWidget* warning_widget = nullptr;
-    QLabel* deprecated_3ds_warning = nullptr;
-    QPushButton* warning_hide = nullptr;
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
@@ -150,6 +149,8 @@ private:
     friend class GameListSearchField;
 
     const PlayTime::PlayTimeManager& play_time_manager;
+
+    std::chrono::time_point<std::chrono::steady_clock> time_last_refresh;
 };
 
 class GameListPlaceholder : public QWidget {

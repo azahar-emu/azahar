@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,13 +19,14 @@ struct ANativeWindow;
 
 class EmuWindow_Android_OpenGL : public EmuWindow_Android {
 public:
-    EmuWindow_Android_OpenGL(Core::System& system, ANativeWindow* surface);
+    EmuWindow_Android_OpenGL(Core::System& system, ANativeWindow* surface, bool is_secondary,
+                             EGLContext* sharedContext = NULL);
     ~EmuWindow_Android_OpenGL() override = default;
 
     void TryPresenting() override;
     void StopPresenting() override;
     void PollEvents() override;
-
+    EGLContext* GetEGLContext() override;
     std::unique_ptr<GraphicsContext> CreateSharedContext() const override;
 
 private:

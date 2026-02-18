@@ -7,7 +7,7 @@ The scripts in this directory assume that your current working directory is the 
 ## Pre-release checklist
 
 - [ ] Update compatibility list
-- [ ] Update translations
+- [ ] If this is a major release (2123.1 -> major.minor), update translations
 
 ### Note:
 

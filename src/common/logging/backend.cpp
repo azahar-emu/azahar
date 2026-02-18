@@ -51,6 +51,8 @@ public:
     virtual void EnableForStacktrace() = 0;
 
     virtual void Flush() = 0;
+
+    virtual void Close() = 0;
 };
 
 /**
@@ -70,6 +72,10 @@ public:
 
     void Flush() override {
         std::fflush(stderr);
+    }
+
+    void Close() override {
+        enabled = false;
     }
 
     void EnableForStacktrace() override {
@@ -130,6 +136,11 @@ public:
         file->Flush();
     }
 
+    void Close() override {
+        file->Close();
+        enabled = false;
+    }
+
     void EnableForStacktrace() override {
         enabled = true;
         bytes_written = 0;
@@ -158,6 +169,8 @@ public:
 
     void Flush() override {}
 
+    void Close() override {}
+
     void EnableForStacktrace() override {}
 };
 
@@ -177,11 +190,14 @@ public:
 
     void Flush() override {}
 
+    void Close() override {}
+
     void EnableForStacktrace() override {}
 };
 #endif
 
 bool initialization_in_progress_suppress_logging = true;
+bool logging_initialized = false;
 
 #ifdef CITRA_LINUX_GCC_BACKTRACE
 [[noreturn]] void SleepForever() {
@@ -216,6 +232,7 @@ public:
         instance = std::unique_ptr<Impl, decltype(&Deleter)>(
             new Impl(fmt::format("{}{}", log_dir, log_file), filter), Deleter);
         initialization_in_progress_suppress_logging = false;
+        logging_initialized = true;
     }
 
     static void Start() {
@@ -258,8 +275,8 @@ public:
         if (!filter.CheckMessage(log_class, log_level)) {
             return;
         }
-        Entry new_entry =
-            CreateEntry(log_class, log_level, filename, line_num, function, std::move(message));
+        Entry new_entry = CreateEntry(log_class, log_level, filename, line_num, function,
+                                      std::move(message), time_origin);
         if (!regex_filter.empty() &&
             !boost::regex_search(FormatLogMessage(new_entry), regex_filter)) {
             return;
@@ -272,6 +289,24 @@ public:
         } else {
             message_queue.EmplaceWait(new_entry);
         }
+    }
+
+    static Entry CreateEntry(Class log_class, Level log_level, const char* filename,
+                             unsigned int line_nr, const char* function, std::string&& message,
+                             const std::chrono::steady_clock::time_point& time_origin) {
+        using std::chrono::duration_cast;
+        using std::chrono::microseconds;
+        using std::chrono::steady_clock;
+
+        return {
+            .timestamp = duration_cast<microseconds>(steady_clock::now() - time_origin),
+            .log_class = log_class,
+            .log_level = log_level,
+            .filename = filename,
+            .line_num = line_nr,
+            .function = function,
+            .message = std::move(message),
+        };
     }
 
 private:
@@ -295,9 +330,9 @@ private:
             }
             backend_thread.request_stop();
             backend_thread.join();
-            const auto signal_entry =
-                CreateEntry(Class::Log, Level::Critical, "?", 0, "?",
-                            fmt::vformat("Received signal {}", fmt::make_format_args(sig)));
+            const auto signal_entry = CreateEntry(
+                Class::Log, Level::Critical, "?", 0, "?",
+                fmt::vformat("Received signal {}", fmt::make_format_args(sig)), time_origin);
             ForEachBackend([&signal_entry](Backend& backend) {
                 backend.EnableForStacktrace();
                 backend.Write(signal_entry);
@@ -310,12 +345,13 @@ private:
                     abort();
                 }
                 line.pop_back(); // Remove newline
-                const auto frame_entry =
-                    CreateEntry(Class::Log, Level::Critical, "?", 0, "?", std::move(line));
+                const auto frame_entry = CreateEntry(Class::Log, Level::Critical, "?", 0, "?",
+                                                     std::move(line), time_origin);
                 ForEachBackend([&frame_entry](Backend& backend) { backend.Write(frame_entry); });
             }
             using namespace std::literals;
-            const auto rip_entry = CreateEntry(Class::Log, Level::Critical, "?", 0, "?", "RIP"s);
+            const auto rip_entry =
+                CreateEntry(Class::Log, Level::Critical, "?", 0, "?", "RIP"s, time_origin);
             ForEachBackend([&rip_entry](Backend& backend) {
                 backend.Write(rip_entry);
                 backend.Flush();
@@ -348,6 +384,8 @@ private:
             };
             while (!stop_token.stop_requested()) {
                 message_queue.PopWait(entry, stop_token);
+                // Only write the log if something was actually popped (entry.filename != nullptr)
+                // (for example, when the stop token is signaled).
                 if (entry.filename != nullptr) {
                     write_logs();
                 }
@@ -367,24 +405,10 @@ private:
             backend_thread.join();
         }
 
-        ForEachBackend([](Backend& backend) { backend.Flush(); });
-    }
-
-    Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                      const char* function, std::string&& message) const {
-        using std::chrono::duration_cast;
-        using std::chrono::microseconds;
-        using std::chrono::steady_clock;
-
-        return {
-            .timestamp = duration_cast<microseconds>(steady_clock::now() - time_origin),
-            .log_class = log_class,
-            .log_level = log_level,
-            .filename = filename,
-            .line_num = line_nr,
-            .function = function,
-            .message = std::move(message),
-        };
+        ForEachBackend([](Backend& backend) {
+            backend.Flush();
+            backend.Close();
+        });
     }
 
     void ForEachBackend(auto lambda) {
@@ -485,9 +509,19 @@ void SetColorConsoleBackendEnabled(bool enabled) {
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
                        unsigned int line_num, const char* function, fmt::string_view format,
                        const fmt::format_args& args) {
-    if (!initialization_in_progress_suppress_logging) {
+    if (initialization_in_progress_suppress_logging) [[unlikely]] {
+        return;
+    }
+
+    if (logging_initialized) [[likely]] {
         Impl::Instance().PushEntry(log_class, log_level, filename, line_num, function,
                                    fmt::vformat(format, args));
+    } else {
+        // In the rare case that logging occurs before initialization, write the
+        // message to stderr to preserve useful debug information.
+        Entry new_entry = Impl::CreateEntry(log_class, log_level, filename, line_num, function,
+                                            fmt::vformat(format, args), {});
+        PrintMessage(new_entry);
     }
 }
 } // namespace Common::Log

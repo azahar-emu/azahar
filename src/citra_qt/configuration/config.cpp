@@ -371,7 +371,7 @@ void QtConfig::ReadControlValues() {
     const auto append_profile = [this, num_touch_from_button_maps] {
         Settings::InputProfile profile;
         profile.name =
-            ReadSetting(QStringLiteral("name"), QStringLiteral("default")).toString().toStdString();
+            ReadSetting(QStringLiteral("name"), QStringLiteral("Default")).toString().toStdString();
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -517,6 +517,8 @@ void QtConfig::ReadLayoutValues() {
 
     ReadGlobalSetting(Settings::values.render_3d);
     ReadGlobalSetting(Settings::values.factor_3d);
+    ReadGlobalSetting(Settings::values.swap_eyes_3d);
+    ReadGlobalSetting(Settings::values.render_3d_which_display);
     ReadGlobalSetting(Settings::values.filter_mode);
     ReadGlobalSetting(Settings::values.pp_shader_name);
     ReadGlobalSetting(Settings::values.anaglyph_shader_name);
@@ -564,8 +566,13 @@ void QtConfig::ReadMiscellaneousValues() {
 
     ReadBasicSetting(Settings::values.log_filter);
     ReadBasicSetting(Settings::values.log_regex_filter);
+#ifdef __unix__
     ReadBasicSetting(Settings::values.enable_gamemode);
+#endif
+#ifdef ENABLE_QT_UPDATE_CHECKER
     ReadBasicSetting(UISettings::values.check_for_update_on_start);
+    ReadBasicSetting(UISettings::values.update_check_channel);
+#endif
 
     qt_config->endGroup();
 }
@@ -668,6 +675,11 @@ void QtConfig::ReadPathValues() {
             ReadSetting(QStringLiteral("last_artic_base_addr"), QString{}).toString();
         UISettings::values.recent_files = ReadSetting(QStringLiteral("recentFiles")).toStringList();
         UISettings::values.language = ReadSetting(QStringLiteral("language"), QString{}).toString();
+
+        ReadBasicSetting(UISettings::values.inserted_cartridge);
+        if (!FileUtil::Exists(UISettings::values.inserted_cartridge.GetValue())) {
+            UISettings::values.inserted_cartridge.SetValue("");
+        }
     }
 
     qt_config->endGroup();
@@ -685,7 +697,8 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.use_hw_shader);
     ReadGlobalSetting(Settings::values.shaders_accurate_mul);
     ReadGlobalSetting(Settings::values.use_disk_shader_cache);
-    ReadGlobalSetting(Settings::values.use_vsync_new);
+    ReadGlobalSetting(Settings::values.use_vsync);
+    ReadGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     ReadGlobalSetting(Settings::values.resolution_factor);
     ReadGlobalSetting(Settings::values.frame_limit);
     ReadGlobalSetting(Settings::values.turbo_limit);
@@ -745,6 +758,7 @@ void QtConfig::ReadSystemValues() {
         ReadBasicSetting(Settings::values.steps_per_hour);
         ReadBasicSetting(Settings::values.plugin_loader_enabled);
         ReadBasicSetting(Settings::values.allow_plugin_loader);
+        ReadBasicSetting(Settings::values.apply_region_free_patch);
     }
 
     qt_config->endGroup();
@@ -802,7 +816,9 @@ void QtConfig::ReadUIValues() {
         UISettings::values.theme =
             ReadSetting(QStringLiteral("theme"), QString::fromUtf8(UISettings::themes[0].second))
                 .toString();
+#ifdef USE_DISCORD_PRESENCE
         ReadBasicSetting(UISettings::values.enable_discord_presence);
+#endif
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
 
         ReadUILayoutValues();
@@ -837,7 +853,6 @@ void QtConfig::ReadUIGameListValues() {
     ReadBasicSetting(UISettings::values.game_list_row_2);
     ReadBasicSetting(UISettings::values.game_list_hide_no_icon);
     ReadBasicSetting(UISettings::values.game_list_single_line_mode);
-    ReadBasicSetting(UISettings::values.show_3ds_files_warning);
 
     ReadBasicSetting(UISettings::values.show_compat_column);
     ReadBasicSetting(UISettings::values.show_region_column);
@@ -1082,6 +1097,8 @@ void QtConfig::SaveLayoutValues() {
 
     WriteGlobalSetting(Settings::values.render_3d);
     WriteGlobalSetting(Settings::values.factor_3d);
+    WriteGlobalSetting(Settings::values.swap_eyes_3d);
+    WriteGlobalSetting(Settings::values.render_3d_which_display);
     WriteGlobalSetting(Settings::values.filter_mode);
     WriteGlobalSetting(Settings::values.pp_shader_name);
     WriteGlobalSetting(Settings::values.anaglyph_shader_name);
@@ -1127,9 +1144,13 @@ void QtConfig::SaveMiscellaneousValues() {
 
     WriteBasicSetting(Settings::values.log_filter);
     WriteBasicSetting(Settings::values.log_regex_filter);
+#ifdef __unix__
     WriteBasicSetting(Settings::values.enable_gamemode);
+#endif
+#ifdef ENABLE_QT_UPDATE_CHECKER
     WriteBasicSetting(UISettings::values.check_for_update_on_start);
-
+    WriteBasicSetting(UISettings::values.update_check_channel);
+#endif
     qt_config->endGroup();
 }
 
@@ -1199,6 +1220,7 @@ void QtConfig::SavePathValues() {
                      UISettings::values.last_artic_base_addr, QString{});
         WriteSetting(QStringLiteral("recentFiles"), UISettings::values.recent_files);
         WriteSetting(QStringLiteral("language"), UISettings::values.language, QString{});
+        WriteBasicSetting(UISettings::values.inserted_cartridge);
     }
 
     qt_config->endGroup();
@@ -1216,7 +1238,8 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.use_hw_shader);
     WriteGlobalSetting(Settings::values.shaders_accurate_mul);
     WriteGlobalSetting(Settings::values.use_disk_shader_cache);
-    WriteGlobalSetting(Settings::values.use_vsync_new);
+    WriteGlobalSetting(Settings::values.use_vsync);
+    WriteGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     WriteGlobalSetting(Settings::values.resolution_factor);
     WriteGlobalSetting(Settings::values.frame_limit);
     WriteGlobalSetting(Settings::values.turbo_limit);
@@ -1276,6 +1299,7 @@ void QtConfig::SaveSystemValues() {
         WriteBasicSetting(Settings::values.steps_per_hour);
         WriteBasicSetting(Settings::values.plugin_loader_enabled);
         WriteBasicSetting(Settings::values.allow_plugin_loader);
+        WriteBasicSetting(Settings::values.apply_region_free_patch);
     }
 
     qt_config->endGroup();
@@ -1316,7 +1340,9 @@ void QtConfig::SaveUIValues() {
     if (global) {
         WriteSetting(QStringLiteral("theme"), UISettings::values.theme,
                      QString::fromUtf8(UISettings::themes[0].second));
+#ifdef USE_DISCORD_PRESENCE
         WriteBasicSetting(UISettings::values.enable_discord_presence);
+#endif
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
 
         SaveUILayoutValues();
@@ -1351,7 +1377,6 @@ void QtConfig::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.game_list_row_2);
     WriteBasicSetting(UISettings::values.game_list_hide_no_icon);
     WriteBasicSetting(UISettings::values.game_list_single_line_mode);
-    WriteBasicSetting(UISettings::values.show_3ds_files_warning);
 
     WriteBasicSetting(UISettings::values.show_compat_column);
     WriteBasicSetting(UISettings::values.show_region_column);

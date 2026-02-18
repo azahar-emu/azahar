@@ -35,6 +35,8 @@ struct FramebufferLayout {
     bool is_rotated = true;
     bool is_portrait = false;
     bool additional_screen_enabled;
+    float top_opacity = 1.0f;
+    float bottom_opacity = 1.0f;
     Common::Rectangle<u32> additional_screen;
 
     CardboardSettings cardboard;
@@ -46,6 +48,8 @@ struct FramebufferLayout {
     u32 GetScalingRatio() const;
 
     static float GetAspectRatioValue(Settings::AspectRatio aspect_ratio);
+
+    Settings::StereoRenderOption render_3d_mode = Settings::values.render_3d.GetValue();
 };
 
 /**
@@ -132,6 +136,14 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout SeparateWindowsLayout(u32 width, u32 height, bool is_secondary, bool upright);
+
+/**
+ * Method for constructing the secondary layout for Android, based on
+ * the appropriate setting.
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ */
+FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height);
 
 /**
  * Factory method for constructing a custom FramebufferLayout

@@ -27,7 +27,7 @@
           <item>
            <widget class="QCheckBox" name="toggle_virtual_sd">
             <property name="text">
-             <string>Use Virtual SD</string>
+             <string>Use virtual SD card</string>
             </property>
            </widget>
           </item>
@@ -42,7 +42,7 @@
            <item>
             <widget class="QCheckBox" name="toggle_custom_storage">
              <property name="text">
-              <string>Use Custom Storage</string>
+              <string>Use custom storage location</string>
              </property>
             </widget>
            </item>
@@ -187,7 +187,7 @@
              <string>Compress installed CIA content</string>
             </property>
             <property name="toolTip">
-              <string>Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>

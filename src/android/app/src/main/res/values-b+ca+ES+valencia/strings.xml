@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">Canvia els fitxers que Azahar utilitza per a carregar aplicacions</string>
     <string name="theme_and_color_description">Modifica l\'aspecte de l\'app</string>
     <string name="install_cia_title">Instal·lar CIA</string>
-    <string name="warning_3ds_files"><![CDATA[Els fitxers encriptats .3ds ja no són compatibles. Pot ser que siga necessari desencriptar-los o canviar-los de nom a .cci. <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">Més Informació.</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -112,8 +111,6 @@
     <string name="controller_dpad_axis_description">És possible que alguns controladors no puguen assignar el D-pad com un eix. Si aquest és el cas, utilitza la secció D-Pad (botons).</string>
     <string name="controller_dpad_button">D-Pad (Botó)</string>
     <string name="controller_dpad_button_description">Assigna només el D-pad a aquests si tens problemes amb les assignacions de botons del D-Pad (Eix).</string>
-    <string name="controller_axis_vertical">Eix Vertical</string>
-    <string name="controller_axis_horizontal">Eix Horitzontal</string>
     <string name="direction_up">Amunt</string>
     <string name="direction_down">Avall</string>
     <string name="direction_left">Esquerra</string>
@@ -122,8 +119,6 @@
     <string name="input_dialog_description">Pulsa o mou un botó/palanca.</string>
     <string name="input_binding">Assignació de botons</string>
     <string name="input_binding_description">Prem o mou una entrada per enllaçar-la a %1$s.</string>
-    <string name="input_binding_description_vertical_axis">Mou el joystick amunt o avall.</string>
-    <string name="input_binding_description_horizontal_axis">Mou el joystick a esquerra o dreta.</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercanviar Pantalles</string>
     <string name="button_turbo">Turbo</string>
@@ -193,6 +188,9 @@
     <string name="region_mismatch">Advertiment Regió No Vàlida</string>
     <string name="region_mismatch_emulated">La configuració del país no és vàlida per a la regió emulada seleccionada.</string>
     <string name="region_mismatch_console">La configuració del país no és vàlida per a la consola vinculada actual.</string>
+    <string name="storage">Emmagatzematge</string>
+    <string name="compress_cia_installs">Comprimir el contingut de CIAs instal·lats</string>
+    <string name="compress_cia_installs_description">Comprimix el contingut de fitxers CIA quan són instal·lats a la SD emulada. Només afecta contingut CIA instal·lat amb esta opció activada.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Càmera interior</string>
@@ -214,21 +212,18 @@
     <string name="spirv_shader_gen_description">Usa SPIR-V en vez de GLSL per a emetre el fragment de ombrejador utilitzat per a emular PICA.</string>
     <string name="disable_spirv_optimizer">Desativar l\'optimitzador SPIR-V</string>
     <string name="disable_spirv_optimizer_description">Desactiva la passada d\'optimització SPIR-V reduint considerablement el quequeig i afectant poc el rendiment.</string>
-    <string name="async_shaders">Activar compilació de ombrejadors asíncrona</string>
     <string name="async_shaders_description">Compila els ombrejats en segón pla per a reduir les aturades durant la partida.
 S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="linear_filtering">Filtre Linear</string>
     <string name="linear_filtering_description">Activa el filtre linear, que fa que els gràfics del joc es vegen més suaus.</string>
     <string name="texture_filter_name">Filtre de Textures</string>
     <string name="texture_filter_description">Millora l\'aspecte visual de les aplicacions aplicant un filtre a les textures. Els filtres compatibles són Anime4K, Ultrafast, Bicubic, ScaleForce, xBRZ Freescale i MMPX.</string>
-    <string name="delay_render_thread">Endarrerir fil de renderitzat del joc</string>
     <string name="delay_render_thread_description">Retarda el fil de renderitzat del joc en enviar dades a la GPU. Ajuda a solucionar problemes de rendiment en les (poques) aplicacions amb velocitats de fotogrames dinàmiques.</string>
     <string name="advanced">Avançat</string>
     <string name="texture_sampling_name">Mostreig de Textures</string>
     <string name="texture_sampling_description">Sobreescriu el filtre de mostreig usat en jocs. Pot ser útil en uns certs casos de jocs amb baix rendiment en pujar la resolució. Si no estàs segur, possa\'l en Controlat per Joc.</string>
     <string name="shaders_accurate_mul">Multiplicació Precisa</string>
     <string name="shaders_accurate_mul_description">Usa multiplicacions més precises en els ombrejos de Hardware, que podrien arreglar uns certs problemes gràfics. Quan s\'active, el rendiment es reduirà.</string>
-    <string name="asynchronous_gpu">Activar Emulació Asíncrona de la GPU</string>
     <string name="asynchronous_gpu_description">Usa un fil separat per a emular la GPU de manera asíncrona. Quan s\'active, el rendiment millorarà.</string>
     <string name="frame_limit_enable">Límit de velocitat</string>
     <string name="frame_limit_enable_description">Quan s\'active, la velocitat d\'emulació estarà limitada a un percentatge determinat de la velocitat normal. Quan es desactive, la velocitat d\'emulació no tindrà límit i la tecla d\'accés ràpid de velocitat turbo no funcionarà.</string>
@@ -283,7 +278,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="audio_volume">Volum</string>
     <string name="audio_stretch">Extensió d\'Àudio</string>
     <string name="audio_stretch_description">Estén l\'àudio per a reduir les aturades. Quan s\'active, la latència d\'àudio s\'incrementarà i reduirà un poc el rendiment.</string>
-    <string name="realtime_audio">Activar àudio en temps real</string>
     <string name="realtime_audio_description">Ajusta la velocitat de reproducció d\'àudio per a compensar les caigudes en la velocitat d\'emulació de quadres. Això significa que l\'àudio es reproduirà a velocitat completa fins i tot quan la velocitat de quadres del joc siga baixa. Pot causar problemes de desincronització d\'àudio.</string>
     <string name="audio_input_type">Dispositiu d\'entrada d\'àudio</string>
     <string name="sound_output_mode">Mode d\'eixida de l\'àudio</string>
@@ -295,12 +289,9 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="hw_shaders_description">Usa el hardware per a emular els ombrejadors de 3DS. Quan s\'active, el rendiment millorarà notablement.</string>
     <string name="cpu_clock_speed">Velocitat de rellotge de la CPU</string>
     <string name="vsync">Activar Sincronització Vertical</string>
-    <string name="vsync_description">Sincronitza els quadres per segon del joc amb la taxa de refresc del teu dispositiu.</string>
     <string name="renderer_debug">Renderitzador de depuració</string>
     <string name="renderer_debug_description">Arxiva informació addicional gràfica relacionada amb la depuració. Quan està activada, el rendiment dels jocs serà reduït considerablement</string>
-    <string name="instant_debug_log">Guardar l\'eixida del registre en cada missatge</string>
     <string name="instant_debug_log_description">Envia immediatament el registre de depuració a un arxiu. Usa-ho si Azahar falla i es talla l\'eixida del registre.</string>
-    <string name="delay_start_lle_modules">Inici diferit amb mòduls LLE</string>
     <string name="delay_start_lle_modules_description">Retarda l\'inici de l\'aplicació quan els mòduls LLE estan habilitats.</string>
     <string name="deterministic_async_operations">Operacions asíncrones deterministes</string>
     <string name="deterministic_async_operations_description">Fa que les operacions asíncrones siguen deterministes per a la depuració. Habilitar esta opció pot causar bloquejos.</string>
@@ -356,8 +347,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancel·lant</string>
-    <string name="important">Important</string>
-    <string name="dont_show_again">No tornar a mostrar</string>
     <string name="visibility">Visibilitat</string>
     <string name="information">Informació</string>
 
@@ -398,6 +387,10 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_configure_controls">Configurar Controls</string>
     <string name="emulation_edit_layout">Editar Estil</string>
     <string name="emulation_done">Fet</string>
+    <string name="emulation_button_sliding">Lliscament de botons</string>
+    <string name="emulation_button_sliding_disabled">Mantindre el botó pressionat originalment</string>
+    <string name="emulation_button_sliding_enabled">Mantindre el botó pressionat actualment</string>
+    <string name="emulation_button_sliding_alternative">Mantindre el botó original i actualment pressionat</string>
     <string name="emulation_toggle_controls">Activar Controls</string>
     <string name="emulation_control_scale">Ajustar Escala</string>
     <string name="emulation_control_scale_global">Escala Global</string>
@@ -410,6 +403,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_aspect_ratio">Relació d\'Aspecte</string>
     <string name="emulation_switch_screen_layout">Estil de Pantalla Apaïsada</string>
     <string name="emulation_switch_portrait_layout">Estil de Pantalla de Perfil</string>
+    <string name="emulation_switch_secondary_layout">Estil de Pantalla Secundària</string>
+    <string name="emulation_switch_secondary_layout_description">La disposició de la pantalla secundària connectada, amb cable o sense fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Vertical</string>
     <string name="emulation_screen_layout_single">Pantalla Única</string>
@@ -417,6 +412,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_screen_layout_hybrid">Pantalles híbrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Per omissió</string>
+    <string name="emulation_secondary_display_default">Per defecte del sistema (espill)</string>
     <string name="emulation_screen_layout_custom">Estil Personalitzat</string>
     <string name="emulation_small_screen_position">Posició de Pantalla Xicoteta</string>
     <string name="small_screen_position_description">On hauria d\'aparéixer la pantalla xicoteta en relació amb la gran en Proporció de Pantalla Gran?</string>
@@ -512,13 +508,9 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="save_load_error">Error de guardat/càrrega</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocorregut un error fatal. Mira el registre per a més detalls.\nSeguir amb l\'emulació podria resultar en diversos penges i problemes.</string>
-    <string name="invalid_region">Regió no vàlida</string>
     <string name="unsupported_encrypted">Aplicació cifrada no suportada</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparant ombrejadors</string>
-    <string name="building_shaders">Construint ombrejadors</string>
-
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
     <string name="uninstall_cia">Desinstal·lar Aplicació</string>
@@ -538,35 +530,14 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="create_shortcut">Crear drecera</string>
     <string name="shortcut_name_empty">El nom de la drecera no pot estar buit</string>
     <string name="shortcut_image_stretch_toggle">Allargar per a ajustar la imatge</string>
-
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">Fitxer:</string>
+    <string name="game_context_type">Tipus:</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">Mostrar informació de rendiment</string>
     <string name="performance_overlay_options">Informació de rendiment</string>
     <string name="performance_overlay_enable">Activar informació de rendiment</string>
     <string name="performance_overlay_options_description">Configura la informació de rendiment</string>
-    <string name="overlay_show_fps">Mostrar FPS</string>
-    <string name="overlay_show_fps_description">Mostra els fotogrames per segon actuals.</string>
-    <string name="overlay_show_frametime">Mostrar duració de fotogrames</string>
-    <string name="overlay_show_frametime_description">Mostra la duració actual de cada fotograma.</string>
-    <string name="overlay_show_speed">Mostrar velocitat</string>
-    <string name="overlay_show_speed_description">Mostra el percentatge de velocitat d\'emulació actual.</string>
-    <string name="overlay_show_app_ram_usage">Mostrar l\'ús de memòria de l\'aplicació</string>
-    <string name="overlay_show_app_ram_usage_description">Mostra la quantitat de memòria RAM que esta usant l\'emulador.</string>
-    <string name="overlay_show_available_ram">Mostrar memòria disponible</string>
-    <string name="overlay_show_available_ram_description">Mostra la quantitat de memòria RAM que esta disponible.</string>
-    <string name="overlay_show_battery_temp">Mostrar la temperatura de la bateria</string>
-    <string name="overlay_show_battery_temp_description">Mostra la temperatura actual de la bateria en Celsius i Fahrenheit.</string>
-    <string name="overlay_position">Posició de la informació</string>
-    <string name="overlay_position_description">Tria on la informació de rendiment serà mostrada en la pantalla.</string>
-    <string name="overlay_position_top_left">Dalt a l\'esquerra</string>
-    <string name="overlay_position_top_right">Dalt a la dreta</string>
-    <string name="overlay_position_bottom_left">Avall a l\'esquerra</string>
-    <string name="overlay_position_bottom_right">Avall a la dreta</string>
-    <string name="overlay_position_center_top">Dalt al centre</string>
-    <string name="overlay_position_center_bottom">Avall al centre</string>
-    <string name="overlay_background">Fons de la informació</string>
-    <string name="overlay_background_description">Agrega un fons darrere de la informació per a fer-la més llegible.</string>
-
     <!-- Cheats -->
     <string name="cheats">Trucs</string>
     <string name="cheats_add">Afegir trucs</string>
@@ -669,7 +640,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
 
     <!-- Render 3D modes -->
     <string name="side_by_side">De costat a costat</string>
-    <string name="reverse_side_by_side">De costat a costat invers</string>
     <string name="anaglyph">Anàglifo</string>
     <string name="interlaced">Entrellaçat</string>
     <string name="reverse_interlaced">Entrellaçat invers</string>
@@ -858,4 +828,4 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_occupied_quicksave_slot">Guardat ràpid - %1$tF %1$tR</string>
     <string name="quickload_not_found">Guardat ràpid no disponible.</string>
 
-</resources>
+    </resources>

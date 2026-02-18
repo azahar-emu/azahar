@@ -913,6 +913,14 @@ void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
     }
 }
 
+void FS_USER::GetCardType(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.Push(0); // CTR Card
+    LOG_DEBUG(Service_FS, "(STUBBED) called");
+}
+
 void FS_USER::GetSdmcArchiveResource(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -999,8 +1007,8 @@ void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(false);
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    rb.Push(!system.GetCartridge().empty());
+    LOG_DEBUG(Service_FS, "called");
 }
 
 void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
@@ -1681,14 +1689,20 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::RegisterProgramInfo(u32 process_id, u64 program_id, const std::string& filepath) {
-    const MediaType media_type = GetMediaTypeFromPath(filepath);
+    MediaType media_type;
+    if (filepath == system.GetCartridge()) {
+        media_type = MediaType::GameCard;
+    } else {
+        media_type = GetMediaTypeFromPath(filepath);
+    }
+
     program_info_map.insert_or_assign(process_id, ProgramInfo{program_id, media_type});
     if (media_type == MediaType::GameCard) {
         current_gamecard_path = filepath;
     }
 }
 
-std::string FS_USER::GetCurrentGamecardPath() const {
+std::string FS_USER::GetRegisteredGamecardPath() const {
     return current_gamecard_path;
 }
 
@@ -1779,7 +1793,7 @@ FS_USER::FS_USER(Core::System& system)
         {0x0810, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
         {0x0811, nullptr, "DeleteSystemSaveData"},
         {0x0812, &FS_USER::GetFreeBytes, "GetFreeBytes"},
-        {0x0813, nullptr, "GetCardType"},
+        {0x0813, &FS_USER::GetCardType, "GetCardType"},
         {0x0814, &FS_USER::GetSdmcArchiveResource, "GetSdmcArchiveResource"},
         {0x0815, &FS_USER::GetNandArchiveResource, "GetNandArchiveResource"},
         {0x0816, nullptr, "GetSdmcFatfsError"},

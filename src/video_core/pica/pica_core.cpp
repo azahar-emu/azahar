@@ -35,6 +35,7 @@ PicaCore::PicaCore(Memory::MemorySystem& memory_, std::shared_ptr<DebugContext> 
       geometry_pipeline{regs.internal, gs_unit, gs_setup},
       shader_engine{CreateEngine(Settings::values.use_shader_jit.GetValue())} {
     InitializeRegs();
+    dirty_regs.SetAllDirty();
 
     const auto submit_vertex = [this](const AttributeBuffer& buffer) {
         const auto add_triangle = [this](const OutputVertex& v0, const OutputVertex& v1,
@@ -258,8 +259,7 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         if (offset >= 4096) {
             LOG_ERROR(HW_GPU, "Invalid GS program offset {}", offset);
         } else {
-            gs_setup.program_code[offset] = value;
-            gs_setup.MarkProgramCodeDirty();
+            gs_setup.UpdateProgramCode(offset, value);
             offset++;
         }
         break;
@@ -274,11 +274,10 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
     case PICA_REG_INDEX(gs.swizzle_patterns.set_word[6]):
     case PICA_REG_INDEX(gs.swizzle_patterns.set_word[7]): {
         u32& offset = regs.internal.gs.swizzle_patterns.offset;
-        if (offset >= gs_setup.swizzle_data.size()) {
+        if (offset >= gs_setup.GetSwizzleData().size()) {
             LOG_ERROR(HW_GPU, "Invalid GS swizzle pattern offset {}", offset);
         } else {
-            gs_setup.swizzle_data[offset] = value;
-            gs_setup.MarkSwizzleDataDirty();
+            gs_setup.UpdateSwizzleData(offset, value);
             offset++;
         }
         break;
@@ -340,11 +339,10 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         if (offset >= 512) {
             LOG_ERROR(HW_GPU, "Invalid VS program offset {}", offset);
         } else {
-            vs_setup.program_code[offset] = value;
-            vs_setup.MarkProgramCodeDirty();
-            if (!regs.internal.pipeline.gs_unit_exclusive_configuration) {
-                gs_setup.program_code[offset] = value;
-                gs_setup.MarkProgramCodeDirty();
+            vs_setup.UpdateProgramCode(offset, value);
+            if (!regs.internal.pipeline.gs_unit_exclusive_configuration &&
+                regs.internal.pipeline.use_gs == PipelineRegs::UseGS::No) {
+                gs_setup.UpdateProgramCode(offset, value);
             }
             offset++;
         }
@@ -360,14 +358,13 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
     case PICA_REG_INDEX(vs.swizzle_patterns.set_word[6]):
     case PICA_REG_INDEX(vs.swizzle_patterns.set_word[7]): {
         u32& offset = regs.internal.vs.swizzle_patterns.offset;
-        if (offset >= vs_setup.swizzle_data.size()) {
+        if (offset >= vs_setup.GetSwizzleData().size()) {
             LOG_ERROR(HW_GPU, "Invalid VS swizzle pattern offset {}", offset);
         } else {
-            vs_setup.swizzle_data[offset] = value;
-            vs_setup.MarkSwizzleDataDirty();
-            if (!regs.internal.pipeline.gs_unit_exclusive_configuration) {
-                gs_setup.swizzle_data[offset] = value;
-                gs_setup.MarkSwizzleDataDirty();
+            vs_setup.UpdateSwizzleData(offset, value);
+            if (!regs.internal.pipeline.gs_unit_exclusive_configuration &&
+                regs.internal.pipeline.use_gs == PipelineRegs::UseGS::No) {
+                gs_setup.UpdateSwizzleData(offset, value);
             }
             offset++;
         }

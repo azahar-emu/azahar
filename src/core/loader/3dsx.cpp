@@ -249,6 +249,17 @@ static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFile* file,
     return ERROR_NONE;
 }
 
+AppLoader_THREEDSX::AppLoader_THREEDSX(Core::System& system_, FileUtil::IOFile&& file,
+                                       const std::string& filename, const std::string& filepath)
+    : AppLoader(system_, std::move(file)), filename(filename), filepath(filepath) {
+
+    filetype = IdentifyType(this->file.get());
+
+    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(this->file.get()) != std::nullopt) {
+        this->file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(this->file));
+    }
+}
+
 FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile* file) {
     u32 magic;
     file->Seek(0, SEEK_SET);
@@ -269,10 +280,6 @@ ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process)
 
     if (!file->IsOpen())
         return ResultStatus::Error;
-
-    if (FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt) {
-        file = std::make_unique<FileUtil::Z3DSReadIOFile>(std::move(file));
-    }
 
     std::shared_ptr<CodeSet> codeset;
     if (Load3DSXFile(system, file.get(), Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
@@ -341,13 +348,12 @@ AppLoader::CompressFileInfo AppLoader_THREEDSX::GetCompressFileInfo() {
     info.recommended_compressed_extension = "z3dsx";
     info.recommended_uncompressed_extension = "3dsx";
     info.underlying_magic = std::array<u8, 4>({'3', 'D', 'S', 'X'});
-    info.is_compressed =
-        FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt;
+    info.is_compressed = file->IsCompressed();
     return info;
 }
 
 bool AppLoader_THREEDSX::IsFileCompressed() {
-    return FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file.get()) != std::nullopt;
+    return file->IsCompressed();
 }
 
 ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {

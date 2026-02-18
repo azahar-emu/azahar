@@ -61,15 +61,12 @@
     <!-- Audio settings strings -->
     <string name="audio_volume">Garsumas</string>
     <string name="audio_stretch">Garso ištempimas</string>
-    <string name="realtime_audio">Įjungti realaus laiko garsą</string>
     <string name="layout_screen_orientation_auto_sensor">Automatinis</string>
     <string name="learn_more">Sužinoti daugiau</string>
     <string name="close">Uždaryti</string>
     <string name="reset_all_settings">Atstatyti visus nustatymus?</string>
     <string name="start">Pradėti</string>
     <string name="cancelling">Atšaukiama...</string>
-    <string name="important">Svarbu</string>
-    <string name="dont_show_again">Daugiau niekada nerodyti</string>
     <!-- Preferences Screen -->
     <string name="preferences_settings">Nustatymai</string>
     <string name="preferences_system">Sistema</string>

@@ -48,6 +48,15 @@ if (APPLE)
     else()
         # Minimum macOS 13
         set(CMAKE_OSX_DEPLOYMENT_TARGET "13.4")
+
+        # Catch compiler issue on AppleClang versions below 15.0
+        # TODO: Remove this check when we drop macOS 13 Ventura
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
+            message(FATAL_ERROR "AppleClang 15.0 or later is required due to a compiler bug in earlier versions.\n"
+                                "Current version: ${CMAKE_CXX_COMPILER_VERSION}\n"
+                                "After updating, delete 'CMakeCache.txt' in the build directory.")
+        endif()
     endif()
 endif()
 
@@ -111,6 +120,8 @@ option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
 option(ENABLE_SSE42 "Enable SSE4.2 optimizations on x86_64" ON)
+
+option(ENABLE_DEVELOPER_OPTIONS "Enable functionality targeted at emulator developers" OFF)
 
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
@@ -212,7 +223,7 @@ function(check_submodules_present)
     foreach(module ${gitmodules})
         string(REGEX REPLACE "path *= *" "" module ${module})
         if (NOT EXISTS "${PROJECT_SOURCE_DIR}/${module}/.git")
-            message(SEND_ERROR "Git submodule ${module} not found."
+            message(SEND_ERROR "Git submodule ${module} not found.\n"
                     "Please run: git submodule update --init --recursive")
         endif()
     endforeach()
@@ -299,7 +310,7 @@ find_package(Threads REQUIRED)
 
 if (ENABLE_QT)
     if (NOT USE_SYSTEM_QT)
-        download_qt(6.7.2)
+        download_qt(6.9.3)
     endif()
 
     find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)

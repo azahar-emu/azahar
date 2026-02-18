@@ -160,8 +160,8 @@ bool InitializeCompiler() {
 }
 } // Anonymous namespace
 
-vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device,
-                         std::string_view premable) {
+std::vector<u32> CompileGLSL(std::string_view code, vk::ShaderStageFlagBits stage,
+                             std::string_view premable) {
     if (!InitializeCompiler()) {
         return {};
     }
@@ -217,7 +217,7 @@ vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, v
         LOG_INFO(Render_Vulkan, "SPIR-V conversion messages: {}", spv_messages);
     }
 
-    return CompileSPV(out_code, device);
+    return out_code;
 }
 
 vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device) {
@@ -229,10 +229,15 @@ vk::ShaderModule CompileSPV(std::span<const u32> code, vk::Device device) {
     try {
         return device.createShaderModule(shader_info);
     } catch (vk::SystemError& err) {
-        UNREACHABLE_MSG("{}", err.what());
+        LOG_ERROR(Render_Vulkan, "{}", err.what());
     }
 
     return {};
+}
+
+vk::ShaderModule Compile(std::string_view code, vk::ShaderStageFlagBits stage, vk::Device device,
+                         std::string_view premable) {
+    return CompileSPV(CompileGLSL(code, stage, premable), device);
 }
 
 } // namespace Vulkan

@@ -17,6 +17,8 @@
   !error "PRODUCT_VARIANT must be defined"
 !endif
 
+ManifestDPIAware true
+
 !define PRODUCT_NAME "Azahar"
 !define PRODUCT_PUBLISHER "Azahar Emulator Developers"
 !define PRODUCT_WEB_SITE "https://azahar-emu.org/"
@@ -60,6 +62,7 @@ Page custom desktopShortcutPageCreate desktopShortcutPageLeave
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
+!define MUI_FINISHPAGE_RUN "$INSTDIR\azahar.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -106,7 +109,6 @@ Function .onInit
   StrCpy $DesktopShortcut 1
   !insertmacro MULTIUSER_INIT
 
-  ; Keep in sync with build_info.txt
   !define MIN_WIN10_VERSION 1607
   ${IfNot} ${AtLeastwin10}
   ${OrIfNot} ${AtLeastWaaS} ${MIN_WIN10_VERSION}
@@ -123,9 +125,9 @@ FunctionEnd
 
 !macro UPDATE_DISPLAYNAME
   ${If} $MultiUser.InstallMode == "CurrentUser"
-    StrCpy $DisplayName "$(^Name) (User)"
+    StrCpy $DisplayName "${PRODUCT_NAME} (User)"
   ${Else}
-    StrCpy $DisplayName "$(^Name)"
+    StrCpy $DisplayName "${PRODUCT_NAME}"
   ${EndIf}
 !macroend
 
@@ -165,9 +167,6 @@ Section "Base"
   ${If} $DesktopShortcut == 1
     CreateShortCut "$DESKTOP\$DisplayName.lnk" "$INSTDIR\azahar.exe"
   ${EndIf}
-
-  ; ??
-  SetOutPath "$TEMP"
 SectionEnd
 
 !include "FileFunc.nsh"
@@ -207,9 +206,10 @@ Section Uninstall
   RMDir /r "$INSTDIR\scripting"
   RMDir "$INSTDIR"
 
+  DeleteRegKey HKCU "Software\Classes\discord-1345366770436800533"
+
   DeleteRegKey SHCTX "${PRODUCT_UNINST_KEY}"
   DeleteRegKey SHCTX "${PRODUCT_DIR_REGKEY}"
-  DeleteRegKey HKCU "Software\Classes\discord-1345366770436800533"
 
   SetAutoClose true
 SectionEnd

@@ -224,6 +224,11 @@ public:
         is_done = true;
     }
 
+    void Cancel() {
+        is_cancel = true;
+        Close();
+    }
+
     const std::vector<InstallResult>& GetInstallResults() const {
         return install_results;
     }
@@ -237,6 +242,7 @@ private:
     bool decryption_authorized;
     bool is_done = false;
     bool is_closed = false;
+    bool is_cancel = false;
     bool is_additional_content = false;
 
     // Whether it's installing an update, and what step of installation it is at
@@ -814,6 +820,17 @@ public:
          *      2-3 : CIAFile handle for application to write to
          */
         void BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::CancelImportProgram service function
+         * Cancel importing a CTR Installable Archive
+         *  Inputs:
+         *      0 : Command header (0x04040002)
+         *      1-2 : CIAFile handle application wrote to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void CancelImportProgram(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::EndImportProgram service function

@@ -63,9 +63,8 @@ class InputOverlayDrawableDpad(
         trackId = -1
     }
 
-    fun updateStatus(event: MotionEvent, hasActiveButtons: Boolean, dpadSlide: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, dpadSlide: Boolean, overlay: InputOverlay): Boolean {
         var isDown = false
-        val pointerIndex = event.actionIndex
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)

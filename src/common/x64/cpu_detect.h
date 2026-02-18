@@ -1,7 +1,10 @@
-// Copyright 2013 Dolphin Emulator Project / 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+// Copyright 2013 Dolphin Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #pragma once
 
 #include "common/arch.h"
@@ -25,7 +28,6 @@ struct CPUCaps {
     bool bmi1;
     bool bmi2;
     bool fma;
-    bool fma4;
     bool aes;
 };
 

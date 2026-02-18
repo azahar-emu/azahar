@@ -185,6 +185,9 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(ProcTex));
+            if (Archive::is_loading::value) {
+                table_dirty = TableAllDirty;
+            }
         }
     };
 
@@ -225,6 +228,9 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(Lighting));
+            if (Archive::is_loading::value) {
+                lut_dirty = LutAllDirty;
+            }
         }
     };
 
@@ -253,6 +259,9 @@ public:
         template <class Archive>
         void serialize(Archive& ar, const u32 file_version) {
             ar& boost::serialization::make_binary_object(this, sizeof(Fog));
+            if (Archive::is_loading::value) {
+                lut_dirty = true;
+            }
         }
     };
 
@@ -285,6 +294,9 @@ private:
         ar & geometry_pipeline;
         ar & primitive_assembler;
         ar & cmd_list;
+        if (Archive::is_loading::value) {
+            dirty_regs.SetAllDirty();
+        }
     }
 
 public:

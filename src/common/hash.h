@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,10 +6,26 @@
 
 #include <cstddef>
 #include <cstring>
-#include "common/cityhash.h"
+#include <string>
+#include <xxhash.h>
+#include "cityhash.h"
 #include "common/common_types.h"
 
 namespace Common {
+
+namespace HashAlgo64 {
+struct XXH3 {
+    static inline u64 hash(const void* data, std::size_t len) noexcept {
+        return XXH3_64bits(data, len);
+    }
+};
+
+struct CityHash {
+    static inline u64 hash(const void* data, std::size_t len) noexcept {
+        return CityHash64(reinterpret_cast<const char*>(data), len);
+    }
+};
+} // namespace HashAlgo64
 
 /**
  * Computes a 64-bit hash over the specified block of data
@@ -17,8 +33,9 @@ namespace Common {
  * @param len Length of data (in bytes) to compute hash over
  * @returns 64-bit hash value that was computed over the data block
  */
+template <typename Hasher = HashAlgo64::XXH3>
 static inline u64 ComputeHash64(const void* data, std::size_t len) noexcept {
-    return CityHash64(static_cast<const char*>(data), len);
+    return Hasher::hash(data, len);
 }
 
 /**
@@ -26,19 +43,25 @@ static inline u64 ComputeHash64(const void* data, std::size_t len) noexcept {
  * that either the struct includes no padding, or that any padding is initialized to a known value
  * by memsetting the struct to 0 before filling it in.
  */
-template <typename T>
+template <typename T, typename Hasher = HashAlgo64::XXH3>
 static inline u64 ComputeStructHash64(const T& data) noexcept {
     static_assert(std::is_trivially_copyable_v<T>,
                   "Type passed to ComputeStructHash64 must be trivially copyable");
-    return ComputeHash64(&data, sizeof(data));
+    return ComputeHash64<Hasher>(&data, sizeof(data));
 }
 
 /**
  * Combines the seed parameter with the provided hash, producing a new unique hash
  * Implementation from: http://boost.sourceforge.net/doc/html/boost/hash_combine.html
  */
-[[nodiscard]] inline u64 HashCombine(const u64 seed, const u64 hash) {
-    return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+[[nodiscard]] constexpr u64 HashCombine(u64 seed) {
+    return seed;
+}
+
+template <typename... Ts>
+[[nodiscard]] constexpr u64 HashCombine(u64 seed, u64 hash, Ts... rest) {
+    seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return HashCombine(seed, rest...);
 }
 
 template <typename T>
@@ -49,7 +72,7 @@ struct IdentityHash {
 };
 
 /// A helper template that ensures the padding in a struct is initialized by memsetting to 0.
-template <typename T>
+template <typename T, typename Hasher = HashAlgo64::XXH3>
 struct HashableStruct {
     // In addition to being trivially copyable, T must also have a trivial default constructor,
     // because any member initialization would be overridden by memset
@@ -78,8 +101,42 @@ struct HashableStruct {
         return !(*this == o);
     };
 
-    std::size_t Hash() const noexcept {
-        return Common::ComputeStructHash64(state);
+    u64 Hash() const noexcept {
+        return Common::ComputeStructHash64<T, Hasher>(state);
+    }
+};
+
+/// Helper struct that provides a hashable string with basic string API
+template <typename Hasher = HashAlgo64::XXH3>
+struct HashableString {
+    std::string value;
+
+    HashableString() = default;
+    HashableString(const std::string& s) : value(s) {}
+    HashableString(std::string&& s) noexcept : value(std::move(s)) {}
+
+    u64 Hash() const noexcept {
+        return ComputeHash64<Hasher>(value.data(), value.size());
+    }
+
+    bool empty() const noexcept {
+        return value.empty();
+    }
+
+    std::size_t size() const noexcept {
+        return value.size();
+    }
+
+    const char* data() const noexcept {
+        return value.data();
+    }
+
+    operator std::string_view() const noexcept {
+        return value;
+    }
+
+    operator std::string&&() && noexcept {
+        return std::move(value);
     }
 };
 

@@ -87,7 +87,7 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore&
 
     // Define vertex layout for software shaders
     MakeSoftwareVertexLayout();
-    pipeline_info.vertex_layout = software_layout;
+    pipeline_info.state.vertex_layout = software_layout;
 
     const vk::Device device = instance.GetDevice();
     texture_lf_view = device.createBufferViewUnique({
@@ -152,66 +152,67 @@ void RasterizerVulkan::LoadDefaultDiskResources(
         program_id = 0;
     }
 
+    if (callback) {
+        callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+    }
+
     pipeline_cache.SetProgramID(program_id);
-    pipeline_cache.LoadDiskCache(stop_loading, callback);
+    pipeline_cache.SetAccurateMul(accurate_mul);
+    pipeline_cache.LoadCache(stop_loading, callback);
+
+    if (callback) {
+        callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
 }
 
 void RasterizerVulkan::SyncDrawState() {
     SyncDrawUniforms();
 
     // SyncCullMode();
-    pipeline_info.rasterization.cull_mode.Assign(regs.rasterizer.cull_mode);
+    pipeline_info.state.rasterization.cull_mode.Assign(regs.rasterizer.cull_mode);
     // If the framebuffer is flipped, request to also flip vulkan viewport
     const bool is_flipped = regs.framebuffer.framebuffer.IsFlipped();
-    pipeline_info.rasterization.flip_viewport.Assign(is_flipped);
+    pipeline_info.state.rasterization.flip_viewport.Assign(is_flipped);
     // SyncBlendEnabled();
-    pipeline_info.blending.blend_enable = regs.framebuffer.output_merger.alphablend_enable;
+    pipeline_info.state.blending.blend_enable = regs.framebuffer.output_merger.alphablend_enable;
     // SyncBlendFuncs();
-    pipeline_info.blending.color_blend_eq.Assign(
+    pipeline_info.state.blending.color_blend_eq.Assign(
         regs.framebuffer.output_merger.alpha_blending.blend_equation_rgb);
-    pipeline_info.blending.alpha_blend_eq.Assign(
+    pipeline_info.state.blending.alpha_blend_eq.Assign(
         regs.framebuffer.output_merger.alpha_blending.blend_equation_a);
-    pipeline_info.blending.src_color_blend_factor.Assign(
+    pipeline_info.state.blending.src_color_blend_factor.Assign(
         regs.framebuffer.output_merger.alpha_blending.factor_source_rgb);
-    pipeline_info.blending.dst_color_blend_factor.Assign(
+    pipeline_info.state.blending.dst_color_blend_factor.Assign(
         regs.framebuffer.output_merger.alpha_blending.factor_dest_rgb);
-    pipeline_info.blending.src_alpha_blend_factor.Assign(
+    pipeline_info.state.blending.src_alpha_blend_factor.Assign(
         regs.framebuffer.output_merger.alpha_blending.factor_source_a);
-    pipeline_info.blending.dst_alpha_blend_factor.Assign(
+    pipeline_info.state.blending.dst_alpha_blend_factor.Assign(
         regs.framebuffer.output_merger.alpha_blending.factor_dest_a);
     // SyncBlendColor();
-    pipeline_info.dynamic.blend_color = regs.framebuffer.output_merger.blend_const.raw;
+    pipeline_info.dynamic_info.blend_color = regs.framebuffer.output_merger.blend_const.raw;
     // SyncLogicOp();
     // SyncColorWriteMask();
-    pipeline_info.blending.logic_op = regs.framebuffer.output_merger.logic_op;
-    const bool is_logic_op_emulated =
-        instance.NeedsLogicOpEmulation() && !regs.framebuffer.output_merger.alphablend_enable;
-    const bool is_logic_op_noop =
-        regs.framebuffer.output_merger.logic_op == Pica::FramebufferRegs::LogicOp::NoOp;
-    if (is_logic_op_emulated && is_logic_op_noop) {
-        // Color output is disabled by logic operation. We use color write mask to skip
-        // color but allow depth write.
-        pipeline_info.blending.color_write_mask = 0;
-    } else {
-        const u32 color_mask = regs.framebuffer.framebuffer.allow_color_write != 0
-                                   ? (regs.framebuffer.output_merger.depth_color_mask >> 8) & 0xF
-                                   : 0;
-        pipeline_info.blending.color_write_mask = color_mask;
-    }
+    pipeline_info.state.blending.logic_op = regs.framebuffer.output_merger.logic_op;
+
+    const u32 color_mask = regs.framebuffer.framebuffer.allow_color_write != 0
+                               ? (regs.framebuffer.output_merger.depth_color_mask >> 8) & 0xF
+                               : 0;
+    pipeline_info.state.blending.color_write_mask = color_mask;
+
     // SyncStencilTest();
     const auto& stencil_test = regs.framebuffer.output_merger.stencil_test;
     const bool test_enable = stencil_test.enable && regs.framebuffer.framebuffer.depth_format ==
                                                         Pica::FramebufferRegs::DepthFormat::D24S8;
 
-    pipeline_info.depth_stencil.stencil_test_enable.Assign(test_enable);
-    pipeline_info.depth_stencil.stencil_fail_op.Assign(stencil_test.action_stencil_fail);
-    pipeline_info.depth_stencil.stencil_pass_op.Assign(stencil_test.action_depth_pass);
-    pipeline_info.depth_stencil.stencil_depth_fail_op.Assign(stencil_test.action_depth_fail);
-    pipeline_info.depth_stencil.stencil_compare_op.Assign(stencil_test.func);
-    pipeline_info.dynamic.stencil_reference = stencil_test.reference_value;
-    pipeline_info.dynamic.stencil_compare_mask = stencil_test.input_mask;
+    pipeline_info.state.depth_stencil.stencil_test_enable.Assign(test_enable);
+    pipeline_info.state.depth_stencil.stencil_fail_op.Assign(stencil_test.action_stencil_fail);
+    pipeline_info.state.depth_stencil.stencil_pass_op.Assign(stencil_test.action_depth_pass);
+    pipeline_info.state.depth_stencil.stencil_depth_fail_op.Assign(stencil_test.action_depth_fail);
+    pipeline_info.state.depth_stencil.stencil_compare_op.Assign(stencil_test.func);
+    pipeline_info.dynamic_info.stencil_reference = stencil_test.reference_value;
+    pipeline_info.dynamic_info.stencil_compare_mask = stencil_test.input_mask;
     // SyncStencilWriteMask();
-    pipeline_info.dynamic.stencil_write_mask =
+    pipeline_info.dynamic_info.stencil_write_mask =
         (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0)
             ? static_cast<u32>(regs.framebuffer.output_merger.stencil_test.write_mask)
             : 0;
@@ -222,12 +223,12 @@ void RasterizerVulkan::SyncDrawState() {
                                 ? regs.framebuffer.output_merger.depth_test_func.Value()
                                 : Pica::FramebufferRegs::CompareFunc::Always;
 
-    pipeline_info.depth_stencil.depth_test_enable.Assign(test_enabled);
-    pipeline_info.depth_stencil.depth_compare_op.Assign(compare_op);
+    pipeline_info.state.depth_stencil.depth_test_enable.Assign(test_enabled);
+    pipeline_info.state.depth_stencil.depth_compare_op.Assign(compare_op);
     // SyncDepthWriteMask();
     const bool write_enable = (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0 &&
                                regs.framebuffer.output_merger.depth_write_enable);
-    pipeline_info.depth_stencil.depth_write_enable.Assign(write_enable);
+    pipeline_info.state.depth_stencil.depth_write_enable.Assign(write_enable);
 }
 
 void RasterizerVulkan::SetupVertexArray() {
@@ -246,7 +247,7 @@ void RasterizerVulkan::SetupVertexArray() {
     const PAddr base_address = vertex_attributes.GetPhysicalBaseAddress(); // GPUREG_ATTR_BUF_BASE
     const u32 stride_alignment = instance.GetMinVertexStrideAlignment();
 
-    VertexLayout& layout = pipeline_info.vertex_layout;
+    VertexLayout& layout = pipeline_info.state.vertex_layout;
     layout.binding_count = 0;
     layout.attribute_count = 16;
     enable_attributes.fill(false);
@@ -322,7 +323,8 @@ void RasterizerVulkan::SetupVertexArray() {
         VertexBinding& binding = layout.bindings[layout.binding_count];
         binding.binding.Assign(layout.binding_count);
         binding.fixed.Assign(0);
-        binding.stride.Assign(aligned_stride);
+        // Will be adjusted on pipeline build, to keep the info transferable.
+        binding.byte_count.Assign(loader.byte_count);
 
         // Keep track of the binding offsets so we can bind the vertex buffer later
         binding_offsets[layout.binding_count++] = static_cast<u32>(array_offset + buffer_offset);
@@ -337,7 +339,7 @@ void RasterizerVulkan::SetupVertexArray() {
 
 void RasterizerVulkan::SetupFixedAttribs() {
     const auto& vertex_attributes = regs.pipeline.vertex_attributes;
-    VertexLayout& layout = pipeline_info.vertex_layout;
+    VertexLayout& layout = pipeline_info.state.vertex_layout;
 
     auto [fixed_ptr, fixed_offset, _] = stream_buffer.Map(16 * sizeof(Common::Vec4f), 0);
     binding_offsets[layout.binding_count] = static_cast<u32>(fixed_offset);
@@ -391,7 +393,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
     VertexBinding& binding = layout.bindings[layout.binding_count];
     binding.binding.Assign(layout.binding_count++);
     binding.fixed.Assign(1);
-    binding.stride.Assign(offset);
+    binding.byte_count.Assign(offset);
 
     stream_buffer.Commit(offset);
 }
@@ -399,7 +401,7 @@ void RasterizerVulkan::SetupFixedAttribs() {
 bool RasterizerVulkan::SetupVertexShader() {
     MICROPROFILE_SCOPE(Vulkan_VS);
     return pipeline_cache.UseProgrammableVertexShader(regs, pica.vs_setup,
-                                                      pipeline_info.vertex_layout, accurate_mul);
+                                                      pipeline_info.state.vertex_layout);
 }
 
 bool RasterizerVulkan::SetupGeometryShader() {
@@ -412,8 +414,9 @@ bool RasterizerVulkan::SetupGeometryShader() {
 
     // Enable the quaternion fix-up geometry-shader only if we are actually doing per-fragment
     // lighting and care about proper quaternions. Otherwise just use standard vertex+fragment
-    // shaders. We also don't need a geometry shader if the barycentric extension is supported.
-    if (regs.lighting.disable || instance.IsFragmentShaderBarycentricSupported()) {
+    // shaders. We also don't need a geometry shader if the barycentric extension is supported,
+    // but that will be decided later as the GS config needs to be cached anyways.
+    if (regs.lighting.disable) {
         pipeline_cache.UseTrivialGeometryShader();
         return true;
     }
@@ -431,7 +434,7 @@ bool RasterizerVulkan::AccelerateDrawBatch(bool is_indexed) {
         }
     }
 
-    pipeline_info.rasterization.topology.Assign(regs.pipeline.triangle_topology);
+    pipeline_info.state.rasterization.topology.Assign(regs.pipeline.triangle_topology);
     if (regs.pipeline.triangle_topology == TriangleTopology::Fan &&
         !instance.IsTriangleFanSupported()) {
         LOG_DEBUG(Render_Vulkan,
@@ -467,7 +470,7 @@ bool RasterizerVulkan::AccelerateDrawBatchInternal(bool is_indexed) {
     const DrawParams params = {
         .vertex_count = regs.pipeline.num_vertices,
         .vertex_offset = -static_cast<s32>(vertex_info.vs_input_index_min),
-        .binding_count = pipeline_info.vertex_layout.binding_count,
+        .binding_count = pipeline_info.state.vertex_layout.binding_count,
         .bindings = binding_offsets,
         .is_indexed = is_indexed,
     };
@@ -521,8 +524,8 @@ void RasterizerVulkan::DrawTriangles() {
         return;
     }
 
-    pipeline_info.rasterization.topology.Assign(Pica::PipelineRegs::TriangleTopology::List);
-    pipeline_info.vertex_layout = software_layout;
+    pipeline_info.state.rasterization.topology.Assign(Pica::PipelineRegs::TriangleTopology::List);
+    pipeline_info.state.vertex_layout = software_layout;
 
     pipeline_cache.UseTrivialVertexShader();
     pipeline_cache.UseTrivialGeometryShader();
@@ -537,14 +540,14 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
     const bool has_stencil = regs.framebuffer.HasStencil();
 
-    const bool write_color_fb = shadow_rendering || pipeline_info.blending.color_write_mask;
+    const bool write_color_fb = shadow_rendering || pipeline_info.GetFinalColorWriteMask(instance);
     const bool write_depth_fb = pipeline_info.IsDepthWriteEnabled();
     const bool using_color_fb =
         regs.framebuffer.framebuffer.GetColorBufferPhysicalAddress() != 0 && write_color_fb;
     const bool using_depth_fb =
         !shadow_rendering && regs.framebuffer.framebuffer.GetDepthBufferPhysicalAddress() != 0 &&
         (write_depth_fb || regs.framebuffer.output_merger.depth_test_enable != 0 ||
-         (has_stencil && pipeline_info.depth_stencil.stencil_test_enable));
+         (has_stencil && pipeline_info.state.depth_stencil.stencil_test_enable));
 
     const auto fb_helper = res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb);
     const Framebuffer* framebuffer = fb_helper.Framebuffer();
@@ -552,8 +555,8 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
         return true;
     }
 
-    pipeline_info.attachments.color = framebuffer->Format(SurfaceType::Color);
-    pipeline_info.attachments.depth = framebuffer->Format(SurfaceType::Depth);
+    pipeline_info.state.attachments.color = framebuffer->Format(SurfaceType::Color);
+    pipeline_info.state.attachments.depth = framebuffer->Format(SurfaceType::Depth);
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
@@ -585,13 +588,13 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     // Configure viewport and scissor
     const auto viewport = fb_helper.Viewport();
-    pipeline_info.dynamic.viewport = Common::Rectangle<s32>{
+    pipeline_info.dynamic_info.viewport = Common::Rectangle<s32>{
         viewport.x,
         viewport.y,
         viewport.x + viewport.width,
         viewport.y + viewport.height,
     };
-    pipeline_info.dynamic.scissor = draw_rect;
+    pipeline_info.dynamic_info.scissor = draw_rect;
 
     // Draw the vertex batch
     bool succeeded = true;
@@ -807,7 +810,7 @@ void RasterizerVulkan::MakeSoftwareVertexLayout() {
         VertexBinding& binding = software_layout.bindings[i];
         binding.binding.Assign(i);
         binding.fixed.Assign(0);
-        binding.stride.Assign(sizeof(HardwareVertex));
+        binding.byte_count.Assign(sizeof(HardwareVertex));
     }
 
     u32 offset = 0;
@@ -985,7 +988,17 @@ void RasterizerVulkan::UploadUniforms(bool accelerate_draw) {
 
 void RasterizerVulkan::SwitchDiskResources(u64 title_id) {
     std::atomic_bool stop_loading = false;
-    pipeline_cache.SwitchPipelineCache(title_id, stop_loading, switch_disk_resources_callback);
+
+    if (switch_disk_resources_callback) {
+        switch_disk_resources_callback(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
+    }
+
+    pipeline_cache.SetAccurateMul(accurate_mul);
+    pipeline_cache.SwitchCache(title_id, stop_loading, switch_disk_resources_callback);
+
+    if (switch_disk_resources_callback) {
+        switch_disk_resources_callback(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
+    }
 }
 
 } // namespace Vulkan

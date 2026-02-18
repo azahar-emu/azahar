@@ -28,7 +28,7 @@
            <string>Select the camera to configure</string>
           </property>
           <property name="text">
-           <string>Camera to configure:</string>
+           <string>Camera to Configure</string>
           </property>
          </widget>
         </item>
@@ -59,7 +59,7 @@
            <string>Select the camera mode (single or double)</string>
           </property>
           <property name="text">
-           <string>Camera mode:</string>
+           <string>Camera mode</string>
           </property>
          </widget>
         </item>
@@ -90,7 +90,7 @@
            <string>Select the position of camera to configure</string>
           </property>
           <property name="text">
-           <string>Camera position:</string>
+           <string>Camera position</string>
           </property>
          </widget>
         </item>
@@ -127,17 +127,17 @@
         <item>
          <widget class="QLabel" name="image_source_label">
           <property name="toolTip">
-           <string>Select where the image of the emulated camera comes from. It may be an image or a real camera.</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select where the image of the emulated camera comes from. It may be an image or a real camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Camera Image Source:</string>
+           <string>Camera Image Source</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QComboBox" name="image_source">
           <property name="toolTip">
-           <string>Select where the image of the emulated camera comes from. It may be an image or a real camera.</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select where the image of the emulated camera comes from. It may be an image or a real camera.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <item>
            <property name="text">
@@ -166,7 +166,7 @@
            <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
-           <string>File:</string>
+           <string>File</string>
           </property>
          </widget>
         </item>
@@ -193,7 +193,7 @@
            <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
-           <string>Camera:</string>
+           <string>Camera</string>
           </property>
          </widget>
         </item>
@@ -234,7 +234,7 @@
            <enum>QFrame::NoFrame</enum>
           </property>
           <property name="text">
-           <string>Flip:</string>
+           <string>Flip</string>
           </property>
          </widget>
         </item>

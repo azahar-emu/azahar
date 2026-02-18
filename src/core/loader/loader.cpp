@@ -48,7 +48,7 @@ FileType GuessFromExtension(const std::string& extension_) {
     if (extension == ".elf" || extension == ".axf")
         return FileType::ELF;
 
-    if (extension == ".cci" || extension == ".zcci")
+    if (extension == ".cci" || extension == ".zcci" || extension == ".3ds")
         return FileType::CCI;
 
     if (extension == ".cxi" || extension == ".app" || extension == ".zcxi")
@@ -164,7 +164,11 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
     FileType filename_type = GuessFromExtension(filename_extension);
 
     if (type != filename_type) {
-        LOG_WARNING(Loader, "File {} has a different type than its extension.", filename);
+        // Do not show the error for CIA files, as their type cannot be determined.
+        if (!(type == FileType::Unknown && filename_type == FileType::CIA)) {
+            LOG_WARNING(Loader, "File {} has a different type than its extension.", filename);
+        }
+
         if (FileType::Unknown == type)
             type = filename_type;
     }

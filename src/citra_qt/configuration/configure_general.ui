@@ -17,6 +17,43 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
+      <widget class="QGroupBox" name="updates_group">
+       <property name="title">
+        <string>Updates</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="toggle_update_checker">
+          <property name="text">
+           <string>Check for updates</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="update_channel_label">
+          <property name="text">
+           <string>Update Channel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="update_channel_combobox">
+          <item>
+           <property name="text">
+            <string>Stable</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Prerelease</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
       <widget class="QGroupBox" name="general_group">
        <property name="title">
         <string>General</string>
@@ -57,13 +94,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QCheckBox" name="toggle_update_checker">
-          <property name="text">
-           <string>Check for updates</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
      </item>
@@ -97,7 +127,7 @@
              </item>
              <item>
               <property name="text">
-               <string>Set emulation speed:</string>
+               <string>Set emulation speed</string>
               </property>
              </item>
             </widget>
@@ -105,7 +135,7 @@
            <item>
             <widget class="QLabel" name="label_emulation_speed">
              <property name="text">
-              <string>Emulation Speed:</string>
+              <string>Emulation Speed</string>
              </property>
             </widget>
            </item>
@@ -315,7 +345,6 @@
   <tabstop>toggle_check_exit</tabstop>
   <tabstop>toggle_background_pause</tabstop>
   <tabstop>toggle_hide_mouse</tabstop>
-  <tabstop>toggle_update_checker</tabstop>
   <tabstop>button_reset_defaults</tabstop>
  </tabstops>
  <resources/>

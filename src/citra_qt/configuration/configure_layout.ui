@@ -132,14 +132,14 @@
           <item>
            <widget class="QCheckBox" name="toggle_swap_screen">
             <property name="text">
-             <string>Swap Screens</string>
+             <string>Swap screens</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QCheckBox" name="toggle_upright_screen">
             <property name="text">
-             <string>Rotate Screens Upright</string>
+             <string>Rotate screens upright</string>
             </property>
            </widget>
           </item>
@@ -531,7 +531,7 @@
             <item>
              <widget class="QLabel" name="lb_opacity_second_layer">
               <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom Screen Opacity % (OpenGL Only)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom Screen Opacity %&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>

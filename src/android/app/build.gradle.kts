@@ -64,7 +64,7 @@ android {
         // The application ID refers to Lime3DS to allow for
         // the Play Store listing, which was originally set up for Lime3DS, to still be used.
         applicationId = "io.github.lime3ds.android"
-        minSdk = 28
+        minSdk = 29
         targetSdk = 35
         versionCode = autoVersion
         versionName = getGitVersion()
@@ -125,7 +125,7 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isShrinkResources = true
+            isShrinkResources = true // TODO: Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
@@ -133,6 +133,22 @@ android {
                 "proguard-rules.pro"
             )
             isDefault = true
+        }
+
+        // Same as above, but with isDebuggable disabled.
+        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS) without constantly tripping over years-old and seemingly harmless memory bugs.
+        // We should fix those bugs eventually, but for now this exists as a workaround to allow other work to be done.
+        register("relWithDebInfoLite") {
+            initWith(getByName("relWithDebInfo"))
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            installation {
+                enableBaselineProfile = false // Disabled by default when isDebuggable is true
+            }
+            lint {
+                checkReleaseBuilds = false // Ditto
+                                           // The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+            }
         }
 
         // Signed by debug key disallowing distribution on Play Store.
@@ -147,6 +163,18 @@ android {
     }
 
     flavorDimensions.add("version")
+
+    productFlavors {
+        register("vanilla") {
+            isDefault = true
+            dimension = "version"
+            versionNameSuffix = "-vanilla"
+        }
+        register("googlePlay") {
+            dimension = "version"
+            versionNameSuffix = "-googleplay"
+        }
+    }
 
     externalNativeBuild {
         cmake {
@@ -186,7 +214,7 @@ dependencies {
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
-    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.304.1/android-binaries-1.4.304.1.zip")
+    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.313.0/android-binaries-1.4.313.0.zip")
     dest(file("${layout.buildDirectory.get().asFile.path}/tmp/Vulkan-ValidationLayers.zip"))
     onlyIfModified(true)
 }

@@ -66,9 +66,11 @@ namespace Camera {
 class QtMultimediaCameraHandlerFactory;
 }
 
+#ifdef USE_DISCORD_PRESENCE
 namespace DiscordRPC {
 class DiscordInterface;
 }
+#endif
 
 namespace PlayTime {
 class PlayTimeManager;
@@ -90,7 +92,7 @@ namespace Service::FS {
 enum class MediaType : u32;
 }
 
-void LaunchQtFrontend(int argc, char* argv[]);
+int LaunchQtFrontend(int argc, char* argv[]);
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT
@@ -107,7 +109,9 @@ public:
 
     GameList* game_list;
     std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
+#ifdef USE_DISCORD_PRESENCE
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
+#endif
 
     bool DropAction(QDropEvent* event);
     void AcceptDropEvent(QDropEvent* event);
@@ -168,7 +172,9 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
+#ifdef USE_DISCORD_PRESENCE
     void SetDiscordEnabled(bool state);
+#endif
     void LoadAmiibo(const QString& filename);
 
     /**
@@ -305,7 +311,10 @@ private slots:
     void OnEmulatorUpdateAvailable();
 #endif
     void OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
-                               std::size_t total);
+                               std::size_t total, const std::string& object);
+#ifdef ENABLE_DEVELOPER_OPTIONS
+    void StartLaunchStressTest(const QString& game_path);
+#endif
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
@@ -435,8 +444,8 @@ private:
 
     std::shared_ptr<Camera::QtMultimediaCameraHandlerFactory> qt_cameras;
 
-    // Prompt shown when update check succeeds
 #ifdef ENABLE_QT_UPDATE_CHECKER
+    // Prompt shown when update check succeeds
     QFuture<QString> update_future;
     QFutureWatcher<QString> update_watcher;
 #endif

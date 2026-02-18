@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -54,7 +54,7 @@ public:
     // loader and pm, which we HLEed, we can just directly use it here
     void RegisterProgramInfo(u32 process_id, u64 program_id, const std::string& filepath);
 
-    std::string GetCurrentGamecardPath() const;
+    std::string GetRegisteredGamecardPath() const;
 
     struct ProductInfo {
         std::array<u8, 0x10> product_code;
@@ -360,6 +360,8 @@ private:
      *      3: Free byte count high word
      */
     void GetFreeBytes(Kernel::HLERequestContext& ctx);
+
+    void GetCardType(Kernel::HLERequestContext& ctx);
 
     /**
      * FS_User::GetSdmcArchiveResource service function.

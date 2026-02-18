@@ -1264,6 +1264,10 @@ std::string GetConsoleIdHash(Core::System& system) {
     return fmt::format("{:02x}", fmt::join(hash.begin(), hash.end(), ""));
 }
 
+std::array<u8, 6> GetConsoleMacAddress(Core::System& system) {
+    return MacToArray(GetModule(system)->GetMacAddress());
+}
+
 std::array<u8, 6> MacToArray(const std::string& mac) {
     std::array<u8, 6> ret;
     int last = -1;

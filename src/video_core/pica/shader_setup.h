@@ -51,6 +51,17 @@ struct ShaderRegs;
  * The geometry shaders has a unique configuration so when enabled it has its own setup.
  */
 struct ShaderSetup {
+private:
+    void MakeProgramCodeDirty() {
+        program_code_hash_dirty = true;
+        program_code_pending_fixup = true;
+        has_fixup = false;
+    }
+
+    void MakeSwizzleDataDirty() {
+        swizzle_data_hash_dirty = true;
+    }
+
 public:
     explicit ShaderSetup();
     ~ShaderSetup();
@@ -65,28 +76,88 @@ public:
 
     u64 GetSwizzleDataHash();
 
-    void MarkProgramCodeDirty() {
-        program_code_hash_dirty = true;
+    void DoProgramCodeFixup();
+
+    inline void UpdateProgramCode(size_t offset, u32 value) {
+        u32& inst = program_code[offset];
+        u32 old = inst;
+
+        if (old == value)
+            return;
+
+        inst = value;
+        if (!program_code_hash_dirty) {
+            MakeProgramCodeDirty();
+        }
+        if ((offset + 1) > biggest_program_size) {
+            biggest_program_size = offset + 1;
+        }
     }
 
-    void MarkSwizzleDataDirty() {
-        swizzle_data_hash_dirty = true;
+    void UpdateProgramCode(const ProgramCode& other, u32 other_size = MAX_PROGRAM_CODE_LENGTH) {
+        program_code = other;
+        biggest_program_size = std::max(biggest_program_size, other_size);
+        MakeProgramCodeDirty();
+    }
+
+    inline void UpdateSwizzleData(size_t offset, u32 value) {
+        u32& data = swizzle_data[offset];
+        u32 old = data;
+
+        if (old == value)
+            return;
+
+        data = value;
+        if (!swizzle_data_hash_dirty) {
+            MakeSwizzleDataDirty();
+        }
+        if ((offset + 1) > biggest_swizzle_size) {
+            biggest_swizzle_size = offset + 1;
+        }
+    }
+
+    void UpdateSwizzleData(const SwizzleData& other, u32 other_size = MAX_SWIZZLE_DATA_LENGTH) {
+        swizzle_data = other;
+        biggest_swizzle_size = std::max(biggest_swizzle_size, other_size);
+        MakeSwizzleDataDirty();
+    }
+
+    const ProgramCode& GetProgramCode() const {
+        return (has_fixup) ? program_code_fixup : program_code;
+    }
+
+    const SwizzleData& GetSwizzleData() const {
+        return swizzle_data;
+    }
+
+    u32 GetBiggestProgramSize() const {
+        return biggest_program_size;
+    }
+
+    u32 GetBiggestSwizzleSize() const {
+        return biggest_swizzle_size;
     }
 
 public:
     Uniforms uniforms;
     PackedAttribute uniform_queue;
-    ProgramCode program_code{};
-    SwizzleData swizzle_data{};
     u32 entry_point{};
     const void* cached_shader{};
     bool uniforms_dirty = true;
+    bool requires_fixup = false;
+    bool has_fixup = false;
 
 private:
+    ProgramCode program_code{};
+    ProgramCode program_code_fixup{};
+    SwizzleData swizzle_data{};
     bool program_code_hash_dirty{true};
     bool swizzle_data_hash_dirty{true};
-    u64 program_code_hash{0xDEADC0DE};
-    u64 swizzle_data_hash{0xDEADC0DE};
+    bool program_code_pending_fixup{true};
+    u32 biggest_program_size = 0;
+    u32 biggest_swizzle_size = 0;
+    u64 program_code_hash{0};
+    u64 swizzle_data_hash{0};
 
     friend class boost::serialization::access;
     template <class Archive>
@@ -94,11 +165,20 @@ private:
         ar & uniforms;
         ar & uniform_queue;
         ar & program_code;
+        ar & program_code_fixup;
         ar & swizzle_data;
         ar & program_code_hash_dirty;
         ar & swizzle_data_hash_dirty;
+        ar & program_code_pending_fixup;
+        ar & biggest_program_size;
+        ar & biggest_swizzle_size;
         ar & program_code_hash;
         ar & swizzle_data_hash;
+        ar & requires_fixup;
+        ar & has_fixup;
+        if (Archive::is_loading::value) {
+            uniforms_dirty = true;
+        }
     }
 };
 

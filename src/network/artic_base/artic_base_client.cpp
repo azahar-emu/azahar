@@ -6,6 +6,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 
+#include "algorithm"
 #include "chrono"
 #include "limits.h"
 #include "memory"
@@ -143,13 +144,33 @@ void Client::UDPStream::Handle() {
     }
 
     // Limit receive buffer so that packets don't get qeued and are dropped instead.
-    int buffer_size_int = static_cast<int>(buffer_size);
-    if (::setsockopt(main_socket, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<char*>(&buffer_size_int),
-                     sizeof(buffer_size_int)) ||
+    // macOS requires larger UDP buffer sizes for reliable operation
+#ifdef __APPLE__
+    const int min_macos_buffer_size = 8192; // 8KB minimum for macOS
+    int effective_buffer_size = std::max(static_cast<int>(buffer_size), min_macos_buffer_size);
+#else
+    int effective_buffer_size = static_cast<int>(buffer_size);
+#endif
+
+    if (::setsockopt(main_socket, SOL_SOCKET, SO_RCVBUF,
+                     reinterpret_cast<char*>(&effective_buffer_size),
+                     sizeof(effective_buffer_size)) < 0 ||
         !thread_run) {
+        LOG_ERROR(Network, "Cannot change receive buffer size: {} (errno: {})", strerror(GET_ERRNO),
+                  GET_ERRNO);
         closesocket(main_socket);
-        LOG_ERROR(Network, "Cannot change receive buffer size");
         return;
+    }
+
+    // Verify the buffer size was actually set
+    socklen_t actual_size_len = sizeof(int);
+    int actual_buffer_size;
+    if (::getsockopt(main_socket, SOL_SOCKET, SO_RCVBUF,
+                     reinterpret_cast<char*>(&actual_buffer_size), &actual_size_len) == 0) {
+        LOG_INFO(Network, "UDP buffer size set to: {} (requested: {})", actual_buffer_size,
+                 effective_buffer_size);
+    } else {
+        LOG_WARNING(Network, "Could not verify UDP buffer size setting");
     }
 
     // Send data to server so that it knows client address.

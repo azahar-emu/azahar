@@ -19,13 +19,15 @@ enum class BooleanSetting(
     INSTANT_DEBUG_LOG("instant_debug_log", Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER("enable_rpc_server", Settings.SECTION_DEBUG, false),
     CUSTOM_LAYOUT("custom_layout",Settings.SECTION_LAYOUT,false),
-    OVERLAY_SHOW_FPS("overlay_show_fps", Settings.SECTION_LAYOUT, true),
-    OVERLAY_SHOW_FRAMETIME("overlay_show_frame_time", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_SPEED("overlay_show_speed", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_APP_RAM_USAGE("overlay_show_app_ram_usage", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_AVAILABLE_RAM("overlay_show_available_ram", Settings.SECTION_LAYOUT, false),
-    OVERLAY_SHOW_BATTERY_TEMP("overlay_show_battery_temp", Settings.SECTION_LAYOUT, false),
-    OVERLAY_BACKGROUND("overlay_background", Settings.SECTION_LAYOUT, false),
+    SWAP_EYES_3D("swap_eyes_3d",Settings.SECTION_RENDERER,false),
+    PERF_OVERLAY_ENABLE("performance_overlay_enable", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_FPS("performance_overlay_show_fps", Settings.SECTION_LAYOUT, true),
+    PERF_OVERLAY_SHOW_FRAMETIME("performance_overlay_show_frame_time", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_SPEED("performance_overlay_show_speed", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_APP_RAM_USAGE("performance_overlay_show_app_ram_usage", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_AVAILABLE_RAM("performance_overlay_show_available_ram", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_SHOW_BATTERY_TEMP("performance_overlay_show_battery_temp", Settings.SECTION_LAYOUT, false),
+    PERF_OVERLAY_BACKGROUND("performance_overlay_background", Settings.SECTION_LAYOUT, false),
     DELAY_START_LLE_MODULES("delay_start_for_lle_modules", Settings.SECTION_DEBUG, true),
     DETERMINISTIC_ASYNC_OPERATIONS("deterministic_async_operations", Settings.SECTION_DEBUG, false),
     REQUIRED_ONLINE_LLE_MODULES("enable_required_online_lle_modules", Settings.SECTION_SYSTEM, false),
@@ -43,15 +45,16 @@ enum class BooleanSetting(
     CPU_JIT("use_cpu_jit", Settings.SECTION_CORE, true),
     HW_SHADER("use_hw_shader", Settings.SECTION_RENDERER, true),
     SHADER_JIT("use_shader_jit", Settings.SECTION_RENDERER, true),
-    VSYNC("use_vsync_new", Settings.SECTION_RENDERER, true),
+    VSYNC("use_vsync", Settings.SECTION_RENDERER, false),
     USE_FRAME_LIMIT("use_frame_limit", Settings.SECTION_RENDERER, true),
     DEBUG_RENDERER("renderer_debug", Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER("disable_right_eye_render", Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER("use_artic_base_controller", Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
+    ANDROID_HIDE_IMAGES("android_hide_images", Settings.SECTION_CORE, false),
+    APPLY_REGION_FREE_PATCH("apply_region_free_patch", Settings.SECTION_SYSTEM, true),
     ENABLE_COMBO_KEY("enable_combo_key", Settings.SECTION_CONTROLS, true);
-
 
     override var boolean: Boolean = defaultValue
 
@@ -85,6 +88,9 @@ enum class BooleanSetting(
             SHADERS_ACCURATE_MUL,
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
+            ANDROID_HIDE_IMAGES,
+            PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
+            APPLY_REGION_FREE_PATCH
         )
 
         fun from(key: String): BooleanSetting? =

@@ -304,20 +304,31 @@ bool DeleteDir(const std::string& filename) {
     return false;
 }
 
-bool Rename(const std::string& srcFilename, const std::string& destFilename) {
-    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFilename, destFilename);
+bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
+    LOG_TRACE(Common_Filesystem, "{} --> {}", srcFullPath, destFullPath);
 #ifdef _WIN32
-    if (_wrename(Common::UTF8ToUTF16W(srcFilename).c_str(),
-                 Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
+    if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
+                 Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
         return true;
 #elif ANDROID
-    if (AndroidStorage::RenameFile(srcFilename, std::string(GetFilename(destFilename))))
-        return true;
+    // srcFullPath and destFullPath are relative to the user directory
+    if (AndroidStorage::GetBuildFlavor() == AndroidStorage::AndroidBuildFlavors::GOOGLEPLAY) {
+        if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath))
+            return true;
+    } else {
+        std::optional<std::string> userDirLocation = AndroidStorage::GetUserDirectory();
+        if (userDirLocation && rename((*userDirLocation + srcFullPath).c_str(),
+                                      (*userDirLocation + destFullPath).c_str()) == 0) {
+            AndroidStorage::UpdateDocumentLocation(srcFullPath, destFullPath);
+            // ^ TODO: This shouldn't fail, but what should we do if it somehow does?
+            return true;
+        }
+    }
 #else
-    if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
+    if (rename(srcFullPath.c_str(), destFullPath.c_str()) == 0)
         return true;
 #endif
-    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
+    LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFullPath, destFullPath,
               GetLastErrorMsg());
     return false;
 }
@@ -874,7 +885,6 @@ void SetUserPath(const std::string& path) {
     g_paths.emplace(UserPath::LoadDir, user_path + LOAD_DIR DIR_SEP);
     g_paths.emplace(UserPath::StatesDir, user_path + STATES_DIR DIR_SEP);
     g_paths.emplace(UserPath::IconsDir, user_path + ICONS_DIR DIR_SEP);
-    g_paths.emplace(UserPath::PlayTimeDir, user_path + LOG_DIR DIR_SEP);
     g_default_paths = g_paths;
 }
 
@@ -1244,20 +1254,19 @@ static std::size_t pread(int fd, void* buf, std::size_t count, uint64_t offset) 
 #define pread ::pread
 #endif
 
-std::size_t IOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                               std::size_t offset) {
+std::size_t IOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
     if (!IsOpen()) {
         m_good = false;
         return std::numeric_limits<std::size_t>::max();
     }
 
-    if (length == 0) {
+    if (byte_count == 0) {
         return 0;
     }
 
     DEBUG_ASSERT(data != nullptr);
 
-    return pread(fileno(m_file), data, data_size * length, offset);
+    return pread(fileno(m_file), data, byte_count, offset);
 }
 
 std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {
@@ -1305,19 +1314,19 @@ struct CryptoIOFileImpl {
         std::size_t res = f.IOFile::ReadImpl(data, length, data_size);
         if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
             d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), length * data_size);
+                          reinterpret_cast<CryptoPP::byte*>(data), res * data_size);
             e.Seek(f.IOFile::Tell());
         }
         return res;
     }
 
-    std::size_t ReadAtImpl(CryptoIOFile& f, void* data, std::size_t length, std::size_t data_size,
+    std::size_t ReadAtImpl(CryptoIOFile& f, void* data, std::size_t byte_count,
                            std::size_t offset) {
-        std::size_t res = f.IOFile::ReadAtImpl(data, length, data_size, offset);
+        std::size_t res = f.IOFile::ReadAtImpl(data, byte_count, offset);
         if (res != std::numeric_limits<std::size_t>::max() && res != 0) {
             d.Seek(offset);
             d.ProcessData(reinterpret_cast<CryptoPP::byte*>(data),
-                          reinterpret_cast<CryptoPP::byte*>(data), length * data_size);
+                          reinterpret_cast<CryptoPP::byte*>(data), res);
             e.Seek(f.IOFile::Tell());
         }
         return res;
@@ -1368,9 +1377,8 @@ std::size_t CryptoIOFile::ReadImpl(void* data, std::size_t length, std::size_t d
     return impl->ReadImpl(*this, data, length, data_size);
 }
 
-std::size_t CryptoIOFile::ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                     std::size_t offset) {
-    return impl->ReadAtImpl(*this, data, length, data_size, offset);
+std::size_t CryptoIOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
+    return impl->ReadAtImpl(*this, data, byte_count, offset);
 }
 
 std::size_t CryptoIOFile::WriteImpl(const void* data, std::size_t length, std::size_t data_size) {

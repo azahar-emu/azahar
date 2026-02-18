@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -85,9 +85,6 @@ public:
      * @param buffer The data to write to the pipe.
      */
     virtual void PipeWrite(DspPipe pipe_number, std::span<const u8> buffer) = 0;
-
-    /// Returns a reference to the array backing DSP memory
-    virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
 
     /// Sets the handler for the interrupts we trigger
     virtual void SetInterruptHandler(

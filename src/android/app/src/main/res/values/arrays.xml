@@ -35,10 +35,24 @@
         <item>@string/emulation_screen_layout_custom</item>
     </string-array>
 
+    <string-array name="secondaryLayouts">
+        <item>@string/emulation_secondary_display_default</item>
+        <item>@string/emulation_top_screen</item>
+        <item>@string/emulation_bottom_screen</item>
+        <item>@string/emulation_screen_layout_sidebyside</item>
+    </string-array>
+
     <integer-array name="portraitLayoutValues">
         <item>0</item>
         <item>2</item>
         <item>1</item>
+    </integer-array>
+
+    <integer-array name="secondaryLayoutValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </integer-array>
 
     <string-array name="smallScreenPositions">
@@ -134,12 +148,12 @@
     </integer-array>
 
     <string-array name="statsPosition">
-        <item>@string/overlay_position_top_left</item>
-        <item>@string/overlay_position_center_top</item>
-        <item>@string/overlay_position_top_right</item>
-        <item>@string/overlay_position_bottom_left</item>
-        <item>@string/overlay_position_center_bottom</item>
-        <item>@string/overlay_position_bottom_right</item>
+        <item>@string/performance_overlay_position_top_left</item>
+        <item>@string/performance_overlay_position_center_top</item>
+        <item>@string/performance_overlay_position_top_right</item>
+        <item>@string/performance_overlay_position_bottom_left</item>
+        <item>@string/performance_overlay_position_center_bottom</item>
+        <item>@string/performance_overlay_position_bottom_right</item>
     </string-array>
     <integer-array name="statsPositionValues">
         <item>0</item>
@@ -225,9 +239,8 @@
     </integer-array>
 
     <string-array name="render3dModes">
-        <item>@string/off</item>
         <item>@string/side_by_side</item>
-        <item>@string/reverse_side_by_side</item>
+        <item>@string/side_by_side_full</item>
         <item>@string/anaglyph</item>
         <item>@string/interlaced</item>
         <item>@string/reverse_interlaced</item>
@@ -235,13 +248,26 @@
     </string-array>
 
     <integer-array name="render3dValues">
-        <item>0</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>
         <item>4</item>
         <item>5</item>
         <item>6</item>
+    </integer-array>
+
+    <string-array name="render3dWhichDisplay">
+        <item>@string/off</item>
+        <item>@string/render_3d_which_display_both</item>
+        <item>@string/render_3d_which_display_primary</item>
+        <item>@string/render_3d_which_display_secondary</item>
+    </string-array>
+
+    <integer-array name="render3dDisplayValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </integer-array>
 
     <string-array name="graphicsApiNames">

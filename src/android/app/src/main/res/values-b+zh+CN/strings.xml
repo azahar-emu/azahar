@@ -32,7 +32,6 @@
     <string name="select_citra_user_folder_home_description">更改 Azahar 用于加载应用的相关文件</string>
     <string name="theme_and_color_description">更改应用程序的外观</string>
     <string name="install_cia_title">安装 CIA</string>
-    <string name="warning_3ds_files"><![CDATA[加密文件和 3ds 后缀名文件不再受支持。可能需要解密和/或重命名为 cci 后缀名。<a href=\"https://azahar-emu.org/blog/game-loading-changes/\">了解详情。</a>]]></string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">选择 GPU 驱动</string>
@@ -112,8 +111,6 @@
     <string name="controller_dpad_axis_description">有些控制器可能无法将其方向键映射为轴。如果是这种情况，只能使用方向键（按键）部分。</string>
     <string name="controller_dpad_button">十字键（按键）</string>
     <string name="controller_dpad_button_description">仅当您在方向键 (轴) 映射遇到问题时，才将方向键映射到这些按键。</string>
-    <string name="controller_axis_vertical">上/下轴</string>
-    <string name="controller_axis_horizontal">左/右轴</string>
     <string name="direction_up">上</string>
     <string name="direction_down">下</string>
     <string name="direction_left">左</string>
@@ -122,8 +119,6 @@
     <string name="input_dialog_description">按下或移动以进行输入。</string>
     <string name="input_binding">绑定输入</string>
     <string name="input_binding_description">按下按键或轻推摇杆，将其绑定到 %1$s。</string>
-    <string name="input_binding_description_vertical_axis">向上或向下轻推您的摇杆。</string>
-    <string name="input_binding_description_horizontal_axis">向左或向右轻推您的摇杆。</string>
     <string name="button_home">HOME</string>
     <string name="button_swap">交换屏幕</string>
     <string name="button_turbo">加速</string>
@@ -193,6 +188,9 @@
     <string name="region_mismatch">区域不匹配警告</string>
     <string name="region_mismatch_emulated">此国家/地区设置对于所选择的模拟区域无效。</string>
     <string name="region_mismatch_console">此国家/地区设置对于当前关联的掌机无效。</string>
+    <string name="storage">存储</string>
+    <string name="compress_cia_installs">压缩已安装的 CIA 内容</string>
+    <string name="compress_cia_installs_description">安装到模拟 SD 卡时，压缩 CIA 文件的内容。仅影响启用此设置时安装的 CIA 内容。</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
@@ -233,6 +231,8 @@
     <string name="frame_limit_enable_description">启用后，模拟速度将被限制为正常速度的指定百分比。如果禁用，模拟速度则不受限制，并且加速热键将不起作用。</string>
     <string name="frame_limit_slider">限制运行速度百分比</string>
     <string name="frame_limit_slider_description">指定限制运行速度的百分比。默认情况下，100% 将限制为正常运行速度。较高或较低的值将增加或降低运行速度。</string>
+    <string name="android_hide_images">在安卓设备上隐藏 3DS 图像</string>
+    <string name="android_hide_images_description">阻止 Android 索引 3DS 摄像、屏幕截图和自定义纹理图像并将其显示在图库中。更改此设置后，可能需要重启设备才能生效。</string>
     <string name="turbo_limit">加速限制</string>
     <string name="turbo_limit_description">加速热键激活时使用的模拟速度限制。</string>
     <string name="expand_to_cutout_area">扩展到裁剪区域</string>
@@ -259,7 +259,7 @@
     <string name="disable_right_eye_render">禁用右眼渲染</string>
     <string name="disable_right_eye_render_description">极大地提高某些应用的性能，但可能会导致其他应用出现闪烁。</string>
     <string name="cardboard_vr">Cardboard VR</string>
-    <string name="cardboard_screen_size">Cardboard 屏幕尺寸</string>
+    <string name="cardboard_screen_size">纸板屏幕大小</string>
     <string name="cardboard_screen_size_description">将屏幕缩放至其原始大小的指定百分比。</string>
     <string name="cardboard_x_shift">水平偏移</string>
     <string name="cardboard_x_shift_description">指定用于水平移动屏幕的百分比。正值会将左右两个视野移向中间，而负值会将左右两个视野向外侧移动。</string>
@@ -294,10 +294,10 @@
     <string name="hw_shaders_description">使用硬件模拟 3DS 着色器。启用后，游戏性能将显著提高。</string>
     <string name="cpu_clock_speed">CPU 时钟频率</string>
     <string name="vsync">启用垂直同步</string>
-    <string name="vsync_description">将游戏帧率与设备的屏幕刷新率同步。</string>
+    <string name="vsync_description">将游戏帧率与设备的屏幕刷新率同步。可能会增加输入延迟，但在某些情况下可以减少画面撕裂。</string>
     <string name="renderer_debug">调试渲染器</string>
     <string name="renderer_debug_description">记录更多与图形相关的调试信息。启用后，游戏性能将显著降低。</string>
-    <string name="instant_debug_log">刷新每条消息的日志输出</string>
+    <string name="instant_debug_log">每条消息都刷新日志输出</string>
     <string name="instant_debug_log_description">立即将调试日志提交到文件。如果 Azahar 崩溃并且日志输出被切断，请使用此选项。</string>
     <string name="delay_start_lle_modules">使用 LLE 模块延迟启动</string>
     <string name="delay_start_lle_modules_description">当 LLE 模块启用时延迟应用的启动。</string>
@@ -355,8 +355,6 @@
     <string name="auto_select">自动选择</string>
     <string name="start">开始</string>
     <string name="cancelling">取消中…</string>
-    <string name="important">重要提示</string>
-    <string name="dont_show_again">不再显示</string>
     <string name="visibility">可见度</string>
     <string name="information">信息</string>
 
@@ -397,18 +395,24 @@
     <string name="emulation_configure_controls">控制设置</string>
     <string name="emulation_edit_layout">编辑布局</string>
     <string name="emulation_done">完成</string>
+    <string name="emulation_button_sliding">按键滑行</string>
+    <string name="emulation_button_sliding_disabled">按住起始按下的按键</string>
+    <string name="emulation_button_sliding_enabled">按住当前按下的按键</string>
+    <string name="emulation_button_sliding_alternative">按住起始和当前按下的按键</string>
     <string name="emulation_toggle_controls">切换控制</string>
     <string name="emulation_control_scale">调整大小</string>
     <string name="emulation_control_scale_global">全局缩放</string>
     <string name="emulation_control_scale_reset_all">重置全部</string>
     <string name="emulation_control_opacity">调整透明度</string>
     <string name="emulation_control_joystick_rel_center">相对摇杆中心</string>
-    <string name="emulation_control_dpad_slide_enable">十字方向键滑动</string>
+    <string name="emulation_control_dpad_slide_enable">十字键滑行</string>
     <string name="emulation_open_settings">打开设置项</string>
     <string name="emulation_open_cheats">开启金手指</string>
     <string name="emulation_aspect_ratio">宽高比</string>
     <string name="emulation_switch_screen_layout">屏幕布局</string>
     <string name="emulation_switch_portrait_layout">纵向屏幕布局</string>
+    <string name="emulation_switch_secondary_layout">副屏幕布局</string>
+    <string name="emulation_switch_secondary_layout_description">有线或无线连接的副屏幕使用布局（Chromecast, Miracast）</string>
     <string name="emulation_screen_layout_largescreen">大屏幕</string>
     <string name="emulation_screen_layout_portrait">纵向</string>
     <string name="emulation_screen_layout_single">单个屏幕</string>
@@ -416,7 +420,15 @@
     <string name="emulation_screen_layout_hybrid">混合式屏幕</string>
     <string name="emulation_screen_layout_original">原始</string>
     <string name="emulation_portrait_layout_top_full">默认</string>
+    <string name="emulation_secondary_display_default">系统默认（镜像）</string>
     <string name="emulation_screen_layout_custom">自定义布局</string>
+    <string name="bg_color">背景颜色</string>
+    <string name="bg_color_description">在模拟运行时屏幕后面出现的颜色，以 RGB 值表示。</string>
+    <string name="bg_red">红</string>
+    <string name="bg_green">绿</string>
+    <string name="bg_blue">蓝</string>
+    <string name="second_screen_opacity">自定义布局副屏幕不透明度</string>
+    <string name="second_screen_opacity_description">使用自定义屏幕布局时， 3DS 副屏的不透明度。当副屏位于主屏前面时，此选项很有用。</string>
     <string name="emulation_small_screen_position">小屏幕位置</string>
     <string name="small_screen_position_description">在“大屏幕”布局中，小屏幕相对于大屏幕应该出现的位置？</string>
     <string name="small_screen_position_top_right">右上</string>
@@ -513,13 +525,9 @@
     <string name="save_load_error">保存/读取出现错误</string>
     <string name="fatal_error">致命错误</string>
     <string name="fatal_error_message">发生致命错误。请查阅日志获取相关信息。\n继续模拟可能会导致错误和崩溃。</string>
-    <string name="invalid_region">无效的地区</string>
     <string name="unsupported_encrypted">不支持的加密应用</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">正在准备着色器</string>
-    <string name="building_shaders">正在构建着色器</string>
-
     <!-- About Game Dialog -->
     <string name="play">开始游戏</string>
     <string name="uninstall_cia">卸载应用</string>
@@ -539,34 +547,36 @@
     <string name="create_shortcut">创建快捷方式</string>
     <string name="shortcut_name_empty">快捷方式名称不能为空</string>
     <string name="shortcut_image_stretch_toggle">拉伸以适合图像</string>
-
+    <string name="game_context_id">ID:</string>
+    <string name="game_context_file">文件:</string>
+    <string name="game_context_type">类型:</string>
     <!-- Performance Overlay settings -->
     <string name="performance_overlay_show">显示性能参数</string>
     <string name="performance_overlay_options">性能参数覆盖</string>
     <string name="performance_overlay_enable">启用性能参数覆盖</string>
     <string name="performance_overlay_options_description">设置是否显示性能参数以及其他覆盖信息。</string>
-    <string name="overlay_show_fps">显示帧率</string>
-    <string name="overlay_show_fps_description">显示当前每秒帧数。</string>
-    <string name="overlay_show_frametime">显示帧生成时间</string>
-    <string name="overlay_show_frametime_description">显示当前帧生成时间。</string>
-    <string name="overlay_show_speed">显示速度</string>
-    <string name="overlay_show_speed_description">显示当前模拟速度百分比。</string>
-    <string name="overlay_show_app_ram_usage">显示应用内存占用</string>
-    <string name="overlay_show_app_ram_usage_description">显示模拟器使用的内存容量。</string>
-    <string name="overlay_show_available_ram">显示可用内存</string>
-    <string name="overlay_show_available_ram_description">显示可用的内存容量。</string>
-    <string name="overlay_show_battery_temp">显示电池温度</string>
-    <string name="overlay_show_battery_temp_description">以摄氏度和华氏度显示当前电池温度。</string>
-    <string name="overlay_position">覆盖位置</string>
-    <string name="overlay_position_description">选择性能参数覆盖在屏幕上的显示位置。</string>
-    <string name="overlay_position_top_left">左上</string>
-    <string name="overlay_position_top_right">右上</string>
-    <string name="overlay_position_bottom_left">左下</string>
-    <string name="overlay_position_bottom_right">右下</string>
-    <string name="overlay_position_center_top">中上</string>
-    <string name="overlay_position_center_bottom">中下</string>
-    <string name="overlay_background">覆盖背景</string>
-    <string name="overlay_background_description">在覆盖层后面添加背景以便于识别。</string>
+    <string name="performance_overlay_show_fps">显示帧率</string>
+    <string name="performance_overlay_show_fps_description">显示当前每秒帧数。</string>
+    <string name="performance_overlay_show_frametime">显示帧生成时间</string>
+    <string name="performance_overlay_show_frametime_description">显示当前帧生成时间。</string>
+    <string name="performance_overlay_show_speed">显示速度</string>
+    <string name="performance_overlay_show_speed_description">显示当前模拟速度百分比。</string>
+    <string name="performance_overlay_show_app_ram_usage">显示应用内存使用情况</string>
+    <string name="performance_overlay_show_app_ram_usage_description">显示模拟器占用的内存大小。</string>
+    <string name="performance_overlay_show_available_ram">显示可用内存</string>
+    <string name="performance_overlay_show_available_ram_description">显示可用的内存大小。</string>
+    <string name="performance_overlay_show_battery_temp">显示电池温度</string>
+    <string name="performance_overlay_show_battery_temp_description">以摄氏度和华氏度显示当前电池温度。</string>
+    <string name="performance_overlay_position">覆盖位置</string>
+    <string name="performance_overlay_position_description">选择性能参数覆盖在屏幕上的显示位置。</string>
+    <string name="performance_overlay_position_top_left">左上</string>
+    <string name="performance_overlay_position_top_right">右上</string>
+    <string name="performance_overlay_position_bottom_left">左下</string>
+    <string name="performance_overlay_position_bottom_right">右下</string>
+    <string name="performance_overlay_position_center_top">中上</string>
+    <string name="performance_overlay_position_center_bottom">中下</string>
+    <string name="performance_overlay_background">覆盖背景</string>
+    <string name="performance_overlay_background_description">在覆盖层后面添加背景以便于识别。</string>
 
     <!-- Cheats -->
     <string name="cheats">金手指</string>
@@ -671,7 +681,6 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">并排屏幕</string>
-    <string name="reverse_side_by_side">反向并排</string>
     <string name="anaglyph">立体图形</string>
     <string name="interlaced">交错</string>
     <string name="reverse_interlaced">逆向交错</string>
@@ -860,4 +869,4 @@
     <string name="emulation_occupied_quicksave_slot">快速保存 - %1$tF %1$tR</string>
     <string name="quickload_not_found">没有可用的快速保存。</string>
 
-</resources>
+    </resources>

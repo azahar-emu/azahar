@@ -19,6 +19,10 @@ add_custom_command(OUTPUT scm_rev.cpp
       "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.h"
       "${VIDEO_CORE}/renderer_opengl/gl_shader_util.cpp"
       "${VIDEO_CORE}/renderer_opengl/gl_shader_util.h"
+      "${VIDEO_CORE}/renderer_vulkan/vk_shader_disk_cache.cpp"
+      "${VIDEO_CORE}/renderer_vulkan/vk_shader_disk_cache.h"
+      "${VIDEO_CORE}/renderer_vulkan/vk_pipeline_cache.cpp"
+      "${VIDEO_CORE}/renderer_vulkan/vk_pipeline_cache.h"
       "${VIDEO_CORE}/renderer_vulkan/vk_shader_util.cpp"
       "${VIDEO_CORE}/renderer_vulkan/vk_shader_util.h"
       "${VIDEO_CORE}/shader/generator/glsl_fs_shader_gen.cpp"
@@ -29,6 +33,7 @@ add_custom_command(OUTPUT scm_rev.cpp
       "${VIDEO_CORE}/shader/generator/glsl_shader_gen.h"
       "${VIDEO_CORE}/shader/generator/pica_fs_config.cpp"
       "${VIDEO_CORE}/shader/generator/pica_fs_config.h"
+      "${VIDEO_CORE}/shader/generator/profile.h"
       "${VIDEO_CORE}/shader/generator/shader_gen.cpp"
       "${VIDEO_CORE}/shader/generator/shader_gen.h"
       "${VIDEO_CORE}/shader/generator/shader_uniforms.cpp"
@@ -68,6 +73,7 @@ add_library(citra_common STATIC
     detached_tasks.cpp
     detached_tasks.h
     bit_field.h
+    bit_field.natvis
     bit_set.h
     bounded_threadsafe_queue.h
     cityhash.cpp
@@ -216,3 +222,5 @@ if (SSE42_COMPILE_OPTION)
     target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
     target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
 endif()
+
+target_link_libraries(citra_common PUBLIC xxHash::xxhash)

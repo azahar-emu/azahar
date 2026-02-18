@@ -1,6 +1,8 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+
+// Originally MIT-licensed code from The Pixellizer Group
 
 // Copyright 2022 The Pixellizer Group
 //
@@ -22,6 +24,7 @@
 #include "core/file_sys/file_backend.h"
 #include "core/file_sys/plugin_3gx.h"
 #include "core/file_sys/plugin_3gx_bootloader.h"
+#include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/loader/loader.h"
 
@@ -173,10 +176,10 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     }
 
     const std::array<u32, 4> mem_region_sizes = {
-        5 * 1024 * 1024, // 5 MiB
-        2 * 1024 * 1024, // 2 MiB
-        3 * 1024 * 1024, // 3 MiB
-        4 * 1024 * 1024  // 4 MiB
+        5 * 1024 * 1024,  // 5 MiB
+        2 * 1024 * 1024,  // 2 MiB
+        10 * 1024 * 1024, // 10 MiB
+        5 * 1024 * 1024   // 5 MiB (reserved)
     };
 
     const bool is_mem_private = header.infos.flags.use_private_memory != 0;
@@ -184,65 +187,64 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     // Map memory block. This behaviour mimics how plugins are loaded on 3DS as much as possible.
     // Calculate the sizes of the different memory regions
     const u32 block_size = mem_region_sizes[header.infos.flags.memory_region_size.Value()];
+    const u32 exe_offset = 0;
     const u32 exe_size = (sizeof(PluginHeader) + text_section.size() + rodata_section.size() +
                           data_section.size() + header.executable.bss_size + 0x1000) &
                          ~0xFFFu;
+    const u32 bootloader_offset = exe_offset + exe_size;
+    const u32 bootloader_size = bootloader_memory_size;
+    const u32 heap_offset = bootloader_offset + bootloader_size;
+    const u32 heap_size = block_size - heap_offset;
 
-    // Allocate the framebuffer block so that is in the highest FCRAM position possible
-    auto offset_fb =
-        kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->RLinearAllocate(_3GX_fb_size);
-    if (!offset_fb) {
-        LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not enough memory: {}",
-                  plg_context.plugin_path);
-        return Loader::ResultStatus::ErrorMemoryAllocationFailed;
+    // Allocate a block of memory for the plugin
+    std::optional<u32> offset;
+    if (kernel.GetMemoryMode() == Kernel::MemoryMode::NewProd ||
+        (plg_context.use_user_load_parameters &&
+         plg_context.user_load_parameters.plugin_memory_strategy ==
+             Service::PLGLDR::PLG_LDR::PluginMemoryStrategy::PLG_STRATEGY_MODE3)) {
+        // Allocate memory block from the end of the APPLICATION region
+        offset =
+            kernel.GetMemoryRegion(Kernel::MemoryRegion::APPLICATION)->RLinearAllocate(block_size);
+
+        // If the reported available APP mem equals the actual size, remove the plugin block size.
+        if (offset) {
+            auto& config_mem = kernel.GetConfigMemHandler();
+            if (config_mem.GetConfigMem().app_mem_alloc ==
+                kernel.GetMemoryRegion(Kernel::MemoryRegion::APPLICATION)->size) {
+                config_mem.GetConfigMem().app_mem_alloc -= block_size;
+            }
+        }
+        plg_context.memory_region = Kernel::MemoryRegion::APPLICATION;
+    } else {
+        // Allocate memory block from the start of the SYSTEM region
+        offset = kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->LinearAllocate(block_size);
+        plg_context.memory_region = Kernel::MemoryRegion::SYSTEM;
     }
-    auto backing_memory_fb = kernel.memory.GetFCRAMRef(*offset_fb);
-    plg_ldr.SetPluginFBAddr(Memory::FCRAM_PADDR + *offset_fb);
-    std::fill(backing_memory_fb.GetPtr(), backing_memory_fb.GetPtr() + _3GX_fb_size, 0);
 
-    auto vma_heap_fb = process.vm_manager.MapBackingMemory(
-        _3GX_heap_load_addr, backing_memory_fb, _3GX_fb_size,
-        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
-    ASSERT(vma_heap_fb.Succeeded());
-    process.vm_manager.Reprotect(vma_heap_fb.Unwrap(), Kernel::VMAPermission::ReadWrite);
-
-    // Allocate a block from the end of FCRAM and clear it
-    auto offset = kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)
-                      ->RLinearAllocate(block_size - _3GX_fb_size);
     if (!offset) {
-        kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->Free(*offset_fb, _3GX_fb_size);
         LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not enough memory: {}",
                   plg_context.plugin_path);
         return Loader::ResultStatus::ErrorMemoryAllocationFailed;
     }
-    auto backing_memory = kernel.memory.GetFCRAMRef(*offset);
-    std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + block_size - _3GX_fb_size, 0);
 
-    // Then we map part of the memory, which contains the executable
-    auto vma = process.vm_manager.MapBackingMemory(_3GX_exe_load_addr, backing_memory, exe_size,
-                                                   is_mem_private ? Kernel::MemoryState::Private
-                                                                  : Kernel::MemoryState::Shared);
-    ASSERT(vma.Succeeded());
-    process.vm_manager.Reprotect(vma.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
+    u32 fcram_offset = offset.value();
 
-    // Write text section
-    kernel.memory.WriteBlock(process, _3GX_exe_load_addr + sizeof(PluginHeader),
-                             text_section.data(), header.executable.code_size);
-    // Write rodata section
-    kernel.memory.WriteBlock(
-        process, _3GX_exe_load_addr + sizeof(PluginHeader) + header.executable.code_size,
-        rodata_section.data(), header.executable.rodata_size);
-    // Write data section
-    kernel.memory.WriteBlock(process,
-                             _3GX_exe_load_addr + sizeof(PluginHeader) +
-                                 header.executable.code_size + header.executable.rodata_size,
-                             data_section.data(), header.executable.data_size);
+    auto backing_memory_exe = kernel.memory.GetFCRAMRef(fcram_offset + exe_offset);
+    std::fill(backing_memory_exe.GetPtr(), backing_memory_exe.GetPtr() + exe_size, 0);
+
+    // Map the executable
+    auto vma_exe = process.vm_manager.MapBackingMemory(
+        _3GX_exe_load_addr, backing_memory_exe, exe_size,
+        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
+    ASSERT(vma_exe.Succeeded());
+    process.vm_manager.Reprotect(vma_exe.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
+
     // Prepare plugin header and write it
     PluginHeader plugin_header = {0};
     plugin_header.version = header.version;
     plugin_header.exe_size = exe_size;
     plugin_header.heap_VA = _3GX_heap_load_addr;
-    plugin_header.heap_size = block_size - exe_size;
+    plugin_header.heap_size = heap_size;
     plg_context.plg_event = _3GX_exe_load_addr - 0x4;
     plg_context.plg_reply = _3GX_exe_load_addr - 0x8;
     plugin_header.plgldr_event = plg_context.plg_event;
@@ -254,39 +256,46 @@ Loader::ResultStatus FileSys::Plugin3GXLoader::Map(
     }
     kernel.memory.WriteBlock(process, _3GX_exe_load_addr, &plugin_header, sizeof(PluginHeader));
 
-    // Map plugin heap
-    auto backing_memory_heap = kernel.memory.GetFCRAMRef(*offset + exe_size);
+    // Write text section
+    kernel.memory.WriteBlock(process, _3GX_exe_load_addr + sizeof(PluginHeader),
+                             text_section.data(), header.executable.code_size);
+    // Write rodata section
+    kernel.memory.WriteBlock(
+        process, _3GX_exe_load_addr + sizeof(PluginHeader) + header.executable.code_size,
+        rodata_section.data(), header.executable.rodata_size);
 
-    // Map the rest of the memory at the heap location
-    auto vma_heap = process.vm_manager.MapBackingMemory(
-        _3GX_heap_load_addr + _3GX_fb_size, backing_memory_heap,
-        block_size - exe_size - _3GX_fb_size,
-        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
-    ASSERT(vma_heap.Succeeded());
-    process.vm_manager.Reprotect(vma_heap.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
+    // Write data section
+    kernel.memory.WriteBlock(process,
+                             _3GX_exe_load_addr + sizeof(PluginHeader) +
+                                 header.executable.code_size + header.executable.rodata_size,
+                             data_section.data(), header.executable.data_size);
 
-    // Allocate a block from the end of FCRAM and clear it
-    auto bootloader_offset = kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)
-                                 ->RLinearAllocate(bootloader_memory_size);
-    if (!bootloader_offset) {
-        kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->Free(*offset_fb, _3GX_fb_size);
-        kernel.GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)
-            ->Free(*offset, block_size - _3GX_fb_size);
-        LOG_ERROR(Service_PLGLDR, "Failed to load 3GX plugin. Not enough memory: {}",
-                  plg_context.plugin_path);
-        return Loader::ResultStatus::ErrorMemoryAllocationFailed;
-    }
+    // Map bootloader
     const bool use_internal = plg_context.load_exe_func.empty();
     MapBootloader(
-        process, kernel, *bootloader_offset,
+        process, kernel, fcram_offset + bootloader_offset,
         (use_internal) ? exe_load_func : plg_context.load_exe_func,
         (use_internal) ? exe_load_args : plg_context.load_exe_args,
         header.executable.code_size + header.executable.rodata_size + header.executable.data_size,
         header.infos.exe_load_checksum,
         plg_context.use_user_load_parameters ? plg_context.user_load_parameters.no_flash : 0);
 
+    // Map plugin heap
+    auto backing_memory_heap = kernel.memory.GetFCRAMRef(fcram_offset + heap_offset);
+    std::fill(backing_memory_heap.GetPtr(), backing_memory_heap.GetPtr() + heap_size, 0);
+
+    auto vma_heap = process.vm_manager.MapBackingMemory(
+        _3GX_heap_load_addr, backing_memory_heap, heap_size,
+        is_mem_private ? Kernel::MemoryState::Private : Kernel::MemoryState::Shared);
+    ASSERT(vma_heap.Succeeded());
+    process.vm_manager.Reprotect(vma_heap.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
+
+    kernel.memory.Plugin3GXFramebufferAddress() = Memory::FCRAM_PADDR + fcram_offset + heap_offset;
     plg_context.plugin_loaded = true;
+    plg_context.plugin_process_id = process.process_id;
     plg_context.use_user_load_parameters = false;
+    plg_context.memory_block = {fcram_offset, block_size};
+
     return Loader::ResultStatus::Success;
 }
 
@@ -355,7 +364,7 @@ void FileSys::Plugin3GXLoader::MapBootloader(Kernel::Process& process, Kernel::K
     std::fill(backing_memory.GetPtr(), backing_memory.GetPtr() + bootloader_memory_size, 0);
     auto vma = process.vm_manager.MapBackingMemory(_3GX_exe_load_addr - bootloader_memory_size,
                                                    backing_memory, bootloader_memory_size,
-                                                   Kernel::MemoryState::Continuous);
+                                                   Kernel::MemoryState::Private);
     ASSERT(vma.Succeeded());
     process.vm_manager.Reprotect(vma.Unwrap(), Kernel::VMAPermission::ReadWriteExecute);
 

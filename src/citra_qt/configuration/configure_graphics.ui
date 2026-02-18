@@ -132,14 +132,14 @@
       <item>
        <widget class="QCheckBox" name="spirv_shader_gen">
         <property name="text">
-         <string>SPIR-V Shader Generation</string>
+         <string>SPIR-V shader generation</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="disable_spirv_optimizer">
         <property name="text">
-         <string>Disable GLSL -> SPIR-V Optimizer</string>
+         <string>Disable GLSL -> SPIR-V optimizer</string>
         </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disables the SPIR-V optimization pass, reducing stuttering considerably while barely affecting performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -176,7 +176,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the selected graphics API to accelerate shader emulation.&lt;/p&gt;&lt;p&gt;Requires a relatively powerful GPU for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Enable Hardware Shader</string>
+            <string>Enable hardware shader</string>
            </property>
           </widget>
          </item>
@@ -201,7 +201,7 @@
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some applications requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>Accurate Multiplication</string>
+               <string>Accurate multiplication</string>
               </property>
              </widget>
             </item>
@@ -217,7 +217,7 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the JIT engine instead of the interpreter for software shader emulation. &lt;/p&gt;&lt;p&gt;Enable this for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Enable Shader JIT</string>
+         <string>Enable shader JIT</string>
         </property>
        </widget>
       </item>
@@ -227,17 +227,17 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compile shaders using background threads to avoid shader compilation stutter. Expect temporary graphical glitches&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Enable Async Shader Compilation</string>
+         <string>Enable async shader compilation</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QCheckBox" name="toggle_async_present">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Perform presentation on separate threads. Improves performance when using Vulkan in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Perform presentation on separate threads. Improves performance when using Vulkan in most applications. Adds ~1 frame of input lag.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Enable Async Presentation</string>
+         <string>Enable async presentation</string>
         </property>
        </widget>
       </item>
@@ -303,17 +303,27 @@
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reduce stuttering by storing and loading generated shaders to disk.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
-         <string>Use Disk Shader Cache</string>
+         <string>Use disk shader cache</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="toggle_vsync_new">
+       <widget class="QCheckBox" name="toggle_vsync">
         <property name="toolTip">
-         <string>VSync prevents the screen from tearing, but some graphics cards have lower performance with VSync enabled. Keep it enabled if you don't notice a performance difference.</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;VSync prevents the screen from tearing, but some graphics cards have lower performance with VSync enabled. Keep it enabled if you don't notice a performance difference.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="text">
          <string>Enable VSync</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_display_refresh_rate_detection">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When enabled, this setting detects when the refresh rate of the screen is below that of the 3DS, and when it is, disables VSync automatically to avoid emulation speed being forced below 100%.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Enable display refresh rate detection</string>
         </property>
        </widget>
       </item>
@@ -349,7 +359,7 @@
             <item>
               <widget class="QLabel" name="label_delay_render">
                 <property name="text">
-                  <string>Delay application render thread:</string>
+                  <string>Delay Application Render Thread</string>
                 </property>
                 <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays the emulated application render thread the specified amount of milliseconds every time it submits render commands to the GPU.&lt;/p&gt;&lt;p&gt;Adjust this feature in the (very few) dynamic framerate applications to fix performance issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -416,7 +426,7 @@
   <tabstop>toggle_accurate_mul</tabstop>
   <tabstop>toggle_shader_jit</tabstop>
   <tabstop>toggle_disk_shader_cache</tabstop>
-  <tabstop>toggle_vsync_new</tabstop>
+  <tabstop>toggle_vsync</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -101,8 +101,10 @@ layout (binding = 2, std140) uniform fs_data {
 };
 )";
 
-FragmentModule::FragmentModule(const FSConfig& config_, const Profile& profile_)
-    : config{config_}, profile{profile_} {
+FragmentModule::FragmentModule(const FSConfig& config_, const UserConfig& user_,
+                               const Profile& profile_)
+    : config{config_}, user{user_}, profile{profile_} {
+    config.ApplyProfile(profile_);
     out.reserve(RESERVE_SIZE);
     DefineExtensions();
     DefineInterface();
@@ -172,6 +174,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         break;
     case TexturingRegs::FogMode::Gas:
         WriteGas();
+        // Return early due to unimplemented gas mode
         return out;
     default:
         break;
@@ -503,7 +506,7 @@ void FragmentModule::WriteLighting() {
         return fmt::format("2.0 * (sampleTexUnit{}()).rgb - 1.0", lighting.bump_selector.Value());
     };
 
-    if (config.user.use_custom_normal) {
+    if (user.use_custom_normal) {
         const auto texel = fmt::format("2.0 * (texture(tex_normal, texcoord0)).rgb - 1.0");
         out += fmt::format("vec3 surface_normal = {};\n", texel);
         out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
@@ -664,7 +667,7 @@ void FragmentModule::WriteLighting() {
             const std::string value =
                 get_lut_value(LightingRegs::SpotlightAttenuationSampler(light_config.num),
                               light_config.num, lighting.lut_sp.type, lighting.lut_sp.abs_input);
-            spot_atten = fmt::format("({:#} * {})", lighting.lut_sp.scale, value);
+            spot_atten = fmt::format("({:#} * {})", lighting.lut_sp.GetScale(), value);
         }
 
         // If enabled, compute distance attenuation value
@@ -692,7 +695,7 @@ void FragmentModule::WriteLighting() {
             const std::string value =
                 get_lut_value(LightingRegs::LightingSampler::Distribution0, light_config.num,
                               lighting.lut_d0.type, lighting.lut_d0.abs_input);
-            d0_lut_value = fmt::format("({:#} * {})", lighting.lut_d0.scale, value);
+            d0_lut_value = fmt::format("({:#} * {})", lighting.lut_d0.GetScale(), value);
         }
         std::string specular_0 = fmt::format("({} * {}.specular_0)", d0_lut_value, light_src);
         if (light_config.geometric_factor_0) {
@@ -706,7 +709,7 @@ void FragmentModule::WriteLighting() {
             std::string value =
                 get_lut_value(LightingRegs::LightingSampler::ReflectRed, light_config.num,
                               lighting.lut_rr.type, lighting.lut_rr.abs_input);
-            value = fmt::format("({:#} * {})", lighting.lut_rr.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rr.GetScale(), value);
             out += fmt::format("refl_value.r = {};\n", value);
         } else {
             out += "refl_value.r = 1.0;\n";
@@ -719,7 +722,7 @@ void FragmentModule::WriteLighting() {
             std::string value =
                 get_lut_value(LightingRegs::LightingSampler::ReflectGreen, light_config.num,
                               lighting.lut_rg.type, lighting.lut_rg.abs_input);
-            value = fmt::format("({:#} * {})", lighting.lut_rg.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rg.GetScale(), value);
             out += fmt::format("refl_value.g = {};\n", value);
         } else {
             out += "refl_value.g = refl_value.r;\n";
@@ -732,7 +735,7 @@ void FragmentModule::WriteLighting() {
             std::string value =
                 get_lut_value(LightingRegs::LightingSampler::ReflectBlue, light_config.num,
                               lighting.lut_rb.type, lighting.lut_rb.abs_input);
-            value = fmt::format("({:#} * {})", lighting.lut_rb.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_rb.GetScale(), value);
             out += fmt::format("refl_value.b = {};\n", value);
         } else {
             out += "refl_value.b = refl_value.r;\n";
@@ -747,7 +750,7 @@ void FragmentModule::WriteLighting() {
             const std::string value =
                 get_lut_value(LightingRegs::LightingSampler::Distribution1, light_config.num,
                               lighting.lut_d1.type, lighting.lut_d1.abs_input);
-            d1_lut_value = fmt::format("({:#} * {})", lighting.lut_d1.scale, value);
+            d1_lut_value = fmt::format("({:#} * {})", lighting.lut_d1.GetScale(), value);
         }
         std::string specular_1 =
             fmt::format("({} * refl_value * {}.specular_1)", d1_lut_value, light_src);
@@ -764,7 +767,7 @@ void FragmentModule::WriteLighting() {
             std::string value =
                 get_lut_value(LightingRegs::LightingSampler::Fresnel, light_config.num,
                               lighting.lut_fr.type, lighting.lut_fr.abs_input);
-            value = fmt::format("({:#} * {})", lighting.lut_fr.scale, value);
+            value = fmt::format("({:#} * {})", lighting.lut_fr.GetScale(), value);
 
             // Enabled for diffuse lighting alpha component
             if (lighting.enable_primary_alpha) {
@@ -832,7 +835,10 @@ void FragmentModule::WriteFog() {
 void FragmentModule::WriteGas() {
     // TODO: Implement me
     LOG_CRITICAL(Render, "Unimplemented gas mode");
-    out += "discard; }";
+    // Replace the output color with a transparent pixel,
+    // (just discarding the pixel causes graphical issues
+    // in some MH games).
+    out += "color = vec4(0.0); }";
 }
 
 void FragmentModule::WriteShadow() {
@@ -1307,7 +1313,7 @@ void FragmentModule::DefineBindingsVK() {
     if (config.framebuffer.shadow_rendering) {
         out += "layout(set = 2, binding = 0, r32ui) uniform uimage2D shadow_buffer;\n\n";
     }
-    if (config.user.use_custom_normal) {
+    if (user.use_custom_normal) {
         out += "layout(set = 2, binding = 1) uniform sampler2D tex_normal;\n";
     }
 }
@@ -1328,7 +1334,7 @@ void FragmentModule::DefineBindingsGL() {
     }
 
     // Utility textures
-    if (config.user.use_custom_normal) {
+    if (user.use_custom_normal) {
         out += "layout(binding = 6) uniform sampler2D tex_normal;\n";
     }
     if (use_blend_fallback) {
@@ -1748,8 +1754,9 @@ void FragmentModule::DefineTexUnitSampler(u32 texture_unit) {
     out += "\n}\n";
 }
 
-std::string GenerateFragmentShader(const FSConfig& config, const Profile& profile) {
-    FragmentModule module{config, profile};
+std::string GenerateFragmentShader(const FSConfig& config, const UserConfig& user,
+                                   const Profile& profile) {
+    FragmentModule module{config, user, profile};
     return module.Generate();
 }
 

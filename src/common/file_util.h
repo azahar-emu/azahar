@@ -51,7 +51,6 @@ enum class UserPath {
     LoadDir,
     LogDir,
     NANDDir,
-    PlayTimeDir,
     RootDir,
     SDMCDir,
     ShaderDir,
@@ -136,13 +135,13 @@ bool Delete(const std::string& filename);
 // Deletes a directory filename, returns true on success
 bool DeleteDir(const std::string& filename);
 
-// renames file srcFilename to destFilename, returns true on success
-bool Rename(const std::string& srcFilename, const std::string& destFilename);
+// Renames file srcFullPath to destFullPath, returns true on success
+bool Rename(const std::string& srcFullPath, const std::string& destFullPath);
 
-// copies file srcFilename to destFilename, returns true on success
+// Copies file srcFilename to destFilename, returns true on success
 bool Copy(const std::string& srcFilename, const std::string& destFilename);
 
-// creates an empty file filename, returns true on success
+// Creates an empty file filename, returns true on success
 bool CreateEmptyFile(const std::string& filename);
 
 /**
@@ -303,6 +302,7 @@ public:
 
     virtual bool Close();
 
+    /// Returns the amount of T items read
     template <typename T>
     std::size_t ReadArray(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -315,16 +315,18 @@ public:
         return items_read;
     }
 
+    /// Returns the amount of bytes read
     template <typename T>
     std::size_t ReadAtArray(T* data, std::size_t length, std::size_t offset) {
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
-        std::size_t items_read = ReadAtImpl(data, length, sizeof(T), offset);
-        if (items_read != length)
+        const size_t bytes = length * sizeof(T);
+        std::size_t size_read = ReadAtImpl(data, bytes, offset);
+        if (size_read != bytes)
             m_good = false;
 
-        return items_read;
+        return size_read;
     }
 
     template <typename T>
@@ -467,8 +469,7 @@ protected:
     virtual bool Open();
 
     virtual std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size);
-    virtual std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                   std::size_t offset);
+    virtual std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset);
     virtual std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size);
 
     virtual bool SeekImpl(s64 off, int origin);
@@ -521,8 +522,7 @@ private:
     std::unique_ptr<CryptoIOFileImpl> impl;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;

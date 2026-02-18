@@ -25,8 +25,10 @@ class Game(
     val isInstalled: Boolean = false,
     val isSystemTitle: Boolean = false,
     val isVisibleSystemTitle: Boolean = false,
+    val isInsertable: Boolean = false,
     val icon: IntArray? = null,
     val fileType: String = "",
+    val isCompressed: Boolean = false,
     val filename: String,
 ) : Parcelable {
     val keyAddedToLibraryTime get() = "${filename}_AddedToLibraryTime"
@@ -64,7 +66,7 @@ class Game(
         val allExtensions: Set<String> get() = extensions + badExtensions
 
         val extensions: Set<String> = HashSet(
-            listOf("3dsx", "elf", "axf", "cci", "cxi", "app")
+            listOf("3dsx", "app", "axf", "cci", "cxi", "elf", "z3dsx", "zcci", "zcxi", "3ds")
         )
 
         val badExtensions: Set<String> = HashSet(

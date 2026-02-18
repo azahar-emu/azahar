@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -286,9 +286,11 @@ SecureDataHeader ParseSecureDataHeader(std::span<const u8> data) {
     return header;
 }
 
-std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info) {
+std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, ConnectionType conn_type,
+                                        const NodeInfo& node_info) {
     EAPoLStartPacket eapol_start{};
     eapol_start.association_id = association_id;
+    eapol_start.conn_type = conn_type;
     eapol_start.node.friend_code_seed = node_info.friend_code_seed;
 
     std::copy(node_info.username.begin(), node_info.username.end(),
@@ -327,13 +329,7 @@ NodeInfo DeserializeNodeInfoFromFrame(std::span<const u8> frame) {
     // Skip the LLC header
     std::memcpy(&eapol_start, frame.data() + sizeof(LLCHeader), sizeof(eapol_start));
 
-    NodeInfo node{};
-    node.friend_code_seed = eapol_start.node.friend_code_seed;
-
-    std::copy(eapol_start.node.username.begin(), eapol_start.node.username.end(),
-              node.username.begin());
-
-    return node;
+    return DeserializeNodeInfo(eapol_start.node);
 }
 
 NodeInfo DeserializeNodeInfo(const EAPoLNodeInfo& node) {
@@ -378,6 +374,13 @@ EAPoLLogoffPacket ParseEAPoLLogoffFrame(std::span<const u8> frame) {
     // Skip the LLC header
     std::memcpy(&eapol_logoff, frame.data() + sizeof(LLCHeader), sizeof(eapol_logoff));
     return eapol_logoff;
+}
+
+EAPoLStartPacket DeserializeEAPolStartPacket(std::span<const u8> frame) {
+    EAPoLStartPacket eapol_start;
+
+    std::memcpy(&eapol_start, frame.data() + sizeof(LLCHeader), sizeof(eapol_start));
+    return eapol_start;
 }
 
 } // namespace Service::NWM

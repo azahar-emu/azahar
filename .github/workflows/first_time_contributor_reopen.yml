@@ -1,0 +1,79 @@
+name: Verify first-time contributors
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'needs verification')
+    steps:
+      - name: Verify and reopen PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            const comment = context.payload.comment;
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issue.number,
+            });
+            
+            // Only allow verification of the comment user is the author
+            if (comment.user.login !== pr.user.login) {
+              return;
+            }
+
+            // Fetch user display and login names (lowercase)
+            const { data: user } = await github.rest.users.getByUsername({
+              username: pr.user.login,
+            });
+            const username = pr.user.login.toLowerCase();
+            const displayName = (user.name || '').toLowerCase();
+            
+            // Make comment body lowercase and split words
+            const body = comment.body.toLowerCase().trim().replace(/[^a-z0-9_\-\s]/g, '').split(/\s+/);
+
+            // Check that the user verified themselves by writing a song about the NES and the SNES.
+            const verified =
+                (body.includes(username) ||
+                (displayName && body.includes(displayName))) &&
+                body.includes('azahar');
+
+            // Only reopen the PR and remove the label if verification succeeded
+            if (verified) {
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: issue.number,
+                state: 'open',
+              });
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: 'Verification successful! Pull request has been reopened. Please also edit your PR description to remove the block of text between `---` to make the description easier to read.',
+              });
+              try {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  name: 'needs verification',
+                });
+              } catch {}
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: 'Verification failed! Pull request will remain closed.',
+              });
+            }

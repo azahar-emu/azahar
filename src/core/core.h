@@ -101,6 +101,7 @@ public:
         ErrorSystemFiles,          ///< Error in finding system files
         ErrorSavestate,            ///< Error saving or loading
         ErrorArticDisconnected,    ///< Error when artic base disconnects
+        ErrorN3DSApplication,      ///< Error launching New 3DS application in Old 3DS mode
         ShutdownRequested,         ///< Emulated program requested a system shutdown
         ErrorUnknown               ///< Any other error
     };
@@ -137,8 +138,9 @@ public:
     bool SendSignal(Signal signal, u32 param = 0);
 
     /// Request reset of the system
-    void RequestReset(const std::string& chainload = "") {
+    void RequestReset(const std::string& chainload = "", std::optional<u8> mem_mode = {}) {
         m_chainloadpath = chainload;
+        m_mem_mode = mem_mode;
         SendSignal(Signal::Reset);
     }
 
@@ -374,6 +376,14 @@ public:
 
     void RegisterAppLoaderEarly(std::unique_ptr<Loader::AppLoader>& loader);
 
+    void InsertCartridge(const std::string& path);
+
+    void EjectCartridge();
+
+    const std::string& GetCartridge() const {
+        return inserted_cartridge;
+    }
+
     bool IsInitialSetup();
 
 private:
@@ -386,9 +396,7 @@ private:
      */
     [[nodiscard]] ResultStatus Init(Frontend::EmuWindow& emu_window,
                                     Frontend::EmuWindow* secondary_window,
-                                    Kernel::MemoryMode memory_mode,
-                                    const Kernel::New3dsHwCapabilities& n3ds_hw_caps,
-                                    u32 num_cores);
+                                    Kernel::MemoryMode memory_mode, u32 num_cores);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -398,6 +406,9 @@ private:
 
     // Temporary app loader passed from frontend
     std::unique_ptr<Loader::AppLoader> early_app_loader;
+
+    /// Path for current inserted cartridge
+    std::string inserted_cartridge;
 
     /// ARM11 CPU core
     std::vector<std::shared_ptr<ARM_Interface>> cpu_cores;
@@ -463,6 +474,7 @@ private:
     Frontend::EmuWindow* m_secondary_window;
     std::string m_filepath;
     std::string m_chainloadpath;
+    std::optional<u8> m_mem_mode;
     u64 title_id;
     bool self_delete_pending;
 
@@ -474,7 +486,10 @@ private:
     bool mic_permission_granted = false;
 
     boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
+    boost::optional<Service::APT::SysMenuArg> restore_sys_menu_arg;
     boost::optional<Service::PLGLDR::PLG_LDR::PluginLoaderContext> restore_plugin_context;
+    std::unique_ptr<IPCDebugger::Recorder> restore_ipc_recorder;
+    std::vector<u8> restore_wireless_reboot_info;
 
     std::vector<u64> lle_modules;
 

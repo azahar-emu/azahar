@@ -21,9 +21,10 @@ ConfigureGraphics::ConfigureGraphics(QString gl_renderer, std::span<const QStrin
 
     ui->graphics_api_combo->setEnabled(!is_powered_on);
     ui->physical_device_combo->setEnabled(!is_powered_on);
+    ui->toggle_accurate_mul->setEnabled(!is_powered_on);
     ui->toggle_async_shaders->setEnabled(!is_powered_on);
     ui->toggle_async_present->setEnabled(!is_powered_on);
-    ui->toggle_accurate_mul->setEnabled(!is_powered_on);
+    ui->toggle_display_refresh_rate_detection->setEnabled(!is_powered_on);
     // Set the index to -1 to ensure the below lambda is called with setCurrentIndex
     ui->graphics_api_combo->setCurrentIndex(-1);
 
@@ -142,7 +143,7 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_hw_shader->setChecked(Settings::values.use_hw_shader.GetValue());
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
-    ui->toggle_vsync_new->setChecked(Settings::values.use_vsync_new.GetValue());
+    ui->toggle_vsync->setChecked(Settings::values.use_vsync.GetValue());
     ui->spirv_shader_gen->setChecked(Settings::values.spirv_shader_gen.GetValue());
     ui->disable_spirv_optimizer->setChecked(Settings::values.disable_spirv_optimizer.GetValue());
     ui->toggle_async_shaders->setChecked(Settings::values.async_shader_compilation.GetValue());
@@ -150,6 +151,8 @@ void ConfigureGraphics::SetConfiguration() {
 
     if (Settings::IsConfiguringGlobal()) {
         ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit.GetValue());
+        ui->toggle_display_refresh_rate_detection->setChecked(
+            Settings::values.use_display_refresh_rate_detection.GetValue());
     }
 }
 
@@ -174,14 +177,16 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->texture_sampling_combobox);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_disk_shader_cache,
                                              ui->toggle_disk_shader_cache, use_disk_shader_cache);
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync_new, ui->toggle_vsync_new,
-                                             use_vsync_new);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync, ui->toggle_vsync,
+                                             use_vsync);
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
         [this](s32) { return ui->delay_render_slider->value(); });
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
+        Settings::values.use_display_refresh_rate_detection =
+            ui->toggle_display_refresh_rate_detection->isChecked();
     }
 }
 
@@ -197,8 +202,8 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->toggle_accurate_mul->setEnabled(Settings::values.shaders_accurate_mul.UsingGlobal());
         ui->toggle_disk_shader_cache->setEnabled(
             Settings::values.use_disk_shader_cache.UsingGlobal());
-        ui->toggle_vsync_new->setEnabled(ui->toggle_vsync_new->isEnabled() &&
-                                         Settings::values.use_vsync_new.UsingGlobal());
+        ui->toggle_vsync->setEnabled(ui->toggle_vsync->isEnabled() &&
+                                     Settings::values.use_vsync.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
         ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
@@ -216,6 +221,7 @@ void ConfigureGraphics::SetupPerGameUI() {
     });
 
     ui->toggle_shader_jit->setVisible(false);
+    ui->toggle_display_refresh_rate_detection->setVisible(false);
 
     ConfigurationShared::SetColoredComboBox(
         ui->graphics_api_combo, ui->graphics_api_group,
@@ -236,8 +242,8 @@ void ConfigureGraphics::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->toggle_disk_shader_cache,
                                             Settings::values.use_disk_shader_cache,
                                             use_disk_shader_cache);
-    ConfigurationShared::SetColoredTristate(ui->toggle_vsync_new, Settings::values.use_vsync_new,
-                                            use_vsync_new);
+    ConfigurationShared::SetColoredTristate(ui->toggle_vsync, Settings::values.use_vsync,
+                                            use_vsync);
     ConfigurationShared::SetColoredTristate(ui->toggle_async_shaders,
                                             Settings::values.async_shader_compilation,
                                             async_shader_compilation);
