@@ -1,8 +1,19 @@
 #pragma once
 
-#include <rc_client.h>
+namespace Core {
+class System;
+}
 
-extern rc_client_t* g_client;
+struct rc_client_t;
 
-void initialize_retroachievements_client();
-void shutdown_retroachievements_client();
+class RcheevosClient {
+public:
+    explicit RcheevosClient(const Core::System& system);
+    ~RcheevosClient();
+
+    void InitializeClient();
+    void LoginRetroachievementsUser(const char* username, const char* password);
+private:
+    const Core::System& system;
+    rc_client_t* rc_client = nullptr;
+};

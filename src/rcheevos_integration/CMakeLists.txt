@@ -3,4 +3,4 @@ add_library(rcheevos_integration STATIC
     rcheevos_integration.h
 )
 
-target_link_libraries(rcheevos_integration PUBLIC rcheevos PRIVATE citra_common)
+target_link_libraries(rcheevos_integration PRIVATE citra_common httplib rcheevos)
