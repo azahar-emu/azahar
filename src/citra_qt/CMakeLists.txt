@@ -330,5 +330,5 @@ if (CITRA_USE_PRECOMPILED_HEADERS)
 endif()
 
 if (ENABLE_RETROACHIEVEMENTS)
-    target_link_libraries(citra_qt PRIVATE rcheevos_integration)
+    target_link_libraries(citra_qt PRIVATE retroachievements)
 endif()

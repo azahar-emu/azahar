@@ -71,7 +71,9 @@ class AppLoader;
 }
 
 #ifdef ENABLE_RETROACHIEVEMENTS
-class RcheevosClient;
+namespace RetroAchievements {
+class Client;
+} // namespace RetroAchievements
 #endif
 
 namespace Core {
@@ -282,11 +284,11 @@ public:
     [[nodiscard]] const Cheats::CheatEngine& CheatEngine() const;
 
 #ifdef ENABLE_RETROACHIEVEMENTS
-    // Gets a reference to the Rcheevos client
-    [[nodiscard]] RcheevosClient &GetRcheevosClient();
+    // Gets a reference to the RetroAchievements client
+    [[nodiscard]] RetroAchievements::Client &RetroAchievementsClient();
 
-    // Gets a const reference to the Rcheevos client
-    [[nodiscard]] const RcheevosClient &GetRcheevosClient() const;
+    // Gets a const reference to the RetroAchievements client
+    [[nodiscard]] const RetroAchievements::Client &RetroAchievementsClient() const;
 #endif
 
     /// Gets a reference to the custom texture cache system
@@ -453,7 +455,7 @@ private:
 
 #ifdef ENABLE_RETROACHIEVEMENTS
     /// RetroAchievements
-    std::unique_ptr<RcheevosClient> rcheevos_client;
+    std::unique_ptr<RetroAchievements::Client> retroachievements_client;
 #endif
 
     /// Video dumper backend

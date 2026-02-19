@@ -505,7 +505,7 @@ target_link_libraries(citra_core PRIVATE Boost::boost Boost::serialization Boost
 target_link_libraries(citra_core PUBLIC dds-ktx PRIVATE cryptopp fmt lodepng open_source_archives)
 
 if (ENABLE_RETROACHIEVEMENTS)
-    target_link_libraries(citra_core PUBLIC rcheevos_integration)
+    target_link_libraries(citra_core PUBLIC retroachievements)
     target_compile_definitions(citra_core PUBLIC ENABLE_RETROACHIEVEMENTS)
 endif()
 
