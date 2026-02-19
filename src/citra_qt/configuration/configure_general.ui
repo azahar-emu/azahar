@@ -318,13 +318,13 @@
       </widget>
      </item>
      <item>
-      <widget class="QGroupBox" name="retro_achievements_group">
+      <widget class="QGroupBox" name="retroachievements_group">
        <property name="title">
         <string>RetroAchievements</string>
        </property>
        <layout class="QVBoxLayout">
         <item>
-         <widget class="QWidget" name="widget_retro_achievements_username" native="true">
+         <widget class="QWidget" name="widget_retroachievements_username" native="true">
           <layout class="QHBoxLayout">
            <property name="leftMargin">
             <number>0</number>
@@ -346,13 +346,13 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="retro_achievements_username_input"/>
+            <widget class="QLineEdit" name="retroachievements_username_input"/>
            </item>
           </layout>
          </widget>
         </item>
         <item>
-         <widget class="QWidget" name="widget_retro_achievements_password" native="true">
+         <widget class="QWidget" name="widget_retroachievements_password" native="true">
           <layout class="QHBoxLayout">
            <property name="leftMargin">
             <number>0</number>
@@ -374,13 +374,13 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="retro_achievements_password_input"/>
+            <widget class="QLineEdit" name="retroachievements_password_input"/>
            </item>
           </layout>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="retro_achievements_log_in_button">
+         <widget class="QPushButton" name="retroachievements_log_in_button">
          <property name="text">
           <string>Log In</string>
          </property>

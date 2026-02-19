@@ -13,7 +13,7 @@
 #include "common/settings.h"
 #include "core/core.h"
 #ifdef ENABLE_RETROACHIEVEMENTS
-#include "rcheevos_integration/rcheevos_integration.h"
+#include "retroachievements/client.h"
 #endif
 #include "ui_configure_general.h"
 
@@ -52,7 +52,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
 #endif
 
 #ifndef ENABLE_RETROACHIEVEMENTS
-    ui->retro_achievements_group->setVisible(false);
+    ui->retroachievements_group->setVisible(false);
 #endif
 
     SetupPerGameUI();
@@ -83,7 +83,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
         ui->change_screenshot_dir->setEnabled(true);
     });
 
-    connect(ui->retro_achievements_log_in_button, &QPushButton::clicked, this,
+    connect(ui->retroachievements_log_in_button, &QPushButton::clicked, this,
             &ConfigureGeneral::RetroAchievementsLogIn);
 }
 
@@ -209,10 +209,10 @@ void ConfigureGeneral::RetranslateUI() {
 
 void ConfigureGeneral::RetroAchievementsLogIn() {
 #ifdef ENABLE_RETROACHIEVEMENTS
-    std::string username = ui->retro_achievements_username_input->text().toStdString(),
-        password = ui->retro_achievements_password_input->text().toStdString();
+    std::string username = ui->retroachievements_username_input->text().toStdString(),
+        password = ui->retroachievements_password_input->text().toStdString();
 
-    Core::System::GetInstance().GetRcheevosClient().LogInRetroachievementsUser(username.c_str(), password.c_str());
+    Core::System::GetInstance().RetroAchievementsClient().LogInUser(username.c_str(), password.c_str());
 #endif
 }
 

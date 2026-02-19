@@ -184,7 +184,7 @@ endif()
 
 if (ENABLE_RETROACHIEVEMENTS)
     add_compile_definitions(ENABLE_RETROACHIEVEMENTS)
-    add_subdirectory(rcheevos_integration)
+    add_subdirectory(retroachievements)
 endif()
 
 add_subdirectory(common)

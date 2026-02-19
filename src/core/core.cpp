@@ -51,7 +51,7 @@
 #endif
 #include "network/network.h"
 #ifdef ENABLE_RETROACHIEVEMENTS
-#include "rcheevos_integration/rcheevos_integration.h"
+#include "retroachievements/client.h"
 #endif
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/gpu.h"
@@ -78,8 +78,8 @@ Core::Timing& Global() {
 
 System::System() : movie{*this}, cheat_engine{*this} {
 #ifdef ENABLE_RETROACHIEVEMENTS
-    rcheevos_client = std::make_unique<RcheevosClient>(*this);
-    rcheevos_client->InitializeClient();
+    retroachievements_client = std::make_unique<RetroAchievements::Client>(*this);
+    retroachievements_client->Initialize();
 #endif
 }
 
@@ -663,12 +663,12 @@ const Cheats::CheatEngine& System::CheatEngine() const {
 }
 
 #ifdef ENABLE_RETROACHIEVEMENTS
-RcheevosClient &System::GetRcheevosClient() {
-    return *rcheevos_client;
+RetroAchievements::Client &System::RetroAchievementsClient() {
+    return *retroachievements_client;
 }
 
-const RcheevosClient &System::GetRcheevosClient() const {
-    return *rcheevos_client;
+const RetroAchievements::Client &System::RetroAchievementsClient() const {
+    return *retroachievements_client;
 }
 #endif
 
