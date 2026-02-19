@@ -107,7 +107,7 @@ jobs:
     env:
       OS: macos
       TARGET: ${{ matrix.target }}
-      MACOSX_DEPLOYMENT_TARGET: 10.15
+      MACOSX_DEPLOYMENT_TARGET: 11.0
       BUILD_DIR: build/osx-${{ matrix.target }}
       EXTRA_PATH: bin/Release
     steps:
