@@ -13,7 +13,6 @@ env:
 
 jobs:
   android:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     env:
       OS: android
@@ -69,7 +68,6 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.so
   windows:
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
       OS: windows
@@ -99,7 +97,6 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
   macos:
-    if: github.event_name != 'pull_request'
     runs-on: macos-26
     strategy:
       matrix:
@@ -147,7 +144,6 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
   tvos:
-    if: github.event_name != 'pull_request'
     runs-on: macos-26
     env:
       OS: tvos
