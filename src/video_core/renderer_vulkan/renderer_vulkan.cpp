@@ -22,7 +22,7 @@
 
 #include <vk_mem_alloc.h>
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(HAVE_LIBRETRO)
 #include "common/apple_utils.h"
 #endif
 
@@ -60,11 +60,11 @@ constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS 
 
 namespace {
 static bool IsLowRefreshRate() {
+#if (defined(__APPLE__) || defined(ENABLE_SDL2)) && !defined(HAVE_LIBRETRO)
     if (!Settings::values.use_display_refresh_rate_detection) {
         LOG_INFO(Render_Vulkan, "Refresh rate detection is currently disabled via settings");
         return false;
     }
-#if defined(__APPLE__) || defined(ENABLE_SDL2)
 #ifdef __APPLE__
     // Apple's low power mode sometimes limits applications to 30fps without changing the refresh
     // rate, meaning the above code doesn't catch it.
@@ -98,7 +98,7 @@ static bool IsLowRefreshRate() {
         LOG_INFO(Render_Vulkan, "Refresh rate is above emulated 3DS screen: {}hz. Good.",
                  cur_refresh_rate);
     }
-#endif // defined(__APPLE__) || defined(ENABLE_SDL2)
+#endif // (defined(__APPLE__) || defined(ENABLE_SDL2)) && !defined(HAVE_LIBRETRO)
 
     // We have no available method of checking refresh rate. Just assume that everything is fine :)
     return false;

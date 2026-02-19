@@ -17,12 +17,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
 include(CMakeDependentOption)
-include(FindPkgConfig)
 
 project(citra LANGUAGES C CXX ASM)
+# must be invoked after project() command when using CMAKE_TOOLCHAIN_FILE
+include(FindPkgConfig)
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
 endif()
+
+option(ENABLE_LIBRETRO "Build as a LibRetro core" OFF)
 
 # Some submodules like to pick their own default build type if not specified.
 # Make sure we default to Release build type always, unless the generator has custom types.
@@ -30,7 +33,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-if (APPLE)
+if (APPLE AND NOT ENABLE_LIBRETRO)
     # Silence warnings on empty objects, for example when platform-specific code is #ifdef'd out.
     set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
     set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -90,6 +93,17 @@ else()
     set(DEFAULT_ENABLE_OPENGL ON)
 endif()
 
+# Track which options were explicitly set by the user (for libretro conflict detection)
+set(_LIBRETRO_INCOMPATIBLE_OPTIONS
+    ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING
+    ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB)
+set(_USER_SET_OPTIONS "")
+foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+    if(DEFINED ${_opt})
+        list(APPEND _USER_SET_OPTIONS ${_opt})
+    endif()
+endforeach()
+
 option(ENABLE_SDL2 "Enable using SDL2" ON)
 CMAKE_DEPENDENT_OPTION(ENABLE_SDL2_FRONTEND "Enable the SDL2 frontend" OFF "ENABLE_SDL2;NOT ANDROID AND NOT IOS" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
@@ -129,6 +143,31 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+
+# Handle incompatible options for libretro builds
+if(ENABLE_LIBRETRO)
+    # Check for explicitly-set conflicting options
+    set(_CONFLICTS "")
+    foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+        list(FIND _USER_SET_OPTIONS ${_opt} _idx)
+        if(NOT _idx EQUAL -1 AND ${_opt})
+            list(APPEND _CONFLICTS ${_opt})
+        endif()
+    endforeach()
+
+    if(_CONFLICTS)
+        string(REPLACE ";" ", " _CONFLICTS_STR "${_CONFLICTS}")
+        message(FATAL_ERROR
+            "ENABLE_LIBRETRO is incompatible with: ${_CONFLICTS_STR}\n"
+            "These options were explicitly enabled but are not supported for libretro builds.\n"
+            "Remove these options or set them to OFF.")
+    endif()
+
+    # Force disable incompatible options (handles defaulted-on options)
+    foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
+        set(${_opt} OFF CACHE BOOL "Disabled for libretro" FORCE)
+    endforeach()
+endif()
 
 # Pass the following values to C++ land
 if (ENABLE_QT)
@@ -300,6 +339,9 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
 # set up output paths for executable binaries
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/$<CONFIG>)
 
+if (ENABLE_LIBRETRO)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # System imported libraries
 # ======================
@@ -359,7 +401,7 @@ if (APPLE)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
 
-    if (ENABLE_VULKAN)
+    if (ENABLE_VULKAN AND NOT ENABLE_LIBRETRO)
         if (NOT USE_SYSTEM_MOLTENVK)
             download_moltenvk()
         endif()
