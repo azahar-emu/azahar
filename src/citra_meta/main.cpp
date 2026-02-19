@@ -7,14 +7,15 @@
 #include "common/detached_tasks.h"
 #include "common/scope_exit.h"
 
+#if !defined(ENABLE_QT)
+#error "citra_meta is somehow building with no frontend. This should be impossible!"
+#endif
+
 #ifdef ENABLE_QT
 #include "citra_qt/citra_qt.h"
 #endif
 #ifdef ENABLE_ROOM
 #include "citra_room/citra_room.h"
-#endif
-#ifdef ENABLE_SDL2_FRONTEND
-#include "citra_sdl/citra_sdl.h"
 #endif
 
 #ifdef _WIN32
@@ -95,25 +96,6 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if ENABLE_QT
-    bool no_gui = false;
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--no-gui") == 0 || strcmp(argv[i], "-n") == 0) {
-            no_gui = true;
-        }
-    }
-
-    if (!no_gui) {
-        return LaunchQtFrontend(argc, argv);
-    }
+    return LaunchQtFrontend(argc, argv);
 #endif
-
-#if ENABLE_SDL2_FRONTEND
-    return LaunchSdlFrontend(argc, argv);
-#else
-    std::cout << "Cannot use SDL frontend as it was disabled at compile time. Exiting."
-              << std::endl;
-    return -1;
-#endif
-
-    return 0;
 }

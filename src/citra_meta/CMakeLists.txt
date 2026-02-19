@@ -45,10 +45,6 @@ endif()
 
 target_link_libraries(citra_meta PRIVATE fmt)
 
-if (ENABLE_SDL2_FRONTEND)
-    target_link_libraries(citra_meta PRIVATE citra_sdl)
-endif()
-
 if (ENABLE_QT)
     target_link_libraries(citra_meta PRIVATE citra_qt)
     target_link_libraries(citra_meta PRIVATE Boost::boost Qt6::Widgets)
