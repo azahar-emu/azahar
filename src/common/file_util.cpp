@@ -1304,6 +1304,7 @@ std::size_t IOFile::ReadAtImpl(void* data, std::size_t byte_count, std::size_t o
     DEBUG_ASSERT(data != nullptr);
 
 #ifdef HAVE_LIBRETRO_VFS
+    std::scoped_lock lock(m_file_pos_mutex);
     int64_t pos = filestream_tell(m_file);
     FSEEK(m_file, offset, RETRO_VFS_SEEK_POSITION_START);
     int64_t rv = FREAD(data, 1, byte_count, m_file);

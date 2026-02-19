@@ -54,7 +54,7 @@ jobs:
       TARGET: x86_64
       BUILD_DIR: build/linux-x86_64
       EXTRA_PATH: bin/Release
-      EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DENABLE_OPT=OFF
+      EXTRA_CORE_ARGS: -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 -DENABLE_LTO=OFF
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,7 +77,7 @@ jobs:
       BUILD_DIR: build/windows-x86_64
       EXTRA_CORE_ARGS: -DENABLE_LTO=OFF -G Ninja
       CMAKE: x86_64-w64-mingw32.static-cmake
-      IMAGE: git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:gcc11
+      IMAGE: git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:mingw12
       EXTRA_PATH: bin/Release
     steps:
       - uses: actions/checkout@v4
@@ -106,7 +106,7 @@ jobs:
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dll
   macos:
     if: github.event_name != 'pull_request'
-    runs-on: macos-14
+    runs-on: macos-latest
     strategy:
       matrix:
         target: ["x86_64", "arm64"]
@@ -120,6 +120,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Install tools
         run: brew install spirv-tools
       - name: Build
@@ -132,17 +134,19 @@ jobs:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
   ios:
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       OS: ios
       TARGET: arm64
       BUILD_DIR: build/ios-arm64
       EXTRA_PATH: bin/Release
-      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
@@ -154,17 +158,19 @@ jobs:
           path: ${{ env.BUILD_DIR }}/${{ env.EXTRA_PATH }}/azahar_libretro.dylib
   tvos:
     if: github.event_name != 'pull_request'
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       OS: tvos
       TARGET: arm64
       BUILD_DIR: build/tvos-arm64
       EXTRA_PATH: bin/Release
-      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
+      EXTRA_CORE_ARGS: -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_C_FLAGS=-DIOS -DCMAKE_CXX_FLAGS=-DIOS -DIOS=ON -DCMAKE_SYSTEM_NAME=tvOS -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 -DCITRA_USE_PRECOMPILED_HEADERS=OFF -DCMAKE_OSX_SYSROOT=appletvos -DCMAKE_OSX_ARCHITECTURES=arm64 -DENABLE_OPT=OFF
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Select Xcode 16.0
+        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR

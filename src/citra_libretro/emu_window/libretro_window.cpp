@@ -118,8 +118,7 @@ void EmuWindow_LibRetro::SwapBuffers() {
         // The 3DS framebuffer is portrait-oriented; ScreenInfo stores pixels
         // column-major so the transpose gives us the landscape orientation:
         //   display (dx, dy) -> ScreenInfo (x=dy, y=dx)
-        auto blit_screen = [&](VideoCore::ScreenId screen_id,
-                               const Common::Rectangle<u32>& rect) {
+        auto blit_screen = [&](VideoCore::ScreenId screen_id, const Common::Rectangle<u32>& rect) {
             const auto& info = renderer.Screen(screen_id);
             if (info.pixels.empty())
                 return;
@@ -143,9 +142,8 @@ void EmuWindow_LibRetro::SwapBuffers() {
                         continue;
 
                     const u8* src = info.pixels.data() + src_off;
-                    const size_t dst_off =
-                        static_cast<size_t>(rect.top + oy) * pitch +
-                        static_cast<size_t>(rect.left + ox) * 4;
+                    const size_t dst_off = static_cast<size_t>(rect.top + oy) * pitch +
+                                           static_cast<size_t>(rect.left + ox) * 4;
 
                     // RGBA -> XRGB8888 (little-endian: B, G, R, 0)
                     data[dst_off + 0] = src[2];

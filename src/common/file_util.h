@@ -15,6 +15,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <string>
@@ -496,6 +497,13 @@ private:
     CORE_FILE* m_file = nullptr;
     int m_fd = -1;
     bool m_good = true;
+#ifdef HAVE_LIBRETRO_VFS
+    // pread() doesn't touch the file position, so it's safe alongside
+    // concurrent fread/fwrite. Libretro VFS has no pread equivalent, so
+    // ReadAtImpl emulates it with seek+read+seek, which would corrupt the
+    // file position for concurrent Read/Write operations.
+    mutable std::mutex m_file_pos_mutex;
+#endif
 
     std::string filename;
     std::string openmode;

@@ -72,7 +72,9 @@ libretro-build-linux-x64:
     - .libretro-linux-cmake-x86_64
   image: $CI_SERVER_HOST:5050/libretro-infrastructure/libretro-build-amd64-ubuntu:backports
   variables:
-    CORE_ARGS: ${BASE_CORE_ARGS} -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DENABLE_OPT=OFF
+    CORE_ARGS: ${BASE_CORE_ARGS} -DENABLE_LTO=OFF
+    CC: /usr/bin/gcc-12
+    CXX: /usr/bin/g++-12
 
 # MacOS x86_64
 libretro-build-osx-x64:

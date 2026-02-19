@@ -306,7 +306,8 @@ void retro_run() {
                 msg = "Azahar was unable to locate a 3DS system archive: " + errorContent;
                 break;
             default:
-                msg = "Fatal Error encountered: " + errorContent;
+                msg = "Fatal Error encountered (" + std::to_string(static_cast<int>(result)) +
+                      "): " + errorContent;
                 break;
             }
 
@@ -514,7 +515,8 @@ bool retro_load_game(const struct retro_game_info* info) {
 #if CITRA_ARCH(x86_64) && CITRA_HAS_SSE42
     if (!Common::GetCPUCaps().sse4_2) {
         LOG_CRITICAL(Frontend, "This CPU does not support SSE4.2, which is required by this build");
-        LibRetro::DisplayMessage("This build requires a CPU with SSE4.2 support.");
+        LibRetro::DisplayMessage(
+            "This CPU does not support SSE4.2, which is required by this build");
         return false;
     }
 #endif
@@ -544,7 +546,7 @@ bool retro_load_game(const struct retro_game_info* info) {
 #else
         emu_instance->hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
         emu_instance->hw_render.version_major = 4;
-        emu_instance->hw_render.version_minor = 2;
+        emu_instance->hw_render.version_minor = 3;
 #endif
         emu_instance->hw_render.context_reset = context_reset;
         emu_instance->hw_render.context_destroy = context_destroy;
