@@ -285,10 +285,10 @@ public:
 
 #ifdef ENABLE_RETROACHIEVEMENTS
     // Gets a reference to the RetroAchievements client
-    [[nodiscard]] RetroAchievements::Client &RetroAchievementsClient();
+    [[nodiscard]] RetroAchievements::Client& RetroAchievementsClient();
 
     // Gets a const reference to the RetroAchievements client
-    [[nodiscard]] const RetroAchievements::Client &RetroAchievementsClient() const;
+    [[nodiscard]] const RetroAchievements::Client& RetroAchievementsClient() const;
 #endif
 
     /// Gets a reference to the custom texture cache system
