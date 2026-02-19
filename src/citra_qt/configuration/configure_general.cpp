@@ -210,9 +210,10 @@ void ConfigureGeneral::RetranslateUI() {
 void ConfigureGeneral::RetroAchievementsLogIn() {
 #ifdef ENABLE_RETROACHIEVEMENTS
     std::string username = ui->retroachievements_username_input->text().toStdString(),
-        password = ui->retroachievements_password_input->text().toStdString();
+                password = ui->retroachievements_password_input->text().toStdString();
 
-    Core::System::GetInstance().RetroAchievementsClient().LogInUser(username.c_str(), password.c_str());
+    Core::System::GetInstance().RetroAchievementsClient().LogInUser(username.c_str(),
+                                                                    password.c_str());
 #endif
 }
 

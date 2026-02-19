@@ -663,11 +663,11 @@ const Cheats::CheatEngine& System::CheatEngine() const {
 }
 
 #ifdef ENABLE_RETROACHIEVEMENTS
-RetroAchievements::Client &System::RetroAchievementsClient() {
+RetroAchievements::Client& System::RetroAchievementsClient() {
     return *retroachievements_client;
 }
 
-const RetroAchievements::Client &System::RetroAchievementsClient() const {
+const RetroAchievements::Client& System::RetroAchievementsClient() const {
     return *retroachievements_client;
 }
 #endif
