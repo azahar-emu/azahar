@@ -11,6 +11,13 @@
 #include "common/scm_rev.h"
 
 namespace RetroAchievements {
+static const char base_url[] = "https://retroachievements.org";
+
+// TODO: Make this use a numeric version as per
+// https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
+static const std::string user_agent = std::string("Azahar/") + Common::g_build_fullname;
+static const httplib::Headers headers = httplib::Headers({{"User-Agent", user_agent}});
+
 namespace Callbacks {
 // This is the function the rc_client will use to read memory for the emulator. we don't need it
 // yet, so just provide a dummy function that returns "no memory read".
@@ -26,23 +33,21 @@ static void server_call(const rc_api_request_t* request, rc_client_server_callba
                         void* callback_data, rc_client_t* rc_client) {
     LOG_DEBUG(RetroAchievements, "Attempting to call server.");
 
-    // TODO: Make this a numeric version as per
-    // https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
-    std::string user_agent = std::string("Azahar/") + Common::g_build_fullname;
+    if (std::strstr(request->url, base_url) == nullptr) {
+        LOG_ERROR(RetroAchievements, "Invalid URL: \"{}\"", request->url);
+        return;
+    }
+
+    httplib::Client client(base_url);
+    const char* path = &request->url[sizeof(base_url) - 1];
 
     // TODO: Should make this async?
-    // TODO: Use a persistent client since base URL will maybe be the same? Or instead just need to
-    // parse the URL into scheme-host-port and path.
-
-    // httplib::Client client(request->url);
-    httplib::Client client("https://retroachievements.org");
-
     httplib::Result result;
     if (request->post_data) {
-        result = client.Post("/dorequest.php", request->post_data, std::strlen(request->post_data),
+        result = client.Post(path, headers, request->post_data, std::strlen(request->post_data),
                              request->content_type);
     } else {
-        result = client.Get("...");
+        result = client.Get(path, headers);
     }
 
     if (result) {
