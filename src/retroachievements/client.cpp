@@ -12,6 +12,7 @@
 
 namespace RetroAchievements
 {
+namespace Callbacks {
 // This is the function the rc_client will use to read memory for the emulator. we don't need it yet,
 // so just provide a dummy function that returns "no memory read".
 static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_bytes, rc_client_t* client)
@@ -57,6 +58,7 @@ static void log_message(const char* message, const rc_client_t* client)
 {
   LOG_DEBUG(RetroAchievements, "RetroAchievements internal message: \"{}\"", message);
 }
+}
 
 Client::Client(const Core::System& _system) : system{_system} {}
 
@@ -70,8 +72,8 @@ Client::~Client() {
 void Client::Initialize() {
   LOG_DEBUG(RetroAchievements, "Initializing RetroAchievements client.");
 
-  rc_client = rc_client_create(read_memory, server_call);
-  rc_client_enable_logging(rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
+  rc_client = rc_client_create(Callbacks::read_memory, Callbacks::server_call);
+  rc_client_enable_logging(rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, Callbacks::log_message);
   rc_client_set_hardcore_enabled(rc_client, 0);
 }
 
@@ -97,12 +99,4 @@ void Client::LogInUser(const char* username, const char* password)
 {
   rc_client_begin_login_with_password(rc_client, username, password, login_callback, NULL);
 }
-
-// void login_remembered_retroachievements_user(const char* username, const char* token)
-// {
-//   // This is exactly the same functionality as rc_client_begin_login_with_password, but
-//   // uses the token captured from the first login instead of a password.
-//   // Note that it uses the same callback.
-//   rc_client_begin_login_with_token(rc_client, username, token, login_callback, NULL);
-// }
 } // namespace RetroAchievements
