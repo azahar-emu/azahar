@@ -374,7 +374,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="retroachievements_password_input"/>
+            <widget class="QLineEdit" name="retroachievements_password_input">
+             <property name="echoMode">
+              <enum>QLineEdit::PasswordEchoOnEdit</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
