@@ -91,12 +91,6 @@ jobs:
               -w "${GITHUB_WORKSPACE}" \
               $IMAGE \
               bash -lc "\
-                  apt-get update -qy && \
-                  apt-get install -qy software-properties-common && \
-                  add-apt-repository -y ppa:savoury1/build-tools && \
-                  add-apt-repository ppa:ubuntu-toolchain-r/test && \
-                  apt-get update -qy && \
-                  apt-get install -qy glslang-tools && \
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
                   ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)"
       - name: Upload
