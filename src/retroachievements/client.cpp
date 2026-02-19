@@ -26,11 +26,9 @@ static void server_call(const rc_api_request_t* request, rc_client_server_callba
                         void* callback_data, rc_client_t* rc_client) {
     LOG_DEBUG(RetroAchievements, "Attempting to call server.");
 
-    std::string user_agent =
-        std::string("Azahar/") +
-        Common::
-            g_build_fullname; // TODO: Make this a numeric version as per
-                              // https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
+    // TODO: Make this a numeric version as per
+    // https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
+    std::string user_agent = std::string("Azahar/") + Common::g_build_fullname;
 
     // TODO: Should make this async?
     // TODO: Use a persistent client since base URL will maybe be the same? Or instead just need to
