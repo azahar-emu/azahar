@@ -120,8 +120,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Select Xcode 16.0
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Install tools
         run: brew install spirv-tools
       - name: Build
@@ -145,8 +143,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Select Xcode 16.0
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
@@ -169,8 +165,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Select Xcode 16.0
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
