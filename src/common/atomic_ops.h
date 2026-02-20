@@ -11,6 +11,11 @@
 #include <cstring>
 #endif
 
+#if !defined(__SIZEOF_INT128__)
+#include <mutex>
+inline std::mutex g_atomic128_mutex;
+#endif
+
 namespace Common {
 
 #if _MSC_VER
@@ -107,14 +112,6 @@ namespace Common {
     return __sync_bool_compare_and_swap(pointer, expected, value);
 }
 
-[[nodiscard]] inline bool AtomicCompareAndSwap(volatile u64* pointer, u128 value, u128 expected) {
-    unsigned __int128 value_a;
-    unsigned __int128 expected_a;
-    std::memcpy(&value_a, value.data(), sizeof(u128));
-    std::memcpy(&expected_a, expected.data(), sizeof(u128));
-    return __sync_bool_compare_and_swap((unsigned __int128*)pointer, expected_a, value_a);
-}
-
 [[nodiscard]] inline bool AtomicCompareAndSwap(volatile u8* pointer, u8 value, u8 expected,
                                                u8& actual) {
     actual = __sync_val_compare_and_swap(pointer, expected, value);
@@ -139,6 +136,51 @@ namespace Common {
     return actual == expected;
 }
 
+#if !defined(__SIZEOF_INT128__)
+
+[[nodiscard]] inline bool AtomicCompareAndSwap(volatile u64* pointer, u128 value, u128 expected)
+{
+    std::lock_guard<std::mutex> lock(g_atomic128_mutex);
+    u128 current;
+    std::memcpy(current.data(), (const void*)pointer, sizeof(u128));
+    bool match = (current == expected);
+    if (match) {
+        std::memcpy((void*)pointer, value.data(), sizeof(u128));
+    }
+    return match;
+}
+
+[[nodiscard]] inline bool AtomicCompareAndSwap(volatile u64* pointer, u128 value, u128 expected, u128& actual)
+{
+    std::lock_guard<std::mutex> lock(g_atomic128_mutex);
+    u128 current;
+    std::memcpy(current.data(), (const void*)pointer, sizeof(u128));
+    bool match = (current == expected);
+    if (match) {
+        std::memcpy((void*)pointer, value.data(), sizeof(u128));
+    }
+    actual = current;
+    return match;
+}
+
+[[nodiscard]] inline u128 AtomicLoad128(volatile u64* pointer)
+{
+    std::lock_guard<std::mutex> lock(g_atomic128_mutex);
+    u128 result;
+    std::memcpy(result.data(), (const void*)pointer, sizeof(u128));
+    return result;
+}
+
+#else
+
+[[nodiscard]] inline bool AtomicCompareAndSwap(volatile u64* pointer, u128 value, u128 expected) {
+    unsigned __int128 value_a;
+    unsigned __int128 expected_a;
+    std::memcpy(&value_a, value.data(), sizeof(u128));
+    std::memcpy(&expected_a, expected.data(), sizeof(u128));
+    return __sync_bool_compare_and_swap((unsigned __int128*)pointer, expected_a, value_a);
+}
+
 [[nodiscard]] inline bool AtomicCompareAndSwap(volatile u64* pointer, u128 value, u128 expected,
                                                u128& actual) {
     unsigned __int128 value_a;
@@ -161,6 +203,7 @@ namespace Common {
     return result;
 }
 
-#endif
+#endif // __SIZEOF_INT128__
+#endif // _MSC_VER
 
 } // namespace Common
