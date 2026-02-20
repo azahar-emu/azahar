@@ -572,6 +572,19 @@ struct Keys {
     static constexpr auto log_regex_filter = HS("log_regex_filter");
     static constexpr auto use_integer_scaling = HS("use_integer_scaling");
     static constexpr auto layouts_to_cycle = HS("layouts_to_cycle");
+
+#ifdef HAVE_LIBRETRO
+    static constexpr auto language_value = HS("language_value");
+    static constexpr auto swap_screen_mode = HS("swap_screen_mode");
+    static constexpr auto use_libretro_save_path = HS("use_libretro_save_path");
+    static constexpr auto analog_function = HS("analog_function");
+    static constexpr auto analog_deadzone = HS("analog_deadzone");
+    static constexpr auto enable_mouse_touchscreen = HS("enable_mouse_touchscreen");
+    static constexpr auto enable_touch_touchscreen = HS("enable_touch_touchscreen");
+    static constexpr auto render_touchscreen = HS("render_touchscreen");
+    static constexpr auto enable_motion = HS("enable_motion");
+    static constexpr auto motion_sensitivity = HS("motion_sensitivity");
+#endif
 #undef HS
 };
 

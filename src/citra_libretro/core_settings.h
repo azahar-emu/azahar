@@ -15,21 +15,21 @@ struct CoreSettings {
 
     std::string file_path;
 
-    float deadzone = 1.f;
+    float analog_deadzone = 1.f;
 
     LibRetro::CStickFunction analog_function;
 
-    bool mouse_touchscreen;
+    bool enable_mouse_touchscreen;
 
     Service::CFG::SystemLanguage language_value;
 
-    bool touch_touchscreen;
+    bool enable_touch_touchscreen;
 
     bool render_touchscreen;
 
-    bool toggle_swap_screen;
+    std::string swap_screen_mode;
 
-    bool motion_enabled;
+    bool enable_motion;
 
     float motion_sensitivity;
 
