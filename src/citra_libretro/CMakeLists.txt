@@ -16,7 +16,7 @@ add_library(azahar_libretro_common OBJECT
         core_settings.h)
 
 target_compile_definitions(azahar_libretro_common PRIVATE HAVE_LIBRETRO)
-target_link_libraries(azahar_libretro_common PRIVATE citra_common citra_core video_core libretro robin_map)
+target_link_libraries(azahar_libretro_common PRIVATE citra_common citra_core video_core libretro tsl::robin_map)
 if(ENABLE_OPENGL)
     target_link_libraries(azahar_libretro_common PRIVATE glad)
 endif()
@@ -43,7 +43,7 @@ target_compile_definitions(audio_core PRIVATE HAVE_LIBRETRO)
 target_compile_definitions(input_common PRIVATE HAVE_LIBRETRO)
 
 target_link_libraries(azahar_libretro PRIVATE citra_common citra_core)
-target_link_libraries(azahar_libretro PRIVATE boost dds-ktx libretro robin_map)
+target_link_libraries(azahar_libretro PRIVATE Boost::boost dds-ktx libretro tsl::robin_map)
 if(ENABLE_VULKAN)
   target_link_libraries(azahar_libretro PRIVATE sirit vulkan-headers vma)
 endif()
