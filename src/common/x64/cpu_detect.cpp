@@ -80,10 +80,6 @@ static CPUCaps Detect() {
     if (max_std_fn >= 1) {
         __cpuid(cpu_id, 0x00000001);
 
-        if ((cpu_id[3] >> 25) & 1)
-            caps.sse = true;
-        if ((cpu_id[3] >> 26) & 1)
-            caps.sse2 = true;
         if ((cpu_id[2]) & 1)
             caps.sse3 = true;
         if ((cpu_id[2] >> 9) & 1)
