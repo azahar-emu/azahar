@@ -79,6 +79,55 @@ class InputBindingSetting(
 
             else -> false
         }
+
+    /**
+     * Returns true if this is an up or down dpad button
+     */
+
+    fun isVerticalButton(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_BUTTON_DOWN,
+            Settings.KEY_BUTTON_UP -> true
+
+            else -> false
+        }
+
+    fun isVerticalDpadAxis(): Boolean  {
+        return abstractSetting.key ==
+            Settings.KEY_DPAD_AXIS_VERTICAL
+        }
+
+    fun isHorizontalDpadAxis(): Boolean  {
+        return abstractSetting.key ==
+                Settings.KEY_DPAD_AXIS_HORIZONTAL
+    }
+
+    fun isVerticalAxis(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_DPAD_AXIS_VERTICAL,
+                Settings.KEY_CIRCLEPAD_AXIS_VERTICAL,
+                Settings.KEY_CSTICK_AXIS_VERTICAL -> true
+
+            else -> false
+        }
+
+    fun isHorizontalAxis(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_DPAD_AXIS_HORIZONTAL,
+            Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+            Settings.KEY_CSTICK_AXIS_HORIZONTAL -> true
+
+            else -> false
+        }
+
+
+    fun isHorizontalButton(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_BUTTON_LEFT,
+                Settings.KEY_BUTTON_RIGHT -> true
+            else -> false
+        }
+
     /**
      * Returns true if this key is for the 3DS L/R or ZL/ZR buttons. Note, these are not real
      * triggers on the 3DS, but we support them as such on a physical gamepad.
@@ -339,6 +388,23 @@ class InputBindingSetting(
                 event.scanCode
             } else {
                 event.keyCode
+            }
+        }
+
+        fun getInputObject(key: String, preferences: SharedPreferences): AbstractStringSetting {
+            return object : AbstractStringSetting {
+                override var string: String
+                    get() = preferences.getString(key, "")!!
+                    set(value) {
+                        preferences.edit()
+                            .putString(key, value)
+                            .apply()
+                    }
+                override val key = key
+                override val section = Settings.SECTION_CONTROLS
+                override val isRuntimeEditable = true
+                override val valueAsString = preferences.getString(key, "")!!
+                override val defaultValue = ""
             }
         }
     }
