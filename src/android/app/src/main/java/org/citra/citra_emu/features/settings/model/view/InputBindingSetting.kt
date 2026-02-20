@@ -124,6 +124,7 @@ class InputBindingSetting(
                 Settings.KEY_BUTTON_SELECT -> NativeLibrary.ButtonType.BUTTON_SELECT
                 Settings.KEY_BUTTON_START -> NativeLibrary.ButtonType.BUTTON_START
                 Settings.KEY_BUTTON_HOME -> NativeLibrary.ButtonType.BUTTON_HOME
+                Settings.KEY_BUTTON_TURBO -> NativeLibrary.ButtonType.BUTTON_TURBO
                 Settings.KEY_BUTTON_UP -> NativeLibrary.ButtonType.DPAD_UP
                 Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
                 Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT

@@ -66,8 +66,9 @@ static const std::array<int, Settings::NativeButton::NumButtons> default_buttons
     InputManager::N3DS_TRIGGER_L,    InputManager::N3DS_TRIGGER_R,
     InputManager::N3DS_BUTTON_START, InputManager::N3DS_BUTTON_SELECT,
     InputManager::N3DS_BUTTON_DEBUG, InputManager::N3DS_BUTTON_GPIO14,
-    InputManager::N3DS_BUTTON_ZL,    InputManager::N3DS_BUTTON_ZR,
-    InputManager::N3DS_BUTTON_HOME,
+    InputManager::N3DS_BUTTON_TURBO, InputManager::N3DS_BUTTON_ZL,
+    InputManager::N3DS_BUTTON_ZR,    InputManager::N3DS_BUTTON_HOME,
+    InputManager::N3DS_BUTTON_POWER,
 };
 
 static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs{{
