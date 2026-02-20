@@ -292,6 +292,15 @@ if (USE_DISCORD_PRESENCE)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
 endif()
 
+# LibRetro
+if (ENABLE_LIBRETRO)
+  add_library(libretro INTERFACE)
+  target_include_directories(libretro INTERFACE ./libretro-common/libretro-common/include)
+  if (ANDROID)
+    add_subdirectory(libretro-common EXCLUDE_FROM_ALL)
+  endif()
+endif()
+
 # JSON
 add_library(json-headers INTERFACE)
 if (USE_SYSTEM_JSON)

@@ -15,6 +15,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <string>
@@ -30,6 +31,14 @@
 #include "common/common_types.h"
 #ifdef _MSC_VER
 #include "common/string_util.h"
+#endif
+
+#ifdef HAVE_LIBRETRO_VFS
+#define SKIP_STDIO_REDEFINES
+#include <streams/file_stream_transforms.h>
+#define CORE_FILE RFILE
+#else
+#define CORE_FILE std::FILE
 #endif
 
 namespace FileUtil {
@@ -120,7 +129,7 @@ private:
 [[nodiscard]] u64 GetSize(int fd);
 
 // Overloaded GetSize, accepts FILE*
-[[nodiscard]] u64 GetSize(FILE* f);
+[[nodiscard]] u64 GetSize(CORE_FILE* f);
 
 // Returns true if successful, or path already exists.
 bool CreateDir(const std::string& filename);
@@ -423,7 +432,11 @@ public:
         return m_good;
     }
     [[nodiscard]] virtual int GetFd() const {
-#ifdef ANDROID
+#ifdef HAVE_LIBRETRO_VFS
+        if (m_file == nullptr)
+            return -1;
+        return fileno(filestream_get_vfs_handle(m_file)->fp);
+#elif defined(ANDROID)
         return m_fd;
 #else
         if (m_file == nullptr)
@@ -448,7 +461,12 @@ public:
     // clear error state
     virtual void Clear() {
         m_good = true;
+
+#ifdef HAVE_LIBRETRO_VFS
+        filestream_rewind(m_file);
+#else
         std::clearerr(m_file);
+#endif
     }
 
     virtual bool IsCrypto() {
@@ -476,9 +494,16 @@ protected:
     virtual u64 TellImpl() const;
 
 private:
-    std::FILE* m_file = nullptr;
+    CORE_FILE* m_file = nullptr;
     int m_fd = -1;
     bool m_good = true;
+#ifdef HAVE_LIBRETRO_VFS
+    // pread() doesn't touch the file position, so it's safe alongside
+    // concurrent fread/fwrite. Libretro VFS has no pread equivalent, so
+    // ReadAtImpl emulates it with seek+read+seek, which would corrupt the
+    // file position for concurrent Read/Write operations.
+    mutable std::mutex m_file_pos_mutex;
+#endif
 
     std::string filename;
     std::string openmode;

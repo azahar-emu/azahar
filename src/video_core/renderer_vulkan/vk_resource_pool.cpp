@@ -2,6 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+// Copyright 2020 yuzu Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #include <cstddef>
 #include <optional>
 #include <unordered_map>
@@ -160,7 +164,10 @@ void DescriptorHeap::Allocate(std::size_t begin, std::size_t end) {
         if (result == vk::Result::eSuccess) {
             break;
         }
-        if (result == vk::Result::eErrorOutOfPoolMemory) {
+        // eErrorFragmentedPool: pool has space but is too fragmented to allocate.
+        // MoltenVK on iOS/tvOS returns this more frequently than native Vulkan drivers.
+        if (result == vk::Result::eErrorOutOfPoolMemory ||
+            result == vk::Result::eErrorFragmentedPool) {
             current_pool++;
             if (current_pool == pools.size()) {
                 LOG_INFO(Render_Vulkan, "Run out of pools, creating new one!");

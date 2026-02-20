@@ -167,11 +167,14 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
                     vk::Format format, vk::ImageUsageFlags usage, vk::ImageCreateFlags flags,
                     vk::ImageAspectFlags aspect, bool need_format_list,
                     std::string_view debug_name) {
+    const bool is_cube_map =
+        type == TextureType::CubeMap && instance->IsLayeredRenderingSupported();
+
     this->instance = instance;
     this->width = width;
     this->height = height;
     this->levels = levels;
-    this->layers = type == TextureType::CubeMap ? 6 : 1;
+    this->layers = is_cube_map ? 6 : 1;
 
     const std::array format_list = {
         vk::Format::eR8G8B8A8Unorm,
@@ -217,8 +220,7 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
 
     const vk::ImageViewCreateInfo view_info = {
         .image = image,
-        .viewType =
-            type == TextureType::CubeMap ? vk::ImageViewType::eCube : vk::ImageViewType::e2D,
+        .viewType = is_cube_map ? vk::ImageViewType::eCube : vk::ImageViewType::e2D,
         .format = format,
         .subresourceRange{
             .aspectMask = aspect,

@@ -214,7 +214,6 @@ struct MIC_U::Impl {
             LOG_CRITICAL(Service_MIC,
                          "Application started sampling again before stopping sampling");
             mic->StopSampling();
-            mic.reset();
         }
 
         u8 sample_size = encoding == Encoding::PCM8Signed || encoding == Encoding::PCM8 ? 8 : 16;
@@ -225,7 +224,9 @@ struct MIC_U::Impl {
         state.looped_buffer = audio_buffer_loop;
         state.size = audio_buffer_size;
 
-        CreateMic();
+        if (!mic) {
+            CreateMic();
+        }
         StartSampling();
 
         timing.ScheduleEvent(GetBufferUpdatePeriod(state.sample_rate), buffer_write_event);
@@ -259,7 +260,6 @@ struct MIC_U::Impl {
         timing.RemoveEvent(buffer_write_event);
         if (mic) {
             mic->StopSampling();
-            mic.reset();
         }
         LOG_TRACE(Service_MIC, "called");
     }
