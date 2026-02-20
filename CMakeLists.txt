@@ -428,6 +428,11 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "^(Linux|kFreeBSD|GNU|SunOS)$")
     set(PLATFORM_LIBRARIES rt)
 endif()
 
+if(CMAKE_CXX_COMPILER MATCHES "webos" OR
+   CMAKE_CXX_COMPILER MATCHES "starfish")
+    set(WEBOS ON)
+endif()
+
 # Setup a custom clang-format target (if clang-format can be found) that will run
 # against all the src files. This should be used before making a pull request.
 # =======================================================================

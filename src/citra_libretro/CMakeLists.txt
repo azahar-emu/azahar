@@ -58,7 +58,7 @@ endif()
 set_target_properties(azahar_libretro PROPERTIES PREFIX "")
 target_compile_definitions(azahar_libretro PRIVATE HAVE_LIBRETRO)
 
-if(ANDROID)
+if(ANDROID OR WEBOS)
   target_compile_definitions(citra_common PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(citra_core PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(video_core PRIVATE HAVE_LIBRETRO_VFS)
@@ -69,6 +69,9 @@ if(ANDROID)
   target_link_libraries(video_core PRIVATE libretro_common)
   target_link_libraries(azahar_libretro_common PRIVATE libretro_common)
   target_link_libraries(azahar_libretro PRIVATE libretro_common)
+endif()
+
+if(ANDROID)
   # Link Android log library for __android_log_print
   target_link_libraries(azahar_libretro PRIVATE log)
   set_target_properties(azahar_libretro PROPERTIES SUFFIX "_android.so")
