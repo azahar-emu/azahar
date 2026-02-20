@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>440</width>
+    <width>639</width>
     <height>950</height>
    </rect>
   </property>
@@ -108,6 +108,13 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="use_integer_scaling">
+        <property name="text">
+         <string>Use Integer Scaling (if layout allows)</string>
+        </property>
        </widget>
       </item>
       <item>

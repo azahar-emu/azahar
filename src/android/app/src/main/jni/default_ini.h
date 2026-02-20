@@ -148,6 +148,10 @@ use_disk_shader_cache =
 # factor for the 3DS resolution
 resolution_factor =
 
+# Use Integer Scaling when the layout allows
+# 0: Off (default), 1: On
+use_integer_scaling =
+
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)
 use_frame_limit =
