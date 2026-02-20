@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/hana/string.hpp>
+
 #include "citra_libretro/core_settings.h"
 #include "citra_libretro/environment.h"
 
@@ -9,11 +11,18 @@
 #include "common/settings.h"
 #include "core/hle/service/cfg/cfg.h"
 
+using BaseKeys = Settings::Keys;
+
 namespace LibRetro {
 
 CoreSettings settings = {};
 
 namespace config {
+
+template <typename HanaString>
+constexpr const char* citra_setting(HanaString key) {
+    return (BOOST_HANA_STRING("citra_") + key).c_str();
+}
 
 static constexpr const char* enabled = "enabled";
 static constexpr const char* disabled = "disabled";
@@ -29,53 +38,56 @@ static constexpr const char* input = "input";
 } // namespace category
 
 namespace cpu {
-static constexpr const char* use_cpu_jit = "citra_use_cpu_jit";
-static constexpr const char* cpu_clock_percentage = "citra_cpu_scale";
+static constexpr const char* use_cpu_jit = citra_setting(BaseKeys::use_cpu_jit);
+static constexpr const char* cpu_clock_percentage = citra_setting(BaseKeys::cpu_clock_percentage);
 } // namespace cpu
 
 namespace system {
-static constexpr const char* is_new_3ds = "citra_is_new_3ds";
-static constexpr const char* region = "citra_region_value";
-static constexpr const char* language = "citra_language";
+static constexpr const char* is_new_3ds = citra_setting(BaseKeys::is_new_3ds);
+static constexpr const char* region_value = citra_setting(BaseKeys::region_value);
+static constexpr const char* language_value = citra_setting(BaseKeys::language_value);
 } // namespace system
 
 namespace audio {
-static constexpr const char* audio_emulation = "citra_audio_emulation";
-static constexpr const char* input_type = "citra_input_type";
+static constexpr const char* audio_emulation = citra_setting(BaseKeys::audio_emulation);
+static constexpr const char* input_type = citra_setting(BaseKeys::input_type);
 } // namespace audio
 
 namespace graphics {
-static constexpr const char* graphics_api = "citra_graphics_api";
-static constexpr const char* use_hw_shader = "citra_use_hw_shaders";
-static constexpr const char* use_shader_jit = "citra_use_shader_jit";
-static constexpr const char* shaders_accurate_mul = "citra_use_acc_mul";
-static constexpr const char* use_disk_shader_cache = "citra_use_hw_shader_cache";
-static constexpr const char* resolution_factor = "citra_resolution_factor";
-static constexpr const char* texture_filter = "citra_texture_filter";
-static constexpr const char* texture_sampling = "citra_texture_sampling";
-static constexpr const char* custom_textures = "citra_custom_textures";
-static constexpr const char* dump_textures = "citra_dump_textures";
+static constexpr const char* graphics_api = citra_setting(BaseKeys::graphics_api);
+static constexpr const char* use_hw_shader = citra_setting(BaseKeys::use_hw_shader);
+static constexpr const char* use_shader_jit = citra_setting(BaseKeys::use_shader_jit);
+static constexpr const char* shaders_accurate_mul = citra_setting(BaseKeys::shaders_accurate_mul);
+static constexpr const char* use_disk_shader_cache = citra_setting(BaseKeys::use_disk_shader_cache);
+static constexpr const char* resolution_factor = citra_setting(BaseKeys::resolution_factor);
+static constexpr const char* texture_filter = citra_setting(BaseKeys::texture_filter);
+static constexpr const char* texture_sampling = citra_setting(BaseKeys::texture_sampling);
+static constexpr const char* custom_textures = citra_setting(BaseKeys::custom_textures);
+static constexpr const char* dump_textures = citra_setting(BaseKeys::dump_textures);
 } // namespace graphics
 
 namespace layout {
-static constexpr const char* layout_option = "citra_layout_option";
-static constexpr const char* swap_screen = "citra_swap_screen";
-static constexpr const char* toggle_swap_screen = "citra_swap_screen_mode";
+static constexpr const char* layout_option = citra_setting(BaseKeys::layout_option);
+static constexpr const char* swap_screen = citra_setting(BaseKeys::swap_screen);
+static constexpr const char* swap_screen_mode = citra_setting(BaseKeys::swap_screen_mode);
 } // namespace layout
 
 namespace storage {
-static constexpr const char* use_virtual_sd = "citra_use_virtual_sd";
-static constexpr const char* use_libretro_save_path = "citra_use_libretro_save_path";
+static constexpr const char* use_virtual_sd = citra_setting(BaseKeys::use_virtual_sd);
+static constexpr const char* use_libretro_save_path =
+    citra_setting(BaseKeys::use_libretro_save_path);
 } // namespace storage
 
 namespace input {
-static constexpr const char* analog_function = "citra_analog_function";
-static constexpr const char* deadzone = "citra_deadzone";
-static constexpr const char* mouse_touchscreen = "citra_mouse_touchscreen";
-static constexpr const char* touch_touchscreen = "citra_touch_touchscreen";
-static constexpr const char* render_touchscreen = "citra_render_touchscreen";
-static constexpr const char* motion_enabled = "citra_motion_enabled";
-static constexpr const char* motion_sensitivity = "citra_motion_sensitivity";
+static constexpr const char* analog_function = citra_setting(BaseKeys::analog_function);
+static constexpr const char* analog_deadzone = citra_setting(BaseKeys::analog_deadzone);
+static constexpr const char* enable_mouse_touchscreen =
+    citra_setting(BaseKeys::enable_mouse_touchscreen);
+static constexpr const char* enable_touch_touchscreen =
+    citra_setting(BaseKeys::enable_touch_touchscreen);
+static constexpr const char* render_touchscreen = citra_setting(BaseKeys::render_touchscreen);
+static constexpr const char* enable_motion = citra_setting(BaseKeys::enable_motion);
+static constexpr const char* motion_sensitivity = citra_setting(BaseKeys::motion_sensitivity);
 } // namespace input
 
 } // namespace config
@@ -179,7 +191,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "New 3DS"
     },
     {
-        config::system::region,
+        config::system::region_value,
         "3DS System Region",
         "System Region",
         "Set the 3DS system region. Auto-select will choose based on the game. "
@@ -200,7 +212,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "Auto"
     },
     {
-        config::system::language,
+        config::system::language_value,
         "3DS System Language",
         "System Language",
         "Set the system language for the emulated 3DS. "
@@ -458,7 +470,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "Top"
     },
     {
-        config::layout::toggle_swap_screen,
+        config::layout::swap_screen_mode,
         "Screen Swap Mode",
         "Swap Mode",
         "How screen swapping behaves when using the screen swap hotkey.",
@@ -519,7 +531,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "c_stick_and_touchscreen"
     },
     {
-        config::input::deadzone,
+        config::input::analog_deadzone,
         "Analog Deadzone",
         "Analog Deadzone",
         "Set the deadzone percentage for analog input to reduce drift.",
@@ -533,7 +545,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "15"
     },
     {
-        config::input::mouse_touchscreen,
+        config::input::enable_mouse_touchscreen,
         "Mouse Touchscreen Support",
         "Mouse Touchscreen",
         "Enable mouse input for touchscreen interactions.",
@@ -547,7 +559,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::enabled
     },
     {
-        config::input::touch_touchscreen,
+        config::input::enable_touch_touchscreen,
         "Touch Device Support",
         "Touch Support",
         "Enable touch device input for touchscreen interactions.",
@@ -575,7 +587,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::disabled
     },
     {
-        config::input::motion_enabled,
+        config::input::enable_motion,
         "Gyroscope/Accelerometer Support",
         "Motion Support",
         "Enable gyroscope and accelerometer input for games that support motion controls.",
@@ -782,10 +794,10 @@ static void ParseSystemOptions(void) {
         LibRetro::FetchVariable(config::system::is_new_3ds, "New 3DS") == "New 3DS";
 
     Settings::values.region_value =
-        GetRegionValue(LibRetro::FetchVariable("citra_region_value", "Auto"));
+        GetRegionValue(LibRetro::FetchVariable(config::system::region_value, "Auto"));
 
     LibRetro::settings.language_value =
-        GetLanguageValue(LibRetro::FetchVariable(config::system::language, "English"));
+        GetLanguageValue(LibRetro::FetchVariable(config::system::language_value, "English"));
 }
 
 static Settings::AudioEmulation GetAudioEmulation(const std::string& name) {
@@ -906,8 +918,8 @@ static void ParseLayoutOptions(void) {
     Settings::values.swap_screen =
         LibRetro::FetchVariable(config::layout::swap_screen, "Top") == "Bottom";
 
-    LibRetro::settings.toggle_swap_screen =
-        LibRetro::FetchVariable(config::layout::toggle_swap_screen, "Toggle") == "Toggle";
+    LibRetro::settings.swap_screen_mode =
+        LibRetro::FetchVariable(config::layout::swap_screen_mode, "Toggle");
 }
 
 static void ParseStorageOptions(void) {
@@ -962,27 +974,27 @@ static void ParseInputOptions(void) {
         Settings::values.current_input_profile.analogs[1] = "";
     }
 
-    auto deadzone = LibRetro::FetchVariable(config::input::deadzone, "15");
-    LibRetro::settings.deadzone = static_cast<float>(std::stoi(deadzone)) / 100.0f;
+    auto analog_deadzone = LibRetro::FetchVariable(config::input::analog_deadzone, "15");
+    LibRetro::settings.analog_deadzone = static_cast<float>(std::stoi(analog_deadzone)) / 100.0f;
 
-    LibRetro::settings.mouse_touchscreen =
-        LibRetro::FetchVariable(config::input::mouse_touchscreen, config::enabled) ==
+    LibRetro::settings.enable_mouse_touchscreen =
+        LibRetro::FetchVariable(config::input::enable_mouse_touchscreen, config::enabled) ==
         config::enabled;
 
-    LibRetro::settings.touch_touchscreen =
-        LibRetro::FetchVariable(config::input::touch_touchscreen, config::enabled) ==
+    LibRetro::settings.enable_touch_touchscreen =
+        LibRetro::FetchVariable(config::input::enable_touch_touchscreen, config::enabled) ==
         config::enabled;
 
     LibRetro::settings.render_touchscreen =
         LibRetro::FetchVariable(config::input::render_touchscreen, config::disabled) ==
         config::enabled;
-    LibRetro::settings.motion_enabled =
-        LibRetro::FetchVariable(config::input::motion_enabled, config::enabled) == config::enabled;
+    LibRetro::settings.enable_motion =
+        LibRetro::FetchVariable(config::input::enable_motion, config::enabled) == config::enabled;
     auto motion_sens = LibRetro::FetchVariable(config::input::motion_sensitivity, "1.0");
     LibRetro::settings.motion_sensitivity = std::stof(motion_sens);
 
     // Configure motion device based on user settings
-    if (LibRetro::settings.motion_enabled) {
+    if (LibRetro::settings.enable_motion) {
         Settings::values.current_input_profile.motion_device =
             "port:0,sensitivity:" + std::to_string(LibRetro::settings.motion_sensitivity) +
             ",engine:libretro";
