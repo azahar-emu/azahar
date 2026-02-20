@@ -1,4 +1,4 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -100,5 +100,7 @@ inline void TruncateString(std::string& str) {
  */
 [[nodiscard]] std::string StringFromFixedZeroTerminatedBuffer(const char* buffer,
                                                               std::size_t max_len);
+
+#define HANA_TO_STD_STRING(hana_string) std::string(hana_string.c_str())
 
 } // namespace Common

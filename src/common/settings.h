@@ -10,9 +10,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/hana/string.hpp>
 #include "audio_core/input_details.h"
 #include "audio_core/sink_details.h"
 #include "common/common_types.h"
+#include "common/string_util.h"
 #include "core/hle/service/cam/cam_params.h"
 
 namespace Settings {
@@ -224,7 +226,7 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit Setting(const Type& default_val, const std::string& name)
+    explicit Setting(const Type& default_val, const std::string_view& name)
         requires(!ranged)
         : value{default_val}, default_value{default_val}, label{name} {}
     virtual ~Setting() = default;
@@ -238,10 +240,10 @@ public:
      * @param name Label for the setting
      */
     explicit Setting(const Type& default_val, const Type& min_val, const Type& max_val,
-                     const std::string& name)
+                     const std::string_view& name)
         requires(ranged)
         : value{default_val}, default_value{default_val}, maximum{max_val}, minimum{min_val},
-          label{name} {}
+          label{std::string(name)} {}
 
     /**
      *  Returns a reference to the setting's value.
@@ -327,7 +329,7 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit SwitchableSetting(const Type& default_val, const std::string& name)
+    explicit SwitchableSetting(const Type& default_val, const std::string_view& name)
         requires(!ranged)
         : Setting<Type>{default_val, name} {}
     virtual ~SwitchableSetting() = default;
@@ -341,7 +343,7 @@ public:
      * @param name Label for the setting
      */
     explicit SwitchableSetting(const Type& default_val, const Type& min_val, const Type& max_val,
-                               const std::string& name)
+                               const std::string_view& name)
         requires(ranged)
         : Setting<Type, true>{default_val, min_val, max_val, name} {}
 
@@ -455,41 +457,159 @@ struct TouchFromButtonMap {
 /// value to fit the region lockout info of the game
 static constexpr s32 REGION_VALUE_AUTO_SELECT = -1;
 
+// This should be the *only place* that setting keys exist as strings.
+struct Keys {
+#define HS BOOST_HANA_STRING // "Hana String"
+    static constexpr auto use_artic_base_controller = HS("use_artic_base_controller");
+    static constexpr auto enable_gamemode = HS("enable_gamemode");
+    static constexpr auto use_cpu_jit = HS("use_cpu_jit");
+    static constexpr auto cpu_clock_percentage = HS("cpu_clock_percentage");
+    static constexpr auto is_new_3ds = HS("is_new_3ds");
+    static constexpr auto lle_applets = HS("lle_applets");
+    static constexpr auto deterministic_async_operations = HS("deterministic_async_operations");
+    static constexpr auto enable_required_online_lle_modules =
+        HS("enable_required_online_lle_modules");
+    static constexpr auto use_virtual_sd = HS("use_virtual_sd");
+    static constexpr auto use_custom_storage = HS("use_custom_storage");
+    static constexpr auto compress_cia_installs = HS("compress_cia_installs");
+    static constexpr auto region_value = HS("region_value");
+    static constexpr auto init_clock = HS("init_clock");
+    static constexpr auto init_time = HS("init_time");
+    static constexpr auto init_time_offset = HS("init_time_offset");
+    static constexpr auto init_ticks_type = HS("init_ticks_type");
+    static constexpr auto init_ticks_override = HS("init_ticks_override");
+    static constexpr auto plugin_loader = HS("plugin_loader");
+    static constexpr auto allow_plugin_loader = HS("allow_plugin_loader");
+    static constexpr auto steps_per_hour = HS("steps_per_hour");
+    static constexpr auto apply_region_free_patch = HS("apply_region_free_patch");
+    static constexpr auto graphics_api = HS("graphics_api");
+    static constexpr auto physical_device = HS("physical_device");
+    static constexpr auto use_gles = HS("use_gles");
+    static constexpr auto renderer_debug = HS("renderer_debug");
+    static constexpr auto dump_command_buffers = HS("dump_command_buffers");
+    static constexpr auto spirv_shader_gen = HS("spirv_shader_gen");
+    static constexpr auto disable_spirv_optimizer = HS("disable_spirv_optimizer");
+    static constexpr auto async_shader_compilation = HS("async_shader_compilation");
+    static constexpr auto async_presentation = HS("async_presentation");
+    static constexpr auto use_hw_shader = HS("use_hw_shader");
+    static constexpr auto use_disk_shader_cache = HS("use_disk_shader_cache");
+    static constexpr auto shaders_accurate_mul = HS("shaders_accurate_mul");
+    static constexpr auto use_vsync = HS("use_vsync");
+    static constexpr auto use_display_refresh_rate_detection =
+        HS("use_display_refresh_rate_detection");
+    static constexpr auto use_shader_jit = HS("use_shader_jit");
+    static constexpr auto resolution_factor = HS("resolution_factor");
+    static constexpr auto frame_limit = HS("frame_limit");
+    static constexpr auto turbo_limit = HS("turbo_limit");
+    static constexpr auto texture_filter = HS("texture_filter");
+    static constexpr auto texture_sampling = HS("texture_sampling");
+    static constexpr auto delay_game_render_thread_us = HS("delay_game_render_thread_us");
+    static constexpr auto layout_option = HS("layout_option");
+    static constexpr auto swap_screen = HS("swap_screen");
+    static constexpr auto upright_screen = HS("upright_screen");
+    static constexpr auto secondary_display_layout = HS("secondary_display_layout");
+    static constexpr auto large_screen_proportion = HS("large_screen_proportion");
+    static constexpr auto screen_gap = HS("screen_gap");
+    static constexpr auto small_screen_position = HS("small_screen_position");
+    static constexpr auto custom_top_x = HS("custom_top_x");
+    static constexpr auto custom_top_y = HS("custom_top_y");
+    static constexpr auto custom_top_width = HS("custom_top_width");
+    static constexpr auto custom_top_height = HS("custom_top_height");
+    static constexpr auto custom_bottom_x = HS("custom_bottom_x");
+    static constexpr auto custom_bottom_y = HS("custom_bottom_y");
+    static constexpr auto custom_bottom_width = HS("custom_bottom_width");
+    static constexpr auto custom_bottom_height = HS("custom_bottom_height");
+    static constexpr auto custom_second_layer_opacity = HS("custom_second_layer_opacity");
+    static constexpr auto aspect_ratio = HS("aspect_ratio");
+    static constexpr auto screen_top_stretch = HS("screen_top_stretch");
+    static constexpr auto screen_top_leftright_padding = HS("screen_top_leftright_padding");
+    static constexpr auto screen_top_topbottom_padding = HS("screen_top_topbottom_padding");
+    static constexpr auto screen_bottom_stretch = HS("screen_bottom_stretch");
+    static constexpr auto screen_bottom_leftright_padding = HS("screen_bottom_leftright_padding");
+    static constexpr auto screen_bottom_topbottom_padding = HS("screen_bottom_topbottom_padding");
+    static constexpr auto portrait_layout_option = HS("portrait_layout_option");
+    static constexpr auto custom_portrait_top_x = HS("custom_portrait_top_x");
+    static constexpr auto custom_portrait_top_y = HS("custom_portrait_top_y");
+    static constexpr auto custom_portrait_top_width = HS("custom_portrait_top_width");
+    static constexpr auto custom_portrait_top_height = HS("custom_portrait_top_height");
+    static constexpr auto custom_portrait_bottom_x = HS("custom_portrait_bottom_x");
+    static constexpr auto custom_portrait_bottom_y = HS("custom_portrait_bottom_y");
+    static constexpr auto custom_portrait_bottom_width = HS("custom_portrait_bottom_width");
+    static constexpr auto custom_portrait_bottom_height = HS("custom_portrait_bottom_height");
+    static constexpr auto bg_red = HS("bg_red");
+    static constexpr auto bg_green = HS("bg_green");
+    static constexpr auto bg_blue = HS("bg_blue");
+    static constexpr auto render_3d = HS("render_3d");
+    static constexpr auto factor_3d = HS("factor_3d");
+    static constexpr auto swap_eyes_3d = HS("swap_eyes_3d");
+    static constexpr auto render_3d_which_display = HS("render_3d_which_display");
+    static constexpr auto mono_render_option = HS("mono_render_option");
+    static constexpr auto cardboard_screen_size = HS("cardboard_screen_size");
+    static constexpr auto cardboard_x_shift = HS("cardboard_x_shift");
+    static constexpr auto cardboard_y_shift = HS("cardboard_y_shift");
+    static constexpr auto filter_mode = HS("filter_mode");
+    static constexpr auto pp_shader_name = HS("pp_shader_name");
+    static constexpr auto anaglyph_shader_name = HS("anaglyph_shader_name");
+    static constexpr auto dump_textures = HS("dump_textures");
+    static constexpr auto custom_textures = HS("custom_textures");
+    static constexpr auto preload_textures = HS("preload_textures");
+    static constexpr auto async_custom_loading = HS("async_custom_loading");
+    static constexpr auto disable_right_eye_render = HS("disable_right_eye_render");
+    static constexpr auto audio_emulation = HS("audio_emulation");
+    static constexpr auto enable_audio_stretching = HS("enable_audio_stretching");
+    static constexpr auto enable_realtime_audio = HS("enable_realtime_audio");
+    static constexpr auto volume = HS("volume");
+    static constexpr auto output_type = HS("output_type");
+    static constexpr auto output_device = HS("output_device");
+    static constexpr auto input_type = HS("input_type");
+    static constexpr auto input_device = HS("input_device");
+    static constexpr auto delay_start_for_lle_modules = HS("delay_start_for_lle_modules");
+    static constexpr auto use_gdbstub = HS("use_gdbstub");
+    static constexpr auto gdbstub_port = HS("gdbstub_port");
+    static constexpr auto instant_debug_log = HS("instant_debug_log");
+    static constexpr auto enable_rpc_server = HS("enable_rpc_server");
+    static constexpr auto log_filter = HS("log_filter");
+    static constexpr auto log_regex_filter = HS("log_regex_filter");
+#undef HS
+};
+
 struct Values {
+#define SS HANA_TO_STD_STRING // "Standard String"
     // Controls
     InputProfile current_input_profile;       ///< The current input profile
     int current_input_profile_index;          ///< The current input profile index
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
     std::vector<TouchFromButtonMap> touch_from_button_maps;
-    Setting<bool> use_artic_base_controller{false, "use_artic_base_controller"};
+    Setting<bool> use_artic_base_controller{false, SS(Keys::use_artic_base_controller)};
 
-    SwitchableSetting<bool> enable_gamemode{true, "enable_gamemode"};
+    SwitchableSetting<bool> enable_gamemode{true, SS(Keys::enable_gamemode)};
 
     // Core
-    Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
-    SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
-    SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
-    SwitchableSetting<bool> lle_applets{true, "lle_applets"};
-    SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
+    Setting<bool> use_cpu_jit{true, SS(Keys::use_cpu_jit)};
+    SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, SS(Keys::cpu_clock_percentage)};
+    SwitchableSetting<bool> is_new_3ds{true, SS(Keys::is_new_3ds)};
+    SwitchableSetting<bool> lle_applets{true, SS(Keys::lle_applets)};
+    SwitchableSetting<bool> deterministic_async_operations{
+        false, SS(Keys::deterministic_async_operations)};
     SwitchableSetting<bool> enable_required_online_lle_modules{
-        false, "enable_required_online_lle_modules"};
+        false, SS(Keys::enable_required_online_lle_modules)};
 
     // Data Storage
-    Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
-    Setting<bool> use_custom_storage{false, "use_custom_storage"};
-    Setting<bool> compress_cia_installs{false, "compress_cia_installs"};
+    Setting<bool> use_virtual_sd{true, SS(Keys::use_virtual_sd)};
+    Setting<bool> use_custom_storage{false, SS(Keys::use_custom_storage)};
+    Setting<bool> compress_cia_installs{false, SS(Keys::compress_cia_installs)};
 
     // System
-    SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, "region_value"};
-    Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
-    Setting<u64> init_time{946681277ULL, "init_time"};
-    Setting<s64> init_time_offset{0, "init_time_offset"};
-    Setting<InitTicks> init_ticks_type{InitTicks::Random, "init_ticks_type"};
-    Setting<s64> init_ticks_override{0, "init_ticks_override"};
-    Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
-    Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
-    Setting<u16> steps_per_hour{0, "steps_per_hour"};
-    Setting<bool> apply_region_free_patch{true, "apply_region_free_patch"};
+    SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, SS(Keys::region_value)};
+    Setting<InitClock> init_clock{InitClock::SystemTime, SS(Keys::init_clock)};
+    Setting<u64> init_time{946681277ULL, SS(Keys::init_time)};
+    Setting<s64> init_time_offset{0, SS(Keys::init_time_offset)};
+    Setting<InitTicks> init_ticks_type{InitTicks::Random, SS(Keys::init_ticks_type)};
+    Setting<s64> init_ticks_override{0, SS(Keys::init_ticks_override)};
+    Setting<bool> plugin_loader_enabled{false, SS(Keys::plugin_loader)};
+    Setting<bool> allow_plugin_loader{true, SS(Keys::allow_plugin_loader)};
+    Setting<u16> steps_per_hour{0, SS(Keys::steps_per_hour)};
+    Setting<bool> apply_region_free_patch{true, SS(Keys::apply_region_free_patch)};
 
     // Renderer
     SwitchableSetting<GraphicsAPI, true> graphics_api{
@@ -503,110 +623,113 @@ struct Values {
 // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
 #endif
-        GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"};
-    SwitchableSetting<u32> physical_device{0, "physical_device"};
-    Setting<bool> use_gles{false, "use_gles"};
-    Setting<bool> renderer_debug{false, "renderer_debug"};
-    Setting<bool> dump_command_buffers{false, "dump_command_buffers"};
-    SwitchableSetting<bool> spirv_shader_gen{true, "spirv_shader_gen"};
-    SwitchableSetting<bool> disable_spirv_optimizer{true, "disable_spirv_optimizer"};
-    SwitchableSetting<bool> async_shader_compilation{false, "async_shader_compilation"};
-    SwitchableSetting<bool> async_presentation{true, "async_presentation"};
-    SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
-    SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
-    SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
+        GraphicsAPI::Software, GraphicsAPI::Vulkan, SS(Keys::graphics_api)};
+    SwitchableSetting<u32> physical_device{0, SS(Keys::physical_device)};
+    Setting<bool> use_gles{false, SS(Keys::use_gles)};
+    Setting<bool> renderer_debug{false, SS(Keys::renderer_debug)};
+    Setting<bool> dump_command_buffers{false, SS(Keys::dump_command_buffers)};
+    SwitchableSetting<bool> spirv_shader_gen{true, SS(Keys::spirv_shader_gen)};
+    SwitchableSetting<bool> disable_spirv_optimizer{true, SS(Keys::disable_spirv_optimizer)};
+    SwitchableSetting<bool> async_shader_compilation{false, SS(Keys::async_shader_compilation)};
+    SwitchableSetting<bool> async_presentation{true, SS(Keys::async_presentation)};
+    SwitchableSetting<bool> use_hw_shader{true, SS(Keys::use_hw_shader)};
+    SwitchableSetting<bool> use_disk_shader_cache{true, SS(Keys::use_disk_shader_cache)};
+    SwitchableSetting<bool> shaders_accurate_mul{true, SS(Keys::shaders_accurate_mul)};
 #ifdef ANDROID // TODO: Fuck this -OS
-    SwitchableSetting<bool> use_vsync{false, "use_vsync"};
+    SwitchableSetting<bool> use_vsync{false, SS(Keys::use_vsync)};
 #else
-    SwitchableSetting<bool> use_vsync{true, "use_vsync"};
+    SwitchableSetting<bool> use_vsync{true, SS(Keys::use_vsync)};
 #endif
     SwitchableSetting<bool> use_display_refresh_rate_detection{
-        true, "use_display_refresh_rate_detection"};
-    Setting<bool> use_shader_jit{true, "use_shader_jit"};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
-    SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
-    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
-    SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
+        true, SS(Keys::use_display_refresh_rate_detection)};
+    Setting<bool> use_shader_jit{true, SS(Keys::use_shader_jit)};
+    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, SS(Keys::resolution_factor)};
+    SwitchableSetting<double, true> frame_limit{100, 0, 1000, SS(Keys::frame_limit)};
+    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, SS(Keys::turbo_limit)};
+    SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter,
+                                                    SS(Keys::texture_filter)};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
-                                                        "texture_sampling"};
+                                                        SS(Keys::texture_sampling)};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
-                                                             "delay_game_render_thread_us"};
+                                                             SS(Keys::delay_game_render_thread_us)};
 
-    SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
-    SwitchableSetting<bool> swap_screen{false, "swap_screen"};
-    SwitchableSetting<bool> upright_screen{false, "upright_screen"};
-    SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{SecondaryDisplayLayout::None,
-                                                                       "secondary_display_layout"};
+    SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, SS(Keys::layout_option)};
+    SwitchableSetting<bool> swap_screen{false, SS(Keys::swap_screen)};
+    SwitchableSetting<bool> upright_screen{false, SS(Keys::upright_screen)};
+    SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{
+        SecondaryDisplayLayout::None, SS(Keys::secondary_display_layout)};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
-                                                           "large_screen_proportion"};
-    SwitchableSetting<int> screen_gap{0, "screen_gap"};
+                                                           SS(Keys::large_screen_proportion)};
+    SwitchableSetting<int> screen_gap{0, SS(Keys::screen_gap)};
     SwitchableSetting<SmallScreenPosition> small_screen_position{SmallScreenPosition::BottomRight,
-                                                                 "small_screen_position"};
-    Setting<u16> custom_top_x{0, "custom_top_x"};
-    Setting<u16> custom_top_y{0, "custom_top_y"};
-    Setting<u16> custom_top_width{800, "custom_top_width"};
-    Setting<u16> custom_top_height{480, "custom_top_height"};
-    Setting<u16> custom_bottom_x{80, "custom_bottom_x"};
-    Setting<u16> custom_bottom_y{500, "custom_bottom_y"};
-    Setting<u16> custom_bottom_width{640, "custom_bottom_width"};
-    Setting<u16> custom_bottom_height{480, "custom_bottom_height"};
-    Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
-    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, "aspect_ratio"};
-    SwitchableSetting<bool> screen_top_stretch{false, "screen_top_stretch"};
-    Setting<u16> screen_top_leftright_padding{0, "screen_top_leftright_padding"};
-    Setting<u16> screen_top_topbottom_padding{0, "screen_top_topbottom_padding"};
-    SwitchableSetting<bool> screen_bottom_stretch{false, "screen_bottom_stretch"};
-    Setting<u16> screen_bottom_leftright_padding{0, "screen_bottom_leftright_padding"};
-    Setting<u16> screen_bottom_topbottom_padding{0, "screen_bottom_topbottom_padding"};
+                                                                 SS(Keys::small_screen_position)};
+    Setting<u16> custom_top_x{0, SS(Keys::custom_top_x)};
+    Setting<u16> custom_top_y{0, SS(Keys::custom_top_y)};
+    Setting<u16> custom_top_width{800, SS(Keys::custom_top_width)};
+    Setting<u16> custom_top_height{480, SS(Keys::custom_top_width)};
+    Setting<u16> custom_bottom_x{80, SS(Keys::custom_bottom_x)};
+    Setting<u16> custom_bottom_y{500, SS(Keys::custom_bottom_y)};
+    Setting<u16> custom_bottom_width{640, SS(Keys::custom_bottom_width)};
+    Setting<u16> custom_bottom_height{480, SS(Keys::custom_bottom_height)};
+    Setting<u16> custom_second_layer_opacity{100, SS(Keys::custom_second_layer_opacity)};
+    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, SS(Keys::aspect_ratio)};
+    SwitchableSetting<bool> screen_top_stretch{false, SS(Keys::screen_top_stretch)};
+    Setting<u16> screen_top_leftright_padding{0, SS(Keys::screen_top_leftright_padding)};
+    Setting<u16> screen_top_topbottom_padding{0, SS(Keys::screen_top_topbottom_padding)};
+    SwitchableSetting<bool> screen_bottom_stretch{false, SS(Keys::screen_bottom_stretch)};
+    Setting<u16> screen_bottom_leftright_padding{0, SS(Keys::screen_bottom_leftright_padding)};
+    Setting<u16> screen_bottom_topbottom_padding{0, SS(Keys::screen_bottom_topbottom_padding)};
 
     SwitchableSetting<PortraitLayoutOption> portrait_layout_option{
-        PortraitLayoutOption::PortraitTopFullWidth, "portrait_layout_option"};
-    Setting<u16> custom_portrait_top_x{0, "custom_portrait_top_x"};
-    Setting<u16> custom_portrait_top_y{0, "custom_portrait_top_y"};
-    Setting<u16> custom_portrait_top_width{800, "custom_portrait_top_width"};
-    Setting<u16> custom_portrait_top_height{480, "custom_portrait_top_height"};
-    Setting<u16> custom_portrait_bottom_x{80, "custom_portrait_bottom_x"};
-    Setting<u16> custom_portrait_bottom_y{500, "custom_portrait_bottom_y"};
-    Setting<u16> custom_portrait_bottom_width{640, "custom_portrait_bottom_width"};
-    Setting<u16> custom_portrait_bottom_height{480, "custom_portrait_bottom_height"};
+        PortraitLayoutOption::PortraitTopFullWidth, SS(Keys::portrait_layout_option)};
+    Setting<u16> custom_portrait_top_x{0, SS(Keys::custom_portrait_top_x)};
+    Setting<u16> custom_portrait_top_y{0, SS(Keys::custom_portrait_top_y)};
+    Setting<u16> custom_portrait_top_width{800, SS(Keys::custom_portrait_top_width)};
+    Setting<u16> custom_portrait_top_height{480, SS(Keys::custom_portrait_top_height)};
+    Setting<u16> custom_portrait_bottom_x{80, SS(Keys::custom_portrait_bottom_x)};
+    Setting<u16> custom_portrait_bottom_y{500, SS(Keys::custom_portrait_bottom_y)};
+    Setting<u16> custom_portrait_bottom_width{640, SS(Keys::custom_portrait_bottom_width)};
+    Setting<u16> custom_portrait_bottom_height{480, SS(Keys::custom_portrait_bottom_height)};
 
-    SwitchableSetting<float> bg_red{0.f, "bg_red"};
-    SwitchableSetting<float> bg_green{0.f, "bg_green"};
-    SwitchableSetting<float> bg_blue{0.f, "bg_blue"};
+    SwitchableSetting<float> bg_red{0.f, SS(Keys::bg_red)};
+    SwitchableSetting<float> bg_green{0.f, SS(Keys::bg_green)};
+    SwitchableSetting<float> bg_blue{0.f, SS(Keys::bg_blue)};
 
-    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
-    SwitchableSetting<u32> factor_3d{0, "factor_3d"};
-    SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
+    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, SS(Keys::render_3d)};
+    SwitchableSetting<u32> factor_3d{0, SS(Keys::factor_3d)};
+    SwitchableSetting<bool> swap_eyes_3d{false, SS(Keys::swap_eyes_3d)};
 
-    SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None,
-                                                                  "render_3d_which_display"};
+    SwitchableSetting<StereoWhichDisplay> render_3d_which_display{
+        StereoWhichDisplay::None, SS(Keys::render_3d_which_display)};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
-                                                           "mono_render_option"};
+                                                           SS(Keys::mono_render_option)};
 
-    Setting<u32> cardboard_screen_size{85, "cardboard_screen_size"};
-    Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
-    Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};
+    Setting<u32> cardboard_screen_size{85, SS(Keys::cardboard_screen_size)};
+    Setting<s32> cardboard_x_shift{0, SS(Keys::cardboard_x_shift)};
+    Setting<s32> cardboard_y_shift{0, SS(Keys::cardboard_y_shift)};
 
-    SwitchableSetting<bool> filter_mode{true, "filter_mode"};
-    SwitchableSetting<std::string> pp_shader_name{"None (builtin)", "pp_shader_name"};
-    SwitchableSetting<std::string> anaglyph_shader_name{"Dubois (builtin)", "anaglyph_shader_name"};
+    SwitchableSetting<bool> filter_mode{true, SS(Keys::filter_mode)};
+    SwitchableSetting<std::string> pp_shader_name{"None (builtin)", SS(Keys::pp_shader_name)};
+    SwitchableSetting<std::string> anaglyph_shader_name{"Dubois (builtin)",
+                                                        SS(Keys::anaglyph_shader_name)};
 
-    SwitchableSetting<bool> dump_textures{false, "dump_textures"};
-    SwitchableSetting<bool> custom_textures{false, "custom_textures"};
-    SwitchableSetting<bool> preload_textures{false, "preload_textures"};
-    SwitchableSetting<bool> async_custom_loading{true, "async_custom_loading"};
-    SwitchableSetting<bool> disable_right_eye_render{false, "disable_right_eye_render"};
+    SwitchableSetting<bool> dump_textures{false, SS(Keys::dump_textures)};
+    SwitchableSetting<bool> custom_textures{false, SS(Keys::custom_textures)};
+    SwitchableSetting<bool> preload_textures{false, SS(Keys::preload_textures)};
+    SwitchableSetting<bool> async_custom_loading{true, SS(Keys::async_custom_loading)};
+    SwitchableSetting<bool> disable_right_eye_render{false, SS(Keys::disable_right_eye_render)};
 
     // Audio
     bool audio_muted;
-    SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
-    SwitchableSetting<bool> enable_realtime_audio{false, "enable_realtime_audio"};
-    SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
-    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
-    Setting<std::string> output_device{"Auto", "output_device"};
-    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, "input_type"};
-    Setting<std::string> input_device{"Auto", "input_device"};
+    SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE,
+                                                      SS(Keys::audio_emulation)};
+    SwitchableSetting<bool> enable_audio_stretching{true, SS(Keys::enable_audio_stretching)};
+    SwitchableSetting<bool> enable_realtime_audio{false, SS(Keys::enable_realtime_audio)};
+    SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, SS(Keys::volume)};
+    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, SS(Keys::output_type)};
+    Setting<std::string> output_device{"Auto", SS(Keys::output_device)};
+    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, SS(Keys::input_type)};
+    Setting<std::string> input_device{"Auto", SS(Keys::input_device)};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;
@@ -616,15 +739,15 @@ struct Values {
     // Debugging
     bool record_frame_times;
     std::unordered_map<std::string, bool> lle_modules;
-    Setting<bool> delay_start_for_lle_modules{true, "delay_start_for_lle_modules"};
-    Setting<bool> use_gdbstub{false, "use_gdbstub"};
-    Setting<u16> gdbstub_port{24689, "gdbstub_port"};
-    Setting<bool> instant_debug_log{false, "instant_debug_log"};
-    Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
+    Setting<bool> delay_start_for_lle_modules{true, SS(Keys::delay_start_for_lle_modules)};
+    Setting<bool> use_gdbstub{false, SS(Keys::use_gdbstub)};
+    Setting<u16> gdbstub_port{24689, SS(Keys::gdbstub_port)};
+    Setting<bool> instant_debug_log{false, SS(Keys::instant_debug_log)};
+    Setting<bool> enable_rpc_server{false, SS(Keys::enable_rpc_server)};
 
     // Miscellaneous
-    Setting<std::string> log_filter{"*:Info", "log_filter"};
-    Setting<std::string> log_regex_filter{"", "log_regex_filter"};
+    Setting<std::string> log_filter{"*:Info", SS(Keys::log_filter)};
+    Setting<std::string> log_regex_filter{"", SS(Keys::log_regex_filter)};
 
     // Video Dumping
     std::string output_format;
@@ -637,6 +760,7 @@ struct Values {
     std::string audio_encoder;
     std::string audio_encoder_options;
     u64 audio_bitrate;
+#undef SS
 };
 
 extern Values values;
