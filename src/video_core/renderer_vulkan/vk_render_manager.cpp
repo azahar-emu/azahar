@@ -42,6 +42,7 @@ void RenderManager::BeginRendering(const Framebuffer* framebuffer,
     };
     images = framebuffer->Images();
     aspects = framebuffer->Aspects();
+    shadow_rendering = framebuffer->shadow_rendering;
     BeginRendering(new_pass);
 }
 
@@ -71,9 +72,11 @@ void RenderManager::EndRendering() {
         return;
     }
 
-    scheduler.Record([images = images, aspects = aspects](vk::CommandBuffer cmdbuf) {
+    scheduler.Record([images = images, aspects = aspects,
+                      shadow_rendering = shadow_rendering](vk::CommandBuffer cmdbuf) {
         u32 num_barriers = 0;
         vk::PipelineStageFlags pipeline_flags{};
+        vk::AccessFlags src_access_flags{};
         std::array<vk::ImageMemoryBarrier, 2> barriers;
         for (u32 i = 0; i < images.size(); i++) {
             if (!images[i]) {
@@ -81,14 +84,18 @@ void RenderManager::EndRendering() {
             }
             const bool is_color = static_cast<bool>(aspects[i] & vk::ImageAspectFlagBits::eColor);
             if (is_color) {
-                pipeline_flags |= vk::PipelineStageFlagBits::eColorAttachmentOutput;
+                pipeline_flags |= shadow_rendering
+                                      ? vk::PipelineStageFlagBits::eFragmentShader
+                                      : vk::PipelineStageFlagBits::eColorAttachmentOutput;
+                src_access_flags = shadow_rendering ? vk::AccessFlagBits::eShaderWrite
+                                                    : vk::AccessFlagBits::eColorAttachmentWrite;
             } else {
                 pipeline_flags |= vk::PipelineStageFlagBits::eEarlyFragmentTests |
                                   vk::PipelineStageFlagBits::eLateFragmentTests;
+                src_access_flags = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
             }
             barriers[num_barriers++] = vk::ImageMemoryBarrier{
-                .srcAccessMask = is_color ? vk::AccessFlagBits::eColorAttachmentWrite
-                                          : vk::AccessFlagBits::eDepthStencilAttachmentWrite,
+                .srcAccessMask = src_access_flags,
                 .dstAccessMask =
                     vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eTransferRead,
                 .oldLayout = vk::ImageLayout::eGeneral,
@@ -120,6 +127,7 @@ void RenderManager::EndRendering() {
     pass.render_pass = VK_NULL_HANDLE;
     images = {};
     aspects = {};
+    shadow_rendering = false;
 
     // The Mali guide recommends flushing at the end of each major renderpass
     // Testing has shown this has a significant effect on rendering performance
@@ -136,7 +144,9 @@ vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
     const u32 color_index =
         color == VideoCore::PixelFormat::Invalid ? NumColorFormats : static_cast<u32>(color);
     const u32 depth_index =
-        depth == VideoCore::PixelFormat::Invalid ? NumDepthFormats : (static_cast<u32>(depth) - 14);
+        depth == VideoCore::PixelFormat::Invalid
+            ? NumDepthFormats
+            : (static_cast<u32>(depth - VideoCore::PixelFormat::NumColorFormat));
 
     ASSERT_MSG(color_index <= NumColorFormats && depth_index <= NumDepthFormats,
                "Invalid color index {} and/or depth_index {}", color_index, depth_index);
