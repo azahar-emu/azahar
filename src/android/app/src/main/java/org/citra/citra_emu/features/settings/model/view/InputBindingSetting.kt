@@ -92,15 +92,34 @@ class InputBindingSetting(
             else -> false
         }
 
-    fun isVerticalAxis(): Boolean  {
+    fun isVerticalDpadAxis(): Boolean  {
         return abstractSetting.key ==
             Settings.KEY_DPAD_AXIS_VERTICAL
         }
 
-    fun isHorizontalAxis(): Boolean  {
+    fun isHorizontalDpadAxis(): Boolean  {
         return abstractSetting.key ==
                 Settings.KEY_DPAD_AXIS_HORIZONTAL
     }
+
+    fun isVerticalAxis(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_DPAD_AXIS_VERTICAL,
+                Settings.KEY_CIRCLEPAD_AXIS_VERTICAL,
+                Settings.KEY_CSTICK_AXIS_VERTICAL -> true
+
+            else -> false
+        }
+
+    fun isHorizontalAxis(): Boolean =
+        when (abstractSetting.key) {
+            Settings.KEY_DPAD_AXIS_HORIZONTAL,
+            Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL,
+            Settings.KEY_CSTICK_AXIS_HORIZONTAL -> true
+
+            else -> false
+        }
+
 
     fun isHorizontalButton(): Boolean =
         when (abstractSetting.key) {

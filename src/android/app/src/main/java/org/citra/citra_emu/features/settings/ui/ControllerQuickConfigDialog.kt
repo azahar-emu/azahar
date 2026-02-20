@@ -38,9 +38,9 @@ class ControllerQuickConfigDialog(
 
         override fun onAxisCaptured() {
             boundHorizontalDpadAxis =
-                boundHorizontalDpadAxis || setting != null && setting!!.isVerticalAxis()
+                boundHorizontalDpadAxis || setting != null && setting!!.isVerticalDpadAxis()
             boundVerticalDpadAxis =
-                boundVerticalDpadAxis || setting != null && setting!!.isHorizontalAxis()
+                boundVerticalDpadAxis || setting != null && setting!!.isHorizontalDpadAxis()
             onInputCaptured(AXIS_WAIT_TIME)
         }
 
@@ -196,11 +196,14 @@ class ControllerQuickConfigDialog(
 
         val nameId = setting?.nameId?.let { context.getString(it) }
 
-        return String.format(
+        var result = String.format(
             context.getString(R.string.input_dialog_title),
             context.getString(inputTypeId),
             nameId
         )
+        if (setting!!.isHorizontalAxis()) result += " - " + context.getString(R.string.input_binding_description_horizontal_axis);
+        else if (setting!!.isVerticalAxis()) result += " - " +  context.getString(R.string.input_binding_description_vertical_axis);
+        return result;
     }
 
     private fun getIcon(): Drawable? {
