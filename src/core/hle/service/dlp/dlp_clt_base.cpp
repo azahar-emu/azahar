@@ -63,12 +63,11 @@ void DLP_Clt_Base::GenerateChannelHandle() {
 
 u32 DLP_Clt_Base::GetCltState() {
     std::scoped_lock lock(clt_state_mutex);
-    u16 node_bitmask = 0x0;
+    u16 node_id = 0x0;
     if (is_connected) {
-        // TODO: verify this!
-        // node_bitmask = GetUDS()->GetConnectionStatusHLE().node_bitmask;
+        node_id = GetUDS()->GetConnectionStatusHLE().network_node_id;
     }
-    return static_cast<u32>(clt_state) << 24 | is_connected << 16 | node_bitmask;
+    return static_cast<u32>(clt_state) << 24 | is_connected << 16 | node_id;
 }
 
 void DLP_Clt_Base::GetChannels(Kernel::HLERequestContext& ctx) {
@@ -121,28 +120,33 @@ void DLP_Clt_Base::StartScan(Kernel::HLERequestContext& ctx) {
         "Scan handle and dlp channel handle do not match. Did you input the wrong ipc params?");
     [[maybe_unused]] u32 unk1 = rp.Pop<u32>();
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
     // start beacon worker
-    std::scoped_lock lock{beacon_mutex, title_info_mutex};
-    if (!is_scanning) {
-        // reset scan dependent variables
-        scanned_title_info.clear();
-        ignore_servers_list.clear();
-        title_info_index = 0;
-
-        clt_state = DLP_Clt_State::Scanning;
-        is_scanning = true;
-
-        // clear out received beacons
-        GetUDS()->GetReceivedBeacons(Network::BroadcastMac);
-
-        LOG_INFO(Service_DLP, "Starting scan worker");
-
-        constexpr int first_scan_delay_ms = 0;
-
-        system.CoreTiming().ScheduleEvent(msToCycles(first_scan_delay_ms), beacon_scan_event, 0);
+    if (!IsIdling()) {
+        rb.Push(Result(0x1, ErrorModule::DLP, ErrorSummary::InvalidState, ErrorLevel::Usage));
+        return;
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    std::scoped_lock lock{beacon_mutex, title_info_mutex, clt_state_mutex};
+
+    // reset scan dependent variables
+    scanned_title_info.clear();
+    ignore_servers_list.clear();
+    title_info_index = 0;
+
+    clt_state = DLP_Clt_State::Scanning;
+    is_scanning = true;
+
+    // clear out received beacons
+    GetUDS()->GetReceivedBeacons(Network::BroadcastMac);
+
+    LOG_INFO(Service_DLP, "Starting scan worker");
+
+    constexpr int first_scan_delay_ms = 0;
+
+    system.CoreTiming().ScheduleEvent(msToCycles(first_scan_delay_ms), beacon_scan_event, 0);
+
     rb.Push(ResultSuccess);
 }
 
@@ -151,7 +155,7 @@ void DLP_Clt_Base::StopScan(Kernel::HLERequestContext& ctx) {
 
     // end beacon worker
     {
-        std::lock_guard lock(beacon_mutex);
+        std::scoped_lock lock{beacon_mutex, clt_state_mutex};
         clt_state = DLP_Clt_State::Initialized;
         is_scanning = false;
 
@@ -164,9 +168,6 @@ void DLP_Clt_Base::StopScan(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
-constexpr u32 res_data_available = 0x0;
-constexpr u32 res_no_data_available = 0xc880afef;
-
 void DLP_Clt_Base::GetTitleInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
@@ -174,9 +175,12 @@ void DLP_Clt_Base::GetTitleInfo(Kernel::HLERequestContext& ctx) {
     [[maybe_unused]] u32 tid_low = rp.Pop<u32>();
     [[maybe_unused]] u32 tid_high = rp.Pop<u32>();
 
+    std::scoped_lock lock(title_info_mutex);
+
     if (!TitleInfoIsCached(mac_addr)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(res_no_data_available);
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
         return;
     }
 
@@ -184,7 +188,7 @@ void DLP_Clt_Base::GetTitleInfo(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer = scanned_title_info[c_title_idx].first.ToBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(res_data_available);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
@@ -198,11 +202,12 @@ void DLP_Clt_Base::GetTitleInfoInOrder(Kernel::HLERequestContext& ctx) {
         title_info_index = 0;
     }
 
-    std::lock_guard lock(title_info_mutex);
+    std::scoped_lock lock(title_info_mutex);
 
     if (title_info_index >= scanned_title_info.size()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(res_no_data_available);
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
         return;
     }
 
@@ -211,7 +216,7 @@ void DLP_Clt_Base::GetTitleInfoInOrder(Kernel::HLERequestContext& ctx) {
     ++title_info_index;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(res_data_available);
+    rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
@@ -224,15 +229,10 @@ void DLP_Clt_Base::DeleteScanInfo(Kernel::HLERequestContext& ctx) {
 
     std::scoped_lock lock(title_info_mutex);
 
-    if (!is_scanning) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(0xE0A0AC01);
-        return;
-    }
-
     if (!TitleInfoIsCached(mac_addr)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(0xD960AC02); // info not found
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
         return;
     }
 
@@ -247,27 +247,23 @@ void DLP_Clt_Base::GetServerInfo(Kernel::HLERequestContext& ctx) {
 
     auto mac_addr = rp.PopRaw<Network::MacAddress>();
 
-    std::vector<u8> buffer;
-    buffer.resize(sizeof(DLPServerInfo));
-    auto server_info = reinterpret_cast<DLPServerInfo*>(buffer.data());
+    std::scoped_lock lock(title_info_mutex);
 
     if (!TitleInfoIsCached(mac_addr)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrorDescription::NotFound, ErrorModule::DLP, ErrorSummary::WrongArgument,
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
                        ErrorLevel::Status));
         return;
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
-    *server_info = scanned_title_info[GetCachedTitleInfoIdx(mac_addr)].second;
+    auto buffer = scanned_title_info[GetCachedTitleInfoIdx(mac_addr)].second.ToBuffer();
 
     rb.Push(ResultSuccess);
     rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
-// this is an issue for save states!
-// someone please verify this
 class DLP_Clt_Base::ThreadCallback : public Kernel::HLERequestContext::WakeupCallback {
 public:
     explicit ThreadCallback(std::shared_ptr<DLP_Clt_Base> p) : p_obj(p) {}
@@ -277,8 +273,8 @@ public:
         IPC::RequestBuilder rb(ctx, 1, 0);
 
         if (!p_obj->OnConnectCallback()) {
-            // TODO: figure out what the proper error code is (timed out)
-            rb.Push<u32>(-1);
+            rb.Push(Result(ErrorDescription::Timeout, ErrorModule::DLP, ErrorSummary::Canceled,
+                           ErrorLevel::Status));
             return;
         }
         rb.Push(ResultSuccess);
@@ -322,14 +318,15 @@ void DLP_Clt_Base::StartSession(Kernel::HLERequestContext& ctx) {
     u32 dlp_child_low = rp.Pop<u32>();
     u32 dlp_child_high = rp.Pop<u32>();
 
-    if (is_connected) {
+    if (!IsIdling()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(0xe0a0ac01); // error: session already started
+        rb.Push(Result(0x1, ErrorModule::DLP, ErrorSummary::InvalidState, ErrorLevel::Usage));
         return;
     }
     if (!TitleInfoIsCached(mac_addr)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(0xc880afef); // error: cannot locate server info cache from mac address
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
         return;
     }
 
@@ -361,7 +358,7 @@ void DLP_Clt_Base::StartSession(Kernel::HLERequestContext& ctx) {
                              dlp_password_buf);
 
     // 3 second timeout
-    static constexpr std::chrono::nanoseconds UDSConnectionTimeout{3000000000};
+    constexpr std::chrono::nanoseconds UDSConnectionTimeout{3000000000};
     uds->connection_event =
         ctx.SleepClientThread("DLP_Clt_Base::StartSession", UDSConnectionTimeout,
                               std::make_shared<ThreadCallback>(shared_this));
@@ -374,14 +371,11 @@ void DLP_Clt_Base::StopSession(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (!is_connected) {
-        // this call returns 0 no matter what
-        rb.Push<u32>(0x0);
-        return;
+    if (is_connected) {
+        DisconnectFromServer();
     }
 
-    DisconnectFromServer();
-
+    // this call returns success no matter what
     rb.Push(ResultSuccess);
 }
 
@@ -418,8 +412,8 @@ void DLP_Clt_Base::GetNodeInfo(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_DLP, "Could not get node info for network node id 0x{:x}",
                   network_node_id);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        // this is the error code for unknown network node id
-        rb.Push(0xE0A0AC01);
+        rb.Push(Result(ErrorDescription::NoData, ErrorModule::DLP, ErrorSummary::NotFound,
+                       ErrorLevel::Status));
         return;
     }
 
@@ -567,6 +561,12 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
     [[maybe_unused]] auto broad_pk5 =
         reinterpret_cast<DLPBroadcastPacket5*>(broadcast_packet_idx_buf[4].data());
 
+    // apply title filter
+    if (scan_title_id_filter && broad_pk1->child_title_id != scan_title_id_filter) {
+        LOG_WARNING(Service_DLP, "Got title info, but it did not match title id filter");
+        return;
+    }
+
     DLPServerInfo c_server_info = GetDLPServerInfoFromRawBeacon(beacon);
     {
         // workaround: load username in host node manually
@@ -575,36 +575,28 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
 
     DLPTitleInfo c_title_info{};
     c_title_info.mac_addr = beacon.transmitter_address;
-    for (size_t i = 0; i < broad_pk1->title_short.size(); i++) {
-        c_title_info.short_description[i] = d_ntohs(broad_pk1->title_short[i]);
-    }
-    for (size_t i = 0; i < broad_pk1->title_long.size(); i++) {
-        c_title_info.long_description[i] = d_ntohs(broad_pk1->title_long[i]);
-    }
-    // unique id should be the title id without the tid high shifted 1 byte right
-    c_title_info.unique_id = (d_ntohll(broad_pk1->child_title_id) & 0xFFFFFFFF) >> 8;
 
-    c_title_info.size = d_ntohl(broad_pk1->size) + broad_title_size_diff;
+    // copy over title string data
+    std::copy(broad_pk1->title_short.begin(), broad_pk1->title_short.end(),
+              c_title_info.short_description.begin());
+    std::copy(broad_pk1->title_long.begin(), broad_pk1->title_long.end(),
+              c_title_info.long_description.begin());
+
+    // unique id should be the title id without the tid high shifted 1 byte right
+    c_title_info.unique_id = (broad_pk1->child_title_id & 0xFFFFFFFF) >> 8;
+
+    c_title_info.size = broad_pk1->size + broad_title_size_diff;
 
     // copy over the icon data
-    auto memcpy_u16_ntohs = [](void* _d, const void* _s, size_t n) {
-        auto d = reinterpret_cast<char*>(_d);
-        auto s = reinterpret_cast<const char*>(_s);
-        for (size_t i = 0; i < n; i += 2) {
-            *reinterpret_cast<u16*>(d + i) = d_ntohs(*reinterpret_cast<const u16*>(s + i));
-        }
-        return n;
-    };
-
-    size_t loc = 0;
-    loc += memcpy_u16_ntohs(c_title_info.icon.data(), broad_pk1->icon_part.data(),
-                            broad_pk1->icon_part.size());
-    loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk2->icon_part.data(),
-                            broad_pk2->icon_part.size());
-    loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk3->icon_part.data(),
-                            broad_pk3->icon_part.size());
-    loc += memcpy_u16_ntohs(c_title_info.icon.data() + loc, broad_pk4->icon_part.data(),
-                            broad_pk4->icon_part.size());
+    auto icon_copy_loc = c_title_info.icon.begin();
+    icon_copy_loc =
+        std::copy(broad_pk1->icon_part.begin(), broad_pk1->icon_part.end(), icon_copy_loc);
+    icon_copy_loc =
+        std::copy(broad_pk2->icon_part.begin(), broad_pk2->icon_part.end(), icon_copy_loc);
+    icon_copy_loc =
+        std::copy(broad_pk3->icon_part.begin(), broad_pk3->icon_part.end(), icon_copy_loc);
+    icon_copy_loc =
+        std::copy(broad_pk4->icon_part.begin(), broad_pk4->icon_part.end(), icon_copy_loc);
 
     LOG_INFO(Service_DLP, "Got title info");
 
@@ -670,7 +662,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
     };
 
     constexpr u32 dlp_poll_rate_normal = 100;
-    constexpr u32 dlp_poll_rate_distribute = 1;
+    constexpr u32 dlp_poll_rate_distribute = 0;
 
     u32 dlp_poll_rate_ms = dlp_poll_rate_normal;
     bool got_corrupted_packets = false;
@@ -690,12 +682,11 @@ void DLP_Clt_Base::ClientConnectionManager() {
             }
 
             // now we can parse the packet
-            std::scoped_lock cs_lock(clt_state_mutex);
+            std::scoped_lock lock{clt_state_mutex, title_info_mutex};
             if (p_head->type == dl_pk_type_auth) {
                 auto s_body =
                     PGen_SetPK<DLPClt_AuthAck>(dl_pk_head_auth_header, 0, p_head->resp_id);
-                s_body->unk1 = {0x01};
-                s_body->unk2 = {0x00, 0x00};
+                s_body->initialized = true;
                 // TODO: find out what this is. this changes each session.
                 // placeholder
                 s_body->resp_id = {0x01, 0x02};
@@ -708,7 +699,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
                 if (IsFKCL() || !NeedsContentDownload(host_mac_address)) {
                     auto s_body = PGen_SetPK<DLPClt_StartDistributionAck_NoContentNeeded>(
                         dl_pk_head_start_dist_header, 0, p_head->resp_id);
-                    s_body->unk1 = {0x1};
+                    s_body->initialized = true;
                     s_body->unk2 = 0x0;
                     is_downloading_content = false;
                     clt_state = DLP_Clt_State::WaitingForServerReady;
@@ -716,11 +707,11 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     // send content needed ack
                     auto s_body = PGen_SetPK<DLPClt_StartDistributionAck_ContentNeeded>(
                         dl_pk_head_start_dist_header, 0, p_head->resp_id);
-                    s_body->unk1 = 0x1;
+                    s_body->initialized = true;
                     // TODO: figure out what these are. seems like magic values
-                    s_body->unk2 = d_htons(0x20);
+                    s_body->unk2 = 0x20;
                     s_body->unk3 = 0x0;
-                    s_body->unk4 = 0x1;
+                    s_body->unk4 = true;
                     s_body->unk5 = 0x0;
                     s_body->unk_body = {}; // all zeros
                     is_downloading_content = true;
@@ -738,22 +729,26 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     dlp_units_downloaded = 0;
                     dlp_units_total = GetNumFragmentsFromTitleSize(tinfo.size);
                     current_content_block = 0;
-                    LOG_INFO(Service_DLP, "Requesting game file");
+                    LOG_INFO(Service_DLP, "Requesting game content");
                 }
                 PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
             } else if (p_head->type == dl_pk_type_distribute) {
                 if (is_downloading_content) {
                     auto r_pbody = GetPacketBody<DLPSrvr_ContentDistributionFragment>(recv_buf);
-                    auto& cf = r_pbody->content_fragment;
+                    if (r_pbody->frag_size > sz - sizeof(DLPSrvr_ContentDistributionFragment)) {
+                        LOG_CRITICAL(Service_DLP,
+                                     "Embedded fragment size is too large. Ignoring fragment.");
+                        continue;
+                    }
+                    std::span<u8> cf(r_pbody->content_fragment, r_pbody->frag_size);
                     ReceivedFragment frag{
-                        .index = static_cast<u32>(d_ntohs(r_pbody->frag_index) +
+                        .index = static_cast<u32>(r_pbody->frag_index +
                                                   dlp_content_block_length * current_content_block),
-                        .content{cf.begin(), cf.begin() + d_ntohs(r_pbody->frag_size)}};
+                        .content{cf.begin(), cf.end()}};
                     received_fragments.insert(frag);
                     dlp_units_downloaded++;
                     if (dlp_units_downloaded == dlp_units_total) {
                         is_downloading_content = false;
-                        clt_state = DLP_Clt_State::WaitingForServerReady;
                         LOG_INFO(Service_DLP, "Finished downloading content. Installing...");
 
                         if (!InstallEncryptedCIAFromFragments(received_fragments)) {
@@ -761,6 +756,8 @@ void DLP_Clt_Base::ClientConnectionManager() {
                         } else {
                             LOG_INFO(Service_DLP, "Successfully installed DLP encrypted content");
                         }
+
+                        clt_state = DLP_Clt_State::WaitingForServerReady;
                     }
                 }
             } else if (p_head->type == dl_pk_type_finish_dist) {
@@ -771,10 +768,10 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     if (is_downloading_content) {
                         current_content_block++;
                     }
-                    s_body->unk1 = 0x1;
+                    s_body->initialized = true;
                     s_body->unk2 = 0x1;
-                    s_body->unk3 = is_downloading_content;
-                    s_body->seq_ack = d_htonl(d_ntohl(r_pbody->seq_num) + 1);
+                    s_body->needs_content = is_downloading_content;
+                    s_body->seq_ack = r_pbody->seq_num + 1;
                     s_body->unk4 = 0x0;
                     PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
                 } else {
@@ -818,9 +815,12 @@ bool DLP_Clt_Base::NeedsContentDownload(Network::MacAddress mac_addr) {
     return !FileUtil::Exists(AM::GetTitleContentPath(FS::MediaType::NAND, title_id));
 }
 
+// DLP Fragments contain encrypted CIA content by design.
+// It is required to decrypt them in order to achieve
+// interoperability between HLE & LLE service modules.
 bool DLP_Clt_Base::InstallEncryptedCIAFromFragments(std::set<ReceivedFragment>& frags) {
     auto cia_file = std::make_unique<AM::CIAFile>(system, FS::MediaType::NAND);
-    cia_file->decryption_authorized = true;
+    cia_file->AuthorizeDecryptionFromHLE();
     bool install_errored = false;
     for (u64 nb = 0; auto& frag : frags) {
         constexpr bool flush_data = true;
@@ -845,6 +845,11 @@ void DLP_Clt_Base::DisconnectFromServer() {
     if (client_connection_worker.joinable()) {
         client_connection_worker.join();
     }
+}
+
+bool DLP_Clt_Base::IsIdling() {
+    std::scoped_lock lock(beacon_mutex);
+    return !is_scanning && !is_connected;
 }
 
 } // namespace Service::DLP

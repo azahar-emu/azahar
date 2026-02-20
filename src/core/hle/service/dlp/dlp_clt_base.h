@@ -41,6 +41,12 @@ struct DLPServerInfo {
     std::array<DLPNodeInfo, 16> node_info;
     u32 unk4;
     u32 unk5;
+    std::vector<u8> ToBuffer() {
+        std::vector<u8> out;
+        out.resize(sizeof(DLPServerInfo));
+        memcpy(out.data(), this, sizeof(DLPServerInfo));
+        return out;
+    }
 };
 
 static_assert(sizeof(DLPServerInfo) == 0x298);
@@ -118,6 +124,7 @@ protected:
     bool NeedsContentDownload(Network::MacAddress mac_addr);
     bool InstallEncryptedCIAFromFragments(std::set<ReceivedFragment>& frags);
     void DisconnectFromServer();
+    bool IsIdling();
 
     void GetMyStatus(Kernel::HLERequestContext& ctx);
     void GetChannels(Kernel::HLERequestContext& ctx);

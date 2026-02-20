@@ -1345,11 +1345,13 @@ public:
 
     void WakeUp(std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
                 Kernel::ThreadWakeupReason reason) {
+        IPC::RequestBuilder rb(ctx, command_id, 1, 0);
         if (reason == Kernel::ThreadWakeupReason::Timeout) {
             LOG_ERROR(Service_NWM, "timed out when trying to connect to UDS server");
+            rb.Push(Result(ErrorDescription::Timeout, ErrorModule::UDS, ErrorSummary::Canceled,
+                           ErrorLevel::Status));
+            return;
         }
-        // TODO(B3N30): Add error handling for host full and timeout
-        IPC::RequestBuilder rb(ctx, command_id, 1, 0);
         rb.Push(ResultSuccess);
         LOG_DEBUG(Service_NWM, "connection sequence finished");
     }

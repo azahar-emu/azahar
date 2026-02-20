@@ -417,6 +417,10 @@ void AuthorizeCIAFileDecryption(CIAFile* cia_file, Kernel::HLERequestContext& ct
     }
 }
 
+void CIAFile::AuthorizeDecryptionFromHLE() {
+    decryption_authorized = true;
+}
+
 CIAFile::CIAFile(Core::System& system_, Service::FS::MediaType media_type, bool from_cdn_)
     : system(system_), from_cdn(from_cdn_), decryption_authorized(false), media_type(media_type),
       decryption_state(std::make_unique<DecryptionState>()) {
