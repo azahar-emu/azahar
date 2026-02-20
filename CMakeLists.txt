@@ -387,7 +387,16 @@ if (ENABLE_QT)
 endif()
 
 # Use system tsl::robin_map if available (otherwise we fallback to version bundled with dynarmic)
+set(TSL_ROBIN_MAP_ENABLE_INSTALL ON CACHE BOOL "" FORCE)
 find_package(tsl-robin-map QUIET)
+
+if (NOT TARGET tsl::robin_map)
+    if (EXISTS "${CMAKE_SOURCE_DIR}/externals/dynarmic/externals/robin-map/CMakeLists.txt")
+        add_subdirectory(externals/dynarmic/externals/robin-map)
+    else()
+        message(FATAL_ERROR "tsl-robin-map not found: please install it or initialize submodules")
+    endif()
+endif()
 
 # Platform-specific library requirements
 # ======================================
