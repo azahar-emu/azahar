@@ -52,59 +52,11 @@ std::string DLP_Base::MacAddrToString(Network::MacAddress mac_addr) {
 }
 
 DLPNodeInfo DLP_Base::UDSToDLPNodeInfo(NWM::NodeInfo node_info) {
-    DLPNodeInfo out;
+    DLPNodeInfo out{};
     out.username = node_info.username;
     out.network_node_id = node_info.network_node_id;
     out.friend_code_seed = node_info.friend_code_seed;
     return out;
-}
-
-u16 DLP_Base::d_htons(u16 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap16(n);
-    } else {
-        return n;
-    }
-}
-
-u16 DLP_Base::d_ntohs(u16 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap16(n);
-    } else {
-        return n;
-    }
-}
-
-u32 DLP_Base::d_htonl(u32 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap32(n);
-    } else {
-        return n;
-    }
-}
-
-u32 DLP_Base::d_ntohl(u32 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap32(n);
-    } else {
-        return n;
-    }
-}
-
-u64 DLP_Base::d_ntohll(u64 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap64(n);
-    } else {
-        return n;
-    }
-}
-
-u64 DLP_Base::d_htonll(u64 n) {
-    if constexpr (std::endian::native == std::endian::little) {
-        return Common::swap64(n);
-    } else {
-        return n;
-    }
 }
 
 void DLP_Base::GetEventDescription(Kernel::HLERequestContext& ctx) {
@@ -134,10 +86,6 @@ void DLP_Base::InitializeDlpBase(u32 shared_mem_size,
                                 Kernel::MemoryPermission::ReadWrite, 0, Kernel::MemoryRegion::BASE,
                                 "NWM::UDS:SharedMemory")
             .Unwrap();
-
-    auto dlp_pass = "0km@tsa$uhmy1a0sa";
-    dlp_password_buf.resize(sizeof(dlp_pass));
-    memcpy(dlp_password_buf.data(), dlp_pass, sizeof(dlp_pass));
 
     NWM::NodeInfo cnode_info{
         .friend_code_seed = HW::UniqueData::GetLocalFriendCodeSeedB().body.friend_code_seed,
@@ -169,7 +117,8 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     t_time_out.Start();
     bool timed_out = false;
     while (true) { // busy wait, TODO: change to not busy wait?
-        if (uds->GetConnectionStatusHLE().status == NWM::NetworkStatus::ConnectedAsSpectator) {
+        if (uds->GetConnectionStatusHLE().status == NWM::NetworkStatus::ConnectedAsSpectator ||
+            uds->GetConnectionStatusHLE().status == NWM::NetworkStatus::ConnectedAsClient) {
             // connected
             break;
         }
@@ -191,7 +140,7 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     if (uds->GetConnectionStatusHLE().status != NWM::NetworkStatus::ConnectedAsSpectator &&
         uds->GetConnectionStatusHLE().status != NWM::NetworkStatus::ConnectedAsClient) {
         // error!
-        LOG_ERROR(Service_DLP, "Could not connect spec to network, connected as 0x{:x}",
+        LOG_ERROR(Service_DLP, "Could not connect to network, connected as 0x{:x}",
                   static_cast<u32>(uds->GetConnectionStatusHLE().status));
         return false;
     }
@@ -281,16 +230,16 @@ bool DLP_Base::ValidatePacket(u32 aes, void* pk, size_t sz, bool checksum) {
 
     auto ph = reinterpret_cast<DLPPacketHeader*>(pk);
 
-    if (d_ntohs(ph->size) != sz) {
+    if (ph->size != sz) {
         LOG_ERROR(Service_DLP, "Packet size in header does not match size received");
         return false;
     }
 
-    std::vector<u8> pk_copy;
-    pk_copy.resize(sz);
-    memcpy(pk_copy.data(), pk, sz);
-
     if (checksum) {
+        std::vector<u8> pk_copy;
+        pk_copy.resize(sz);
+        memcpy(pk_copy.data(), pk, sz);
+
         auto ph_cpy = reinterpret_cast<DLPPacketHeader*>(pk_copy.data());
         ph_cpy->checksum = 0;
         u32 new_checksum = GeneratePKChecksum(aes, pk_copy.data(), pk_copy.size());

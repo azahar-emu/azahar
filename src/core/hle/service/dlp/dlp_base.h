@@ -11,6 +11,8 @@
 
 #include <semaphore>
 
+// DLP save states are not supported
+
 namespace Service::DLP {
 
 using DLP_Username = std::array<u16_le, 10>;
@@ -25,7 +27,7 @@ struct DLPTitleInfo {
     std::array<u8, 16> age_ratings;
     std::array<u16, 64> short_description; // UTF-16
     std::array<u16, 128> long_description; // UTF-16
-    std::array<u8, 0x1200> icon;           // 48x48, RGB565
+    std::array<u16, 0x900> icon;           // 48x48, RGB565
     u32 size;
     u8 unk2;
     u8 unk3;
@@ -81,7 +83,7 @@ struct DLPPacketHeader {
             u16 unk; // usually 0x00 0x00
         };
     };
-    u16 size;                  // size of the whole packet, including the header
+    u16_be size;               // size of the whole packet, including the header
     std::array<u8, 2> unk1;    // always 0x02 0x00
     u32 checksum;              // always calculate
     u8 packet_index;           // starts at 0
@@ -90,21 +92,43 @@ struct DLPPacketHeader {
 
 static_assert(sizeof(DLPPacketHeader) == 0x10);
 
+// bool with 3ds padding included
+struct DLPPacketBool {
+    union {
+        u32 raw;
+        struct {
+            u8 active_value : 1;
+            u8 padding : 7;
+            std::array<u8, 3> padding2;
+        };
+    };
+    operator bool() {
+        return active_value;
+    }
+    DLPPacketBool& operator=(const bool& o) {
+        raw = 0x0;
+        active_value = o;
+        return *this;
+    }
+};
+
+static_assert(sizeof(DLPPacketBool) == sizeof(u32_be));
+
 constexpr u32 broad_title_size_diff = 111360;
 
 #pragma pack(push, 2)
 struct DLPBroadcastPacket1 {
     DLPPacketHeader head;
-    u64 child_title_id; // title id of the child being broadcasted
+    u64_be child_title_id; // title id of the child being broadcasted
     u64 unk1;
     u64 unk2;
     u64 unk3;
-    u64 unk4; // all 0s
-    u32 size; // size minus broad_title_size_diff
+    u64 unk4;    // all 0s
+    u32_be size; // size minus broad_title_size_diff
     u32 unk5;
-    std::array<u16, 64> title_short;
-    std::array<u16, 128> title_long;
-    std::array<u8, 0x138> icon_part;
+    std::array<u16_be, 64> title_short;
+    std::array<u16_be, 128> title_long;
+    std::array<u16_be, 0x9c> icon_part;
     u64 unk;
 };
 #pragma pack(pop)
@@ -113,21 +137,21 @@ static_assert(sizeof(DLPBroadcastPacket1) == 768);
 
 struct DLPBroadcastPacket2 {
     DLPPacketHeader head;
-    std::array<u8, 0x598> icon_part;
+    std::array<u16_be, 0x2cc> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket2) == 1448);
 
 struct DLPBroadcastPacket3 {
     DLPPacketHeader head;
-    std::array<u8, 0x598> icon_part;
+    std::array<u16_be, 0x2cc> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket3) == 1448);
 
 struct DLPBroadcastPacket4 {
     DLPPacketHeader head;
-    std::array<u8, 0x598> icon_part;
+    std::array<u16_be, 0x2cc> icon_part;
 };
 
 static_assert(sizeof(DLPBroadcastPacket4) == 1448);
@@ -151,8 +175,8 @@ static_assert(sizeof(DLPSrvr_Auth) == 0x14);
 
 struct DLPClt_AuthAck {
     DLPPacketHeader head;
-    std::array<u8, 4> unk1;    // 0x1
-    std::array<u8, 2> unk2;    // 0x0 could be padding
+    DLPPacketBool initialized; // true
+    std::array<u8, 2> padding;
     std::array<u8, 2> resp_id; // very important! game specific?
 };
 
@@ -161,26 +185,26 @@ static_assert(sizeof(DLPClt_AuthAck) == 0x18);
 // start distribution
 struct DLPSrvr_StartDistribution {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
+    DLPPacketBool initialized; // 0x1
 };
 
 static_assert(sizeof(DLPSrvr_StartDistribution) == 0x14);
 
 struct DLPClt_StartDistributionAck_NoContentNeeded {
     DLPPacketHeader head;
-    std::array<u8, 4> unk1; // 0x1
-    u32 unk2;               // 0x0
+    DLPPacketBool initialized; // 0x1
+    u32 unk2;                  // 0x0
 };
 
 static_assert(sizeof(DLPClt_StartDistributionAck_NoContentNeeded) == 0x18);
 
 struct DLPClt_StartDistributionAck_ContentNeeded {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
-    u16 unk2; // BE 0x20 unk important!
-    u16 unk3; // 0x0
-    u32 unk4; // 0x1
-    u32 unk5; // 0x0
+    DLPPacketBool initialized; // 0x1
+    u16_be unk2;               // BE 0x20 unk important!
+    u16_be unk3;               // 0x0
+    DLPPacketBool unk4;        // 0x1
+    u32_be unk5;               // 0x0
     std::array<u8, 0x18> unk_body;
 };
 
@@ -190,20 +214,20 @@ static_assert(sizeof(DLPClt_StartDistributionAck_ContentNeeded) == 0x38);
 // packet_index is 1
 struct DLPSrvr_ContentDistributionFragment {
     DLPPacketHeader head;
-    u32 content_magic; // extra magic value
-    u32 unk1;          // 0x1 BE
-    u16 frag_index;    // BE % dlp_content_block_length
-    u16 frag_size;     // BE
-    std::array<u8, content_fragment_size> content_fragment;
+    u32_be content_magic; // extra magic value
+    u32_be unk1;          // 0x1 BE
+    u16_be frag_index;    // BE % dlp_content_block_length
+    u16_be frag_size;     // BE
+    u8 content_fragment[];
 };
 
-static_assert(sizeof(DLPSrvr_ContentDistributionFragment) == 1468);
+static_assert(sizeof(DLPSrvr_ContentDistributionFragment) == 28);
 
 // finish receiving content
 struct DLPSrvr_FinishContentUpload {
     DLPPacketHeader head;
-    u32 unk1;    // 0x1
-    u32 seq_num; // BE starts at 0x0 and copies whatever number the ack gives it
+    DLPPacketBool initialized; // 0x1
+    u32_be seq_num;            // BE starts at 0x0 and copies whatever number the ack gives it
 };
 
 static_assert(sizeof(DLPSrvr_FinishContentUpload) == 0x18);
@@ -212,11 +236,11 @@ static_assert(sizeof(DLPSrvr_FinishContentUpload) == 0x18);
 #pragma pack(push, 2)
 struct DLPClt_FinishContentUploadAck {
     DLPPacketHeader head;
-    u32 unk1;    // 0x1
-    u8 unk2;     // 0x1
-    u8 unk3;     // 0x1 if downloading conetnt
-    u32 seq_ack; // BE client increments this every ack
-    u16 unk4;    // 0x0
+    DLPPacketBool initialized; // 0x1
+    u8 unk2;                   // 0x1
+    u8 needs_content;          // 0x1 if downloading conetnt
+    u32_be seq_ack;            // BE client increments this every ack
+    u16 unk4;                  // 0x0
 };
 #pragma pack(pop)
 
@@ -227,16 +251,16 @@ static_assert(sizeof(DLPClt_FinishContentUploadAck) == 0x1C);
 // the final command is given
 struct DLPSrvr_BeginGame {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
-    u32 unk2; // 0x9 could be DLP_Srvr_State
+    u32_le unk1; // 0x1
+    u32_le unk2; // 0x9 could be DLP_Srvr_State
 };
 
 static_assert(sizeof(DLPSrvr_BeginGame) == 0x18);
 
 struct DLPClt_BeginGameAck {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
-    u32 unk2; // 0x9 could be DLP_Clt_State
+    u32_le unk1; // 0x1
+    u32_le unk2; // 0x9 could be DLP_Clt_State
 };
 
 static_assert(sizeof(DLPClt_BeginGameAck) == 0x18);
@@ -244,7 +268,7 @@ static_assert(sizeof(DLPClt_BeginGameAck) == 0x18);
 // packet_index is 1. this is not acked
 struct DLPSrvr_BeginGameFinal {
     DLPPacketHeader head;
-    u32 unk1; // 0x1
+    u32_le unk1; // 0x1
     std::array<u8, 9> wireless_reboot_passphrase;
     u8 unk2;     // 0x09 could be server state
     u16 padding; // 0x00 0x00
@@ -280,7 +304,8 @@ protected:
     u32 dlp_sharedmem_size{};
 
     DLP_Username username;
-    std::vector<u8> dlp_password_buf;
+    // stubbed as HLE NWM_UDS does not check this. Should be: 0km@tsa$uhmy1a0sa + nul
+    std::vector<u8> dlp_password_buf{};
     std::array<u8, 9> wireless_reboot_passphrase;
 
     const u32 dlp_content_block_length = 182;
@@ -303,12 +328,6 @@ protected:
     static DLP_Username String16AsDLPUsername(std::u16string str);
     static std::string MacAddrToString(Network::MacAddress);
     static DLPNodeInfo UDSToDLPNodeInfo(NWM::NodeInfo node_info);
-    static u16 d_htons(u16);
-    static u16 d_ntohs(u16);
-    static u32 d_htonl(u32 n);
-    static u32 d_ntohl(u32 n);
-    static u64 d_ntohll(u64);
-    static u64 d_htonll(u64);
     template <typename T>
     static T* GetPacketBody(std::vector<u8>& b) {
         if (b.size() < sizeof(T)) {
@@ -338,16 +357,18 @@ protected:
         send_packet_ctx.resize(sizeof(T));
         auto ph = GetPacketHead(send_packet_ctx);
         ph->magic = magic;
-        ph->size = d_htons(sizeof(T));
+        ph->size = sizeof(T);
         ph->unk1 = {0x02, 0x00};
         ph->resp_id = resp_id;
         ph->packet_index = packet_index;
         return GetPacketBody<T>(send_packet_ctx);
     }
     void PGen_SendPK(u32 aes, u16 node_id, u8 data_channel, u8 flags = 0) {
+        ASSERT(send_packet_ctx.size() >= sizeof(DLPPacketHeader));
         auto ph = GetPacketHead(send_packet_ctx);
+        ASSERT(ph->size == send_packet_ctx.size());
         ph->checksum = 0;
-        ph->checksum = GeneratePKChecksum(aes, ph, d_ntohs(ph->size));
+        ph->checksum = GeneratePKChecksum(aes, ph, ph->size);
         SendTo(node_id, data_channel, send_packet_ctx, flags);
         send_packet_ctx.clear();
         sm_packet_sender_session.release();
