@@ -182,6 +182,11 @@ if(ENABLE_DEVELOPER_OPTIONS)
     add_compile_definitions(ENABLE_DEVELOPER_OPTIONS)
 endif()
 
+if (ENABLE_RETROACHIEVEMENTS)
+    add_compile_definitions(ENABLE_RETROACHIEVEMENTS)
+    add_subdirectory(retroachievements)
+endif()
+
 add_subdirectory(common)
 add_subdirectory(core)
 add_subdirectory(video_core)
