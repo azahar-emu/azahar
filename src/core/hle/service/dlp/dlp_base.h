@@ -326,7 +326,6 @@ protected:
 
     static std::u16string DLPUsernameAsString16(DLP_Username uname);
     static DLP_Username String16AsDLPUsername(std::u16string str);
-    static std::string MacAddrToString(Network::MacAddress);
     static DLPNodeInfo UDSToDLPNodeInfo(NWM::NodeInfo node_info);
     template <typename T>
     static T* GetPacketBody(std::vector<u8>& b) {

@@ -14,7 +14,7 @@
 namespace Service::DLP {
 
 DLP_Clt_Base::DLP_Clt_Base(Core::System& s, std::string unique_string_id) : DLP_Base(s) {
-    std::string unique_scan_event_id = std::format("DLP::{}::BeaconScanCallback", unique_string_id);
+    std::string unique_scan_event_id = fmt::format("DLP::{}::BeaconScanCallback", unique_string_id);
     beacon_scan_event = system.CoreTiming().RegisterEvent(
         unique_scan_event_id, [this](std::uintptr_t user_data, s64 cycles_late) {
             BeaconScanCallback(user_data, cycles_late);
@@ -740,7 +740,8 @@ void DLP_Clt_Base::ClientConnectionManager() {
                                      "Embedded fragment size is too large. Ignoring fragment.");
                         continue;
                     }
-                    std::span<u8> cf(r_pbody->content_fragment, r_pbody->frag_size);
+                    std::span<u8> cf(r_pbody->content_fragment,
+                                     static_cast<size_t>(r_pbody->frag_size));
                     ReceivedFragment frag{
                         .index = static_cast<u32>(r_pbody->frag_index +
                                                   dlp_content_block_length * current_content_block),

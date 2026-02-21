@@ -42,15 +42,6 @@ DLP_Username DLP_Base::String16AsDLPUsername(std::u16string str) {
     return out;
 }
 
-std::string DLP_Base::MacAddrToString(Network::MacAddress mac_addr) {
-    std::string out;
-    for (auto c : mac_addr) {
-        out += std::format("0x{:x} ", c);
-    }
-    out.pop_back();
-    return out;
-}
-
 DLPNodeInfo DLP_Base::UDSToDLPNodeInfo(NWM::NodeInfo node_info) {
     DLPNodeInfo out{};
     out.username = node_info.username;
