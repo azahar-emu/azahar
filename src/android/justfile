@@ -1,0 +1,57 @@
+# Default build: vanilla flavor, relWithDebInfo type (project default)
+apk_path := "app/build/outputs/apk/vanilla/relWithDebInfo/app-vanilla-relWithDebInfo.apk"
+debug_apk_path := "app/build/outputs/apk/vanilla/debug/app-vanilla-debug.apk"
+
+# Detect connected device ABI for single-arch builds
+device_abi := `adb shell getprop ro.product.cpu.abi 2>/dev/null || true`
+abi_filter := if device_abi != "" { "-PabiFilters=" + device_abi } else { "" }
+
+# List available commands
+default:
+    @just --list
+
+alias help := default
+
+# Build targeting connected device's ABI when available, full build otherwise
+[group('build')]
+build:
+    ./gradlew assembleVanillaRelWithDebInfo {{ abi_filter }}
+
+# Debug build targeting connected device's ABI when available
+[group('build')]
+build-debug:
+    ./gradlew assembleVanillaDebug {{ abi_filter }}
+
+# Build and copy timestamped APK to out/
+[group('build')]
+generate-apk: build
+    #!/usr/bin/env sh
+    mkdir -p out
+    timestamp=$(date +%Y%m%d-%H%M)
+    cp {{ apk_path }} out/azahar-${timestamp}.apk
+    echo "APK copied to out/azahar-${timestamp}.apk"
+
+# Build and install to connected device
+[group('device')]
+install: build
+    adb install -r -t {{ apk_path }}
+
+# Build and install debug variant to connected device
+[group('device')]
+install-debug: build-debug
+    adb install -r -t {{ debug_apk_path }}
+
+# Stop gradle daemons
+[group('maintenance')]
+stop:
+    ./gradlew --stop
+
+# Remove all build artifacts
+[group('maintenance')]
+clean:
+    ./gradlew clean
+
+# Full refresh: stop daemons, clean build artifacts, rebuild from scratch
+[group('maintenance')]
+refresh: stop clean
+    ./gradlew assembleVanillaRelWithDebInfo

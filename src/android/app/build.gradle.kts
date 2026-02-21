@@ -20,7 +20,16 @@ plugins {
  * next 680 years.
  */
 val autoVersion = (((System.currentTimeMillis() / 1000) - 1451606400) / 10).toInt()
-val abiFilter = listOf("arm64-v8a", "x86_64")
+val validAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+val abiFilter =
+    (project.findProperty("abiFilters") as String?)
+        ?.split(",")
+        ?.map { it.trim() }
+        ?.also { filters ->
+            val invalid = filters.filterNot { it in validAbis }
+            require(invalid.isEmpty()) { "Invalid ABI filter(s): $invalid. Valid values: $validAbis" }
+        }
+        ?: listOf("arm64-v8a", "x86_64")
 
 val downloadedJniLibsPath = "${layout.buildDirectory.get().asFile.path}/downloadedJniLibs"
 
