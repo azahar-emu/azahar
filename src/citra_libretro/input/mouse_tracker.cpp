@@ -130,7 +130,7 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
                           const Layout::FramebufferLayout& layout) {
     bool state = false;
 
-    if (LibRetro::settings.mouse_touchscreen) {
+    if (LibRetro::settings.enable_mouse_touchscreen) {
         // Check mouse input
         state |= LibRetro::CheckInput(0, RETRO_DEVICE_MOUSE, 0, RETRO_DEVICE_ID_MOUSE_LEFT);
 
@@ -157,7 +157,7 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
         }
     }
 
-    if (LibRetro::settings.touch_touchscreen) {
+    if (LibRetro::settings.enable_touch_touchscreen) {
         // Check touchscreen input
         state |= LibRetro::CheckInput(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED);
 
@@ -206,10 +206,10 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
         float smoothedX = std::abs(controllerX);
         float smoothedY = std::abs(controllerY);
 
-        if (smoothedX < LibRetro::settings.deadzone) {
+        if (smoothedX < LibRetro::settings.analog_deadzone) {
             controllerX = 0;
         }
-        if (smoothedY < LibRetro::settings.deadzone) {
+        if (smoothedY < LibRetro::settings.analog_deadzone) {
             controllerY = 0;
         }
 
