@@ -1,17 +1,23 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include "core/hle/service/service.h"
+#include "dlp_base.h"
 
 namespace Service::DLP {
 
-class DLP_SRVR final : public ServiceFramework<DLP_SRVR> {
+class DLP_SRVR final : public ServiceFramework<DLP_SRVR>, public DLP_Base {
 public:
     DLP_SRVR();
     ~DLP_SRVR() = default;
+
+    virtual std::shared_ptr<Kernel::SessionRequestHandler> GetServiceFrameworkSharedPtr();
+    virtual bool IsHost() {
+        return true;
+    }
 
 private:
     void IsChild(Kernel::HLERequestContext& ctx);
