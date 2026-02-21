@@ -15,7 +15,9 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#ifdef HAVE_LIBRETRO
 #include <mutex>
+#endif
 #include <optional>
 #include <span>
 #include <string>
