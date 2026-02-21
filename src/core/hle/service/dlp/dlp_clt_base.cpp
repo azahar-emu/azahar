@@ -741,7 +741,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
                         continue;
                     }
                     std::span<u8> cf(r_pbody->content_fragment,
-                                     static_cast<size_t>(r_pbody->frag_size));
+                                     static_cast<u16>(r_pbody->frag_size));
                     ReceivedFragment frag{
                         .index = static_cast<u32>(r_pbody->frag_index +
                                                   dlp_content_block_length * current_content_block),
