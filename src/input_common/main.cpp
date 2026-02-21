@@ -70,6 +70,104 @@ void Shutdown() {
     udp.reset();
 }
 
+std::string ButtonToText(const Common::ParamPackage& param) {
+    if (!param.Has("engine")) {
+        return "[not set]";
+    }
+    const auto engine_str = param.Get("engine", "");
+    // keyboard should be handled by the frontend
+    if (engine_str == "keyboard") {
+        return "keyboard code " + param.Get("code", 0);
+    }
+
+    if (engine_str == "sdl") {
+        if (param.Has("hat")) {
+            return "Hat " + param.Get("hat", "") + " " + param.Get("direction", "");
+        } else if (param.Has("button") || param.Has("cbutton")) {
+            if (param.Get("name", "") != "")
+                return param.Get("name", "");
+            else
+                return "Button " + param.Get("button", "");
+
+        } else if (param.Has("axis") || param.Has("caxis")) {
+            auto name = param.Get("name", "");
+            if (name == "LT" || name == "RT")
+                return name;
+            else if (name != "")
+                return name + param.Get("direction", "");
+            else
+                return "Axis " + param.Get("axis", "") + param.Get("direction", "");
+        }
+
+        return {};
+    }
+
+    if (engine_str == "gcpad") {
+        if (param.Has("axis")) {
+            const auto axis_str = param.Get("axis", "");
+            const auto direction_str = param.Get("direction", "");
+
+            return "GC Axis " + axis_str + direction_str;
+        }
+        if (param.Has("button")) {
+            const auto button = int(std::log2(param.Get("button", 0)));
+            return "GC Button " + button;
+        }
+        return "keyboard code " + param.Get("code", 0);
+    }
+
+    return "[unknown]";
+}
+
+std::string AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
+    if (!param.Has("engine")) {
+        return "[not set]";
+    }
+
+    const auto engine_str = param.Get("engine", "");
+    if (engine_str == "analog_from_button") {
+        return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
+    }
+
+    const auto axis_x_str = param.Get("axis_x", "");
+    const auto axis_y_str = param.Get("axis_y", "");
+    const auto name_x_str = param.Get("name_x", "");
+    const auto name_y_str = param.Get("name_y", "");
+    static const auto plus_str = "+";
+    static const auto minus_str = "-";
+    if (engine_str == "sdl" || engine_str == "gcpad") {
+        if (dir == "modifier") {
+            return "[unused]";
+        }
+        if (dir == "left") {
+            if (name_x_str == "")
+                return "Axis " + axis_x_str + minus_str;
+            else
+                return name_x_str + minus_str;
+        }
+        if (dir == "right") {
+            if (name_x_str == "")
+                return "Axis " + axis_x_str + plus_str;
+            else
+                return name_x_str + plus_str;
+        }
+        if (dir == "up") {
+            if (name_y_str == "")
+                return "Axis " + axis_y_str + plus_str;
+            else
+                return name_y_str + plus_str;
+        }
+        if (dir == "down") {
+            if (name_y_str == "")
+                return "Axis " + axis_y_str + minus_str;
+            else
+                return name_y_str + plus_str;
+        }
+        return {};
+    }
+    return "[unknown]";
+}
+
 Keyboard* GetKeyboard() {
     return keyboard.get();
 }
@@ -104,7 +202,7 @@ Common::ParamPackage GetControllerButtonBinds(const Common::ParamPackage& params
     const auto native_button{static_cast<Settings::NativeButton::Values>(button)};
     const auto engine{params.Get("engine", "")};
     if (engine == "sdl") {
-        return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerButtonBindByGUID(
+        return dynamic_cast<SDL::SDLState*>(sdl.get())->GetSDLControllerButtonBind(
             params.Get("guid", "0"), params.Get("port", 0), native_button);
     }
 #ifdef ENABLE_GCADAPTER

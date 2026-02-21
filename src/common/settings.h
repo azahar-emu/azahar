@@ -46,6 +46,8 @@ enum class LayoutOption : u32 {
     CustomLayout,
 };
 
+enum class InputMappingType : u8 { AllControllers, Guid, GuidPort };
+
 /** Defines the layout option for mobile portrait */
 enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
@@ -444,6 +446,7 @@ struct InputProfile {
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+    InputMappingType maptype = Settings::InputMappingType::GuidPort;
 };
 
 struct TouchFromButtonMap {
@@ -462,7 +465,8 @@ struct Values {
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
     std::vector<TouchFromButtonMap> touch_from_button_maps;
     Setting<bool> use_artic_base_controller{false, "use_artic_base_controller"};
-
+    Setting<InputMappingType> controller_hotkey_maptype{InputMappingType::AllControllers,
+                                                        "controller_hotkey_maptype"};
     SwitchableSetting<bool> enable_gamemode{true, "enable_gamemode"};
 
     // Core

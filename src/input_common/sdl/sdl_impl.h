@@ -11,6 +11,7 @@
 #include "common/settings.h"
 #include "common/threadsafe_queue.h"
 #include "input_common/sdl/sdl.h"
+#include "input_common/sdl/sdl_joystick.h"
 
 union SDL_Event;
 using SDL_Joystick = struct _SDL_Joystick;
@@ -19,8 +20,6 @@ using SDL_GameController = struct _SDL_GameController;
 
 namespace InputCommon::SDL {
 
-class SDLJoystick;
-class SDLGameController;
 class SDLButtonFactory;
 class SDLAnalogFactory;
 class SDLMotionFactory;
@@ -36,11 +35,12 @@ public:
     /// Handle SDL_Events for joysticks from SDL_PollEvent
     void HandleGameControllerEvent(const SDL_Event& event);
 
+    std::vector<std::shared_ptr<SDLJoystick>> GetJoysticksByGUID(const std::string& guid, int port);
     std::shared_ptr<SDLJoystick> GetSDLJoystickBySDLID(SDL_JoystickID sdl_id);
     std::shared_ptr<SDLJoystick> GetSDLJoystickByGUID(const std::string& guid, int port);
 
-    Common::ParamPackage GetSDLControllerButtonBindByGUID(const std::string& guid, int port,
-                                                          Settings::NativeButton::Values button);
+    Common::ParamPackage GetSDLControllerButtonBind(const std::string& guid, int port,
+                                                    Settings::NativeButton::Values button);
     Common::ParamPackage GetSDLControllerAnalogBindByGUID(const std::string& guid, int port,
                                                           Settings::NativeAnalog::Values analog);
 
@@ -53,11 +53,12 @@ public:
 
 private:
     void InitJoystick(int joystick_index);
-    void CloseJoystick(SDL_Joystick* sdl_joystick);
+    void CloseJoystick(SDL_JoystickID instance_id);
 
     /// Needs to be called before SDL_QuitSubSystem.
     void CloseJoysticks();
 
+    std::shared_ptr<SDLJoystick> GetSDLJoystickByGUIDLocked(const std::string& guid, int port);
     /// Map of GUID of a list of corresponding virtual Joysticks
     std::unordered_map<std::string, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
     std::mutex joystick_map_mutex;
