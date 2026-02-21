@@ -5195,7 +5195,7 @@ Você gostaria de baixá-la?</translation>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="679"/>
         <source>Delete Vulkan Shader Cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Excluir Cache de Shaders Vulkan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="682"/>
@@ -6081,7 +6081,7 @@ Mensagem de depuração: </translation>
     <message>
         <location filename="../../src/citra_qt/loading_screen.cpp" line="71"/>
         <source>Loading %3 %1 / %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Carregando %3 %1 / %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/loading_screen.cpp" line="72"/>

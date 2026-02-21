@@ -133,6 +133,8 @@ Divertiti usando l\'emulatore!</string>
     <string name="input_dialog_description">Premi o sposta un comando</string>
     <string name="input_binding">Assegnazione Input</string>
     <string name="input_binding_description">Premi o muovi un comando per assegnarlo a %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Premi UP sul tuo controller.</string>
+    <string name="input_binding_description_horizontal_axis">Premi RIGHT sul tuo controller.</string>
     <string name="button_home">Home</string>
     <string name="button_swap">Inverti schermi</string>
     <string name="button_turbo">Turbo</string>
@@ -553,6 +555,8 @@ Divertiti usando l\'emulatore!</string>
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparazione degli shader</string>
+    <string name="building_shaders">Compilazione %s</string>
+
     <!-- About Game Dialog -->
     <string name="play">Riproduci</string>
     <string name="uninstall_cia">Disinstalla applicazione</string>

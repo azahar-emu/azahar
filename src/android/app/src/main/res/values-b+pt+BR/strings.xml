@@ -118,6 +118,8 @@
     <string name="controller_dpad_axis_description">Alguns controles podem não ser capazes de mapear os D-pads para um eixo. Se esse for o caso, use a seção de D-Pad (Botões).</string>
     <string name="controller_dpad_button">D-Pad (Botão)</string>
     <string name="controller_dpad_button_description">Só mapeie o D-pad para isso se você se você estiver encontrando problemas com o mapeamento de botão do D-Pad (Eixo).</string>
+    <string name="controller_axis_vertical">Eixo Vertical</string>
+    <string name="controller_axis_horizontal">Eixo Horizontal</string>
     <string name="direction_up">Cima</string>
     <string name="direction_down">Baixo</string>
     <string name="direction_left">Esquerda</string>
@@ -126,6 +128,8 @@
     <string name="input_dialog_description">Pressione ou mova uma entrada.</string>
     <string name="input_binding">Mapeamento de controles</string>
     <string name="input_binding_description">Pressione ou mova um botão/alavanca para mapear para %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Pressione para CIMA no seu joystick.</string>
+    <string name="input_binding_description_horizontal_axis">Pressione para a DIREITA no seu joystick.</string>
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
     <string name="button_turbo">Turbo</string>
@@ -546,6 +550,8 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando Shaders</string>
+    <string name="building_shaders">Construindo %s</string>
+
     <!-- About Game Dialog -->
     <string name="play">Jogar</string>
     <string name="uninstall_cia">Desinstalar Aplicativo</string>
