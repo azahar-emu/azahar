@@ -713,7 +713,10 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
             // New config entry, usually always taken unless there is duplicate entries on the cache
             // for some reason.
 
-            auto shader_it = programmable_vertex_cache.find(entry->spirv_entry_id);
+            // We cannot trust the SPIRV entry ID anymore if we are regenerating.
+            auto shader_it = regenerate_file
+                                 ? programmable_vertex_cache.end()
+                                 : programmable_vertex_cache.find(entry->spirv_entry_id);
             if (shader_it != programmable_vertex_cache.end()) {
                 // The config entry uses a SPIRV entry that was already compiled (this is the usual
                 // path when the cache doesn't need to be re-generated).
@@ -722,40 +725,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                           entry->spirv_entry_id);
 
                 iter_config->second = &shader_it->second;
-
-                if (regenerate_file) {
-                    // In case we are re-generating the cache, we could only have gotten here if the
-                    // SPIRV was already compiled and cached, so only cache the config.
-                    AppendVSConfig(*regenerate_file, *entry, curr.Id());
-                }
-
-                bool new_program = known_vertex_programs.emplace(entry->program_entry_id).second;
-                if (new_program && regenerate_file) {
-                    // If the vertex program is not known at this point we need to save it as well.
-                    // This can happen to config entries that compile to the same SPIRV but use
-                    // different program code (maybe because garbage data was in the program
-                    // buffer).
-                    auto program_it = pending_programs.find(entry->program_entry_id);
-                    if (program_it == pending_programs.end()) {
-                        // Program code not in disk cache, should never happen.
-                        LOG_ERROR(Render_Vulkan, "Missing program code for config entry");
-                        programmable_vertex_map.erase(iter_config);
-                        continue;
-                    }
-
-                    // This is very rare so no need to use the LRU.
-                    auto program_cache_entry = vs_cache.ReadAt(program_it->second);
-                    const VSProgramEntry* program_entry;
-
-                    if (!program_cache_entry.Valid() ||
-                        program_cache_entry.Type() != CacheEntryType::VS_PROGRAM ||
-                        !(program_entry = program_cache_entry.Payload<VSProgramEntry>()) ||
-                        program_entry->version != VSProgramEntry::EXPECTED_VERSION) {
-                        MALFORMED_DISK_CACHE;
-                    }
-
-                    AppendVSProgram(*regenerate_file, *program_entry, entry->program_entry_id);
-                }
+                known_vertex_programs.emplace(entry->program_entry_id).second;
             } else {
                 // Cached SPIRV not found, need to recompile.
 
@@ -859,8 +829,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                 // Asign the SPIRV shader to the config
                 iter_config->second = &iter_prog->second;
 
-                LOG_DEBUG(Render_Vulkan, "    linked with new SPIRV {:016X}.",
-                          entry->spirv_entry_id);
+                LOG_DEBUG(Render_Vulkan, "    linked with SPIRV {:016X}.", entry->spirv_entry_id);
             }
         }
     }
@@ -1017,7 +986,7 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
                      tot_callback_index, "Fragment Shader");
         }
 
-        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", offset.first);
 
         if (fragment_shaders.find(offset.first) != fragment_shaders.end()) {
             // SPIRV of config was already compiled, no need to regenerate
@@ -1250,7 +1219,7 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
                      tot_callback_index, "Geometry Shader");
         }
 
-        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", offset.first);
 
         if (fixed_geometry_shaders.find(offset.first) != fixed_geometry_shaders.end()) {
             // SPIRV of config was already compiled, no need to regenerate
@@ -1399,6 +1368,11 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
             // Fetch all the shaders used in the pipeline,
             // if any is missing we cannot build it.
             std::array<Shader*, MAX_SHADER_STAGES> shaders;
+
+            LOG_DEBUG(Render_Vulkan, "    uses VS: {:016X}, FS: {:016X}, GS: {:016X}",
+                      entry->pl_info.shader_ids[ProgramType::VS],
+                      entry->pl_info.shader_ids[ProgramType::FS],
+                      entry->pl_info.shader_ids[ProgramType::GS]);
 
             if (entry->pl_info.shader_ids[ProgramType::VS]) {
                 auto it_vs =
