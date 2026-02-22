@@ -186,6 +186,11 @@ bool ShouldCheckForPrereleaseUpdates() {
         (update_channel == UISettings::UpdateCheckChannels::PRERELEASE);
     return (IsPrereleaseBuild() || using_prerelease_channel);
 }
+
+static int GetMajorVersion(const std::string& version) {
+    size_t dot = version.find('.');
+    return std::stoi(version.substr(0, dot));
+}
 #endif
 
 GMainWindow::GMainWindow(Core::System& system_)
@@ -421,8 +426,17 @@ GMainWindow::GMainWindow(Core::System& system_)
             const std::optional<std::string> latest_release_tag =
                 UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
 
-            if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
-                return QString::fromStdString(latest_release_tag.value());
+            if (latest_release_tag) {
+                const int latest_version = GetMajorVersion(latest_release_tag.value());
+                const int current_version = GetMajorVersion(Common::g_build_fullname);
+
+                if (latest_version > current_version) {
+                    return QString::fromStdString(latest_release_tag.value());
+                } else if ((latest_version == current_version) &&
+                           (latest_release_tag &&
+                            latest_release_tag.value() != Common::g_build_fullname)) {
+                    return QString::fromStdString(latest_release_tag.value());
+                }
             }
             return QString{};
         });
