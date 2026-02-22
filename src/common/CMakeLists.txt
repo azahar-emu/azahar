@@ -127,6 +127,7 @@ add_library(citra_common STATIC
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
+    setting_keys.h
     settings.cpp
     settings.h
     slot_vector.h
@@ -160,6 +161,8 @@ add_library(citra_common STATIC
     zstd_compression.cpp
     zstd_compression.h
 )
+
+target_include_directories(citra_common PUBLIC ${CMAKE_BINARY_DIR}/src)
 
 if (UNIX AND NOT APPLE)
   target_sources(citra_common PRIVATE

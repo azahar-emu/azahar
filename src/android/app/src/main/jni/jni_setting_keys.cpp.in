@@ -1,0 +1,23 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
+#ifdef ANDROID
+#include <jni.h>
+#endif
+
+#define JNI_DEFINE_KEY(KEY, KEY_JNI_ESCAPED)                                                       \
+    JNIEXPORT jstring JNICALL                                                                      \
+    Java_org_citra_citra_1emu_features_settings_SettingKeys_##KEY_JNI_ESCAPED(                     \
+        JNIEnv* env, jobject obj                                                                   \
+    ) {                                                                                            \
+        return env->NewStringUTF(#KEY);                                                            \
+    }
+
+extern "C" {
+
+    @JNI_SETTING_KEY_DEFINITIONS@
+
+}
