@@ -2,11 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#pragma once
-
-#ifdef ANDROID
 #include <jni.h>
-#endif
 
 #define JNI_DEFINE_KEY(KEY, KEY_JNI_ESCAPED)                                                       \
     JNIEXPORT jstring JNICALL                                                                      \
