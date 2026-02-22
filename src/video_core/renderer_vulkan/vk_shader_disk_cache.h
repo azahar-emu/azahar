@@ -103,7 +103,8 @@ private:
     struct VSConfigEntry {
         static constexpr u8 EXPECTED_VERSION = 0;
 
-        u8 version; // Surprise tool that can help us later
+        u64 version; // Surprise tool that can help us later
+
         u64 program_entry_id;
         u64 spirv_entry_id;
         Pica::Shader::Generator::PicaVSConfig vs_config;
@@ -113,34 +114,38 @@ private:
     struct VSProgramEntry {
         static constexpr u8 EXPECTED_VERSION = 0;
 
-        u8 version; // Surprise tool that can help us later
+        u64 version; // Surprise tool that can help us later
+
         u32 program_len;
         u32 swizzle_len;
         Pica::ProgramCode program_code;
         Pica::SwizzleData swizzle_code;
     };
-    static_assert(sizeof(VSProgramEntry) == 32780);
+    static_assert(sizeof(VSProgramEntry) == 32784);
 
     struct FSConfigEntry {
         static constexpr u8 EXPECTED_VERSION = 0;
 
-        u8 version; // Surprise tool that can help us later
+        u64 version; // Surprise tool that can help us later
+
         Pica::Shader::FSConfig fs_config;
     };
-    static_assert(sizeof(FSConfigEntry) == 276);
+    static_assert(sizeof(FSConfigEntry) == 280);
 
     struct GSConfigEntry {
         static constexpr u8 EXPECTED_VERSION = 0;
 
-        u8 version; // Surprise tool that can help us later
+        u64 version; // Surprise tool that can help us later
+
         Pica::Shader::Generator::PicaFixedGSConfig gs_config;
     };
-    static_assert(sizeof(GSConfigEntry) == 44);
+    static_assert(sizeof(GSConfigEntry) == 48);
 
     struct PLConfigEntry {
         static constexpr u8 EXPECTED_VERSION = 0;
 
-        u8 version; // Surprise tool that can help us later
+        u64 version; // Surprise tool that can help us later
+
         StaticPipelineInfo pl_info;
     };
     static_assert(sizeof(PLConfigEntry) == 152);
