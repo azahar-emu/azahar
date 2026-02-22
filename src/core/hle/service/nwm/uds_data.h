@@ -91,7 +91,7 @@ constexpr u16 EAPoLStartMagic = 0x201;
 struct EAPoLStartPacket {
     u16_be magic = EAPoLStartMagic;
     u16_be association_id;
-    enum_le<ConnectionType> conn_type;
+    enum_le<ConnectionType> connection_type;
     INSERT_PADDING_BYTES(3);
     EAPoLNodeInfo node;
 };

@@ -39,6 +39,8 @@ SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 
 namespace Service::APT {
 
+constexpr u32 max_wireless_reboot_info_size = 0x10;
+
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
     DEBUG_SERIALIZATION_POINT;
@@ -64,7 +66,7 @@ std::shared_ptr<Module> Module::NSInterface::GetModule() const {
 
 void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto size = rp.Pop<u32>();
+    const auto size = std::min(rp.Pop<u32>(), max_wireless_reboot_info_size);
     const auto buffer = rp.PopStaticBuffer();
 
     apt->wireless_reboot_info = std::move(buffer);

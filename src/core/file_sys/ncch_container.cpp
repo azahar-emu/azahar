@@ -138,7 +138,7 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
         return Loader::ResultStatus::Success;
     }
 
-    if (!file->IsOpen()) {
+    if (!file || !file->IsOpen()) {
         return Loader::ResultStatus::Error;
     }
 
@@ -204,6 +204,9 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
 Loader::ResultStatus NCCHContainer::Load() {
     if (is_loaded)
         return Loader::ResultStatus::Success;
+
+    if (!file)
+        return Loader::ResultStatus::Error;
 
     int block_size = kBlockSize;
 
@@ -621,7 +624,7 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romf
         return Loader::ResultStatus::ErrorNotUsed;
     }
 
-    if (!file->IsOpen())
+    if (!file || !file->IsOpen())
         return Loader::ResultStatus::Error;
 
     u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * block_size) + 0x1000;
@@ -767,6 +770,9 @@ bool NCCHContainer::HasExHeader() {
 
 std::unique_ptr<FileUtil::IOFile> NCCHContainer::Reopen(
     const std::unique_ptr<FileUtil::IOFile>& orig_file, const std::string& new_filename) {
+    if (!orig_file)
+        return nullptr;
+
     const bool is_compressed = orig_file->IsCompressed();
     const bool is_crypto = orig_file->IsCrypto();
     const std::string filename = new_filename.empty() ? orig_file->Filename() : new_filename;
