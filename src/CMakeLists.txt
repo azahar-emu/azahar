@@ -1,6 +1,8 @@
 # Enable modules to include each other's files
 include_directories(.)
 
+include(GenerateSettingKeys)
+
 # CMake seems to only define _DEBUG on Windows
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
