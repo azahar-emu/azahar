@@ -459,131 +459,130 @@ static constexpr s32 REGION_VALUE_AUTO_SELECT = -1;
 
 // This should be the *only place* that setting keys exist as strings.
 struct Keys {
-#define HS BOOST_HANA_STRING // "Hana String"
-    static constexpr auto use_artic_base_controller = HS("use_artic_base_controller");
-    static constexpr auto enable_gamemode = HS("enable_gamemode");
-    static constexpr auto use_cpu_jit = HS("use_cpu_jit");
-    static constexpr auto cpu_clock_percentage = HS("cpu_clock_percentage");
-    static constexpr auto is_new_3ds = HS("is_new_3ds");
-    static constexpr auto lle_applets = HS("lle_applets");
-    static constexpr auto deterministic_async_operations = HS("deterministic_async_operations");
-    static constexpr auto enable_required_online_lle_modules =
-        HS("enable_required_online_lle_modules");
-    static constexpr auto use_virtual_sd = HS("use_virtual_sd");
-    static constexpr auto use_custom_storage = HS("use_custom_storage");
-    static constexpr auto compress_cia_installs = HS("compress_cia_installs");
-    static constexpr auto region_value = HS("region_value");
-    static constexpr auto init_clock = HS("init_clock");
-    static constexpr auto init_time = HS("init_time");
-    static constexpr auto init_time_offset = HS("init_time_offset");
-    static constexpr auto init_ticks_type = HS("init_ticks_type");
-    static constexpr auto init_ticks_override = HS("init_ticks_override");
-    static constexpr auto plugin_loader = HS("plugin_loader");
-    static constexpr auto allow_plugin_loader = HS("allow_plugin_loader");
-    static constexpr auto steps_per_hour = HS("steps_per_hour");
-    static constexpr auto apply_region_free_patch = HS("apply_region_free_patch");
-    static constexpr auto graphics_api = HS("graphics_api");
-    static constexpr auto physical_device = HS("physical_device");
-    static constexpr auto use_gles = HS("use_gles");
-    static constexpr auto renderer_debug = HS("renderer_debug");
-    static constexpr auto dump_command_buffers = HS("dump_command_buffers");
-    static constexpr auto spirv_shader_gen = HS("spirv_shader_gen");
-    static constexpr auto disable_spirv_optimizer = HS("disable_spirv_optimizer");
-    static constexpr auto async_shader_compilation = HS("async_shader_compilation");
-    static constexpr auto async_presentation = HS("async_presentation");
-    static constexpr auto use_hw_shader = HS("use_hw_shader");
-    static constexpr auto use_disk_shader_cache = HS("use_disk_shader_cache");
-    static constexpr auto shaders_accurate_mul = HS("shaders_accurate_mul");
-    static constexpr auto use_vsync = HS("use_vsync");
-    static constexpr auto use_display_refresh_rate_detection =
-        HS("use_display_refresh_rate_detection");
-    static constexpr auto use_shader_jit = HS("use_shader_jit");
-    static constexpr auto resolution_factor = HS("resolution_factor");
-    static constexpr auto frame_limit = HS("frame_limit");
-    static constexpr auto turbo_limit = HS("turbo_limit");
-    static constexpr auto texture_filter = HS("texture_filter");
-    static constexpr auto texture_sampling = HS("texture_sampling");
-    static constexpr auto delay_game_render_thread_us = HS("delay_game_render_thread_us");
-    static constexpr auto layout_option = HS("layout_option");
-    static constexpr auto swap_screen = HS("swap_screen");
-    static constexpr auto upright_screen = HS("upright_screen");
-    static constexpr auto secondary_display_layout = HS("secondary_display_layout");
-    static constexpr auto large_screen_proportion = HS("large_screen_proportion");
-    static constexpr auto screen_gap = HS("screen_gap");
-    static constexpr auto small_screen_position = HS("small_screen_position");
-    static constexpr auto custom_top_x = HS("custom_top_x");
-    static constexpr auto custom_top_y = HS("custom_top_y");
-    static constexpr auto custom_top_width = HS("custom_top_width");
-    static constexpr auto custom_top_height = HS("custom_top_height");
-    static constexpr auto custom_bottom_x = HS("custom_bottom_x");
-    static constexpr auto custom_bottom_y = HS("custom_bottom_y");
-    static constexpr auto custom_bottom_width = HS("custom_bottom_width");
-    static constexpr auto custom_bottom_height = HS("custom_bottom_height");
-    static constexpr auto custom_second_layer_opacity = HS("custom_second_layer_opacity");
-    static constexpr auto aspect_ratio = HS("aspect_ratio");
-    static constexpr auto screen_top_stretch = HS("screen_top_stretch");
-    static constexpr auto screen_top_leftright_padding = HS("screen_top_leftright_padding");
-    static constexpr auto screen_top_topbottom_padding = HS("screen_top_topbottom_padding");
-    static constexpr auto screen_bottom_stretch = HS("screen_bottom_stretch");
-    static constexpr auto screen_bottom_leftright_padding = HS("screen_bottom_leftright_padding");
-    static constexpr auto screen_bottom_topbottom_padding = HS("screen_bottom_topbottom_padding");
-    static constexpr auto portrait_layout_option = HS("portrait_layout_option");
-    static constexpr auto custom_portrait_top_x = HS("custom_portrait_top_x");
-    static constexpr auto custom_portrait_top_y = HS("custom_portrait_top_y");
-    static constexpr auto custom_portrait_top_width = HS("custom_portrait_top_width");
-    static constexpr auto custom_portrait_top_height = HS("custom_portrait_top_height");
-    static constexpr auto custom_portrait_bottom_x = HS("custom_portrait_bottom_x");
-    static constexpr auto custom_portrait_bottom_y = HS("custom_portrait_bottom_y");
-    static constexpr auto custom_portrait_bottom_width = HS("custom_portrait_bottom_width");
-    static constexpr auto custom_portrait_bottom_height = HS("custom_portrait_bottom_height");
-    static constexpr auto bg_red = HS("bg_red");
-    static constexpr auto bg_green = HS("bg_green");
-    static constexpr auto bg_blue = HS("bg_blue");
-    static constexpr auto render_3d = HS("render_3d");
-    static constexpr auto factor_3d = HS("factor_3d");
-    static constexpr auto swap_eyes_3d = HS("swap_eyes_3d");
-    static constexpr auto render_3d_which_display = HS("render_3d_which_display");
-    static constexpr auto mono_render_option = HS("mono_render_option");
-    static constexpr auto cardboard_screen_size = HS("cardboard_screen_size");
-    static constexpr auto cardboard_x_shift = HS("cardboard_x_shift");
-    static constexpr auto cardboard_y_shift = HS("cardboard_y_shift");
-    static constexpr auto filter_mode = HS("filter_mode");
-    static constexpr auto pp_shader_name = HS("pp_shader_name");
-    static constexpr auto anaglyph_shader_name = HS("anaglyph_shader_name");
-    static constexpr auto dump_textures = HS("dump_textures");
-    static constexpr auto custom_textures = HS("custom_textures");
-    static constexpr auto preload_textures = HS("preload_textures");
-    static constexpr auto async_custom_loading = HS("async_custom_loading");
-    static constexpr auto disable_right_eye_render = HS("disable_right_eye_render");
-    static constexpr auto audio_emulation = HS("audio_emulation");
-    static constexpr auto enable_audio_stretching = HS("enable_audio_stretching");
-    static constexpr auto enable_realtime_audio = HS("enable_realtime_audio");
-    static constexpr auto volume = HS("volume");
-    static constexpr auto output_type = HS("output_type");
-    static constexpr auto output_device = HS("output_device");
-    static constexpr auto input_type = HS("input_type");
-    static constexpr auto input_device = HS("input_device");
-    static constexpr auto delay_start_for_lle_modules = HS("delay_start_for_lle_modules");
-    static constexpr auto use_gdbstub = HS("use_gdbstub");
-    static constexpr auto gdbstub_port = HS("gdbstub_port");
-    static constexpr auto instant_debug_log = HS("instant_debug_log");
-    static constexpr auto enable_rpc_server = HS("enable_rpc_server");
-    static constexpr auto log_filter = HS("log_filter");
-    static constexpr auto log_regex_filter = HS("log_regex_filter");
+#define DEFINE_KEY(KEY) static constexpr auto KEY = BOOST_HANA_STRING(#KEY);
+
+    DEFINE_KEY(use_artic_base_controller)
+    DEFINE_KEY(enable_gamemode)
+    DEFINE_KEY(use_cpu_jit)
+    DEFINE_KEY(cpu_clock_percentage)
+    DEFINE_KEY(is_new_3ds)
+    DEFINE_KEY(lle_applets)
+    DEFINE_KEY(deterministic_async_operations)
+    DEFINE_KEY(enable_required_online_lle_modules)
+    DEFINE_KEY(use_virtual_sd)
+    DEFINE_KEY(use_custom_storage)
+    DEFINE_KEY(compress_cia_installs)
+    DEFINE_KEY(region_value)
+    DEFINE_KEY(init_clock)
+    DEFINE_KEY(init_time)
+    DEFINE_KEY(init_time_offset)
+    DEFINE_KEY(init_ticks_type)
+    DEFINE_KEY(init_ticks_override)
+    DEFINE_KEY(plugin_loader)
+    DEFINE_KEY(allow_plugin_loader)
+    DEFINE_KEY(steps_per_hour)
+    DEFINE_KEY(apply_region_free_patch)
+    DEFINE_KEY(graphics_api)
+    DEFINE_KEY(physical_device)
+    DEFINE_KEY(use_gles)
+    DEFINE_KEY(renderer_debug)
+    DEFINE_KEY(dump_command_buffers)
+    DEFINE_KEY(spirv_shader_gen)
+    DEFINE_KEY(disable_spirv_optimizer)
+    DEFINE_KEY(async_shader_compilation)
+    DEFINE_KEY(async_presentation)
+    DEFINE_KEY(use_hw_shader)
+    DEFINE_KEY(use_disk_shader_cache)
+    DEFINE_KEY(shaders_accurate_mul)
+    DEFINE_KEY(use_vsync)
+    DEFINE_KEY(use_display_refresh_rate_detection)
+    DEFINE_KEY(use_shader_jit)
+    DEFINE_KEY(resolution_factor)
+    DEFINE_KEY(frame_limit)
+    DEFINE_KEY(turbo_limit)
+    DEFINE_KEY(texture_filter)
+    DEFINE_KEY(texture_sampling)
+    DEFINE_KEY(delay_game_render_thread_us)
+    DEFINE_KEY(layout_option)
+    DEFINE_KEY(swap_screen)
+    DEFINE_KEY(upright_screen)
+    DEFINE_KEY(secondary_display_layout)
+    DEFINE_KEY(large_screen_proportion)
+    DEFINE_KEY(screen_gap)
+    DEFINE_KEY(small_screen_position)
+    DEFINE_KEY(custom_top_x)
+    DEFINE_KEY(custom_top_y)
+    DEFINE_KEY(custom_top_width)
+    DEFINE_KEY(custom_top_height)
+    DEFINE_KEY(custom_bottom_x)
+    DEFINE_KEY(custom_bottom_y)
+    DEFINE_KEY(custom_bottom_width)
+    DEFINE_KEY(custom_bottom_height)
+    DEFINE_KEY(custom_second_layer_opacity)
+    DEFINE_KEY(aspect_ratio)
+    DEFINE_KEY(screen_top_stretch)
+    DEFINE_KEY(screen_top_leftright_padding)
+    DEFINE_KEY(screen_top_topbottom_padding)
+    DEFINE_KEY(screen_bottom_stretch)
+    DEFINE_KEY(screen_bottom_leftright_padding)
+    DEFINE_KEY(screen_bottom_topbottom_padding)
+    DEFINE_KEY(portrait_layout_option)
+    DEFINE_KEY(custom_portrait_top_x)
+    DEFINE_KEY(custom_portrait_top_y)
+    DEFINE_KEY(custom_portrait_top_width)
+    DEFINE_KEY(custom_portrait_top_height)
+    DEFINE_KEY(custom_portrait_bottom_x)
+    DEFINE_KEY(custom_portrait_bottom_y)
+    DEFINE_KEY(custom_portrait_bottom_width)
+    DEFINE_KEY(custom_portrait_bottom_height)
+    DEFINE_KEY(bg_red)
+    DEFINE_KEY(bg_green)
+    DEFINE_KEY(bg_blue)
+    DEFINE_KEY(render_3d)
+    DEFINE_KEY(factor_3d)
+    DEFINE_KEY(swap_eyes_3d)
+    DEFINE_KEY(render_3d_which_display)
+    DEFINE_KEY(mono_render_option)
+    DEFINE_KEY(cardboard_screen_size)
+    DEFINE_KEY(cardboard_x_shift)
+    DEFINE_KEY(cardboard_y_shift)
+    DEFINE_KEY(filter_mode)
+    DEFINE_KEY(pp_shader_name)
+    DEFINE_KEY(anaglyph_shader_name)
+    DEFINE_KEY(dump_textures)
+    DEFINE_KEY(custom_textures)
+    DEFINE_KEY(preload_textures)
+    DEFINE_KEY(async_custom_loading)
+    DEFINE_KEY(disable_right_eye_render)
+    DEFINE_KEY(audio_emulation)
+    DEFINE_KEY(enable_audio_stretching)
+    DEFINE_KEY(enable_realtime_audio)
+    DEFINE_KEY(volume)
+    DEFINE_KEY(output_type)
+    DEFINE_KEY(output_device)
+    DEFINE_KEY(input_type)
+    DEFINE_KEY(input_device)
+    DEFINE_KEY(delay_start_for_lle_modules)
+    DEFINE_KEY(use_gdbstub)
+    DEFINE_KEY(gdbstub_port)
+    DEFINE_KEY(instant_debug_log)
+    DEFINE_KEY(enable_rpc_server)
+    DEFINE_KEY(log_filter)
+    DEFINE_KEY(log_regex_filter)
 
 #ifdef HAVE_LIBRETRO
-    static constexpr auto language_value = HS("language_value");
-    static constexpr auto swap_screen_mode = HS("swap_screen_mode");
-    static constexpr auto use_libretro_save_path = HS("use_libretro_save_path");
-    static constexpr auto analog_function = HS("analog_function");
-    static constexpr auto analog_deadzone = HS("analog_deadzone");
-    static constexpr auto enable_mouse_touchscreen = HS("enable_mouse_touchscreen");
-    static constexpr auto enable_touch_touchscreen = HS("enable_touch_touchscreen");
-    static constexpr auto render_touchscreen = HS("render_touchscreen");
-    static constexpr auto enable_motion = HS("enable_motion");
-    static constexpr auto motion_sensitivity = HS("motion_sensitivity");
+    DEFINE_KEY(language_value)
+    DEFINE_KEY(swap_screen_mode)
+    DEFINE_KEY(use_libretro_save_path)
+    DEFINE_KEY(analog_function)
+    DEFINE_KEY(analog_deadzone)
+    DEFINE_KEY(enable_mouse_touchscreen)
+    DEFINE_KEY(enable_touch_touchscreen)
+    DEFINE_KEY(render_touchscreen)
+    DEFINE_KEY(enable_motion)
+    DEFINE_KEY(motion_sensitivity)
 #endif
-#undef HS
+#undef DEFINE_KEY
 };
 
 struct Values {
