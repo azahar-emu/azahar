@@ -115,7 +115,7 @@ foreach(KEY IN ITEMS
     "log_filter"
     "log_regex_filter"
 )
-    set(SHARED_SETTING_KEY_DEFINITIONS "${SHARED_SETTING_KEY_DEFINITIONS}
+    set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
         DEFINE_KEY(${KEY})")
     if (ANDROID)
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
@@ -125,24 +125,61 @@ foreach(KEY IN ITEMS
 endforeach()
 
 # Libretro exclusive setting keys
-foreach(KEY IN ITEMS
-    "language_value"
-    "swap_screen_mode"
-    "use_libretro_save_path"
-    "analog_function"
-    "analog_deadzone"
-    "enable_mouse_touchscreen"
-    "enable_touch_touchscreen"
-    "render_touchscreen"
-    "enable_motion"
-    "motion_sensitivity"
-)
-    string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
-    set(LIBRETRO_SETTING_KEY_DEFINITIONS "${LIBRETRO_SETTING_KEY_DEFINITIONS}
-        DEFINE_KEY(${KEY})")
-endforeach()
+if (ENABLE_LIBRETRO)
+    foreach(KEY IN ITEMS
+        "language_value"
+        "swap_screen_mode"
+        "use_libretro_save_path"
+        "analog_function"
+        "analog_deadzone"
+        "enable_mouse_touchscreen"
+        "enable_touch_touchscreen"
+        "render_touchscreen"
+        "enable_motion"
+        "motion_sensitivity"
+    )
+        string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
+            DEFINE_KEY(${KEY})")
+    endforeach()
+endif()
+
+# Android exclusive setting keys (standalone app only, not Android libretro)
+if (ANDROID)
+    foreach(KEY IN ITEMS
+        "expand_to_cutout_area"
+        "custom_layout"
+        "performance_overlay_enable"
+        "performance_overlay_show_fps"
+        "performance_overlay_show_frame_time"
+        "performance_overlay_show_speed"
+        "performance_overlay_show_app_ram_usage"
+        "performance_overlay_show_available_ram"
+        "performance_overlay_show_battery_temp"
+        "performance_overlay_background"
+        "use_frame_limit" # FIXME: DUPLICATE KEY (shared equivalent: frame_limit)
+        "android_hide_images"
+        "camera_inner_flip"
+        "camera_outer_left_flip"
+        "camera_outer_right_flip"
+        "screen_orientation"
+        "performance_overlay_position"
+        "camera_inner_name"
+        "camera_inner_config"
+        "camera_outer_left_name"
+        "camera_outer_left_config"
+        "camera_outer_right_name"
+        "camera_outer_right_config"
+    )
+        string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
+            DEFINE_KEY(${KEY})")
+        set(JNI_SETTING_KEY_DEFINITIONS "${JNI_SETTING_KEY_DEFINITIONS}
+            JNI_DEFINE_KEY(${KEY}, ${KEY_JNI_ESCAPED})")
+    endforeach()
+endif()
 
 configure_file("common/setting_keys.h.in" "common/setting_keys.h" @ONLY)
-if (ANDROID)
+if (ANDROID AND NOT ENABLE_LIBRETRO)
     configure_file("android/app/src/main/jni/jni_setting_keys.cpp.in" "android/app/src/main/jni/jni_setting_keys.cpp" @ONLY)
 endif()

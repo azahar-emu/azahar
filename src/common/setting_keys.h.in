@@ -8,10 +8,9 @@
 
 namespace Settings {
 namespace Keys {
-@SHARED_SETTING_KEY_DEFINITIONS@
-#ifdef HAVE_LIBRETRO
-@LIBRETRO_SETTING_KEY_DEFINITIONS@
-#endif
+
+@SETTING_KEY_DEFINITIONS@
+
 }
 }
 

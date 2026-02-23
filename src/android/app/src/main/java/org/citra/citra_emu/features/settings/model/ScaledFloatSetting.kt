@@ -4,13 +4,15 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.features.settings.SettingKeys
+
 enum class ScaledFloatSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: Float,
     val scale: Int
 ) : AbstractFloatSetting {
-    AUDIO_VOLUME("volume", Settings.SECTION_AUDIO, 1.0f, 100);
+    AUDIO_VOLUME(SettingKeys.volume(), Settings.SECTION_AUDIO, 1.0f, 100);
 
     override var float: Float = defaultValue
         get() = field * scale
