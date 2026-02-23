@@ -118,4 +118,27 @@ object SettingKeys {
     external fun log_regex_filter(): String
     external fun use_integer_scaling(): String
     external fun layouts_to_cycle(): String
+    external fun expand_to_cutout_area(): String
+    external fun custom_layout(): String
+    external fun performance_overlay_enable(): String
+    external fun performance_overlay_show_fps(): String
+    external fun performance_overlay_show_frame_time(): String
+    external fun performance_overlay_show_speed(): String
+    external fun performance_overlay_show_app_ram_usage(): String
+    external fun performance_overlay_show_available_ram(): String
+    external fun performance_overlay_show_battery_temp(): String
+    external fun performance_overlay_background(): String
+    external fun use_frame_limit(): String
+    external fun android_hide_images(): String
+    external fun camera_inner_flip(): String
+    external fun camera_outer_left_flip(): String
+    external fun camera_outer_right_flip(): String
+    external fun screen_orientation(): String
+    external fun performance_overlay_position(): String
+    external fun camera_inner_name(): String
+    external fun camera_inner_config(): String
+    external fun camera_outer_left_name(): String
+    external fun camera_outer_left_config(): String
+    external fun camera_outer_right_name(): String
+    external fun camera_outer_right_config(): String
 }
