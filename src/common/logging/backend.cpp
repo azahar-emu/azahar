@@ -333,15 +333,16 @@ public:
         return true;
     }
 
+    const Filter& GetFilter() const {
+        return filter;
+    }
+
     void SetColorConsoleBackendEnabled(bool enabled) {
         color_console_backend.SetEnabled(enabled);
     }
 
     void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                    const char* function, std::string message) {
-        if (!filter.CheckMessage(log_class, log_level)) {
-            return;
-        }
         Entry new_entry = CreateEntry(log_class, log_level, filename, line_num, function,
                                       std::move(message), time_origin);
         if (!regex_filter.empty() &&
@@ -599,6 +600,9 @@ void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
     }
 
     if (logging_initialized) [[likely]] {
+        if (!Impl::Instance().GetFilter().CheckMessage(log_class, log_level)) {
+            return;
+        }
         Impl::Instance().PushEntry(log_class, log_level, filename, line_num, function,
                                    fmt::vformat(format, args));
     } else {
