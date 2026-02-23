@@ -239,6 +239,14 @@ static void UpdateSettings() {
  * libretro callback; Called every game tick.
  */
 void retro_run() {
+    if (!emu_instance->game_loaded) {
+        // Game failed to load (e.g. encrypted ROM, bad path).
+        // Present an empty frame so RetroArch doesn't hang.
+        LibRetro::PollInput();
+        LibRetro::UploadVideoFrame(nullptr, 0, 0, 0);
+        return;
+    }
+
     // Check to see if we actually have any config updates to process.
     if (LibRetro::HasUpdatedConfig()) {
         LibRetro::ParseCoreOptions();
@@ -526,6 +534,40 @@ bool retro_load_game(const struct retro_game_info* info) {
     // If using HW rendering, don't actually load the game here. azahar wants
     // the graphics context ready and available before calling System::Load.
     LibRetro::settings.file_path = info->path;
+
+    // Early validation: check that the ROM can be loaded before committing to
+    // the HW renderer setup. Without this, failures (encrypted ROMs, bad files)
+    // are only detected in context_reset after retro_load_game already returned
+    // true, leaving the frontend stuck on a black screen.
+    // GetLoader + LoadKernelMemoryMode only read ROM headers — no renderer needed.
+    {
+        auto loader = Loader::GetLoader(LibRetro::settings.file_path);
+        if (!loader) {
+            LibRetro::DisplayMessage("Failed to obtain loader for the specified ROM.");
+            return false;
+        }
+        auto [memory_mode, result] = loader->LoadKernelMemoryMode();
+        if (result != Loader::ResultStatus::Success) {
+            switch (result) {
+            case Loader::ResultStatus::ErrorEncrypted:
+                LibRetro::DisplayMessage(
+                    "This ROM is encrypted and must be decrypted before use with Azahar.");
+                break;
+            case Loader::ResultStatus::ErrorInvalidFormat:
+                LibRetro::DisplayMessage("The ROM format is not supported.");
+                break;
+            case Loader::ResultStatus::ErrorGbaTitle:
+                LibRetro::DisplayMessage("GBA Virtual Console titles are not supported.");
+                break;
+            default:
+                LibRetro::DisplayMessage("Failed to load ROM metadata.");
+                break;
+            }
+            return false;
+        }
+        // Stash the loader so System::Load can reuse it instead of re-opening
+        Core::System::GetInstance().RegisterAppLoaderEarly(loader);
+    }
 
     if (!LibRetro::SetPixelFormat(RETRO_PIXEL_FORMAT_XRGB8888)) {
         LibRetro::DisplayMessage("XRGB8888 is not supported.");
