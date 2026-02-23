@@ -169,6 +169,9 @@ void Handle::Create(const Instance* instance, u32 width, u32 height, u32 levels,
                     std::string_view debug_name) {
     const bool is_cube_map =
         type == TextureType::CubeMap && instance->IsLayeredRenderingSupported();
+    if (!is_cube_map) {
+        flags &= ~vk::ImageCreateFlagBits::eCubeCompatible;
+    }
 
     this->instance = instance;
     this->width = width;
