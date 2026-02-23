@@ -292,9 +292,14 @@ private:
         bool SwitchMode(CacheOpMode mode);
 
     private:
+        bool ReadFromFileCached(void* dst, size_t absolute_pos, size_t size);
+
         CacheOpMode curr_mode = CacheOpMode::NONE;
         std::string filepath;
         FileUtil::IOFile file{};
+        size_t file_size;
+        size_t cached_file_data_start{};
+        std::vector<u8> cached_file_data;
         std::atomic<size_t> next_entry_id = SIZE_MAX;
         Common::ThreadWorker append_worker{1, "Disk Shader Cache Append Worker"};
     };

@@ -301,11 +301,11 @@ ShaderDiskCache::CacheEntry::CacheEntryHeader ShaderDiskCache::CacheFile::ReadAt
 
     CacheEntry::CacheEntryHeader header;
 
-    if (file.ReadAtArray(&header, 1, position) == sizeof(CacheEntry::CacheEntryHeader)) {
-        return header;
+    if (!ReadFromFileCached(&header, position, sizeof(header))) {
+        return CacheEntry::CacheEntryHeader();
     }
 
-    return CacheEntry::CacheEntryHeader();
+    return header;
 }
 
 ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) {
@@ -323,8 +323,8 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) 
         u32 payload_size = res.header.entry_size - headers_size;
         std::vector<u8> payload(payload_size);
 
-        if (file.ReadAtBytes(payload.data(), payload_size,
-                             position + sizeof(CacheEntry::CacheEntryHeader)) == payload_size) {
+        if (ReadFromFileCached(payload.data(), (position + sizeof(CacheEntry::CacheEntryHeader)),
+                               payload_size)) {
             // Decompress data if needed
             if (res.header.zstd_compressed) {
                 if (Common::Compression::GetDecompressedSize(payload) <
@@ -344,6 +344,7 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) 
 size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
     if (!file.IsGood()) {
         next_entry_id = SIZE_MAX;
+        file_size = 0;
         return next_entry_id;
     }
 
@@ -351,7 +352,7 @@ size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
         return next_entry_id;
     }
 
-    const size_t file_size = file.GetSize();
+    file_size = file.GetSize();
     if (file_size == 0) {
         next_entry_id = 0;
         return next_entry_id;
@@ -363,6 +364,7 @@ size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
         footer.version == CacheEntry::CacheEntryFooter::ENTRY_VERSION) {
         next_entry_id = footer.entry_id + 1;
     } else {
+        file_size = 0;
         return SIZE_MAX;
     }
 
@@ -428,7 +430,9 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
 
     switch (mode) {
     case CacheOpMode::READ: {
-        next_entry_id = SIZE_MAX; // Force reading entries agains
+        next_entry_id = SIZE_MAX; // Force reading entries again
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         file = FileUtil::IOFile(filepath, "rb");
         bool is_open = file.IsGood();
         if (is_open) {
@@ -443,6 +447,8 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
             return false;
         }
         file.Close();
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         curr_mode = mode;
         if (next_entry_id == SIZE_MAX) {
             // Cannot append if getting total items fails
@@ -454,6 +460,8 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
     }
     case CacheOpMode::DELETE: {
         next_entry_id = SIZE_MAX;
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         file.Close();
         curr_mode = mode;
         return FileUtil::Delete(filepath);
@@ -471,6 +479,34 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
         UNREACHABLE();
     }
     return false;
+}
+
+bool ShaderDiskCache::CacheFile::ReadFromFileCached(void* dst, size_t position, size_t size) {
+    if (!dst || position + size > file_size) {
+        return false;
+    }
+
+    size_t offset = position - cached_file_data_start;
+    if (position < cached_file_data_start || offset > cached_file_data.size() ||
+        size > cached_file_data.size() - offset) {
+        if (size > CacheEntry::MAX_ENTRY_SIZE) {
+            return false;
+        }
+
+        size_t to_read = std::min<size_t>(CacheEntry::MAX_ENTRY_SIZE, file_size - position);
+
+        cached_file_data_start = position;
+        cached_file_data.resize(to_read);
+
+        if (file.ReadAtBytes(cached_file_data.data(), to_read, position) != to_read) {
+            return false;
+        }
+
+        offset = 0;
+    }
+
+    std::memcpy(dst, cached_file_data.data() + offset, size);
+    return true;
 }
 
 std::string ShaderDiskCache::GetVSFile(u64 title_id, bool is_temp) const {
