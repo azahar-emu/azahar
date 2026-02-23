@@ -92,6 +92,8 @@ libretro-build-osx-arm64:
   extends:
     - .core-defs
     - .libretro-osx-cmake-arm64
+  variables:
+    MACOSX_DEPLOYMENT_TARGET: "11.0"
 
 ################################### CELLULAR #################################
 # Android ARMv8a
