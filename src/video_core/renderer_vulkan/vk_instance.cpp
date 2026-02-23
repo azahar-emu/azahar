@@ -618,6 +618,20 @@ bool Instance::CreateDevice() {
 #undef PROP_GET
 #undef FEAT_SET
 
+    // Check layered rendering support on MoltenVK
+    // MoltenVK maps Metal's layeredRendering capability to shaderOutputLayer
+    if (is_moltenvk) {
+        vk::PhysicalDeviceVulkan12Features vulkan12_features;
+        vk::PhysicalDeviceFeatures2 features2;
+        features2.pNext = &vulkan12_features;
+        physical_device.getFeatures2(&features2);
+        if (!vulkan12_features.shaderOutputLayer) {
+            LOG_INFO(Render_Vulkan,
+                     "Disabling layered rendering (shaderOutputLayer not supported by device)");
+            layered_rendering_supported = false;
+        }
+    }
+
 #ifdef HAVE_LIBRETRO
     // LibRetro builds: device already created by frontend, just return after feature detection
     return true;
