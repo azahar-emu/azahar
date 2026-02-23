@@ -82,7 +82,7 @@ libretro-build-osx-x64:
     - mac-apple-silicon
   variables:
     CORE_ARGS: ${BASE_CORE_ARGS} -DCMAKE_OSX_ARCHITECTURES=x86_64
-    MACOSX_DEPLOYMENT_TARGET: "10.15"
+    MACOSX_DEPLOYMENT_TARGET: "11.0"
   extends:
     - .core-defs
     - .libretro-osx-cmake-x86_64
