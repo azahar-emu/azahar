@@ -172,11 +172,11 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         nullptr,
         config::category::system,
         {
-            { "Old 3DS", "Original 3DS" },
             { "New 3DS", "New 3DS" },
+            { "Old 3DS", "Original 3DS" },
             { nullptr, nullptr }
         },
-        "Old 3DS"
+        "New 3DS"
     },
     {
         config::system::region,
@@ -779,7 +779,7 @@ static Service::CFG::SystemLanguage GetLanguageValue(const std::string& name) {
 
 static void ParseSystemOptions(void) {
     Settings::values.is_new_3ds =
-        LibRetro::FetchVariable(config::system::is_new_3ds, "Old 3DS") == "New 3DS";
+        LibRetro::FetchVariable(config::system::is_new_3ds, "New 3DS") == "New 3DS";
 
     Settings::values.region_value =
         GetRegionValue(LibRetro::FetchVariable("citra_region_value", "Auto"));
