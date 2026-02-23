@@ -115,11 +115,24 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
         }
     }
 
-    // Request features we need (these will be OR'd with frontend requirements)
-    // The Instance class will validate these against actual device capabilities
-    merged_features.geometryShader = VK_TRUE;    // Used for certain rendering effects
-    merged_features.logicOp = VK_TRUE;           // Used for blending modes
-    merged_features.samplerAnisotropy = VK_TRUE; // Used for texture filtering
+    // Query actual device features so we only request what's supported
+    PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures =
+        (PFN_vkGetPhysicalDeviceFeatures)get_instance_proc_addr(instance,
+                                                                "vkGetPhysicalDeviceFeatures");
+    VkPhysicalDeviceFeatures device_features{};
+    vkGetPhysicalDeviceFeatures(gpu, &device_features);
+
+    // Request features we want, gated by actual device support
+    if (device_features.geometryShader)
+        merged_features.geometryShader = VK_TRUE;
+    if (device_features.logicOp)
+        merged_features.logicOp = VK_TRUE;
+    if (device_features.samplerAnisotropy)
+        merged_features.samplerAnisotropy = VK_TRUE;
+    if (device_features.fragmentStoresAndAtomics)
+        merged_features.fragmentStoresAndAtomics = VK_TRUE;
+    if (device_features.shaderClipDistance)
+        merged_features.shaderClipDistance = VK_TRUE;
 
     // Find queue family with graphics support
     PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties =
