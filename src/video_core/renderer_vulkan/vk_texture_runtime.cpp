@@ -922,7 +922,8 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
             .src_rect = upload.texture_rect,
             .dst_rect = upload.texture_rect * res_scale,
         };
-        if (type != SurfaceType::Texture || !runtime->blit_helper.Filter(*this, blit)) {
+        if ((type != SurfaceType::Color && type != SurfaceType::Texture) ||
+            !runtime->blit_helper.Filter(*this, blit)) {
             BlitScale(blit, true);
         }
     }
