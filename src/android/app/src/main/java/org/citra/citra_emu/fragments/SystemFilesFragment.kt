@@ -39,6 +39,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.SettingKeys
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -177,7 +178,7 @@ class SystemFilesFragment : Fragment() {
         binding.buttonSetUpSystemFiles.setOnClickListener {
             val inflater = LayoutInflater.from(context)
             val inputBinding = DialogSoftwareKeyboardBinding.inflate(inflater)
-            var textInputValue: String = preferences.getString("last_artic_base_addr", "")!!
+            var textInputValue: String = preferences.getString(SettingKeys.last_artic_base_addr(), "")!!
 
             val progressDialog = showProgressDialog(
                 getText(R.string.setup_system_files),
@@ -274,7 +275,7 @@ class SystemFilesFragment : Fragment() {
                             .setPositiveButton(android.R.string.ok) { diag, _ ->
                                 if (textInputValue.isNotEmpty() && !(!buttonO3ds.isChecked && !buttonN3ds.isChecked)) {
                                     preferences.edit()
-                                        .putString("last_artic_base_addr", textInputValue)
+                                        .putString(SettingKeys.last_artic_base_addr(), textInputValue)
                                         .apply()
                                     val menu = Game(
                                         title = getString(R.string.artic_base),

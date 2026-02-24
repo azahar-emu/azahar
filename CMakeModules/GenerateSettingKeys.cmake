@@ -135,6 +135,7 @@ foreach(KEY IN ITEMS
     "udp_input_address"
     "udp_input_port"
     "udp_pad_index"
+    "record_frame_times"
 )
     set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
         DEFINE_KEY(${KEY})")

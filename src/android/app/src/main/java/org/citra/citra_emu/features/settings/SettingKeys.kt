@@ -139,4 +139,17 @@ object SettingKeys {
     external fun camera_outer_left_config(): String
     external fun camera_outer_right_name(): String
     external fun camera_outer_right_config(): String
+    external fun video_encoder(): String
+    external fun video_encoder_options(): String
+    external fun video_bitrate(): String
+    external fun audio_encoder(): String
+    external fun audio_encoder_options(): String
+    external fun audio_bitrate(): String
+    external fun last_artic_base_addr(): String
+    external fun motion_device(): String
+    external fun touch_device(): String
+    external fun udp_input_address(): String
+    external fun udp_input_port(): String
+    external fun udp_pad_index(): String
+    external fun record_frame_times(): String
 }
