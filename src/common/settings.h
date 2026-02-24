@@ -551,7 +551,7 @@ struct Values {
     Setting<u16> custom_top_x{0, SS(Keys::custom_top_x)};
     Setting<u16> custom_top_y{0, SS(Keys::custom_top_y)};
     Setting<u16> custom_top_width{800, SS(Keys::custom_top_width)};
-    Setting<u16> custom_top_height{480, SS(Keys::custom_top_width)};
+    Setting<u16> custom_top_height{480, SS(Keys::custom_top_height)};
     Setting<u16> custom_bottom_x{80, SS(Keys::custom_bottom_x)};
     Setting<u16> custom_bottom_y{500, SS(Keys::custom_bottom_y)};
     Setting<u16> custom_bottom_width{640, SS(Keys::custom_bottom_width)};
