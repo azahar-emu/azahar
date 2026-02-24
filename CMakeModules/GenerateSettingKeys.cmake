@@ -114,6 +114,27 @@ foreach(KEY IN ITEMS
     "enable_rpc_server"
     "log_filter"
     "log_regex_filter"
+    "camera_inner_flip"
+    "camera_outer_left_flip"
+    "camera_outer_right_flip"
+    "camera_inner_name"
+    "camera_inner_config"
+    "camera_outer_left_name"
+    "camera_outer_left_config"
+    "camera_outer_right_name"
+    "camera_outer_right_config"
+    "video_encoder"
+    "video_encoder_options"
+    "video_bitrate"
+    "audio_encoder"
+    "audio_encoder_options"
+    "audio_bitrate"
+    "last_artic_base_addr"
+    "motion_device"
+    "touch_device"
+    "udp_input_address"
+    "udp_input_port"
+    "udp_pad_index"
 )
     set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
         DEFINE_KEY(${KEY})")
@@ -124,19 +145,67 @@ foreach(KEY IN ITEMS
     endif()
 endforeach()
 
-# Libretro exclusive setting keys
-if (ENABLE_LIBRETRO)
+# Qt exclusive setting keys
+# Note: A lot of these are very generic because our Qt settings are currently put under groups:
+#       E.g. UILayout\geometry
+# TODO: We should probably get rid of these groups and use complete keys at some point. -OS
+# FIXME: Some of these settings don't use the standard snake_case. When we can migrate, address that. -OS
+if (ENABLE_QT)
     foreach(KEY IN ITEMS
-        "language_value"
-        "swap_screen_mode"
-        "use_libretro_save_path"
-        "analog_function"
-        "analog_deadzone"
-        "enable_mouse_touchscreen"
-        "enable_touch_touchscreen"
-        "render_touchscreen"
-        "enable_motion"
-        "motion_sensitivity"
+        "nickname"
+        "ip"
+        "port"
+        "room_nickname"
+        "room_name"
+        "room_port"
+        "host_type"
+        "max_player"
+        "room_description"
+        "multiplayer_filter_text"
+        "multiplayer_filter_games_owned"
+        "multiplayer_filter_hide_empty"
+        "multiplayer_filter_hide_full"
+        "username_ban_list"
+        "username"
+        "ip_ban_list"
+        "romsPath"
+        "symbolsPath"
+        "movieRecordPath"
+        "moviePlaybackPath"
+        "videoDumpingPath"
+        "gameListRootDir"
+        "gameListDeepScan"
+        "path"
+        "deep_scan"
+        "expanded"
+        "recentFiles"
+        "language" # FIXME: DUPLICATE KEY (libretro equivalent: language_value)
+        "output_format"
+        "format_options"
+        "theme"
+        "program_id"
+        "geometry"
+        "state"
+        "geometryRenderWindow"
+        "gameListHeaderState"
+        "microProfileDialogGeometry"
+        "web_api_url"
+        "citra_username"
+        "citra_token"
+        "name"
+        "bind"
+        "profile"
+        "use_touch_from_button"
+        "touch_from_button_map"
+        "touch_from_button_maps" # Why are these two so similar? Basically typo bait
+        "nand_directory"
+        "sdmc_directory"
+        "game_id"
+        "KeySeq"
+        "gamedirs"
+        "libvorbis"
+        "Context"
+        "favorites"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
@@ -159,17 +228,8 @@ if (ANDROID)
         "performance_overlay_background"
         "use_frame_limit" # FIXME: DUPLICATE KEY (shared equivalent: frame_limit)
         "android_hide_images"
-        "camera_inner_flip"
-        "camera_outer_left_flip"
-        "camera_outer_right_flip"
         "screen_orientation"
         "performance_overlay_position"
-        "camera_inner_name"
-        "camera_inner_config"
-        "camera_outer_left_name"
-        "camera_outer_left_config"
-        "camera_outer_right_name"
-        "camera_outer_right_config"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
@@ -179,7 +239,30 @@ if (ANDROID)
     endforeach()
 endif()
 
+# Libretro exclusive setting keys
+if (ENABLE_LIBRETRO)
+    foreach(KEY IN ITEMS
+        "language_value"
+        "swap_screen_mode"
+        "use_libretro_save_path"
+        "analog_function"
+        "analog_deadzone"
+        "enable_mouse_touchscreen"
+        "enable_touch_touchscreen"
+        "render_touchscreen"
+        "enable_motion"
+        "motion_sensitivity"
+    )
+        string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
+            DEFINE_KEY(${KEY})")
+    endforeach()
+endif()
+
 configure_file("common/setting_keys.h.in" "common/setting_keys.h" @ONLY)
+if (ENABLE_QT)
+    configure_file("citra_qt/setting_qkeys.h.in" "citra_qt/setting_qkeys.h" @ONLY)
+endif()
 if (ANDROID AND NOT ENABLE_LIBRETRO)
     configure_file("android/app/src/main/jni/jni_setting_keys.cpp.in" "android/app/src/main/jni/jni_setting_keys.cpp" @ONLY)
 endif()

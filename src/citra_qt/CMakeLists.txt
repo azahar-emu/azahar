@@ -174,6 +174,7 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     qt_image_interface.cpp
     qt_image_interface.h
+    setting_qkeys.h
     uisettings.cpp
     uisettings.h
     user_data_migration.cpp
@@ -189,6 +190,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     util/util.cpp
     util/util.h
 )
+
+target_include_directories(citra_qt PUBLIC ${CMAKE_BINARY_DIR}/src)
 
 if (APPLE)
   target_sources(citra_qt PUBLIC
