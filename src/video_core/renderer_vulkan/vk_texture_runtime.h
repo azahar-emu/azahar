@@ -44,19 +44,23 @@ enum ViewType {
 };
 
 struct Handle {
-    explicit Handle() = default;
+    explicit Handle(const Instance& _instance) : instance(_instance) {}
 
     ~Handle() {
         Destroy();
     }
 
+    Handle(const Handle& other) = delete;
+
     Handle(Handle&& other) noexcept
-        : allocation(std::exchange(other.allocation, VK_NULL_HANDLE)),
+        : instance(other.instance), allocation(std::exchange(other.allocation, VK_NULL_HANDLE)),
           image(std::exchange(other.image, VK_NULL_HANDLE)),
           image_views(std::exchange(other.image_views, {})),
           framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
           width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
           levels(std::exchange(other.levels, 0)), layers(std::exchange(other.layers, 0)) {}
+
+    Handle& operator=(const Handle& other) = delete;
 
     Handle& operator=(Handle&& other) noexcept {
         if (this == &other)
@@ -74,10 +78,9 @@ struct Handle {
         return *this;
     }
 
-    void Create(const Instance* instance, u32 width, u32 height, u32 levels,
-                VideoCore::TextureType type, vk::Format format, vk::ImageUsageFlags usage,
-                vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect, bool need_format_list,
-                std::string_view debug_name = {});
+    void Create(u32 width, u32 height, u32 levels, VideoCore::TextureType type, vk::Format format,
+                vk::ImageUsageFlags usage, vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect,
+                bool need_format_list, std::string_view debug_name = {});
 
     void Destroy();
 
@@ -85,7 +88,7 @@ struct Handle {
         return allocation;
     }
 
-    const Instance* instance{nullptr};
+    const Instance& instance;
 
     VmaAllocation allocation{VK_NULL_HANDLE};
     vk::Image image{VK_NULL_HANDLE};
@@ -269,9 +272,9 @@ private:
                               const VideoCore::StagingData& staging);
 
 public:
-    TextureRuntime* runtime;
-    const Instance* instance;
-    Scheduler* scheduler;
+    TextureRuntime& runtime;
+    const Instance& instance;
+    Scheduler& scheduler;
     FormatTraits traits;
     std::array<Handle, Type::Num> handles;
     Type current{};
@@ -291,8 +294,34 @@ public:
     Framebuffer(const Framebuffer&) = delete;
     Framebuffer& operator=(const Framebuffer&) = delete;
 
-    Framebuffer(Framebuffer&& o) noexcept = default;
-    Framebuffer& operator=(Framebuffer&& o) noexcept = default;
+    Framebuffer(Framebuffer&& other) noexcept
+        : instance(other.instance), images(std::exchange(other.images, {})),
+          image_views(std::exchange(other.image_views, {})),
+          framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
+          render_pass(std::exchange(other.render_pass, VK_NULL_HANDLE)),
+          framebuffer_views(std::move(other.framebuffer_views)),
+          aspects(std::exchange(other.aspects, {})),
+          formats(std::exchange(
+              other.formats, {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid})),
+          width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
+          res_scale(std::exchange(other.res_scale, 1)) {}
+
+    Framebuffer& operator=(Framebuffer&& other) noexcept {
+
+        images = std::exchange(other.images, {});
+        image_views = std::exchange(other.image_views, {});
+        framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);
+        render_pass = std::exchange(other.render_pass, VK_NULL_HANDLE);
+        framebuffer_views = std::move(other.framebuffer_views);
+        aspects = std::exchange(other.aspects, {});
+        formats = std::exchange(other.formats,
+                                {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid});
+        width = std::exchange(other.width, 0);
+        height = std::exchange(other.height, 0);
+        res_scale = std::exchange(other.res_scale, 1);
+
+        return *this;
+    }
 
     VideoCore::PixelFormat Format(VideoCore::SurfaceType type) const noexcept {
         return formats[Index(type)];
@@ -323,16 +352,17 @@ public:
     }
 
 private:
+    const Instance& instance;
     std::array<vk::Image, 2> images{};
     std::array<vk::ImageView, 2> image_views{};
-    vk::Framebuffer framebuffer;
-    vk::RenderPass render_pass;
+    vk::Framebuffer framebuffer{};
+    vk::RenderPass render_pass{};
     std::vector<vk::UniqueImageView> framebuffer_views;
     std::array<vk::ImageAspectFlags, 2> aspects{};
     std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
                                                   VideoCore::PixelFormat::Invalid};
-    u32 width;
-    u32 height;
+    u32 width{};
+    u32 height{};
     u32 res_scale{1};
 };
 
