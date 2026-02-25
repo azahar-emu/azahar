@@ -1,21 +1,23 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.model
+
+import org.citra.citra_emu.features.settings.SettingKeys
 
 enum class StringSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: String
 ) : AbstractStringSetting {
-    INIT_TIME("init_time", Settings.SECTION_SYSTEM, "946731601"),
-    CAMERA_INNER_NAME("camera_inner_name", Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_INNER_CONFIG("camera_inner_config", Settings.SECTION_CAMERA, "_front"),
-    CAMERA_OUTER_LEFT_NAME("camera_outer_left_name", Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_OUTER_LEFT_CONFIG("camera_outer_left_config", Settings.SECTION_CAMERA, "_back"),
-    CAMERA_OUTER_RIGHT_NAME("camera_outer_right_name", Settings.SECTION_CAMERA, "ndk"),
-    CAMERA_OUTER_RIGHT_CONFIG("camera_outer_right_config", Settings.SECTION_CAMERA, "_back");
+    INIT_TIME(SettingKeys.init_time(), Settings.SECTION_SYSTEM, "946731601"),
+    CAMERA_INNER_NAME(SettingKeys.camera_inner_name(), Settings.SECTION_CAMERA, "ndk"),
+    CAMERA_INNER_CONFIG(SettingKeys.camera_inner_config(), Settings.SECTION_CAMERA, "_front"),
+    CAMERA_OUTER_LEFT_NAME(SettingKeys.camera_outer_left_name(), Settings.SECTION_CAMERA, "ndk"),
+    CAMERA_OUTER_LEFT_CONFIG(SettingKeys.camera_outer_left_config(), Settings.SECTION_CAMERA, "_back"),
+    CAMERA_OUTER_RIGHT_NAME(SettingKeys.camera_outer_right_name(), Settings.SECTION_CAMERA, "ndk"),
+    CAMERA_OUTER_RIGHT_CONFIG(SettingKeys.camera_outer_right_config(), Settings.SECTION_CAMERA, "_back");
 
     override var string: String = defaultValue
 

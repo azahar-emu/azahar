@@ -7,6 +7,7 @@
 #include <QKeySequence>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
+#include "citra_qt/setting_qkeys.h"
 #include "common/file_util.h"
 #include "common/settings.h"
 #include "core/hle/service/service.h"
@@ -299,31 +300,29 @@ void QtConfig::ReadCameraValues() {
     qt_config->beginGroup(QStringLiteral("Camera"));
 
     Settings::values.camera_name[OuterRightCamera] =
-        ReadSetting(QStringLiteral("camera_outer_right_name"), QStringLiteral("blank"))
+        ReadSetting(Settings::QKeys::camera_inner_flip, QStringLiteral("blank"))
             .toString()
             .toStdString();
     Settings::values.camera_config[OuterRightCamera] =
-        ReadSetting(QStringLiteral("camera_outer_right_config"), QString{})
-            .toString()
-            .toStdString();
+        ReadSetting(Settings::QKeys::camera_outer_right_config, QString{}).toString().toStdString();
     Settings::values.camera_flip[OuterRightCamera] =
-        ReadSetting(QStringLiteral("camera_outer_right_flip"), 0).toInt();
+        ReadSetting(Settings::QKeys::camera_outer_right_flip, 0).toInt();
     Settings::values.camera_name[InnerCamera] =
-        ReadSetting(QStringLiteral("camera_inner_name"), QStringLiteral("blank"))
+        ReadSetting(Settings::QKeys::camera_inner_name, QStringLiteral("blank"))
             .toString()
             .toStdString();
     Settings::values.camera_config[InnerCamera] =
-        ReadSetting(QStringLiteral("camera_inner_config"), QString{}).toString().toStdString();
+        ReadSetting(Settings::QKeys::camera_inner_config, QString{}).toString().toStdString();
     Settings::values.camera_flip[InnerCamera] =
-        ReadSetting(QStringLiteral("camera_inner_flip"), 0).toInt();
+        ReadSetting(Settings::QKeys::camera_inner_flip, 0).toInt();
     Settings::values.camera_name[OuterLeftCamera] =
-        ReadSetting(QStringLiteral("camera_outer_left_name"), QStringLiteral("blank"))
+        ReadSetting(Settings::QKeys::camera_outer_left_name, QStringLiteral("blank"))
             .toString()
             .toStdString();
     Settings::values.camera_config[OuterLeftCamera] =
-        ReadSetting(QStringLiteral("camera_outer_left_config"), QString{}).toString().toStdString();
+        ReadSetting(Settings::QKeys::camera_outer_left_config, QString{}).toString().toStdString();
     Settings::values.camera_flip[OuterLeftCamera] =
-        ReadSetting(QStringLiteral("camera_outer_left_flip"), 0).toInt();
+        ReadSetting(Settings::QKeys::camera_outer_left_flip, 0).toInt();
 
     qt_config->endGroup();
 }
@@ -334,12 +333,12 @@ void QtConfig::ReadControlValues() {
     ReadBasicSetting(Settings::values.use_artic_base_controller);
 
     int num_touch_from_button_maps =
-        qt_config->beginReadArray(QStringLiteral("touch_from_button_maps"));
+        qt_config->beginReadArray(Settings::QKeys::touch_from_button_maps);
 
     if (num_touch_from_button_maps > 0) {
         const auto append_touch_from_button_map = [this] {
             Settings::TouchFromButtonMap map;
-            map.name = ReadSetting(QStringLiteral("name"), QStringLiteral("default"))
+            map.name = ReadSetting(Settings::QKeys::name, QStringLiteral("default"))
                            .toString()
                            .toStdString();
             const int num_touch_maps = qt_config->beginReadArray(QStringLiteral("entries"));
@@ -347,7 +346,7 @@ void QtConfig::ReadControlValues() {
             for (int i = 0; i < num_touch_maps; i++) {
                 qt_config->setArrayIndex(i);
                 std::string touch_mapping =
-                    ReadSetting(QStringLiteral("bind")).toString().toStdString();
+                    ReadSetting(Settings::QKeys::bind).toString().toStdString();
                 map.buttons.emplace_back(std::move(touch_mapping));
             }
             qt_config->endArray(); // entries
@@ -365,13 +364,12 @@ void QtConfig::ReadControlValues() {
     }
     qt_config->endArray();
 
-    Settings::values.current_input_profile_index =
-        ReadSetting(QStringLiteral("profile"), 0).toInt();
+    Settings::values.current_input_profile_index = ReadSetting(Settings::QKeys::profile, 0).toInt();
 
     const auto append_profile = [this, num_touch_from_button_maps] {
         Settings::InputProfile profile;
         profile.name =
-            ReadSetting(QStringLiteral("name"), QStringLiteral("Default")).toString().toStdString();
+            ReadSetting(Settings::QKeys::name, QStringLiteral("Default")).toString().toStdString();
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -394,31 +392,31 @@ void QtConfig::ReadControlValues() {
                 profile.analogs[i] = default_param;
         }
         profile.motion_device =
-            ReadSetting(QStringLiteral("motion_device"),
+            ReadSetting(Settings::QKeys::motion_device,
                         QStringLiteral(
                             "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0"))
                 .toString()
                 .toStdString();
         profile.touch_device =
-            ReadSetting(QStringLiteral("touch_device"), QStringLiteral("engine:emu_window"))
+            ReadSetting(Settings::QKeys::touch_device, QStringLiteral("engine:emu_window"))
                 .toString()
                 .toStdString();
         profile.use_touch_from_button =
-            ReadSetting(QStringLiteral("use_touch_from_button"), false).toBool();
+            ReadSetting(Settings::QKeys::use_touch_from_button, false).toBool();
         profile.touch_from_button_map_index =
-            ReadSetting(QStringLiteral("touch_from_button_map"), 0).toInt();
+            ReadSetting(Settings::QKeys::touch_from_button_map, 0).toInt();
         profile.touch_from_button_map_index =
             std::clamp(profile.touch_from_button_map_index, 0, num_touch_from_button_maps - 1);
         profile.udp_input_address =
-            ReadSetting(QStringLiteral("udp_input_address"),
+            ReadSetting(Settings::QKeys::udp_input_address,
                         QString::fromUtf8(InputCommon::CemuhookUDP::DEFAULT_ADDR))
                 .toString()
                 .toStdString();
         profile.udp_input_port = static_cast<u16>(
-            ReadSetting(QStringLiteral("udp_input_port"), InputCommon::CemuhookUDP::DEFAULT_PORT)
+            ReadSetting(Settings::QKeys::udp_input_port, InputCommon::CemuhookUDP::DEFAULT_PORT)
                 .toInt());
         profile.udp_pad_index =
-            static_cast<u8>(ReadSetting(QStringLiteral("udp_pad_index"), 0).toUInt());
+            static_cast<u8>(ReadSetting(Settings::QKeys::udp_pad_index, 0).toUInt());
         Settings::values.input_profiles.emplace_back(std::move(profile));
     };
 
@@ -478,9 +476,9 @@ void QtConfig::ReadDataStorageValues() {
     ReadBasicSetting(Settings::values.compress_cia_installs);
 
     const std::string nand_dir =
-        ReadSetting(QStringLiteral("nand_directory"), QStringLiteral("")).toString().toStdString();
+        ReadSetting(Settings::QKeys::nand_directory, QStringLiteral("")).toString().toStdString();
     const std::string sdmc_dir =
-        ReadSetting(QStringLiteral("sdmc_directory"), QStringLiteral("")).toString().toStdString();
+        ReadSetting(Settings::QKeys::sdmc_directory, QStringLiteral("")).toString().toStdString();
 
     if (Settings::values.use_custom_storage) {
         FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir, nand_dir);
@@ -495,7 +493,7 @@ void QtConfig::ReadDebuggingValues() {
 
     // Intentionally not using the QT default setting as this is intended to be changed in the ini
     Settings::values.record_frame_times =
-        qt_config->value(QStringLiteral("record_frame_times"), false).toBool();
+        qt_config->value(Settings::QKeys::record_frame_times, false).toBool();
     ReadBasicSetting(Settings::values.use_gdbstub);
     ReadBasicSetting(Settings::values.gdbstub_port);
     ReadBasicSetting(Settings::values.renderer_debug);
@@ -580,48 +578,48 @@ void QtConfig::ReadMiscellaneousValues() {
 void QtConfig::ReadMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    UISettings::values.nickname = ReadSetting(QStringLiteral("nickname"), QString{}).toString();
-    UISettings::values.ip = ReadSetting(QStringLiteral("ip"), QString{}).toString();
+    UISettings::values.nickname = ReadSetting(Settings::QKeys::nickname, QString{}).toString();
+    UISettings::values.ip = ReadSetting(Settings::QKeys::ip, QString{}).toString();
     UISettings::values.port =
-        ReadSetting(QStringLiteral("port"), Network::DefaultRoomPort).toString();
+        ReadSetting(Settings::QKeys::port, Network::DefaultRoomPort).toString();
     UISettings::values.room_nickname =
-        ReadSetting(QStringLiteral("room_nickname"), QString{}).toString();
-    UISettings::values.room_name = ReadSetting(QStringLiteral("room_name"), QString{}).toString();
+        ReadSetting(Settings::QKeys::room_nickname, QString{}).toString();
+    UISettings::values.room_name = ReadSetting(Settings::QKeys::room_name, QString{}).toString();
     UISettings::values.room_port =
-        ReadSetting(QStringLiteral("room_port"), QStringLiteral("24872")).toString();
+        ReadSetting(Settings::QKeys::room_port, QStringLiteral("24872")).toString();
     bool ok;
-    UISettings::values.host_type = ReadSetting(QStringLiteral("host_type"), 0).toUInt(&ok);
+    UISettings::values.host_type = ReadSetting(Settings::QKeys::host_type, 0).toUInt(&ok);
     if (!ok) {
         UISettings::values.host_type = 0;
     }
-    UISettings::values.max_player = ReadSetting(QStringLiteral("max_player"), 8).toUInt();
-    UISettings::values.game_id = ReadSetting(QStringLiteral("game_id"), 0).toULongLong();
+    UISettings::values.max_player = ReadSetting(Settings::QKeys::max_player, 8).toUInt();
+    UISettings::values.game_id = ReadSetting(Settings::QKeys::game_id, 0).toULongLong();
     UISettings::values.room_description =
-        ReadSetting(QStringLiteral("room_description"), QString{}).toString();
+        ReadSetting(Settings::QKeys::room_description, QString{}).toString();
     UISettings::values.multiplayer_filter_text =
-        ReadSetting(QStringLiteral("multiplayer_filter_text"), QString{}).toString();
+        ReadSetting(Settings::QKeys::multiplayer_filter_text, QString{}).toString();
     UISettings::values.multiplayer_filter_games_owned =
-        ReadSetting(QStringLiteral("multiplayer_filter_games_owned"), false).toBool();
+        ReadSetting(Settings::QKeys::multiplayer_filter_games_owned, false).toBool();
     UISettings::values.multiplayer_filter_hide_empty =
-        ReadSetting(QStringLiteral("multiplayer_filter_hide_empty"), false).toBool();
+        ReadSetting(Settings::QKeys::multiplayer_filter_hide_empty, false).toBool();
     UISettings::values.multiplayer_filter_hide_full =
-        ReadSetting(QStringLiteral("multiplayer_filter_hide_full"), false).toBool();
+        ReadSetting(Settings::QKeys::multiplayer_filter_hide_full, false).toBool();
 
     // Read ban list back
-    int size = qt_config->beginReadArray(QStringLiteral("username_ban_list"));
+    int size = qt_config->beginReadArray(Settings::QKeys::username_ban_list);
     UISettings::values.ban_list.first.resize(size);
     for (int i = 0; i < size; ++i) {
         qt_config->setArrayIndex(i);
         UISettings::values.ban_list.first[i] =
-            ReadSetting(QStringLiteral("username")).toString().toStdString();
+            ReadSetting(Settings::QKeys::username).toString().toStdString();
     }
     qt_config->endArray();
-    size = qt_config->beginReadArray(QStringLiteral("ip_ban_list"));
+    size = qt_config->beginReadArray(Settings::QKeys::ip_ban_list);
     UISettings::values.ban_list.second.resize(size);
     for (int i = 0; i < size; ++i) {
         qt_config->setArrayIndex(i);
         UISettings::values.ban_list.second[i] =
-            ReadSetting(QStringLiteral("ip")).toString().toStdString();
+            ReadSetting(Settings::QKeys::ip).toString().toStdString();
     }
     qt_config->endArray();
 
@@ -634,25 +632,25 @@ void QtConfig::ReadPathValues() {
     ReadGlobalSetting(UISettings::values.screenshot_path);
 
     if (global) {
-        UISettings::values.roms_path = ReadSetting(QStringLiteral("romsPath")).toString();
-        UISettings::values.symbols_path = ReadSetting(QStringLiteral("symbolsPath")).toString();
+        UISettings::values.roms_path = ReadSetting(Settings::QKeys::romsPath).toString();
+        UISettings::values.symbols_path = ReadSetting(Settings::QKeys::symbolsPath).toString();
         UISettings::values.movie_record_path =
-            ReadSetting(QStringLiteral("movieRecordPath")).toString();
+            ReadSetting(Settings::QKeys::movieRecordPath).toString();
         UISettings::values.movie_playback_path =
-            ReadSetting(QStringLiteral("moviePlaybackPath")).toString();
+            ReadSetting(Settings::QKeys::moviePlaybackPath).toString();
         UISettings::values.video_dumping_path =
-            ReadSetting(QStringLiteral("videoDumpingPath")).toString();
+            ReadSetting(Settings::QKeys::videoDumpingPath).toString();
         UISettings::values.game_dir_deprecated =
-            ReadSetting(QStringLiteral("gameListRootDir"), QStringLiteral(".")).toString();
+            ReadSetting(Settings::QKeys::gameListRootDir, QStringLiteral(".")).toString();
         UISettings::values.game_dir_deprecated_deepscan =
-            ReadSetting(QStringLiteral("gameListDeepScan"), false).toBool();
+            ReadSetting(Settings::QKeys::gameListDeepScan, false).toBool();
         int size = qt_config->beginReadArray(QStringLiteral("gamedirs"));
         for (int i = 0; i < size; ++i) {
             qt_config->setArrayIndex(i);
             UISettings::GameDir game_dir;
-            game_dir.path = ReadSetting(QStringLiteral("path")).toString();
-            game_dir.deep_scan = ReadSetting(QStringLiteral("deep_scan"), false).toBool();
-            game_dir.expanded = ReadSetting(QStringLiteral("expanded"), true).toBool();
+            game_dir.path = ReadSetting(Settings::QKeys::path).toString();
+            game_dir.deep_scan = ReadSetting(Settings::QKeys::deep_scan, false).toBool();
+            game_dir.expanded = ReadSetting(Settings::QKeys::expanded, true).toBool();
             UISettings::values.game_dirs.append(game_dir);
         }
         qt_config->endArray();
@@ -672,9 +670,9 @@ void QtConfig::ReadPathValues() {
             }
         }
         UISettings::values.last_artic_base_addr =
-            ReadSetting(QStringLiteral("last_artic_base_addr"), QString{}).toString();
-        UISettings::values.recent_files = ReadSetting(QStringLiteral("recentFiles")).toStringList();
-        UISettings::values.language = ReadSetting(QStringLiteral("language"), QString{}).toString();
+            ReadSetting(Settings::QKeys::last_artic_base_addr, QString{}).toString();
+        UISettings::values.recent_files = ReadSetting(Settings::QKeys::recentFiles).toStringList();
+        UISettings::values.language = ReadSetting(Settings::QKeys::language, QString{}).toString();
 
         ReadBasicSetting(UISettings::values.inserted_cartridge);
         if (!FileUtil::Exists(UISettings::values.inserted_cartridge.GetValue())) {
@@ -732,8 +730,7 @@ void QtConfig::ReadShortcutValues() {
         UISettings::values.shortcuts.push_back(
             {name,
              group,
-             {ReadSetting(QStringLiteral("KeySeq"), shortcut.keyseq).toString(),
-              shortcut.context}});
+             {ReadSetting(Settings::QKeys::KeySeq, shortcut.keyseq).toString(), shortcut.context}});
         qt_config->endGroup();
         qt_config->endGroup();
     }
@@ -774,35 +771,35 @@ void QtConfig::ReadVideoDumpingValues() {
     qt_config->beginGroup(QStringLiteral("VideoDumping"));
 
     Settings::values.output_format =
-        ReadSetting(QStringLiteral("output_format"), QStringLiteral("webm"))
+        ReadSetting(Settings::QKeys::output_format, QStringLiteral("webm"))
             .toString()
             .toStdString();
     Settings::values.format_options =
-        ReadSetting(QStringLiteral("format_options")).toString().toStdString();
+        ReadSetting(Settings::QKeys::format_options).toString().toStdString();
 
     Settings::values.video_encoder =
-        ReadSetting(QStringLiteral("video_encoder"), QStringLiteral("libvpx-vp9"))
+        ReadSetting(Settings::QKeys::video_encoder, QStringLiteral("libvpx-vp9"))
             .toString()
             .toStdString();
 
     Settings::values.video_encoder_options =
-        ReadSetting(QStringLiteral("video_encoder_options"), DEFAULT_VIDEO_ENCODER_OPTIONS)
+        ReadSetting(Settings::QKeys::video_encoder_options, DEFAULT_VIDEO_ENCODER_OPTIONS)
             .toString()
             .toStdString();
 
     Settings::values.video_bitrate =
-        ReadSetting(QStringLiteral("video_bitrate"), 2500000).toULongLong();
+        ReadSetting(Settings::QKeys::video_bitrate, 2500000).toULongLong();
 
     Settings::values.audio_encoder =
-        ReadSetting(QStringLiteral("audio_encoder"), QStringLiteral("libvorbis"))
+        ReadSetting(Settings::QKeys::audio_encoder, QStringLiteral("libvorbis"))
             .toString()
             .toStdString();
     Settings::values.audio_encoder_options =
-        ReadSetting(QStringLiteral("audio_encoder_options"), DEFAULT_AUDIO_ENCODER_OPTIONS)
+        ReadSetting(Settings::QKeys::audio_encoder_options, DEFAULT_AUDIO_ENCODER_OPTIONS)
             .toString()
             .toStdString();
     Settings::values.audio_bitrate =
-        ReadSetting(QStringLiteral("audio_bitrate"), 64000).toULongLong();
+        ReadSetting(Settings::QKeys::audio_bitrate, 64000).toULongLong();
 
     qt_config->endGroup();
 }
@@ -814,7 +811,7 @@ void QtConfig::ReadUIValues() {
 
     if (global) {
         UISettings::values.theme =
-            ReadSetting(QStringLiteral("theme"), QString::fromUtf8(UISettings::themes[0].second))
+            ReadSetting(Settings::QKeys::theme, QString::fromUtf8(UISettings::themes[0].second))
                 .toString();
 #ifdef USE_DISCORD_PRESENCE
         ReadBasicSetting(UISettings::values.enable_discord_presence);
@@ -864,7 +861,7 @@ void QtConfig::ReadUIGameListValues() {
     for (int i = 0; i < favorites_size; i++) {
         qt_config->setArrayIndex(i);
         UISettings::values.favorited_ids.append(
-            ReadSetting(QStringLiteral("program_id")).toULongLong());
+            ReadSetting(Settings::QKeys::program_id).toULongLong());
     }
     qt_config->endArray();
 
@@ -874,14 +871,14 @@ void QtConfig::ReadUIGameListValues() {
 void QtConfig::ReadUILayoutValues() {
     qt_config->beginGroup(QStringLiteral("UILayout"));
 
-    UISettings::values.geometry = ReadSetting(QStringLiteral("geometry")).toByteArray();
-    UISettings::values.state = ReadSetting(QStringLiteral("state")).toByteArray();
+    UISettings::values.geometry = ReadSetting(Settings::QKeys::geometry).toByteArray();
+    UISettings::values.state = ReadSetting(Settings::QKeys::state).toByteArray();
     UISettings::values.renderwindow_geometry =
-        ReadSetting(QStringLiteral("geometryRenderWindow")).toByteArray();
+        ReadSetting(Settings::QKeys::geometryRenderWindow).toByteArray();
     UISettings::values.gamelist_header_state =
-        ReadSetting(QStringLiteral("gameListHeaderState")).toByteArray();
+        ReadSetting(Settings::QKeys::gameListHeaderState).toByteArray();
     UISettings::values.microprofile_geometry =
-        ReadSetting(QStringLiteral("microProfileDialogGeometry")).toByteArray();
+        ReadSetting(Settings::QKeys::microProfileDialogGeometry).toByteArray();
     ReadBasicSetting(UISettings::values.microprofile_visible);
 
     qt_config->endGroup();
@@ -891,13 +888,13 @@ void QtConfig::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
     NetSettings::values.web_api_url =
-        ReadSetting(QStringLiteral("web_api_url"), QStringLiteral("https://api.citra-emu.org"))
+        ReadSetting(Settings::QKeys::web_api_url, QStringLiteral("https://api.citra-emu.org"))
             .toString()
             .toStdString();
     NetSettings::values.citra_username =
-        ReadSetting(QStringLiteral("citra_username")).toString().toStdString();
+        ReadSetting(Settings::QKeys::citra_username).toString().toStdString();
     NetSettings::values.citra_token =
-        ReadSetting(QStringLiteral("citra_token")).toString().toStdString();
+        ReadSetting(Settings::QKeys::citra_token).toString().toStdString();
 
     qt_config->endGroup();
 }
@@ -945,27 +942,27 @@ void QtConfig::SaveCameraValues() {
     using namespace Service::CAM;
     qt_config->beginGroup(QStringLiteral("Camera"));
 
-    WriteSetting(QStringLiteral("camera_outer_right_name"),
+    WriteSetting(Settings::QKeys::camera_outer_right_name,
                  QString::fromStdString(Settings::values.camera_name[OuterRightCamera]),
                  QStringLiteral("blank"));
-    WriteSetting(QStringLiteral("camera_outer_right_config"),
+    WriteSetting(Settings::QKeys::camera_outer_right_config,
                  QString::fromStdString(Settings::values.camera_config[OuterRightCamera]),
                  QString{});
-    WriteSetting(QStringLiteral("camera_outer_right_flip"),
+    WriteSetting(Settings::QKeys::camera_outer_right_flip,
                  Settings::values.camera_flip[OuterRightCamera], 0);
-    WriteSetting(QStringLiteral("camera_inner_name"),
+    WriteSetting(Settings::QKeys::camera_inner_name,
                  QString::fromStdString(Settings::values.camera_name[InnerCamera]),
                  QStringLiteral("blank"));
-    WriteSetting(QStringLiteral("camera_inner_config"),
+    WriteSetting(Settings::QKeys::camera_inner_config,
                  QString::fromStdString(Settings::values.camera_config[InnerCamera]), QString{});
-    WriteSetting(QStringLiteral("camera_inner_flip"), Settings::values.camera_flip[InnerCamera], 0);
-    WriteSetting(QStringLiteral("camera_outer_left_name"),
+    WriteSetting(Settings::QKeys::camera_inner_flip, Settings::values.camera_flip[InnerCamera], 0);
+    WriteSetting(Settings::QKeys::camera_outer_left_name,
                  QString::fromStdString(Settings::values.camera_name[OuterLeftCamera]),
                  QStringLiteral("blank"));
-    WriteSetting(QStringLiteral("camera_outer_left_config"),
+    WriteSetting(Settings::QKeys::camera_outer_left_config,
                  QString::fromStdString(Settings::values.camera_config[OuterLeftCamera]),
                  QString{});
-    WriteSetting(QStringLiteral("camera_outer_left_flip"),
+    WriteSetting(Settings::QKeys::camera_outer_left_flip,
                  Settings::values.camera_flip[OuterLeftCamera], 0);
 
     qt_config->endGroup();
@@ -976,12 +973,12 @@ void QtConfig::SaveControlValues() {
 
     WriteBasicSetting(Settings::values.use_artic_base_controller);
 
-    WriteSetting(QStringLiteral("profile"), Settings::values.current_input_profile_index, 0);
+    WriteSetting(Settings::QKeys::profile, Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray(QStringLiteral("profiles"));
     for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
         qt_config->setArrayIndex(static_cast<int>(p));
         const auto& profile = Settings::values.input_profiles[p];
-        WriteSetting(QStringLiteral("name"), QString::fromStdString(profile.name),
+        WriteSetting(Settings::QKeys::name, QString::fromStdString(profile.name),
                      QStringLiteral("default"));
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
@@ -998,32 +995,32 @@ void QtConfig::SaveControlValues() {
                          QString::fromStdString(default_param));
         }
         WriteSetting(
-            QStringLiteral("motion_device"), QString::fromStdString(profile.motion_device),
+            Settings::QKeys::motion_device, QString::fromStdString(profile.motion_device),
             QStringLiteral("engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0"));
-        WriteSetting(QStringLiteral("touch_device"), QString::fromStdString(profile.touch_device),
+        WriteSetting(Settings::QKeys::touch_device, QString::fromStdString(profile.touch_device),
                      QStringLiteral("engine:emu_window"));
-        WriteSetting(QStringLiteral("use_touch_from_button"), profile.use_touch_from_button, false);
-        WriteSetting(QStringLiteral("touch_from_button_map"), profile.touch_from_button_map_index,
+        WriteSetting(Settings::QKeys::use_touch_from_button, profile.use_touch_from_button, false);
+        WriteSetting(Settings::QKeys::touch_from_button_map, profile.touch_from_button_map_index,
                      0);
-        WriteSetting(QStringLiteral("udp_input_address"),
+        WriteSetting(Settings::QKeys::udp_input_address,
                      QString::fromStdString(profile.udp_input_address),
                      QString::fromUtf8(InputCommon::CemuhookUDP::DEFAULT_ADDR));
-        WriteSetting(QStringLiteral("udp_input_port"), profile.udp_input_port,
+        WriteSetting(Settings::QKeys::udp_input_port, profile.udp_input_port,
                      InputCommon::CemuhookUDP::DEFAULT_PORT);
-        WriteSetting(QStringLiteral("udp_pad_index"), profile.udp_pad_index, 0);
+        WriteSetting(Settings::QKeys::udp_pad_index, profile.udp_pad_index, 0);
     }
     qt_config->endArray();
 
-    qt_config->beginWriteArray(QStringLiteral("touch_from_button_maps"));
+    qt_config->beginWriteArray(Settings::QKeys::touch_from_button_maps);
     for (std::size_t p = 0; p < Settings::values.touch_from_button_maps.size(); ++p) {
         qt_config->setArrayIndex(static_cast<int>(p));
         const auto& map = Settings::values.touch_from_button_maps[p];
-        WriteSetting(QStringLiteral("name"), QString::fromStdString(map.name),
+        WriteSetting(Settings::QKeys::name, QString::fromStdString(map.name),
                      QStringLiteral("default"));
         qt_config->beginWriteArray(QStringLiteral("entries"));
         for (std::size_t q = 0; q < map.buttons.size(); ++q) {
             qt_config->setArrayIndex(static_cast<int>(q));
-            WriteSetting(QStringLiteral("bind"), QString::fromStdString(map.buttons[q]));
+            WriteSetting(Settings::QKeys::bind, QString::fromStdString(map.buttons[q]));
         }
         qt_config->endArray();
     }
@@ -1062,10 +1059,10 @@ void QtConfig::SaveDataStorageValues() {
     WriteBasicSetting(Settings::values.use_virtual_sd);
     WriteBasicSetting(Settings::values.use_custom_storage);
     WriteBasicSetting(Settings::values.compress_cia_installs);
-    WriteSetting(QStringLiteral("nand_directory"),
+    WriteSetting(Settings::QKeys::nand_directory,
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
                  QStringLiteral(""));
-    WriteSetting(QStringLiteral("sdmc_directory"),
+    WriteSetting(Settings::QKeys::sdmc_directory,
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)),
                  QStringLiteral(""));
 
@@ -1076,7 +1073,7 @@ void QtConfig::SaveDebuggingValues() {
     qt_config->beginGroup(QStringLiteral("Debugging"));
 
     // Intentionally not using the QT default setting as this is intended to be changed in the ini
-    qt_config->setValue(QStringLiteral("record_frame_times"), Settings::values.record_frame_times);
+    qt_config->setValue(Settings::QKeys::record_frame_times, Settings::values.record_frame_times);
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);
     WriteBasicSetting(Settings::values.renderer_debug);
@@ -1157,39 +1154,37 @@ void QtConfig::SaveMiscellaneousValues() {
 void QtConfig::SaveMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    WriteSetting(QStringLiteral("nickname"), UISettings::values.nickname, QString{});
-    WriteSetting(QStringLiteral("ip"), UISettings::values.ip, QString{});
-    WriteSetting(QStringLiteral("port"), UISettings::values.port, Network::DefaultRoomPort);
-    WriteSetting(QStringLiteral("room_nickname"), UISettings::values.room_nickname, QString{});
-    WriteSetting(QStringLiteral("room_name"), UISettings::values.room_name, QString{});
-    WriteSetting(QStringLiteral("room_port"), UISettings::values.room_port,
-                 QStringLiteral("24872"));
-    WriteSetting(QStringLiteral("host_type"), UISettings::values.host_type, 0);
-    WriteSetting(QStringLiteral("max_player"), UISettings::values.max_player, 8);
-    WriteSetting(QStringLiteral("game_id"), UISettings::values.game_id, 0);
-    WriteSetting(QStringLiteral("room_description"), UISettings::values.room_description,
-                 QString{});
-    WriteSetting(QStringLiteral("multiplayer_filter_text"),
+    WriteSetting(Settings::QKeys::nickname, UISettings::values.nickname, QString{});
+    WriteSetting(Settings::QKeys::ip, UISettings::values.ip, QString{});
+    WriteSetting(Settings::QKeys::port, UISettings::values.port, Network::DefaultRoomPort);
+    WriteSetting(Settings::QKeys::room_nickname, UISettings::values.room_nickname, QString{});
+    WriteSetting(Settings::QKeys::room_name, UISettings::values.room_name, QString{});
+    WriteSetting(Settings::QKeys::room_port, UISettings::values.room_port, QStringLiteral("24872"));
+    WriteSetting(Settings::QKeys::host_type, UISettings::values.host_type, 0);
+    WriteSetting(Settings::QKeys::max_player, UISettings::values.max_player, 8);
+    WriteSetting(Settings::QKeys::game_id, UISettings::values.game_id, 0);
+    WriteSetting(Settings::QKeys::room_description, UISettings::values.room_description, QString{});
+    WriteSetting(Settings::QKeys::multiplayer_filter_text,
                  UISettings::values.multiplayer_filter_text, QString{});
-    WriteSetting(QStringLiteral("multiplayer_filter_games_owned"),
+    WriteSetting(Settings::QKeys::multiplayer_filter_games_owned,
                  UISettings::values.multiplayer_filter_games_owned, false);
-    WriteSetting(QStringLiteral("multiplayer_filter_hide_empty"),
+    WriteSetting(Settings::QKeys::multiplayer_filter_hide_empty,
                  UISettings::values.multiplayer_filter_hide_empty, false);
-    WriteSetting(QStringLiteral("multiplayer_filter_hide_full"),
+    WriteSetting(Settings::QKeys::multiplayer_filter_hide_full,
                  UISettings::values.multiplayer_filter_hide_full, false);
 
     // Write ban list
-    qt_config->beginWriteArray(QStringLiteral("username_ban_list"));
+    qt_config->beginWriteArray(Settings::QKeys::username_ban_list);
     for (std::size_t i = 0; i < UISettings::values.ban_list.first.size(); ++i) {
         qt_config->setArrayIndex(static_cast<int>(i));
-        WriteSetting(QStringLiteral("username"),
+        WriteSetting(Settings::QKeys::username,
                      QString::fromStdString(UISettings::values.ban_list.first[i]));
     }
     qt_config->endArray();
-    qt_config->beginWriteArray(QStringLiteral("ip_ban_list"));
+    qt_config->beginWriteArray(Settings::QKeys::ip_ban_list);
     for (std::size_t i = 0; i < UISettings::values.ban_list.second.size(); ++i) {
         qt_config->setArrayIndex(static_cast<int>(i));
-        WriteSetting(QStringLiteral("ip"),
+        WriteSetting(Settings::QKeys::ip,
                      QString::fromStdString(UISettings::values.ban_list.second[i]));
     }
     qt_config->endArray();
@@ -1202,24 +1197,24 @@ void QtConfig::SavePathValues() {
 
     WriteGlobalSetting(UISettings::values.screenshot_path);
     if (global) {
-        WriteSetting(QStringLiteral("romsPath"), UISettings::values.roms_path);
-        WriteSetting(QStringLiteral("symbolsPath"), UISettings::values.symbols_path);
-        WriteSetting(QStringLiteral("movieRecordPath"), UISettings::values.movie_record_path);
-        WriteSetting(QStringLiteral("moviePlaybackPath"), UISettings::values.movie_playback_path);
-        WriteSetting(QStringLiteral("videoDumpingPath"), UISettings::values.video_dumping_path);
-        qt_config->beginWriteArray(QStringLiteral("gamedirs"));
+        WriteSetting(Settings::QKeys::romsPath, UISettings::values.roms_path);
+        WriteSetting(Settings::QKeys::symbolsPath, UISettings::values.symbols_path);
+        WriteSetting(Settings::QKeys::movieRecordPath, UISettings::values.movie_record_path);
+        WriteSetting(Settings::QKeys::moviePlaybackPath, UISettings::values.movie_playback_path);
+        WriteSetting(Settings::QKeys::videoDumpingPath, UISettings::values.video_dumping_path);
+        qt_config->beginWriteArray(Settings::QKeys::gamedirs);
         for (int i = 0; i < UISettings::values.game_dirs.size(); ++i) {
             qt_config->setArrayIndex(i);
             const auto& game_dir = UISettings::values.game_dirs[i];
-            WriteSetting(QStringLiteral("path"), game_dir.path);
-            WriteSetting(QStringLiteral("deep_scan"), game_dir.deep_scan, false);
-            WriteSetting(QStringLiteral("expanded"), game_dir.expanded, true);
+            WriteSetting(Settings::QKeys::path, game_dir.path);
+            WriteSetting(Settings::QKeys::deep_scan, game_dir.deep_scan, false);
+            WriteSetting(Settings::QKeys::expanded, game_dir.expanded, true);
         }
         qt_config->endArray();
-        WriteSetting(QStringLiteral("last_artic_base_addr"),
-                     UISettings::values.last_artic_base_addr, QString{});
-        WriteSetting(QStringLiteral("recentFiles"), UISettings::values.recent_files);
-        WriteSetting(QStringLiteral("language"), UISettings::values.language, QString{});
+        WriteSetting(Settings::QKeys::last_artic_base_addr, UISettings::values.last_artic_base_addr,
+                     QString{});
+        WriteSetting(Settings::QKeys::recentFiles, UISettings::values.recent_files);
+        WriteSetting(Settings::QKeys::language, UISettings::values.language, QString{});
         WriteBasicSetting(UISettings::values.inserted_cartridge);
     }
 
@@ -1255,7 +1250,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.disable_right_eye_render);
 
     if (global) {
-        WriteSetting(QStringLiteral("use_shader_jit"), Settings::values.use_shader_jit.GetValue(),
+        WriteSetting(Settings::QKeys::use_shader_jit, Settings::values.use_shader_jit.GetValue(),
                      true);
     }
 
@@ -1273,8 +1268,8 @@ void QtConfig::SaveShortcutValues() {
 
         qt_config->beginGroup(group);
         qt_config->beginGroup(name);
-        WriteSetting(QStringLiteral("KeySeq"), shortcut.keyseq, default_hotkey.keyseq);
-        WriteSetting(QStringLiteral("Context"), shortcut.context, default_hotkey.context);
+        WriteSetting(Settings::QKeys::KeySeq, shortcut.keyseq, default_hotkey.keyseq);
+        WriteSetting(Settings::QKeys::Context, shortcut.context, default_hotkey.context);
         qt_config->endGroup();
         qt_config->endGroup();
     }
@@ -1308,25 +1303,25 @@ void QtConfig::SaveSystemValues() {
 void QtConfig::SaveVideoDumpingValues() {
     qt_config->beginGroup(QStringLiteral("VideoDumping"));
 
-    WriteSetting(QStringLiteral("output_format"),
+    WriteSetting(Settings::QKeys::output_format,
                  QString::fromStdString(Settings::values.output_format), QStringLiteral("webm"));
-    WriteSetting(QStringLiteral("format_options"),
+    WriteSetting(Settings::QKeys::format_options,
                  QString::fromStdString(Settings::values.format_options));
-    WriteSetting(QStringLiteral("video_encoder"),
+    WriteSetting(Settings::QKeys::video_encoder,
                  QString::fromStdString(Settings::values.video_encoder),
                  QStringLiteral("libvpx-vp9"));
-    WriteSetting(QStringLiteral("video_encoder_options"),
+    WriteSetting(Settings::QKeys::video_encoder_options,
                  QString::fromStdString(Settings::values.video_encoder_options),
                  DEFAULT_VIDEO_ENCODER_OPTIONS);
-    WriteSetting(QStringLiteral("video_bitrate"),
+    WriteSetting(Settings::QKeys::video_bitrate,
                  static_cast<unsigned long long>(Settings::values.video_bitrate), 2500000);
-    WriteSetting(QStringLiteral("audio_encoder"),
+    WriteSetting(Settings::QKeys::audio_encoder,
                  QString::fromStdString(Settings::values.audio_encoder),
                  QStringLiteral("libvorbis"));
-    WriteSetting(QStringLiteral("audio_encoder_options"),
+    WriteSetting(Settings::QKeys::audio_encoder_options,
                  QString::fromStdString(Settings::values.audio_encoder_options),
                  DEFAULT_AUDIO_ENCODER_OPTIONS);
-    WriteSetting(QStringLiteral("audio_bitrate"),
+    WriteSetting(Settings::QKeys::audio_bitrate,
                  static_cast<unsigned long long>(Settings::values.audio_bitrate), 64000);
 
     qt_config->endGroup();
@@ -1338,7 +1333,7 @@ void QtConfig::SaveUIValues() {
     SavePathValues();
 
     if (global) {
-        WriteSetting(QStringLiteral("theme"), UISettings::values.theme,
+        WriteSetting(Settings::QKeys::theme, UISettings::values.theme,
                      QString::fromUtf8(UISettings::themes[0].second));
 #ifdef USE_DISCORD_PRESENCE
         WriteBasicSetting(UISettings::values.enable_discord_presence);
@@ -1384,10 +1379,10 @@ void QtConfig::SaveUIGameListValues() {
     WriteBasicSetting(UISettings::values.show_size_column);
     WriteBasicSetting(UISettings::values.show_play_time_column);
 
-    qt_config->beginWriteArray(QStringLiteral("favorites"));
+    qt_config->beginWriteArray(Settings::QKeys::favorites);
     for (int i = 0; i < UISettings::values.favorited_ids.size(); i++) {
         qt_config->setArrayIndex(i);
-        WriteSetting(QStringLiteral("program_id"),
+        WriteSetting(Settings::QKeys::program_id,
                      QVariant::fromValue(UISettings::values.favorited_ids[i]));
     }
     qt_config->endArray();
@@ -1398,11 +1393,11 @@ void QtConfig::SaveUIGameListValues() {
 void QtConfig::SaveUILayoutValues() {
     qt_config->beginGroup(QStringLiteral("UILayout"));
 
-    WriteSetting(QStringLiteral("geometry"), UISettings::values.geometry);
-    WriteSetting(QStringLiteral("state"), UISettings::values.state);
-    WriteSetting(QStringLiteral("geometryRenderWindow"), UISettings::values.renderwindow_geometry);
-    WriteSetting(QStringLiteral("gameListHeaderState"), UISettings::values.gamelist_header_state);
-    WriteSetting(QStringLiteral("microProfileDialogGeometry"),
+    WriteSetting(Settings::QKeys::geometry, UISettings::values.geometry);
+    WriteSetting(Settings::QKeys::state, UISettings::values.state);
+    WriteSetting(Settings::QKeys::geometryRenderWindow, UISettings::values.renderwindow_geometry);
+    WriteSetting(Settings::QKeys::gameListHeaderState, UISettings::values.gamelist_header_state);
+    WriteSetting(Settings::QKeys::microProfileDialogGeometry,
                  UISettings::values.microprofile_geometry);
     WriteBasicSetting(UISettings::values.microprofile_visible);
 
@@ -1412,12 +1407,12 @@ void QtConfig::SaveUILayoutValues() {
 void QtConfig::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(QStringLiteral("web_api_url"),
+    WriteSetting(Settings::QKeys::web_api_url,
                  QString::fromStdString(NetSettings::values.web_api_url),
                  QStringLiteral("https://api.citra-emu.org"));
-    WriteSetting(QStringLiteral("citra_username"),
+    WriteSetting(Settings::QKeys::citra_username,
                  QString::fromStdString(NetSettings::values.citra_username));
-    WriteSetting(QStringLiteral("citra_token"),
+    WriteSetting(Settings::QKeys::citra_token,
                  QString::fromStdString(NetSettings::values.citra_token));
 
     qt_config->endGroup();

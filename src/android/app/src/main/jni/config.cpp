@@ -212,7 +212,7 @@ void Config::ReadValues() {
             "Layout", "portrait_layout_option",
             static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
     Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
-        sdl2_config->GetInteger("Layout", "secondary_display_layout",
+        sdl2_config->GetInteger("Layout", Settings::Keys::secondary_display_layout.c_str(),
                                 static_cast<int>(Settings::SecondaryDisplayLayout::None)));
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
@@ -252,7 +252,8 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.region_value);
     ReadSetting("System", Settings::values.init_clock);
     {
-        std::string time = sdl2_config->GetString("System", "init_time", "946681277");
+        std::string time =
+            sdl2_config->GetString("System", Settings::Keys::init_time.c_str(), "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -268,23 +269,26 @@ void Config::ReadValues() {
     // Camera
     using namespace Service::CAM;
     Settings::values.camera_name[OuterRightCamera] =
-        sdl2_config->GetString("Camera", "camera_outer_right_name", "ndk");
-    Settings::values.camera_config[OuterRightCamera] = sdl2_config->GetString(
-        "Camera", "camera_outer_right_config", std::string{Camera::NDK::BackCameraPlaceholder});
+        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_right_name.c_str(), "ndk");
+    Settings::values.camera_config[OuterRightCamera] =
+        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_right_config.c_str(),
+                               std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-        sdl2_config->GetInteger("Camera", "camera_outer_right_flip", 0);
+        sdl2_config->GetInteger("Camera", Settings::Keys::camera_outer_right_flip.c_str(), 0);
     Settings::values.camera_name[InnerCamera] =
-        sdl2_config->GetString("Camera", "camera_inner_name", "ndk");
-    Settings::values.camera_config[InnerCamera] = sdl2_config->GetString(
-        "Camera", "camera_inner_config", std::string{Camera::NDK::FrontCameraPlaceholder});
+        sdl2_config->GetString("Camera", Settings::Keys::camera_inner_name.c_str(), "ndk");
+    Settings::values.camera_config[InnerCamera] =
+        sdl2_config->GetString("Camera", Settings::Keys::camera_inner_config.c_str(),
+                               std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-        sdl2_config->GetInteger("Camera", "camera_inner_flip", 0);
+        sdl2_config->GetInteger("Camera", Settings::Keys::camera_inner_flip.c_str(), 0);
     Settings::values.camera_name[OuterLeftCamera] =
-        sdl2_config->GetString("Camera", "camera_outer_left_name", "ndk");
-    Settings::values.camera_config[OuterLeftCamera] = sdl2_config->GetString(
-        "Camera", "camera_outer_left_config", std::string{Camera::NDK::BackCameraPlaceholder});
+        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_left_name.c_str(), "ndk");
+    Settings::values.camera_config[OuterLeftCamera] =
+        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_left_config.c_str(),
+                               std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-        sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
+        sdl2_config->GetInteger("Camera", Settings::Keys::camera_outer_left_flip.c_str(), 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -299,7 +303,7 @@ void Config::ReadValues() {
 
     // Debugging
     Settings::values.record_frame_times =
-        sdl2_config->GetBoolean("Debugging", "record_frame_times", false);
+        sdl2_config->GetBoolean("Debugging", Settings::Keys::record_frame_times.c_str(), false);
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
