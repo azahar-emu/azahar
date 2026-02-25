@@ -606,6 +606,7 @@ bool Client::Read(SocketHolder sockFD, void* buffer, size_t size,
             if (GET_ERRNO == ERRNO(EWOULDBLOCK) &&
                 (timeout == std::chrono::nanoseconds(0) ||
                  std::chrono::steady_clock::now() - before < timeout)) {
+                std::this_thread::sleep_for(100us);
                 continue;
             }
             read_bytes = 0;
@@ -630,6 +631,7 @@ bool Client::Write(SocketHolder sockFD, const void* buffer, size_t size,
             if (GET_ERRNO == ERRNO(EWOULDBLOCK) &&
                 (timeout == std::chrono::nanoseconds(0) ||
                  std::chrono::steady_clock::now() - before < timeout)) {
+                std::this_thread::sleep_for(100us);
                 continue;
             }
             write_bytes = 0;
