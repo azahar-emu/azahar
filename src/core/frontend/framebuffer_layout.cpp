@@ -79,7 +79,7 @@ FramebufferLayout SingleFrameLayout(u32 width, u32 height, bool swapped, bool up
 
     // TODO: This is kind of gross, make it platform agnostic. -OS
 #ifdef ANDROID
-    const float window_aspect_ratio = static_cast<float>(height) / width;
+    const float window_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
     const auto aspect_ratio_setting = Settings::values.aspect_ratio.GetValue();
 
     float emulation_aspect_ratio = (swapped) ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
@@ -342,17 +342,30 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryDisplayLayout layout =
         Settings::values.secondary_display_layout.GetValue();
     switch (layout) {
+     case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
 
     case Settings::SecondaryDisplayLayout::BottomScreenOnly:
         return SingleFrameLayout(width, height, true, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::SideBySide:
         return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
                                 1.0f, Settings::SmallScreenPosition::MiddleRight);
+    case Settings::SecondaryDisplayLayout::LargeScreen:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                Settings::values.large_screen_proportion.GetValue(),
+                                Settings::values.small_screen_position.GetValue());
+    case Settings::SecondaryDisplayLayout::Original:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                1.0f, Settings::SmallScreenPosition::BelowLarge);
+    case Settings::SecondaryDisplayLayout::Hybrid:
+        return HybridScreenLayout(width, height, false, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::None:
-        // this should never happen, but if it does, somehow, send the top screen
-    case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        // this should never happen - if "none" is set this method shouldn't run - but if it does,
+        // somehow, use ReversePrimary
+    case Settings::SecondaryDisplayLayout::ReversePrimary:
     default:
-        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
+        return SingleFrameLayout(width, height, !Settings::values.swap_screen.GetValue(),
+                                 Settings::values.upright_screen.GetValue());
     }
 }
 

@@ -18,10 +18,13 @@
 #include "video_core/renderer_base.h"
 
 bool EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
-    if (render_window == surface) {
+    int w = surface== NULL ? 0 : ANativeWindow_getWidth(surface);
+    int h = surface== NULL ? 0 : ANativeWindow_getHeight(surface);
+    if (render_window == surface && w == window_width && h == window_height) {
         return false;
     }
-
+    window_width = w;
+    window_height = h;
     render_window = surface;
     window_info.type = Frontend::WindowSystemType::Android;
     window_info.render_surface = surface;
@@ -45,15 +48,9 @@ void EmuWindow_Android::OnTouchMoved(int x, int y) {
 }
 
 void EmuWindow_Android::OnFramebufferSizeChanged() {
-    const bool is_portrait_mode{IsPortraitMode()};
+    const bool is_portrait_mode = IsPortraitMode() && !is_secondary;
 
-    const int bigger{window_width > window_height ? window_width : window_height};
-    const int smaller{window_width < window_height ? window_width : window_height};
-    if (is_portrait_mode && !is_secondary) {
-        UpdateCurrentFramebufferLayout(smaller, bigger, is_portrait_mode);
-    } else {
-        UpdateCurrentFramebufferLayout(bigger, smaller, is_portrait_mode);
-    }
+    UpdateCurrentFramebufferLayout(window_width,window_height,is_portrait_mode);
 }
 
 EmuWindow_Android::EmuWindow_Android(ANativeWindow* surface, bool is_secondary)
