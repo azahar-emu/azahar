@@ -39,6 +39,7 @@ static constexpr const char* input = "input";
 
 namespace cpu {
 static constexpr const char* use_cpu_jit = citra_setting(BaseKeys::use_cpu_jit);
+static constexpr const char* use_fastinterp = citra_setting(BaseKeys::use_fastinterp);
 static constexpr const char* cpu_clock_percentage = citra_setting(BaseKeys::cpu_clock_percentage);
 } // namespace cpu
 
@@ -148,6 +149,21 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         "Enable Just-In-Time compilation for ARM CPU emulation. "
         "Significantly improves performance but may reduce accuracy. "
         "Restart required.",
+        nullptr,
+        config::category::cpu,
+        {
+            { config::enabled, "Enabled" },
+            { config::disabled, "Disabled" },
+            { nullptr, nullptr }
+        },
+        config::enabled
+    },
+    {
+        config::cpu::use_fastinterp,
+        "Use Fast Interpreter",
+        "Fast Interpreter",
+        "When the CPU JIT is disabled or unavailable, use the fast interpreter "
+        "instead of the legacy interpreter. Restart required.",
         nullptr,
         config::category::cpu,
         {
@@ -773,6 +789,8 @@ void RegisterCoreOptions(void) {
 static void ParseCpuOptions(void) {
     Settings::values.use_cpu_jit =
         LibRetro::FetchVariable(config::cpu::use_cpu_jit, config::enabled) == config::enabled;
+    Settings::values.use_fastinterp =
+        LibRetro::FetchVariable(config::cpu::use_fastinterp, config::enabled) == config::enabled;
 #if defined(IOS)
     if (!LibRetro::CanUseJIT())
         Settings::values.use_cpu_jit = false;
