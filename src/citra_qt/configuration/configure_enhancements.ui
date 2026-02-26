@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>440</width>
+    <width>639</width>
     <height>950</height>
    </rect>
   </property>
@@ -108,6 +108,16 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="use_integer_scaling">
+        <property name="text">
+         <string>Use Integer Scaling</string>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use Integer Scaling&lt;/p&gt;&lt;p&gt;Enforces that the larger screen in all layouts is an integer scale of the 240px height of the original 3DS screen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
        </widget>
       </item>
       <item>
