@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -604,12 +604,14 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
     case SDL_CONTROLLERTOUCHPADDOWN:
     case SDL_CONTROLLERTOUCHPADMOTION:
         if (auto joystick = GetSDLJoystickBySDLID(event.ctouchpad.which)) {
-            joystick->SetTouchpad(event.ctouchpad.x, event.ctouchpad.y, event.ctouchpad.touchpad, true);
+            joystick->SetTouchpad(event.ctouchpad.x, event.ctouchpad.y, event.ctouchpad.touchpad,
+                                  true);
         }
         break;
     case SDL_CONTROLLERTOUCHPADUP:
         if (auto joystick = GetSDLJoystickBySDLID(event.ctouchpad.which)) {
-            joystick->SetTouchpad(event.ctouchpad.x, event.ctouchpad.y, event.ctouchpad.touchpad, false);
+            joystick->SetTouchpad(event.ctouchpad.x, event.ctouchpad.y, event.ctouchpad.touchpad,
+                                  false);
         }
         break;
 #endif
@@ -715,12 +717,13 @@ private:
 
 class SDLTouch final : public Input::TouchDevice {
 public:
-    explicit SDLTouch(std::shared_ptr<SDLJoystick> joystick_, int pad_) :
-        joystick(std::move(joystick_)),pad(pad_) {}
+    explicit SDLTouch(std::shared_ptr<SDLJoystick> joystick_, int pad_)
+        : joystick(std::move(joystick_)), pad(pad_) {}
 
     std::tuple<float, float, bool> GetStatus() const override {
         return joystick->GetTouch(pad);
     }
+
 private:
     std::shared_ptr<SDLJoystick> joystick;
     const int pad;
@@ -852,7 +855,7 @@ private:
  * A factory that creates a TouchDevice from an SDL Touchpad
  */
 class SDLTouchFactory final : public Input::Factory<Input::TouchDevice> {
-    public:
+public:
     explicit SDLTouchFactory(SDLState& state_) : state(state_) {}
     /**
      * Creates touch device from touchpad
@@ -878,7 +881,7 @@ SDLState::SDLState() {
     RegisterFactory<ButtonDevice>("sdl", std::make_shared<SDLButtonFactory>(*this));
     RegisterFactory<AnalogDevice>("sdl", std::make_shared<SDLAnalogFactory>(*this));
     RegisterFactory<MotionDevice>("sdl", std::make_shared<SDLMotionFactory>(*this));
-    RegisterFactory<TouchDevice>("sdl",std::make_shared<SDLTouchFactory>(*this));
+    RegisterFactory<TouchDevice>("sdl", std::make_shared<SDLTouchFactory>(*this));
     // If the frontend is going to manage the event loop, then we dont start one here
     start_thread = !SDL_WasInit(SDL_INIT_GAMECONTROLLER);
     if (start_thread && SDL_Init(SDL_INIT_GAMECONTROLLER) < 0) {
@@ -1015,7 +1018,7 @@ protected:
     SDLState& state;
 };
 
-class SDLTouchpadPoller final: public SDLPoller {
+class SDLTouchpadPoller final : public SDLPoller {
 public:
     explicit SDLTouchpadPoller(SDLState& state_) : SDLPoller(state_) {}
 
@@ -1027,12 +1030,12 @@ public:
                 continue;
             }
             switch (event.type) {
-                case SDL_CONTROLLERTOUCHPADDOWN:
-                    auto joystick = state.GetSDLJoystickBySDLID(event.ctouchpad.which);
-                    params.Set("engine", "sdl");
-                    params.Set("touchpad",event.ctouchpad.touchpad);
-                    params.Set("port", joystick->GetPort());
-                    params.Set("guid", joystick->GetGUID());
+            case SDL_CONTROLLERTOUCHPADDOWN:
+                auto joystick = state.GetSDLJoystickBySDLID(event.ctouchpad.which);
+                params.Set("engine", "sdl");
+                params.Set("touchpad", event.ctouchpad.touchpad);
+                params.Set("port", joystick->GetPort());
+                params.Set("guid", joystick->GetGUID());
             }
         }
         return params;

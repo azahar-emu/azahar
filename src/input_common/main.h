@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -45,7 +45,7 @@ void ReloadInputDevices();
 
 namespace Polling {
 
-enum class DeviceType { Button, Analog, Touchpad};
+enum class DeviceType { Button, Analog, Touchpad };
 
 /**
  * A class that can be used to get inputs from an input device like controllers without having to

@@ -139,8 +139,7 @@ void ConfigureMotionTouch::SetConfiguration() {
         ui->touch_provider->findData(QString::fromStdString(touch_engine)));
     ui->touch_from_button_checkbox->setChecked(
         Settings::values.current_input_profile.use_touch_from_button);
-    ui->touchpad_checkbox->setChecked(
-        Settings::values.current_input_profile.use_touchpad);
+    ui->touchpad_checkbox->setChecked(Settings::values.current_input_profile.use_touchpad);
     touch_from_button_maps = Settings::values.touch_from_button_maps;
     for (const auto& touch_map : touch_from_button_maps) {
         ui->touch_from_button_map->addItem(QString::fromStdString(touch_map.name));
@@ -166,9 +165,7 @@ void ConfigureMotionTouch::SetConfiguration() {
 void ConfigureMotionTouch::UpdateUiDisplay() {
     const std::string motion_engine = ui->motion_provider->currentData().toString().toStdString();
     const std::string touch_engine = ui->touch_provider->currentData().toString().toStdString();
-    ui->touchpad_config_btn->setEnabled(
-        ui->touchpad_checkbox->isChecked()
-    );
+    ui->touchpad_config_btn->setEnabled(ui->touchpad_checkbox->isChecked());
     if (motion_engine == "motion_emu") {
         ui->motion_sensitivity_label->setVisible(true);
         ui->motion_sensitivity->setVisible(true);
@@ -233,7 +230,8 @@ void ConfigureMotionTouch::ConnectEvents() {
             poll_timer->start(200);     // Check for new inputs every 200ms
         }
     });
-    connect(ui->touchpad_checkbox,&QCheckBox::checkStateChanged, this, [this]() {UpdateUiDisplay(); });
+    connect(ui->touchpad_checkbox, &QCheckBox::checkStateChanged, this,
+            [this]() { UpdateUiDisplay(); });
     connect(ui->touchpad_config_btn, &QPushButton::clicked, this, [this]() {
         if (QMessageBox::information(this, tr("Information"),
                                      tr("After pressing OK, tap the trackpad on the controller"
@@ -245,7 +243,7 @@ void ConfigureMotionTouch::ConnectEvents() {
             input_setter = [this](const Common::ParamPackage& params) {
                 tpguid = params.Get("guid", "0");
                 tpport = params.Get("port", 0);
-                tp = params.Get("touchpad",0);
+                tp = params.Get("touchpad", 0);
             };
 
             device_pollers =
@@ -408,7 +406,7 @@ void ConfigureMotionTouch::ApplyConfiguration() {
         touchpad_param.Set("engine", "sdl");
         touchpad_param.Set("guid", tpguid);
         touchpad_param.Set("port", tpport);
-        touchpad_param.Set("touchpad",tp);
+        touchpad_param.Set("touchpad", tp);
     }
     Settings::values.current_input_profile.motion_device = motion_param.Serialize();
     Settings::values.current_input_profile.touch_device = touch_param.Serialize();
@@ -416,8 +414,7 @@ void ConfigureMotionTouch::ApplyConfiguration() {
         ui->touch_from_button_checkbox->isChecked();
     Settings::values.current_input_profile.touch_from_button_map_index =
         ui->touch_from_button_map->currentIndex();
-    Settings::values.current_input_profile.use_touchpad =
-        ui->touchpad_checkbox->isChecked();
+    Settings::values.current_input_profile.use_touchpad = ui->touchpad_checkbox->isChecked();
     Settings::values.current_input_profile.controller_touch_device = touchpad_param.Serialize();
     Settings::values.touch_from_button_maps = touch_from_button_maps;
     Settings::values.current_input_profile.udp_input_address = ui->udp_server->text().toStdString();
