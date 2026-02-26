@@ -53,7 +53,8 @@ enum class BooleanSetting(
     UPRIGHT_SCREEN("upright_screen", Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT("compress_cia_installs", Settings.SECTION_STORAGE, false),
     ANDROID_HIDE_IMAGES("android_hide_images", Settings.SECTION_CORE, false),
-    APPLY_REGION_FREE_PATCH("apply_region_free_patch", Settings.SECTION_SYSTEM, true);
+    APPLY_REGION_FREE_PATCH("apply_region_free_patch", Settings.SECTION_SYSTEM, true),
+    ENABLE_COMBO_KEY("enable_combo_key", Settings.SECTION_CONTROLS, true);
 
     override var boolean: Boolean = defaultValue
 
