@@ -7,11 +7,25 @@ package org.citra.citra_emu.features.settings.model
 enum class IntListSetting(
     override val key: String,
     override val section: String,
-    override val defaultValue: List<Int>
+    override val defaultValue: List<Int>,
+    val canBeEmpty: Boolean = true
 ) : AbstractListSetting<Int> {
-    LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0,1,2,3,4,5));
 
-    override var list: List<Int> = defaultValue
+    LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false);
+
+    private var backingList: List<Int> = defaultValue
+    private var lastValidList : List<Int> = defaultValue
+
+    override var list: List<Int>
+        get() = backingList
+        set(value) {
+            if (!canBeEmpty && value.isEmpty()) {
+                backingList = lastValidList
+            } else {
+                backingList = value
+                lastValidList = value
+            }
+        }
 
     override val valueAsString: String
         get() = list.joinToString()
@@ -28,8 +42,7 @@ enum class IntListSetting(
         }
 
     companion object {
-        private val NOT_RUNTIME_EDITABLE:List<IntListSetting> = listOf();
-
+        private val NOT_RUNTIME_EDITABLE: List<IntListSetting> = emptyList()
 
         fun from(key: String): IntListSetting? =
             values().firstOrNull { it.key == key }

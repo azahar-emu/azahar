@@ -1,5 +1,6 @@
 #include <QCloseEvent>
 #include <QDialog>
+#include <QMessageBox>
 #include "citra_qt/configuration/configure_layout_cycle.h"
 #include "ui_configure_layout_cycle.h"
 
@@ -14,6 +15,7 @@ ConfigureLayoutCycle::ConfigureLayoutCycle(QWidget* parent)
 ConfigureLayoutCycle::~ConfigureLayoutCycle() = default;
 
 void ConfigureLayoutCycle::ConnectEvents() {
+    disconnect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
             &ConfigureLayoutCycle::ApplyConfiguration);
     connect(ui->globalCheck, &QCheckBox::stateChanged, this, &ConfigureLayoutCycle::UpdateGlobal);
@@ -70,8 +72,14 @@ void ConfigureLayoutCycle::ApplyConfiguration() {
         newSetting.push_back(Settings::LayoutOption::HybridScreen);
     if (ui->customCheck->isChecked())
         newSetting.push_back(Settings::LayoutOption::CustomLayout);
-    Settings::values.layouts_to_cycle = newSetting;
-    accept();
+    if (newSetting.empty()) {
+        QMessageBox::warning(this, tr("No Layout Selected"),
+                             tr("Please select at least one layout option to cycle through."));
+        return;
+    } else {
+        Settings::values.layouts_to_cycle = newSetting;
+        accept();
+    }
 }
 
 void ConfigureLayoutCycle::UpdateGlobal() {
