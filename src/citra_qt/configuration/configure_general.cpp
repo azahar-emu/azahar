@@ -28,16 +28,9 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureGeneral>()) {
     ui->setupUi(this);
 
-    connect(ui->turbo_limit, &QSlider::valueChanged, this, [&](double value) {
-        Settings::values.turbo_limit.SetValue(SliderToSettings(value));
-        ui->turbo_limit_display_label->setText(
-            QStringLiteral("%1%").arg(Settings::values.turbo_limit.GetValue()));
-    });
-
     // Set a minimum width for the label to prevent the slider from changing size.
     // This scales across DPIs, and is acceptable for uncapitalized strings.
     const auto width = static_cast<int>(tr("unthrottled").size() * 6);
-    ui->emulation_speed_display_label->setMinimumWidth(width);
     ui->emulation_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
     ui->screenshot_combo->setVisible(!Settings::IsConfiguringGlobal());
 #ifndef __unix__
@@ -52,17 +45,6 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
 
     connect(ui->button_reset_defaults, &QPushButton::clicked, this,
             &ConfigureGeneral::ResetDefaults);
-
-    connect(ui->frame_limit, &QSlider::valueChanged, this, [&](int value) {
-        if (value == ui->frame_limit->maximum()) {
-            ui->emulation_speed_display_label->setText(tr("unthrottled"));
-        } else {
-            ui->emulation_speed_display_label->setText(
-                QStringLiteral("%1%")
-                    .arg(SliderToSettings(value))
-                    .rightJustified(tr("unthrottled").size()));
-        }
-    });
 
     connect(ui->change_screenshot_dir, &QToolButton::clicked, this, [this] {
         ui->change_screenshot_dir->setEnabled(false);
@@ -80,9 +62,7 @@ ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::SetConfiguration() {
     if (Settings::IsConfiguringGlobal()) {
-        ui->turbo_limit->setValue(SettingsToSlider(Settings::values.turbo_limit.GetValue()));
-        ui->turbo_limit_display_label->setText(
-            QStringLiteral("%1%").arg(Settings::values.turbo_limit.GetValue()));
+        ui->turbo_limit->setValue(Settings::values.turbo_limit.GetValue());
 
         ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing.GetValue());
         ui->toggle_background_pause->setChecked(
@@ -101,19 +81,7 @@ void ConfigureGeneral::SetConfiguration() {
 #endif
     }
 
-    if (Settings::values.frame_limit.GetValue() == 0) {
-        ui->frame_limit->setValue(ui->frame_limit->maximum());
-    } else {
-        ui->frame_limit->setValue(SettingsToSlider(Settings::values.frame_limit.GetValue()));
-    }
-    if (ui->frame_limit->value() == ui->frame_limit->maximum()) {
-        ui->emulation_speed_display_label->setText(tr("unthrottled"));
-    } else {
-        ui->emulation_speed_display_label->setText(
-            QStringLiteral("%1%")
-                .arg(SliderToSettings(ui->frame_limit->value()))
-                .rightJustified(tr("unthrottled").size()));
-    }
+    ui->frame_limit->setValue(Settings::values.frame_limit.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
         if (Settings::values.frame_limit.UsingGlobal()) {
@@ -167,11 +135,9 @@ void ConfigureGeneral::ResetDefaults() {
 }
 
 void ConfigureGeneral::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(
-        &Settings::values.frame_limit, ui->emulation_speed_combo, [this](s32) {
-            const bool is_maximum = ui->frame_limit->value() == ui->frame_limit->maximum();
-            return is_maximum ? 0 : SliderToSettings(ui->frame_limit->value());
-        });
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.frame_limit,
+                                             ui->emulation_speed_combo,
+                                             [this](s32) { return ui->frame_limit->value(); });
 
     ConfigurationShared::ApplyPerGameSetting(
         &UISettings::values.screenshot_path, ui->screenshot_combo,
@@ -189,6 +155,7 @@ void ConfigureGeneral::ApplyConfiguration() {
 #ifdef __unix__
         Settings::values.enable_gamemode = ui->toggle_gamemode->isChecked();
 #endif
+        Settings::values.turbo_limit = ui->turbo_limit->value();
     }
 }
 
