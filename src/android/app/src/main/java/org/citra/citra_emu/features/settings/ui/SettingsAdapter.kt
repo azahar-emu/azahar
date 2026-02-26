@@ -256,6 +256,12 @@ class SettingsAdapter(
         dialog = MaterialAlertDialogBuilder(context)
             .setTitle(item.nameId)
             .setMultiChoiceItems(item.choicesId, value, this)
+            .setOnDismissListener {
+                if (clickedPosition != -1) {
+                    notifyItemChanged(clickedPosition)
+                    clickedPosition = -1
+                }
+            }
             .show()
     }
 
