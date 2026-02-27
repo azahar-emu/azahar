@@ -779,6 +779,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
         sl.apply {
+            add(
+                RunnableSetting(
+                    R.string.controller_auto_map,
+                    R.string.controller_auto_map_description,
+                    true,
+                    R.drawable.ic_controller,
+                    { settingsAdapter.onClickAutoMap() },
+                    onLongClick = { settingsAdapter.onLongClickAutoMap() }
+                )
+            )
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)

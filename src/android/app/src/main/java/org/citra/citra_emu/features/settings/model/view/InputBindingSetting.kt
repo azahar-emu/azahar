@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.view.InputDevice
 import android.view.InputDevice.MotionRange
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
@@ -235,8 +236,7 @@ class InputBindingSetting(
 
         val code = translateEventToKeyId(keyEvent)
         writeButtonMapping(keyEvent)
-        val uiString = "${keyEvent.device.name}: Button $code"
-        value = uiString
+        value = "${keyEvent.device.name}: ${getButtonName(code)}"
     }
 
     /**
@@ -263,14 +263,248 @@ class InputBindingSetting(
         // use UP (-) to map vertical, but use RIGHT (+) to map horizontal
         val inverted = if (isHorizontalOrientation()) axisDir == '-' else axisDir == '+'
         writeAxisMapping(motionRange.axis, button, inverted)
-        val uiString = "${device.name}: Axis ${motionRange.axis}" + axisDir
-        value = uiString
+        value = "Axis ${motionRange.axis}$axisDir"
     }
 
     override val type = TYPE_INPUT_BINDING
 
     companion object {
         private const val INPUT_MAPPING_PREFIX = "InputMapping"
+
+        private fun toTitleCase(raw: String): String =
+            raw.replace("_", " ").lowercase()
+                .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+
+        private const val BUTTON_NAME_L3 = "Button L3"
+        private const val BUTTON_NAME_R3 = "Button R3"
+
+        private val buttonNameOverrides = mapOf(
+            KeyEvent.KEYCODE_BUTTON_THUMBL to BUTTON_NAME_L3,
+            KeyEvent.KEYCODE_BUTTON_THUMBR to BUTTON_NAME_R3,
+            LINUX_BTN_DPAD_UP to "Dpad Up",
+            LINUX_BTN_DPAD_DOWN to "Dpad Down",
+            LINUX_BTN_DPAD_LEFT to "Dpad Left",
+            LINUX_BTN_DPAD_RIGHT to "Dpad Right"
+        )
+
+        fun getButtonName(keyCode: Int): String =
+            buttonNameOverrides[keyCode]
+                ?: toTitleCase(KeyEvent.keyCodeToString(keyCode).removePrefix("KEYCODE_"))
+
+        private data class DefaultButtonMapping(
+            val settingKey: String,
+            val hostKeyCode: Int,
+            val guestButtonCode: Int
+        )
+        // Auto-map always sets inverted = false. Users needing inverted axes should remap manually.
+        private data class DefaultAxisMapping(
+            val settingKey: String,
+            val hostAxis: Int,
+            val guestButton: Int,
+            val orientation: Int,
+            val inverted: Boolean
+        )
+
+        private val xboxFaceButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, NativeLibrary.ButtonType.BUTTON_A),
+            DefaultButtonMapping(Settings.KEY_BUTTON_B, KeyEvent.KEYCODE_BUTTON_A, NativeLibrary.ButtonType.BUTTON_B),
+            DefaultButtonMapping(Settings.KEY_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y, NativeLibrary.ButtonType.BUTTON_X),
+            DefaultButtonMapping(Settings.KEY_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_X, NativeLibrary.ButtonType.BUTTON_Y)
+        )
+
+        private val nintendoFaceButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_A, KeyEvent.KEYCODE_BUTTON_A, NativeLibrary.ButtonType.BUTTON_A),
+            DefaultButtonMapping(Settings.KEY_BUTTON_B, KeyEvent.KEYCODE_BUTTON_B, NativeLibrary.ButtonType.BUTTON_B),
+            DefaultButtonMapping(Settings.KEY_BUTTON_X, KeyEvent.KEYCODE_BUTTON_X, NativeLibrary.ButtonType.BUTTON_X),
+            DefaultButtonMapping(Settings.KEY_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_Y, NativeLibrary.ButtonType.BUTTON_Y)
+        )
+
+        private val commonButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_L, KeyEvent.KEYCODE_BUTTON_L1, NativeLibrary.ButtonType.TRIGGER_L),
+            DefaultButtonMapping(Settings.KEY_BUTTON_R, KeyEvent.KEYCODE_BUTTON_R1, NativeLibrary.ButtonType.TRIGGER_R),
+            DefaultButtonMapping(Settings.KEY_BUTTON_ZL, KeyEvent.KEYCODE_BUTTON_L2, NativeLibrary.ButtonType.BUTTON_ZL),
+            DefaultButtonMapping(Settings.KEY_BUTTON_ZR, KeyEvent.KEYCODE_BUTTON_R2, NativeLibrary.ButtonType.BUTTON_ZR),
+            DefaultButtonMapping(Settings.KEY_BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_SELECT, NativeLibrary.ButtonType.BUTTON_SELECT),
+            DefaultButtonMapping(Settings.KEY_BUTTON_START, KeyEvent.KEYCODE_BUTTON_START, NativeLibrary.ButtonType.BUTTON_START)
+        )
+
+        private val dpadButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_UP, KeyEvent.KEYCODE_DPAD_UP, NativeLibrary.ButtonType.DPAD_UP),
+            DefaultButtonMapping(Settings.KEY_BUTTON_DOWN, KeyEvent.KEYCODE_DPAD_DOWN, NativeLibrary.ButtonType.DPAD_DOWN),
+            DefaultButtonMapping(Settings.KEY_BUTTON_LEFT, KeyEvent.KEYCODE_DPAD_LEFT, NativeLibrary.ButtonType.DPAD_LEFT),
+            DefaultButtonMapping(Settings.KEY_BUTTON_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT, NativeLibrary.ButtonType.DPAD_RIGHT)
+        )
+
+        private val stickAxisMappings = listOf(
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL, MotionEvent.AXIS_X, NativeLibrary.ButtonType.STICK_LEFT, 0, false),
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_VERTICAL, MotionEvent.AXIS_Y, NativeLibrary.ButtonType.STICK_LEFT, 1, false),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_HORIZONTAL, MotionEvent.AXIS_Z, NativeLibrary.ButtonType.STICK_C, 0, false),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_VERTICAL, MotionEvent.AXIS_RZ, NativeLibrary.ButtonType.STICK_C, 1, false)
+        )
+
+        private val dpadAxisMappings = listOf(
+            DefaultAxisMapping(Settings.KEY_DPAD_AXIS_HORIZONTAL, MotionEvent.AXIS_HAT_X, NativeLibrary.ButtonType.DPAD, 0, false),
+            DefaultAxisMapping(Settings.KEY_DPAD_AXIS_VERTICAL, MotionEvent.AXIS_HAT_Y, NativeLibrary.ButtonType.DPAD, 1, false)
+        )
+
+        // Nintendo Switch Joy-Con specific mappings.
+        // Joy-Cons connected via Bluetooth on Android have several quirks:
+        // - They register as two separate InputDevices (left and right)
+        // - Android's evdev translation swaps A<->B (BTN_EAST->BUTTON_B, BTN_SOUTH->BUTTON_A)
+        //   but does NOT swap X<->Y (BTN_NORTH->BUTTON_X, BTN_WEST->BUTTON_Y)
+        // - D-pad buttons arrive as KEYCODE_UNKNOWN (0) with Linux BTN_DPAD_* scan codes
+        // - Right stick uses AXIS_RX/AXIS_RY instead of AXIS_Z/AXIS_RZ
+        private const val NINTENDO_VENDOR_ID = 0x057e
+
+        // Linux BTN_DPAD_* values (0x220-0x223). Joy-Con D-pad buttons arrive as
+        // KEYCODE_UNKNOWN with these scan codes because Android's input layer doesn't
+        // translate them to KEYCODE_DPAD_*. translateEventToKeyId() falls back to
+        // the scan code in that case.
+        private const val LINUX_BTN_DPAD_UP = 0x220    // 544
+        private const val LINUX_BTN_DPAD_DOWN = 0x221  // 545
+        private const val LINUX_BTN_DPAD_LEFT = 0x222  // 546
+        private const val LINUX_BTN_DPAD_RIGHT = 0x223 // 547
+
+        // Joy-Con face buttons: A/B are swapped by Android's evdev layer, but X/Y are not.
+        // This is different from both the standard Xbox table (full swap) and the
+        // Nintendo table (no swap).
+        private val joyconFaceButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, NativeLibrary.ButtonType.BUTTON_A),
+            DefaultButtonMapping(Settings.KEY_BUTTON_B, KeyEvent.KEYCODE_BUTTON_A, NativeLibrary.ButtonType.BUTTON_B),
+            DefaultButtonMapping(Settings.KEY_BUTTON_X, KeyEvent.KEYCODE_BUTTON_X, NativeLibrary.ButtonType.BUTTON_X),
+            DefaultButtonMapping(Settings.KEY_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_Y, NativeLibrary.ButtonType.BUTTON_Y)
+        )
+
+        // Joy-Con D-pad: uses Linux scan codes because Android reports BTN_DPAD_* as KEYCODE_UNKNOWN
+        private val joyconDpadButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_UP, LINUX_BTN_DPAD_UP, NativeLibrary.ButtonType.DPAD_UP),
+            DefaultButtonMapping(Settings.KEY_BUTTON_DOWN, LINUX_BTN_DPAD_DOWN, NativeLibrary.ButtonType.DPAD_DOWN),
+            DefaultButtonMapping(Settings.KEY_BUTTON_LEFT, LINUX_BTN_DPAD_LEFT, NativeLibrary.ButtonType.DPAD_LEFT),
+            DefaultButtonMapping(Settings.KEY_BUTTON_RIGHT, LINUX_BTN_DPAD_RIGHT, NativeLibrary.ButtonType.DPAD_RIGHT)
+        )
+
+        // Joy-Con sticks: left stick is AXIS_X/Y (standard), right stick is AXIS_RX/RY
+        // (not Z/RZ like most controllers). The horizontal axis is inverted relative to
+        // the standard orientation - verified empirically on paired Joy-Cons via Bluetooth.
+        private val joyconStickAxisMappings = listOf(
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL, MotionEvent.AXIS_X, NativeLibrary.ButtonType.STICK_LEFT, 0, false),
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_VERTICAL, MotionEvent.AXIS_Y, NativeLibrary.ButtonType.STICK_LEFT, 1, false),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_HORIZONTAL, MotionEvent.AXIS_RX, NativeLibrary.ButtonType.STICK_C, 0, true),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_VERTICAL, MotionEvent.AXIS_RY, NativeLibrary.ButtonType.STICK_C, 1, false)
+        )
+
+        /**
+         * Detects whether a device is a Nintendo Switch Joy-Con (as opposed to a
+         * Pro Controller or other Nintendo device) by checking vendor ID + device
+         * capabilities. Joy-Cons lack AXIS_HAT_X/Y and use AXIS_RX/RY for the
+         * right stick, while the Pro Controller has standard HAT axes and Z/RZ.
+         */
+        fun isJoyCon(device: InputDevice?): Boolean {
+            if (device == null) return false
+            if (device.vendorId != NINTENDO_VENDOR_ID) return false
+
+            // Pro Controllers have HAT_X/HAT_Y (D-pad) and Z/RZ (right stick).
+            // Joy-Cons lack both: no HAT axes, right stick on RX/RY instead of Z/RZ.
+            var hasHatAxes = false
+            var hasStandardRightStick = false
+            for (range in device.motionRanges) {
+                when (range.axis) {
+                    MotionEvent.AXIS_HAT_X, MotionEvent.AXIS_HAT_Y -> hasHatAxes = true
+                    MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ -> hasStandardRightStick = true
+                }
+            }
+            return !hasHatAxes && !hasStandardRightStick
+        }
+
+        private val allBindingKeys: Set<String> by lazy {
+            (Settings.buttonKeys + Settings.triggerKeys +
+                Settings.circlePadKeys + Settings.cStickKeys + Settings.dPadAxisKeys +
+                Settings.dPadButtonKeys).toSet()
+        }
+
+        fun clearAllBindings() {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+            val editor = prefs.edit()
+            val allKeys = prefs.all.keys.toList()
+            for (key in allKeys) {
+                if (key.startsWith(INPUT_MAPPING_PREFIX) || key in allBindingKeys) {
+                    editor.remove(key)
+                }
+            }
+            editor.apply()
+        }
+
+        private fun applyBindings(
+            buttonMappings: List<DefaultButtonMapping>,
+            axisMappings: List<DefaultAxisMapping>
+        ) {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+            val editor = prefs.edit()
+            buttonMappings.forEach { applyDefaultButtonMapping(editor, it) }
+            axisMappings.forEach { applyDefaultAxisMapping(editor, it) }
+            editor.apply()
+        }
+
+        /**
+         * Applies Joy-Con specific bindings: scan code D-pad, partial face button
+         * swap, and AXIS_RX/RY right stick.
+         */
+        fun applyJoyConBindings() {
+            applyBindings(
+                joyconFaceButtonMappings + commonButtonMappings + joyconDpadButtonMappings,
+                joyconStickAxisMappings
+            )
+        }
+
+        /**
+         * Applies auto-mapped bindings based on detected controller layout and d-pad type.
+         *
+         * @param isNintendoLayout true if the controller uses Nintendo face button layout
+         *   (A=east, B=south), false for Xbox layout (A=south, B=east)
+         * @param useAxisDpad true if the d-pad should be mapped as axis (HAT_X/HAT_Y),
+         *   false if it should be mapped as individual button keycodes (DPAD_UP/DOWN/LEFT/RIGHT)
+         */
+        fun applyAutoMapBindings(isNintendoLayout: Boolean, useAxisDpad: Boolean) {
+            val faceButtons = if (isNintendoLayout) nintendoFaceButtonMappings else xboxFaceButtonMappings
+            val buttonMappings = if (useAxisDpad) {
+                faceButtons + commonButtonMappings
+            } else {
+                faceButtons + commonButtonMappings + dpadButtonMappings
+            }
+            val axisMappings = if (useAxisDpad) {
+                stickAxisMappings + dpadAxisMappings
+            } else {
+                stickAxisMappings
+            }
+            applyBindings(buttonMappings, axisMappings)
+        }
+
+        private fun applyDefaultButtonMapping(
+            editor: SharedPreferences.Editor,
+            mapping: DefaultButtonMapping
+        ) {
+            val prefKey = getInputButtonKey(mapping.hostKeyCode)
+            editor.putInt(prefKey, mapping.guestButtonCode)
+            editor.putString(mapping.settingKey, getButtonName(mapping.hostKeyCode))
+            editor.putString(
+                "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}",
+                prefKey
+            )
+        }
+
+        private fun applyDefaultAxisMapping(
+            editor: SharedPreferences.Editor,
+            mapping: DefaultAxisMapping
+        ) {
+            val axisKey = getInputAxisKey(mapping.hostAxis)
+            editor.putInt(getInputAxisOrientationKey(mapping.hostAxis), mapping.orientation)
+            editor.putInt(getInputAxisButtonKey(mapping.hostAxis), mapping.guestButton)
+            editor.putBoolean(getInputAxisInvertedKey(mapping.hostAxis), mapping.inverted)
+            val dir = if (mapping.orientation == 0) '+' else '-'
+            editor.putString(mapping.settingKey, "Axis ${mapping.hostAxis}$dir")
+            val reverseKey = "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}_${mapping.orientation}"
+            editor.putString(reverseKey, axisKey)
+        }
 
         /**
          * Returns the settings key for the specified Citra button code.
@@ -315,18 +549,10 @@ class InputBindingSetting(
             return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
         }
 
-        /**
-         * Helper function to get the settings key for an gamepad button.
-         *
-         */
-        @Deprecated("Use the new getInputButtonKey(keyEvent) method to handle unknown keys")
-        fun getInputButtonKey(keyCode: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyCode}"
+        private fun getInputButtonKey(keyId: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyId}"
 
-        /**
-         * Helper function to get the settings key for an gamepad button.
-         *
-         */
-        fun getInputButtonKey(event: KeyEvent): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${translateEventToKeyId(event)}"
+        /** Falls back to the scan code when keyCode is KEYCODE_UNKNOWN. */
+        fun getInputButtonKey(event: KeyEvent): String = getInputButtonKey(translateEventToKeyId(event))
 
         /**
          * Helper function to get the settings key for an gamepad axis.

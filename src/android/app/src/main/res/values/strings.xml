@@ -119,6 +119,12 @@
     <string name="search_installed">Installed</string>
 
     <!-- Input related strings -->
+    <string name="controller_auto_map">Auto-Map Controller</string>
+    <string name="controller_auto_map_description">Apply standard gamepad mapping for all buttons and axes</string>
+    <string name="auto_map_prompt">Press this button on your controller!</string>
+    <string name="auto_map_image_description">3DS face button diamond with A button highlighted</string>
+    <string name="controller_clear_all">Clear All Bindings</string>
+    <string name="controller_clear_all_confirm">This will remove all current controller bindings.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Hotkeys</string>
