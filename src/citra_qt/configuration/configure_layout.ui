@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>705</width>
-    <height>656</height>
+    <width>659</width>
+    <height>662</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -51,8 +51,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>688</width>
-        <height>799</height>
+        <width>646</width>
+        <height>824</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -130,18 +130,39 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="toggle_swap_screen">
-            <property name="text">
-             <string>Swap screens</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="toggle_upright_screen">
-            <property name="text">
-             <string>Rotate screens upright</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QCheckBox" name="toggle_upright_screen">
+                <property name="text">
+                 <string>Rotate screens upright</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="toggle_swap_screen">
+                <property name="text">
+                 <string>Swap screens</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QPushButton" name="customize_layouts_to_cycle">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Customize layout cycling</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QWidget" name="widget" native="true">
@@ -356,7 +377,7 @@
                <item row="0" column="1">
                 <widget class="QSpinBox" name="custom_top_x">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -376,7 +397,7 @@
                <item row="1" column="1">
                 <widget class="QSpinBox" name="custom_top_y">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -396,7 +417,7 @@
                <item row="2" column="1">
                 <widget class="QSpinBox" name="custom_top_width">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -416,7 +437,7 @@
                <item row="3" column="1">
                 <widget class="QSpinBox" name="custom_top_height">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -440,6 +461,12 @@
               <property name="title">
                <string>Bottom Screen</string>
               </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
               <layout class="QGridLayout" name="gridLayout_1">
                <item row="0" column="0">
                 <widget class="QLabel" name="lb_bottom_x">
@@ -451,7 +478,7 @@
                <item row="0" column="1">
                 <widget class="QSpinBox" name="custom_bottom_x">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -471,7 +498,7 @@
                <item row="1" column="1">
                 <widget class="QSpinBox" name="custom_bottom_y">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -491,7 +518,7 @@
                <item row="2" column="1">
                 <widget class="QSpinBox" name="custom_bottom_width">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -511,7 +538,7 @@
                <item row="3" column="1">
                 <widget class="QSpinBox" name="custom_bottom_height">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -538,7 +565,7 @@
             <item>
              <widget class="QSpinBox" name="custom_second_layer_opacity">
               <property name="buttonSymbols">
-               <enum>QAbstractSpinBox::ButtonSymbols::PlusMinus</enum>
+               <enum>QAbstractSpinBox::UpDownArrows</enum>
               </property>
               <property name="minimum">
                <number>10</number>
@@ -583,7 +610,7 @@
                <item row="1" column="1">
                 <widget class="QSpinBox" name="screen_top_leftright_padding">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -610,7 +637,7 @@
                <item row="2" column="1">
                 <widget class="QSpinBox" name="screen_top_topbottom_padding">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -659,7 +686,7 @@
                <item row="1" column="1">
                 <widget class="QSpinBox" name="screen_bottom_leftright_padding">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -672,7 +699,7 @@
                <item row="2" column="1">
                 <widget class="QSpinBox" name="screen_bottom_topbottom_padding">
                  <property name="buttonSymbols">
-                  <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
                  </property>
                  <property name="suffix">
                   <string>px</string>
@@ -717,9 +744,6 @@
        </item>
        <item>
         <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
-         </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
