@@ -51,7 +51,6 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
 
         binding.imageFaceButtons.setImageResource(R.drawable.automap_face_buttons)
 
-        // Capture button press to detect layout
         dialog?.setOnKeyListener { _, _, event -> onKeyEvent(event) }
 
         binding.buttonCancel.setOnClickListener {
@@ -68,8 +67,24 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
         if (event.action != KeyEvent.ACTION_UP) return false
 
         val keyCode = event.keyCode
+        val device = event.device
 
-        // Determine layout from which keycode arrives for the east/right position.
+        // Check if this is a Nintendo Switch Joy-Con (not Pro Controller).
+        // Joy-Cons have unique quirks: split devices, non-standard D-pad scan codes,
+        // partial A/B swap but no X/Y swap from Android's evdev layer.
+        val isJoyCon = InputBindingSetting.isJoyCon(device)
+
+        if (isJoyCon) {
+            Log.info("[AutoMap] Detected Joy-Con - using Joy-Con mappings")
+            InputBindingSetting.clearAllBindings()
+            InputBindingSetting.applyJoyConBindings()
+            onComplete?.invoke()
+            dismiss()
+            return true
+        }
+
+        // For non-Joy-Con controllers, determine layout from which keycode arrives
+        // for the east/right position.
         // The user is pressing the button in the "A" (east/right) position on the 3DS diamond.
         // Xbox layout: east position sends KEYCODE_BUTTON_B (97)
         // Nintendo layout: east position sends KEYCODE_BUTTON_A (96)
@@ -86,14 +101,11 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
         val layoutName = if (isNintendoLayout) "Nintendo" else "Xbox"
         Log.info("[AutoMap] Detected $layoutName layout (keyCode=$keyCode)")
 
-        // Detect d-pad type from the InputDevice
-        val device = event.device
         val useAxisDpad = detectDpadType(device)
 
         val dpadName = if (useAxisDpad) "axis" else "button"
         Log.info("[AutoMap] Detected $dpadName d-pad (device=${device?.name})")
 
-        // Apply the detected bindings
         InputBindingSetting.clearAllBindings()
         InputBindingSetting.applyAutoMapBindings(isNintendoLayout, useAxisDpad)
 
@@ -113,8 +125,10 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
             return dialog
         }
 
-        // Returns true for axis d-pad, false for button d-pad.
-        // Prefers axis when both are present. Defaults to axis if detection fails.
+        /**
+         * Returns true for axis d-pad (HAT_X/HAT_Y), false for button d-pad (DPAD_UP/DOWN/LEFT/RIGHT).
+         * Prefers axis when both are present. Defaults to axis if detection fails.
+         */
         private fun detectDpadType(device: InputDevice?): Boolean {
             if (device == null) return true
 
@@ -132,7 +146,6 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
             )
             val hasButtonDpad = device.hasKeys(*dpadKeyCodes).any { it }
 
-            // If button d-pad detected, use button mode. Otherwise default to axis.
             return !hasButtonDpad
         }
     }
