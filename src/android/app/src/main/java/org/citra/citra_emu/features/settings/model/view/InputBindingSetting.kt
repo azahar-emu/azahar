@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.view.InputDevice
 import android.view.InputDevice.MotionRange
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
@@ -235,8 +236,7 @@ class InputBindingSetting(
 
         val code = translateEventToKeyId(keyEvent)
         writeButtonMapping(keyEvent)
-        val uiString = "${keyEvent.device.name}: Button $code"
-        value = uiString
+        value = "${keyEvent.device.name}: ${getButtonName(code)}"
     }
 
     /**
@@ -263,14 +263,156 @@ class InputBindingSetting(
         // use UP (-) to map vertical, but use RIGHT (+) to map horizontal
         val inverted = if (isHorizontalOrientation()) axisDir == '-' else axisDir == '+'
         writeAxisMapping(motionRange.axis, button, inverted)
-        val uiString = "${device.name}: Axis ${motionRange.axis}" + axisDir
-        value = uiString
+        value = "Axis ${motionRange.axis}$axisDir"
     }
 
     override val type = TYPE_INPUT_BINDING
 
     companion object {
         private const val INPUT_MAPPING_PREFIX = "InputMapping"
+
+        private fun toTitleCase(raw: String): String =
+            raw.replace("_", " ").lowercase()
+                .split(" ").joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+
+        private const val BUTTON_NAME_L3 = "Button L3"
+        private const val BUTTON_NAME_R3 = "Button R3"
+
+        private val buttonNameOverrides = mapOf(
+            KeyEvent.KEYCODE_BUTTON_THUMBL to BUTTON_NAME_L3,
+            KeyEvent.KEYCODE_BUTTON_THUMBR to BUTTON_NAME_R3
+        )
+
+        fun getButtonName(keyCode: Int): String =
+            buttonNameOverrides[keyCode]
+                ?: toTitleCase(KeyEvent.keyCodeToString(keyCode).removePrefix("KEYCODE_"))
+
+        private data class DefaultButtonMapping(
+            val settingKey: String,
+            val hostKeyCode: Int,
+            val guestButtonCode: Int
+        )
+        // Auto-map always sets inverted = false. Users needing inverted axes should remap manually.
+        private data class DefaultAxisMapping(
+            val settingKey: String,
+            val hostAxis: Int,
+            val guestButton: Int,
+            val orientation: Int,
+            val inverted: Boolean
+        )
+
+        private val xboxFaceButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_A, KeyEvent.KEYCODE_BUTTON_B, NativeLibrary.ButtonType.BUTTON_A),
+            DefaultButtonMapping(Settings.KEY_BUTTON_B, KeyEvent.KEYCODE_BUTTON_A, NativeLibrary.ButtonType.BUTTON_B),
+            DefaultButtonMapping(Settings.KEY_BUTTON_X, KeyEvent.KEYCODE_BUTTON_Y, NativeLibrary.ButtonType.BUTTON_X),
+            DefaultButtonMapping(Settings.KEY_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_X, NativeLibrary.ButtonType.BUTTON_Y)
+        )
+
+        private val nintendoFaceButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_A, KeyEvent.KEYCODE_BUTTON_A, NativeLibrary.ButtonType.BUTTON_A),
+            DefaultButtonMapping(Settings.KEY_BUTTON_B, KeyEvent.KEYCODE_BUTTON_B, NativeLibrary.ButtonType.BUTTON_B),
+            DefaultButtonMapping(Settings.KEY_BUTTON_X, KeyEvent.KEYCODE_BUTTON_X, NativeLibrary.ButtonType.BUTTON_X),
+            DefaultButtonMapping(Settings.KEY_BUTTON_Y, KeyEvent.KEYCODE_BUTTON_Y, NativeLibrary.ButtonType.BUTTON_Y)
+        )
+
+        private val commonButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_L, KeyEvent.KEYCODE_BUTTON_L1, NativeLibrary.ButtonType.TRIGGER_L),
+            DefaultButtonMapping(Settings.KEY_BUTTON_R, KeyEvent.KEYCODE_BUTTON_R1, NativeLibrary.ButtonType.TRIGGER_R),
+            DefaultButtonMapping(Settings.KEY_BUTTON_ZL, KeyEvent.KEYCODE_BUTTON_L2, NativeLibrary.ButtonType.BUTTON_ZL),
+            DefaultButtonMapping(Settings.KEY_BUTTON_ZR, KeyEvent.KEYCODE_BUTTON_R2, NativeLibrary.ButtonType.BUTTON_ZR),
+            DefaultButtonMapping(Settings.KEY_BUTTON_SELECT, KeyEvent.KEYCODE_BUTTON_SELECT, NativeLibrary.ButtonType.BUTTON_SELECT),
+            DefaultButtonMapping(Settings.KEY_BUTTON_START, KeyEvent.KEYCODE_BUTTON_START, NativeLibrary.ButtonType.BUTTON_START)
+        )
+
+        private val dpadButtonMappings = listOf(
+            DefaultButtonMapping(Settings.KEY_BUTTON_UP, KeyEvent.KEYCODE_DPAD_UP, NativeLibrary.ButtonType.DPAD_UP),
+            DefaultButtonMapping(Settings.KEY_BUTTON_DOWN, KeyEvent.KEYCODE_DPAD_DOWN, NativeLibrary.ButtonType.DPAD_DOWN),
+            DefaultButtonMapping(Settings.KEY_BUTTON_LEFT, KeyEvent.KEYCODE_DPAD_LEFT, NativeLibrary.ButtonType.DPAD_LEFT),
+            DefaultButtonMapping(Settings.KEY_BUTTON_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT, NativeLibrary.ButtonType.DPAD_RIGHT)
+        )
+
+        private val stickAxisMappings = listOf(
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_HORIZONTAL, MotionEvent.AXIS_X, NativeLibrary.ButtonType.STICK_LEFT, 0, false),
+            DefaultAxisMapping(Settings.KEY_CIRCLEPAD_AXIS_VERTICAL, MotionEvent.AXIS_Y, NativeLibrary.ButtonType.STICK_LEFT, 1, false),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_HORIZONTAL, MotionEvent.AXIS_Z, NativeLibrary.ButtonType.STICK_C, 0, false),
+            DefaultAxisMapping(Settings.KEY_CSTICK_AXIS_VERTICAL, MotionEvent.AXIS_RZ, NativeLibrary.ButtonType.STICK_C, 1, false)
+        )
+
+        private val dpadAxisMappings = listOf(
+            DefaultAxisMapping(Settings.KEY_DPAD_AXIS_HORIZONTAL, MotionEvent.AXIS_HAT_X, NativeLibrary.ButtonType.DPAD, 0, false),
+            DefaultAxisMapping(Settings.KEY_DPAD_AXIS_VERTICAL, MotionEvent.AXIS_HAT_Y, NativeLibrary.ButtonType.DPAD, 1, false)
+        )
+
+        private val allBindingKeys: Set<String> by lazy {
+            (Settings.buttonKeys + Settings.triggerKeys +
+                Settings.circlePadKeys + Settings.cStickKeys + Settings.dPadAxisKeys +
+                Settings.dPadButtonKeys).toSet()
+        }
+
+        fun clearAllBindings() {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+            val editor = prefs.edit()
+            val allKeys = prefs.all.keys.toList()
+            for (key in allKeys) {
+                if (key.startsWith(INPUT_MAPPING_PREFIX) || key in allBindingKeys) {
+                    editor.remove(key)
+                }
+            }
+            editor.apply()
+        }
+
+        /**
+         * Applies auto-mapped bindings based on detected controller layout and d-pad type.
+         *
+         * @param isNintendoLayout true if the controller uses Nintendo face button layout
+         *   (A=east, B=south), false for Xbox layout (A=south, B=east)
+         * @param useAxisDpad true if the d-pad should be mapped as axis (HAT_X/HAT_Y),
+         *   false if it should be mapped as individual button keycodes (DPAD_UP/DOWN/LEFT/RIGHT)
+         */
+        fun applyAutoMapBindings(isNintendoLayout: Boolean, useAxisDpad: Boolean) {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+            val editor = prefs.edit()
+
+            val faceButtons = if (isNintendoLayout) nintendoFaceButtonMappings else xboxFaceButtonMappings
+            (faceButtons + commonButtonMappings).forEach { applyDefaultButtonMapping(editor, it) }
+
+            val axisMappings = if (useAxisDpad) {
+                stickAxisMappings + dpadAxisMappings
+            } else {
+                dpadButtonMappings.forEach { applyDefaultButtonMapping(editor, it) }
+                stickAxisMappings
+            }
+
+            axisMappings.forEach { applyDefaultAxisMapping(editor, it) }
+            editor.apply()
+        }
+
+        private fun applyDefaultButtonMapping(
+            editor: SharedPreferences.Editor,
+            mapping: DefaultButtonMapping
+        ) {
+            val prefKey = getInputButtonKey(mapping.hostKeyCode)
+            editor.putInt(prefKey, mapping.guestButtonCode)
+            editor.putString(mapping.settingKey, getButtonName(mapping.hostKeyCode))
+            editor.putString(
+                "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}",
+                prefKey
+            )
+        }
+
+        private fun applyDefaultAxisMapping(
+            editor: SharedPreferences.Editor,
+            mapping: DefaultAxisMapping
+        ) {
+            val axisKey = getInputAxisKey(mapping.hostAxis)
+            editor.putInt(getInputAxisOrientationKey(mapping.hostAxis), mapping.orientation)
+            editor.putInt(getInputAxisButtonKey(mapping.hostAxis), mapping.guestButton)
+            editor.putBoolean(getInputAxisInvertedKey(mapping.hostAxis), mapping.inverted)
+            val dir = if (mapping.orientation == 0) '+' else '-'
+            editor.putString(mapping.settingKey, "Axis ${mapping.hostAxis}$dir")
+            val reverseKey = "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}_${mapping.orientation}"
+            editor.putString(reverseKey, axisKey)
+        }
 
         /**
          * Returns the settings key for the specified Citra button code.

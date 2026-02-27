@@ -22,7 +22,7 @@ abstract class SettingsItem(
 ) {
     abstract val type: Int
 
-    val isEditable: Boolean
+    open val isEditable: Boolean
         get() {
             if (!EmulationActivity.isRunning()) return true
             return setting?.isRuntimeEditable ?: false

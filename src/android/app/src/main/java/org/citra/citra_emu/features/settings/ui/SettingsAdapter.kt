@@ -65,6 +65,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SliderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.StringInputViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHolder
+import org.citra.citra_emu.fragments.AutoMapDialogFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.SystemSaveGame
@@ -642,26 +643,42 @@ class SettingsAdapter(
         ).show((fragmentView as SettingsFragment).childFragmentManager, MessageDialogFragment.TAG)
     }
 
+    fun onClickAutoMap() {
+        val activity = fragmentView.activityView as FragmentActivity
+        AutoMapDialogFragment.newInstance {
+            fragmentView.loadSettingsList()
+            fragmentView.onSettingChanged()
+        }.show(activity.supportFragmentManager, AutoMapDialogFragment.TAG)
+    }
+
+    fun onLongClickAutoMap(): Boolean {
+        showConfirmationDialog(R.string.controller_clear_all, R.string.controller_clear_all_confirm) {
+            InputBindingSetting.clearAllBindings()
+            fragmentView.loadSettingsList()
+            fragmentView.onSettingChanged()
+        }
+        return true
+    }
+
     fun onClickRegenerateConsoleId() {
-        MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.regenerate_console_id)
-            .setMessage(R.string.regenerate_console_id_description)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                SystemSaveGame.regenerateConsoleId()
-                notifyDataSetChanged()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        showConfirmationDialog(R.string.regenerate_console_id, R.string.regenerate_console_id_description) {
+            SystemSaveGame.regenerateConsoleId()
+            notifyDataSetChanged()
+        }
     }
 
     fun onClickRegenerateMAC() {
+        showConfirmationDialog(R.string.regenerate_mac_address, R.string.regenerate_mac_address_description) {
+            SystemSaveGame.regenerateMac()
+            notifyDataSetChanged()
+        }
+    }
+
+    private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.regenerate_mac_address)
-            .setMessage(R.string.regenerate_mac_address_description)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                SystemSaveGame.regenerateMac()
-                notifyDataSetChanged()
-            }
+            .setTitle(titleId)
+            .setMessage(messageId)
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int -> onConfirm() }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
