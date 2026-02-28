@@ -432,9 +432,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 #endif
 
-    game_list->LoadCompatibilityList();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
-
     mouse_hide_timer.setInterval(default_mouse_timeout);
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
@@ -3736,6 +3733,11 @@ void GMainWindow::mousePressEvent([[maybe_unused]] QMouseEvent* event) {
 
 void GMainWindow::mouseReleaseEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
+}
+
+void GMainWindow::showEvent([[maybe_unused]] QShowEvent* event) {
+    game_list->LoadCompatibilityList();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
