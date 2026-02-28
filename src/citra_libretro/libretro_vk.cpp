@@ -96,6 +96,7 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     AddExtensionIfAvailable(enabled_exts, available_exts,
                             VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_TOOLING_INFO_EXTENSION_NAME);
+    AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
