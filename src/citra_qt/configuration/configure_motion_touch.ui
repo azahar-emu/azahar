@@ -179,8 +179,11 @@
        <layout class="QHBoxLayout" name="touchpad_hlayout">
         <item>
          <widget class="QCheckBox" name="touchpad_checkbox">
+          <property name="toolTip">
+           <string>Map touchpads on controllers like the DualSense directly to touch</string>
+          </property>
           <property name="text">
-           <string>Use controller (e.g. DualSense) touchpad</string>
+           <string>Use controller touchpad</string>
           </property>
          </widget>
         </item>

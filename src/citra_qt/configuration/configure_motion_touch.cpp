@@ -234,8 +234,8 @@ void ConfigureMotionTouch::ConnectEvents() {
             [this]() { UpdateUiDisplay(); });
     connect(ui->touchpad_config_btn, &QPushButton::clicked, this, [this]() {
         if (QMessageBox::information(this, tr("Information"),
-                                     tr("After pressing OK, tap the trackpad on the controller"
-                                        "that you want to track."),
+                                     tr("After pressing OK, tap the touchpad on the controller "
+                                        "you want to track."),
                                      QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok) {
             ui->touchpad_config_btn->setText(tr("[press touchpad]"));
             ui->touchpad_config_btn->setFocus();
