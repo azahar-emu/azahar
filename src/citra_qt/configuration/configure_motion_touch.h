@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -76,6 +76,9 @@ private:
     // Used for SDL input polling
     std::string guid;
     int port;
+    std::string tpguid; // guid for touchpad
+    int tpport;         // port for touchpad
+    int tp;             // which touchpad
     std::unique_ptr<QTimer> timeout_timer;
     std::unique_ptr<QTimer> poll_timer;
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
