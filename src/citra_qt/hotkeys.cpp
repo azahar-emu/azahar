@@ -2,10 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QAction>
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/uisettings.h"
+#include "input_common/main.h"
 
 HotkeyRegistry::HotkeyRegistry() = default;
 
@@ -17,22 +19,41 @@ void HotkeyRegistry::SaveHotkeys() {
         for (const auto& hotkey : group.second) {
             UISettings::values.shortcuts.push_back(
                 {hotkey.first, group.first,
-                 UISettings::ContextualShortcut(
-                     {hotkey.second.keyseq.toString(), hotkey.second.context})});
+                 UISettings::ContextualShortcut({hotkey.second.keyseq.toString(),
+                                                 hotkey.second.controller_keyseq,
+                                                 hotkey.second.context})});
         }
     }
 }
-
+void HotkeyRegistry::UpdateControllerHotkey(QString name, Hotkey& hk) {
+    if (hk.controller_keyseq.isEmpty()) {
+        buttonMonitor.removeButton(name);
+    } else {
+        QStringList paramList = hk.controller_keyseq.split(QStringLiteral("||"));
+        if (paramList.length() > 0) {
+            hk.button_device =
+                Input::CreateDevice<Input::ButtonDevice>(paramList.value(0).toStdString());
+            if (paramList.length() > 1) {
+                hk.button_device2 =
+                    Input::CreateDevice<Input::ButtonDevice>(paramList.value(1).toStdString());
+            }
+            buttonMonitor.addButton(name, &hk);
+        }
+    }
+}
 void HotkeyRegistry::LoadHotkeys() {
     // Make sure NOT to use a reference here because it would become invalid once we call
     // beginGroup()
     for (auto shortcut : UISettings::values.shortcuts) {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
-        if (!shortcut.shortcut.keyseq.isEmpty()) {
+        if (!shortcut.shortcut.keyseq.isEmpty() || !shortcut.shortcut.controller_keyseq.isEmpty()) {
             hk.keyseq =
                 QKeySequence::fromString(shortcut.shortcut.keyseq, QKeySequence::NativeText);
             hk.context = static_cast<Qt::ShortcutContext>(shortcut.shortcut.context);
+            hk.controller_keyseq = shortcut.shortcut.controller_keyseq;
         }
+        UpdateControllerHotkey(shortcut.name, hk);
+
         for (auto const& [_, hotkey_shortcut] : hk.shortcuts) {
             if (hotkey_shortcut) {
                 hotkey_shortcut->disconnect();
@@ -62,4 +83,24 @@ Qt::ShortcutContext HotkeyRegistry::GetShortcutContext(const QString& group,
                                                        const QString& action) {
     Hotkey& hk = hotkey_groups[group][action];
     return hk.context;
+}
+
+void HotkeyRegistry::SetAction(const QString& group, const QString& action_name, QAction* action) {
+    Hotkey& hk = hotkey_groups[group][action_name];
+    hk.action = action;
+}
+
+QString HotkeyRegistry::SequenceToString(QString controller_keyseq) {
+    if (controller_keyseq.isEmpty())
+        return controller_keyseq;
+    QStringList keys = controller_keyseq.split(QStringLiteral("||"));
+    Common::ParamPackage p1 = Common::ParamPackage(keys.value(0).toStdString());
+    QString output = QString::fromStdString(InputCommon::ButtonToText(p1));
+
+    if (keys.length() > 1) {
+        output.append(QStringLiteral(" + "));
+        p1 = Common::ParamPackage(keys.value(1).toStdString());
+        output.append(QString::fromStdString(InputCommon::ButtonToText(p1)));
+    }
+    return output;
 }

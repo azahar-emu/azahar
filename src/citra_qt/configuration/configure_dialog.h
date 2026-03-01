@@ -23,6 +23,7 @@ class ConfigureGeneral;
 class ConfigureSystem;
 class ConfigureInput;
 class ConfigureHotkeys;
+class ConfigureControllerHotkeys;
 class ConfigureGraphics;
 class ConfigureLayout;
 class ConfigureEnhancements;
@@ -65,6 +66,7 @@ private:
     std::unique_ptr<ConfigureSystem> system_tab;
     std::unique_ptr<ConfigureInput> input_tab;
     std::unique_ptr<ConfigureHotkeys> hotkeys_tab;
+    std::unique_ptr<ConfigureControllerHotkeys> hotkeys_controller_tab;
     std::unique_ptr<ConfigureGraphics> graphics_tab;
     std::unique_ptr<ConfigureEnhancements> enhancements_tab;
     std::unique_ptr<ConfigureLayout> layout_tab;
