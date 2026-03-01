@@ -18,6 +18,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/weak_ptr.hpp>
 #include <httplib.h>
+#include "common/network.h"
 #include "common/thread.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -87,13 +88,6 @@ enum class PostDataType : u8 {
 
 enum class ClientCertID : u32 {
     Default = 0x40, // Default client cert
-};
-
-struct URLInfo {
-    bool is_https;
-    std::string host;
-    int port;
-    std::string path;
 };
 
 /// Represents a client certificate along with its private key, stored as a byte array of DER data.
@@ -296,9 +290,9 @@ public:
     void ParseAsciiPostData();
     std::string ParseMultipartFormData();
     void MakeRequest();
-    void MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestNonSSL(httplib::Request& request, const Common::URLInfo& url_info,
                            std::vector<Context::RequestHeader>& pending_headers);
-    void MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestSSL(httplib::Request& request, const Common::URLInfo& url_info,
                         std::vector<Context::RequestHeader>& pending_headers);
     bool ContentProvider(size_t offset, size_t length, httplib::DataSink& sink);
     bool ChunkedContentProvider(size_t offset, httplib::DataSink& sink);
