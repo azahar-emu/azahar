@@ -123,7 +123,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseProgrammableVer
 
             shader.program = std::move(program);
             const vk::Device device = parent.instance.GetDevice();
-            parent.workers.QueueWork([device, &shader, this, spirv_id] {
+            parent.shader_workers.QueueWork([device, &shader, this, spirv_id] {
                 auto spirv = CompileGLSL(shader.program, vk::ShaderStageFlagBits::eVertex);
                 AppendVSSPIRV(vs_cache, spirv, spirv_id);
                 shader.program.clear();
@@ -157,7 +157,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFragmentShader(
     if (new_shader) {
         LOG_NEW_OBJECT(Render_Vulkan, "New FS config {:016X}", fs_config_hash);
 
-        parent.workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
+        parent.shader_workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
             std::vector<u32> spirv;
             const bool use_spirv = parent.profile.vk_use_spirv_generator;
             if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
@@ -212,7 +212,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFixedGeometrySh
         if (new_shader) {
             LOG_NEW_OBJECT(Render_Vulkan, "New GS config {:016X}", gs_config_hash);
 
-            parent.workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
+            parent.shader_workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
                 ExtraFixedGSConfig extra;
                 extra.use_clip_planes = parent.profile.has_clip_planes;
                 extra.separable_shader = true;
@@ -252,7 +252,7 @@ GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
         }
         it.value() = std::make_unique<GraphicsPipeline>(
             parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
-            *parent.pipeline_layout, parent.current_shaders, &parent.workers);
+            *parent.pipeline_layout, parent.current_shaders, &parent.pipeline_workers);
     }
 
     if (known_graphic_pipelines.emplace(hash).second) {
@@ -1454,7 +1454,7 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
             auto [it_pl, _] = graphics_pipelines.try_emplace(pl_hash_opt);
             it_pl.value() = std::make_unique<GraphicsPipeline>(
                 parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
-                *parent.pipeline_layout, shaders, &parent.workers);
+                *parent.pipeline_layout, shaders, &parent.pipeline_workers);
 
             it_pl.value()->TryBuild(false);
 
