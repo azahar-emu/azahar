@@ -331,3 +331,7 @@ endif()
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(citra_qt PRIVATE precompiled_headers.h)
 endif()
+
+if (ENABLE_RETROACHIEVEMENTS)
+    target_link_libraries(citra_qt PRIVATE retroachievements)
+endif()

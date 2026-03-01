@@ -106,3 +106,6 @@
 [submodule "externals/libretro-common"]
 	path = externals/libretro-common/libretro-common
 	url = https://github.com/libretro/libretro-common.git
+[submodule "externals/rcheevos/rcheevos"]
+	path = externals/rcheevos/rcheevos
+	url = https://github.com/RetroAchievements/rcheevos.git
