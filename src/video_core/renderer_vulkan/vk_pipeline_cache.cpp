@@ -84,8 +84,9 @@ PipelineCache::PipelineCache(const Instance& instance_, Scheduler& scheduler_,
                              RenderManager& renderpass_cache_, DescriptorUpdateQueue& update_queue_)
     : instance{instance_}, scheduler{scheduler_}, renderpass_cache{renderpass_cache_},
       update_queue{update_queue_},
-      num_worker_threads{std::max(std::thread::hardware_concurrency(), 2U) >> 1},
-      workers{num_worker_threads, "Pipeline workers"},
+      num_worker_threads{std::max(std::thread::hardware_concurrency(), 2U) / 2},
+      pipeline_workers{num_worker_threads, "Pipeline workers"},
+      shader_workers{num_worker_threads, "Shader workers"},
       descriptor_heaps{
           DescriptorHeap{instance, scheduler.GetMasterSemaphore(), BUFFER_BINDINGS, 32},
           DescriptorHeap{instance, scheduler.GetMasterSemaphore(), TEXTURE_BINDINGS<1>},
@@ -144,7 +145,8 @@ void PipelineCache::BuildLayout() {
 }
 
 PipelineCache::~PipelineCache() {
-    workers.WaitForRequests();
+    pipeline_workers.WaitForRequests();
+    shader_workers.WaitForRequests();
     SaveDriverPipelineDiskCache();
 }
 
