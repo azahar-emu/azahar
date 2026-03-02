@@ -10,7 +10,6 @@ package org.citra.citra_emu.features.settings
 object SettingKeys {
     // Shared
     external fun use_artic_base_controller(): String
-    external fun enable_gamemode(): String
     external fun use_cpu_jit(): String
     external fun cpu_clock_percentage(): String
     external fun is_new_3ds(): String
@@ -18,12 +17,10 @@ object SettingKeys {
     external fun deterministic_async_operations(): String
     external fun enable_required_online_lle_modules(): String
     external fun use_virtual_sd(): String
-    external fun use_custom_storage(): String
     external fun compress_cia_installs(): String
     external fun region_value(): String
     external fun init_clock(): String
     external fun init_time(): String
-    external fun init_time_offset(): String
     external fun init_ticks_type(): String
     external fun init_ticks_override(): String
     external fun plugin_loader(): String
@@ -31,10 +28,8 @@ object SettingKeys {
     external fun steps_per_hour(): String
     external fun apply_region_free_patch(): String
     external fun graphics_api(): String
-    external fun physical_device(): String
     external fun use_gles(): String
     external fun renderer_debug(): String
-    external fun dump_command_buffers(): String
     external fun spirv_shader_gen(): String
     external fun disable_spirv_optimizer(): String
     external fun async_shader_compilation(): String
@@ -43,7 +38,6 @@ object SettingKeys {
     external fun use_disk_shader_cache(): String
     external fun shaders_accurate_mul(): String
     external fun use_vsync(): String
-    external fun use_display_refresh_rate_detection(): String
     external fun use_shader_jit(): String
     external fun resolution_factor(): String
     external fun frame_limit(): String
@@ -68,12 +62,6 @@ object SettingKeys {
     external fun custom_bottom_height(): String
     external fun custom_second_layer_opacity(): String
     external fun aspect_ratio(): String
-    external fun screen_top_stretch(): String
-    external fun screen_top_leftright_padding(): String
-    external fun screen_top_topbottom_padding(): String
-    external fun screen_bottom_stretch(): String
-    external fun screen_bottom_leftright_padding(): String
-    external fun screen_bottom_topbottom_padding(): String
     external fun portrait_layout_option(): String
     external fun custom_portrait_top_x(): String
     external fun custom_portrait_top_y(): String
@@ -90,7 +78,6 @@ object SettingKeys {
     external fun factor_3d(): String
     external fun swap_eyes_3d(): String
     external fun render_3d_which_display(): String
-    external fun mono_render_option(): String
     external fun cardboard_screen_size(): String
     external fun cardboard_x_shift(): String
     external fun cardboard_y_shift(): String
@@ -128,12 +115,6 @@ object SettingKeys {
     external fun camera_outer_left_config(): String
     external fun camera_outer_right_name(): String
     external fun camera_outer_right_config(): String
-    external fun video_encoder(): String
-    external fun video_encoder_options(): String
-    external fun video_bitrate(): String
-    external fun audio_encoder(): String
-    external fun audio_encoder_options(): String
-    external fun audio_bitrate(): String
     external fun last_artic_base_addr(): String
     external fun motion_device(): String
     external fun touch_device(): String
@@ -144,7 +125,6 @@ object SettingKeys {
 
     // Android
     external fun expand_to_cutout_area(): String
-    external fun custom_layout(): String
     external fun performance_overlay_enable(): String
     external fun performance_overlay_show_fps(): String
     external fun performance_overlay_show_frame_time(): String

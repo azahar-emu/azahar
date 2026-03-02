@@ -20,8 +20,7 @@ enum class BooleanSetting(
     SWAP_SCREEN(SettingKeys.swap_screen(), Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG(SettingKeys.instant_debug_log(), Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER(SettingKeys.enable_rpc_server(), Settings.SECTION_DEBUG, false),
-    CUSTOM_LAYOUT(SettingKeys.custom_layout(),Settings.SECTION_LAYOUT,false),
-    SWAP_EYES_3D(SettingKeys.swap_eyes_3d(),Settings.SECTION_RENDERER,false),
+    SWAP_EYES_3D(SettingKeys.swap_eyes_3d(),Settings.SECTION_RENDERER, false),
     PERF_OVERLAY_ENABLE(SettingKeys.performance_overlay_enable(), Settings.SECTION_LAYOUT, false),
     PERF_OVERLAY_SHOW_FPS(SettingKeys.performance_overlay_show_fps(), Settings.SECTION_LAYOUT, true),
     PERF_OVERLAY_SHOW_FRAMETIME(SettingKeys.performance_overlay_show_frame_time(), Settings.SECTION_LAYOUT, false),
@@ -54,7 +53,7 @@ enum class BooleanSetting(
     USE_ARTIC_BASE_CONTROLLER(SettingKeys.use_artic_base_controller(), Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN(SettingKeys.upright_screen(), Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),
-    ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_CORE, false),
+    ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_MISC, false),
     APPLY_REGION_FREE_PATCH(SettingKeys.apply_region_free_patch(), Settings.SECTION_SYSTEM, true),
     USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false);
 

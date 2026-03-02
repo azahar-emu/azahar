@@ -138,9 +138,13 @@ foreach(KEY IN ITEMS
     "udp_input_port"
     "udp_pad_index"
     "record_frame_times"
+    "language" # FIXME: DUPLICATE KEY (libretro equivalent: language_value)
+    "web_api_url"
+    "citra_username"
+    "citra_token"
 )
-    set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
-        DEFINE_KEY(${KEY})")
+    set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
+    set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")
     if (ANDROID)
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(JNI_SETTING_KEY_DEFINITIONS "${JNI_SETTING_KEY_DEFINITIONS}
@@ -182,7 +186,6 @@ if (ENABLE_QT)
         "deep_scan"
         "expanded"
         "recentFiles"
-        "language" # FIXME: DUPLICATE KEY (libretro equivalent: language_value)
         "output_format"
         "format_options"
         "theme"
@@ -192,9 +195,6 @@ if (ENABLE_QT)
         "geometryRenderWindow"
         "gameListHeaderState"
         "microProfileDialogGeometry"
-        "web_api_url"
-        "citra_username"
-        "citra_token"
         "name"
         "bind"
         "profile"
@@ -210,9 +210,8 @@ if (ENABLE_QT)
         "Context"
         "favorites"
     )
-        string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
-        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
-            DEFINE_KEY(${KEY})")
+        set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")
     endforeach()
 endif()
 
@@ -220,7 +219,6 @@ endif()
 if (ANDROID)
     foreach(KEY IN ITEMS
         "expand_to_cutout_area"
-        "custom_layout"
         "performance_overlay_enable"
         "performance_overlay_show_fps"
         "performance_overlay_show_frame_time"
@@ -235,8 +233,8 @@ if (ANDROID)
         "performance_overlay_position"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
-        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
-            DEFINE_KEY(${KEY})")
+        set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")
         set(JNI_SETTING_KEY_DEFINITIONS "${JNI_SETTING_KEY_DEFINITIONS}
             JNI_DEFINE_KEY(${KEY}, ${KEY_JNI_ESCAPED})")
     endforeach()
@@ -257,11 +255,17 @@ if (ENABLE_LIBRETRO)
         "motion_sensitivity"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
-        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}
-            DEFINE_KEY(${KEY})")
+        set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
+        set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")
     endforeach()
 endif()
 
+# Trim trailing comma and newline from SETTING_KEY_LIST
+string(LENGTH "${SETTING_KEY_LIST}" SETTING_KEY_LIST_LENGTH)
+math(EXPR SETTING_KEY_LIST_NEW_LENGTH "${SETTING_KEY_LIST_LENGTH} - 1")
+string(SUBSTRING "${SETTING_KEY_LIST}" 0 ${SETTING_KEY_LIST_NEW_LENGTH} SETTING_KEY_LIST)
+
+# Configure files
 configure_file("common/setting_keys.h.in" "common/setting_keys.h" @ONLY)
 if (ENABLE_QT)
     configure_file("citra_qt/setting_qkeys.h.in" "citra_qt/setting_qkeys.h" @ONLY)

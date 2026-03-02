@@ -4,14 +4,29 @@
 
 #pragma once
 
-#define DEFINE_KEY(KEY) static constexpr auto KEY = BOOST_HANA_STRING(#KEY);
+#include <boost/hana/string.hpp>
+
 
 namespace Settings {
+
 namespace Keys {
+#define DEFINE_KEY(KEY) static constexpr auto KEY = BOOST_HANA_STRING(#KEY);
 
 @SETTING_KEY_DEFINITIONS@
 
-}
-}
+static const std::array keys_array = {
+@SETTING_KEY_LIST@
+};
 
 #undef DEFINE_KEY
+}
+
+namespace CKeys { // Basically just a shorthand for Settings::Keys::KEY.c_str()
+#define DEFINE_KEY(KEY) static constexpr char KEY[] = #KEY;
+
+@SETTING_KEY_DEFINITIONS@
+
+#undef DEFINE_KEY
+}
+
+}

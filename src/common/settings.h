@@ -10,7 +10,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/hana/string.hpp>
 #include "audio_core/input_details.h"
 #include "audio_core/sink_details.h"
 #include "common/common_types.h"
@@ -37,7 +36,8 @@ enum class InitTicks : u32 {
 };
 
 /** Defines the layout option for desktop and mobile landscape */
-enum class LayoutOption : u32 {
+enum class LayoutOption : u32 { // Shouldn't these have set numbers to prevent last two from
+                                // shifting? -OS
     Default,
     SingleScreen,
     LargeScreen,

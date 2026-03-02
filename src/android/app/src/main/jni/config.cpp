@@ -4,13 +4,16 @@
 
 #include <iomanip>
 #include <memory>
+#include <ranges>
 #include <sstream>
 #include <unordered_map>
 #include <INIReader.h>
+#include <boost/hana/string.hpp>
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/setting_keys.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -328,6 +331,21 @@ void Config::ReadValues() {
 }
 
 void Config::Reload() {
-    LoadINI(DefaultINI::android_config_file);
+    for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
+         ++key) {
+        const auto key_declaration_string = std::string(*key) + " =";
+        // FIXME: This code looks so ass when formatted by clang-format -OS
+        if (std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
+                std::end(DefaultINI::android_config_omitted_keys) &&
+            std::string(DefaultINI::android_config_default_file_content)
+                    .find(key_declaration_string) == std::string::npos) {
+            LOG_ERROR(Config,
+                      "Validation of default content config failed: Missing or malformed key "
+                      "declaration {}",
+                      *key);
+            ASSERT(false);
+        }
+    }
+    LoadINI(DefaultINI::android_config_default_file_content);
     ReadValues();
 }
