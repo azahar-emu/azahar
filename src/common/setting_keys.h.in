@@ -9,8 +9,8 @@
 
 namespace Settings {
 
-namespace Keys {
-#define DEFINE_KEY(KEY) static constexpr auto KEY = BOOST_HANA_STRING(#KEY);
+namespace Keys { // Basically just a shorthand for Settings::HKeys::KEY.c_str()
+#define DEFINE_KEY(KEY) static constexpr char KEY[] = #KEY;
 
 @SETTING_KEY_DEFINITIONS@
 
@@ -21,8 +21,8 @@ static const std::array keys_array = {
 #undef DEFINE_KEY
 }
 
-namespace CKeys { // Basically just a shorthand for Settings::Keys::KEY.c_str()
-#define DEFINE_KEY(KEY) static constexpr char KEY[] = #KEY;
+namespace HKeys {
+#define DEFINE_KEY(KEY) static constexpr auto KEY = BOOST_HANA_STRING(#KEY);
 
 @SETTING_KEY_DEFINITIONS@
 

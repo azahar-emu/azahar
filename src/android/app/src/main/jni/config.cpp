@@ -218,7 +218,7 @@ void Config::ReadValues() {
             "Layout", "portrait_layout_option",
             static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
     Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
-        android_config->GetInteger("Layout", Settings::Keys::secondary_display_layout.c_str(),
+        android_config->GetInteger("Layout", Settings::HKeys::secondary_display_layout.c_str(),
                                    static_cast<int>(Settings::SecondaryDisplayLayout::None)));
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
@@ -259,7 +259,7 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.init_clock);
     {
         std::string time =
-            android_config->GetString("System", Settings::Keys::init_time.c_str(), "946681277");
+            android_config->GetString("System", Settings::HKeys::init_time.c_str(), "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -274,27 +274,27 @@ void Config::ReadValues() {
 
     // Camera
     using namespace Service::CAM;
-    Settings::values.camera_name[OuterRightCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_outer_right_name.c_str(), "ndk");
+    Settings::values.camera_name[OuterRightCamera] = android_config->GetString(
+        "Camera", Settings::HKeys::camera_outer_right_name.c_str(), "ndk");
     Settings::values.camera_config[OuterRightCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_outer_right_config.c_str(),
+        android_config->GetString("Camera", Settings::HKeys::camera_outer_right_config.c_str(),
                                   std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-        android_config->GetInteger("Camera", Settings::Keys::camera_outer_right_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::HKeys::camera_outer_right_flip.c_str(), 0);
     Settings::values.camera_name[InnerCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_inner_name.c_str(), "ndk");
+        android_config->GetString("Camera", Settings::HKeys::camera_inner_name.c_str(), "ndk");
     Settings::values.camera_config[InnerCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_inner_config.c_str(),
+        android_config->GetString("Camera", Settings::HKeys::camera_inner_config.c_str(),
                                   std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-        android_config->GetInteger("Camera", Settings::Keys::camera_inner_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::HKeys::camera_inner_flip.c_str(), 0);
     Settings::values.camera_name[OuterLeftCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_outer_left_name.c_str(), "ndk");
+        android_config->GetString("Camera", Settings::HKeys::camera_outer_left_name.c_str(), "ndk");
     Settings::values.camera_config[OuterLeftCamera] =
-        android_config->GetString("Camera", Settings::Keys::camera_outer_left_config.c_str(),
+        android_config->GetString("Camera", Settings::HKeys::camera_outer_left_config.c_str(),
                                   std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-        android_config->GetInteger("Camera", Settings::Keys::camera_outer_left_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::HKeys::camera_outer_left_flip.c_str(), 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -309,7 +309,7 @@ void Config::ReadValues() {
 
     // Debugging
     Settings::values.record_frame_times =
-        android_config->GetBoolean("Debugging", Settings::Keys::record_frame_times.c_str(), false);
+        android_config->GetBoolean("Debugging", Settings::HKeys::record_frame_times.c_str(), false);
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
@@ -331,7 +331,7 @@ void Config::ReadValues() {
 }
 
 void Config::Reload() {
-    for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
+    for (auto key = Settings::HKeys::keys_array.begin(); key != Settings::HKeys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
         // FIXME: This code looks so ass when formatted by clang-format -OS

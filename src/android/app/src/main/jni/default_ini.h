@@ -7,41 +7,41 @@
 #include <boost/hana/string.hpp>
 #include "common/setting_keys.h"
 
-namespace CKeys = Settings::CKeys;
+namespace Keys = Settings::Keys;
 
 namespace DefaultINI {
 
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
 constexpr std::array android_config_omitted_keys = {
-    CKeys::enable_gamemode,
-    CKeys::use_custom_storage,
-    CKeys::init_time_offset,
-    CKeys::physical_device,
-    CKeys::use_gles, // Niche
-    CKeys::dump_command_buffers,
-    CKeys::use_display_refresh_rate_detection,
-    CKeys::screen_top_stretch,
-    CKeys::screen_top_leftright_padding,
-    CKeys::screen_top_topbottom_padding,
-    CKeys::screen_bottom_stretch,
-    CKeys::screen_bottom_leftright_padding,
-    CKeys::screen_bottom_topbottom_padding,
-    CKeys::mono_render_option,
-    CKeys::log_regex_filter, // Niche
-    CKeys::video_encoder,
-    CKeys::video_encoder_options,
-    CKeys::video_bitrate,
-    CKeys::audio_encoder,
-    CKeys::audio_encoder_options,
-    CKeys::audio_bitrate,
-    CKeys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Keys::enable_gamemode,
+    Keys::use_custom_storage,
+    Keys::init_time_offset,
+    Keys::physical_device,
+    Keys::use_gles, // Niche
+    Keys::dump_command_buffers,
+    Keys::use_display_refresh_rate_detection,
+    Keys::screen_top_stretch,
+    Keys::screen_top_leftright_padding,
+    Keys::screen_top_topbottom_padding,
+    Keys::screen_bottom_stretch,
+    Keys::screen_bottom_leftright_padding,
+    Keys::screen_bottom_topbottom_padding,
+    Keys::mono_render_option,
+    Keys::log_regex_filter, // Niche
+    Keys::video_encoder,
+    Keys::video_encoder_options,
+    Keys::video_bitrate,
+    Keys::audio_encoder,
+    Keys::audio_encoder_options,
+    Keys::audio_bitrate,
+    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
 };
 
 // clang-format off
 // Is this macro nasty? Yes.
 // Does it make the code way more readable? Also yes.
-#define DECLARE_KEY(KEY) +Settings::Keys::KEY+BOOST_HANA_STRING(" =")+
+#define DECLARE_KEY(KEY) +Settings::HKeys::KEY+BOOST_HANA_STRING(" =")+
 // clang-format on
 
 static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(

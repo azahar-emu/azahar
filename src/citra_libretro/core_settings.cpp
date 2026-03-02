@@ -11,7 +11,7 @@
 #include "common/settings.h"
 #include "core/hle/service/cfg/cfg.h"
 
-namespace BaseKeys = Settings::Keys;
+namespace BaseKeys = Settings::HKeys;
 
 namespace LibRetro {
 
