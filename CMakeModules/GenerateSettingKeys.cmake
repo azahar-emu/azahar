@@ -2,7 +2,7 @@
 # All references to setting strings should be derived from the
 # `setting_keys.h` and `jni_setting_keys.cpp` files generated here.
 
-# !!! Changes made here should be mirrored to SettingKeys.kt if applicable
+# !!! Changes made here should be mirrored to SettingKeys.kt if used on Android
 
 # Shared setting keys (multi-platform)
 foreach(KEY IN ITEMS

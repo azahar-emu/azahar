@@ -9,7 +9,7 @@
 
 namespace Settings {
 
-namespace Keys { // Basically just a shorthand for Settings::HKeys::KEY.c_str()
+namespace Keys {
 #define DEFINE_KEY(KEY) static constexpr char KEY[] = #KEY;
 
 @SETTING_KEY_DEFINITIONS@
