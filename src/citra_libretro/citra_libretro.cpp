@@ -261,16 +261,16 @@ void retro_run() {
     }
 
     // Check if the screen swap button is pressed
-    static bool screen_swap_btn_state = false;
-    static bool screen_swap_toggled = false;
+    static bool screen_swap_button_state = false;
+    static bool screens_swapped = false;
     bool screen_swap_btn =
         !!LibRetro::CheckInput(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3);
-    if (screen_swap_btn != screen_swap_btn_state) {
-        if (LibRetro::settings.toggle_swap_screen) {
-            if (!screen_swap_btn_state)
-                screen_swap_toggled = !screen_swap_toggled;
+    if (screen_swap_btn != screen_swap_button_state) {
+        if (LibRetro::settings.swap_screen_mode == "Toggle") {
+            if (!screen_swap_button_state)
+                screens_swapped = !screens_swapped;
 
-            if (screen_swap_toggled)
+            if (screens_swapped)
                 Settings::values.swap_screen =
                     LibRetro::FetchVariable("citra_swap_screen", "Top") != "Bottom";
             else
@@ -290,7 +290,7 @@ void retro_run() {
         // Update the framebuffer sizing.
         emu_instance->emu_window->UpdateLayout();
 
-        screen_swap_btn_state = screen_swap_btn;
+        screen_swap_button_state = screen_swap_btn;
     }
 
 #ifdef ENABLE_OPENGL
