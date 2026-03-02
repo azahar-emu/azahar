@@ -331,7 +331,7 @@ void Config::ReadValues() {
 }
 
 void Config::Reload() {
-    for (auto key = Settings::HKeys::keys_array.begin(); key != Settings::HKeys::keys_array.end();
+    for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
         // FIXME: This code looks so ass when formatted by clang-format -OS
