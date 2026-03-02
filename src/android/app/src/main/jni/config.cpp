@@ -25,11 +25,11 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    sdl2_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
+    android_config_loc = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "config.ini";
     std::string ini_buffer;
-    FileUtil::ReadFileToString(true, sdl2_config_loc, ini_buffer);
+    FileUtil::ReadFileToString(true, android_config_loc, ini_buffer);
     if (!ini_buffer.empty()) {
-        sdl2_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
+        android_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
     }
 
     Reload();
@@ -38,15 +38,15 @@ Config::Config() {
 Config::~Config() = default;
 
 bool Config::LoadINI(const std::string& default_contents, bool retry) {
-    const std::string& location = this->sdl2_config_loc;
-    if (sdl2_config == nullptr || sdl2_config->ParseError() < 0) {
+    const std::string& location = this->android_config_loc;
+    if (android_config == nullptr || android_config->ParseError() < 0) {
         if (retry) {
             LOG_WARNING(Config, "Failed to load {}. Creating file from defaults...", location);
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, location, default_contents);
             std::string ini_buffer;
             FileUtil::ReadFileToString(true, location, ini_buffer);
-            sdl2_config =
+            android_config =
                 std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size()); // Reopen file
 
             return LoadINI(default_contents, false);
@@ -77,7 +77,8 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value = sdl2_config->Get(group, setting.GetLabel(), setting.GetDefault());
+    std::string setting_value =
+        android_config->Get(group, setting.GetLabel(), setting.GetDefault());
     if (setting_value.empty()) {
         setting_value = setting.GetDefault();
     }
@@ -86,15 +87,15 @@ void Config::ReadSetting(const std::string& group, Settings::Setting<std::string
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = sdl2_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+    setting = android_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
 }
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
     if constexpr (std::is_floating_point_v<Type>) {
-        setting = sdl2_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
+        setting = android_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
     } else {
-        setting = static_cast<Type>(sdl2_config->GetInteger(
+        setting = static_cast<Type>(android_config->GetInteger(
             group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
     }
 }
@@ -103,30 +104,30 @@ void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputManager::GenerateButtonParamPackage(default_buttons[i]);
-        Settings::values.current_input_profile.buttons[i] =
-            sdl2_config->GetString("Controls", Settings::NativeButton::mapping[i], default_param);
+        Settings::values.current_input_profile.buttons[i] = android_config->GetString(
+            "Controls", Settings::NativeButton::mapping[i], default_param);
         if (Settings::values.current_input_profile.buttons[i].empty())
             Settings::values.current_input_profile.buttons[i] = default_param;
     }
 
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
         std::string default_param = InputManager::GenerateAnalogParamPackage(default_analogs[i]);
-        Settings::values.current_input_profile.analogs[i] =
-            sdl2_config->GetString("Controls", Settings::NativeAnalog::mapping[i], default_param);
+        Settings::values.current_input_profile.analogs[i] = android_config->GetString(
+            "Controls", Settings::NativeAnalog::mapping[i], default_param);
         if (Settings::values.current_input_profile.analogs[i].empty())
             Settings::values.current_input_profile.analogs[i] = default_param;
     }
 
-    Settings::values.current_input_profile.motion_device = sdl2_config->GetString(
+    Settings::values.current_input_profile.motion_device = android_config->GetString(
         "Controls", "motion_device",
         "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
     Settings::values.current_input_profile.touch_device =
-        sdl2_config->GetString("Controls", "touch_device", "engine:emu_window");
-    Settings::values.current_input_profile.udp_input_address = sdl2_config->GetString(
+        android_config->GetString("Controls", "touch_device", "engine:emu_window");
+    Settings::values.current_input_profile.udp_input_address = android_config->GetString(
         "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
     Settings::values.current_input_profile.udp_input_port =
-        static_cast<u16>(sdl2_config->GetInteger("Controls", "udp_input_port",
-                                                 InputCommon::CemuhookUDP::DEFAULT_PORT));
+        static_cast<u16>(android_config->GetInteger("Controls", "udp_input_port",
+                                                    InputCommon::CemuhookUDP::DEFAULT_PORT));
 
     ReadSetting("Controls", Settings::values.use_artic_base_controller);
 
@@ -135,9 +136,9 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Renderer
-    Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", true);
+    Settings::values.use_gles = android_config->GetBoolean("Renderer", "use_gles", true);
     Settings::values.shaders_accurate_mul =
-        sdl2_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
+        android_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
@@ -152,7 +153,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
     // Workaround to map Android setting for enabling the frame limiter to the format Citra expects
-    if (sdl2_config->GetBoolean("Renderer", "use_frame_limit", true)) {
+    if (android_config->GetBoolean("Renderer", "use_frame_limit", true)) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
         Settings::values.frame_limit = 0;
@@ -166,7 +167,7 @@ void Config::ReadValues() {
     else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)
         default_shader = "Horizontal (builtin)";
     Settings::values.pp_shader_name =
-        sdl2_config->GetString("Renderer", "pp_shader_name", default_shader);
+        android_config->GetString("Renderer", "pp_shader_name", default_shader);
     ReadSetting("Renderer", Settings::values.filter_mode);
     ReadSetting("Renderer", Settings::values.use_integer_scaling);
 
@@ -181,18 +182,19 @@ void Config::ReadValues() {
     // Layout
     // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read
     // since older config files may have other values
-    int layoutInt = (int)sdl2_config->GetInteger(
+    int layoutInt = (int)android_config->GetInteger(
         "Layout", "layout_option", static_cast<int>(Settings::LayoutOption::LargeScreen));
     if (layoutInt < 0 || layoutInt > 5) {
         layoutInt = static_cast<int>(Settings::LayoutOption::LargeScreen);
     }
     Settings::values.layout_option = static_cast<Settings::LayoutOption>(layoutInt);
-    Settings::values.screen_gap = static_cast<int>(sdl2_config->GetReal("Layout", "screen_gap", 0));
+    Settings::values.screen_gap =
+        static_cast<int>(android_config->GetReal("Layout", "screen_gap", 0));
     Settings::values.large_screen_proportion =
-        static_cast<float>(sdl2_config->GetReal("Layout", "large_screen_proportion", 2.25));
+        static_cast<float>(android_config->GetReal("Layout", "large_screen_proportion", 2.25));
     Settings::values.small_screen_position = static_cast<Settings::SmallScreenPosition>(
-        sdl2_config->GetInteger("Layout", "small_screen_position",
-                                static_cast<int>(Settings::SmallScreenPosition::TopRight)));
+        android_config->GetInteger("Layout", "small_screen_position",
+                                   static_cast<int>(Settings::SmallScreenPosition::TopRight)));
     ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
@@ -209,12 +211,12 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.upright_screen);
 
     Settings::values.portrait_layout_option =
-        static_cast<Settings::PortraitLayoutOption>(sdl2_config->GetInteger(
+        static_cast<Settings::PortraitLayoutOption>(android_config->GetInteger(
             "Layout", "portrait_layout_option",
             static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
     Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
-        sdl2_config->GetInteger("Layout", Settings::Keys::secondary_display_layout.c_str(),
-                                static_cast<int>(Settings::SecondaryDisplayLayout::None)));
+        android_config->GetInteger("Layout", Settings::Keys::secondary_display_layout.c_str(),
+                                   static_cast<int>(Settings::SecondaryDisplayLayout::None)));
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
     ReadSetting("Layout", Settings::values.custom_portrait_top_width);
@@ -254,7 +256,7 @@ void Config::ReadValues() {
     ReadSetting("System", Settings::values.init_clock);
     {
         std::string time =
-            sdl2_config->GetString("System", Settings::Keys::init_time.c_str(), "946681277");
+            android_config->GetString("System", Settings::Keys::init_time.c_str(), "946681277");
         try {
             Settings::values.init_time = std::stoll(time);
         } catch (...) {
@@ -270,26 +272,26 @@ void Config::ReadValues() {
     // Camera
     using namespace Service::CAM;
     Settings::values.camera_name[OuterRightCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_right_name.c_str(), "ndk");
+        android_config->GetString("Camera", Settings::Keys::camera_outer_right_name.c_str(), "ndk");
     Settings::values.camera_config[OuterRightCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_right_config.c_str(),
-                               std::string{Camera::NDK::BackCameraPlaceholder});
+        android_config->GetString("Camera", Settings::Keys::camera_outer_right_config.c_str(),
+                                  std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterRightCamera] =
-        sdl2_config->GetInteger("Camera", Settings::Keys::camera_outer_right_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::Keys::camera_outer_right_flip.c_str(), 0);
     Settings::values.camera_name[InnerCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_inner_name.c_str(), "ndk");
+        android_config->GetString("Camera", Settings::Keys::camera_inner_name.c_str(), "ndk");
     Settings::values.camera_config[InnerCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_inner_config.c_str(),
-                               std::string{Camera::NDK::FrontCameraPlaceholder});
+        android_config->GetString("Camera", Settings::Keys::camera_inner_config.c_str(),
+                                  std::string{Camera::NDK::FrontCameraPlaceholder});
     Settings::values.camera_flip[InnerCamera] =
-        sdl2_config->GetInteger("Camera", Settings::Keys::camera_inner_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::Keys::camera_inner_flip.c_str(), 0);
     Settings::values.camera_name[OuterLeftCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_left_name.c_str(), "ndk");
+        android_config->GetString("Camera", Settings::Keys::camera_outer_left_name.c_str(), "ndk");
     Settings::values.camera_config[OuterLeftCamera] =
-        sdl2_config->GetString("Camera", Settings::Keys::camera_outer_left_config.c_str(),
-                               std::string{Camera::NDK::BackCameraPlaceholder});
+        android_config->GetString("Camera", Settings::Keys::camera_outer_left_config.c_str(),
+                                  std::string{Camera::NDK::BackCameraPlaceholder});
     Settings::values.camera_flip[OuterLeftCamera] =
-        sdl2_config->GetInteger("Camera", Settings::Keys::camera_outer_left_flip.c_str(), 0);
+        android_config->GetInteger("Camera", Settings::Keys::camera_outer_left_flip.c_str(), 0);
 
     // Miscellaneous
     ReadSetting("Miscellaneous", Settings::values.log_filter);
@@ -304,7 +306,7 @@ void Config::ReadValues() {
 
     // Debugging
     Settings::values.record_frame_times =
-        sdl2_config->GetBoolean("Debugging", Settings::Keys::record_frame_times.c_str(), false);
+        android_config->GetBoolean("Debugging", Settings::Keys::record_frame_times.c_str(), false);
     ReadSetting("Debugging", Settings::values.renderer_debug);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
@@ -312,18 +314,20 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.enable_rpc_server);
 
     for (const auto& service_module : Service::service_module_map) {
-        bool use_lle = sdl2_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);
+        bool use_lle =
+            android_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);
         Settings::values.lle_modules.emplace(service_module.name, use_lle);
     }
 
     // Web Service
     NetSettings::values.web_api_url =
-        sdl2_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username = sdl2_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = sdl2_config->GetString("WebService", "citra_token", "");
+        android_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
+    NetSettings::values.citra_username =
+        android_config->GetString("WebService", "citra_username", "");
+    NetSettings::values.citra_token = android_config->GetString("WebService", "citra_token", "");
 }
 
 void Config::Reload() {
-    LoadINI(DefaultINI::sdl2_config_file);
+    LoadINI(DefaultINI::android_config_file);
     ReadValues();
 }

@@ -6,7 +6,7 @@
 
 namespace DefaultINI {
 
-const char* sdl2_config_file = R"(
+const char* android_config_file = R"(
 [Controls]
 # The input devices and parameters for each 3DS native input
 # It should be in the format of "engine:[engine_name],[param1]:[value1],[param2]:[value2]..."
