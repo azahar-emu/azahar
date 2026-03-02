@@ -39,10 +39,10 @@ constexpr std::array android_config_omitted_keys = {
 };
 
 // clang-format off
+
 // Is this macro nasty? Yes.
 // Does it make the code way more readable? Also yes.
 #define DECLARE_KEY(KEY) +Settings::HKeys::KEY+BOOST_HANA_STRING(" =")+
-// clang-format on
 
 static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 [Controls]
@@ -554,6 +554,8 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(web_api_url) BOOST_HANA_STRING(R"(
 # Username and token for Citra Web Service
 )") DECLARE_KEY(citra_username) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(citra_token) BOOST_HANA_STRING("\n"))
-                                                             .c_str();
-}
+)") DECLARE_KEY(citra_token) BOOST_HANA_STRING("\n")).c_str();
+
+// clang-format on
+
+} // namespace DefaultINI
