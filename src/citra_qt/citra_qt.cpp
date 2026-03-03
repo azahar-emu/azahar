@@ -461,6 +461,23 @@ GMainWindow::GMainWindow(Core::System& system_)
     if (!game_path.isEmpty()) {
         BootGame(game_path);
     }
+
+    // Add bundled post-processing shaders on first startup
+    std::string shader_dir = FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir);
+
+    if (!FileUtil::IsDirectory(shader_dir)) {
+        FileUtil::CreateDir(shader_dir);
+
+        QDir resourceDir(QStringLiteral(":/shaders"));
+        const QStringList files = resourceDir.entryList(QDir::Files);
+
+        const QString shader_dir_q = QString::fromStdString(shader_dir);
+
+        for (const QString& file : files) {
+            QFile::copy(QStringLiteral(":/shaders/") + file,
+                        shader_dir_q + QLatin1Char('/') + file);
+        }
+    }
 }
 
 GMainWindow::~GMainWindow() {
