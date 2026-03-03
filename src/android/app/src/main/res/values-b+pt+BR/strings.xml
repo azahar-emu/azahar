@@ -107,7 +107,6 @@
     <string name="search_recently_added">Recentemente adicionado</string>
     <string name="search_installed">Instalado</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Analógico</string>
     <string name="controller_c">Direcional C-Stick</string>
     <string name="controller_hotkeys">Teclas de atalho</string>

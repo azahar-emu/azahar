@@ -99,7 +99,6 @@
     <string name="search_recently_added">Son eklenen</string>
     <string name="search_installed">Yüklü</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Kısayol tuşları</string>

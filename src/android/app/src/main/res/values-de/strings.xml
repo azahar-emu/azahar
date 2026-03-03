@@ -100,7 +100,6 @@
     <string name="search_recently_added">Kürzlich hinzugefügt</string>
     <string name="search_installed">Installiert</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Schiebepad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Tastenkürzel</string>

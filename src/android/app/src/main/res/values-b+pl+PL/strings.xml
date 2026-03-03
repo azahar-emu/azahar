@@ -107,7 +107,6 @@
     <string name="search_recently_added">Ostatnio dodane</string>
     <string name="search_installed">Zainstalowane</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Analog</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Skróty klawiszowe</string>
@@ -229,6 +228,8 @@
     <string name="async_shaders_description">Kompiluje shadery w tle, aby zmniejszyć zacinanie się podczas rozgrywki. Po włączeniu należy spodziewać się tymczasowych błędów graficznych</string>
     <string name="linear_filtering">Filtrowanie Linear</string>
     <string name="linear_filtering_description">Włącza filtrowanie liniowe, które sprawia, że grafika w grach jest płynniejsza.</string>
+    <string name="use_integer_scaling">Skalowanie całkowitoliczbowe</string>
+    <string name="use_integer_scaling_description">Skaluje ekrany za pomocą całkowitego mnożnika oryginalnego ekranu 3DS. W przypadku układów z dwoma różnymi rozmiarami ekranu największy ekran jest skalowany całkowicie.</string>
     <string name="texture_filter_name">Filtr tekstur</string>
     <string name="texture_filter_description">Ulepsza oprawę wizualną aplikacji poprzez zastosowanie filtrów do tekstur. Obsługiwane filtry to Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale i MMPX.</string>
     <string name="delay_render_thread">Opóźnienie Renderowania Wątku Gry</string>

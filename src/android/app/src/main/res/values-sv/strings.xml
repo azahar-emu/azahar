@@ -107,7 +107,6 @@
     <string name="search_recently_added">Nyligen tillagd</string>
     <string name="search_installed">Installerad</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-spak</string>
     <string name="controller_hotkeys">Snabbtangenter</string>
@@ -550,6 +549,8 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Förbereder shaders</string>
+    <string name="building_shaders">Bygger %s</string>
+
     <!-- About Game Dialog -->
     <string name="play">Spela</string>
     <string name="uninstall_cia">Avinstallera applikation</string>
