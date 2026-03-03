@@ -529,6 +529,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 
 # Port for listening to GDB connections.
 )") DECLARE_KEY(use_gdbstub) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(gdbstub_port) BOOST_HANA_STRING(R"(
 
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
