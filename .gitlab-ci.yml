@@ -104,6 +104,10 @@ android-arm64-v8a:
   variables:
     ANDROID_NDK_VERSION: 26.2.11394342
     NDK_ROOT: /android-sdk-linux/ndk/$ANDROID_NDK_VERSION
+    LIBNAME: ${CORENAME}_libretro.so
+  artifacts:
+    paths:
+      - $LIBNAME
 
 # iOS arm64
 libretro-build-ios-arm64:
