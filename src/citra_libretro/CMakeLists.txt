@@ -71,7 +71,6 @@ if(ANDROID)
   target_link_libraries(azahar_libretro PRIVATE libretro_common)
   # Link Android log library for __android_log_print
   target_link_libraries(azahar_libretro PRIVATE log)
-  set_target_properties(azahar_libretro PROPERTIES SUFFIX "_android.so")
 endif()
 
 if(MINGW)
