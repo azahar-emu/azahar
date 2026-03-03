@@ -1,8 +1,11 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QCoreApplication>
 #include <QMessageBox>
+#include <QMetaObject>
+#include <QThread>
 #include "citra_qt/camera/camera_util.h"
 #include "citra_qt/camera/qt_camera_base.h"
 #include "common/logging/log.h"
@@ -38,8 +41,15 @@ void QtCameraInterface::SetEffect(Service::CAM::Effect effect) {
 }
 
 std::vector<u16> QtCameraInterface::ReceiveFrame() {
-    return CameraUtil::ProcessImage(QtReceiveFrame(), width, height, output_rgb, flip_horizontal,
-                                    flip_vertical);
+    QImage img;
+    if (QThread::currentThread() == QCoreApplication::instance()->thread()) {
+        img = QtReceiveFrame();
+    } else {
+        QMetaObject::invokeMethod(
+            QCoreApplication::instance(), [&]() { img = QtReceiveFrame(); },
+            Qt::BlockingQueuedConnection);
+    }
+    return CameraUtil::ProcessImage(img, width, height, output_rgb, flip_horizontal, flip_vertical);
 }
 
 std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(const std::string& config,
