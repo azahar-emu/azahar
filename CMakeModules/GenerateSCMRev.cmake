@@ -1,9 +1,10 @@
-list(APPEND CMAKE_MODULE_PATH "${SRC_DIR}/CMakeModules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
+
 include(GenerateBuildInfo)
 generate_build_info()
 
 # The variable SRC_DIR must be passed into the script (since it uses the current build directory for all values of CMAKE_*_DIR)
-set(VIDEO_CORE "${SRC_DIR}/src/video_core")
+set(VIDEO_CORE "${CMAKE_SOURCE_DIR}/src/video_core")
 set(HASH_FILES
     "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.cpp"
     "${VIDEO_CORE}/renderer_opengl/gl_shader_disk_cache.h"
@@ -47,4 +48,4 @@ foreach (F IN LISTS HASH_FILES)
     set(COMBINED "${COMBINED}${TMP}")
 endforeach()
 string(MD5 SHADER_CACHE_VERSION "${COMBINED}")
-configure_file("${SRC_DIR}/src/common/scm_rev.cpp.in" "scm_rev.cpp" @ONLY)
+configure_file("${CMAKE_SOURCE_DIR}/src/common/scm_rev.cpp.in" "scm_rev.cpp" @ONLY)
