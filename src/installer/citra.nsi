@@ -28,7 +28,7 @@ ManifestDPIAware true
 !define BINARY_SOURCE_DIR "..\..\build\bundle"
 
 Name "${PRODUCT_NAME}"
-OutFile "azahar-${PRODUCT_VERSION}-windows-${PRODUCT_VARIANT}-installer.exe"
+OutFile "azahar-windows-${PRODUCT_VARIANT}-${PRODUCT_VERSION}-installer.exe"
 SetCompressor /SOLID lzma
 ShowInstDetails show
 ShowUnInstDetails show

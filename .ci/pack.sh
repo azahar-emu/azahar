@@ -8,7 +8,7 @@ REV_NAME="azahar-$OS-$TARGET-$GITDATE-$GITREV"
 # Determine the name of the release being built.
 if [ "$GITHUB_REF_TYPE" = "tag" ]; then
     RELEASE_NAME=azahar-$GITHUB_REF_NAME
-    REV_NAME="azahar-$GITHUB_REF_NAME-$OS-$TARGET"
+    REV_NAME="azahar-$OS-$TARGET-$GITHUB_REF_NAME"
 else
     RELEASE_NAME=azahar-head
 fi
