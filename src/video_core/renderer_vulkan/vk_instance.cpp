@@ -398,8 +398,6 @@ bool Instance::CreateDevice() {
     const vk::StructureChain feature_chain = physical_device.getFeatures2<
         vk::PhysicalDeviceFeatures2, vk::PhysicalDevicePortabilitySubsetFeaturesKHR,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT,
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR,
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT, vk::PhysicalDeviceIndexTypeUint8FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
@@ -529,8 +527,6 @@ bool Instance::CreateDevice() {
         vk::PhysicalDevicePortabilitySubsetFeaturesKHR{},
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR{},
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT{},
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT{},
         vk::PhysicalDeviceIndexTypeUint8FeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
