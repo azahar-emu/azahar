@@ -56,3 +56,7 @@ repo/
 .ccache/
 node_modules/
 VULKAN_SDK/
+
+# Version info files
+GIT-COMMIT
+GIT-TAG

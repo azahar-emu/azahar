@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -398,8 +398,6 @@ bool Instance::CreateDevice() {
     const vk::StructureChain feature_chain = physical_device.getFeatures2<
         vk::PhysicalDeviceFeatures2, vk::PhysicalDevicePortabilitySubsetFeaturesKHR,
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT,
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT,
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR,
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT, vk::PhysicalDeviceIndexTypeUint8FeaturesEXT,
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT,
@@ -464,7 +462,9 @@ bool Instance::CreateDevice() {
     const bool has_custom_border_color =
         add_extension(VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME, is_qualcomm,
                       "it is broken on most Qualcomm driver versions");
-    const bool has_index_type_uint8 = add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME);
+    const bool has_index_type_uint8 =
+        add_extension(VK_EXT_INDEX_TYPE_UINT8_EXTENSION_NAME, is_moltenvk,
+                      "uint8 index conversion causes memory leaks in MoltenVK");
     const bool has_fragment_shader_interlock =
         add_extension(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME, is_nvidia,
                       "it is broken on Nvidia drivers");
@@ -481,6 +481,9 @@ bool Instance::CreateDevice() {
         return false;
     }
 
+#ifndef HAVE_LIBRETRO
+    // Find graphics queue family. LibRetro builds skip this since queue_family_index
+    // is already set by LibRetroVKInstance from the frontend-provided context.
     bool graphics_queue_found = false;
     for (std::size_t i = 0; i < family_properties.size(); i++) {
         const u32 index = static_cast<u32>(i);
@@ -494,6 +497,7 @@ bool Instance::CreateDevice() {
         LOG_CRITICAL(Render_Vulkan, "Unable to find graphics and/or present queues.");
         return false;
     }
+#endif
 
     static constexpr std::array<f32, 1> queue_priorities = {1.0f};
 
@@ -523,8 +527,6 @@ bool Instance::CreateDevice() {
         vk::PhysicalDevicePortabilitySubsetFeaturesKHR{},
         vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR{},
         vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState2FeaturesEXT{},
-        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT{},
         vk::PhysicalDeviceCustomBorderColorFeaturesEXT{},
         vk::PhysicalDeviceIndexTypeUint8FeaturesEXT{},
         vk::PhysicalDeviceFragmentShaderInterlockFeaturesEXT{},
@@ -612,6 +614,24 @@ bool Instance::CreateDevice() {
 #undef PROP_GET
 #undef FEAT_SET
 
+    // Check layered rendering support on MoltenVK
+    // MoltenVK maps Metal's layeredRendering capability to shaderOutputLayer
+    if (is_moltenvk) {
+        vk::PhysicalDeviceVulkan12Features vulkan12_features;
+        vk::PhysicalDeviceFeatures2 features2;
+        features2.pNext = &vulkan12_features;
+        physical_device.getFeatures2(&features2);
+        if (!vulkan12_features.shaderOutputLayer) {
+            LOG_INFO(Render_Vulkan,
+                     "Disabling layered rendering (shaderOutputLayer not supported by device)");
+            layered_rendering_supported = false;
+        }
+    }
+
+#ifdef HAVE_LIBRETRO
+    // LibRetro builds: device already created by frontend, just return after feature detection
+    return true;
+#else
     try {
         device = physical_device.createDeviceUnique(device_chain.get());
     } catch (vk::ExtensionNotPresentError& err) {
@@ -626,6 +646,7 @@ bool Instance::CreateDevice() {
 
     CreateAllocator();
     return true;
+#endif
 }
 
 void Instance::CreateAllocator() {
@@ -636,9 +657,9 @@ void Instance::CreateAllocator() {
 
     const VmaAllocatorCreateInfo allocator_info = {
         .physicalDevice = physical_device,
-        .device = *device,
+        .device = GetDevice(),
         .pVulkanFunctions = &functions,
-        .instance = *instance,
+        .instance = GetInstance(),
         .vulkanApiVersion = TargetVulkanApiVersion,
     };
 

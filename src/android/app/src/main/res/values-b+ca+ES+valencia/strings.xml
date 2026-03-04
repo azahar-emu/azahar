@@ -100,7 +100,6 @@
     <string name="search_recently_added">Acabats d\'afegir</string>
     <string name="search_installed">Instal·lats</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Pad circular</string>
     <string name="controller_c">Palanca C</string>
     <string name="controller_hotkeys">Tecles de drecera</string>

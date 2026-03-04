@@ -147,7 +147,8 @@ private:
     vk::UniquePipelineCache driver_pipeline_cache;
     vk::UniquePipelineLayout pipeline_layout;
     std::size_t num_worker_threads;
-    Common::ThreadWorker workers;
+    Common::ThreadWorker pipeline_workers;
+    Common::ThreadWorker shader_workers;
     PipelineInfo current_info{};
     GraphicsPipeline* current_pipeline{};
     std::array<DescriptorHeap, NumDescriptorHeaps> descriptor_heaps;

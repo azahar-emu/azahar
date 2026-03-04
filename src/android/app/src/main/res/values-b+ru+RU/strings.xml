@@ -58,7 +58,6 @@
     <string name="search_recently_added">Добавленные недавно</string>
     <string name="search_installed">Установленные</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Джойстик</string>
     <string name="controller_c">C-стик</string>
     <string name="controller_hotkeys">Горячие клавиши</string>

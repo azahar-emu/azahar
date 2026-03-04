@@ -43,6 +43,7 @@ import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.Settings
@@ -50,6 +51,7 @@ import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
+import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
 import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
@@ -59,7 +61,8 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.viewholder.DateTimeViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.HeaderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.InputBindingSettingViewHolder
-import org.citra.citra_emu.features.settings.ui.viewholder.StringMultiChoiceViewHolder
+import org.citra.citra_emu.features.settings.ui.viewholder.StringMultiChoiceViewHolder // TODO: Remove and integrate within MultiChoiceViewHolder
+import org.citra.citra_emu.features.settings.ui.viewholder.MultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.RunnableViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SingleChoiceViewHolder
@@ -67,6 +70,7 @@ import org.citra.citra_emu.features.settings.ui.viewholder.SliderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.StringInputViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SubmenuViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SwitchSettingViewHolder
+import org.citra.citra_emu.fragments.AutoMapDialogFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.SystemSaveGame
@@ -77,7 +81,8 @@ import kotlin.math.roundToInt
 class SettingsAdapter(
     private val fragmentView: SettingsFragmentView,
     public val context: Context
-) : RecyclerView.Adapter<SettingViewHolder?>(), DialogInterface.OnClickListener, DialogInterface.OnMultiChoiceClickListener {
+) : RecyclerView.Adapter<SettingViewHolder?>(), DialogInterface.OnClickListener,
+    DialogInterface.OnMultiChoiceClickListener {
     private var settings: ArrayList<SettingsItem>? = null
     private var clickedItem: SettingsItem? = null
     private var clickedPosition: Int
@@ -107,6 +112,10 @@ class SettingsAdapter(
 
             SettingsItem.TYPE_SINGLE_CHOICE, SettingsItem.TYPE_STRING_SINGLE_CHOICE -> {
                 SingleChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
+            }
+
+            SettingsItem.TYPE_MULTI_CHOICE -> {
+                MultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
             }
 
             SettingsItem.TYPE_SLIDER -> {
@@ -190,24 +199,35 @@ class SettingsAdapter(
                     SettingsItem.TYPE_SLIDER -> {
                         (oldItem as SliderSetting).isEnabled == (newItem as SliderSetting).isEnabled
                     }
+
                     SettingsItem.TYPE_SWITCH -> {
                         (oldItem as SwitchSetting).isEnabled == (newItem as SwitchSetting).isEnabled
                     }
+
                     SettingsItem.TYPE_SINGLE_CHOICE -> {
                         (oldItem as SingleChoiceSetting).isEnabled == (newItem as SingleChoiceSetting).isEnabled
                     }
-                    SettingsItem.TYPE_DATETIME_SETTING -> {
-                        (oldItem as DateTimeSetting).isEnabled == (newItem as DateTimeSetting).isEnabled
+                    
+                    SettingsItem.TYPE_MULTI_CHOICE -> {
+                        (oldItem as MultiChoiceSetting).isEnabled == (newItem as MultiChoiceSetting).isEnabled
                     }
-                    SettingsItem.TYPE_STRING_SINGLE_CHOICE -> {
-                        (oldItem as StringSingleChoiceSetting).isEnabled == (newItem as StringSingleChoiceSetting).isEnabled
-                    }
-                    SettingsItem.TYPE_STRING_INPUT -> {
-                        (oldItem as StringInputSetting).isEnabled == (newItem as StringInputSetting).isEnabled
-                    }
+                    
                     SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
                         (oldItem as StringMultiChoiceSetting).isEnabled == (newItem as StringMultiChoiceSetting).isEnabled
                     }
+
+                    SettingsItem.TYPE_DATETIME_SETTING -> {
+                        (oldItem as DateTimeSetting).isEnabled == (newItem as DateTimeSetting).isEnabled
+                    }
+
+                    SettingsItem.TYPE_STRING_SINGLE_CHOICE -> {
+                        (oldItem as StringSingleChoiceSetting).isEnabled == (newItem as StringSingleChoiceSetting).isEnabled
+                    }
+
+                    SettingsItem.TYPE_STRING_INPUT -> {
+                        (oldItem as StringInputSetting).isEnabled == (newItem as StringInputSetting).isEnabled
+                    }
+
                     else -> {
                         oldItem == newItem
                     }
@@ -226,7 +246,7 @@ class SettingsAdapter(
 
         // If statement is required otherwise the app will crash on activity recreate ex. theme settings
         if (fragmentView.activityView != null)
-            // Reload the settings list to update the UI
+        // Reload the settings list to update the UI
             fragmentView.loadSettingsList()
     }
 
@@ -242,6 +262,27 @@ class SettingsAdapter(
     fun onSingleChoiceClick(item: SingleChoiceSetting, position: Int) {
         clickedPosition = position
         onSingleChoiceClick(item)
+    }
+
+    private fun onMultiChoiceClick(item: MultiChoiceSetting) {
+        clickedItem = item
+
+        val value: BooleanArray = getSelectionForMultiChoiceValue(item);
+        dialog = MaterialAlertDialogBuilder(context)
+            .setTitle(item.nameId)
+            .setMultiChoiceItems(item.choicesId, value, this)
+            .setOnDismissListener {
+                if (clickedPosition != -1) {
+                    notifyItemChanged(clickedPosition)
+                    clickedPosition = -1
+                }
+            }
+            .show()
+    }
+
+    fun onMultiChoiceClick(item: MultiChoiceSetting, position: Int) {
+        clickedPosition = position
+        onMultiChoiceClick(item)
     }
 
     private fun onStringSingleChoiceClick(item: StringSingleChoiceSetting) {
@@ -372,14 +413,14 @@ class SettingsAdapter(
                     sliderString = sliderProgress.roundToInt().toString()
                     if (textSliderValue?.text.toString() != sliderString) {
                         textSliderValue?.setText(sliderString)
-                        textSliderValue?.setSelection(textSliderValue?.length() ?: 0 )
+                        textSliderValue?.setSelection(textSliderValue?.length() ?: 0)
                     }
                 } else {
                     val currentText = textSliderValue?.text.toString()
                     val currentTextValue = currentText.toFloat()
                     if (currentTextValue != sliderProgress) {
                         textSliderValue?.setText(sliderString)
-                        textSliderValue?.setSelection(textSliderValue?.length() ?: 0 )
+                        textSliderValue?.setSelection(textSliderValue?.length() ?: 0)
                     }
                 }
             }
@@ -459,6 +500,7 @@ class SettingsAdapter(
                             }
                             it.setSelectedValue(value)
                         }
+
                         is AbstractShortSetting -> {
                             val value = getValueForSingleChoiceSelection(it, which).toShort()
                             if (it.selectedValue.toShort() != value) {
@@ -466,6 +508,7 @@ class SettingsAdapter(
                             }
                             it.setSelectedValue(value)
                         }
+
                         else -> throw IllegalStateException("Unrecognized type used for SingleChoiceSetting!")
                     }
                     fragmentView?.putSetting(setting)
@@ -511,11 +554,12 @@ class SettingsAdapter(
                             val setting = it.setSelectedValue(value)
                             fragmentView?.putSetting(setting)
                         }
+
                         else -> {
                             val setting = it.setSelectedValue(sliderProgress)
                             fragmentView?.putSetting(setting)
                         }
-                   }
+                    }
                     fragmentView.loadSettingsList()
                     closeDialog()
                 }
@@ -531,13 +575,28 @@ class SettingsAdapter(
                     fragmentView?.putSetting(setting)
                     fragmentView.loadSettingsList()
                     closeDialog()
-               }
+                }
             }
         }
         clickedItem = null
         sliderProgress = -1f
         textInputValue = ""
     }
+
+    //onclick for multichoice
+    override fun onClick(dialog: DialogInterface?, which: Int, isChecked: Boolean) {
+        val mcsetting = clickedItem as? MultiChoiceSetting
+        mcsetting?.let {
+            val value = getValueForMultiChoiceSelection(it, which)
+            if (it.selectedValues.contains(value) != isChecked) {
+                val setting = it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
+                fragmentView?.putSetting(setting)
+                fragmentView?.onSettingChanged()
+            }
+            fragmentView.loadSettingsList()
+        }
+    }
+
 
     fun onLongClick(setting: AbstractSetting, position: Int): Boolean {
         MaterialAlertDialogBuilder(context)
@@ -598,26 +657,42 @@ class SettingsAdapter(
         ).show((fragmentView as SettingsFragment).childFragmentManager, MessageDialogFragment.TAG)
     }
 
+    fun onClickAutoMap() {
+        val activity = fragmentView.activityView as FragmentActivity
+        AutoMapDialogFragment.newInstance {
+            fragmentView.loadSettingsList()
+            fragmentView.onSettingChanged()
+        }.show(activity.supportFragmentManager, AutoMapDialogFragment.TAG)
+    }
+
+    fun onLongClickAutoMap(): Boolean {
+        showConfirmationDialog(R.string.controller_clear_all, R.string.controller_clear_all_confirm) {
+            InputBindingSetting.clearAllBindings()
+            fragmentView.loadSettingsList()
+            fragmentView.onSettingChanged()
+        }
+        return true
+    }
+
     fun onClickRegenerateConsoleId() {
-        MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.regenerate_console_id)
-            .setMessage(R.string.regenerate_console_id_description)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                SystemSaveGame.regenerateConsoleId()
-                notifyDataSetChanged()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        showConfirmationDialog(R.string.regenerate_console_id, R.string.regenerate_console_id_description) {
+            SystemSaveGame.regenerateConsoleId()
+            notifyDataSetChanged()
+        }
     }
 
     fun onClickRegenerateMAC() {
+        showConfirmationDialog(R.string.regenerate_mac_address, R.string.regenerate_mac_address_description) {
+            SystemSaveGame.regenerateMac()
+            notifyDataSetChanged()
+        }
+    }
+
+    private fun showConfirmationDialog(titleId: Int, messageId: Int, onConfirm: () -> Unit) {
         MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.regenerate_mac_address)
-            .setMessage(R.string.regenerate_mac_address_description)
-            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                SystemSaveGame.regenerateMac()
-                notifyDataSetChanged()
-            }
+            .setTitle(titleId)
+            .setMessage(messageId)
+            .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int -> onConfirm() }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
@@ -634,6 +709,16 @@ class SettingsAdapter(
     }
 
     private fun getValueForSingleChoiceSelection(item: SingleChoiceSetting, which: Int): Int {
+        val valuesId = item.valuesId
+        return if (valuesId > 0) {
+            val valuesArray = context.resources.getIntArray(valuesId)
+            valuesArray[which]
+        } else {
+            which
+        }
+    }
+
+    private fun getValueForMultiChoiceSelection(item: MultiChoiceSetting, which: Int): Int {
         val valuesId = item.valuesId
         return if (valuesId > 0) {
             val valuesArray = context.resources.getIntArray(valuesId)
@@ -660,23 +745,22 @@ class SettingsAdapter(
         return -1
     }
 
-
-
-    private fun onStringMultiChoiceClick(item: StringMultiChoiceSetting) {
-        clickedItem = item
-        dialog = context?.let {
-            MaterialAlertDialogBuilder(it)
-                .setTitle(item.nameId)
-                .setMultiChoiceItems(item.choices, item.selectValueIndices, this)
-                .show()
+    private fun getSelectionForMultiChoiceValue(item: MultiChoiceSetting): BooleanArray {
+        val value = item.selectedValues;
+        val valuesId = item.valuesId;
+        if (valuesId > 0) {
+            val valuesArray = context.resources.getIntArray(valuesId);
+            val res = BooleanArray(valuesArray.size){false}
+            for (index in valuesArray.indices) {
+                if (value.contains(valuesArray[index])) {
+                    res[index] = true;
+                }
+            }
+            return res;
         }
+        return BooleanArray(1){false};
     }
-
-    fun onStringMultiChoiceClick(item: StringMultiChoiceSetting, position: Int) {
-        clickedPosition = position
-        onStringMultiChoiceClick(item)
-    }
-
+    
     //TODO: I only added MultiChoice for fleshing out backend, debating whether to remove MultiChoiceSetting and related code for cleaning up
     override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
         when (clickedItem) {
@@ -752,5 +836,4 @@ class SettingsAdapter(
                 }
             }
         }
-    }
 }

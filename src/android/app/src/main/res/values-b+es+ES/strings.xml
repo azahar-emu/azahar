@@ -104,7 +104,6 @@
     <string name="search_recently_added">Recién Añadidos</string>
     <string name="search_installed">Instalados</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Pad Circular</string>
     <string name="controller_c">Palanca C</string>
     <string name="controller_hotkeys">Teclas de atajo</string>

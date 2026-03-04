@@ -432,9 +432,6 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 #endif
 
-    game_list->LoadCompatibilityList();
-    game_list->PopulateAsync(UISettings::values.game_dirs);
-
     mouse_hide_timer.setInterval(default_mouse_timeout);
     connect(&mouse_hide_timer, &QTimer::timeout, this, &GMainWindow::HideMouseCursor);
     connect(ui->menubar, &QMenuBar::hovered, this, &GMainWindow::OnMouseActivity);
@@ -2741,25 +2738,22 @@ void GMainWindow::AdjustSpeedLimit(bool increase) {
 
 void GMainWindow::ToggleScreenLayout() {
     const Settings::LayoutOption new_layout = []() {
-        switch (Settings::values.layout_option.GetValue()) {
-        case Settings::LayoutOption::Default:
-            return Settings::LayoutOption::SingleScreen;
-        case Settings::LayoutOption::SingleScreen:
-            return Settings::LayoutOption::LargeScreen;
-        case Settings::LayoutOption::LargeScreen:
-            return Settings::LayoutOption::HybridScreen;
-        case Settings::LayoutOption::HybridScreen:
-            return Settings::LayoutOption::SideScreen;
-        case Settings::LayoutOption::SideScreen:
-            return Settings::LayoutOption::SeparateWindows;
-        case Settings::LayoutOption::SeparateWindows:
-            return Settings::LayoutOption::CustomLayout;
-        case Settings::LayoutOption::CustomLayout:
-            return Settings::LayoutOption::Default;
-        default:
-            LOG_ERROR(Frontend, "Unknown layout option {}",
-                      Settings::values.layout_option.GetValue());
-            return Settings::LayoutOption::Default;
+        const Settings::LayoutOption current_layout = Settings::values.layout_option.GetValue();
+        std::vector<Settings::LayoutOption> layouts_to_cycle =
+            Settings::values.layouts_to_cycle.GetValue();
+        const auto current_pos =
+            distance(layouts_to_cycle.begin(),
+                     std::find(layouts_to_cycle.begin(), layouts_to_cycle.end(), current_layout));
+        // if the layouts_to_cycle setting has somehow been
+        // cleared out, add just default back in
+        if (layouts_to_cycle.size() == 0) {
+            layouts_to_cycle.push_back(Settings::LayoutOption::Default);
+        }
+        if (current_pos >= layouts_to_cycle.size() - 1) {
+            // either this layout wasn't found or it was last so move to the beginning
+            return layouts_to_cycle[0];
+        } else {
+            return layouts_to_cycle[current_pos + 1];
         }
     }();
 
@@ -3739,6 +3733,11 @@ void GMainWindow::mousePressEvent([[maybe_unused]] QMouseEvent* event) {
 
 void GMainWindow::mouseReleaseEvent([[maybe_unused]] QMouseEvent* event) {
     OnMouseActivity();
+}
+
+void GMainWindow::showEvent([[maybe_unused]] QShowEvent* event) {
+    game_list->LoadCompatibilityList();
+    game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {

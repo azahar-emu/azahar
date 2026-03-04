@@ -27,6 +27,7 @@ enum class WindowSystemType : u8 {
     MacOS,
     X11,
     Wayland,
+    LibRetro,
 };
 
 struct Frame;
@@ -256,6 +257,16 @@ public:
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
     bool isSecondary() const {
         return is_secondary;
+    }
+
+    /**
+     * Requests for a frontend to setup a framebuffer.
+     */
+    virtual void SetupFramebuffer() {}
+
+    /// Flags that the framebuffer should be cleared.
+    virtual bool NeedsClearing() const {
+        return true;
     }
 
     Settings::StereoRenderOption get3DMode() const;

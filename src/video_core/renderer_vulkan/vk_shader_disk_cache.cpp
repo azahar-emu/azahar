@@ -123,7 +123,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseProgrammableVer
 
             shader.program = std::move(program);
             const vk::Device device = parent.instance.GetDevice();
-            parent.workers.QueueWork([device, &shader, this, spirv_id] {
+            parent.shader_workers.QueueWork([device, &shader, this, spirv_id] {
                 auto spirv = CompileGLSL(shader.program, vk::ShaderStageFlagBits::eVertex);
                 AppendVSSPIRV(vs_cache, spirv, spirv_id);
                 shader.program.clear();
@@ -157,7 +157,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFragmentShader(
     if (new_shader) {
         LOG_NEW_OBJECT(Render_Vulkan, "New FS config {:016X}", fs_config_hash);
 
-        parent.workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
+        parent.shader_workers.QueueWork([fs_config, user, this, &shader, fs_config_hash]() {
             std::vector<u32> spirv;
             const bool use_spirv = parent.profile.vk_use_spirv_generator;
             if (use_spirv && !fs_config.UsesSpirvIncompatibleConfig()) {
@@ -212,7 +212,7 @@ std::optional<std::pair<u64, Shader* const>> ShaderDiskCache::UseFixedGeometrySh
         if (new_shader) {
             LOG_NEW_OBJECT(Render_Vulkan, "New GS config {:016X}", gs_config_hash);
 
-            parent.workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
+            parent.shader_workers.QueueWork([gs_config, this, &shader, gs_config_hash]() {
                 ExtraFixedGSConfig extra;
                 extra.use_clip_planes = parent.profile.has_clip_planes;
                 extra.separable_shader = true;
@@ -252,7 +252,7 @@ GraphicsPipeline* ShaderDiskCache::GetPipeline(const PipelineInfo& info) {
         }
         it.value() = std::make_unique<GraphicsPipeline>(
             parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
-            *parent.pipeline_layout, parent.current_shaders, &parent.workers);
+            *parent.pipeline_layout, parent.current_shaders, &parent.pipeline_workers);
     }
 
     if (known_graphic_pipelines.emplace(hash).second) {
@@ -301,11 +301,11 @@ ShaderDiskCache::CacheEntry::CacheEntryHeader ShaderDiskCache::CacheFile::ReadAt
 
     CacheEntry::CacheEntryHeader header;
 
-    if (file.ReadAtArray(&header, 1, position) == sizeof(CacheEntry::CacheEntryHeader)) {
-        return header;
+    if (!ReadFromFileCached(&header, position, sizeof(header))) {
+        return CacheEntry::CacheEntryHeader();
     }
 
-    return CacheEntry::CacheEntryHeader();
+    return header;
 }
 
 ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) {
@@ -323,8 +323,8 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) 
         u32 payload_size = res.header.entry_size - headers_size;
         std::vector<u8> payload(payload_size);
 
-        if (file.ReadAtBytes(payload.data(), payload_size,
-                             position + sizeof(CacheEntry::CacheEntryHeader)) == payload_size) {
+        if (ReadFromFileCached(payload.data(), (position + sizeof(CacheEntry::CacheEntryHeader)),
+                               payload_size)) {
             // Decompress data if needed
             if (res.header.zstd_compressed) {
                 if (Common::Compression::GetDecompressedSize(payload) <
@@ -344,6 +344,7 @@ ShaderDiskCache::CacheEntry ShaderDiskCache::CacheFile::ReadAt(size_t position) 
 size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
     if (!file.IsGood()) {
         next_entry_id = SIZE_MAX;
+        file_size = 0;
         return next_entry_id;
     }
 
@@ -351,7 +352,7 @@ size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
         return next_entry_id;
     }
 
-    const size_t file_size = file.GetSize();
+    file_size = file.GetSize();
     if (file_size == 0) {
         next_entry_id = 0;
         return next_entry_id;
@@ -363,6 +364,7 @@ size_t ShaderDiskCache::CacheFile::GetTotalEntries() {
         footer.version == CacheEntry::CacheEntryFooter::ENTRY_VERSION) {
         next_entry_id = footer.entry_id + 1;
     } else {
+        file_size = 0;
         return SIZE_MAX;
     }
 
@@ -428,7 +430,9 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
 
     switch (mode) {
     case CacheOpMode::READ: {
-        next_entry_id = SIZE_MAX; // Force reading entries agains
+        next_entry_id = SIZE_MAX; // Force reading entries again
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         file = FileUtil::IOFile(filepath, "rb");
         bool is_open = file.IsGood();
         if (is_open) {
@@ -443,6 +447,8 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
             return false;
         }
         file.Close();
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         curr_mode = mode;
         if (next_entry_id == SIZE_MAX) {
             // Cannot append if getting total items fails
@@ -454,6 +460,8 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
     }
     case CacheOpMode::DELETE: {
         next_entry_id = SIZE_MAX;
+        cached_file_data_start = 0;
+        cached_file_data.clear();
         file.Close();
         curr_mode = mode;
         return FileUtil::Delete(filepath);
@@ -471,6 +479,34 @@ bool ShaderDiskCache::CacheFile::SwitchMode(CacheOpMode mode) {
         UNREACHABLE();
     }
     return false;
+}
+
+bool ShaderDiskCache::CacheFile::ReadFromFileCached(void* dst, size_t position, size_t size) {
+    if (!dst || position + size > file_size) {
+        return false;
+    }
+
+    size_t offset = position - cached_file_data_start;
+    if (position < cached_file_data_start || offset > cached_file_data.size() ||
+        size > cached_file_data.size() - offset) {
+        if (size > CacheEntry::MAX_ENTRY_SIZE) {
+            return false;
+        }
+
+        size_t to_read = std::min<size_t>(CacheEntry::MAX_ENTRY_SIZE, file_size - position);
+
+        cached_file_data_start = position;
+        cached_file_data.resize(to_read);
+
+        if (file.ReadAtBytes(cached_file_data.data(), to_read, position) != to_read) {
+            return false;
+        }
+
+        offset = 0;
+    }
+
+    std::memcpy(dst, cached_file_data.data() + offset, size);
+    return true;
 }
 
 std::string ShaderDiskCache::GetVSFile(u64 title_id, bool is_temp) const {
@@ -713,7 +749,10 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
             // New config entry, usually always taken unless there is duplicate entries on the cache
             // for some reason.
 
-            auto shader_it = programmable_vertex_cache.find(entry->spirv_entry_id);
+            // We cannot trust the SPIRV entry ID anymore if we are regenerating.
+            auto shader_it = regenerate_file
+                                 ? programmable_vertex_cache.end()
+                                 : programmable_vertex_cache.find(entry->spirv_entry_id);
             if (shader_it != programmable_vertex_cache.end()) {
                 // The config entry uses a SPIRV entry that was already compiled (this is the usual
                 // path when the cache doesn't need to be re-generated).
@@ -722,40 +761,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                           entry->spirv_entry_id);
 
                 iter_config->second = &shader_it->second;
-
-                if (regenerate_file) {
-                    // In case we are re-generating the cache, we could only have gotten here if the
-                    // SPIRV was already compiled and cached, so only cache the config.
-                    AppendVSConfig(*regenerate_file, *entry, curr.Id());
-                }
-
-                bool new_program = known_vertex_programs.emplace(entry->program_entry_id).second;
-                if (new_program && regenerate_file) {
-                    // If the vertex program is not known at this point we need to save it as well.
-                    // This can happen to config entries that compile to the same SPIRV but use
-                    // different program code (maybe because garbage data was in the program
-                    // buffer).
-                    auto program_it = pending_programs.find(entry->program_entry_id);
-                    if (program_it == pending_programs.end()) {
-                        // Program code not in disk cache, should never happen.
-                        LOG_ERROR(Render_Vulkan, "Missing program code for config entry");
-                        programmable_vertex_map.erase(iter_config);
-                        continue;
-                    }
-
-                    // This is very rare so no need to use the LRU.
-                    auto program_cache_entry = vs_cache.ReadAt(program_it->second);
-                    const VSProgramEntry* program_entry;
-
-                    if (!program_cache_entry.Valid() ||
-                        program_cache_entry.Type() != CacheEntryType::VS_PROGRAM ||
-                        !(program_entry = program_cache_entry.Payload<VSProgramEntry>()) ||
-                        program_entry->version != VSProgramEntry::EXPECTED_VERSION) {
-                        MALFORMED_DISK_CACHE;
-                    }
-
-                    AppendVSProgram(*regenerate_file, *program_entry, entry->program_entry_id);
-                }
+                known_vertex_programs.emplace(entry->program_entry_id).second;
             } else {
                 // Cached SPIRV not found, need to recompile.
 
@@ -859,8 +865,7 @@ bool ShaderDiskCache::InitVSCache(const std::atomic_bool& stop_loading,
                 // Asign the SPIRV shader to the config
                 iter_config->second = &iter_prog->second;
 
-                LOG_DEBUG(Render_Vulkan, "    linked with new SPIRV {:016X}.",
-                          entry->spirv_entry_id);
+                LOG_DEBUG(Render_Vulkan, "    linked with SPIRV {:016X}.", entry->spirv_entry_id);
             }
         }
     }
@@ -1017,7 +1022,7 @@ bool ShaderDiskCache::InitFSCache(const std::atomic_bool& stop_loading,
                      tot_callback_index, "Fragment Shader");
         }
 
-        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", offset.first);
 
         if (fragment_shaders.find(offset.first) != fragment_shaders.end()) {
             // SPIRV of config was already compiled, no need to regenerate
@@ -1250,7 +1255,7 @@ bool ShaderDiskCache::InitGSCache(const std::atomic_bool& stop_loading,
                      tot_callback_index, "Geometry Shader");
         }
 
-        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", curr.Id());
+        LOG_DEBUG(Render_Vulkan, "Linking {:016X}.", offset.first);
 
         if (fixed_geometry_shaders.find(offset.first) != fixed_geometry_shaders.end()) {
             // SPIRV of config was already compiled, no need to regenerate
@@ -1400,6 +1405,11 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
             // if any is missing we cannot build it.
             std::array<Shader*, MAX_SHADER_STAGES> shaders;
 
+            LOG_DEBUG(Render_Vulkan, "    uses VS: {:016X}, FS: {:016X}, GS: {:016X}",
+                      entry->pl_info.shader_ids[ProgramType::VS],
+                      entry->pl_info.shader_ids[ProgramType::FS],
+                      entry->pl_info.shader_ids[ProgramType::GS]);
+
             if (entry->pl_info.shader_ids[ProgramType::VS]) {
                 auto it_vs =
                     programmable_vertex_map.find(entry->pl_info.shader_ids[ProgramType::VS]);
@@ -1444,7 +1454,7 @@ bool ShaderDiskCache::InitPLCache(const std::atomic_bool& stop_loading,
             auto [it_pl, _] = graphics_pipelines.try_emplace(pl_hash_opt);
             it_pl.value() = std::make_unique<GraphicsPipeline>(
                 parent.instance, parent.renderpass_cache, info, *parent.driver_pipeline_cache,
-                *parent.pipeline_layout, shaders, &parent.workers);
+                *parent.pipeline_layout, shaders, &parent.pipeline_workers);
 
             it_pl.value()->TryBuild(false);
 

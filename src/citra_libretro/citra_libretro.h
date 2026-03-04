@@ -4,4 +4,7 @@
 
 #pragma once
 
-int LaunchSdlFrontend(int argc, char** argv);
+#include "core/core.h"
+#include "emu_window/libretro_window.h"
+
+namespace LibRetro {} // namespace LibRetro

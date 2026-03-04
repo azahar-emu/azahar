@@ -49,6 +49,9 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     configuration/configure_layout.cpp
     configuration/configure_layout.h
     configuration/configure_layout.ui
+    configuration/configure_layout_cycle.cpp
+    configuration/configure_layout_cycle.h
+    configuration/configure_layout_cycle.ui
     configuration/configure_dialog.cpp
     configuration/configure_dialog.h
     configuration/configure_general.cpp
@@ -174,6 +177,7 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     precompiled_headers.h
     qt_image_interface.cpp
     qt_image_interface.h
+    setting_qkeys.h
     uisettings.cpp
     uisettings.h
     user_data_migration.cpp
@@ -189,6 +193,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     util/util.cpp
     util/util.h
 )
+
+target_include_directories(citra_qt PUBLIC ${CMAKE_BINARY_DIR}/src)
 
 if (APPLE)
   target_sources(citra_qt PUBLIC

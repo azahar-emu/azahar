@@ -293,6 +293,11 @@ add_library(citra_core STATIC
     hle/service/dlp/dlp_fkcl.h
     hle/service/dlp/dlp_srvr.cpp
     hle/service/dlp/dlp_srvr.h
+    hle/service/dlp/dlp_clt_base.cpp
+    hle/service/dlp/dlp_clt_base.h
+    hle/service/dlp/dlp_base.cpp
+    hle/service/dlp/dlp_base.h
+    hle/service/dlp/dlp_crypto.cpp
     hle/service/dsp/dsp_dsp.cpp
     hle/service/dsp/dsp_dsp.h
     hle/service/err/err_f.cpp

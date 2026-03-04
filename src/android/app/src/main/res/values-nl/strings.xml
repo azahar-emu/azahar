@@ -73,7 +73,6 @@ Vink deze optie in de toekomst nogmaals aan om te zien of er ondersteuning is to
     <string name="search_recently_added">Recent Toegevoegd</string>
     <string name="search_installed">Geïnstalleerd</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Sneltoetsen</string>

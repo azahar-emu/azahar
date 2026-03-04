@@ -1,8 +1,10 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.model
+
+import org.citra.citra_emu.features.settings.SettingKeys
 
 enum class ScaledFloatSetting(
     override val key: String,
@@ -10,7 +12,7 @@ enum class ScaledFloatSetting(
     override val defaultValue: Float,
     val scale: Int
 ) : AbstractFloatSetting {
-    AUDIO_VOLUME("volume", Settings.SECTION_AUDIO, 1.0f, 100);
+    AUDIO_VOLUME(SettingKeys.volume(), Settings.SECTION_AUDIO, 1.0f, 100);
 
     override var float: Float = defaultValue
         get() = field * scale

@@ -100,7 +100,6 @@
     <string name="search_recently_added">最近添加</string>
     <string name="search_installed">已安装</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">方向摇杆</string>
     <string name="controller_c">C 摇杆</string>
     <string name="controller_hotkeys">热键</string>

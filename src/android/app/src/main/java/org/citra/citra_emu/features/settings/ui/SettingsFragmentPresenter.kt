@@ -14,6 +14,7 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -28,12 +29,14 @@ import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.HeaderSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.RunnableSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
@@ -798,6 +801,16 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
 
         sl.apply {
+            add(
+                RunnableSetting(
+                    R.string.controller_auto_map,
+                    R.string.controller_auto_map_description,
+                    true,
+                    R.drawable.ic_controller,
+                    { settingsAdapter.onClickAutoMap() },
+                    onLongClick = { settingsAdapter.onLongClickAutoMap() }
+                )
+            )
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
@@ -833,7 +846,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 add(InputBindingSetting(button, Settings.triggerTitles[i]))
             }
 
-            add(HeaderSetting(R.string.controller_hotkeys))
+            add(HeaderSetting(R.string.controller_hotkeys,R.string.controller_hotkeys_description))
             Settings.hotKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
@@ -930,6 +943,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.resolutionFactorValues,
                     IntSetting.RESOLUTION_FACTOR.key,
                     IntSetting.RESOLUTION_FACTOR.defaultValue
+                )
+            )
+             add(
+                SwitchSetting(
+                    BooleanSetting.USE_INTEGER_SCALING,
+                    R.string.use_integer_scaling,
+                    R.string.use_integer_scaling_description,
+                    BooleanSetting.USE_INTEGER_SCALING.key,
+                    BooleanSetting.USE_INTEGER_SCALING.defaultValue
                 )
             )
             add(
@@ -1179,6 +1201,17 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     BooleanSetting.UPRIGHT_SCREEN.key,
                     BooleanSetting.UPRIGHT_SCREEN.defaultValue
+                )
+            )
+            add(
+                MultiChoiceSetting(
+                    IntListSetting.LAYOUTS_TO_CYCLE,
+                    R.string.layouts_to_cycle,
+                    R.string.layouts_to_cycle_description,
+                    R.array.landscapeLayouts,
+                    R.array.landscapeLayoutValues,
+                    IntListSetting.LAYOUTS_TO_CYCLE.key,
+                    IntListSetting.LAYOUTS_TO_CYCLE.defaultValue
                 )
             )
             add(

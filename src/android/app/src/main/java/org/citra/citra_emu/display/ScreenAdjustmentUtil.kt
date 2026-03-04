@@ -12,6 +12,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.EmulationMenuSettings
@@ -31,8 +32,16 @@ class ScreenAdjustmentUtil(
         BooleanSetting.SWAP_SCREEN.boolean = isEnabled
         settings.saveSetting(BooleanSetting.SWAP_SCREEN, SettingsFile.FILE_NAME_CONFIG)
     }
+
     fun cycleLayouts() {
-        val landscapeValues = context.resources.getIntArray(R.array.landscapeValues)
+
+        val landscapeLayoutsToCycle = IntListSetting.LAYOUTS_TO_CYCLE.list;
+        val landscapeValues =
+            if (landscapeLayoutsToCycle.isNotEmpty())
+                landscapeLayoutsToCycle.toIntArray()
+            else context.resources.getIntArray(
+                R.array.landscapeValues
+            )
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
         if (NativeLibrary.isPortraitMode) {

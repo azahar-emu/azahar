@@ -67,7 +67,10 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
     }
 
     override fun onLongClick(clicked: View): Boolean {
-        // no-op
-        return true
+        if (!setting.isEditable) {
+            adapter.onClickDisabledSetting(true)
+            return true
+        }
+        return setting.onLongClick?.invoke() ?: true
     }
 }

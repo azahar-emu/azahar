@@ -16,8 +16,6 @@ namespace Common {
 struct CPUCaps {
     char cpu_string[0x21];
     char brand_string[0x41];
-    bool sse;
-    bool sse2;
     bool sse3;
     bool ssse3;
     bool sse4_1;
