@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2018 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,8 +9,6 @@
 #include <QCamera>
 #include <QImage>
 #include <QMediaCaptureSession>
-#include <QMetaObject>
-#include <QThread>
 #include <QVideoSink>
 #include "citra_qt/camera/camera_util.h"
 #include "citra_qt/camera/qt_camera_base.h"
@@ -26,8 +24,8 @@ public:
     explicit QtMultimediaCameraHandler(const std::string& camera_name);
     ~QtMultimediaCameraHandler();
 
-    Q_INVOKABLE void StartCapture();
-    Q_INVOKABLE void StopCapture();
+    void StartCapture();
+    void StopCapture();
 
     QImage QtReceiveFrame() {
         return camera_surface->videoFrame().toImage();
@@ -78,33 +76,17 @@ public:
         : QtCameraInterface(flip), handler(handler) {}
 
     void StartCapture() override {
-        if (handler->thread() == QThread::currentThread()) {
-            handler->StartCapture();
-        } else {
-            QMetaObject::invokeMethod(handler.get(), "StartCapture", Qt::BlockingQueuedConnection);
-        }
+        handler->StartCapture();
     }
 
     void StopCapture() override {
-        if (handler->thread() == QThread::currentThread()) {
-            handler->StopCapture();
-        } else {
-            QMetaObject::invokeMethod(handler.get(), "StopCapture", Qt::BlockingQueuedConnection);
-        }
+        handler->StopCapture();
     }
 
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override {}
 
     QImage QtReceiveFrame() override {
-        if (handler->thread() == QThread::currentThread()) {
-            return handler->QtReceiveFrame();
-        }
-
-        QImage frame;
-        QMetaObject::invokeMethod(
-            handler.get(), [&]() { frame = handler->QtReceiveFrame(); },
-            Qt::BlockingQueuedConnection);
-        return frame;
+        return handler->QtReceiveFrame();
     }
 
     bool IsPreviewAvailable() override {

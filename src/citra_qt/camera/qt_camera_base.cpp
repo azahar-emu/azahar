@@ -42,9 +42,11 @@ void QtCameraInterface::SetEffect(Service::CAM::Effect effect) {
 
 std::vector<u16> QtCameraInterface::ReceiveFrame() {
     QImage img;
+    // If executing from Qt thread, call directly as normal
     if (QThread::currentThread() == QCoreApplication::instance()->thread()) {
         img = QtReceiveFrame();
-    } else {
+    } else { // If not on Qt thread, switch to Qt thread to call QtReceiveFrame, as calling it from
+             // a different thread will cause deadlocks in msys2 builds
         QMetaObject::invokeMethod(
             QCoreApplication::instance(), [&]() { img = QtReceiveFrame(); },
             Qt::BlockingQueuedConnection);
