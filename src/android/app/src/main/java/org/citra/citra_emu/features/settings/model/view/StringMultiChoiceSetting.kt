@@ -7,6 +7,7 @@ package org.citra.citra_emu.features.settings.model.view
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
+import org.citra.citra_emu.features.settings.model.StringListSetting
 
 class StringMultiChoiceSetting(
     setting: AbstractSetting?,

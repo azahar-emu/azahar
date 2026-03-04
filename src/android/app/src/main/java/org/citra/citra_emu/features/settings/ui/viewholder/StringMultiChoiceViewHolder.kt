@@ -6,12 +6,11 @@ package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
 import org.citra.citra_emu.databinding.ListItemSettingBinding
-import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
-class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
+class StringMultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {
     private lateinit var setting: SettingsItem
 
@@ -40,16 +39,6 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
 
     private fun getTextSetting(): String {
         when (val item = setting) {
-            is MultiChoiceSetting -> {
-                val resMgr = binding.textSettingDescription.context.resources
-                val values = resMgr.getIntArray(item.valuesId)
-                values.forEachIndexed { i: Int, value: Int ->
-                    if (value in (setting as MultiChoiceSetting).selectedValues) {
-                        return resMgr.getStringArray(item.choicesId)[i]
-                    }
-                }
-                return ""
-            }
 
             is StringMultiChoiceSetting -> {
                 item.values?.forEachIndexed { i: Int, value: String ->
@@ -69,13 +58,7 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             adapter.onClickDisabledSetting(!setting.isEditable)
             return
         }
-
-        if (setting is MultiChoiceSetting) {
-            adapter.onMultiChoiceClick(
-                (setting as MultiChoiceSetting),
-                bindingAdapterPosition
-            )
-        } else if (setting is StringMultiChoiceSetting) {
+        if (setting is StringMultiChoiceSetting) {
             adapter.onStringMultiChoiceClick(
                 (setting as StringMultiChoiceSetting),
                 bindingAdapterPosition

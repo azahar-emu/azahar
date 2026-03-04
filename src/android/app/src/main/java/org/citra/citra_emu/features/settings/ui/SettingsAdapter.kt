@@ -38,7 +38,6 @@ import org.citra.citra_emu.databinding.ListItemSettingsHeaderBinding
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
-import org.citra.citra_emu.features.settings.model.AbstractMultiIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
@@ -49,7 +48,6 @@ import org.citra.citra_emu.features.settings.model.AbstractShortSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
-import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
@@ -61,7 +59,7 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.viewholder.DateTimeViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.HeaderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.InputBindingSettingViewHolder
-import org.citra.citra_emu.features.settings.ui.viewholder.MultiChoiceViewHolder
+import org.citra.citra_emu.features.settings.ui.viewholder.StringMultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.RunnableViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SingleChoiceViewHolder
@@ -136,7 +134,7 @@ class SettingsAdapter(
             }
 
             SettingsItem.TYPE_MULTI_CHOICE, SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
-                MultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
+                StringMultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
             }
 
             else -> {
@@ -206,6 +204,9 @@ class SettingsAdapter(
                     }
                     SettingsItem.TYPE_STRING_INPUT -> {
                         (oldItem as StringInputSetting).isEnabled == (newItem as StringInputSetting).isEnabled
+                    }
+                    SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
+                        (oldItem as StringMultiChoiceSetting).isEnabled == (newItem as StringMultiChoiceSetting).isEnabled
                     }
                     else -> {
                         oldItem == newItem
@@ -659,55 +660,7 @@ class SettingsAdapter(
         return -1
     }
 
-    private fun getSelectionForMultiChoiceValues(item: MultiChoiceSetting): BooleanArray {
-        val checked_values = mutableListOf<Boolean>()
-        val values = item.selectedValues
-        val valuesId = item.valuesId
-        if (valuesId > 0) {
-            val valuesArray = context.resources.getIntArray(valuesId)
-            for (index in valuesArray.indices) {
-                val current = valuesArray[index]
-                if (current in values) {
-                    checked_values.add(true)
-                } else {
-                    checked_values.add(false)
-                }
-            }
-        }
 
-        if (checked_values == null) {
-            return booleanArrayOf(false)
-        } else {
-            return checked_values.toBooleanArray()
-        }
-    }
-    // TODO: Part of MultiChoice Impl
-    /*
-    private fun getValueForMultiChoiceSelection(item: MultiChoiceSetting, which: Int, is_checked: Boolean): Int {
-        val valuesId = item.valuesId
-        if (valuesId > 0) {
-            val valuesArray = context.resources.getIntArray(valuesId)
-            if (is_checked) {
-                return valuesArray[which]
-            }
-        }
-        return which
-    }
-     */
-
-    private fun onMultiChoiceClick(item: MultiChoiceSetting) {
-        clickedItem = item
-        val values = getSelectionForMultiChoiceValues(item)
-        dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(item.nameId)
-            .setMultiChoiceItems(item.choicesId, values, this)
-            .show()
-    }
-
-    fun onMultiChoiceClick(item: MultiChoiceSetting, position: Int) {
-        clickedPosition = position
-        onMultiChoiceClick(item)
-    }
 
     private fun onStringMultiChoiceClick(item: StringMultiChoiceSetting) {
         clickedItem = item
@@ -765,8 +718,8 @@ class SettingsAdapter(
             //TODO: Don't fully know how to grab the setting itself for the buttons so I'm adding them to a backing array to be called later
             //TODO: Likely need to be reimplemented
             is StringMultiChoiceSetting -> {
-                val scSetting = clickedItem as? StringMultiChoiceSetting
-                scSetting?.let {
+                val mcSetting = clickedItem as? StringMultiChoiceSetting
+                mcSetting?.let {
                     val setting = when (it.setting) {
                         is AbstractMultiStringSetting -> {
                             val value = it.getValueAt(which)
