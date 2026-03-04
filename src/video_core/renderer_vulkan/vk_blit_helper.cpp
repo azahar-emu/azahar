@@ -250,8 +250,7 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                                   vk::ShaderStageFlagBits::eCompute, device)},
       depth_to_buffer_comp{Compile(HostShaders::VULKAN_DEPTH_TO_BUFFER_COMP,
                                    vk::ShaderStageFlagBits::eCompute, device)},
-      blit_depth_stencil_frag{Compile(HostShaders::VULKAN_BLIT_DEPTH_STENCIL_FRAG,
-                                      vk::ShaderStageFlagBits::eFragment, device)},
+      blit_depth_stencil_frag{VK_NULL_HANDLE},
       // Texture filtering shader modules
       bicubic_frag{Compile(HostShaders::BICUBIC_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       scale_force_frag{
@@ -263,9 +262,15 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
       d24s8_to_rgba8_pipeline{MakeComputePipeline(d24s8_to_rgba8_comp, compute_pipeline_layout)},
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
-      depth_blit_pipeline{MakeDepthStencilBlitPipeline()},
+      depth_blit_pipeline{VK_NULL_HANDLE},
       linear_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eLinear>)},
       nearest_sampler{device.createSampler(SAMPLER_CREATE_INFO<vk::Filter::eNearest>)} {
+
+    if (instance.IsShaderStencilExportSupported()) {
+        blit_depth_stencil_frag = Compile(HostShaders::VULKAN_BLIT_DEPTH_STENCIL_FRAG,
+                                          vk::ShaderStageFlagBits::eFragment, device);
+        depth_blit_pipeline = MakeDepthStencilBlitPipeline();
+    }
 
     if (instance.HasDebuggingToolAttached()) {
         SetObjectName(device, compute_pipeline_layout, "BlitHelper: compute_pipeline_layout");
@@ -280,7 +285,9 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
         SetObjectName(device, full_screen_vert, "BlitHelper: full_screen_vert");
         SetObjectName(device, d24s8_to_rgba8_comp, "BlitHelper: d24s8_to_rgba8_comp");
         SetObjectName(device, depth_to_buffer_comp, "BlitHelper: depth_to_buffer_comp");
-        SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
+        if (blit_depth_stencil_frag) {
+            SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
+        }
         SetObjectName(device, d24s8_to_rgba8_pipeline, "BlitHelper: d24s8_to_rgba8_pipeline");
         SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
         if (depth_blit_pipeline) {
@@ -304,7 +311,9 @@ BlitHelper::~BlitHelper() {
     device.destroyShaderModule(full_screen_vert);
     device.destroyShaderModule(d24s8_to_rgba8_comp);
     device.destroyShaderModule(depth_to_buffer_comp);
-    device.destroyShaderModule(blit_depth_stencil_frag);
+    if (blit_depth_stencil_frag) {
+        device.destroyShaderModule(blit_depth_stencil_frag);
+    }
     // Destroy texture filtering shader modules
     device.destroyShaderModule(bicubic_frag);
     device.destroyShaderModule(scale_force_frag);
@@ -592,10 +601,6 @@ vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::Pipeli
 }
 
 vk::Pipeline BlitHelper::MakeDepthStencilBlitPipeline() {
-    if (!instance.IsShaderStencilExportSupported()) {
-        return VK_NULL_HANDLE;
-    }
-
     const std::array stages = MakeStages(full_screen_vert, blit_depth_stencil_frag);
     const auto renderpass = renderpass_cache.GetRenderpass(VideoCore::PixelFormat::Invalid,
                                                            VideoCore::PixelFormat::D24S8, false);
