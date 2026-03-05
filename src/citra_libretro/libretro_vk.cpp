@@ -35,13 +35,13 @@ const VkApplicationInfo* GetVulkanApplicationInfo() {
     return &app_info;
 }
 
-void AddExtensionIfAvailable(std::vector<const char*>& enabled_exts,
+bool AddExtensionIfAvailable(std::vector<const char*>& enabled_exts,
                              const std::vector<VkExtensionProperties>& available_exts,
                              const char* ext_name) {
     // Check if already in the list
     for (const char* ext : enabled_exts) {
         if (ext && !strcmp(ext, ext_name)) {
-            return; // Already enabled
+            return true;
         }
     }
 
@@ -50,11 +50,12 @@ void AddExtensionIfAvailable(std::vector<const char*>& enabled_exts,
         if (!strcmp(ext.extensionName, ext_name)) {
             enabled_exts.push_back(ext_name);
             LOG_INFO(Render_Vulkan, "Enabling Vulkan extension: {}", ext_name);
-            return;
+            return true;
         }
     }
 
     LOG_DEBUG(Render_Vulkan, "Vulkan extension {} not available", ext_name);
+    return false;
 }
 
 bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instance,
@@ -97,6 +98,8 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
                             VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_EXT_TOOLING_INFO_EXTENSION_NAME);
     AddExtensionIfAvailable(enabled_exts, available_exts, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+    const bool has_custom_border_color = AddExtensionIfAvailable(
+        enabled_exts, available_exts, VK_EXT_CUSTOM_BORDER_COLOR_EXTENSION_NAME);
 
     // These are beneficial but blacklisted on some platforms due to driver bugs
     // For now, let the Instance class handle these decisions
@@ -165,6 +168,18 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     queue_info.queueCount = 1;
     queue_info.pQueuePriorities = &queue_priority;
 
+    VkPhysicalDeviceFeatures2 enabled_features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    enabled_features.features = merged_features;
+
+    VkPhysicalDeviceCustomBorderColorFeaturesEXT custom_border_color_features{
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT};
+    if (has_custom_border_color) {
+        custom_border_color_features.customBorderColors = VK_TRUE;
+        custom_border_color_features.customBorderColorWithoutFormat = VK_TRUE;
+        custom_border_color_features.pNext = enabled_features.pNext;
+        enabled_features.pNext = &custom_border_color_features;
+    }
+
     VkDeviceCreateInfo device_info{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
@@ -172,7 +187,7 @@ bool CreateVulkanDevice(struct retro_vulkan_context* context, VkInstance instanc
     device_info.ppEnabledExtensionNames = enabled_exts.data();
     device_info.enabledLayerCount = num_required_device_layers;
     device_info.ppEnabledLayerNames = required_device_layers;
-    device_info.pEnabledFeatures = &merged_features;
+    device_info.pNext = &enabled_features;
 
     PFN_vkCreateDevice vkCreateDevice =
         (PFN_vkCreateDevice)get_instance_proc_addr(instance, "vkCreateDevice");
