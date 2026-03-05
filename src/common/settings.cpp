@@ -163,6 +163,8 @@ void LogSettings() {
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
+    log_setting("Debugging_ToggleUniqueDataConsoleType",
+                values.toggle_unique_data_console_type.GetValue());
 }
 
 bool IsConfiguringGlobal() {

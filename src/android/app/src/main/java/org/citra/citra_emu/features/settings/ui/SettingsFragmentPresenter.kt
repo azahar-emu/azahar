@@ -1819,6 +1819,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE,
+                    R.string.toggle_unique_data_console_type,
+                    R.string.toggle_unique_data_console_type_desc,
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE.key,
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.DELAY_START_LLE_MODULES,
                     R.string.delay_start_lle_modules,
                     R.string.delay_start_lle_modules_description,

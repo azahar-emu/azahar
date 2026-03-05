@@ -270,6 +270,16 @@
        </widget>
       </item>
       <item row="2" column="0">
+       <widget class="QCheckBox" name="toggle_unique_data_console_type">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggles the unique data console type (Old 3DS &#8596; New 3DS) to be able to download the opposite system firmware type from system settings.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Toggle unique data console type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
        <widget class="QCheckBox" name="deterministic_async_operations">
         <property name="text">
          <string>Force deterministic async operations</string>
@@ -279,7 +289,7 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
         <widget class="QCheckBox" name="enable_rpc_server">
           <property name="text">
             <string>Enable RPC server</string>
