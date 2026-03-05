@@ -194,7 +194,6 @@ static int GetMajorVersion(const std::string& version) {
     } catch (...) {
         return 0;
     }
-    
 }
 #endif
 
