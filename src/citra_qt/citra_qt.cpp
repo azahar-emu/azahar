@@ -189,7 +189,12 @@ static bool ShouldCheckForPrereleaseUpdates() {
 
 static int GetMajorVersion(const std::string& version) {
     size_t dot = version.find('.');
-    return std::stoi(version.substr(0, dot));
+    try {
+        return std::stoi(version.substr(0, dot));
+    } catch (...) {
+        return 0;
+    }
+    
 }
 #endif
 
