@@ -10,6 +10,8 @@ import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.model.CheapDocument
+import org.citra.citra_emu.utils.BuildUtil
+import java.io.IOException
 import java.net.URLDecoder
 import java.nio.file.Paths
 import java.util.StringTokenizer
@@ -261,6 +263,17 @@ class DocumentsTree {
 
     @Synchronized
     private fun resolvePath(filepath: String): DocumentsNode? {
+        if (!BuildUtil.isGooglePlayBuild) {
+            var isLegalPath = false
+            kotlinDirectoryAccessWhitelist.forEach {
+                if (filepath.startsWith(it)) {
+                    isLegalPath = true
+                }
+            }
+            if (!isLegalPath) {
+                throw IOException("Attempted to resolve forbidden path: " + filepath)
+            }
+        }
         root ?: return null
         val tokens = StringTokenizer(filepath, DELIMITER, false)
         var iterator = root
@@ -352,5 +365,10 @@ class DocumentsTree {
 
     companion object {
         const val DELIMITER = "/"
+        val kotlinDirectoryAccessWhitelist = arrayOf(
+            "/config/",
+            "/log/",
+            "/gpu_drivers/",
+        )
     }
 }
