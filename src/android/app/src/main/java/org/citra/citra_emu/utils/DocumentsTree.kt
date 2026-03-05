@@ -77,8 +77,9 @@ class DocumentsTree {
 
     @Synchronized
     fun getFilename(filepath: String): String {
-        val node = resolvePath(filepath) ?: return ""
-        return node.name
+        val components = filepath.split(DELIMITER).filter { it.isNotEmpty() }
+        val filename = components.last()
+        return filename
     }
 
     @Synchronized
