@@ -626,6 +626,7 @@ bool retro_load_game(const struct retro_game_info* info) {
 #endif
         break;
     case Settings::GraphicsAPI::Software:
+        emu_instance->emu_window->CreateContext();
         emu_instance->game_loaded = do_load_game();
         if (!emu_instance->game_loaded)
             return false;

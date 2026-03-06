@@ -219,17 +219,9 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
 
     Restrict(0, 0, layout.bottom_screen.GetWidth(), layout.bottom_screen.GetHeight());
 
-    // Make the coordinates 0 -> 1
-    projectedX = (float)x / layout.bottom_screen.GetWidth();
-    projectedY = (float)y / layout.bottom_screen.GetHeight();
-
-    // Ensure that the projected position doesn't overlap outside the bottom screen framebuffer.
-    // TODO: Provide config option
-    renderRatio = (float)layout.bottom_screen.GetHeight() / 30;
-
-    // Map the mouse coord to the bottom screen's position
-    projectedX = layout.bottom_screen.left + projectedX * layout.bottom_screen.GetWidth();
-    projectedY = layout.bottom_screen.top + projectedY * layout.bottom_screen.GetHeight();
+    // Store as bottom-screen-local pixel coordinates
+    projectedX = static_cast<float>(x);
+    projectedY = static_cast<float>(y);
 
     isPressed = state;
 
@@ -241,10 +233,15 @@ void MouseTracker::Render(int bufferWidth, int bufferHeight, void* framebuffer_d
         return;
     }
 
-    // Delegate to renderer-specific implementation
+    // Delegate to renderer-specific implementation.
+    // Convert from bottom-screen-local to layout-absolute for the legacy renderers.
     if (cursor_renderer) {
-        cursor_renderer->Render(bufferWidth, bufferHeight, projectedX, projectedY, renderRatio,
-                                framebuffer_layout, framebuffer_data);
+        const float abs_x = framebuffer_layout.bottom_screen.left + projectedX;
+        const float abs_y = framebuffer_layout.bottom_screen.top + projectedY;
+        const float ratio =
+            static_cast<float>(framebuffer_layout.bottom_screen.GetHeight()) / 30.0f;
+        cursor_renderer->Render(bufferWidth, bufferHeight, abs_x, abs_y, ratio, framebuffer_layout,
+                                framebuffer_data);
     }
 }
 
@@ -349,30 +346,12 @@ void OpenGLCursorRenderer::Render(int bufferWidth, int bufferHeight, float proje
 #endif
 
 #ifdef ENABLE_VULKAN
-// Vulkan-specific cursor renderer implementation
-VulkanCursorRenderer::VulkanCursorRenderer() {
-    // Vulkan cursor rendering will be integrated into the main rendering pipeline
-}
-
+// Vulkan cursor is drawn by RendererVulkan::DrawCursor() inside the render pass.
+// This class exists only to satisfy the CursorRenderer interface.
+VulkanCursorRenderer::VulkanCursorRenderer() = default;
 VulkanCursorRenderer::~VulkanCursorRenderer() = default;
-
-void VulkanCursorRenderer::Render(int bufferWidth, int bufferHeight, float projectedX,
-                                  float projectedY, float renderRatio,
-                                  const Layout::FramebufferLayout& layout, void* framebuffer_data) {
-    // Use shared coordinate calculation
-    CursorCoordinates coords(bufferWidth, bufferHeight, projectedX, projectedY, renderRatio,
-                             layout);
-
-    // TODO: Implement actual Vulkan cursor drawing using the renderer's command buffer
-    // This would involve:
-    // 1. Creating a simple vertex buffer with cursor geometry using coords
-    // 2. Using a basic shader pipeline
-    // 3. Recording draw commands into the current command buffer
-    // 4. Using blend mode similar to OpenGL (ONE_MINUS_DST_COLOR, ONE_MINUS_SRC_COLOR)
-
-    // For now, this is a placeholder - the cursor won't be visible in Vulkan mode
-    // but the touchscreen input will still work
-}
+void VulkanCursorRenderer::Render(int, int, float, float, float, const Layout::FramebufferLayout&,
+                                  void*) {}
 #endif
 
 // Software-specific cursor renderer implementation

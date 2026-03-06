@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/math_util.h"
+#include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
 
 #ifdef ENABLE_OPENGL
@@ -53,6 +54,11 @@ public:
                 static_cast<const unsigned int&>(projectedY)};
     }
 
+    /// Get cursor rendering state for external renderers (e.g. Vulkan).
+    Frontend::EmuWindow::CursorInfo GetCursorInfo() const {
+        return {true, projectedX, projectedY};
+    }
+
 private:
     int x;
     int y;
@@ -62,7 +68,6 @@ private:
 
     float projectedX;
     float projectedY;
-    float renderRatio;
 
     bool isPressed;
 
