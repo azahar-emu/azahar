@@ -635,6 +635,7 @@ struct Values {
     Setting<u16> gdbstub_port{24689, Keys::gdbstub_port};
     Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
     Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
+    Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};

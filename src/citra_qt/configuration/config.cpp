@@ -504,6 +504,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
+    ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -1084,6 +1085,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.renderer_debug);
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
+    WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {

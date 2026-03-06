@@ -539,6 +539,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(enable_rpc_server) BOOST_HANA_STRING(R"(
 
+# Enables toggling the unique data console type (Old 3DS <-> New 3DS) to be able to download the opposite system firmware type from system settings.
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(toggle_unique_data_console_type) BOOST_HANA_STRING(R"(
+
 # Delay the start of apps when LLE modules are enabled
 # 0: Off, 1 (default): On
 )") DECLARE_KEY(delay_start_for_lle_modules) BOOST_HANA_STRING(R"(

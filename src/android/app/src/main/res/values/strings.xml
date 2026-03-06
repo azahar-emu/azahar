@@ -357,6 +357,8 @@
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
     <string name="enable_rpc_server">Enable RPC Server</string>
     <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
+    <string name="toggle_unique_data_console_type">Toggle unique data console type</string>
+    <string name="toggle_unique_data_console_type_desc">Toggles the unique data console type (Old 3DS &#8596; New 3DS) to be able to download the opposite system firmware type from system settings.</string>
     <string name="shader_jit">Enable Shader JIT</string>
     <string name="shader_jit_description">Use the JIT engine instead of the interpreter for software shader emulation.</string>
 
