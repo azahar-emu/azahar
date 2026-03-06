@@ -10,16 +10,6 @@
 
 namespace Service::DLP {
 
-enum class DLP_Clt_State : u32 {
-    NotInitialized = 0, // TODO: check on hardware. it probably just errors
-    Initialized = 1,
-    Scanning = 2,
-    Joined = 5,
-    Downloading = 6,
-    WaitingForServerReady = 7,
-    Complete = 9,
-};
-
 // number of bars
 enum class DLPSignalStrength : u8 {
     VeryWeak = 0,
@@ -79,18 +69,13 @@ protected:
                             ///< beacons until at least one tinfo buf element is cleared
     bool is_scanning = false;
     constexpr static inline int beacon_scan_interval_ms = 1000;
+    constexpr static inline u32 dlp_poll_rate_distribute = 0;
     std::vector<std::pair<DLPTitleInfo, DLPServerInfo>> scanned_title_info;
     std::map<Network::MacAddress, bool>
         ignore_servers_list; // ignore servers which give us bad broadcast data
     u64 scan_title_id_filter;
     Network::MacAddress scan_mac_address_filter;
     Network::MacAddress host_mac_address;
-    constexpr static inline u16 dlp_net_info_channel = 0x1;
-    constexpr static inline u16 dlp_bind_node_id = 0x1;
-    constexpr static inline u32 dlp_recv_buffer_size = 0x3c00;
-    constexpr static inline u8 dlp_broadcast_data_channel = 0x1;
-    constexpr static inline u8 dlp_client_data_channel = 0x2;
-    constexpr static inline u8 dlp_host_network_node_id = 0x1;
 
     Core::TimingEventType* beacon_scan_event;
 

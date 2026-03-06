@@ -25,6 +25,7 @@
 #include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
+#include "common/hacks/hack_manager.h"
 
 SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS)
 SERVICE_CONSTRUCT_IMPL(Service::NWM::NWM_UDS)
@@ -716,12 +717,27 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
     return connection_status_event;
 }
 
+// allows people who haven't set up their
+// 3ds to play local play on games which
+// require a unique friend code seed
+void NWM_UDS::CheckSpoofFriendCodeSeed(Kernel::HLERequestContext& ctx, NodeInfo& node) {
+    u64 caller_tid = ctx.ClientThread()->owner_process.lock()->codeset->program_id;
+    if (Common::Hacks::hack_manager.GetHackAllowMode(
+            Common::Hacks::HackType::SPOOF_FRIEND_CODE_SEED, caller_tid,
+            Common::Hacks::HackAllowMode::DISALLOW) == Common::Hacks::HackAllowMode::FORCE) {
+        auto mac_address = GetMacAddress();
+        memcpy(&node.friend_code_seed, mac_address.data(), mac_address.size());
+    }
+}
+
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 sharedmem_size = rp.Pop<u32>();
     auto node = rp.PopRaw<NodeInfo>();
     u16 version = rp.Pop<u16>();
     auto sharedmem = rp.PopObject<Kernel::SharedMemory>();
+
+    CheckSpoofFriendCodeSeed(ctx, node);
 
     auto result = Initialize(sharedmem_size, node, version, std::move(sharedmem));
 
@@ -738,6 +754,8 @@ void NWM_UDS::InitializeDeprecated(Kernel::HLERequestContext& ctx) {
     u32 sharedmem_size = rp.Pop<u32>();
     auto node = rp.PopRaw<NodeInfo>();
     auto sharedmem = rp.PopObject<Kernel::SharedMemory>();
+
+    CheckSpoofFriendCodeSeed(ctx, node);
 
     // The deprecated version uses fixed 0x100 as the version
     auto result = Initialize(sharedmem_size, node, 0x100, std::move(sharedmem));
@@ -960,13 +978,8 @@ Result NWM_UDS::BeginHostingNetwork(std::span<const u8> network_info_buffer,
         // Notify the application that the first node was set.
         connection_status.changed_nodes |= 1;
 
-        if (auto room_member = Network::GetRoomMember().lock()) {
-            if (room_member->IsConnected()) {
-                network_info.host_mac_address = room_member->GetMacAddress();
-            } else {
-                network_info.host_mac_address = {{0x0, 0x0, 0x0, 0x0, 0x0, 0x0}};
-            }
-        }
+        network_info.host_mac_address = GetMacAddress();
+
         node_info[0] = current_node;
 
         // If the game has a preferred channel, use that instead.
@@ -1021,32 +1034,20 @@ void NWM_UDS::BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx) {
     rb.Push(result);
 }
 
-void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-    const u16 network_node_id = rp.Pop<u16>();
-
-    LOG_WARNING(Service_NWM, "(stubbed) called");
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-
+Result NWM_UDS::EjectClientHLE(u16 network_node_id) {
     // The host can not be kicked.
     if (network_node_id == 1) {
-        rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::WrongArgument, ErrorLevel::Usage));
-        return;
+        return Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                       ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
 
     std::scoped_lock lock(connection_status_mutex);
     if (connection_status.status != NetworkStatus::ConnectedAsHost) {
         // Only the host can kick people.
-        rb.Push(Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::InvalidState, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "called with status {}", connection_status.status);
-        return;
+        return Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                       ErrorSummary::InvalidState, ErrorLevel::Usage);
     }
-
-    // This function always returns success if the status is valid.
-    rb.Push(ResultSuccess);
 
     using Network::WifiPacket;
     Network::MacAddress dest_address = Network::BroadcastMac;
@@ -1056,7 +1057,7 @@ void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
 
         if (!address) {
             // There is no error if the network node id was not found.
-            return;
+            return ResultSuccess;
         }
         dest_address = *address;
     }
@@ -1070,6 +1071,21 @@ void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
         SendPacket(deauth);
         SendPacket(deauth);
     }
+    
+    // This function always returns success if the status is valid.
+    return ResultSuccess;
+}
+
+void NWM_UDS::EjectClient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u16 network_node_id = rp.Pop<u16>();
+
+    LOG_WARNING(Service_NWM, "(stubbed) called");
+
+    auto res = EjectClientHLE(network_node_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(res);
 }
 
 Result NWM_UDS::UpdateNetworkAttributeHLE(u16 node_bitmask, u8 flag) {
@@ -1092,21 +1108,16 @@ void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     rb.Push(ResultSuccess);
 }
 
-void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx);
-
+Result NWM_UDS::DestroyNetworkHLE() {
     // Unschedule the beacon broadcast event.
     system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 
     // Only a host can destroy
     std::scoped_lock lock(connection_status_mutex);
     if (connection_status.status != NetworkStatus::ConnectedAsHost) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(Result(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
-                       ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "called with status {}",
                     static_cast<u32>(connection_status.status));
-        return;
+        return Result(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
     // TODO(B3N30): Send 3 Deauth packets
@@ -1118,14 +1129,22 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     node_map.clear();
     connection_status_event->Signal();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-
     for (auto& bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
+    
+    return ResultSuccess;
+}
 
-    rb.Push(ResultSuccess);
+void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    auto res = DestroyNetworkHLE();
+    
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    
+    rb.Push(res);
 
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -1266,7 +1285,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
 
     rb.Push(ResultSuccess);
-    rb.Push<u32>(*ret); // return is data size if gt/eq to 0
+    rb.Push<u32>(*ret);
     rb.Push<u16>(secure_data.src_node_id);
     rb.PushStaticBuffer(std::move(output_buffer), 0);
 }
@@ -1621,6 +1640,23 @@ void NWM_UDS::BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late)
                                       beacon_broadcast_event, 0);
 }
 
+Network::MacAddress NWM_UDS::GetMacAddress() {
+    MacAddress mac;
+
+    if (auto room_member = Network::GetRoomMember().lock(); room_member && room_member->IsConnected()) {
+        mac = room_member->GetMacAddress();
+        if (mac != CFG::GetConsoleMacAddress(system)) {
+            LOG_WARNING(Service_NWM, "Room member mac address is different from the console mac address. Using room member mac address.");
+        }
+    } else {
+        // if we are not connected to the room, we can
+        // use the system mac address. In hopefully all cases
+        // this will match the room member mac addr anyways
+        mac = CFG::GetConsoleMacAddress(system);
+    }
+    return mac;
+}
+
 NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -1665,20 +1701,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
             BeaconBroadcastCallback(user_data, cycles_late);
         });
 
-    MacAddress mac;
-
-    if (auto cfg = system.ServiceManager().GetService<Service::CFG::CFG_U>("cfg:u")) {
-        auto cfg_module = cfg->GetModule();
-        mac = Service::CFG::MacToArray(cfg_module->GetMacAddress());
-    }
-
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        if (room_member->IsConnected()) {
-            mac = room_member->GetMacAddress();
-        }
-    }
-
-    system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
+    system.Kernel().GetSharedPageHandler().SetMacAddress(GetMacAddress());
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         wifi_packet_received = room_member->BindOnWifiPacketReceived(
