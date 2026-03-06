@@ -394,8 +394,15 @@ void DLP_Clt_Base::GetConnectingNodes(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> connected_nodes_buffer;
     connected_nodes_buffer.resize(node_array_len * sizeof(u16));
-    memcpy(connected_nodes_buffer.data(), conn_status.nodes,
-           std::min<u32>(connected_nodes_buffer.size(), conn_status.total_nodes) * sizeof(u16));
+    auto connected_nodes = reinterpret_cast<u16*>(connected_nodes_buffer.data());
+    for (int i = 0, out_idx = 0; i < NWM::UDSMaxNodes; i++) {
+        auto node_id = conn_status.nodes[i];
+        if (!node_id) {
+            continue;
+        }
+        
+        connected_nodes[out_idx++] = node_id;
+    }
 
     rb.Push(ResultSuccess);
     rb.Push<u32>(conn_status.total_nodes);
@@ -476,7 +483,7 @@ void DLP_Clt_Base::BeaconScanCallback(std::uintptr_t user_data, s64 cycles_late)
 
     // set our next scan interval
     system.CoreTiming().ScheduleEvent(
-        msToCycles(std::max<int>(0, beacon_scan_interval_ms -
+        msToCycles(std::max<int>(100, beacon_scan_interval_ms -
                                         beacon_parse_timer_total.GetTimeElapsed().count())) -
             cycles_late,
         beacon_scan_event, 0);
@@ -578,14 +585,20 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
 
     // copy over title string data
     std::copy(broad_pk1->title_short.begin(), broad_pk1->title_short.end(),
-              c_title_info.short_description.begin());
+              c_title_info.title_short.begin());
     std::copy(broad_pk1->title_long.begin(), broad_pk1->title_long.end(),
-              c_title_info.long_description.begin());
+              c_title_info.title_long.begin());
 
     // unique id should be the title id without the tid high shifted 1 byte right
     c_title_info.unique_id = (broad_pk1->child_title_id & 0xFFFFFFFF) >> 8;
+    
+    // LLE DLP seems to get the wrong
+    // required size from HLE AM.
+    // TODO: test on HW and fix this.
+    // this hack may not work on all titles?
+    constexpr u32 transfer_size_to_real_offset = 0x3AC0;
 
-    c_title_info.size = broad_pk1->size + broad_title_size_diff;
+    c_title_info.size = broad_pk1->transfer_size + transfer_size_to_real_offset;
 
     // copy over the icon data
     auto icon_copy_loc = c_title_info.icon.begin();
@@ -661,9 +674,6 @@ void DLP_Clt_Base::ClientConnectionManager() {
         std::this_thread::sleep_for(std::chrono::milliseconds(poll_rate));
     };
 
-    constexpr u32 dlp_poll_rate_normal = 100;
-    constexpr u32 dlp_poll_rate_distribute = 0;
-
     u32 dlp_poll_rate_ms = dlp_poll_rate_normal;
     bool got_corrupted_packets = false;
 
@@ -672,7 +682,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
     while (sleep_poll(dlp_poll_rate_ms), is_connected) {
         std::vector<u8> recv_buf;
 
-        if (int sz = RecvFrom(dlp_host_network_node_id, recv_buf)) {
+        if (int sz = RecvFrom(dlp_bind_node_id, recv_buf)) {
             auto p_head = GetPacketHead(recv_buf);
             // validate packet header
             if (!ValidatePacket(aes, p_head, sz, should_verify_checksum)) {
@@ -752,6 +762,10 @@ void DLP_Clt_Base::ClientConnectionManager() {
                         is_downloading_content = false;
                         LOG_INFO(Service_DLP, "Finished downloading content. Installing...");
 
+                        if (received_fragments.size() != dlp_units_total) {
+                            LOG_WARNING(Service_DLP, "There was a mismatch in fragment indexes, because we did not receive all fragments {} / {}", received_fragments.size(), dlp_units_total);
+                        }
+
                         if (!InstallEncryptedCIAFromFragments(received_fragments)) {
                             LOG_ERROR(Service_DLP, "Could not install DLP encrypted content");
                         } else {
@@ -801,7 +815,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
         }
     }
 
-    uds->UnbindHLE(dlp_host_network_node_id);
+    uds->UnbindHLE(dlp_bind_node_id);
     uds->DisconnectNetworkHLE();
 }
 
@@ -823,6 +837,7 @@ bool DLP_Clt_Base::InstallEncryptedCIAFromFragments(std::set<ReceivedFragment>& 
     auto cia_file = std::make_unique<AM::CIAFile>(system, FS::MediaType::NAND);
     cia_file->AuthorizeDecryptionFromHLE();
     bool install_errored = false;
+
     for (u64 nb = 0; auto& frag : frags) {
         constexpr bool flush_data = true;
         constexpr bool update_timestamp = false;

@@ -2278,7 +2278,7 @@ void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
 
         ProductCode product_code;
 
-        IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
+        IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
         FileSys::NCCHContainer ncch(path);
         ncch.Load();
         std::memcpy(&product_code.code, &ncch.ncch_header.product_code, 0x10);
@@ -2866,7 +2866,7 @@ void Module::Interface::GetNumImportTitleContextsImpl(IPC::RequestParser& rp,
                                                       bool include_installing,
                                                       bool include_finalizing) {
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
 
     u32 count = 0;
@@ -2905,7 +2905,7 @@ void Module::Interface::GetImportTitleContextListImpl(IPC::RequestParser& rp,
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
     rb.Push(written);
 }

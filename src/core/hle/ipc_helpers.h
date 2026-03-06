@@ -32,8 +32,8 @@ public:
     }
 
     void ValidateHeader() {
-        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd {:#x})",
-                         header.raw);
+        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd {:#x}, session: {})",
+                         header.raw, context->Session()->GetName());
     }
 
     void Skip(unsigned size_in_words, bool set_to_null) {

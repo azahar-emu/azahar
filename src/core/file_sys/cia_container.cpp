@@ -199,13 +199,14 @@ Loader::ResultStatus CIAContainer::LoadMetadata(std::span<const u8> meta_data, s
 }
 
 Loader::ResultStatus CIAContainer::LoadSMDH(std::span<const u8> smdh_data, std::size_t offset) {
-    if (smdh_data.size() - offset < sizeof(Loader::SMDH)) {
+    if (smdh_data.size() < sizeof(Loader::SMDH) ||
+        offset > smdh_data.size() - sizeof(Loader::SMDH)) {
         return Loader::ResultStatus::Error;
     }
 
     cia_smdh = std::make_unique<Loader::SMDH>();
 
-    std::memcpy(cia_smdh.get(), smdh_data.data(), sizeof(Loader::SMDH));
+    std::memcpy(cia_smdh.get(), smdh_data.data() + offset, sizeof(Loader::SMDH));
 
     return Loader::ResultStatus::Success;
 }

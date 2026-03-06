@@ -117,7 +117,7 @@ struct ConnectionStatus {
 static_assert(sizeof(ConnectionStatus) == 0x30, "ConnectionStatus has incorrect size.");
 
 struct NetworkInfo {
-    std::array<u8, 6> host_mac_address;
+    MacAddress host_mac_address;
     u8 channel;
     u8 unk1;
     u8 initialized;
@@ -479,6 +479,8 @@ private:
      */
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
+    void CheckSpoofFriendCodeSeed(Kernel::HLERequestContext& ctx, NodeInfo& node);
+
     ResultVal<std::shared_ptr<Kernel::Event>> Initialize(
         u32 sharedmem_size, const NodeInfo& node, u16 version,
         std::shared_ptr<Kernel::SharedMemory> sharedmem);
@@ -499,6 +501,8 @@ private:
     ResultStatus SendToHLE(u32 dest_node_id, u8 data_channel, u32 data_size, u8 flags,
                            std::vector<u8> input_buffer);
     Result UpdateNetworkAttributeHLE(u16 bitmask, u8 flag);
+    Result DestroyNetworkHLE();
+    Result EjectClientHLE(u16 node_id);
 
     Result BeginHostingNetwork(std::span<const u8> network_info_buffer, std::vector<u8> passphrase);
 
@@ -507,6 +511,8 @@ private:
                           std::vector<u8> passphrase);
 
     void ConnectToNetworkHLE(NetworkInfo net_info, u8 connection_type, std::vector<u8> passphrase);
+
+    Network::MacAddress GetMacAddress();
 
     void BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late);
 

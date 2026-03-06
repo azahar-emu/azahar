@@ -15,6 +15,7 @@ enum class HackType : int {
     ONLINE_LLE_REQUIRED,
     REGION_FROM_SECURE,
     REQUIRES_SHADER_FIXUP,
+    SPOOF_FRIEND_CODE_SEED,
 };
 
 class UserHackData {};

@@ -36,7 +36,7 @@ void DLP_FKCL::InitializeWithName(Kernel::HLERequestContext& ctx) {
     u32 shared_mem_size = rp.Pop<u32>();
     u32 max_beacons = rp.Pop<u32>();
     constexpr u32 constant_mem_size = 0;
-    auto username = rp.PopRaw<std::array<u16_le, 10>>();
+    auto username = rp.PopRaw<DLP_Username>();
     rp.Skip(1, false); // possible null terminator or unk flags
     auto [shared_mem, event] = rp.PopObjects<Kernel::SharedMemory, Kernel::Event>();
 
