@@ -174,6 +174,11 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         ui->buttonHome,   ui->buttonPower,
     };
 
+    button_names = {"A Button",     "B Button",      "X Button",     "Y Button",     "D-Pad Up",
+                    "D-Pad Down",   "D-Pad Left",    "D-Pad Right",  "L Button",     "R Button",
+                    "Start Button", "Select Button", "Debug Button", "GPIO4 Button", "ZL Button",
+                    "ZR Button",    "Home Button",   "Power Button"};
+
     analog_map_buttons = {{
         {
             ui->buttonCircleUp,
@@ -198,7 +203,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
             nullptr,
         },
     }};
-
+    analog_names = {"Circle Pad", "C Stick"};
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
     analog_map_deadzone_and_modifier_slider = {ui->sliderCirclePadDeadzoneAndModifier,
                                                ui->sliderCStickDeadzoneAndModifier};
@@ -439,16 +444,72 @@ void ConfigureInput::EmitInputKeysChanged() {
     emit InputKeysChanged(GetUsedKeyboardKeys());
 }
 
-void ConfigureInput::OnHotkeysChanged(QList<QKeySequence> new_key_list) {
+void ConfigureInput::OnHotkeysChanged(
+    QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list) {
     hotkey_list = new_key_list;
 }
 
-QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
-    QList<QKeySequence> list;
+void ConfigureInput::OnClearBinding(ConfigureInput::InputBinding binding) {
+    ClearBinding(binding);
+}
+
+bool sameInput(const Common::ParamPackage& param1, const Common::ParamPackage& param2) {
+    return param1.Has("engine") && param2.Has("engine") &&
+           param1.Get("engine", "") == param2.Get("engine", "") &&
+           param1.Get("guid", "") == param2.Get("guid", "") &&
+           (param1.Get("code", -1) == param2.Get("code", -2) ||
+            param1.Get("button", -1) == param2.Get("button", -2) ||
+            (param1.Get("axis", -1) == param2.Get("axis", -2) &&
+             param1.Get("direction", "a") == param2.Get("direction", "b")) ||
+            (param1.Get("axis_x", -1) == param2.Get("axis_x", -2) &&
+             param1.Get("axis_y", -1) == param2.Get("axis_y", -2)) ||
+            (param1.Get("hat", -1) == param2.Get("hat", -2) &&
+             param1.Get("direction", "a") == param2.Get("direction", "b")));
+}
+
+ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPackage& param) {
+    if (!param.Has("engine"))
+        return {"", "", 0};
+    // check for a button map
+    for (int button = 0; button < Settings::NativeButton::NumButtons; ++button) {
+        const auto& button_param = buttons_param[button];
+        if (sameInput(param, button_param)) {
+            return {"NativeButton", button_names[button], button};
+        }
+    }
+    // check for an analog map
+    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; ++analog_id) {
+        const auto& analog_param = analogs_param[analog_id];
+        if (analog_param.Get("engine", "") == "analog_from_button") {
+            for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; ++sub_button_id) {
+                const Common::ParamPackage sub_button{
+                    analog_param.Get(analog_sub_buttons[sub_button_id], "")};
+                if (sameInput(param, sub_button)) {
+                    return {"AnalogButton",
+                            analog_names[analog_id] + " " + analog_sub_buttons[sub_button_id],
+                            analog_id, sub_button_id};
+                }
+            }
+        } else if (sameInput(param, analog_param)) {
+            return {"Analog", analog_names[analog_id], analog_id};
+        }
+    }
+
+    if (param.Get("engine", "") == "keyboard" &&
+        hotkey_list.contains(QKeySequence(param.Get("code", 0)))) {
+        return hotkey_list[QKeySequence(param.Get("code", 0))];
+    }
+
+    return {"", "", 0};
+}
+
+QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureInput::GetUsedKeyboardKeys() {
+    QMap<QKeySequence, ConfigureInput::InputBinding> list;
     for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
         const auto& button_param = buttons_param[button];
         if (button_param.Get("engine", "") == "keyboard") {
-            list << QKeySequence(button_param.Get("code", 0));
+            list[QKeySequence(button_param.Get("code", 0))] =
+                ConfigureInput::InputBinding{"NativeButton", button_names[button], button};
         }
     }
 
@@ -458,7 +519,10 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
             for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; ++sub_button_id) {
                 const Common::ParamPackage sub_button{
                     analog_param.Get(analog_sub_buttons[sub_button_id], "")};
-                list << QKeySequence(sub_button.Get("code", 0));
+                list[QKeySequence(sub_button.Get("code", 0))] = ConfigureInput::InputBinding{
+                    "AnalogButton",
+                    analog_names[analog_id] + " " + analog_sub_buttons[sub_button_id], analog_id,
+                    sub_button_id};
             }
         }
     }
@@ -496,6 +560,25 @@ void ConfigureInput::RestoreDefaults() {
 
     ApplyConfiguration();
     Settings::SaveProfile(Settings::values.current_input_profile_index);
+}
+
+void ConfigureInput::ClearBinding(InputBinding binding) {
+    if (binding.binding_type == "NativeButton") {
+        buttons_param[binding.index].Clear();
+        button_map[binding.index]->setText(tr("[not set]"));
+    } else if (binding.binding_type == "AnalogButton") {
+        const auto analog_id = binding.index;
+        const auto sub_button_id = binding.sub_index;
+        analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
+        analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
+    } else if (binding.binding_type == "Analog") {
+        const auto analog_id = binding.index;
+        analogs_param[analog_id].Clear();
+        UpdateButtonLabels();
+    } else if (binding.binding_type == "Hotkey") {
+        emit ClearHotkey(binding);
+    }
+    ApplyConfiguration();
 }
 
 void ConfigureInput::ClearAll() {
@@ -628,7 +711,7 @@ void ConfigureInput::HandleClick(QPushButton* button,
     poll_timer->start(200);     // Check for new inputs every 200ms
 }
 
-void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool abort) {
+void ConfigureInput::StopPolling() {
     releaseKeyboard();
     releaseMouse();
     timeout_timer->stop();
@@ -636,7 +719,24 @@ void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool a
     for (auto& poller : device_pollers) {
         poller->Stop();
     }
+}
 
+void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool abort) {
+    auto const currentBinding = GetMapping(params);
+    StopPolling();
+    if (!abort && currentBinding.binding_type != "") {
+        auto response =
+            QMessageBox::question(this, QStringLiteral("Duplicate mapping"),
+                                  QString::fromStdString("This will clear the mapping for " +
+                                                         currentBinding.name + ". Proceed?"),
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (response == QMessageBox::No) {
+            abort = true;
+            return;
+        } else {
+            ClearBinding(currentBinding);
+        }
+    }
     if (!abort && input_setter) {
         (*input_setter)(params);
     }
@@ -651,16 +751,9 @@ void ConfigureInput::keyPressEvent(QKeyEvent* event) {
 
     if (event->key() != Qt::Key_Escape && event->key() != previous_key_code) {
         if (want_keyboard_keys) {
-            // Check if key is already bound
-            if (hotkey_list.contains(QKeySequence(event->key())) ||
-                GetUsedKeyboardKeys().contains(QKeySequence(event->key()))) {
-                SetPollingResult({}, true);
-                QMessageBox::critical(this, tr("Error!"),
-                                      tr("You're using a key that's already bound."));
-                return;
-            }
-            SetPollingResult(Common::ParamPackage{InputCommon::GenerateKeyboardParam(event->key())},
-                             false);
+            auto param = Common::ParamPackage(InputCommon::GenerateKeyboardParam(event->key()));
+            previous_key_code = 0;
+            SetPollingResult(param, false);
         } else {
             // Escape key wasn't pressed and we don't want any keyboard keys, so don't stop
             // polling
