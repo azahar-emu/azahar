@@ -70,6 +70,8 @@ namespace layout {
 static constexpr const char* layout_option = citra_setting(BaseKeys::layout_option);
 static constexpr const char* swap_screen = citra_setting(BaseKeys::swap_screen);
 static constexpr const char* swap_screen_mode = citra_setting(BaseKeys::swap_screen_mode);
+static constexpr const char* large_screen_proportion =
+    citra_setting(BaseKeys::large_screen_proportion);
 } // namespace layout
 
 namespace storage {
@@ -482,6 +484,40 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             { nullptr, nullptr }
         },
         "Toggle"
+    },
+    {
+        config::layout::large_screen_proportion,
+        "Large Screen Proportion",
+        "Large Screen Proportion",
+        "How many times larger the main screen is compared to the small screen "
+        "in the Large Screen layout.",
+        nullptr,
+        config::category::layout,
+        {
+            { "1.00", "1.00x (Equal Size)" },
+            { "1.25", "1.25x" },
+            { "1.50", "1.50x" },
+            { "1.75", "1.75x" },
+            { "2.00", "2.00x" },
+            { "2.25", "2.25x" },
+            { "2.50", "2.50x" },
+            { "2.75", "2.75x" },
+            { "3.00", "3.00x" },
+            { "3.25", "3.25x" },
+            { "3.50", "3.50x" },
+            { "3.75", "3.75x" },
+            { "4.00", "4.00x (Default)" },
+            { "4.25", "4.25x" },
+            { "4.50", "4.50x" },
+            { "4.75", "4.75x" },
+            { "5.00", "5.00x" },
+            { "5.25", "5.25x" },
+            { "5.50", "5.50x" },
+            { "5.75", "5.75x" },
+            { "6.00", "6.00x" },
+            { nullptr, nullptr }
+        },
+        "4.00"
     },
 
     // Storage Category
@@ -920,6 +956,10 @@ static void ParseLayoutOptions(void) {
 
     LibRetro::settings.swap_screen_mode =
         LibRetro::FetchVariable(config::layout::swap_screen_mode, "Toggle");
+
+    auto large_screen_proportion =
+        LibRetro::FetchVariable(config::layout::large_screen_proportion, "4.00");
+    Settings::values.large_screen_proportion = std::stof(large_screen_proportion);
 }
 
 static void ParseStorageOptions(void) {
