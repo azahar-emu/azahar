@@ -323,14 +323,16 @@ class GameAdapter(
             }
         }
 
+        val titleId = game.titleId
+        val dlcTitleId = titleId or 0x8C00000000L
+        val updateTitleId = titleId or 0xE00000000L
+
         popup.setOnMenuItemClickListener { menuItem ->
             val uninstallAction: () -> Unit = {
                 when (menuItem.itemId) {
-                    R.id.game_context_uninstall -> CitraApplication.documentsTree.deleteDocument(dirs.gameDir)
-                    R.id.game_context_uninstall_dlc -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.dlcDir)
-                        .toString())
-                    R.id.game_context_uninstall_updates -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.updatesDir)
-                        .toString())
+                    R.id.game_context_uninstall -> NativeLibrary.uninstallTitle(titleId)
+                    R.id.game_context_uninstall_dlc -> NativeLibrary.uninstallTitle(dlcTitleId)
+                    R.id.game_context_uninstall_updates -> NativeLibrary.uninstallTitle(updateTitleId)
                 }
                 ViewModelProvider(activity)[GamesViewModel::class.java].reloadGames(true)
                 bottomSheetDialog.dismiss()

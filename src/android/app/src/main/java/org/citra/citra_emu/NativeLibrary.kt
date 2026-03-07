@@ -230,6 +230,8 @@ object NativeLibrary {
     external fun playTimeManagerGetPlayTime(titleId: Long): Long
     external fun playTimeManagerGetCurrentTitleId(): Long
 
+    external fun uninstallTitle(titleId: Long): Boolean
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
