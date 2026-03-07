@@ -282,6 +282,7 @@ Loader::SMDH::TitleLanguage DLP_Base::SystemLanguageToSMDHLanguage(CFG::SystemLa
     default:
     }
     UNREACHABLE_MSG("Unknown system language: {}", static_cast<u32>(sys_lang));
+    return SMDH::TitleLanguage::English;
 }
 
 } // namespace Service::DLP
