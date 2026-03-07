@@ -24,6 +24,7 @@ public:
     void ApplyConfiguration();
     void RetranslateUI();
     void SetConfiguration();
+    void RetroAchievementsLogIn();
 
     void SetupPerGameUI();
 

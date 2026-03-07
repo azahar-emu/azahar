@@ -136,6 +136,8 @@ option(ENABLE_SSE42 "Enable SSE4.2 optimizations on x86_64" ON)
 
 option(ENABLE_DEVELOPER_OPTIONS "Enable functionality targeted at emulator developers" OFF)
 
+option(ENABLE_RETROACHIEVEMENTS "Build with RetroAchievements support" OFF)
+
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
 option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
