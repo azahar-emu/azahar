@@ -366,15 +366,6 @@ public:
 
     bool LoadStateBuffer(std::vector<u8> buffer);
 
-    /// Self delete ncch
-    bool SetSelfDelete(const std::string& file) {
-        if (m_filepath == file) {
-            self_delete_pending = true;
-            return true;
-        }
-        return false;
-    }
-
     /// Applies any changes to settings to this core instance.
     void ApplySettings();
 
@@ -480,7 +471,6 @@ private:
     std::string m_chainloadpath;
     std::optional<u8> m_mem_mode;
     u64 title_id;
-    bool self_delete_pending;
 
     std::mutex signal_mutex;
     Signal current_signal;

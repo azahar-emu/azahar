@@ -211,10 +211,33 @@ bool Delete(const std::string& filename) {
     }
 
 #ifdef _WIN32
-    if (!DeleteFileW(Common::UTF8ToUTF16W(filename).c_str())) {
-        LOG_ERROR(Common_Filesystem, "DeleteFile failed on {}: {}", filename, GetLastErrorMsg());
-        return false;
+    // On windows, if we delete a file with an open handle (pending to be deleted) and
+    // then try to open the same file name again, it will fail. On linux this doesn't happen
+    // as the new file will be a different inode, even if it has the same file name.
+    // The 3ds is linux-like, so to emulate this behaviour we need to rename the file
+    // first to an unique name then mark it for deletion. This way we can open new files
+    // with the same name. Once all handles of the old file are closed, the old file will be
+    // finally deleted.
+    static std::atomic<uint64_t> counter{0};
+
+    const std::wstring wfilename = Common::UTF8ToUTF16W(filename);
+    const DWORD pid = GetCurrentProcessId();
+    const uint64_t id = counter++;
+
+    std::wstring deleted_path =
+        wfilename + L".deleted." + std::to_wstring(pid) + L"." + std::to_wstring(id);
+
+    // Rename first
+    if (MoveFileExW(wfilename.c_str(), deleted_path.c_str(), MOVEFILE_REPLACE_EXISTING)) {
+        // Then mark file for deletion
+        DeleteFileW(deleted_path.c_str());
+        return true;
     }
+
+    LOG_ERROR(Common_Filesystem, "Rename to deleted path failed on {}: {}", filename,
+              GetLastErrorMsg());
+
+    return false;
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     if (!AndroidStorage::DeleteDocument(filename)) {
         LOG_ERROR(Common_Filesystem, "unlink failed on {}", filename);
@@ -344,9 +367,10 @@ bool DeleteDir(const std::string& filename) {
 bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
     LOG_TRACE(Common_Filesystem, "{} --> {}", srcFullPath, destFullPath);
 #ifdef _WIN32
-    if (_wrename(Common::UTF8ToUTF16W(srcFullPath).c_str(),
-                 Common::UTF8ToUTF16W(destFullPath).c_str()) == 0)
+    if (MoveFileExW(Common::UTF8ToUTF16W(srcFullPath).c_str(),
+                    Common::UTF8ToUTF16W(destFullPath).c_str(), MOVEFILE_REPLACE_EXISTING)) {
         return true;
+    }
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     // srcFullPath and destFullPath are relative to the user directory
     if (AndroidStorage::GetBuildFlavor() == AndroidStorage::AndroidBuildFlavors::GOOGLEPLAY) {
@@ -1167,11 +1191,46 @@ bool IOFile::Open() {
     Close();
 
 #ifdef _WIN32
-    if (flags == 0) {
-        flags = _SH_DENYNO;
+    // Open with FILE_SHARE_READ, FILE_SHARE_WRITE and FILE_SHARE_DELETE
+    // flags. This mimics linux behaviour as much as possible, which
+    // the 3DS also does.
+
+    const std::wstring wfilename = Common::UTF8ToUTF16W(filename);
+
+    DWORD access = 0;
+    DWORD creation = OPEN_EXISTING;
+
+    if (openmode.find("r") != std::string::npos)
+        access |= GENERIC_READ;
+    if (openmode.find("w") != std::string::npos) {
+        access |= GENERIC_WRITE;
+        creation = CREATE_ALWAYS;
     }
-    m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),
-                      Common::UTF8ToUTF16W(openmode).c_str(), flags);
+    if (openmode.find("a") != std::string::npos) {
+        access |= FILE_APPEND_DATA;
+        creation = OPEN_ALWAYS;
+    }
+    if (openmode.find("+") != std::string::npos) {
+        access |= GENERIC_READ | GENERIC_WRITE;
+    }
+
+    HANDLE h = CreateFileW(wfilename.c_str(), access,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr,
+                           creation, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+    if (h == INVALID_HANDLE_VALUE) {
+        m_good = false;
+        return false;
+    }
+
+    int fd = _open_osfhandle(reinterpret_cast<intptr_t>(h), 0);
+    if (fd == -1) {
+        CloseHandle(h);
+        m_good = false;
+        return m_good;
+    }
+
+    m_file = _fdopen(fd, openmode.c_str());
     m_good = m_file != nullptr;
 
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
