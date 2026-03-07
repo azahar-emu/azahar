@@ -296,7 +296,7 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
 std::string TranslateFilePath(const std::string& filepath) {
     std::optional<std::string> userDirLocation = GetUserDirectory();
     if (userDirLocation) {
-        return *userDirLocation + filepath;
+        return *userDirLocation + "/" + filepath;
     }
     return "";
 }
