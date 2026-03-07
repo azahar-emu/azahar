@@ -916,15 +916,7 @@ bool CIAFile::Close() {
             if (abort) {
                 break;
             }
-
-            // If the file to delete is the current launched rom, signal the system to delete
-            // the current rom instead of deleting it now, once all the handles to the file
-            // are closed.
-            std::string to_delete =
-                GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index);
-            if (!system.IsPoweredOn() || !system.SetSelfDelete(to_delete)) {
-                FileUtil::Delete(to_delete);
-            }
+            FileUtil::Delete(GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index));
         }
 
         FileUtil::Delete(old_tmd_path);
