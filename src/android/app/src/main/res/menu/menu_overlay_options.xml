@@ -79,6 +79,9 @@
             <item
                 android:id="@+id/menu_emulation_adjust_scale_button_swap"
                 android:title="@string/button_swap" />
+            <item
+                android:id="@+id/menu_emulation_adjust_scale_button_combo"
+                android:title="@string/button_combo" />
         </menu>
     </item>
 
