@@ -179,7 +179,7 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
     {
         std::scoped_lock lock(connection_status_mutex);
         if (connection_status.status != NetworkStatus::Connecting) {
-            LOG_TRACE(Service_NWM,
+            LOG_DEBUG(Service_NWM,
                       "Ignored AssociationResponseFrame because connection status is {}",
                       static_cast<u32>(connection_status.status));
             return;
@@ -356,7 +356,7 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     if (connection_status.status != NetworkStatus::ConnectedAsHost &&
         connection_status.status != NetworkStatus::ConnectedAsClient &&
         connection_status.status != NetworkStatus::ConnectedAsSpectator) {
-        LOG_DEBUG(Service_NWM, "Ignored SecureDataPacket because connection status is {}",
+        LOG_TRACE(Service_NWM, "Ignored SecureDataPacket because connection status is {}",
                   static_cast<u32>(connection_status.status));
         return;
     }
