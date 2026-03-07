@@ -70,7 +70,15 @@ object GameHelper {
 
     fun getGame(uri: Uri, isInstalled: Boolean, addedToLibrary: Boolean): Game {
         val filePath = uri.toString()
-        var gameInfo: GameInfo? = GameInfo(filePath)
+        var nativePath: String? = null
+        var gameInfo: GameInfo?
+        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
+            gameInfo = GameInfo(filePath)
+        } else {
+            nativePath = "!" + NativeLibrary.getNativePath(uri);
+            gameInfo = GameInfo(nativePath)
+        }
+
 
         if (gameInfo?.isValid() == false) {
             gameInfo = null
@@ -81,7 +89,11 @@ object GameHelper {
         val newGame = Game(
             (gameInfo?.getTitle() ?: FileUtil.getFilename(uri)).replace("[\\t\\n\\r]+".toRegex(), " "),
             filePath.replace("\n", " "),
-            filePath,
+            if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
+                filePath
+            } else {
+                nativePath!!
+            },
             gameInfo?.getTitleID() ?: 0,
             gameInfo?.getCompany() ?: "",
             if (isEncrypted) { CitraApplication.appContext.getString(R.string.unsupported_encrypted) } else { gameInfo?.getRegions() ?: "" },

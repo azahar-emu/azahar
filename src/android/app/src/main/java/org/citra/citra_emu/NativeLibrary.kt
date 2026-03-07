@@ -698,6 +698,11 @@ object NativeLibrary {
 
         val dirSep = "/"
 
+        val uriString = uri.toString()
+        if (!uriString.contains(":")) { // These raw URIs happen when generating the game list. Why?
+            return uriString
+        }
+
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 
