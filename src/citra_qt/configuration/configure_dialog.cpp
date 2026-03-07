@@ -75,7 +75,10 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_, Cor
             &ConfigureHotkeys::OnInputKeysChanged);
     connect(hotkeys_tab.get(), &ConfigureHotkeys::HotkeysChanged, input_tab.get(),
             &ConfigureInput::OnHotkeysChanged);
-
+    connect(input_tab.get(), &ConfigureInput::ClearHotkey, hotkeys_tab.get(),
+            &ConfigureHotkeys::OnClearBinding);
+    connect(hotkeys_tab.get(), &ConfigureHotkeys::ClearInputBinding, input_tab.get(),
+            &ConfigureInput::OnClearBinding);
     // Synchronise lists upon initialisation
     input_tab->EmitInputKeysChanged();
     hotkeys_tab->EmitHotkeysChanged();

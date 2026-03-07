@@ -30,6 +30,12 @@ class ConfigureInput : public QWidget {
     Q_OBJECT
 
 public:
+    struct InputBinding {
+        std::string binding_type;
+        std::string name;
+        int index;
+        int sub_index = -1; // used for sub-buttons
+    };
     explicit ConfigureInput(Core::System& system, QWidget* parent = nullptr);
     ~ConfigureInput() override;
 
@@ -44,10 +50,12 @@ public:
     /// Save the current input profile index
     void ApplyProfile();
 public slots:
-    void OnHotkeysChanged(QList<QKeySequence> new_key_list);
+    void OnHotkeysChanged(QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list);
+    void OnClearBinding(ConfigureInput::InputBinding binding);
 
 signals:
-    void InputKeysChanged(QList<QKeySequence> new_key_list);
+    void InputKeysChanged(QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list);
+    void ClearHotkey(ConfigureInput::InputBinding hotkey_to_clear);
 
 private:
     Core::System& system;
@@ -66,6 +74,8 @@ private:
 
     /// Each button input is represented by a QPushButton.
     std::array<QPushButton*, Settings::NativeButton::NumButtons> button_map;
+    std::array<std::string, Settings::NativeButton::NumButtons> button_names;
+    std::array<std::string, Settings::NativeAnalog::NumAnalogs> analog_names;
 
     /// A group of five QPushButtons represent one analog input. The buttons each represent up,
     /// down, left, right, and modifier, respectively.
@@ -89,14 +99,17 @@ private:
      * These can't be bound to any input key.
      * Synchronised with ConfigureHotkeys via signal-slot.
      */
-    QList<QKeySequence> hotkey_list;
+    QMap<QKeySequence, ConfigureInput::InputBinding> hotkey_list;
 
     /// A flag to indicate if keyboard keys are okay when configuring an input. If this is false,
     /// keyboard events are ignored.
     bool want_keyboard_keys = false;
 
-    /// Generates list of all used keys
-    QList<QKeySequence> GetUsedKeyboardKeys();
+    /// Generates list of all used keyboard keys for sharing with hotkey code
+    QMap<QKeySequence, ConfigureInput::InputBinding> GetUsedKeyboardKeys();
+    InputBinding GetMapping(const Common::ParamPackage& param);
+
+    void ClearBinding(InputBinding binding);
 
     void MapFromButton(const Common::ParamPackage& params);
     void AutoMap();
@@ -117,7 +130,9 @@ private:
     /// The key code of the previous state of the key being currently bound.
     int previous_key_code;
 
-    /// Finish polling and configure input using the input_setter
+    /// Stop polling
+    void StopPolling();
+    /// configure input using the input_setter
     void SetPollingResult(const Common::ParamPackage& params, bool abort);
 
     /// Handle key press events.
