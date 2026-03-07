@@ -28,7 +28,7 @@ struct DLPTitleInfo {
     std::array<u8, 16> age_ratings;
     std::array<u16, 64> title_short; // UTF-16
     std::array<u16, 128> title_long; // UTF-16
-    std::array<u16, 0x900> icon;           // 48x48, RGB565
+    std::array<u16, 0x900> icon;     // 48x48, RGB565
     u32 size;
     u8 unk2;
     u8 unk3;
@@ -67,7 +67,8 @@ enum class DLP_Clt_State : u16 {
     Downloading = 6,
     WaitingForServerReady = 7,
     Complete = 9,
-    WaitingForAccept = 64, // when a client joins, but is not accepted yet (used on servers w/ manual accept)
+    WaitingForAccept =
+        64, // when a client joins, but is not accepted yet (used on servers w/ manual accept)
 };
 
 // START BIG ENDIAN
@@ -91,17 +92,18 @@ struct DLPPacketHeader {
         std::array<u8, 4> magic;
         struct {
             u8 type;
-            u8 mag0x02; // usually 0x02, but appears to depend on the internal state of a random buffer
+            u8 mag0x02; // usually 0x02, but appears to depend on the internal state of a random
+                        // buffer
             u16 padding;
         };
     };
-    u16_be size;               // size of the whole packet, including the header
+    u16_be size;      // size of the whole packet, including the header
     u16_le must_be_2; // always set to 2
-    u32 checksum;              // always calculate
-    u8 packet_index;           // starts at 0
+    u32 checksum;     // always calculate
+    u8 packet_index;  // starts at 0
     union {
         std::array<u8, 3> resp_id; // client: copies this from host packet when responding to it
-        struct { // for server use
+        struct {                   // for server use
             u8 pk_seq_num;
             std::array<u8, 2> resp_id_high;
         };
@@ -137,12 +139,12 @@ struct DLPBroadcastPacket1 {
     DLPPacketHeader head;
     u64_be child_title_id; // title id of the child being broadcasted
     std::array<u8, 2> unk1;
-    std::array<u8, 2> unk6; // need 0x1 0x1
+    std::array<u8, 2> unk6;    // need 0x1 0x1
     u32_be content_block_size; // full byte size of content block
     u8 max_nodes;
     std::array<u8, 7> unk2;
     u64 unk3;
-    u64 unk4;    // all 0s
+    u64 unk4; // all 0s
     u32_be transfer_size;
     u32_be required_size;
     std::array<u16_be, 64> title_short;
@@ -212,8 +214,8 @@ static_assert(sizeof(DLPSrvr_StartDistribution) == 0x14);
 struct DLPClt_StartDistributionAck_NoContentNeeded {
     DLPPacketHeader head;
     DLPPacketBool initialized; // 0x1
-    u16_be unk2;                  // 0x0. if 0x20, move to ContentNeeded
-    u16_be unk3;                  // 0x0
+    u16_be unk2;               // 0x0. if 0x20, move to ContentNeeded
+    u16_be unk3;               // 0x0
 };
 
 static_assert(sizeof(DLPClt_StartDistributionAck_NoContentNeeded) == 0x18);
@@ -304,6 +306,7 @@ static_assert(sizeof(DLPSrvr_BeginGameFinal) == 0x20);
 class DLP_Base {
 public:
     static Loader::SMDH::TitleLanguage SystemLanguageToSMDHLanguage(CFG::SystemLanguage);
+
 protected:
     DLP_Base(Core::System& s);
     virtual ~DLP_Base() = default;
@@ -335,7 +338,7 @@ protected:
     constexpr static inline u8 dlp_broadcast_data_channel = 0x1;
     constexpr static inline u8 dlp_client_data_channel = 0x2;
     constexpr static inline u8 dlp_host_network_node_id = 0x1;
-    
+
     const u8 first_client_node_id = dlp_host_network_node_id + 1;
 
     DLP_Username username;
@@ -357,7 +360,7 @@ protected:
     bool ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionType conn_type,
                                std::vector<u8> passphrase);
     // out_node: if node_id is broadcast, check which node we received from
-    int RecvFrom(u16 node_id, std::vector<u8>& buffer, u16 *out_node = nullptr);
+    int RecvFrom(u16 node_id, std::vector<u8>& buffer, u16* out_node = nullptr);
     bool SendTo(u16 node_id, u8 data_channel, std::vector<u8>& buffer, u8 flags = 0);
 
     static std::u16string DLPUsernameAsString16(DLP_Username uname);
@@ -411,7 +414,7 @@ protected:
     // adds x bytes to the packet and refreshes the
     // packet body pointer
     template <typename T>
-    void PGen_AddPacketData(T *& p, size_t num_bytes) {
+    void PGen_AddPacketData(T*& p, size_t num_bytes) {
         send_packet_ctx.resize(send_packet_ctx.size() + num_bytes);
         auto head = GetPacketHead(send_packet_ctx);
         head->size = send_packet_ctx.size();

@@ -165,9 +165,9 @@ void IPCRecorderWidget::ApplyFilter(int index) {
         item->setHidden(false);
         return;
     }
-    
+
     auto filters = filter_full.split(u' ');
-    
+
     for (auto& filter : filters) {
         if (filter.isEmpty()) {
             continue;

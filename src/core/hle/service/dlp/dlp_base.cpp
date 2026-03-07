@@ -139,7 +139,7 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     return true;
 }
 
-int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer, u16 *out_node) {
+int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer, u16* out_node) {
     constexpr u32 max_pullpacket_size = 0x3c00;
     std::vector<u8> buffer_out;
 
@@ -247,8 +247,7 @@ bool DLP_Base::ValidatePacket(u32 aes, void* pk, size_t sz, bool checksum) {
 }
 
 u32 DLP_Base::GetNumFragmentsFromTitleSize(u32 tsize) {
-    return Common::AlignUp(tsize, content_fragment_size) /
-           content_fragment_size;
+    return Common::AlignUp(tsize, content_fragment_size) / content_fragment_size;
 }
 
 Loader::SMDH::TitleLanguage DLP_Base::SystemLanguageToSMDHLanguage(CFG::SystemLanguage sys_lang) {
@@ -279,10 +278,9 @@ Loader::SMDH::TitleLanguage DLP_Base::SystemLanguageToSMDHLanguage(CFG::SystemLa
         return SMDH::TitleLanguage::Russian;
     case LANGUAGE_TW:
         return SMDH::TitleLanguage::TraditionalChinese;
-    default:
+    default:;
     }
     UNREACHABLE_MSG("Unknown system language: {}", static_cast<u32>(sys_lang));
-    return SMDH::TitleLanguage::English;
 }
 
 } // namespace Service::DLP

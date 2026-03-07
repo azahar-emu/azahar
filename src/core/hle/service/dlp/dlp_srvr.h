@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include "common/timer.h"
 #include "core/hle/service/service.h"
 #include "dlp_base.h"
-#include "common/timer.h"
 
 namespace Service::FS {
 class FS_USER;
@@ -49,9 +49,9 @@ private:
     std::mutex broadcast_mutex;
     const std::array<u8, 3> default_resp_id{};
     Network::MacAddress host_mac_address;
-    
+
     std::atomic_int dlp_srvr_poll_rate_ms;
-    
+
     struct TitleBroadcastInfo {
         u64 title_id;
         u64 title_size;
@@ -61,10 +61,10 @@ private:
         std::array<u16, 0x40> title_short;
         std::array<u16, 0x80> title_long;
     } title_broadcast_info;
-    
+
     std::atomic_bool is_distributing;
     std::atomic_bool is_waiting_for_passphrase;
-    
+
     struct ClientState {
         ClientState() {
             rate_timer.Start();
@@ -96,7 +96,7 @@ private:
         u8 network_node_id;
         std::array<u8, 2> resp_id;
         u16 next_req_ack;
-        
+
         std::array<u8, 3> GetPkRespId() {
             return {pk_seq_num, resp_id[0], resp_id[1]};
         }
@@ -129,14 +129,12 @@ private:
                 LOG_ERROR(Service_DLP, "Unknown client state");
                 break;
             }
-            
-            bool is_joined = state != NotJoined &&
-                             state != NeedsAuth &&
-                             state != NeedsAuthAck;
-            
+
+            bool is_joined = state != NotJoined && state != NeedsAuth && state != NeedsAuthAck;
+
             return static_cast<u32>(state_lle) << 24 | is_joined << 16 | network_node_id;
         }
-        
+
         // could be used in getclientstate
         enum : u8 {
             NotJoined = 0,
@@ -150,24 +148,26 @@ private:
             SentPassphrase,
         } state;
     };
-    
+
     std::vector<ClientState> client_states;
     std::recursive_mutex client_states_mutex;
-    
-    ClientState *GetClState(u8 node_id, bool should_error = true);
-    
+
+    ClientState* GetClState(u8 node_id, bool should_error = true);
+
     Core::TimingEventType* title_broadcast_event;
-    
+
     std::atomic_bool is_hosting;
     std::thread server_connection_worker;
-    
+
     void ServerConnectionManager();
     void EndConnectionManager();
     void SendAuthPacket(ClientState& cl);
     bool SendNextCIAFragment(ClientState& cl, u8 block_frag_index);
 
     u8 GetSrvrState();
-    void InitializeSrvrCommon(u32 shared_mem_size, u8 max_clnts, u32 process_id, DLP_Username uname, std::shared_ptr<Kernel::SharedMemory> shared_mem, std::shared_ptr<Kernel::Event> event);
+    void InitializeSrvrCommon(u32 shared_mem_size, u8 max_clnts, u32 process_id, DLP_Username uname,
+                              std::shared_ptr<Kernel::SharedMemory> shared_mem,
+                              std::shared_ptr<Kernel::Event> event);
     bool CacheContentFileInMemory(u32 process_id);
     void TitleBroadcastCallback(std::uintptr_t user_data, s64 cycles_late);
     void EnsureEndBroadcaster();

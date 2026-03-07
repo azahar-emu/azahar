@@ -9,6 +9,7 @@
 #include <cryptopp/osrng.h>
 #include "common/archives.h"
 #include "common/common_types.h"
+#include "common/hacks/hack_manager.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -25,7 +26,6 @@
 #include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
-#include "common/hacks/hack_manager.h"
 
 SERIALIZE_EXPORT_IMPL(Service::NWM::NWM_UDS)
 SERVICE_CONSTRUCT_IMPL(Service::NWM::NWM_UDS)
@@ -1038,15 +1038,15 @@ Result NWM_UDS::EjectClientHLE(u16 network_node_id) {
     // The host can not be kicked.
     if (network_node_id == 1) {
         return Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::WrongArgument, ErrorLevel::Usage);
+                      ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
 
     std::scoped_lock lock(connection_status_mutex);
     if (connection_status.status != NetworkStatus::ConnectedAsHost) {
         // Only the host can kick people.
         LOG_WARNING(Service_NWM, "called with status {}", connection_status.status);
-        return Result(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                       ErrorSummary::InvalidState, ErrorLevel::Usage);
+        return Result(ErrorDescription::NotAuthorized, ErrorModule::UDS, ErrorSummary::InvalidState,
+                      ErrorLevel::Usage);
     }
 
     using Network::WifiPacket;
@@ -1071,7 +1071,7 @@ Result NWM_UDS::EjectClientHLE(u16 network_node_id) {
         SendPacket(deauth);
         SendPacket(deauth);
     }
-    
+
     // This function always returns success if the status is valid.
     return ResultSuccess;
 }
@@ -1117,7 +1117,8 @@ Result NWM_UDS::DestroyNetworkHLE() {
     if (connection_status.status != NetworkStatus::ConnectedAsHost) {
         LOG_WARNING(Service_NWM, "called with status {}",
                     static_cast<u32>(connection_status.status));
-        return Result(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState, ErrorLevel::Status);
+        return Result(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
+                      ErrorLevel::Status);
     }
 
     // TODO(B3N30): Send 3 Deauth packets
@@ -1133,7 +1134,7 @@ Result NWM_UDS::DestroyNetworkHLE() {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
-    
+
     return ResultSuccess;
 }
 
@@ -1141,9 +1142,9 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
 
     auto res = DestroyNetworkHLE();
-    
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    
+
     rb.Push(res);
 
     LOG_DEBUG(Service_NWM, "called");
@@ -1643,10 +1644,12 @@ void NWM_UDS::BeaconBroadcastCallback(std::uintptr_t user_data, s64 cycles_late)
 Network::MacAddress NWM_UDS::GetMacAddress() {
     MacAddress mac;
 
-    if (auto room_member = Network::GetRoomMember().lock(); room_member && room_member->IsConnected()) {
+    if (auto room_member = Network::GetRoomMember().lock();
+        room_member && room_member->IsConnected()) {
         mac = room_member->GetMacAddress();
         if (mac != CFG::GetConsoleMacAddress(system)) {
-            LOG_WARNING(Service_NWM, "Room member mac address is different from the console mac address. Using room member mac address.");
+            LOG_WARNING(Service_NWM, "Room member mac address is different from the console mac "
+                                     "address. Using room member mac address.");
         }
     } else {
         // if we are not connected to the room, we can
