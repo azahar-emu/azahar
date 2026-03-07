@@ -110,6 +110,7 @@ protected:
     bool InstallEncryptedCIAFromFragments(std::set<ReceivedFragment>& frags);
     void DisconnectFromServer();
     bool IsIdling();
+    bool FinishedCurrentContentBlock();
 
     void GetMyStatus(Kernel::HLERequestContext& ctx);
     void GetChannels(Kernel::HLERequestContext& ctx);

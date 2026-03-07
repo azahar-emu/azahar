@@ -591,14 +591,8 @@ void DLP_Clt_Base::CacheBeaconTitleInfo(Network::WifiPacket& beacon) {
 
     // unique id should be the title id without the tid high shifted 1 byte right
     c_title_info.unique_id = (broad_pk1->child_title_id & 0xFFFFFFFF) >> 8;
-    
-    // LLE DLP seems to get the wrong
-    // required size from HLE AM.
-    // TODO: test on HW and fix this.
-    // this hack may not work on all titles?
-    constexpr u32 transfer_size_to_real_offset = 0x3AC0;
 
-    c_title_info.size = broad_pk1->transfer_size + transfer_size_to_real_offset;
+    c_title_info.size = broad_pk1->transfer_size;
 
     // copy over the icon data
     auto icon_copy_loc = c_title_info.icon.begin();
@@ -694,6 +688,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
             // now we can parse the packet
             std::scoped_lock lock{clt_state_mutex, title_info_mutex};
             if (p_head->type == dl_pk_type_auth) {
+                LOG_DEBUG(Service_DLP, "Recv auth");
                 auto s_body =
                     PGen_SetPK<DLPClt_AuthAck>(dl_pk_head_auth_header, 0, p_head->resp_id);
                 s_body->initialized = true;
@@ -702,6 +697,7 @@ void DLP_Clt_Base::ClientConnectionManager() {
                 s_body->resp_id = {0x01, 0x02};
                 PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
             } else if (p_head->type == dl_pk_type_start_dist) {
+                LOG_DEBUG(Service_DLP, "Recv start dist");
                 // poll rate on non-downloading clients still needs to
                 // be quick enough to eat broadcast content frag packets
                 dlp_poll_rate_ms = dlp_poll_rate_distribute;
@@ -773,6 +769,8 @@ void DLP_Clt_Base::ClientConnectionManager() {
                         }
 
                         clt_state = DLP_Clt_State::WaitingForServerReady;
+                    } else if (FinishedCurrentContentBlock()) {
+                        current_content_block++;
                     }
                 }
             } else if (p_head->type == dl_pk_type_finish_dist) {
@@ -780,20 +778,20 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     auto r_pbody = GetPacketBody<DLPSrvr_FinishContentUpload>(recv_buf);
                     auto s_body = PGen_SetPK<DLPClt_FinishContentUploadAck>(
                         dl_pk_head_finish_dist_header, 0, p_head->resp_id);
-                    if (is_downloading_content) {
-                        current_content_block++;
-                    }
                     s_body->initialized = true;
-                    s_body->unk2 = 0x1;
+                    s_body->finished_cur_block = FinishedCurrentContentBlock();
                     s_body->needs_content = is_downloading_content;
-                    s_body->seq_ack = r_pbody->seq_num + 1;
+                    s_body->seq_ack = current_content_block;
                     s_body->unk4 = 0x0;
                     PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
+                    
+                    LOG_DEBUG(Service_DLP, "Recv finish dist, fc: {}, {} / {}", FinishedCurrentContentBlock(), dlp_units_downloaded, dlp_units_total);
                 } else {
                     LOG_ERROR(Service_DLP, "Received finish dist packet, but packet index was {}",
                               p_head->packet_index);
                 }
             } else if (p_head->type == dl_pk_type_start_game) {
+                LOG_DEBUG(Service_DLP, "Recv start game");
                 if (p_head->packet_index == 0) {
                     dlp_poll_rate_ms = dlp_poll_rate_normal;
                     auto s_body = PGen_SetPK<DLPClt_BeginGameAck>(dl_pk_head_start_game_header, 0,
@@ -866,6 +864,10 @@ void DLP_Clt_Base::DisconnectFromServer() {
 bool DLP_Clt_Base::IsIdling() {
     std::scoped_lock lock(beacon_mutex);
     return !is_scanning && !is_connected;
+}
+
+bool DLP_Clt_Base::FinishedCurrentContentBlock() {
+    return dlp_units_downloaded % dlp_content_block_length == 0 || dlp_units_downloaded == dlp_units_total;
 }
 
 } // namespace Service::DLP

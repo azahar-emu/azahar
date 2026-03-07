@@ -281,7 +281,7 @@ Loader::SMDH::TitleLanguage DLP_Base::SystemLanguageToSMDHLanguage(CFG::SystemLa
         return SMDH::TitleLanguage::TraditionalChinese;
     default:
     }
-    LOG_WARNING(Service_DLP, "Unknown system language: {}", static_cast<u32>(sys_lang));
+    UNREACHABLE_MSG("Unknown system language: {}", static_cast<u32>(sys_lang));
 }
 
 } // namespace Service::DLP
