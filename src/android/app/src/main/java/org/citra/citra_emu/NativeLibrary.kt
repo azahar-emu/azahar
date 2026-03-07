@@ -693,34 +693,37 @@ object NativeLibrary {
 
     @Keep
     @JvmStatic
-    fun getUserDirectory(uriOverride: Uri? = null): String {
+    fun getNativePath(uri: Uri): String {
         BuildUtil.assertNotGooglePlay()
 
-        val preferences: SharedPreferences =
-            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-
         val dirSep = "/"
-        val udUri = uriOverride ?:
-                    preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
-        val udPathSegment = udUri.lastPathSegment!!
-        val udVirtualPath = udPathSegment.substringAfter(":")
 
-        if (udPathSegment.startsWith("primary:")) { // User directory is located in primary storage
+        val pathSegment = uri.lastPathSegment!!
+        val virtualPath = pathSegment.substringAfter(":")
+
+        if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
             val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
-            return primaryStoragePath + dirSep + udVirtualPath + dirSep
+            return primaryStoragePath + dirSep + virtualPath + dirSep
         } else { // User directory probably located on a removable storage device
-            val storageIdString = udPathSegment.substringBefore(":")
-            val udRemovablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
+            val storageIdString = pathSegment.substringBefore(":")
+            val removablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
 
-            if (udRemovablePath == null) {
+            if (removablePath == null) {
                 android.util.Log.e("NativeLibrary",
-                    "Unknown mount location for storage device '$storageIdString' (URI: $udUri)"
+                    "Unknown mount location for storage device '$storageIdString' (URI: $uri)"
                 )
                 return ""
             }
-            return udRemovablePath + dirSep + udVirtualPath + dirSep
+            return removablePath + dirSep + virtualPath
         }
+    }
 
+    @Keep
+    @JvmStatic
+    fun getUserDirectory(): String {
+        val preferences: SharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+        return getNativePath(preferences.getString("CITRA_DIRECTORY", "")!!.toUri())
     }
 
     @Keep
