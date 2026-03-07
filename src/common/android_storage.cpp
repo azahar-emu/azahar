@@ -163,13 +163,27 @@ std::optional<std::string> GetUserDirectory() {
         throw std::runtime_error(
             "Unable to locate user directory: Function with ID 'get_user_directory' is missing");
     }
+
     auto env = GetEnvForThread();
-    auto j_user_directory =
-        (jstring)(env->CallStaticObjectMethod(native_library, get_user_directory, nullptr));
-    auto result = env->GetStringUTFChars(j_user_directory, nullptr);
-    if (result == "") {
+
+    jstring j_user_directory =
+        (jstring)env->CallStaticObjectMethod(native_library, get_user_directory);
+
+    if (env->ExceptionCheck() || j_user_directory == nullptr) {
+        env->ExceptionClear();
         return std::nullopt;
     }
+
+    const char* chars = env->GetStringUTFChars(j_user_directory, nullptr);
+
+    std::string result = chars ? chars : "";
+
+    env->ReleaseStringUTFChars(j_user_directory, chars);
+
+    if (result.empty()) {
+        return std::nullopt;
+    }
+
     return result;
 }
 
@@ -296,7 +310,7 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
 std::string TranslateFilePath(const std::string& filepath) {
     std::optional<std::string> userDirLocation = GetUserDirectory();
     if (userDirLocation) {
-        return *userDirLocation + "/" + filepath;
+        return *userDirLocation + filepath;
     }
     return "";
 }

@@ -698,7 +698,7 @@ object NativeLibrary {
 
         val dirSep = "/"
 
-        val pathSegment = uri.lastPathSegment!!
+        val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 
         if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
@@ -723,7 +723,8 @@ object NativeLibrary {
     fun getUserDirectory(): String {
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        return getNativePath(preferences.getString("CITRA_DIRECTORY", "")!!.toUri())
+        val userDirectoryUri = preferences.getString("CITRA_DIRECTORY", "")!!.toUri()
+        return getNativePath(userDirectoryUri)
     }
 
     @Keep
