@@ -308,9 +308,16 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
 }
 
 std::string TranslateFilePath(const std::string& filepath) {
+    // "!" at front of path indicates an already-native path.
+    // This is hacky, but I don't know how else we can do this without a lot of quite invasive
+    // changes to how Android file IO works.
+    // TODO: We should definitely change this in favour of a real solution down the line.
+    if (filepath.front() == '!') {
+        return filepath.substr(1);
+    }
     std::optional<std::string> userDirLocation = GetUserDirectory();
     if (userDirLocation) {
-        return *userDirLocation + filepath;
+        return *userDirLocation + "/" + filepath;
     }
     return "";
 }

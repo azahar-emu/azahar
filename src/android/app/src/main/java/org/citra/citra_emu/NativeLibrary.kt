@@ -703,7 +703,7 @@ object NativeLibrary {
 
         if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
             val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
-            return primaryStoragePath + dirSep + virtualPath + dirSep
+            return primaryStoragePath + dirSep + virtualPath
         } else { // User directory probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
             val removablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
