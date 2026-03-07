@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -64,7 +64,7 @@ void NDM_U::SuspendDaemons(Kernel::HLERequestContext& ctx) {
     daemon_bit_mask =
         static_cast<DaemonMask>(static_cast<u32>(default_daemon_bit_mask) & ~bit_mask);
     for (std::size_t index = 0; index < daemon_status.size(); ++index) {
-        if (bit_mask & (1 << index)) {
+        if (bit_mask & (1 << index) && daemon_suspend_counter[index]++ == 0) {
             daemon_status[index] = DaemonStatus::Suspended;
         }
     }
@@ -78,15 +78,23 @@ void NDM_U::ResumeDaemons(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 bit_mask = rp.Pop<u32>() & 0xF;
     daemon_bit_mask = static_cast<DaemonMask>(static_cast<u32>(daemon_bit_mask) & ~bit_mask);
+
+    LOG_WARNING(Service_NDM, "(STUBBED) bit_mask=0x{:08X}", bit_mask);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
     for (std::size_t index = 0; index < daemon_status.size(); ++index) {
-        if (bit_mask & (1 << index)) {
+        if (bit_mask & (1 << index) && daemon_suspend_counter[index] == 0) {
+            rb.Push(Result(13, ErrorModule::NDM, ErrorSummary::InvalidState, ErrorLevel::Status));
+            return;
+        }
+    }
+    for (std::size_t index = 0; index < daemon_status.size(); ++index) {
+        if (bit_mask & (1 << index) && --daemon_suspend_counter[index] == 0) {
             daemon_status[index] = DaemonStatus::Idle;
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
-    LOG_WARNING(Service_NDM, "(STUBBED) bit_mask=0x{:08X}", bit_mask);
 }
 
 void NDM_U::SuspendScheduler(Kernel::HLERequestContext& ctx) {
@@ -121,8 +129,9 @@ void NDM_U::GetDaemonDisableCount(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(ResultSuccess);
-    rb.Push<u32>(0); // current process disable count
-    rb.Push<u32>(0); // total disable count
+    // TODO(PabloMK7): Implement separate per process count
+    rb.Push<u32>(daemon_suspend_counter.at(daemon)); // current process disable count
+    rb.Push<u32>(daemon_suspend_counter.at(daemon)); // total disable count
     LOG_WARNING(Service_NDM, "(STUBBED) daemon=0x{:02X}", daemon);
 }
 
