@@ -400,7 +400,7 @@ void DLP_Clt_Base::GetConnectingNodes(Kernel::HLERequestContext& ctx) {
         if (!node_id) {
             continue;
         }
-        
+
         connected_nodes[out_idx++] = node_id;
     }
 
@@ -484,7 +484,7 @@ void DLP_Clt_Base::BeaconScanCallback(std::uintptr_t user_data, s64 cycles_late)
     // set our next scan interval
     system.CoreTiming().ScheduleEvent(
         msToCycles(std::max<int>(100, beacon_scan_interval_ms -
-                                        beacon_parse_timer_total.GetTimeElapsed().count())) -
+                                          beacon_parse_timer_total.GetTimeElapsed().count())) -
             cycles_late,
         beacon_scan_event, 0);
 }
@@ -759,7 +759,10 @@ void DLP_Clt_Base::ClientConnectionManager() {
                         LOG_INFO(Service_DLP, "Finished downloading content. Installing...");
 
                         if (received_fragments.size() != dlp_units_total) {
-                            LOG_WARNING(Service_DLP, "There was a mismatch in fragment indexes, because we did not receive all fragments {} / {}", received_fragments.size(), dlp_units_total);
+                            LOG_WARNING(Service_DLP,
+                                        "There was a mismatch in fragment indexes, because we did "
+                                        "not receive all fragments {} / {}",
+                                        received_fragments.size(), dlp_units_total);
                         }
 
                         if (!InstallEncryptedCIAFromFragments(received_fragments)) {
@@ -775,7 +778,8 @@ void DLP_Clt_Base::ClientConnectionManager() {
                 }
             } else if (p_head->type == dl_pk_type_finish_dist) {
                 if (p_head->packet_index == 1) {
-                    auto r_pbody = GetPacketBody<DLPSrvr_FinishContentUpload>(recv_buf);
+                    [[maybe_unused]] auto r_pbody =
+                        GetPacketBody<DLPSrvr_FinishContentUpload>(recv_buf);
                     auto s_body = PGen_SetPK<DLPClt_FinishContentUploadAck>(
                         dl_pk_head_finish_dist_header, 0, p_head->resp_id);
                     s_body->initialized = true;
@@ -784,8 +788,9 @@ void DLP_Clt_Base::ClientConnectionManager() {
                     s_body->seq_ack = current_content_block;
                     s_body->unk4 = 0x0;
                     PGen_SendPK(aes, dlp_host_network_node_id, dlp_client_data_channel);
-                    
-                    LOG_DEBUG(Service_DLP, "Recv finish dist, fc: {}, {} / {}", FinishedCurrentContentBlock(), dlp_units_downloaded, dlp_units_total);
+
+                    LOG_DEBUG(Service_DLP, "Recv finish dist, fc: {}, {} / {}",
+                              FinishedCurrentContentBlock(), dlp_units_downloaded, dlp_units_total);
                 } else {
                     LOG_ERROR(Service_DLP, "Received finish dist packet, but packet index was {}",
                               p_head->packet_index);
@@ -867,7 +872,8 @@ bool DLP_Clt_Base::IsIdling() {
 }
 
 bool DLP_Clt_Base::FinishedCurrentContentBlock() {
-    return dlp_units_downloaded % dlp_content_block_length == 0 || dlp_units_downloaded == dlp_units_total;
+    return dlp_units_downloaded % dlp_content_block_length == 0 ||
+           dlp_units_downloaded == dlp_units_total;
 }
 
 } // namespace Service::DLP
