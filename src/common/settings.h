@@ -49,6 +49,8 @@ enum class LayoutOption : u32 { // Shouldn't these have set numbers to prevent l
     CustomLayout,
 };
 
+enum class InputMappingType : u8 { AllControllers, Guid, GuidPort };
+
 /** Defines the layout option for mobile portrait */
 enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
@@ -447,6 +449,7 @@ struct InputProfile {
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+    InputMappingType maptype = Settings::InputMappingType::GuidPort;
 };
 
 struct TouchFromButtonMap {
@@ -467,7 +470,9 @@ struct Values {
     Setting<bool> use_artic_base_controller{false, Keys::use_artic_base_controller};
 
     SwitchableSetting<bool> enable_gamemode{true, Keys::enable_gamemode};
-
+    // Should this be a QT setting somehow?
+    SwitchableSetting<InputMappingType> controller_hotkey_maptype{
+        Settings::InputMappingType::AllControllers, Keys::controller_hotkey_maptype};
     // Core
     Setting<bool> use_cpu_jit{true, Keys::use_cpu_jit};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, Keys::cpu_clock_percentage};
