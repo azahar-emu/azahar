@@ -139,7 +139,7 @@ bool DLP_Base::ConnectToNetworkAsync(NWM::NetworkInfo net_info, NWM::ConnectionT
     return true;
 }
 
-int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer) {
+int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer, u16* out_node) {
     constexpr u32 max_pullpacket_size = 0x3c00;
     std::vector<u8> buffer_out;
 
@@ -158,6 +158,9 @@ int DLP_Base::RecvFrom(u16 node_id, std::vector<u8>& buffer) {
     }
 
     buffer = buffer_out;
+    if (out_node) {
+        *out_node = secure_data.src_node_id;
+    }
     return *ret; // size
 }
 
@@ -244,8 +247,40 @@ bool DLP_Base::ValidatePacket(u32 aes, void* pk, size_t sz, bool checksum) {
 }
 
 u32 DLP_Base::GetNumFragmentsFromTitleSize(u32 tsize) {
-    return Common::AlignUp(tsize - broad_title_size_diff, content_fragment_size) /
-           content_fragment_size;
+    return Common::AlignUp(tsize, content_fragment_size) / content_fragment_size;
+}
+
+Loader::SMDH::TitleLanguage DLP_Base::SystemLanguageToSMDHLanguage(CFG::SystemLanguage sys_lang) {
+    using namespace Loader;
+    using namespace CFG;
+    switch (sys_lang) {
+    case LANGUAGE_JP:
+        return SMDH::TitleLanguage::Japanese;
+    case LANGUAGE_EN:
+        return SMDH::TitleLanguage::English;
+    case LANGUAGE_FR:
+        return SMDH::TitleLanguage::French;
+    case LANGUAGE_DE:
+        return SMDH::TitleLanguage::German;
+    case LANGUAGE_IT:
+        return SMDH::TitleLanguage::Italian;
+    case LANGUAGE_ES:
+        return SMDH::TitleLanguage::Spanish;
+    case LANGUAGE_ZH:
+        return SMDH::TitleLanguage::SimplifiedChinese;
+    case LANGUAGE_KO:
+        return SMDH::TitleLanguage::Korean;
+    case LANGUAGE_NL:
+        return SMDH::TitleLanguage::Dutch;
+    case LANGUAGE_PT:
+        return SMDH::TitleLanguage::Portuguese;
+    case LANGUAGE_RU:
+        return SMDH::TitleLanguage::Russian;
+    case LANGUAGE_TW:
+        return SMDH::TitleLanguage::TraditionalChinese;
+    default:;
+    }
+    UNREACHABLE_MSG("Unknown system language: {}", static_cast<u32>(sys_lang));
 }
 
 } // namespace Service::DLP
