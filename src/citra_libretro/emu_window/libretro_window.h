@@ -57,6 +57,9 @@ public:
     /// When true, SwapBuffers() is suppressed (used during savestate drain loops)
     bool suppressPresentation = false;
 
+    /// Get cursor state for rendering a touch crosshair on the bottom screen.
+    CursorInfo GetCursorInfo() const override;
+
 private:
     /// Called when a configuration change affects the minimal size of the window
     void OnMinimalClientAreaChangeRequest(std::pair<u32, u32> minimal_size) override;
