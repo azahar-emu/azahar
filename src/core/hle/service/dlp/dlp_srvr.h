@@ -6,6 +6,7 @@
 
 #include "core/hle/service/service.h"
 #include "dlp_base.h"
+#include "common/timer.h"
 
 namespace Service::FS {
 class FS_USER;
@@ -64,8 +65,10 @@ private:
     std::atomic_bool is_distributing;
     std::atomic_bool is_waiting_for_passphrase;
     
-    // gets used during distribution
     struct ClientState {
+        ClientState() {
+            rate_timer.Start();
+        }
         bool needs_content_download;
         bool can_download_next_block;
         bool sent_next_block_req;
@@ -73,6 +76,14 @@ private:
         u8 pk_seq_num;
         void IncrSeqNum() {
             pk_seq_num++;
+        }
+        Common::Timer rate_timer;
+        bool ShouldRateLimit(int ms) {
+            if (rate_timer.GetTimeDifference().count() < ms) {
+                return true;
+            }
+            rate_timer.Update();
+            return false;
         }
         u32 dlp_units_total;
         u32 GetDlpUnitsDownloaded() {

@@ -179,7 +179,7 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
     {
         std::scoped_lock lock(connection_status_mutex);
         if (connection_status.status != NetworkStatus::Connecting) {
-            LOG_DEBUG(Service_NWM,
+            LOG_TRACE(Service_NWM,
                       "Ignored AssociationResponseFrame because connection status is {}",
                       static_cast<u32>(connection_status.status));
             return;

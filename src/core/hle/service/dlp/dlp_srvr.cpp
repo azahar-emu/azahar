@@ -17,7 +17,6 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/am/am.h"
-#include "common/timer.h"
 
 SERIALIZE_EXPORT_IMPL(Service::DLP::DLP_SRVR)
 
@@ -530,11 +529,10 @@ void DLP_SRVR::TitleBroadcastCallback(std::uintptr_t user_data, s64 cycles_late)
     
     auto p1 = PGen_SetPK<DLPBroadcastPacket1>(dl_pk_head_broadcast_header, 0, broadcast_resp_id);
     p1->child_title_id = title_broadcast_info.title_id;
-    // TODO: find out which one is transfer size and which
-    // one is required size
     p1->transfer_size = title_broadcast_info.transfer_size;
     p1->required_size = title_broadcast_info.required_size;
-    p1->max_clients = max_clients + 1;
+    p1->content_block_size = content_fragment_size * dlp_content_block_length;
+    p1->max_nodes = max_clients + 1;
     std::copy(title_broadcast_info.title_short.begin(), title_broadcast_info.title_short.end(), p1->title_short.begin());
     std::copy(title_broadcast_info.title_long.begin(), title_broadcast_info.title_long.end(), p1->title_long.begin());
     
@@ -553,10 +551,6 @@ void DLP_SRVR::TitleBroadcastCallback(std::uintptr_t user_data, s64 cycles_late)
     // i'm not sure what this is. is this regional?
     p1->unk1 = {0x0, 0x10};
     p1->unk6 = {0x1, 0x1};
-    // never changes. appears to affect
-    // expected size of content fragments?
-    p1->unk7 = {0x0, 0x3};
-    p1->unk8 = {0xFF, 0xC0};
     PGen_SendPK(aes, broadcast_node_id, dlp_broadcast_data_channel);
     auto p2 = PGen_SetPK<DLPBroadcastPacket2>(dl_pk_head_broadcast_header, 1, broadcast_resp_id);
     copy_pk_icon({p2->icon_part.begin(), p2->icon_part.end()});
@@ -679,7 +673,7 @@ void DLP_SRVR::ServerConnectionManager() {
                 // needs to broadcast the packets for efficiency.
                 for (size_t i = 0; i < dlp_content_block_length; i++) {
                     if (cl.GetTotalFragIndex(i) == cl.dlp_units_total) {
-                        LOG_INFO(Service_DLP, "Cut block short");
+                        LOG_DEBUG(Service_DLP, "Cut block short");
                         break;
                     }
                     SendNextCIAFragment(cl, i);
@@ -694,8 +688,10 @@ void DLP_SRVR::ServerConnectionManager() {
                     LOG_ERROR(Service_DLP, "Got unexpected content block request when client did not request content previously");
                     continue;
                 }
-                // primative form of rate limiting
-                if (cl.sent_next_block_req) {
+                // since we have a global poll rate,
+                // we need to rate limit packet sending
+                // to individual clients
+                if (cl.ShouldRateLimit(dlp_poll_rate_normal)) {
                     continue;
                 }
                 // send finish dist req
@@ -703,11 +699,13 @@ void DLP_SRVR::ServerConnectionManager() {
                 s_body->initialized = true;
                 s_body->seq_num = 0;
                 PGen_SendPK(aes, cl.network_node_id, dlp_client_data_channel);
-                cl.sent_next_block_req = true;
                 break;
             }
             case ClientState::DistributeDone:
             case ClientState::SentPassphrase: {
+                if (cl.ShouldRateLimit(dlp_poll_rate_normal)) {
+                    continue;
+                }
                 auto s_body = PGen_SetPK<DLPSrvr_BeginGame>(dl_pk_head_start_game_header, 0, cl.GetPkRespId());
                 s_body->unk1 = 0x1;
                 s_body->unk2 = 0x9;
@@ -738,6 +736,7 @@ void DLP_SRVR::ServerConnectionManager() {
             }
             
             if (p_head->type == dl_pk_type_auth) {
+                LOG_DEBUG(Service_DLP, "Recv auth");
                 if (cl->state != ClientState::NeedsAuthAck)
                     continue;
                 auto r_pbody = GetPacketBody<DLPClt_AuthAck>(recv_buf);
@@ -745,6 +744,7 @@ void DLP_SRVR::ServerConnectionManager() {
                 cl->resp_id = r_pbody->resp_id;
                 cl->IncrSeqNum();
             } else if (p_head->type == dl_pk_type_start_dist) {
+                LOG_DEBUG(Service_DLP, "Recv start dist");
                 if (cl->state != ClientState::NeedsDistributeAck)
                     continue;
                 // packet needs to be at least the size of
@@ -764,6 +764,7 @@ void DLP_SRVR::ServerConnectionManager() {
                         LOG_WARNING(Service_DLP, "Corrupted packet info");
                     }
                     cl->sent_next_block_req = false;
+                    cl->can_download_next_block = false;
                     // the reason we have this enum value is because
                     // we still need it to confirm that it finished
                     // "downloading" content
@@ -773,6 +774,7 @@ void DLP_SRVR::ServerConnectionManager() {
             } else if (p_head->type == dl_pk_type_distribute) {
                 LOG_ERROR(Service_DLP, "Unexpected content distribution fragment");
             } else if (p_head->type == dl_pk_type_finish_dist) {
+                LOG_DEBUG(Service_DLP, "Recv finish dist");
                 if (cl->state != ClientState::NeedsContent &&
                     cl->state != ClientState::DoesNotNeedContent) {
                     continue;
@@ -789,7 +791,11 @@ void DLP_SRVR::ServerConnectionManager() {
                     cl->sent_next_block_req = false;
                 } else {
                     if (cl->current_content_block != r_pbody->seq_ack) {
-                        LOG_WARNING(Service_DLP, "Received out of order block request. Ignoring. ({} != {})", static_cast<u32>(r_pbody->seq_ack), cl->current_content_block);
+                        if (r_pbody->finished_cur_block) {
+                            LOG_WARNING(Service_DLP, "Received out of order block request. Ignoring. ({} != {})", static_cast<u32>(r_pbody->seq_ack), cl->current_content_block);
+                        }
+                        cl->sent_next_block_req = false;
+                        cl->IncrSeqNum(); // client expects us to increment here
                         continue;
                     }
                 }
@@ -797,6 +803,7 @@ void DLP_SRVR::ServerConnectionManager() {
                 cl->next_req_ack++;
                 cl->IncrSeqNum();
             } else if (p_head->type == dl_pk_type_start_game) {
+                LOG_DEBUG(Service_DLP, "Recv start game");
                 if (cl->state != ClientState::DistributeDone &&
                     cl->state != ClientState::SentPassphrase) {
                     continue;
@@ -818,7 +825,6 @@ void DLP_SRVR::ServerConnectionManager() {
             is_waiting_for_passphrase = true;
             dlp_srvr_poll_rate_ms = dlp_poll_rate_normal;
         } else if (is_waiting_for_passphrase && all_got_passphrase()) {
-            // WE ARE DONE!!!
             is_waiting_for_passphrase = false;
             srvr_state = DLP_Srvr_State::Complete;
             // we have to stop the server client manager thread

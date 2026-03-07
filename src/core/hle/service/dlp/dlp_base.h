@@ -18,7 +18,7 @@ namespace Service::DLP {
 
 using DLP_Username = std::array<u16_le, 10>;
 constexpr inline u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
-constexpr inline u32 content_fragment_size = 1440;
+constexpr inline u32 content_fragment_size = 1440; // const frag packet size
 
 struct DLPTitleInfo {
     u32 unique_id; // games look at this to make sure it's their title info
@@ -99,8 +99,13 @@ struct DLPPacketHeader {
     u16_le must_be_2; // always set to 2
     u32 checksum;              // always calculate
     u8 packet_index;           // starts at 0
-    // low byte is pk_seq_num. todo: change to independent var
-    std::array<u8, 3> resp_id; // copies this from host packet when responding to it
+    union {
+        std::array<u8, 3> resp_id; // client: copies this from host packet when responding to it
+        struct { // for server use
+            u8 pk_seq_num;
+            std::array<u8, 2> resp_id_high;
+        };
+    };
 };
 
 static_assert(sizeof(DLPPacketHeader) == 0x10);
@@ -133,9 +138,8 @@ struct DLPBroadcastPacket1 {
     u64_be child_title_id; // title id of the child being broadcasted
     std::array<u8, 2> unk1;
     std::array<u8, 2> unk6; // need 0x1 0x1
-    std::array<u8, 2> unk7; // need 0x0 0x3
-    std::array<u8, 2> unk8; // need 0xFF 0xC0
-    u8 max_clients;
+    u32_be content_block_size; // full byte size of content block
+    u8 max_nodes;
     std::array<u8, 7> unk2;
     u64 unk3;
     u64 unk4;    // all 0s
@@ -256,7 +260,7 @@ static_assert(sizeof(DLPSrvr_FinishContentUpload) == 0x18);
 struct DLPClt_FinishContentUploadAck {
     DLPPacketHeader head;
     DLPPacketBool initialized; // 0x1
-    u8 unk2;                   // 0x1
+    u8 finished_cur_block;     // 0x1 if finished downloading current block
     u8 needs_content;          // 0x1 if downloading conetnt
     u32_be seq_ack;            // BE client increments this every ack
     u16 unk4;                  // 0x0
@@ -324,7 +328,6 @@ protected:
 
     constexpr static inline u32 dlp_poll_rate_normal = 100;
 
-    constexpr static inline u16 dlp_beacon_channel = 0xb;
     constexpr static inline u16 dlp_wlan_comm_id = 0x2810;
     constexpr static inline u16 dlp_net_info_channel = 0x1;
     constexpr static inline u16 dlp_bind_node_id = 0x1;
