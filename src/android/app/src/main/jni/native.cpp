@@ -1107,4 +1107,17 @@ void Java_org_citra_citra_1emu_NativeLibrary_setInsertedCartridge(JNIEnv* env, j
     inserted_cartridge = GetJString(env, path);
 }
 
+jboolean Java_org_citra_citra_1emu_NativeLibrary_uninstallTitle(JNIEnv* env, jobject obj,
+                                                                jlong j_titleid) {
+    const auto titleid = static_cast<long long>(env, j_titleid);
+    // TODO: Don't hard-code to SDMC? (CBA to pass a value from Kotlin at the moment) -OS
+    const auto result = Service::AM::UninstallProgram(Service::FS::MediaType::SDMC, titleid);
+    if (result.IsError()) {
+        LOG_ERROR(Frontend, "Failed to uninstall '{}': 0x{:08X}", std::to_string(titleid),
+                  result.raw);
+        return false;
+    }
+    return true;
+}
+
 } // extern "C"
