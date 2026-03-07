@@ -56,7 +56,9 @@ ANDROID_STORAGE_FUNCTIONS(FS)
 #undef F
 #undef FS
 #undef FR
+bool CanUseRawFS();
 bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest_full_path);
+std::string TranslateFilePath(const std::string& filepath);
 // Reference:
 // https://developer.android.com/reference/android/os/ParcelFileDescriptor#parseMode(java.lang.String)
 enum class AndroidOpenMode {
