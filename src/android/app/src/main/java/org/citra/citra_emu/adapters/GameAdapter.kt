@@ -330,9 +330,9 @@ class GameAdapter(
         popup.setOnMenuItemClickListener { menuItem ->
             val uninstallAction: () -> Unit = {
                 when (menuItem.itemId) {
-                    R.id.game_context_uninstall -> NativeLibrary.uninstallTitle(titleId)
-                    R.id.game_context_uninstall_dlc -> NativeLibrary.uninstallTitle(dlcTitleId)
-                    R.id.game_context_uninstall_updates -> NativeLibrary.uninstallTitle(updateTitleId)
+                    R.id.game_context_uninstall -> NativeLibrary.uninstallTitle(titleId, game.mediaType)
+                    R.id.game_context_uninstall_dlc -> NativeLibrary.uninstallTitle(dlcTitleId, Game.MediaType.SDMC)
+                    R.id.game_context_uninstall_updates -> NativeLibrary.uninstallTitle(updateTitleId, Game.MediaType.SDMC)
                 }
                 ViewModelProvider(activity)[GamesViewModel::class.java].reloadGames(true)
                 bottomSheetDialog.dismiss()

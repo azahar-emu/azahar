@@ -25,6 +25,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.activities.EmulationActivity
+import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
@@ -132,7 +133,27 @@ object NativeLibrary {
      * If not set, it auto-detects a location
      */
     external fun setUserDirectory(directory: String)
-    external fun getInstalledGamePaths(): Array<String?>
+
+    data class InstalledGame(
+        val path: String,
+        val mediaType: Game.MediaType
+    )
+    fun getInstalledGamePaths(): Array<InstalledGame> {
+        val games = getInstalledGamePathsImpl()
+
+        return games.mapNotNull { entry ->
+            entry?.let {
+                val sep = it.lastIndexOf('|')
+                if (sep == -1) return@mapNotNull null
+
+                val path = it.substring(0, sep)
+                val mediaType = Game.MediaType.fromInt(it.substring(sep + 1).toInt())
+
+                InstalledGame(path, mediaType!!)
+            }
+        }.toTypedArray()
+    }
+    private external fun getInstalledGamePathsImpl(): Array<String?>
 
     // Create the config.ini file.
     external fun createConfigFile()
@@ -230,7 +251,10 @@ object NativeLibrary {
     external fun playTimeManagerGetPlayTime(titleId: Long): Long
     external fun playTimeManagerGetCurrentTitleId(): Long
 
-    external fun uninstallTitle(titleId: Long): Boolean
+    private external fun uninstallTitle(titleId: Long, mediaType: Int): Boolean
+    fun uninstallTitle(titleId: Long, mediaType: Game.MediaType): Boolean {
+        return uninstallTitle(titleId, mediaType.value)
+    }
 
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
