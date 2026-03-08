@@ -32,7 +32,7 @@ object GameHelper {
 
         addGamesRecursive(games, FileUtil.listFiles(gamesUri), 3)
         NativeLibrary.getInstalledGamePaths().forEach {
-            games.add(getGame(Uri.parse(it), isInstalled = true, addedToLibrary = true))
+            games.add(getGame(Uri.parse(it.path), isInstalled = true, addedToLibrary = true, it.mediaType))
         }
 
         // Cache list of games found on disk
@@ -62,13 +62,13 @@ object GameHelper {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
                 if (Game.allExtensions.contains(FileUtil.getExtension(it.uri))) {
-                    games.add(getGame(it.uri, isInstalled = false, addedToLibrary = true))
+                    games.add(getGame(it.uri, isInstalled = false, addedToLibrary = true, Game.MediaType.GAME_CARD))
                 }
             }
         }
     }
 
-    fun getGame(uri: Uri, isInstalled: Boolean, addedToLibrary: Boolean): Game {
+    fun getGame(uri: Uri, isInstalled: Boolean, addedToLibrary: Boolean, mediaType: Game.MediaType): Game {
         val filePath = uri.toString()
         var nativePath: String? = null
         var gameInfo: GameInfo?
@@ -95,6 +95,7 @@ object GameHelper {
                 nativePath!!
             },
             gameInfo?.getTitleID() ?: 0,
+            mediaType,
             gameInfo?.getCompany() ?: "",
             if (isEncrypted) { CitraApplication.appContext.getString(R.string.unsupported_encrypted) } else { gameInfo?.getRegions() ?: "" },
             isInstalled,
