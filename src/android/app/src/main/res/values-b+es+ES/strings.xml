@@ -66,13 +66,14 @@
     <string name="give_permission">Conceder permiso</string>
     <string name="notification_warning">¿Saltarse la concesión del permiso de notificaciones?</string>
     <string name="notification_warning_description">Azahar no podrá notificarte sobre información importante.</string>
-    <string name="filesystem_permission_warning">Falta Permisos</string>
+    <string name="filesystem_permission_warning">Faltan Permisos</string>
+    <string name="filesystem_permission_warning_description">Azahar necesita permiso para administrar archivos en este dispositivo para poder almacenar y administrar los datos de usuario de 3DS.\n\nPor favor, otorgue el permiso antes de continuar.</string>
     <string name="camera_permission">Cámara</string>
     <string name="camera_permission_description">Concede el permiso de cámara debajo para emular la cámara de la 3DS.</string>
     <string name="microphone_permission">Micrófono</string>
     <string name="microphone_permission_description">Concede el permiso de micrófono debajo para emular el micrófono de la 3DS.</string>
     <string name="filesystem_permission">Sistema de archivos</string>
-    <string name="filesystem_permission_description">Concede el permiso de sistema de archivos debajo para permitir que Azahar almacene archivos.</string>
+    <string name="filesystem_permission_description">Concede el permiso de sistema de archivos abajo para permitir que Azahar almacene archivos.</string>
     <string name="permission_denied">Permiso denegado</string>
     <string name="add_games_warning">¿Saltarse la selección de la carpeta de aplicaciones?</string>
     <string name="add_games_warning_description">Nada se mostrará en la lista de aplicaciones si no se selecciona una carpeta.</string>
@@ -92,7 +93,9 @@
     <string name="cannot_skip">No puedes saltarte el configuración de la carpeta de usuario</string>
     <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, seleccione un directorio y luego puede continuar.</string>
     <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de algunas actualizaciones de aplicaciones o de Android. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
-    <string name="invalid_selection">Selección no válido</string>
+    <string name="invalid_selection">Selección no válida</string>
+    <string name="invalid_user_directory">La selección del directorio de usuario no es válida.\nVuelve a seleccionar el directorio de usuario, asegurándote de navegar hasta él desde la raíz del almacenamiento del dispositivo.</string>
+    <string name="filesystem_permission_lost">Azahar ha perdido el permiso para administrar archivos en este dispositivo. Esto puede ocurrir después de alguna actualización de la aplicación o de Android. Vuelve a conceder este permiso en la siguiente pantalla para seguir usando la aplicación.</string>
     <string name="set_up_theme_settings">Configuración de tema</string>
     <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
     <string name="setup_set_theme">Establecer tema</string>
@@ -104,9 +107,18 @@
     <string name="search_recently_added">Recién Añadidos</string>
     <string name="search_installed">Instalados</string>
 
+    <!-- Input related strings -->
+    <string name="controller_auto_map">Mapeo de Mando Automático</string>
+    <string name="controller_auto_map_description">Aplica la asignación de mando estándar para todos los botones y ejes</string>
+    <string name="auto_map_prompt">¡Presiona este botón en tu mando!</string>
+    <string name="auto_map_image_description">Botones de 3DS con el botón A resaltado</string>
+    <string name="controller_clear_all">Limpiar Todas las Asignaciones</string>
+    <string name="controller_clear_all_confirm">Esto eliminará todas los asignaciones del mando actual.</string>
     <string name="controller_circlepad">Pad Circular</string>
     <string name="controller_c">Palanca C</string>
     <string name="controller_hotkeys">Teclas de atajo</string>
+    <string name="controller_hotkeys_description">Si la tecla \"Habilitar teclas de acceso rápido\" está asignada, se debe presionar esa tecla además de la tecla de acceso rápido asignada</string>
+    <string name="controller_hotkey_enable_button">Habilitar teclas de acceso rápido</string>
     <string name="controller_triggers">Botones Traseros</string>
     <string name="controller_trigger">Botón Trasero</string>
     <string name="controller_dpad">Pad de Control</string>
@@ -164,6 +176,8 @@
     <string name="username">Nombre de usuario/a</string>
     <string name="new_3ds">Modo New 3DS</string>
     <string name="lle_applets">Usar Applets LLE (si están instaladas)</string>
+    <string name="apply_region_free_patch">Aplicar parche de región libre a las aplicaciones instaladas</string>
+    <string name="apply_region_free_patch_desc">Parchea la región de las aplicaciones instaladas para que estén libres de región, de modo que siempre aparezcan en el menú home.</string>
     <string name="enable_required_online_lle_modules">Habilitar los módulos LLE necesarios para las funciones en línea (si están instalados)</string>
     <string name="enable_required_online_lle_modules_desc">Habilita los módulos LLE necesarios para el modo multijugador en línea, acceso a la eShop, etc.</string>
     <string name="clock">Reloj</string>
@@ -224,6 +238,8 @@
 Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="linear_filtering">Filtro Linear</string>
     <string name="linear_filtering_description">Activa el filtro linear, que hace que los gráficos del juego se vean más suaves.</string>
+    <string name="use_integer_scaling">Escalado a múltiplos enteros</string>
+    <string name="use_integer_scaling_description">Escala las pantallas con un multiplicador entero de la pantalla original de 3DS. Para diseños con dos tamaños de pantalla diferentes, la pantalla más grande se escala con un multiplicador entero.</string>
     <string name="texture_filter_name">Filtro de Texturas</string>
     <string name="texture_filter_description">Mejora los gráficos visuales de las aplicaciones aplicando un filtro a las texturas. Los filtros soportados son Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, y MMPX.</string>
     <string name="delay_render_thread">Atrasar hilo de renderizado del juego</string>
@@ -239,7 +255,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="frame_limit_enable_description">Cuando se active, la velocidad de emulación estará limitada a un porcentaje determinado de la velocidad normal. Cuando se desactive, la velocidad de emulación no tendrá límite y la tecla de acceso rápido de velocidad turbo no funcionará.</string>
     <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
     <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o altos incrementarán o reducirán el límite de velocidad.</string>
-    <string name="android_hide_images">Ocultar imágenes 3DS de Android</string>
+    <string name="android_hide_images">Ocultar las imágenes de 3DS en Android</string>
+    <string name="android_hide_images_description">Evita que Android indexe las imágenes de la cámara, capturas de pantalla y texturas personalizadas de la 3DS y las muestre en la galería. Es posible que tengas que reiniciar el dispositivo después de cambiar esta configuración para que surta efecto.</string>
     <string name="turbo_limit">Límite de Velocidad Turbo</string>
     <string name="turbo_limit_description">Límite de velocidad de emulación utilizado mientras la tecla de acceso rápido turbo está activa.</string>
     <string name="expand_to_cutout_area">Expandir al área de recorte</string>
@@ -261,12 +278,15 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="debug_warning">Aviso: Modificar estas configuraciones reducirán la velocidad de emulación.</string>
     <string name="stereoscopy">Estereoscopía</string>
     <string name="render3d">Modo 3D Estereoscópico</string>
+    <string name="render3d_description">Seleccione el modo 3D estereoscópico para renderizado 3D. Los modos lado a lado son los más comunes en la actualidad. Los modos Anaglifo y Entrelazado siempre se aplican a todas las pantallas conectadas.</string>
     <string name="factor3d">Profundidad</string>
     <string name="factor3d_description">Especifica el valor del regulador 3D. Debería estar puesto a más allá del 0% cuando el Modo 3D Estereoscópico está activado.\nNota: Los valores de profundidad superiores al 100 % no son posibles en hardware real y pueden causar problemas gráficos.</string>
     <string name="disable_right_eye_render">Desactivar Renderizado de Ojo Derecho</string>
     <string name="disable_right_eye_render_description">Mejora significativamente el rendimiento en algunas aplicaciones, pero puede causar parpadeo en otros.</string>
     <string name="swap_eyes_3d">Intercambiar Ojos</string>
+    <string name="swap_eyes_3d_description">Intercambia qué ojo se muestra en cada lado. Combinado con el modo Lado a Lado, ¡permite ver en 3D cruzando los ojos!</string>
     <string name="render_3d_which_display">Renderizado 3D Estereoscópico</string>
+    <string name="render_3d_which_display_description">Decide si se activa el 3D estereoscópico y en qué pantallas. Las opciones de pantalla única solo son relevantes cuando se conectan varias pantallas.</string>
     <string name="render_3d_which_display_both">Activado (todas las pantallas)</string>
     <string name="render_3d_which_display_primary">Activado (solo pantalla principal)</string>
     <string name="render_3d_which_display_secondary">Activado (solo pantalla secundaria)</string>
@@ -306,9 +326,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="hw_shaders_description">Usa el hardware para emular los sombreadores de 3DS. Cuando se active, el rendimiento mejorará notablemente.</string>
     <string name="cpu_clock_speed">Velocidad de reloj de la CPU</string>
     <string name="vsync">Activar Sincronización Vertical</string>
+    <string name="vsync_description">Sincroniza la frecuencia de fotogramas del juego con la frecuencia de actualización de tu dispositivo. Puede causar latencia de entrada adicional, pero puede reducir el tearing en algunos casos.</string>
     <string name="renderer_debug">Renderizador de depuración</string>
     <string name="renderer_debug_description">Archiva información adicional gráfica relacionada con la depuración. Cuando está activada, el rendimiento de los juegos será reducido considerablemente</string>
-    <string name="instant_debug_log">Limpiar la salida del registro en cada mensaje</string>
+    <string name="instant_debug_log">Escribir la salida del registro en cada mensaje</string>
     <string name="instant_debug_log_description">Inmediatamente guarda el registro de depuración en el archivo. Utilice ésto si Azahar se bloquea y la salida del registro se está cortando.</string>
     <string name="delay_start_lle_modules">Retrasar el comienzo con módulos LLE</string>
     <string name="delay_start_lle_modules_description">Retrasa el inicio de la aplicación cuando los módulos LLE están habilitados.</string>
@@ -316,6 +337,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="deterministic_async_operations_description">Hace que las operaciones asíncronas sean deterministas para la depuración. Habilitar esta opción puede causar bloqueos.</string>
     <string name="enable_rpc_server">Activar servidor RPC</string>
     <string name="enable_rpc_server_desc">Activa el servidor RPC en el puerto 45987. Esto permite leer/escribir de manera remota la memoria emulada.</string>
+    <string name="toggle_unique_data_console_type">Alternar los datos de consola únicos</string>
+    <string name="toggle_unique_data_console_type_desc">Alternar los datos de consola únicos (Old 3DS &#8596; New 3DS) para poder descargar el archivo del sistema opuesto desde la configuración del sistema.</string>
     <string name="shader_jit">Activar Sombreador JIT</string>
     <string name="shader_jit_description">Usar el motor JIT en lugar del intérprete para la emulación del sombreador de software.</string>
 
@@ -326,6 +349,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="layout_screen_orientation_landscape_reverse">Horizontal invertida</string>
     <string name="layout_screen_orientation_portrait">Retrato</string>
     <string name="layout_screen_orientation_portrait_reverse">Retrato invertido</string>
+    <string name="layouts_to_cycle">Ciclo de Estilos</string>
+    <string name="layouts_to_cycle_description">Selecciona qué estilos se pueden ciclar con la tecla de acceso rápido</string>
     <string name="aspect_ratio_default">Por defecto</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -434,11 +459,12 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_secondary_display_default">Por defecto del sistema (espejo)</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
     <string name="bg_color">Color de fondo</string>
+    <string name="bg_color_description">El color que aparece detrás de las pantallas durante la emulación, representado como un valor RGB.</string>
     <string name="bg_red">Rojo</string>
     <string name="bg_green">Verde</string>
     <string name="bg_blue">Azul</string>
     <string name="second_screen_opacity">Opacidad personalizado de la segunda pantalla</string>
-    <string name="second_screen_opacity_description">La opacidad de la segunda pantalla 3DS al usar el pantalla personalizado. Útil si la segunda pantalla ésta posición en la parte superior de la primera pantalla.</string>
+    <string name="second_screen_opacity_description">La opacidad de la segunda pantalla de 3DS al usar el pantalla personalizado. Útil si la segunda pantalla ésta posicionada en la parte superior de la primera pantalla.</string>
     <string name="emulation_small_screen_position">Posición Pantalla Pequeña</string>
     <string name="small_screen_position_description">¿Dónde debería aparecer la pantalla pequeña en relación con la grande en Disposicion de Pantalla Grande?</string>
     <string name="small_screen_position_top_right">Arriba a la Derecha</string>
@@ -535,6 +561,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
     <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
+    <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>
@@ -582,7 +610,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="performance_overlay_show_battery_temp">Mostrar la temperatura de la batería</string>
     <string name="performance_overlay_show_battery_temp_description">Muestra la temperatura actual de la batería en Celsius y Fahrenheit.</string>
     <string name="performance_overlay_position">Posición de la información</string>
-    <string name="performance_overlay_position_description">Elegir donde el superposición de rendimiento esta mostrado en el pantalla</string>
+    <string name="performance_overlay_position_description">Elegir donde la superposición de rendimiento está mostrada en la pantalla</string>
     <string name="performance_overlay_position_top_left">Arriba a la Izquierda</string>
     <string name="performance_overlay_position_top_right">Arriba a la Derecha</string>
     <string name="performance_overlay_position_bottom_left">Abajo a la Izquierda</string>
@@ -886,15 +914,17 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
     <!-- File Compression -->
     <string name="compress">Comprimir</string>
-    <string name="compressing">Compresando...</string>
+    <string name="compressing">Comprimiendo...</string>
     <string name="decompress">Descomprimir</string>
     <string name="decompressing">Descomprimiendo…</string>
     <string name="compress_success">Compresión completada con éxito.</string>
-    <string name="compress_unsupported">Compresión no está soportado con este archivo.</string>
+    <string name="compress_unsupported">Compresión no soportada con este archivo.</string>
     <string name="compress_already">Este archivo ya está comprimido.</string>
     <string name="compress_failed">Falló la compresión.</string>
     <string name="decompress_success">Descompresión completada con éxito.</string>
-    <string name="decompress_unsupported">Descompresión no está soportado con este archivo.</string>
+    <string name="decompress_unsupported">Descompresión no soportada con este archivo.</string>
     <string name="decompress_not_compressed">El archivo no está comprimido.</string>
     <string name="decompress_failed"> Falló la descompresión.</string>
-    </resources>
+    <string name="compress_decompress_installed_app">Las aplicaciones ya instaladas no se pueden comprimir ni descomprimir.</string>
+
+</resources>

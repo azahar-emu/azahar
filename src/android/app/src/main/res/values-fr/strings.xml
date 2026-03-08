@@ -67,7 +67,7 @@
     <string name="notification_warning">Ne pas autoriser les notifications ?</string>
     <string name="notification_warning_description">Azahar ne pourra pas vous avertir des informations importantes.</string>
     <string name="filesystem_permission_warning">Autorisations manquantes</string>
-    <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" avant de continuer.</string>
+    <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" pour continuer.</string>
     <string name="camera_permission">Caméra</string>
     <string name="camera_permission_description">Accorder l\'autorisation de la caméra ci-dessous pour émuler la caméra 3DS.</string>
     <string name="microphone_permission">Microphone</string>
@@ -241,7 +241,7 @@
     <string name="use_integer_scaling_description">Redimensionne les écrans avec un multiple entier de la taille de l\'écran original de la 3DS. Pour les dispositions avec deux tailles d\'écrans différentes, c\'est l\'écran le plus large qui est redimensionné par un multiple entier.</string>
     <string name="texture_filter_name">Filtrage des textures</string>
     <string name="texture_filter_description">Améliore l\'aspect visuel des applications en appliquant un filtre aux textures. Les filtres pris en charge sont Anime4K Ultrafast, Bicubique, ScaleForce, xBRZ freescale et MMPX.</string>
-    <string name="delay_render_thread">Retarder le thread de rendu du jeu</string>
+    <string name="delay_render_thread">Retarder le fil de rendu du jeu</string>
     <string name="delay_render_thread_description">Délai le thread de rendu du jeu lorsqu\'il soumet des données au GPU. Cela permet de résoudre les problèmes de performance dans les (très rares) applications avec des fréquences d\'images dynamiques.</string>
     <string name="advanced">Avancé</string>
     <string name="texture_sampling_name">Échantillonnage de texture</string>
@@ -325,7 +325,7 @@
     <string name="hw_shaders_description">Utilise le hardware pour émuler les shaders de la 3DS. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
     <string name="cpu_clock_speed">Fréquence d\'horloge du CPU</string>
     <string name="vsync">Activer la synchronisation verticale (VSync)</string>
-    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil. Peut rajouter de la latence d\'entrée mais peut réduire le tearing dans certains cas.</string>
+    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil. Peut rajouter de la latence d\'entrée mais peut réduire le déchirement d\'écran dans certains cas.</string>
     <string name="renderer_debug">Rendu de débogage</string>
     <string name="renderer_debug_description">Enregistre des informations de débogage supplémentaires liées aux graphiques. Lorsqu\'il est activé, les performances du jeu seront significativement réduites.</string>
     <string name="instant_debug_log">Vider la sortie des logs sur chaque message</string>
@@ -336,6 +336,8 @@
     <string name="deterministic_async_operations_description">Rend les opérations asynchrones déterministes pour le débogage. L\'activation de cette fonction peut entraîner des blocages.</string>
     <string name="enable_rpc_server">Activer le serveur RPC</string>
     <string name="enable_rpc_server_desc">Active le serveur RPC sur le port 45987. Cela permet de lire/écrire à distance la mémoire invitée.</string>
+    <string name="toggle_unique_data_console_type">Changer le type de console des données uniques</string>
+    <string name="toggle_unique_data_console_type_desc">Change le type de console des données uniques (Old 3DS &#8596; New 3DS) afin de pouvoir télécharger le firmware système opposé depuis les paramètres de la console.</string>
     <string name="shader_jit">Activer Shader JIT</string>
     <string name="shader_jit_description">Utilisez le moteur JIT à la place de l\'interpréteur pour l\'émulation des shaders logiciels.</string>
 
