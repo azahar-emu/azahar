@@ -1124,4 +1124,10 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_uninstallTitle(JNIEnv* env, job
     return true;
 }
 
+jboolean Java_org_citra_citra_1emu_NativeLibrary_nativeFileExists(JNIEnv* env, jobject obj,
+                                                                  jstring j_path) {
+    const auto path = GetJString(env, j_path);
+    return FileUtil::Exists(path);
+}
+
 } // extern "C"
