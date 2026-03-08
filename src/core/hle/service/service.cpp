@@ -69,7 +69,7 @@ const std::array<ServiceModuleInfo, 41> service_module_map{
      {"AC", 0x00040130'00002402, AC::InstallInterfaces, false},
      {"ACT", 0x00040130'00003802, ACT::InstallInterfaces, true},
      {"AM", 0x00040130'00001502, AM::InstallInterfaces, false},
-     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces, true},
+     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces, false},
      {"CAM", 0x00040130'00001602,
       [](Core::System& system) {
           CAM::InstallInterfaces(system);
