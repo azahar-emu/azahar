@@ -136,7 +136,7 @@ class GameAdapter(
         val holder = view.tag as GameViewHolder
         gameExists(holder)
 
-        if (holder.game.titleId == 0L) {
+        if (!holder.game.valid) {
             MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.properties)
                 .setMessage(R.string.properties_not_loaded)
@@ -558,7 +558,9 @@ class GameAdapter(
 
     private class DiffCallback : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean {
-            return oldItem.titleId == newItem.titleId
+            // The title is taken into account to support 3DSX, which all have the titleID 0.
+            // This only works now because we always return the English title, adjust if that changes.
+            return oldItem.titleId == newItem.titleId && oldItem.title == newItem.title
         }
 
         override fun areContentsTheSame(oldItem: Game, newItem: Game): Boolean {

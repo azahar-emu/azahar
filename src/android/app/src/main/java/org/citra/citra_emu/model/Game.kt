@@ -16,6 +16,7 @@ import org.citra.citra_emu.activities.EmulationActivity
 @Parcelize
 @Serializable
 class Game(
+    val valid: Boolean = false,
     val title: String = "",
     val description: String = "",
     val path: String = "",
