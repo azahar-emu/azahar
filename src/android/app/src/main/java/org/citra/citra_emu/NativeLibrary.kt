@@ -256,6 +256,8 @@ object NativeLibrary {
         return uninstallTitle(titleId, mediaType.value)
     }
 
+    external fun nativeFileExists(path: String): Boolean
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
