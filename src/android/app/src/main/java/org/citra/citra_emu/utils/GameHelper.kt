@@ -79,14 +79,15 @@ object GameHelper {
             gameInfo = GameInfo(nativePath)
         }
 
-
-        if (gameInfo?.isValid() == false) {
+        val valid = gameInfo.isValid()
+        if (!valid) {
             gameInfo = null
         }
 
         val isEncrypted = gameInfo?.isEncrypted() == true
 
         val newGame = Game(
+            valid,
             (gameInfo?.getTitle() ?: FileUtil.getFilename(uri)).replace("[\\t\\n\\r]+".toRegex(), " "),
             filePath.replace("\n", " "),
             if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
