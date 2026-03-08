@@ -1251,23 +1251,26 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     bool exists = false;
 
     if (auto arg = apt->applet_manager->ReceiveDeliverArg()) {
-        param = std::move(arg->param);
-
         // TODO: This is a complete guess based on observations. It is unknown how the OtherMedia
         // type is handled and how it interacts with the OtherApp type, and it is unknown if
         // this (checking the jump parameters) is indeed the way the 3DS checks the types.
         const auto& jump_parameters = apt->applet_manager->GetApplicationJumpParameters();
-        switch (startup_argument_type) {
-        case StartupArgumentType::OtherApp:
-            exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
-                     jump_parameters.current_media_type == jump_parameters.next_media_type;
-            break;
-        case StartupArgumentType::Restart:
-            exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
-            break;
-        case StartupArgumentType::OtherMedia:
-            exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
-            break;
+
+        if (jump_parameters.Valid()) {
+            param = std::move(arg->param);
+
+            switch (startup_argument_type) {
+            case StartupArgumentType::OtherApp:
+                exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
+                         jump_parameters.current_media_type == jump_parameters.next_media_type;
+                break;
+            case StartupArgumentType::Restart:
+                exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
+                break;
+            case StartupArgumentType::OtherMedia:
+                exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
+                break;
+            }
         }
     }
 

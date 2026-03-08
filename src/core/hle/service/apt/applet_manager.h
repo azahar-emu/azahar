@@ -185,12 +185,21 @@ private:
 using SysMenuArg = std::array<u8, SysMenuArgSize>;
 
 struct ApplicationJumpParameters {
-    u64 next_title_id;
-    FS::MediaType next_media_type;
-    ApplicationJumpFlags flags;
+    u64 next_title_id = ~0ULL;
+    FS::MediaType next_media_type{};
+    ApplicationJumpFlags flags{};
 
-    u64 current_title_id;
-    FS::MediaType current_media_type;
+    u64 current_title_id = ~0ULL;
+    FS::MediaType current_media_type{};
+
+    bool Valid() const {
+        return next_title_id != ~0ULL && current_title_id != ~0ULL;
+    }
+
+    void Invalidate() {
+        next_title_id = ~0ULL;
+        current_title_id = ~0ULL;
+    }
 
 private:
     template <class Archive>
