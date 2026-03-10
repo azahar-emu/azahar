@@ -606,7 +606,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             { config::disabled, "Disabled" },
             { nullptr, nullptr }
         },
-        config::disabled
+        config::enabled
     },
     {
         config::input::render_touchscreen,
