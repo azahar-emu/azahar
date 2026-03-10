@@ -26,13 +26,8 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
-import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
-import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.InsetsHelper
@@ -43,12 +38,11 @@ import org.citra.citra_emu.utils.ThemeUtil
 class SettingsActivity :
     AppCompatActivity(),
     SettingsActivityView {
-    private val presenter = SettingsActivityPresenter(this)
-
     private lateinit var binding: ActivitySettingsBinding
+    val settingsViewModel: SettingsViewModel by viewModels()
+    private val presenter by lazy { SettingsActivityPresenter(this, settingsViewModel) }
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
-
+    // the activity will work with the fresh Settings() object created and stored in the viewmodel
     override val settings: Settings get() = settingsViewModel.settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,9 +58,9 @@ class SettingsActivity :
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val launcher = intent
-        val gameID = launcher.getStringExtra(ARG_GAME_ID)
-        val menuTag = launcher.getStringExtra(ARG_MENU_TAG)
-        presenter.onCreate(savedInstanceState, menuTag!!, gameID!!)
+        val gameID = launcher.getStringExtra(ARG_GAME_ID) ?: ""
+        val menuTag = launcher.getStringExtra(ARG_MENU_TAG) ?: ""
+        presenter.onCreate(savedInstanceState, menuTag, gameID)
 
         // Show "Back" button in the action bar for navigation
         setSupportActionBar(binding.toolbarSettings)
@@ -211,13 +205,6 @@ class SettingsActivity :
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }
         editor.apply()
-
-        // Reset the static memory representation of each setting
-        BooleanSetting.clear()
-        FloatSetting.clear()
-        ScaledFloatSetting.clear()
-        IntSetting.clear()
-        StringSetting.clear()
 
         // Delete settings file because the user may have changed values that do not exist in the UI
         val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)

@@ -7,11 +7,11 @@ package org.citra.citra_emu.features.settings.model.view
 import androidx.annotation.StringRes
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.AbstractShortSetting
-import org.citra.citra_emu.features.settings.model.AbstractStringSetting
+import org.citra.citra_emu.features.settings.model.Settings
 
 class StringSingleChoiceSetting(
-    setting: AbstractSetting?,
+    val settings: Settings,
+    setting: AbstractSetting<String>?,
     titleId: Int,
     descriptionId: Int,
     val choices: Array<String>,
@@ -19,6 +19,8 @@ class StringSingleChoiceSetting(
     val key: String? = null,
     private val defaultValue: String? = null,
     override var isEnabled: Boolean = true,
+    private val getValue: (()->String)? = null,
+    private val setValue: ((String)-> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
@@ -35,22 +37,12 @@ class StringSingleChoiceSetting(
 
     val selectedValue: String
         get() {
+            if (getValue != null) return getValue.invoke()
             if (setting == null) {
                 return defaultValue!!
             }
-
-            try {
-                val setting = setting as AbstractStringSetting
-                return setting.string
-            } catch (_: ClassCastException) {
-            }
-
-            try {
-                val setting = setting as AbstractShortSetting
-                return setting.short.toString()
-            } catch (_: ClassCastException) {
-            }
-            return defaultValue!!
+            @Suppress("UNCHECKED_CAST")
+            return settings.get(setting as AbstractSetting<String>)
         }
     val selectValueIndex: Int
         get() {
@@ -68,17 +60,14 @@ class StringSingleChoiceSetting(
      * initializes a new one and returns it, so it can be added to the Hashmap.
      *
      * @param selection New value of the int.
-     * @return the existing setting with the new value applied.
      */
-    fun setSelectedValue(selection: String): AbstractStringSetting {
-        val stringSetting = setting as AbstractStringSetting
-        stringSetting.string = selection
-        return stringSetting
-    }
-
-    fun setSelectedValue(selection: Short): AbstractShortSetting {
-        val shortSetting = setting as AbstractShortSetting
-        shortSetting.short = selection
-        return shortSetting
+    fun setSelectedValue(selection: String) {
+        if (setValue != null) {
+            setValue(selection)
+        }else {
+            @Suppress("UNCHECKED_CAST")
+            val stringSetting = setting as AbstractSetting<String>
+            settings.set(stringSetting, selection)
+        }
     }
 }
