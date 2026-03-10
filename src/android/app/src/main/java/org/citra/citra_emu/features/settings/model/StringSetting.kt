@@ -10,7 +10,7 @@ enum class StringSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: String
-) : AbstractStringSetting {
+) : AbstractSetting<String>{
     INIT_TIME(SettingKeys.init_time(), Settings.SECTION_SYSTEM, "946731601"),
     CAMERA_INNER_NAME(SettingKeys.camera_inner_name(), Settings.SECTION_CAMERA, "ndk"),
     CAMERA_INNER_CONFIG(SettingKeys.camera_inner_config(), Settings.SECTION_CAMERA, "_front"),
@@ -29,10 +29,7 @@ enum class StringSetting(
     WEB_API_URL(SettingKeys.web_api_url(), Settings.SECTION_NETWORK, ""),
     NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, "");
 
-    override var string: String = defaultValue
-
-    override val valueAsString: String
-        get() = string
+    override fun valueFromString(string: String) = string
 
     override val isRuntimeEditable: Boolean
         get() {
@@ -57,6 +54,5 @@ enum class StringSetting(
 
         fun from(key: String): StringSetting? = StringSetting.values().firstOrNull { it.key == key }
 
-        fun clear() = StringSetting.values().forEach { it.string = it.defaultValue }
     }
 }
