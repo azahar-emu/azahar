@@ -13,16 +13,19 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.divider.MaterialDividerItemDecoration
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
-import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
+import kotlin.getValue
 
 class SettingsFragment : Fragment(), SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
-    private val fragmentPresenter = SettingsFragmentPresenter(this)
+    private val settingsViewModel: SettingsViewModel by activityViewModels()
+
+    private val fragmentPresenter by lazy { SettingsFragmentPresenter(this) }
     private var settingsAdapter: SettingsAdapter? = null
 
     private var _binding: FragmentSettingsBinding? = null
@@ -37,7 +40,7 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
         super.onCreate(savedInstanceState)
         val menuTag = requireArguments().getString(ARGUMENT_MENU_TAG)
         val gameId = requireArguments().getString(ARGUMENT_GAME_ID)
-        fragmentPresenter.onCreate(menuTag!!, gameId!!)
+        fragmentPresenter.onCreate(menuTag!!, gameId!!, settingsViewModel.settings)
     }
 
     override fun onCreateView(
@@ -86,10 +89,6 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
 
     override fun showToastMessage(message: String?, is_long: Boolean) {
         activityView!!.showToastMessage(message!!, is_long)
-    }
-
-    override fun putSetting(setting: AbstractSetting) {
-        fragmentPresenter.putSetting(setting)
     }
 
     override fun onSettingChanged() {

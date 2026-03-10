@@ -11,11 +11,10 @@ import org.citra.citra_emu.features.settings.model.view.StringInputSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: SettingsItem
-
+    SettingViewHolder<StringInputSetting>(binding.root, adapter) {
+    override lateinit var setting: StringInputSetting
     override fun bind(item: SettingsItem) {
-        setting = item
+        setting = item as StringInputSetting
         binding.textSettingName.setText(item.nameId)
         if (item.descriptionId != 0) {
             binding.textSettingDescription.visibility = View.VISIBLE
@@ -24,7 +23,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             binding.textSettingDescription.visibility = View.GONE
         }
         binding.textSettingValue.visibility = View.VISIBLE
-        binding.textSettingValue.text = setting.setting?.valueAsString
+        binding.textSettingValue.text = setting.selectedValue
 
         if (setting.isActive) {
             binding.textSettingName.alpha = 1f
@@ -42,7 +41,7 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             adapter.onClickDisabledSetting(!setting.isEditable)
             return
         }
-        adapter.onStringInputClick((setting as StringInputSetting), bindingAdapterPosition)
+        adapter.onStringInputClick(setting, bindingAdapterPosition)
     }
 
     override fun onLongClick(clicked: View): Boolean {
