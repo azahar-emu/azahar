@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #ifdef ANDROID
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include "common/android_storage.h"
@@ -317,7 +318,9 @@ std::string TranslateFilePath(const std::string& filepath) {
     }
     std::optional<std::string> userDirLocation = GetUserDirectory();
     if (userDirLocation) {
-        return *userDirLocation + "/" + filepath;
+        std::string translatedPath = *userDirLocation + "/" + filepath;
+        boost::replace_all(translatedPath, "//", "/");
+        return translatedPath;
     }
     return "";
 }
