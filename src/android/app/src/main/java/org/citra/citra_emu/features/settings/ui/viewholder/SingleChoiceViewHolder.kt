@@ -12,8 +12,8 @@ import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSettin
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: SettingsItem
+    SettingViewHolder<SettingsItem>(binding.root, adapter) {
+    override lateinit var setting: SettingsItem
 
     override fun bind(item: SettingsItem) {
         setting = item
