@@ -51,6 +51,7 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -87,14 +88,15 @@ class EmulationActivity : AppCompatActivity() {
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
-        settingsViewModel.settings.loadSettings()
+
+        SettingsFile.loadSettings(settingsViewModel.settings)
         super.onCreate(savedInstanceState)
-        secondaryDisplay = SecondaryDisplay(this)
+        secondaryDisplay = SecondaryDisplay(this, settingsViewModel.settings)
         secondaryDisplay.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this, settingsViewModel.settings)
         setContentView(binding.root)
 
         val navHostFragment =
@@ -232,7 +234,7 @@ class EmulationActivity : AppCompatActivity() {
         val attributes = window.attributes
 
         attributes.layoutInDisplayCutoutMode =
-            if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+            if (settingsViewModel.settings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             } else {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
@@ -250,7 +252,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     private fun applyOrientationSettings() {
-        val orientationOption = IntSetting.ORIENTATION_OPTION.int
+        val orientationOption = settingsViewModel.settings.get(IntSetting.ORIENTATION_OPTION)
         screenAdjustmentUtil.changeActivityOrientation(orientationOption)
     }
 

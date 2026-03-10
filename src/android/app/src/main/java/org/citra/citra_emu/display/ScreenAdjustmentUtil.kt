@@ -29,13 +29,13 @@ class ScreenAdjustmentUtil(
             isEnabled,
             windowManager.defaultDisplay.rotation
         )
-        BooleanSetting.SWAP_SCREEN.boolean = isEnabled
-        settings.saveSetting(BooleanSetting.SWAP_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        settings.update(BooleanSetting.SWAP_SCREEN, isEnabled)
+        SettingsFile.saveSetting(BooleanSetting.SWAP_SCREEN, settings)
     }
 
     fun cycleLayouts() {
 
-        val landscapeLayoutsToCycle = IntListSetting.LAYOUTS_TO_CYCLE.list;
+        val landscapeLayoutsToCycle = settings.get(IntListSetting.LAYOUTS_TO_CYCLE)
         val landscapeValues =
             if (landscapeLayoutsToCycle.isNotEmpty())
                 landscapeLayoutsToCycle.toIntArray()
@@ -45,12 +45,12 @@ class ScreenAdjustmentUtil(
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
         if (NativeLibrary.isPortraitMode) {
-            val currentLayout = IntSetting.PORTRAIT_SCREEN_LAYOUT.int
+            val currentLayout = settings.get(IntSetting.PORTRAIT_SCREEN_LAYOUT)
             val pos = portraitValues.indexOf(currentLayout)
             val layoutOption = portraitValues[(pos + 1) % portraitValues.size]
             changePortraitOrientation(layoutOption)
         } else {
-            val currentLayout = IntSetting.SCREEN_LAYOUT.int
+            val currentLayout = settings.get(IntSetting.SCREEN_LAYOUT)
             val pos = landscapeValues.indexOf(currentLayout)
             val layoutOption = landscapeValues[(pos + 1) % landscapeValues.size]
             changeScreenOrientation(layoutOption)
@@ -58,30 +58,30 @@ class ScreenAdjustmentUtil(
     }
 
     fun changePortraitOrientation(layoutOption: Int) {
-        IntSetting.PORTRAIT_SCREEN_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
+        settings.update(IntSetting.PORTRAIT_SCREEN_LAYOUT, layoutOption)
+        SettingsFile.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, settings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
     }
 
     fun changeScreenOrientation(layoutOption: Int) {
-        IntSetting.SCREEN_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
+        settings.update(IntSetting.SCREEN_LAYOUT, layoutOption)
+        SettingsFile.saveSetting(IntSetting.SCREEN_LAYOUT, settings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
     }
 
     fun changeActivityOrientation(orientationOption: Int) {
         val activity = context as? Activity ?: return
-        IntSetting.ORIENTATION_OPTION.int = orientationOption
-        settings.saveSetting(IntSetting.ORIENTATION_OPTION, SettingsFile.FILE_NAME_CONFIG)
+        settings.update(IntSetting.ORIENTATION_OPTION, orientationOption)
+        SettingsFile.saveSetting(IntSetting.ORIENTATION_OPTION, settings)
         activity.requestedOrientation = orientationOption
     }
 
     fun toggleScreenUpright() {
-        val uprightBoolean = BooleanSetting.UPRIGHT_SCREEN.boolean
-        BooleanSetting.UPRIGHT_SCREEN.boolean = !uprightBoolean
-        settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        val uprightBoolean = settings.get(BooleanSetting.UPRIGHT_SCREEN)
+        settings.update(BooleanSetting.UPRIGHT_SCREEN, !uprightBoolean)
+        SettingsFile.saveSetting(BooleanSetting.UPRIGHT_SCREEN, settings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
 

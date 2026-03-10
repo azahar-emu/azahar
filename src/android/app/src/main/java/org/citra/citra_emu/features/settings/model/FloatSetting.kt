@@ -9,18 +9,25 @@ import org.citra.citra_emu.features.settings.SettingKeys
 enum class FloatSetting(
     override val key: String,
     override val section: String,
-    override val defaultValue: Float
-) : AbstractFloatSetting {
+    override val defaultValue: Float,
+    val scale:Int = 1
+) : AbstractSetting<Float> {
     LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(),Settings.SECTION_LAYOUT,2.25f),
     SECOND_SCREEN_OPACITY(SettingKeys.custom_second_layer_opacity(), Settings.SECTION_RENDERER, 100f),
-    BACKGROUND_RED(SettingKeys.bg_red(), Settings.SECTION_RENDERER, 0f),
-    BACKGROUND_BLUE(SettingKeys.bg_blue(), Settings.SECTION_RENDERER, 0f),
-    BACKGROUND_GREEN(SettingKeys.bg_green(), Settings.SECTION_RENDERER, 0f);
+    BACKGROUND_RED(SettingKeys.bg_red(), Settings.SECTION_RENDERER, 0f, 255),
+    BACKGROUND_BLUE(SettingKeys.bg_blue(), Settings.SECTION_RENDERER, 0f, 255),
+    BACKGROUND_GREEN(SettingKeys.bg_green(), Settings.SECTION_RENDERER, 0f, 255),
+    AUDIO_VOLUME(SettingKeys.volume(), Settings.SECTION_AUDIO, 1.0f, 100);
 
-    override var float: Float = defaultValue
+    // valueFromString reads raw setting from file, scales up for UI
+    override fun valueFromString(string: String): Float? {
+        return string.toFloatOrNull()?.times(scale)
+    }
 
-    override val valueAsString: String
-        get() = float.toString()
+    // valueToString scales back down to raw for file
+    override fun valueToString(value: Float): String {
+        return (value / scale).toString()
+    }
 
     override val isRuntimeEditable: Boolean
         get() {
@@ -36,7 +43,5 @@ enum class FloatSetting(
         private val NOT_RUNTIME_EDITABLE = emptyList<FloatSetting>()
 
         fun from(key: String): FloatSetting? = FloatSetting.values().firstOrNull { it.key == key }
-
-        fun clear() = FloatSetting.values().forEach { it.float = it.defaultValue }
     }
 }

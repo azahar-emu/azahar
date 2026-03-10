@@ -19,8 +19,9 @@ import android.view.WindowManager
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.display.SecondaryDisplayLayout
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.settings.model.Settings
 
-class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
+class SecondaryDisplay(val context: Context, private val settings: Settings) : DisplayManager.DisplayListener {
     private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
@@ -68,8 +69,7 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     fun updateDisplay() {
         // decide if we are going to the external display or the internal one
         var display = getExternalDisplay(context)
-        if (display == null ||
-            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
+        if (display == null || settings.get(IntSetting.SECONDARY_DISPLAY_LAYOUT) == SecondaryDisplayLayout.NONE.int) {
             display = vd.display
         }
 
