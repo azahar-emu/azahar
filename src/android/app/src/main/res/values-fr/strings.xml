@@ -328,7 +328,7 @@
     <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil. Peut rajouter de la latence d\'entrée mais peut réduire le déchirement d\'écran dans certains cas.</string>
     <string name="renderer_debug">Rendu de débogage</string>
     <string name="renderer_debug_description">Enregistre des informations de débogage supplémentaires liées aux graphiques. Lorsqu\'il est activé, les performances du jeu seront significativement réduites.</string>
-    <string name="instant_debug_log">Vider la sortie des logs sur chaque message</string>
+    <string name="instant_debug_log">Vider la sortie des logs à chaque message</string>
     <string name="instant_debug_log_description">Enregistre immédiatement le log de débogage dans un fichier. A utiliser si Azahar se plante et que la sortie du journal est coupée.</string>
     <string name="delay_start_lle_modules">Démarrage différé avec les modules LLE</string>
     <string name="delay_start_lle_modules_description">Retarde le démarrage de l\'application lorsque les modules LLE sont activés.</string>
@@ -336,7 +336,7 @@
     <string name="deterministic_async_operations_description">Rend les opérations asynchrones déterministes pour le débogage. L\'activation de cette fonction peut entraîner des blocages.</string>
     <string name="enable_rpc_server">Activer le serveur RPC</string>
     <string name="enable_rpc_server_desc">Active le serveur RPC sur le port 45987. Cela permet de lire/écrire à distance la mémoire invitée.</string>
-    <string name="toggle_unique_data_console_type">Changer le type de console des données uniques</string>
+    <string name="toggle_unique_data_console_type">Basculer le type de console des données uniques</string>
     <string name="toggle_unique_data_console_type_desc">Change le type de console des données uniques (Old 3DS &#8596; New 3DS) afin de pouvoir télécharger le firmware système opposé depuis les paramètres de la console.</string>
     <string name="shader_jit">Activer Shader JIT</string>
     <string name="shader_jit_description">Utilisez le moteur JIT à la place de l\'interpréteur pour l\'émulation des shaders logiciels.</string>
@@ -487,7 +487,7 @@
     <string name="emulation_custom_layout_y">Position Y</string>
     <string name="emulation_custom_layout_width">Largeur</string>
     <string name="emulation_custom_layout_height">Hauteur</string>
-    <string name="emulation_cycle_landscape_layouts">Dispositions de cycle</string>
+    <string name="emulation_cycle_landscape_layouts">Dispositions à alterner</string>
     <string name="emulation_swap_screens">Permuter les écrans</string>
     <string name="emulation_rotate_upright">Tourner l\'écran à la verticale</string>
     <string name="emulation_touch_overlay_reset">Réinitialiser l\'overlay</string>
