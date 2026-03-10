@@ -13,8 +13,8 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class InputBindingSettingViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: InputBindingSetting
+    SettingViewHolder<InputBindingSetting>(binding.root, adapter) {
+    override lateinit var setting: InputBindingSetting
 
     override fun bind(item: SettingsItem) {
         val preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)

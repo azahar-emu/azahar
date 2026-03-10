@@ -4,7 +4,6 @@
 
 package org.citra.citra_emu.display
 
-import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.view.WindowManager
@@ -17,11 +16,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.EmulationMenuSettings
 
-class ScreenAdjustmentUtil(
-    private val context: Context,
-    private val windowManager: WindowManager,
-    private val settings: Settings
-) {
+class ScreenAdjustmentUtil(private val context: Context, private val windowManager: WindowManager) {
     fun swapScreen() {
         val isEnabled = !EmulationMenuSettings.swapScreens
         val displayRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -35,12 +30,12 @@ class ScreenAdjustmentUtil(
             isEnabled,
             displayRotation
         )
-        BooleanSetting.SWAP_SCREEN.boolean = isEnabled
-        settings.saveSetting(BooleanSetting.SWAP_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        Settings.activeSettings.update(BooleanSetting.SWAP_SCREEN, isEnabled)
+        SettingsFile.saveSetting(BooleanSetting.SWAP_SCREEN, Settings.activeSettings)
     }
 
     fun cycleLayouts() {
-        val landscapeLayoutsToCycle = IntListSetting.LAYOUTS_TO_CYCLE.list
+        val landscapeLayoutsToCycle = Settings.activeSettings.get(IntListSetting.LAYOUTS_TO_CYCLE)
         val landscapeValues =
             if (landscapeLayoutsToCycle.isNotEmpty()) {
                 landscapeLayoutsToCycle.toIntArray()
@@ -52,12 +47,12 @@ class ScreenAdjustmentUtil(
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
         if (NativeLibrary.isPortraitMode()) {
-            val currentLayout = IntSetting.PORTRAIT_SCREEN_LAYOUT.int
+            val currentLayout = Settings.activeSettings.get(IntSetting.PORTRAIT_SCREEN_LAYOUT)
             val pos = portraitValues.indexOf(currentLayout)
             val layoutOption = portraitValues[(pos + 1) % portraitValues.size]
             changePortraitOrientation(layoutOption)
         } else {
-            val currentLayout = IntSetting.SCREEN_LAYOUT.int
+            val currentLayout = Settings.activeSettings.get(IntSetting.SCREEN_LAYOUT)
             val pos = landscapeValues.indexOf(currentLayout)
             val layoutOption = landscapeValues[(pos + 1) % landscapeValues.size]
             changeScreenOrientation(layoutOption)
@@ -65,48 +60,41 @@ class ScreenAdjustmentUtil(
     }
 
     fun changePortraitOrientation(layoutOption: Int) {
-        IntSetting.PORTRAIT_SCREEN_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
+        Settings.activeSettings.update(IntSetting.PORTRAIT_SCREEN_LAYOUT, layoutOption)
+        SettingsFile.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, Settings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeScreenOrientation(layoutOption: Int) {
-        IntSetting.SCREEN_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
+        Settings.activeSettings.update(IntSetting.SCREEN_LAYOUT, layoutOption)
+        SettingsFile.saveSetting(IntSetting.SCREEN_LAYOUT, Settings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeSecondaryOrientation(layoutOption: Int) {
-        IntSetting.SECONDARY_DISPLAY_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.SECONDARY_DISPLAY_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
+        Settings.activeSettings.update(IntSetting.SECONDARY_DISPLAY_LAYOUT, layoutOption)
+        SettingsFile.saveSetting(IntSetting.SECONDARY_DISPLAY_LAYOUT, Settings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun enableSecondaryDisplay(layoutOption: Int) {
-        BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = true
-        settings.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, SettingsFile.FILE_NAME_CONFIG)
+        Settings.activeSettings.update(BooleanSetting.ENABLE_SECONDARY_DISPLAY, true)
+        SettingsFile.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, Settings.activeSettings)
         changeSecondaryOrientation(layoutOption)
     }
 
     fun disableSecondaryDisplay() {
-        BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = false
-        settings.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, SettingsFile.FILE_NAME_CONFIG)
-    }
-
-    fun changeActivityOrientation(orientationOption: Int) {
-        val activity = context as? Activity ?: return
-        IntSetting.ORIENTATION_OPTION.int = orientationOption
-        settings.saveSetting(IntSetting.ORIENTATION_OPTION, SettingsFile.FILE_NAME_CONFIG)
-        activity.requestedOrientation = orientationOption
+        Settings.activeSettings.update(BooleanSetting.ENABLE_SECONDARY_DISPLAY, false)
+        SettingsFile.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, Settings.activeSettings)
     }
 
     fun toggleScreenUpright() {
-        val uprightBoolean = BooleanSetting.UPRIGHT_SCREEN.boolean
-        BooleanSetting.UPRIGHT_SCREEN.boolean = !uprightBoolean
-        settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
+        val uprightBoolean = Settings.activeSettings.get(BooleanSetting.UPRIGHT_SCREEN)
+        Settings.activeSettings.update(BooleanSetting.UPRIGHT_SCREEN, !uprightBoolean)
+        SettingsFile.saveSetting(BooleanSetting.UPRIGHT_SCREEN, Settings.activeSettings)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }

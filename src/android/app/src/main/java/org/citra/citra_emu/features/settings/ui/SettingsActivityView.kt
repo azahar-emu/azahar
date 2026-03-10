@@ -25,7 +25,7 @@ interface SettingsActivityView {
      *
      * @return A HashMap of Settings.
      */
-    val settings: Settings
+    val editingSettings: Settings
 
     /**
      * Called when a load operation completes.

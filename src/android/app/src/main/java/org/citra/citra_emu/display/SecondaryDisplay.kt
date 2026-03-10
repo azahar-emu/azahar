@@ -18,6 +18,7 @@ import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.Log
 
 class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
@@ -88,8 +89,9 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
         val displayToUse = if (availableDisplays.isEmpty() ||
             // Theoretically, the NONE option is no longer selectable, but
             // I am leaving this in for backwards compatibility
-            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int ||
-            !BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean
+            Settings.activeSettings.get(IntSetting.SECONDARY_DISPLAY_LAYOUT) ==
+            SecondaryDisplayLayout.NONE.int ||
+            !Settings.activeSettings.get(BooleanSetting.ENABLE_SECONDARY_DISPLAY)
         ) {
             currentDisplayId = -1
             vd.display
