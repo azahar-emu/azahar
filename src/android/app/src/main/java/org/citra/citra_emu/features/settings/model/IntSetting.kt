@@ -10,7 +10,7 @@ enum class IntSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: Int
-) : AbstractIntSetting {
+) : AbstractSetting<Int> {
     FRAME_LIMIT(SettingKeys.frame_limit(), Settings.SECTION_RENDERER, 100),
     EMULATED_REGION(SettingKeys.region_value(), Settings.SECTION_SYSTEM, -1),
     INIT_CLOCK(SettingKeys.init_clock(), Settings.SECTION_SYSTEM, 0),
@@ -50,7 +50,6 @@ enum class IntSetting(
     CPU_CLOCK_SPEED(SettingKeys.cpu_clock_percentage(), Settings.SECTION_CORE, 100),
     TEXTURE_FILTER(SettingKeys.texture_filter(), Settings.SECTION_RENDERER, 0),
     TEXTURE_SAMPLING(SettingKeys.texture_sampling(), Settings.SECTION_RENDERER, 0),
-    USE_FRAME_LIMIT(SettingKeys.use_frame_limit(), Settings.SECTION_RENDERER, 1),
     DELAY_RENDER_THREAD_US(SettingKeys.delay_game_render_thread_us(), Settings.SECTION_RENDERER, 0),
     ORIENTATION_OPTION(SettingKeys.screen_orientation(), Settings.SECTION_LAYOUT, 2),
     TURBO_LIMIT(SettingKeys.turbo_limit(), Settings.SECTION_CORE, 200),
@@ -58,10 +57,15 @@ enum class IntSetting(
     RENDER_3D_WHICH_DISPLAY(SettingKeys.render_3d_which_display(),Settings.SECTION_RENDERER,0),
     ASPECT_RATIO(SettingKeys.aspect_ratio(), Settings.SECTION_LAYOUT, 0);
 
-    override var int: Int = defaultValue
 
-    override val valueAsString: String
-        get() = int.toString()
+    override fun valueFromString(string: String): Int? {
+        return string.toIntOrNull() ?: when (string.trim().lowercase()) {
+            "true" -> 1
+            "false" -> 0
+            else -> null
+        }
+    }
+
 
     override val isRuntimeEditable: Boolean
         get() {
@@ -83,6 +87,5 @@ enum class IntSetting(
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }
 
-        fun clear() = IntSetting.values().forEach { it.int = it.defaultValue }
     }
 }

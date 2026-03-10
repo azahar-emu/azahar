@@ -14,8 +14,8 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: RunnableSetting
+    SettingViewHolder<RunnableSetting>(binding.root, adapter) {
+    override lateinit var setting: RunnableSetting
 
     override fun bind(item: SettingsItem) {
         setting = item as RunnableSetting

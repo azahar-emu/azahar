@@ -19,7 +19,8 @@ import org.citra.citra_emu.features.settings.model.Settings
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
-    private val context: Context
+    private val context: Context,
+    private val settings: Settings
 ) {
 
     private val hotkeyButtons = Hotkey.entries.map { it.button }
@@ -112,7 +113,7 @@ class HotkeyUtility(
             Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
             Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
             Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
-            Hotkey.TURBO_LIMIT.button -> TurboHelper.toggleTurbo(true)
+            Hotkey.TURBO_LIMIT.button -> TurboHelper.toggleTurbo(true, settings)
             Hotkey.QUICKSAVE.button -> {
                 NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                 Toast.makeText(
