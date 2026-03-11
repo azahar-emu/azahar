@@ -1308,7 +1308,7 @@ Result SVC::CreateThread(Handle* out_handle, u32 entry_point, u32 arg, VAddr sta
     }
 
     // Create thread.
-    const std::string name = fmt::format("thread-{:08X}", entry_point);
+    const std::string name = fmt::format("{}-{:08X}", current_process->codeset->name, entry_point);
     CASCADE_RESULT(std::shared_ptr<Thread> thread,
                    kernel.CreateThread(name, entry_point, priority, arg, processor_id, stack_top,
                                        current_process));
