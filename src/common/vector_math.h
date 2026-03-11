@@ -82,7 +82,7 @@ public:
         return Vec2{f, f};
     }
 
-    [[nodiscard]] constexpr Vec2<decltype(T{} + T{})> operator+(const Vec2 & other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} + T{})> operator+(const Vec2& other) const {
         return {x + other.x, y + other.y};
     }
     constexpr Vec2& operator+=(const Vec2& other) {
@@ -90,7 +90,7 @@ public:
         y += other.y;
         return *this;
     }
-    [[nodiscard]] constexpr Vec2<decltype(T{} - T{})> operator-(const Vec2 & other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} - T{})> operator-(const Vec2& other) const {
         return {x - other.x, y - other.y};
     }
     constexpr Vec2& operator-=(const Vec2& other) {
@@ -103,12 +103,12 @@ public:
     [[nodiscard]] constexpr Vec2<std::enable_if_t<std::is_signed_v<U>, U>> operator-() const {
         return {-x, -y};
     }
-    [[nodiscard]] constexpr Vec2<decltype(T{} * T{})> operator*(const Vec2 & other) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} * T{})> operator*(const Vec2& other) const {
         return {x * other.x, y * other.y};
     }
 
     template <typename V>
-    [[nodiscard]] constexpr Vec2<decltype(T{} * V{})> operator*(const V & f) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f};
     }
 
@@ -119,7 +119,7 @@ public:
     }
 
     template <typename V>
-    [[nodiscard]] constexpr Vec2<decltype(T{} / V{})> operator/(const V & f) const {
+    [[nodiscard]] constexpr Vec2<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f};
     }
 
@@ -252,7 +252,7 @@ public:
         return Vec3(f, f, f);
     }
 
-    [[nodiscard]] constexpr Vec3<decltype(T{} + T{})> operator+(const Vec3 & other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} + T{})> operator+(const Vec3& other) const {
         return {x + other.x, y + other.y, z + other.z};
     }
 
@@ -263,7 +263,7 @@ public:
         return *this;
     }
 
-    [[nodiscard]] constexpr Vec3<decltype(T{} - T{})> operator-(const Vec3 & other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} - T{})> operator-(const Vec3& other) const {
         return {x - other.x, y - other.y, z - other.z};
     }
 
@@ -279,12 +279,12 @@ public:
         return {-x, -y, -z};
     }
 
-    [[nodiscard]] constexpr Vec3<decltype(T{} * T{})> operator*(const Vec3 & other) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} * T{})> operator*(const Vec3& other) const {
         return {x * other.x, y * other.y, z * other.z};
     }
 
     template <typename V>
-    [[nodiscard]] constexpr Vec3<decltype(T{} * V{})> operator*(const V & f) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f, z * f};
     }
 
@@ -294,7 +294,7 @@ public:
         return *this;
     }
     template <typename V>
-    [[nodiscard]] constexpr Vec3<decltype(T{} / V{})> operator/(const V & f) const {
+    [[nodiscard]] constexpr Vec3<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f, z / f};
     }
 
@@ -486,7 +486,7 @@ public:
         return Vec4(f, f, f, f);
     }
 
-    [[nodiscard]] constexpr Vec4<decltype(T{} + T{})> operator+(const Vec4 & other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} + T{})> operator+(const Vec4& other) const {
         return {x + other.x, y + other.y, z + other.z, w + other.w};
     }
 
@@ -498,7 +498,7 @@ public:
         return *this;
     }
 
-    [[nodiscard]] constexpr Vec4<decltype(T{} - T{})> operator-(const Vec4 & other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} - T{})> operator-(const Vec4& other) const {
         return {x - other.x, y - other.y, z - other.z, w - other.w};
     }
 
@@ -515,12 +515,12 @@ public:
         return {-x, -y, -z, -w};
     }
 
-    [[nodiscard]] constexpr Vec4<decltype(T{} * T{})> operator*(const Vec4 & other) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} * T{})> operator*(const Vec4& other) const {
         return {x * other.x, y * other.y, z * other.z, w * other.w};
     }
 
     template <typename V>
-    [[nodiscard]] constexpr Vec4<decltype(T{} * V{})> operator*(const V & f) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} * V{})> operator*(const V& f) const {
         return {x * f, y * f, z * f, w * f};
     }
 
@@ -531,7 +531,7 @@ public:
     }
 
     template <typename V>
-    [[nodiscard]] constexpr Vec4<decltype(T{} / V{})> operator/(const V & f) const {
+    [[nodiscard]] constexpr Vec4<decltype(T{} / V{})> operator/(const V& f) const {
         return {x / f, y / f, z / f, w / f};
     }
 
@@ -664,7 +664,7 @@ public:
 };
 
 template <typename T, typename V>
-[[nodiscard]] constexpr Vec4<decltype(V{} * T{})> operator*(const V & f, const Vec4<T>& vec) {
+[[nodiscard]] constexpr Vec4<decltype(V{} * T{})> operator*(const V& f, const Vec4<T>& vec) {
     return {f * vec.x, f * vec.y, f * vec.z, f * vec.w};
 }
 
@@ -719,8 +719,9 @@ template <typename X>
 
 // linear interpolation via int: 0=begin, base=end
 template <typename X, int base>
-[[nodiscard]] constexpr decltype((X{} * int{} + X{} * int{}) /
-                                 base) LerpInt(const X& begin, const X& end, const int t) {
+[[nodiscard]] constexpr decltype((X{} * int{} + X{} * int{}) / base) LerpInt(const X& begin,
+                                                                             const X& end,
+                                                                             const int t) {
     return (begin * (base - t) + end * t) / base;
 }
 

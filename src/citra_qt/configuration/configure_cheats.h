@@ -6,8 +6,8 @@
 
 #include <memory>
 #include <span>
-#include <QNetworkAccessManager>
 #include <QWidget>
+#include <QNetworkAccessManager>
 #include "common/common_types.h"
 
 namespace Cheats {
@@ -60,9 +60,8 @@ private slots:
     void OnDeleteCheat();
     void OnAddCheat();
     void OnDownloadCheat();
-
 private:
-    QNetworkAccessManager* networkManager;
+    QNetworkAccessManager *networkManager;
     std::unique_ptr<Ui::ConfigureCheats> ui;
     Cheats::CheatEngine& cheat_engine;
     std::span<const std::shared_ptr<Cheats::CheatBase>> cheats;

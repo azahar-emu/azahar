@@ -18,16 +18,16 @@ public:
         return {-xyz, w};
     }
 
-    [[nodiscard]] Quaternion<decltype(T{} + T{})> operator+(const Quaternion & other) const {
+    [[nodiscard]] Quaternion<decltype(T{} + T{})> operator+(const Quaternion& other) const {
         return {xyz + other.xyz, w + other.w};
     }
 
-    [[nodiscard]] Quaternion<decltype(T{} - T{})> operator-(const Quaternion & other) const {
+    [[nodiscard]] Quaternion<decltype(T{} - T{})> operator-(const Quaternion& other) const {
         return {xyz - other.xyz, w - other.w};
     }
 
     [[nodiscard]] Quaternion<decltype(T{} * T{} - T{} * T{})> operator*(
-        const Quaternion & other) const {
+        const Quaternion& other) const {
         return {xyz * other.w + other.xyz * w + Cross(xyz, other.xyz),
                 w * other.w - Dot(xyz, other.xyz)};
     }
