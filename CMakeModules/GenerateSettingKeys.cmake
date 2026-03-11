@@ -8,6 +8,7 @@
 foreach(KEY IN ITEMS
     "use_artic_base_controller"
     "enable_gamemode"
+    "controller_hotkey_maptype"
     "use_cpu_jit"
     "cpu_clock_percentage"
     "is_new_3ds"
@@ -135,6 +136,7 @@ foreach(KEY IN ITEMS
     "last_artic_base_addr"
     "motion_device"
     "touch_device"
+    "input_maptype"
     "udp_input_address"
     "udp_input_port"
     "udp_pad_index"
@@ -206,6 +208,7 @@ if (ENABLE_QT)
         "sdmc_directory"
         "game_id"
         "KeySeq"
+        "controller_keyseq"
         "gamedirs"
         "libvorbis"
         "Context"
