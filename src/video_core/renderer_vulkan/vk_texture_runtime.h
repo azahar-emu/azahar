@@ -295,7 +295,8 @@ public:
     Framebuffer& operator=(const Framebuffer&) = delete;
 
     Framebuffer(Framebuffer&& other) noexcept
-        : instance(other.instance), images(std::exchange(other.images, {})),
+        : VideoCore::FramebufferParams(std::move(other)), instance(other.instance),
+          images(std::exchange(other.images, {})),
           image_views(std::exchange(other.image_views, {})),
           framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
           render_pass(std::exchange(other.render_pass, VK_NULL_HANDLE)),
@@ -307,7 +308,7 @@ public:
           res_scale(std::exchange(other.res_scale, 1)) {}
 
     Framebuffer& operator=(Framebuffer&& other) noexcept {
-
+        VideoCore::FramebufferParams::operator=(std::move(other));
         images = std::exchange(other.images, {});
         image_views = std::exchange(other.image_views, {});
         framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);
