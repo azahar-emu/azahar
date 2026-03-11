@@ -26,6 +26,7 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
         {0x0024, nullptr, "AddDenyApType"},
         {0x0027, &AC_I::GetInfraPriority, "GetInfraPriority"},
         {0x002D, &AC_I::SetRequestEulaVersion, "SetRequestEulaVersion"},
+        {0x002F, &AC_I::GetNZoneBeaconNotFoundEvent, "GetNZoneBeaconNotFoundEvent"},
         {0x0030, &AC_I::RegisterDisconnectEvent, "RegisterDisconnectEvent"},
         {0x0036, &AC_I::GetConnectingProxyEnable, "GetConnectingProxyEnable"},
         {0x003C, nullptr, "GetAPSSIDList"},
