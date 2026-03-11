@@ -1,22 +1,22 @@
 // Copyright Citra Emulator Project / Lime3DS Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
-#include <QFileDialog>
 #include <QCheckBox>
+#include <QFile>
+#include <QFileDialog>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 #include <QTableWidgetItem>
 #include <QtGlobal>
+#include <fmt/format.h>
+#include "common/file_util.h"
+#include "configuration/ui_configure_cheats.h"
 #include "configure_cheats.h"
 #include "core/cheats/cheat_base.h"
 #include "core/cheats/cheats.h"
 #include "core/cheats/gateway_cheat.h"
 #include "ui_configure_cheats.h"
-#include "configuration/ui_configure_cheats.h"
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QFile>
-#include "common/file_util.h"
-#include <fmt/format.h>
 
 ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_id_, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureCheats>()), cheat_engine{cheat_engine_},
@@ -42,7 +42,8 @@ ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_i
     connect(ui->buttonSave, &QPushButton::clicked, this,
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
     connect(ui->buttonDelete, &QPushButton::clicked, this, &ConfigureCheats::OnDeleteCheat);
-    connect(ui->buttonDownloadCheats, &QPushButton::clicked, this, &ConfigureCheats::OnDownloadCheat);
+    connect(ui->buttonDownloadCheats, &QPushButton::clicked, this,
+            &ConfigureCheats::OnDownloadCheat);
     cheat_engine.LoadCheatFile(title_id);
     LoadCheats();
 }
@@ -50,38 +51,43 @@ ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_i
 ConfigureCheats::~ConfigureCheats() = default;
 
 void ConfigureCheats::OnDownloadCheat() {
-    auto confirmDownload = QMessageBox::warning(this, QStringLiteral("Warning"), QStringLiteral("Current cheats will be wiped and replaced. Continue?"), QMessageBox::Yes | QMessageBox::No);
-    if (confirmDownload == QMessageBox::Yes){
+    auto confirmDownload =
+        QMessageBox::warning(this, QStringLiteral("Warning"),
+                             QStringLiteral("Current cheats will be wiped and replaced. Continue?"),
+                             QMessageBox::Yes | QMessageBox::No);
+    if (confirmDownload == QMessageBox::Yes) {
         ConfigureCheats::DownloadFile();
     }
 }
 
 void ConfigureCheats::DownloadFile() {
-    //Create Url in format: https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/{title_id}.txt
-    std::string baseUrl = "https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/";
+    // Create Url in format:
+    // https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/{title_id}.txt
+    std::string baseUrl =
+        "https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/";
     QString url = QString::fromStdString(fmt::format("{}{:016X}.txt", baseUrl, title_id));
 
-    //Create File Path in format: {Cheat Directory}{title_id}.txt
+    // Create File Path in format: {Cheat Directory}{title_id}.txt
     std::string cheatPath = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
     QString filePath = QString::fromStdString(fmt::format("{}{:016X}.txt", cheatPath, title_id));
 
-    connect(networkManager, &QNetworkAccessManager::finished, this, [filePath, this](QNetworkReply *reply) {
-        if (reply->error() == QNetworkReply::NoError) {
-            QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
-                file.write(reply->readAll());
-                file.close();
-                cheat_engine.LoadCheatFile(title_id);
-                this->LoadCheats();
-            }
-        } else {
-            qDebug() << "No File Found: " << reply->errorString();
-        }
-        reply->deleteLater();
-    });
+    connect(networkManager, &QNetworkAccessManager::finished, this,
+            [filePath, this](QNetworkReply* reply) {
+                if (reply->error() == QNetworkReply::NoError) {
+                    QFile file(filePath);
+                    if (file.open(QIODevice::WriteOnly)) {
+                        file.write(reply->readAll());
+                        file.close();
+                        cheat_engine.LoadCheatFile(title_id);
+                        this->LoadCheats();
+                    }
+                } else {
+                    qDebug() << "No File Found: " << reply->errorString();
+                }
+                reply->deleteLater();
+            });
     networkManager->get(QNetworkRequest(QUrl(url)));
 }
-
 
 void ConfigureCheats::LoadCheats() {
     cheats = cheat_engine.GetCheats();
