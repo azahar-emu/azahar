@@ -5,58 +5,32 @@
 #include <algorithm>
 #include <memory>
 #include "common/archives.h"
+#include "common/common_paths.h"
 #include "common/error.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
-#include "core/file_sys/archive_sdmc.h"
+#include "core/file_sys/archive_nand.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/path_parser.h"
 
-SERIALIZE_EXPORT_IMPL(FileSys::SDMCArchive)
-SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_SDMC)
+SERIALIZE_EXPORT_IMPL(FileSys::NANDArchive)
+SERIALIZE_EXPORT_IMPL(FileSys::ArchiveFactory_NAND)
 
 namespace FileSys {
 
-class SDMCDelayGenerator : public DelayGenerator {
-public:
-    u64 GetReadDelayNs(std::size_t length) override {
-        // This is the delay measured on O3DS and O2DS with
-        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
-        // from the results the average of each length was taken.
-        static constexpr u64 slope(183);
-        static constexpr u64 offset(524879);
-        static constexpr u64 minimum(631826);
-        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-        return IPCDelayNanoseconds;
-    }
+// TODO(PabloMK7): This code is very similar to the SMDC archive code. Maybe we should look
+// into unifying everything in a FAT-like archive, as both the SMDC and NAND archives
+// seem to behave the same way.
 
-    u64 GetOpenDelayNs() override {
-        // This is the delay measured on O3DS and O2DS with
-        // https://gist.github.com/FearlessTobi/c37e143c314789251f98f2c45cd706d2
-        // from the results the average of each length was taken.
-        static constexpr u64 IPCDelayNanoseconds(269082);
-        return IPCDelayNanoseconds;
-    }
-
-    SERIALIZE_DELAY_GENERATOR
-};
-
-ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path, const Mode& mode,
+ResultVal<std::unique_ptr<FileBackend>> NANDArchive::OpenFile(const Path& path, const Mode& mode,
                                                               u32 attributes) {
-    Mode modified_mode;
-    modified_mode.hex = mode.hex;
-
-    // SDMC archive always opens a file with at least read permission
-    modified_mode.read_flag.Assign(1);
-
-    return OpenFileBase(path, modified_mode);
-}
-
-ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& path,
-                                                                  const Mode& mode) const {
     LOG_DEBUG(Service_FS, "called path={} mode={:01X}", path.DebugStr(), mode.hex);
+
+    if (!AllowsWrite() && mode != Mode::ReadOnly()) {
+        return ResultInvalidOpenFlags;
+    }
 
     const PathParser path_parser(path);
 
@@ -108,11 +82,15 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
         return ResultNotFound;
     }
 
-    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SDMCDelayGenerator>();
-    return std::make_unique<DiskFile>(std::move(file), mode, std::move(delay_generator));
+    return std::make_unique<DiskFile>(std::move(file), mode, nullptr);
 }
 
-Result SDMCArchive::DeleteFile(const Path& path) const {
+Result NANDArchive::DeleteFile(const Path& path) const {
+
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -146,7 +124,12 @@ Result SDMCArchive::DeleteFile(const Path& path) const {
     return ResultNotFound;
 }
 
-Result SDMCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+Result NANDArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     const PathParser path_parser_src(src_path);
 
     // TODO: Verify these return codes with HW
@@ -213,16 +196,28 @@ static Result DeleteDirectoryHelper(const Path& path, const std::string& mount_p
     return ResultUnexpectedFileOrDirectorySdmc;
 }
 
-Result SDMCArchive::DeleteDirectory(const Path& path) const {
+Result NANDArchive::DeleteDirectory(const Path& path) const {
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     return DeleteDirectoryHelper(path, mount_point, FileUtil::DeleteDir);
 }
 
-Result SDMCArchive::DeleteDirectoryRecursively(const Path& path) const {
+Result NANDArchive::DeleteDirectoryRecursively(const Path& path) const {
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     return DeleteDirectoryHelper(
         path, mount_point, [](const std::string& p) { return FileUtil::DeleteDirRecursively(p); });
 }
 
-Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size, u32 attributes) const {
+Result NANDArchive::CreateFile(const FileSys::Path& path, u64 size, u32 attributes) const {
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -267,7 +262,11 @@ Result SDMCArchive::CreateFile(const FileSys::Path& path, u64 size, u32 attribut
                   ErrorLevel::Info);
 }
 
-Result SDMCArchive::CreateDirectory(const Path& path, u32 attributes) const {
+Result NANDArchive::CreateDirectory(const Path& path, u32 attributes) const {
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -302,7 +301,11 @@ Result SDMCArchive::CreateDirectory(const Path& path, u32 attributes) const {
                   ErrorLevel::Status);
 }
 
-Result SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+Result NANDArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+    if (!AllowsWrite()) {
+        return ResultInvalidOpenFlags;
+    }
+
     const PathParser path_parser_src(src_path);
 
     // TODO: Verify these return codes with HW
@@ -331,7 +334,7 @@ Result SDMCArchive::RenameDirectory(const Path& src_path, const Path& dest_path)
                   ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Path& path) {
+ResultVal<std::unique_ptr<DirectoryBackend>> NANDArchive::OpenDirectory(const Path& path) {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
@@ -360,49 +363,57 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
     return std::make_unique<DiskDirectory>(full_path);
 }
 
-u64 SDMCArchive::GetFreeBytes() const {
+u64 NANDArchive::GetFreeBytes() const {
     // TODO: Stubbed to return 1GiB
     return 1024 * 1024 * 1024;
 }
 
-ArchiveFactory_SDMC::ArchiveFactory_SDMC(const std::string& sdmc_directory)
-    : sdmc_directory(sdmc_directory) {
+ArchiveFactory_NAND::ArchiveFactory_NAND(const std::string& nand_directory, NANDArchiveType type)
+    : nand_directory(nand_directory), archive_type(type) {
 
-    LOG_DEBUG(Service_FS, "Directory {} set as SDMC.", sdmc_directory);
+    LOG_DEBUG(Service_FS, "Directory {} set as NAND.", nand_directory);
 }
 
-bool ArchiveFactory_SDMC::Initialize() {
-    if (!Settings::values.use_virtual_sd) {
-        LOG_WARNING(Service_FS, "SDMC disabled by config.");
-        return false;
-    }
-
-    if (!FileUtil::CreateFullPath(sdmc_directory)) {
-        LOG_ERROR(Service_FS, "Unable to create SDMC path.");
+bool ArchiveFactory_NAND::Initialize() {
+    if (!FileUtil::CreateFullPath(GetPath())) {
+        LOG_ERROR(Service_FS, "Unable to create NAND path.");
         return false;
     }
 
     return true;
 }
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path,
+std::string ArchiveFactory_NAND::GetPath() {
+    switch (archive_type) {
+    case NANDArchiveType::RW:
+        return PathParser("/rw").BuildHostPath(nand_directory) + DIR_SEP;
+    case NANDArchiveType::RO:
+    case NANDArchiveType::RO_W:
+        return PathParser("/ro").BuildHostPath(nand_directory) + DIR_SEP;
+    default:
+        break;
+    }
+
+    UNREACHABLE();
+    return "";
+}
+
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NAND::Open(const Path& path,
                                                                      u64 program_id) {
-    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SDMCDelayGenerator>();
-    return std::make_unique<SDMCArchive>(sdmc_directory, std::move(delay_generator));
+    return std::make_unique<NANDArchive>(GetPath(), archive_type);
 }
 
-Result ArchiveFactory_SDMC::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+Result ArchiveFactory_NAND::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
                                    u64 program_id, u32 directory_buckets, u32 file_buckets) {
-    // This is kind of an undesirable operation, so let's just ignore it. :)
-    return ResultSuccess;
+    // TODO(PabloMK7): Find proper error code
+    LOG_ERROR(Service_FS, "Unimplemented Format archive {}", GetName());
+    return UnimplementedFunction(ErrorModule::FS);
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path,
+ResultVal<ArchiveFormatInfo> ArchiveFactory_NAND::GetFormatInfo(const Path& path,
                                                                 u64 program_id) const {
-    // TODO(Subv): Implement
+    // TODO(PabloMK7): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
-    return ResultUnknown;
+    return UnimplementedFunction(ErrorModule::FS);
 }
 } // namespace FileSys
-
-SERIALIZE_EXPORT_IMPL(FileSys::SDMCDelayGenerator)

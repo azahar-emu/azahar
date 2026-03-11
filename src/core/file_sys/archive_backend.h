@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -35,6 +35,18 @@ union Mode {
     BitField<0, 1, u32> read_flag;
     BitField<1, 1, u32> write_flag;
     BitField<2, 1, u32> create_flag;
+
+    bool operator==(const Mode& other) const {
+        return hex == other.hex;
+    }
+
+    bool operator!=(const Mode& other) const {
+        return !(*this == other);
+    }
+
+    static constexpr Mode ReadOnly() {
+        return Mode{.hex = 1};
+    }
 };
 
 class Path {
