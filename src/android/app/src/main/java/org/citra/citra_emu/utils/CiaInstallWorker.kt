@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,9 +12,11 @@ import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.NativeLibrary.InstallStatus
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.FileUtil.getFilename
+import androidx.core.net.toUri
 
 class CiaInstallWorker(
     val context: Context,
@@ -131,7 +133,7 @@ class CiaInstallWorker(
         installProgressBuilder.setOngoing(true)
         setProgressCallback(100, 0)
         selectedFiles.forEachIndexed { i, file ->
-            val filename = getFilename(Uri.parse(file))
+            val filename = getFilename(file.toUri())
             installProgressBuilder.setContentText(
                 context.getString(
                     R.string.cia_install_notification_installing,
@@ -140,7 +142,13 @@ class CiaInstallWorker(
                     selectedFiles.size
                 )
             )
-            val res = installCIA(file)
+            var fileFinal: String
+            if (BuildUtil.isGooglePlayBuild) {
+                fileFinal = file
+            } else {
+                fileFinal = "!" + NativeLibrary.getNativePath(file.toUri())
+            }
+            val res = installCIA(fileFinal)
             notifyInstallStatus(filename, res)
         }
         notificationManager.cancel(PROGRESS_NOTIFICATION_ID)

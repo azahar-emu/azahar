@@ -54,8 +54,10 @@ import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
 import org.citra.citra_emu.model.Game
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.viewmodel.GamesViewModel
 
 class GameAdapter(
@@ -136,7 +138,7 @@ class GameAdapter(
         val holder = view.tag as GameViewHolder
         gameExists(holder)
 
-        if (holder.game.titleId == 0L) {
+        if (!holder.game.valid) {
             MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.properties)
                 .setMessage(R.string.properties_not_loaded)
@@ -153,12 +155,21 @@ class GameAdapter(
         if (holder.game.isInstalled) {
             return true
         }
-
-        val gameExists = DocumentFile.fromSingleUri(
-            CitraApplication.appContext,
-            Uri.parse(holder.game.path)
-        )?.exists() == true
+        val path = holder.game.path
+        val pathUri = path.toUri()
+        var gameExists: Boolean
+        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(path)) {
+            gameExists =
+                DocumentFile.fromSingleUri(
+                    CitraApplication.appContext,
+                    pathUri
+                )?.exists() == true
+        } else {
+            val nativePath = NativeLibrary.getNativePath(pathUri)
+            gameExists = NativeLibrary.nativeFileExists(nativePath)
+        }
         return if (!gameExists) {
+            Log.error("[GameAdapter] ROM file does not exist: $path")
             Toast.makeText(
                 CitraApplication.appContext,
                 R.string.loader_error_file_not_found,
@@ -323,14 +334,16 @@ class GameAdapter(
             }
         }
 
+        val titleId = game.titleId
+        val dlcTitleId = titleId or 0x8C00000000L
+        val updateTitleId = titleId or 0xE00000000L
+
         popup.setOnMenuItemClickListener { menuItem ->
             val uninstallAction: () -> Unit = {
                 when (menuItem.itemId) {
-                    R.id.game_context_uninstall -> CitraApplication.documentsTree.deleteDocument(dirs.gameDir)
-                    R.id.game_context_uninstall_dlc -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.dlcDir)
-                        .toString())
-                    R.id.game_context_uninstall_updates -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.updatesDir)
-                        .toString())
+                    R.id.game_context_uninstall -> NativeLibrary.uninstallTitle(titleId, game.mediaType)
+                    R.id.game_context_uninstall_dlc -> NativeLibrary.uninstallTitle(dlcTitleId, Game.MediaType.SDMC)
+                    R.id.game_context_uninstall_updates -> NativeLibrary.uninstallTitle(updateTitleId, Game.MediaType.SDMC)
                 }
                 ViewModelProvider(activity)[GamesViewModel::class.java].reloadGames(true)
                 bottomSheetDialog.dismiss()
@@ -556,7 +569,9 @@ class GameAdapter(
 
     private class DiffCallback : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean {
-            return oldItem.titleId == newItem.titleId
+            // The title is taken into account to support 3DSX, which all have the titleID 0.
+            // This only works now because we always return the English title, adjust if that changes.
+            return oldItem.titleId == newItem.titleId && oldItem.title == newItem.title
         }
 
         override fun areContentsTheSame(oldItem: Game, newItem: Game): Boolean {

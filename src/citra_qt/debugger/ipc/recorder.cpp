@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -160,16 +160,23 @@ QString IPCRecorderWidget::GetFunctionName(const IPCDebugger::RequestRecord& rec
 
 void IPCRecorderWidget::ApplyFilter(int index) {
     auto* item = ui->main->invisibleRootItem()->child(index);
-    const QString filter = ui->filter->text();
-    if (filter.isEmpty()) {
+    const QString filter_full = ui->filter->text();
+    if (filter_full.isEmpty()) {
         item->setHidden(false);
         return;
     }
 
-    for (int i = 0; i < item->columnCount(); ++i) {
-        if (item->text(i).contains(filter)) {
-            item->setHidden(false);
-            return;
+    auto filters = filter_full.split(u' ');
+
+    for (auto& filter : filters) {
+        if (filter.isEmpty()) {
+            continue;
+        }
+        for (int i = 0; i < item->columnCount(); ++i) {
+            if (item->text(i).contains(filter)) {
+                item->setHidden(false);
+                return;
+            }
         }
     }
 

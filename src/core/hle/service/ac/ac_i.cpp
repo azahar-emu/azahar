@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,7 +13,7 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
         {0x0001, &AC_I::CreateDefaultConfig, "CreateDefaultConfig"},
         {0x0004, &AC_I::ConnectAsync, "ConnectAsync"},
         {0x0005, &AC_I::GetConnectResult, "GetConnectResult"},
-        {0x0007, nullptr, "CancelConnectAsync"},
+        {0x0007, &AC_I::CancelConnectAsync, "CancelConnectAsync"},
         {0x0008, &AC_I::CloseAsync, "CloseAsync"},
         {0x0009, &AC_I::GetCloseResult, "GetCloseResult"},
         {0x000A, nullptr, "GetLastErrorCode"},

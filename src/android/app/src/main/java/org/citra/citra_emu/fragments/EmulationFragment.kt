@@ -133,14 +133,16 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         var intentGame: Game? = null
         if (intentUri != null) {
             intentGame = if (Game.extensions.contains(FileUtil.getExtension(intentUri))) {
-                GameHelper.getGame(intentUri, isInstalled = false, addedToLibrary = false)
+                // isInstalled, addedToLibrary and mediaType do not matter here
+                GameHelper.getGame(intentUri, isInstalled = false, addedToLibrary = false, mediaType = Game.MediaType.GAME_CARD)
             } else {
                 null
             }
         } else if (oldIntentInfo.first != null) {
             val gameUri = Uri.parse(oldIntentInfo.first)
             intentGame = if (Game.extensions.contains(FileUtil.getExtension(gameUri))) {
-                GameHelper.getGame(gameUri, isInstalled = false, addedToLibrary = false)
+                // isInstalled, addedToLibrary and mediaType do not matter here
+                GameHelper.getGame(gameUri, isInstalled = false, addedToLibrary = false, mediaType = Game.MediaType.GAME_CARD)
             } else {
                 null
             }

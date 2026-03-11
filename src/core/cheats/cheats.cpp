@@ -65,6 +65,8 @@ void CheatEngine::SaveCheatFile(u64 title_id) const {
     const std::string cheat_dir = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
     const std::string filepath = fmt::format("{}{:016X}.txt", cheat_dir, title_id);
 
+    LOG_INFO(Core_Cheats, "Attempting to save cheats file: {}", filepath);
+
     if (!FileUtil::IsDirectory(cheat_dir)) {
         FileUtil::CreateDir(cheat_dir);
     }
@@ -86,6 +88,8 @@ void CheatEngine::LoadCheatFile(u64 title_id) {
 
     const std::string cheat_dir = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
     const std::string filepath = fmt::format("{}{:016X}.txt", cheat_dir, title_id);
+
+    LOG_INFO(Core_Cheats, "Attempting to load cheats file: {}", filepath);
 
     if (!FileUtil::IsDirectory(cheat_dir)) {
         FileUtil::CreateDir(cheat_dir);

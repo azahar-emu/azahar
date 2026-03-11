@@ -34,6 +34,9 @@
 #ifdef _MSC_VER
 #include "common/string_util.h"
 #endif
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
+#include "android_storage.h"
+#endif
 
 #ifdef HAVE_LIBRETRO_VFS
 #define SKIP_STDIO_REDEFINES
@@ -438,13 +441,16 @@ public:
         if (m_file == nullptr)
             return -1;
         return fileno(filestream_get_vfs_handle(m_file)->fp);
-#elif defined(ANDROID)
-        return m_fd;
 #else
+#ifdef ANDROID
+        if (!AndroidStorage::CanUseRawFS()) {
+            return m_fd;
+        }
+#endif // ANDROID
         if (m_file == nullptr)
             return -1;
         return fileno(m_file);
-#endif
+#endif // HAVE_LIBRETRO_VFS
     }
     [[nodiscard]] explicit operator bool() const {
         return IsGood();

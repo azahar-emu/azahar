@@ -24,6 +24,8 @@ set(SHADER_FILES
     vulkan_present_anaglyph.frag
     vulkan_present_interlaced.frag
     vulkan_blit_depth_stencil.frag
+    vulkan_cursor.frag
+    vulkan_cursor.vert
 )
 
 set(SHADER_INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/include)

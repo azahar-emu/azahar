@@ -652,34 +652,38 @@ void Java_org_citra_citra_1emu_NativeLibrary_setUserDirectory(JNIEnv* env,
     FileUtil::SetCurrentDir(GetJString(env, j_directory));
 }
 
-jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getInstalledGamePaths(
+jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getInstalledGamePathsImpl(
     JNIEnv* env, [[maybe_unused]] jclass clazz) {
     std::vector<std::string> games;
-    const FileUtil::DirectoryEntryCallable ScanDir =
-        [&games, &ScanDir](u64*, const std::string& directory, const std::string& virtual_name) {
-            std::string path = directory + virtual_name;
-            if (FileUtil::IsDirectory(path)) {
-                path += '/';
-                FileUtil::ForeachDirectoryEntry(nullptr, path, ScanDir);
-            } else {
-                if (!FileUtil::Exists(path))
-                    return false;
-                auto loader = Loader::GetLoader(path);
-                if (loader) {
-                    bool executable{};
-                    const Loader::ResultStatus result = loader->IsExecutable(executable);
-                    if (Loader::ResultStatus::Success == result && executable) {
-                        games.emplace_back(path);
-                    }
+    Service::FS::MediaType media_type;
+    const FileUtil::DirectoryEntryCallable ScanDir = [&games, &ScanDir, &media_type](
+                                                         u64*, const std::string& directory,
+                                                         const std::string& virtual_name) {
+        std::string path = directory + virtual_name;
+        if (FileUtil::IsDirectory(path)) {
+            path += '/';
+            FileUtil::ForeachDirectoryEntry(nullptr, path, ScanDir);
+        } else {
+            if (!FileUtil::Exists(path))
+                return false;
+            auto loader = Loader::GetLoader(path);
+            if (loader) {
+                bool executable{};
+                const Loader::ResultStatus result = loader->IsExecutable(executable);
+                if (Loader::ResultStatus::Success == result && executable) {
+                    games.emplace_back(path + "|" + std::to_string(static_cast<int>(media_type)));
                 }
             }
-            return true;
-        };
+        }
+        return true;
+    };
+    media_type = Service::FS::MediaType::SDMC;
     ScanDir(nullptr, "",
             FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
                 "Nintendo "
                 "3DS/00000000000000000000000000000000/"
                 "00000000000000000000000000000000/title/00040000");
+    media_type = Service::FS::MediaType::NAND;
     ScanDir(nullptr, "",
             FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) +
                 "00000000000000000000000000000000/title/00040010");
@@ -1105,6 +1109,25 @@ jlong Java_org_citra_citra_1emu_NativeLibrary_playTimeManagerGetCurrentTitleId(J
 void Java_org_citra_citra_1emu_NativeLibrary_setInsertedCartridge(JNIEnv* env, jobject obj,
                                                                   jstring path) {
     inserted_cartridge = GetJString(env, path);
+}
+
+jboolean Java_org_citra_citra_1emu_NativeLibrary_uninstallTitle(JNIEnv* env, jobject obj,
+                                                                jlong j_titleid, jint j_mediatype) {
+    const auto titleid = static_cast<u64>(j_titleid);
+    const auto result =
+        Service::AM::UninstallProgram(static_cast<Service::FS::MediaType>(j_mediatype), titleid);
+    if (result.IsError()) {
+        LOG_ERROR(Frontend, "Failed to uninstall '{}': 0x{:08X}", std::to_string(titleid),
+                  result.raw);
+        return false;
+    }
+    return true;
+}
+
+jboolean Java_org_citra_citra_1emu_NativeLibrary_nativeFileExists(JNIEnv* env, jobject obj,
+                                                                  jstring j_path) {
+    const auto path = GetJString(env, j_path);
+    return FileUtil::Exists(path);
 }
 
 } // extern "C"

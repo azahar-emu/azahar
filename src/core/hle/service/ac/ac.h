@@ -59,6 +59,15 @@ public:
         void GetConnectResult(Kernel::HLERequestContext& ctx);
 
         /**
+         * AC::CancelConnectAsync service function
+         *  Inputs:
+         *      1 : ProcessId Header
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void CancelConnectAsync(Kernel::HLERequestContext& ctx);
+
+        /**
          * AC::CloseAsync service function
          *  Inputs:
          *      1 : ProcessId Header

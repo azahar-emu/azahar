@@ -567,7 +567,7 @@ class SetupFragment : Fragment() {
         }
 
         if (!BuildUtil.isGooglePlayBuild) {
-            if (NativeLibrary.getUserDirectory(result) == "") {
+            if (NativeLibrary.getNativePath(result) == "") {
                 SelectUserDirectoryDialogFragment.newInstance(
                     mainActivity,
                     R.string.invalid_selection,
