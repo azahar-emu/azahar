@@ -46,6 +46,8 @@ add_library(citra_core STATIC
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
     file_sys/archive_extsavedata.h
+    file_sys/archive_nand.cpp
+    file_sys/archive_nand.h
     file_sys/archive_ncch.cpp
     file_sys/archive_ncch.h
     file_sys/archive_other_savedata.cpp
