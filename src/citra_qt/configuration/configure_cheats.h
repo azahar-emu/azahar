@@ -7,6 +7,7 @@
 #include <memory>
 #include <span>
 #include <QWidget>
+#include <QNetworkAccessManager>
 #include "common/common_types.h"
 
 namespace Cheats {
@@ -50,6 +51,7 @@ private:
      * @return true if the cheat is saved successfully, false otherwise
      */
     bool SaveCheat(int row);
+    void DownloadFile();
 
 private slots:
     void OnRowSelected(int row, int column);
@@ -57,8 +59,9 @@ private slots:
     void OnTextEdited();
     void OnDeleteCheat();
     void OnAddCheat();
-
+    void OnDownloadCheat();
 private:
+    QNetworkAccessManager *networkManager;
     std::unique_ptr<Ui::ConfigureCheats> ui;
     Cheats::CheatEngine& cheat_engine;
     std::span<const std::shared_ptr<Cheats::CheatBase>> cheats;
