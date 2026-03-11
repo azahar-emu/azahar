@@ -737,7 +737,7 @@ object NativeLibrary {
             return primaryStoragePath + dirSep + virtualPath
         } else { // User directory probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
-            val removablePath = RemovableStorageHelper.getRemovableStoragePath(storageIdString)
+            val removablePath = RemovableStorageHelper.getRemovableStoragePath(CitraApplication.appContext, storageIdString)
 
             if (removablePath == null) {
                 android.util.Log.e("NativeLibrary",

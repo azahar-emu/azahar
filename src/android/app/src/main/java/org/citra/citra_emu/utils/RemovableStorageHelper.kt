@@ -4,28 +4,43 @@
 
 package org.citra.citra_emu.utils
 
-import org.citra.citra_emu.utils.BuildUtil
-import java.io.File
+import android.content.Context
+import android.os.storage.StorageManager
 
 object RemovableStorageHelper {
-    // This really shouldn't be necessary, but the Android API seemingly
-    // doesn't have a way of doing this?
-    fun getRemovableStoragePath(idString: String): String? {
-        BuildUtil.assertNotGooglePlay()
 
-        // On certain Android flavours the external storage mount location can
-        // vary, so add extra cases here if we discover them.
-        val possibleMountPaths = listOf("/mnt/media_rw/$idString", "/storage/$idString")
+    private val pathCache = mutableMapOf<String, String?>()
+    private var scanned = false
 
-        for (mountPath in possibleMountPaths) {
-            val pathFile = File(mountPath);
-            if (pathFile.exists()) {
-                // TODO: Cache which mount location is being used for the remainder of the
-                //       session, as it should never change. -OS
-                return pathFile.absolutePath
-            }
+    private fun scanVolumes(context: Context) {
+        if (scanned) {
+            return
         }
 
-        return null
+        val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+
+        for (volume in storageManager.storageVolumes) {
+            if (!volume.isRemovable) {
+                continue
+            }
+
+            val uuid = volume.uuid ?: continue
+            val dir = volume.directory ?: continue
+
+            pathCache[uuid.uppercase()] = dir.absolutePath
+        }
+
+        scanned = true
+    }
+
+    fun getRemovableStoragePath(context: Context, idString: String): String? {
+        BuildUtil.assertNotGooglePlay()
+        val key = idString.uppercase()
+
+        if (!scanned) {
+            scanVolumes(context)
+        }
+
+        return pathCache[key]
     }
 }
