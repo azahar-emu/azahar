@@ -130,6 +130,18 @@ public:
         void SetRequestEulaVersion(Kernel::HLERequestContext& ctx);
 
         /**
+         * AC::GetNZoneBeaconNotFoundEvent service function
+         *  Inputs:
+         *      1 : ProcessId Header
+         *      2 : ProcessId
+         *      3 : Copy Handle Header
+         *      4 : Event handle, should be signaled when a Nintendo Zone beacon is not found
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetNZoneBeaconNotFoundEvent(Kernel::HLERequestContext& ctx);
+
+        /**
          * AC::RegisterDisconnectEvent service function
          *  Inputs:
          *      1 : ProcessId Header
@@ -194,6 +206,7 @@ protected:
     std::shared_ptr<Kernel::Event> close_event;
     std::shared_ptr<Kernel::Event> connect_event;
     std::shared_ptr<Kernel::Event> disconnect_event;
+    std::shared_ptr<Kernel::Event> nintendo_zone_beacon_not_found_event;
 
 private:
     [[maybe_unused]]
