@@ -199,6 +199,8 @@ if (ENABLE_QT)
         "name"
         "bind"
         "profile"
+        "use_touchpad"
+        "controller_touch_device"
         "use_touch_from_button"
         "touch_from_button_map"
         "touch_from_button_maps" # Why are these two so similar? Basically typo bait
