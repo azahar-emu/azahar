@@ -43,6 +43,7 @@ ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_i
             [this] { SaveCheat(ui->tableCheats->currentRow()); });
     connect(ui->buttonDelete, &QPushButton::clicked, this, &ConfigureCheats::OnDeleteCheat);
     connect(ui->buttonDownloadCheats, &QPushButton::clicked, this, &ConfigureCheats::OnDownloadCheat);
+    connect(networkManager, &QNetworkAccessManager::finished, this, &ConfigureCheats::OnNetworkRequest);
     cheat_engine.LoadCheatFile(title_id);
     LoadCheats();
 }
@@ -56,29 +57,31 @@ void ConfigureCheats::OnDownloadCheat() {
     }
 }
 
+void ConfigureCheats::OnNetworkRequest(QNetworkReply *reply){
+    if (reply->error() == QNetworkReply::NoError) {
+        QFile file(filePath);
+        if (file.open(QIODevice::WriteOnly)) {
+            file.write(reply->readAll());
+            file.close();
+            cheat_engine.LoadCheatFile(title_id);
+            this->LoadCheats();
+        }
+    } else {
+        QMessageBox::warning(this, QStringLiteral("Warning"), QStringLiteral("No Cheats Found"), QMessageBox::Ok);
+    }
+    reply->deleteLater();
+}
+
+
 void ConfigureCheats::DownloadFile() {
     //Create Url in format: https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/{title_id}.txt
     std::string baseUrl = "https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/";
-    QString url = QString::fromStdString(fmt::format("{}{:016X}.txt", baseUrl, title_id));
+    url = QString::fromStdString(fmt::format("{}{:016X}.txt", baseUrl, title_id));
 
     //Create File Path in format: {Cheat Directory}{title_id}.txt
     std::string cheatPath = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
-    QString filePath = QString::fromStdString(fmt::format("{}{:016X}.txt", cheatPath, title_id));
+    filePath = QString::fromStdString(fmt::format("{}{:016X}.txt", cheatPath, title_id));
 
-    connect(networkManager, &QNetworkAccessManager::finished, this, [filePath, this](QNetworkReply *reply) {
-        if (reply->error() == QNetworkReply::NoError) {
-            QFile file(filePath);
-            if (file.open(QIODevice::WriteOnly)) {
-                file.write(reply->readAll());
-                file.close();
-                cheat_engine.LoadCheatFile(title_id);
-                this->LoadCheats();
-            }
-        } else {
-            qDebug() << "No File Found: " << reply->errorString();
-        }
-        reply->deleteLater();
-    });
     networkManager->get(QNetworkRequest(QUrl(url)));
 }
 
