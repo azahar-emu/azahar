@@ -13,12 +13,16 @@ object RemovableStorageHelper {
     private var scanned = false
 
     private fun scanVolumes(context: Context) {
-        if (scanned) return
+        if (scanned) {
+            return
+        }
 
         val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
 
         for (volume in storageManager.storageVolumes) {
-            if (!volume.isRemovable) continue
+            if (!volume.isRemovable) {
+                continue
+            }
 
             val uuid = volume.uuid ?: continue
             val dir = volume.directory ?: continue
