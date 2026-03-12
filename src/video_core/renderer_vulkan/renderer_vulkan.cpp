@@ -236,7 +236,8 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
 
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
-    if (Core::PerfStats::game_frames_updated){
+
+    if ((Core::PerfStats::game_frames_updated && Settings::values.use_skip_duplicate_frames.GetValue()) || !Settings::values.use_skip_duplicate_frames.GetValue()){
         Frame* frame = window.GetRenderFrame();
 
         if (layout.width != frame->width || layout.height != frame->height) {
