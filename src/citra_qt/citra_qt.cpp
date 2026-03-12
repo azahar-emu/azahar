@@ -116,6 +116,7 @@
 
 #ifdef __APPLE__
 #include "common/apple_authorization.h"
+#include "common/apple_utils.h"
 Q_IMPORT_PLUGIN(QDarwinCameraPermissionPlugin);
 #endif
 
@@ -423,6 +424,19 @@ GMainWindow::GMainWindow(Core::System& system_)
     secondary_window->setWindowIcon(azahar_icon);
 
     show();
+
+#ifdef __APPLE__
+    if (AppleUtils::IsRunningFromTerminal()) {
+        QMessageBox::warning(
+            this, tr("Warning"),
+            tr("The `azahar` executable is being run directly rather than via the Azahar.app "
+               "bundle.\n\n"
+               "When run this way, the app may be missing certain functionality such as camera "
+               "emulation.\n\n"
+               "It is recommended to instead run Azahar using the `open` command, e.g.:\n"
+               "`open ./Azahar.app`"));
+    }
+#endif
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
     if (UISettings::values.check_for_update_on_start) {
