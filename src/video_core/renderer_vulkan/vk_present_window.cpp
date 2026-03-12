@@ -290,6 +290,39 @@ void PresentWindow::Present(Frame* frame) {
     });
 }
 
+void PresentWindow::SkipPresent(Frame* frame) {
+    // Fix this later
+    if (!use_present_thread) {
+        scheduler.WaitWorker();
+        CopyToSwapchain(frame);
+        free_queue.push(frame);
+        return;
+    }
+
+    scheduler.Record([this, frame](vk::CommandBuffer) {
+        std::unique_lock lock{queue_mutex};
+        //present_queue.push(frame);
+        frame_cv.notify_one();
+    });
+}
+
+// Skip Present Bkup
+// void PresentWindow::SkipPresent(Frame* frame) {
+//     if (!use_present_thread) {
+//         scheduler.WaitWorker();
+//         CopyToSwapchain(frame);
+//         free_queue.push(frame);
+//         return;
+//     }
+
+//     scheduler.Record([this, frame](vk::CommandBuffer) {
+//         std::unique_lock lock{queue_mutex};
+//         present_queue.push(frame);
+//         frame_cv.notify_one();
+//     });
+// }
+
+
 void PresentWindow::WaitPresent() {
     if (!use_present_thread) {
         return;
