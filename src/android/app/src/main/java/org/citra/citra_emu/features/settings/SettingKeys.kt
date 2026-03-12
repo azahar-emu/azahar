@@ -38,6 +38,7 @@ object SettingKeys {
     external fun use_disk_shader_cache(): String
     external fun shaders_accurate_mul(): String
     external fun use_vsync(): String
+    external fun use_skip_duplicate_frames(): String
     external fun use_shader_jit(): String
     external fun resolution_factor(): String
     external fun frame_limit(): String
