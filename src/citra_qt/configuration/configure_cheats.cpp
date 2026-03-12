@@ -51,7 +51,7 @@ ConfigureCheats::ConfigureCheats(Cheats::CheatEngine& cheat_engine_, u64 title_i
 ConfigureCheats::~ConfigureCheats() = default;
 
 void ConfigureCheats::OnDownloadCheat() {
-    auto confirmDownload = QMessageBox::warning(this, QStringLiteral("Warning"), QStringLiteral("Current cheats will be wiped and replaced. Continue?"), QMessageBox::Yes | QMessageBox::No);
+    auto confirmDownload = QMessageBox::warning(this, QStringLiteral("Warning"), QStringLiteral("Cheats will be downloaded from the Sharkive Repository. Current cheats will be wiped and replaced. Continue?"), QMessageBox::Yes | QMessageBox::No);
     if (confirmDownload == QMessageBox::Yes){
         ConfigureCheats::DownloadFile();
     }
@@ -74,11 +74,9 @@ void ConfigureCheats::OnNetworkRequest(QNetworkReply *reply){
 
 
 void ConfigureCheats::DownloadFile() {
-    //Create Url in format: https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/{title_id}.txt
     std::string baseUrl = "https://raw.githubusercontent.com/FlagBrew/Sharkive/refs/heads/master/3ds/";
     url = QString::fromStdString(fmt::format("{}{:016X}.txt", baseUrl, title_id));
 
-    //Create File Path in format: {Cheat Directory}{title_id}.txt
     std::string cheatPath = FileUtil::GetUserPath(FileUtil::UserPath::CheatsDir);
     filePath = QString::fromStdString(fmt::format("{}{:016X}.txt", cheatPath, title_id));
 
