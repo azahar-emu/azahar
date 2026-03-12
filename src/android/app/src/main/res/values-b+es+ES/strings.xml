@@ -337,8 +337,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="deterministic_async_operations_description">Hace que las operaciones asíncronas sean deterministas para la depuración. Habilitar esta opción puede causar bloqueos.</string>
     <string name="enable_rpc_server">Activar servidor RPC</string>
     <string name="enable_rpc_server_desc">Activa el servidor RPC en el puerto 45987. Esto permite leer/escribir de manera remota la memoria emulada.</string>
-    <string name="toggle_unique_data_console_type">Alternar los datos de consola únicos</string>
-    <string name="toggle_unique_data_console_type_desc">Alternar los datos de consola únicos (Old 3DS &#8596; New 3DS) para poder descargar el archivo del sistema opuesto desde la configuración del sistema.</string>
+    <string name="toggle_unique_data_console_type">Cambiar tipo de consola en los datos únicos de consola</string>
+    <string name="toggle_unique_data_console_type_desc">Permite alternar el tipo de consola (Old 3DS &#8596; New 3DS) para poder descargar el firmware del sistema opuesto desde la configuración del sistema.</string>
     <string name="shader_jit">Activar Sombreador JIT</string>
     <string name="shader_jit_description">Usar el motor JIT en lugar del intérprete para la emulación del sombreador de software.</string>
 
