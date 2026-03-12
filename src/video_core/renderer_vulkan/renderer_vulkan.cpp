@@ -254,9 +254,6 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
         scheduler.Flush(frame->render_ready);
         window.Present(frame);
         Core::PerfStats::game_frames_updated = false;
-        //LOG_INFO(Render_Vulkan, "Entered Present Thread");
-    } else {
-        //LOG_INFO(Render_Vulkan, "Entered Skip Present Thread");
     }
 }
 

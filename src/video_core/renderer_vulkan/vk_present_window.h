@@ -52,9 +52,6 @@ public:
     /// Queues the provided frame for presentation.
     void Present(Frame* frame);
 
-    /// Skip queuing the provided frame for presentation.
-    void SkipPresent(Frame* frame);
-
     /// This is called to notify the rendering backend of a surface change
     void NotifySurfaceChanged();
 
