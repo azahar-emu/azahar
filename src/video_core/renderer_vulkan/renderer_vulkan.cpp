@@ -236,23 +236,28 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
 
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
-    Frame* frame = window.GetRenderFrame();
+    if (Core::PerfStats::game_frames_updated){
+        Frame* frame = window.GetRenderFrame();
 
-    if (layout.width != frame->width || layout.height != frame->height) {
-        window.WaitPresent();
-        scheduler.Finish();
-        window.RecreateFrame(frame, layout.width, layout.height);
+        if (layout.width != frame->width || layout.height != frame->height) {
+            window.WaitPresent();
+            scheduler.Finish();
+            window.RecreateFrame(frame, layout.width, layout.height);
+        }
+
+        clear_color.float32[0] = Settings::values.bg_red.GetValue();
+        clear_color.float32[1] = Settings::values.bg_green.GetValue();
+        clear_color.float32[2] = Settings::values.bg_blue.GetValue();
+        clear_color.float32[3] = 1.0f;
+
+        DrawScreens(frame, layout, flipped);
+        scheduler.Flush(frame->render_ready);
+        window.Present(frame);
+        Core::PerfStats::game_frames_updated = false;
+        //LOG_INFO(Render_Vulkan, "Entered Present Thread");
+    } else {
+        //LOG_INFO(Render_Vulkan, "Entered Skip Present Thread");
     }
-
-    clear_color.float32[0] = Settings::values.bg_red.GetValue();
-    clear_color.float32[1] = Settings::values.bg_green.GetValue();
-    clear_color.float32[2] = Settings::values.bg_blue.GetValue();
-    clear_color.float32[3] = 1.0f;
-
-    DrawScreens(frame, layout, flipped);
-    scheduler.Flush(frame->render_ready);
-
-    window.Present(frame);
 }
 
 void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer,
