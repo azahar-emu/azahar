@@ -24,7 +24,6 @@
 #include "video_core/host_shaders/vulkan_cursor_vert.h"
 
 #include <vk_mem_alloc.h>
-
 #if defined(__APPLE__) && !defined(HAVE_LIBRETRO)
 #include "common/apple_utils.h"
 #endif
@@ -237,23 +236,26 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
 
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
-    Frame* frame = window.GetRenderFrame();
 
-    if (layout.width != frame->width || layout.height != frame->height) {
-        window.WaitPresent();
-        scheduler.Finish();
-        window.RecreateFrame(frame, layout.width, layout.height);
+    if ((Core::PerfStats::game_frames_updated && Settings::values.use_skip_duplicate_frames.GetValue()) || !Settings::values.use_skip_duplicate_frames.GetValue()){
+        Frame* frame = window.GetRenderFrame();
+
+        if (layout.width != frame->width || layout.height != frame->height) {
+            window.WaitPresent();
+            scheduler.Finish();
+            window.RecreateFrame(frame, layout.width, layout.height);
+        }
+
+        clear_color.float32[0] = Settings::values.bg_red.GetValue();
+        clear_color.float32[1] = Settings::values.bg_green.GetValue();
+        clear_color.float32[2] = Settings::values.bg_blue.GetValue();
+        clear_color.float32[3] = 1.0f;
+
+        DrawScreens(frame, layout, flipped);
+        scheduler.Flush(frame->render_ready);
+        window.Present(frame);
+        Core::PerfStats::game_frames_updated = false;
     }
-
-    clear_color.float32[0] = Settings::values.bg_red.GetValue();
-    clear_color.float32[1] = Settings::values.bg_green.GetValue();
-    clear_color.float32[2] = Settings::values.bg_blue.GetValue();
-    clear_color.float32[3] = 1.0f;
-
-    DrawScreens(frame, layout, flipped);
-    scheduler.Flush(frame->render_ready);
-
-    window.Present(frame);
 }
 
 void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer,
