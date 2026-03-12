@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>509</height>
+    <height>559</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -314,6 +314,16 @@
         </property>
         <property name="text">
          <string>Enable VSync</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="toggle_skip_duplicate_frames">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Skips presenting duplicated frames in 30fps games. This allows external frame generation tools to work correctly in 30fps games. This does not boost performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Skip Duplicate Frame Display</string>
         </property>
        </widget>
       </item>
