@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-if [[ "$TARGET" == "appimage"* ]]; then
+if [[ "$TARGET" == "appimage"* ]] || [[ "$TARGET" == "clang"* ]]; then
     # Compile the AppImage we distribute with Clang.
     export EXTRA_CMAKE_FLAGS=(-DCMAKE_CXX_COMPILER=clang++
                               -DCMAKE_C_COMPILER=clang
