@@ -2,10 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <unistd.h>
+
 namespace AppleUtils {
 
-float GetRefreshRate();
-int IsLowPowerModeEnabled();
-bool IsRunningFromTerminal();
+bool IsRunningFromTerminal() {
+    return (getppid() != 1);
+}
 
 } // namespace AppleUtils
