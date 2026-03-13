@@ -94,9 +94,9 @@ public:
         }
     }
 
-    void UpdateProgramCode(const ProgramCode& other) {
+    void UpdateProgramCode(const ProgramCode& other, u32 other_size = MAX_PROGRAM_CODE_LENGTH) {
         program_code = other;
-        biggest_program_size = program_code.size();
+        biggest_program_size = std::max(biggest_program_size, other_size);
         MakeProgramCodeDirty();
     }
 
@@ -116,9 +116,9 @@ public:
         }
     }
 
-    void UpdateSwizzleData(const SwizzleData& other) {
+    void UpdateSwizzleData(const SwizzleData& other, u32 other_size = MAX_SWIZZLE_DATA_LENGTH) {
         swizzle_data = other;
-        biggest_swizzle_size = swizzle_data.size();
+        biggest_swizzle_size = std::max(biggest_swizzle_size, other_size);
         MakeSwizzleDataDirty();
     }
 
@@ -128,6 +128,14 @@ public:
 
     const SwizzleData& GetSwizzleData() const {
         return swizzle_data;
+    }
+
+    u32 GetBiggestProgramSize() const {
+        return biggest_program_size;
+    }
+
+    u32 GetBiggestSwizzleSize() const {
+        return biggest_swizzle_size;
     }
 
 public:

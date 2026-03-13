@@ -3,7 +3,6 @@
 
     <!-- Home Strings -->
     <string name="grid_menu_core_settings">Innstillinger</string>
-    <!-- Input related strings -->
     <string name="controller_circlepad">Gliplate</string>
     <string name="controller_c">C-Spak</string>
     <string name="controller_triggers">Utløser</string>

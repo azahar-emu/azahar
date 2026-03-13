@@ -108,9 +108,17 @@
     <string name="search_installed">Installerad</string>
 
     <!-- Input related strings -->
+    <string name="controller_auto_map">Automatisk kontrollermappning</string>
+    <string name="controller_auto_map_description">Använd standardmappning för alla knappar och axlar på spelkontrollen</string>
+    <string name="auto_map_prompt">Tryck på denna knapp på din kontroller!</string>
+    <string name="auto_map_image_description">3DS-knapp med diamantform och A-knappen markerad</string>
+    <string name="controller_clear_all">Töm alla bindningar</string>
+    <string name="controller_clear_all_confirm">Detta kommer att ta bort alla aktuella kontrollerbindningar.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-spak</string>
     <string name="controller_hotkeys">Snabbtangenter</string>
+    <string name="controller_hotkeys_description">Om tangenten ”Aktivera med snabbtangent” är mappad måste den tangenten tryckas ned utöver den mappade snabbtangenten.</string>
+    <string name="controller_hotkey_enable_button">Aktivera med snabbtangent</string>
     <string name="controller_triggers">Avtryckare</string>
     <string name="controller_trigger">Avtryckare</string>
     <string name="controller_dpad">Riktningsknappar</string>
@@ -229,6 +237,8 @@
     <string name="async_shaders_description">Sammanställer shaders i bakgrunden för att minska stuttering under spelet. När det är aktiverat kan du förvänta dig tillfälliga grafiska glitches</string>
     <string name="linear_filtering">Lineär filtrering</string>
     <string name="linear_filtering_description"> Aktiverar linjär filtrering, vilket gör att spelets grafik ser jämnare ut.</string>
+    <string name="use_integer_scaling">Heltalsskalning</string>
+    <string name="use_integer_scaling_description">Skalar skärmarna med en heltalskoefficient av den ursprungliga 3DS-skärmen. För layouter med två olika skärmstorlekar skalas den största skärmen med ett heltal.</string>
     <string name="texture_filter_name">Texturfilter</string>
     <string name="texture_filter_description">Förbättrar det visuella i applikationer genom att tillämpa ett filter på texturer. De filter som stöds är Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale och MMPX.</string>
     <string name="delay_render_thread">Fördröj spelrenderingstråd</string>
@@ -326,6 +336,8 @@
     <string name="deterministic_async_operations_description">Gör asynkrona operationer deterministiska för felsökning. Om du aktiverar detta kan det orsaka frysningar.</string>
     <string name="enable_rpc_server">Aktivera RPC-server</string>
     <string name="enable_rpc_server_desc">Aktiverar RPC-servern på port 45987. Detta möjliggör fjärrläsning/skrivning av gästminne.</string>
+    <string name="toggle_unique_data_console_type">Växla mellan unika datakonsoltyper</string>
+    <string name="toggle_unique_data_console_type_desc">Växlar mellan de unika datakonsoltyperna (gamla 3DS och nya 3DS) för att kunna ladda ner motsvarande systemfirmwaretyp från systeminställningarna.</string>
     <string name="shader_jit">Aktivera Shader JIT</string>
     <string name="shader_jit_description">Använd JIT-motorn istället för tolken för emulering av programvaru-shader.</string>
 
@@ -336,6 +348,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Omvänd liggande</string>
     <string name="layout_screen_orientation_portrait">Stående</string>
     <string name="layout_screen_orientation_portrait_reverse">Omvänd stående</string>
+    <string name="layouts_to_cycle">Layouter att växla</string>
+    <string name="layouts_to_cycle_description">Vilka layouter växlas mellan med snabbtangenten Växla layout?</string>
     <string name="aspect_ratio_default">Standard</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -550,7 +564,7 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Förbereder shaders</string>
-    <string name="building_shaders">Bygger shaders</string>
+    <string name="building_shaders">Bygger %s</string>
 
     <!-- About Game Dialog -->
     <string name="play">Spela</string>

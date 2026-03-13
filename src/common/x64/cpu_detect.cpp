@@ -1,7 +1,10 @@
-// Copyright 2013 Dolphin Emulator Project / 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+// Copyright 2013 Dolphin Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
 
@@ -77,10 +80,6 @@ static CPUCaps Detect() {
     if (max_std_fn >= 1) {
         __cpuid(cpu_id, 0x00000001);
 
-        if ((cpu_id[3] >> 25) & 1)
-            caps.sse = true;
-        if ((cpu_id[3] >> 26) & 1)
-            caps.sse2 = true;
         if ((cpu_id[2]) & 1)
             caps.sse3 = true;
         if ((cpu_id[2] >> 9) & 1)
@@ -129,13 +128,6 @@ static CPUCaps Detect() {
         std::memcpy(caps.cpu_string + 16, cpu_id, sizeof(cpu_id));
         __cpuid(cpu_id, 0x80000004);
         std::memcpy(caps.cpu_string + 32, cpu_id, sizeof(cpu_id));
-    }
-
-    if (max_ex_fn >= 0x80000001) {
-        // Check for more features
-        __cpuid(cpu_id, 0x80000001);
-        if ((cpu_id[2] >> 16) & 1)
-            caps.fma4 = true;
     }
 
     return caps;

@@ -46,6 +46,8 @@ add_library(citra_core STATIC
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
     file_sys/archive_extsavedata.h
+    file_sys/archive_nand.cpp
+    file_sys/archive_nand.h
     file_sys/archive_ncch.cpp
     file_sys/archive_ncch.h
     file_sys/archive_other_savedata.cpp
@@ -293,6 +295,11 @@ add_library(citra_core STATIC
     hle/service/dlp/dlp_fkcl.h
     hle/service/dlp/dlp_srvr.cpp
     hle/service/dlp/dlp_srvr.h
+    hle/service/dlp/dlp_clt_base.cpp
+    hle/service/dlp/dlp_clt_base.h
+    hle/service/dlp/dlp_base.cpp
+    hle/service/dlp/dlp_base.h
+    hle/service/dlp/dlp_crypto.cpp
     hle/service/dsp/dsp_dsp.cpp
     hle/service/dsp/dsp_dsp.h
     hle/service/err/err_f.cpp

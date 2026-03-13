@@ -50,15 +50,17 @@ else()
 endif()
 
 # Catch2
-add_library(catch2 INTERFACE)
-if(USE_SYSTEM_CATCH2)
-    find_package(Catch2 3.0.0 REQUIRED)
-else()
-    set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
-    set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
-    add_subdirectory(catch2)
+if (ENABLE_TESTS)
+    add_library(catch2 INTERFACE)
+    if(USE_SYSTEM_CATCH2)
+        find_package(Catch2 3.0.0 REQUIRED)
+    else()
+        set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
+        set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
+        add_subdirectory(catch2)
+    endif()
+    target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
 endif()
-target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
 
 # Crypto++
 if(USE_SYSTEM_CRYPTOPP)
@@ -290,6 +292,15 @@ if (USE_DISCORD_PRESENCE)
 
     add_subdirectory(discord-rpc EXCLUDE_FROM_ALL)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
+endif()
+
+# LibRetro
+if (ENABLE_LIBRETRO)
+  add_library(libretro INTERFACE)
+  target_include_directories(libretro INTERFACE ./libretro-common/libretro-common/include)
+  if (ANDROID)
+    add_subdirectory(libretro-common EXCLUDE_FROM_ALL)
+  endif()
 endif()
 
 # JSON

@@ -1,0 +1,19 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
+#include <QString>
+
+#define DEFINE_KEY(KEY) static const auto KEY = QStringLiteral(#KEY);
+
+namespace Settings {
+namespace QKeys {
+
+@SETTING_KEY_DEFINITIONS@
+
+}
+}
+
+#undef DEFINE_KEY

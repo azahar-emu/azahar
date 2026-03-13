@@ -41,6 +41,15 @@ namespace Common::Compression {
 [[nodiscard]] std::vector<u8> CompressDataZSTDDefault(std::span<const u8> source);
 
 /**
+ * Gets the decompressed size of the specified Zstandard compressed memory region.
+ *
+ * @param compressed the compressed source memory region.
+ *
+ * @return the size of the decompressed data.
+ */
+[[nodiscard]] std::size_t GetDecompressedSize(std::span<const u8> compressed);
+
+/**
  * Decompresses a source memory region with Zstandard and returns the uncompressed data in a vector.
  *
  * @param compressed the compressed source memory region.
@@ -174,8 +183,7 @@ private:
     bool Open() override;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;
@@ -241,8 +249,7 @@ private:
     bool Open() override;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;

@@ -1,4 +1,4 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -35,8 +35,8 @@ struct RenderPass {
 };
 
 class RenderManager {
-    static constexpr u32 NumColorFormats = 13;
-    static constexpr u32 NumDepthFormats = 4;
+    static constexpr u32 NumColorFormats = static_cast<u32>(VideoCore::PixelFormat::NumColorFormat);
+    static constexpr u32 NumDepthFormats = static_cast<u32>(VideoCore::PixelFormat::NumDepthFormat);
 
 public:
     explicit RenderManager(const Instance& instance, Scheduler& scheduler);
@@ -67,6 +67,7 @@ private:
     std::mutex cache_mutex;
     std::array<vk::Image, 2> images;
     std::array<vk::ImageAspectFlags, 2> aspects;
+    bool shadow_rendering{};
     RenderPass pass{};
     u32 num_draws{};
 };

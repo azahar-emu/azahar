@@ -97,6 +97,7 @@ void LogSettings() {
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
+    log_setting("Renderer_UseIntegerScaling", values.use_integer_scaling.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
     log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
@@ -123,6 +124,7 @@ void LogSettings() {
     log_setting("Layout_ScreenGap", values.screen_gap.GetValue());
     log_setting("Layout_LargeScreenProportion", values.large_screen_proportion.GetValue());
     log_setting("Layout_SmallScreenPosition", values.small_screen_position.GetValue());
+    // log_setting("Layout_LayoutsToCycle",values.layouts_to_cycle.GetValue());
     log_setting("Utility_DumpTextures", values.dump_textures.GetValue());
     log_setting("Utility_CustomTextures", values.custom_textures.GetValue());
     log_setting("Utility_PreloadTextures", values.preload_textures.GetValue());
@@ -161,6 +163,8 @@ void LogSettings() {
     log_setting("Debugging_UseGdbstub", values.use_gdbstub.GetValue());
     log_setting("Debugging_GdbstubPort", values.gdbstub_port.GetValue());
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
+    log_setting("Debugging_ToggleUniqueDataConsoleType",
+                values.toggle_unique_data_console_type.GetValue());
 }
 
 bool IsConfiguringGlobal() {
@@ -206,6 +210,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
+    values.use_integer_scaling.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
     values.texture_sampling.SetGlobal(true);
@@ -213,6 +218,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.layout_option.SetGlobal(true);
     values.portrait_layout_option.SetGlobal(true);
     values.secondary_display_layout.SetGlobal(true);
+    values.layouts_to_cycle.SetGlobal(true);
     values.swap_screen.SetGlobal(true);
     values.upright_screen.SetGlobal(true);
     values.large_screen_proportion.SetGlobal(true);

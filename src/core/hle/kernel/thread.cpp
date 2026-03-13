@@ -455,9 +455,9 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
     }
 
     // Initialize new "main" thread
-    auto thread_res =
-        kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
-                            Memory::HEAP_VADDR_END, owner_process, sleep_time_ns == 0);
+    auto thread_res = kernel.CreateThread(
+        fmt::format("{}-main", owner_process->codeset->name), entry_point, priority, 0,
+        owner_process->ideal_processor, Memory::HEAP_VADDR_END, owner_process, sleep_time_ns == 0);
 
     std::shared_ptr<Thread> thread = std::move(thread_res).Unwrap();
 

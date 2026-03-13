@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,8 +12,8 @@ class INIReader;
 
 class Config {
 private:
-    std::unique_ptr<INIReader> sdl2_config;
-    std::string sdl2_config_loc;
+    std::unique_ptr<INIReader> android_config;
+    std::string android_config_loc;
 
     bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
@@ -26,7 +26,7 @@ public:
 
 private:
     /**
-     * Applies a value read from the sdl2_config to a Setting.
+     * Applies a value read from the android_config to a Setting.
      *
      * @param group The name of the INI group
      * @param setting The yuzu setting to modify

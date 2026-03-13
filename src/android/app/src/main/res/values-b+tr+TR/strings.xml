@@ -99,7 +99,6 @@
     <string name="search_recently_added">Son eklenen</string>
     <string name="search_installed">Yüklü</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Kısayol tuşları</string>
@@ -481,8 +480,6 @@
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
-    <string name="building_shaders">Gölgelendiriciler Oluşturuluyor</string>
-
     <!-- About Game Dialog -->
     <string name="play">Oyna</string>
     <string name="uninstall_cia">Uygulamayı Sil</string>

@@ -15,6 +15,9 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#ifdef HAVE_LIBRETRO
+#include <mutex>
+#endif
 #include <optional>
 #include <span>
 #include <string>
@@ -30,6 +33,17 @@
 #include "common/common_types.h"
 #ifdef _MSC_VER
 #include "common/string_util.h"
+#endif
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
+#include "android_storage.h"
+#endif
+
+#ifdef HAVE_LIBRETRO_VFS
+#define SKIP_STDIO_REDEFINES
+#include <streams/file_stream_transforms.h>
+#define CORE_FILE RFILE
+#else
+#define CORE_FILE std::FILE
 #endif
 
 namespace FileUtil {
@@ -120,7 +134,7 @@ private:
 [[nodiscard]] u64 GetSize(int fd);
 
 // Overloaded GetSize, accepts FILE*
-[[nodiscard]] u64 GetSize(FILE* f);
+[[nodiscard]] u64 GetSize(CORE_FILE* f);
 
 // Returns true if successful, or path already exists.
 bool CreateDir(const std::string& filename);
@@ -302,6 +316,7 @@ public:
 
     virtual bool Close();
 
+    /// Returns the amount of T items read
     template <typename T>
     std::size_t ReadArray(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>,
@@ -314,16 +329,18 @@ public:
         return items_read;
     }
 
+    /// Returns the amount of bytes read
     template <typename T>
     std::size_t ReadAtArray(T* data, std::size_t length, std::size_t offset) {
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
-        std::size_t items_read = ReadAtImpl(data, length, sizeof(T), offset);
-        if (items_read != length)
+        const size_t bytes = length * sizeof(T);
+        std::size_t size_read = ReadAtImpl(data, bytes, offset);
+        if (size_read != bytes)
             m_good = false;
 
-        return items_read;
+        return size_read;
     }
 
     template <typename T>
@@ -420,13 +437,20 @@ public:
         return m_good;
     }
     [[nodiscard]] virtual int GetFd() const {
-#ifdef ANDROID
-        return m_fd;
+#ifdef HAVE_LIBRETRO_VFS
+        if (m_file == nullptr)
+            return -1;
+        return fileno(filestream_get_vfs_handle(m_file)->fp);
 #else
+#ifdef ANDROID
+        if (!AndroidStorage::CanUseRawFS()) {
+            return m_fd;
+        }
+#endif // ANDROID
         if (m_file == nullptr)
             return -1;
         return fileno(m_file);
-#endif
+#endif // HAVE_LIBRETRO_VFS
     }
     [[nodiscard]] explicit operator bool() const {
         return IsGood();
@@ -445,7 +469,12 @@ public:
     // clear error state
     virtual void Clear() {
         m_good = true;
+
+#ifdef HAVE_LIBRETRO_VFS
+        filestream_rewind(m_file);
+#else
         std::clearerr(m_file);
+#endif
     }
 
     virtual bool IsCrypto() {
@@ -466,17 +495,23 @@ protected:
     virtual bool Open();
 
     virtual std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size);
-    virtual std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                                   std::size_t offset);
+    virtual std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset);
     virtual std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size);
 
     virtual bool SeekImpl(s64 off, int origin);
     virtual u64 TellImpl() const;
 
 private:
-    std::FILE* m_file = nullptr;
+    CORE_FILE* m_file = nullptr;
     int m_fd = -1;
     bool m_good = true;
+#ifdef HAVE_LIBRETRO_VFS
+    // pread() doesn't touch the file position, so it's safe alongside
+    // concurrent fread/fwrite. Libretro VFS has no pread equivalent, so
+    // ReadAtImpl emulates it with seek+read+seek, which would corrupt the
+    // file position for concurrent Read/Write operations.
+    mutable std::mutex m_file_pos_mutex;
+#endif
 
     std::string filename;
     std::string openmode;
@@ -520,8 +555,7 @@ private:
     std::unique_ptr<CryptoIOFileImpl> impl;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t length, std::size_t data_size,
-                           std::size_t offset) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
     std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
 
     bool SeekImpl(s64 off, int origin) override;

@@ -311,7 +311,7 @@ private slots:
     void OnEmulatorUpdateAvailable();
 #endif
     void OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
-                               std::size_t total);
+                               std::size_t total, const std::string& object);
 #ifdef ENABLE_DEVELOPER_OPTIONS
     void StartLaunchStressTest(const QString& game_path);
 #endif
@@ -461,6 +461,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 };
 
 class GApplicationEventFilter : public QObject {

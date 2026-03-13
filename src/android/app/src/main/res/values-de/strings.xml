@@ -100,7 +100,6 @@
     <string name="search_recently_added">Kürzlich hinzugefügt</string>
     <string name="search_installed">Installiert</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Schiebepad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Tastenkürzel</string>
@@ -503,8 +502,6 @@
     <string name="unsupported_encrypted">Nicht unterstützte verschlüsselte Anwendung</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Shader werden vorbereitet</string>
-    <string name="building_shaders">Shader werden erstellt</string>
-
     <!-- About Game Dialog -->
     <string name="play">Spielen</string>
     <string name="uninstall_cia">Anwendung deinstallieren</string>

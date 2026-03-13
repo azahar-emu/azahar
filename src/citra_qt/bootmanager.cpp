@@ -66,29 +66,31 @@ void EmuThread::run() {
     const auto scope = core_context.Acquire();
 
     if (Settings::values.custom_textures && Settings::values.preload_textures) {
-        emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0);
+        emit LoadProgress(VideoCore::LoadCallbackStage::Preload, 0, 0, "");
         system.CustomTexManager().PreloadTextures(
-            stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value,
-                             std::size_t total) { emit LoadProgress(stage, value, total); });
+            stop_run,
+            [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+                   const std::string& object) { emit LoadProgress(stage, value, total, object); });
     }
 
     system.GPU().Renderer().Rasterizer()->SetSwitchDiskResourcesCallback(
-        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
-            emit SwitchDiskResources(stage, value, total);
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+               const std::string& object) {
+            emit SwitchDiskResources(stage, value, total, object);
         });
 
-    emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0);
+    emit LoadProgress(VideoCore::LoadCallbackStage::Prepare, 0, 0, "");
 
     u64 program_id{};
     system.GetAppLoader().ReadProgramId(program_id);
     system.GPU().ApplyPerProgramSettings(program_id);
 
     system.GPU().Renderer().Rasterizer()->LoadDefaultDiskResources(
-        stop_run, [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total) {
-            emit LoadProgress(stage, value, total);
-        });
+        stop_run,
+        [this](VideoCore::LoadCallbackStage stage, std::size_t value, std::size_t total,
+               const std::string& object) { emit LoadProgress(stage, value, total, object); });
 
-    emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0);
+    emit LoadProgress(VideoCore::LoadCallbackStage::Complete, 0, 0, "");
 
     core_context.MakeCurrent();
 

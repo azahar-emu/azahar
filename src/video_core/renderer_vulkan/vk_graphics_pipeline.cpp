@@ -4,6 +4,7 @@
 
 #include <boost/container/static_vector.hpp>
 
+#include "common/alignment.h"
 #include "common/hash.h"
 #include "common/microprofile.h"
 #include "video_core/renderer_vulkan/pica_to_vk.h"
@@ -31,23 +32,30 @@ vk::ShaderStageFlagBits MakeShaderStage(std::size_t index) {
     return vk::ShaderStageFlagBits::eVertex;
 }
 
-u64 PipelineInfo::Hash(const Instance& instance) const {
-    u64 info_hash = 0;
-    const auto append_hash = [&info_hash](const auto& data) {
-        const u64 data_hash = Common::ComputeStructHash64(data);
-        info_hash = Common::HashCombine(info_hash, data_hash);
-    };
-
-    append_hash(vertex_layout);
-    append_hash(attachments);
-    append_hash(blending);
+u64 StaticPipelineInfo::OptimizedHash(const Instance& instance) const {
+    u64 info_hash = Common::HashCombine(
+        shader_ids[0], shader_ids[1], shader_ids[2], Common::ComputeStructHash64(vertex_layout),
+        Common::ComputeStructHash64(attachments), Common::ComputeStructHash64(blending));
 
     if (!instance.IsExtendedDynamicStateSupported()) {
-        append_hash(rasterization);
-        append_hash(depth_stencil);
+        info_hash = Common::HashCombine(info_hash, Common::ComputeStructHash64(rasterization),
+                                        Common::ComputeStructHash64(depth_stencil));
     }
 
     return info_hash;
+}
+
+u16 PipelineInfo::GetFinalColorWriteMask(const Instance& instance) {
+    u16 color_write_mask = state.blending.color_write_mask;
+    const bool is_logic_op_emulated =
+        instance.NeedsLogicOpEmulation() && !state.blending.blend_enable;
+    const bool is_logic_op_noop = state.blending.logic_op == Pica::FramebufferRegs::LogicOp::NoOp;
+    if (is_logic_op_emulated && is_logic_op_noop) {
+        // Color output is disabled by logic operation. We use color write mask to skip
+        // color but allow depth write.
+        color_write_mask = 0;
+    }
+    return color_write_mask;
 }
 
 Shader::Shader(const Instance& instance) : device{instance.GetDevice()} {}
@@ -100,20 +108,22 @@ bool GraphicsPipeline::TryBuild(bool wait_built) {
 
 bool GraphicsPipeline::Build(bool fail_on_compile_required) {
     MICROPROFILE_SCOPE(Vulkan_Pipeline);
+
+    const u32 stride_alignment = instance.GetMinVertexStrideAlignment();
     std::array<vk::VertexInputBindingDescription, MAX_VERTEX_BINDINGS> bindings;
-    for (u32 i = 0; i < info.vertex_layout.binding_count; i++) {
-        const auto& binding = info.vertex_layout.bindings[i];
+    for (u32 i = 0; i < info.state.vertex_layout.binding_count; i++) {
+        const auto& binding = info.state.vertex_layout.bindings[i];
         bindings[i] = vk::VertexInputBindingDescription{
             .binding = binding.binding,
-            .stride = binding.stride,
+            .stride = Common::AlignUp(binding.byte_count.Value(), stride_alignment),
             .inputRate = binding.fixed.Value() ? vk::VertexInputRate::eInstance
                                                : vk::VertexInputRate::eVertex,
         };
     }
 
     std::array<vk::VertexInputAttributeDescription, MAX_VERTEX_ATTRIBUTES> attributes;
-    for (u32 i = 0; i < info.vertex_layout.attribute_count; i++) {
-        const auto& attr = info.vertex_layout.attributes[i];
+    for (u32 i = 0; i < info.state.vertex_layout.attribute_count; i++) {
+        const auto& attr = info.state.vertex_layout.attributes[i];
         const FormatTraits& traits = instance.GetTraits(attr.type, attr.size);
         attributes[i] = vk::VertexInputAttributeDescription{
             .location = attr.location,
@@ -131,23 +141,23 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
     }
 
     const vk::PipelineVertexInputStateCreateInfo vertex_input_info = {
-        .vertexBindingDescriptionCount = info.vertex_layout.binding_count,
+        .vertexBindingDescriptionCount = info.state.vertex_layout.binding_count,
         .pVertexBindingDescriptions = bindings.data(),
-        .vertexAttributeDescriptionCount = info.vertex_layout.attribute_count,
+        .vertexAttributeDescriptionCount = info.state.vertex_layout.attribute_count,
         .pVertexAttributeDescriptions = attributes.data(),
     };
 
     const vk::PipelineInputAssemblyStateCreateInfo input_assembly = {
-        .topology = PicaToVK::PrimitiveTopology(info.rasterization.topology),
+        .topology = PicaToVK::PrimitiveTopology(info.state.rasterization.topology),
         .primitiveRestartEnable = false,
     };
 
     const vk::PipelineRasterizationStateCreateInfo raster_state = {
         .depthClampEnable = false,
         .rasterizerDiscardEnable = false,
-        .cullMode =
-            PicaToVK::CullMode(info.rasterization.cull_mode, info.rasterization.flip_viewport),
-        .frontFace = PicaToVK::FrontFace(info.rasterization.cull_mode),
+        .cullMode = PicaToVK::CullMode(info.state.rasterization.cull_mode,
+                                       info.state.rasterization.flip_viewport),
+        .frontFace = PicaToVK::FrontFace(info.state.rasterization.cull_mode),
         .depthBiasEnable = false,
         .lineWidth = 1.0f,
     };
@@ -158,19 +168,20 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
     };
 
     const vk::PipelineColorBlendAttachmentState colorblend_attachment = {
-        .blendEnable = info.blending.blend_enable,
-        .srcColorBlendFactor = PicaToVK::BlendFunc(info.blending.src_color_blend_factor),
-        .dstColorBlendFactor = PicaToVK::BlendFunc(info.blending.dst_color_blend_factor),
-        .colorBlendOp = PicaToVK::BlendEquation(info.blending.color_blend_eq),
-        .srcAlphaBlendFactor = PicaToVK::BlendFunc(info.blending.src_alpha_blend_factor),
-        .dstAlphaBlendFactor = PicaToVK::BlendFunc(info.blending.dst_alpha_blend_factor),
-        .alphaBlendOp = PicaToVK::BlendEquation(info.blending.alpha_blend_eq),
-        .colorWriteMask = static_cast<vk::ColorComponentFlags>(info.blending.color_write_mask),
+        .blendEnable = info.state.blending.blend_enable,
+        .srcColorBlendFactor = PicaToVK::BlendFunc(info.state.blending.src_color_blend_factor),
+        .dstColorBlendFactor = PicaToVK::BlendFunc(info.state.blending.dst_color_blend_factor),
+        .colorBlendOp = PicaToVK::BlendEquation(info.state.blending.color_blend_eq),
+        .srcAlphaBlendFactor = PicaToVK::BlendFunc(info.state.blending.src_alpha_blend_factor),
+        .dstAlphaBlendFactor = PicaToVK::BlendFunc(info.state.blending.dst_alpha_blend_factor),
+        .alphaBlendOp = PicaToVK::BlendEquation(info.state.blending.alpha_blend_eq),
+        .colorWriteMask =
+            static_cast<vk::ColorComponentFlags>(info.GetFinalColorWriteMask(instance)),
     };
 
     const vk::PipelineColorBlendStateCreateInfo color_blending = {
-        .logicOpEnable = !info.blending.blend_enable && !instance.NeedsLogicOpEmulation(),
-        .logicOp = PicaToVK::LogicOp(info.blending.logic_op),
+        .logicOpEnable = !info.state.blending.blend_enable && !instance.NeedsLogicOpEmulation(),
+        .logicOp = PicaToVK::LogicOp(info.state.blending.logic_op),
         .attachmentCount = 1,
         .pAttachments = &colorblend_attachment,
         .blendConstants = std::array{1.0f, 1.0f, 1.0f, 1.0f},
@@ -219,18 +230,18 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
     };
 
     const vk::StencilOpState stencil_op_state = {
-        .failOp = PicaToVK::StencilOp(info.depth_stencil.stencil_fail_op),
-        .passOp = PicaToVK::StencilOp(info.depth_stencil.stencil_pass_op),
-        .depthFailOp = PicaToVK::StencilOp(info.depth_stencil.stencil_depth_fail_op),
-        .compareOp = PicaToVK::CompareFunc(info.depth_stencil.stencil_compare_op),
+        .failOp = PicaToVK::StencilOp(info.state.depth_stencil.stencil_fail_op),
+        .passOp = PicaToVK::StencilOp(info.state.depth_stencil.stencil_pass_op),
+        .depthFailOp = PicaToVK::StencilOp(info.state.depth_stencil.stencil_depth_fail_op),
+        .compareOp = PicaToVK::CompareFunc(info.state.depth_stencil.stencil_compare_op),
     };
 
     const vk::PipelineDepthStencilStateCreateInfo depth_info = {
-        .depthTestEnable = static_cast<u32>(info.depth_stencil.depth_test_enable.Value()),
-        .depthWriteEnable = static_cast<u32>(info.depth_stencil.depth_write_enable.Value()),
-        .depthCompareOp = PicaToVK::CompareFunc(info.depth_stencil.depth_compare_op),
+        .depthTestEnable = static_cast<u32>(info.state.depth_stencil.depth_test_enable.Value()),
+        .depthWriteEnable = static_cast<u32>(info.state.depth_stencil.depth_write_enable.Value()),
+        .depthCompareOp = PicaToVK::CompareFunc(info.state.depth_stencil.depth_compare_op),
         .depthBoundsTestEnable = false,
-        .stencilTestEnable = static_cast<u32>(info.depth_stencil.stencil_test_enable.Value()),
+        .stencilTestEnable = static_cast<u32>(info.state.depth_stencil.stencil_test_enable.Value()),
         .front = stencil_op_state,
         .back = stencil_op_state,
     };
@@ -263,8 +274,8 @@ bool GraphicsPipeline::Build(bool fail_on_compile_required) {
         .pColorBlendState = &color_blending,
         .pDynamicState = &dynamic_info,
         .layout = pipeline_layout,
-        .renderPass =
-            renderpass_cache.GetRenderpass(info.attachments.color, info.attachments.depth, false),
+        .renderPass = renderpass_cache.GetRenderpass(info.state.attachments.color,
+                                                     info.state.attachments.depth, false),
     };
 
     if (fail_on_compile_required) {

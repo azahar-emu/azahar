@@ -207,9 +207,10 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress")));
     jclass load_callback_stage_class =
         env->FindClass("org/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage");
-    s_disk_cache_load_progress = env->GetStaticMethodID(
-        s_disk_cache_progress_class, "loadProgress",
-        "(Lorg/citra/citra_emu/utils/DiskShaderCacheProgress$LoadCallbackStage;II)V");
+    s_disk_cache_load_progress =
+        env->GetStaticMethodID(s_disk_cache_progress_class, "loadProgress",
+                               "(Lorg/citra/citra_emu/utils/"
+                               "DiskShaderCacheProgress$LoadCallbackStage;IILjava/lang/String;)V");
     s_compress_progress_method =
         env->GetStaticMethodID(s_native_library_class, "onCompressProgress", "(JJ)V");
     // Initialize LoadCallbackStage map

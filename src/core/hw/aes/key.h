@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -101,5 +101,7 @@ const AESIV& GetNfcIv();
 std::pair<AESKey, AESIV> GetOTPKeyIV();
 
 const AESKey& GetMovableKey(bool cmac_key);
+
+const AESIV& GetDlpChecksumModIv();
 
 } // namespace HW::AES

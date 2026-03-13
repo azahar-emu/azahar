@@ -2,11 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma once
+
+#include "common/hash.h"
 #include "common/thread_worker.h"
 #include "video_core/pica/regs_pipeline.h"
 #include "video_core/pica/regs_rasterizer.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_common.h"
+
+#define LAYOUT_HASH static_cast<u64>(sizeof(T)), static_cast<u64>(alignof(T))
+#define FIELD_HASH(x) static_cast<u64>(offsetof(T, x)), static_cast<u64>(sizeof(x))
 
 namespace Common {
 
@@ -51,14 +57,29 @@ constexpr u32 MAX_VERTEX_BINDINGS = 13;
  * the overhead of hashing as much as possible
  */
 union RasterizationState {
-    u8 value = 0;
+    u8 value;
     BitField<0, 2, Pica::PipelineRegs::TriangleTopology> topology;
     BitField<4, 2, Pica::RasterizerRegs::CullMode> cull_mode;
     BitField<6, 1, u8> flip_viewport;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = RasterizationState;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(topology), FIELD_HASH(cull_mode),
+                                   FIELD_HASH(flip_viewport));
+    }
 };
+static_assert(std::is_trivial_v<RasterizationState>);
 
 union DepthStencilState {
-    u32 value = 0;
+    u32 value;
     BitField<0, 1, u32> depth_test_enable;
     BitField<1, 1, u32> depth_write_enable;
     BitField<2, 1, u32> stencil_test_enable;
@@ -67,14 +88,32 @@ union DepthStencilState {
     BitField<9, 3, Pica::FramebufferRegs::StencilAction> stencil_pass_op;
     BitField<12, 3, Pica::FramebufferRegs::StencilAction> stencil_depth_fail_op;
     BitField<15, 3, Pica::FramebufferRegs::CompareFunc> stencil_compare_op;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = DepthStencilState;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(depth_test_enable), FIELD_HASH(depth_write_enable),
+                                   FIELD_HASH(stencil_test_enable), FIELD_HASH(depth_compare_op),
+                                   FIELD_HASH(stencil_fail_op), FIELD_HASH(stencil_pass_op),
+                                   FIELD_HASH(stencil_depth_fail_op),
+                                   FIELD_HASH(stencil_compare_op));
+    }
 };
+static_assert(std::is_trivial_v<DepthStencilState>);
 
 struct BlendingState {
     u16 blend_enable;
     u16 color_write_mask;
     Pica::FramebufferRegs::LogicOp logic_op;
     union {
-        u32 value = 0;
+        u32 value;
         BitField<0, 4, Pica::FramebufferRegs::BlendFactor> src_color_blend_factor;
         BitField<4, 4, Pica::FramebufferRegs::BlendFactor> dst_color_blend_factor;
         BitField<8, 3, Pica::FramebufferRegs::BlendEquation> color_blend_eq;
@@ -82,9 +121,149 @@ struct BlendingState {
         BitField<15, 4, Pica::FramebufferRegs::BlendFactor> dst_alpha_blend_factor;
         BitField<19, 3, Pica::FramebufferRegs::BlendEquation> alpha_blend_eq;
     };
-};
 
-struct DynamicState {
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = BlendingState;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(blend_enable), FIELD_HASH(color_write_mask),
+                                   FIELD_HASH(logic_op), FIELD_HASH(src_color_blend_factor),
+                                   FIELD_HASH(dst_color_blend_factor), FIELD_HASH(color_blend_eq),
+                                   FIELD_HASH(src_alpha_blend_factor),
+                                   FIELD_HASH(dst_alpha_blend_factor), FIELD_HASH(alpha_blend_eq));
+    }
+};
+static_assert(std::is_trivial_v<BlendingState>);
+
+union VertexBinding {
+    u16 value;
+    BitField<0, 4, u16> binding;
+    BitField<4, 1, u16> fixed;
+    BitField<5, 11, u16> byte_count;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = VertexBinding;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(binding), FIELD_HASH(fixed), FIELD_HASH(byte_count));
+    }
+};
+static_assert(std::is_trivial_v<VertexBinding>);
+
+union VertexAttribute {
+    u32 value;
+    BitField<0, 4, u32> binding;
+    BitField<4, 4, u32> location;
+    BitField<8, 3, Pica::PipelineRegs::VertexAttributeFormat> type;
+    BitField<11, 3, u32> size;
+    BitField<14, 11, u32> offset;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = VertexAttribute;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(binding), FIELD_HASH(location), FIELD_HASH(type),
+                                   FIELD_HASH(size), FIELD_HASH(offset));
+    }
+};
+static_assert(std::is_trivial_v<VertexAttribute>);
+
+struct VertexLayout {
+    u8 binding_count;
+    u8 attribute_count;
+    std::array<VertexBinding, MAX_VERTEX_BINDINGS> bindings;
+    std::array<VertexAttribute, MAX_VERTEX_ATTRIBUTES> attributes;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = VertexLayout;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(binding_count), FIELD_HASH(attribute_count),
+                                   FIELD_HASH(bindings), FIELD_HASH(attributes),
+
+                                   // nested layout
+                                   VertexBinding::StructHash(), VertexAttribute::StructHash());
+    }
+};
+static_assert(std::is_trivial_v<VertexLayout>);
+
+struct AttachmentInfo {
+    VideoCore::PixelFormat color;
+    VideoCore::PixelFormat depth;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = AttachmentInfo;
+        return Common::HashCombine(STRUCT_VERSION,
+
+                                   // layout
+                                   LAYOUT_HASH,
+
+                                   // fields
+                                   FIELD_HASH(color), FIELD_HASH(depth));
+    }
+};
+static_assert(std::is_trivial_v<AttachmentInfo>);
+
+struct StaticPipelineInfo {
+    std::array<u64, MAX_SHADER_STAGES> shader_ids;
+
+    BlendingState blending;
+    AttachmentInfo attachments;
+    VertexLayout vertex_layout;
+
+    RasterizationState rasterization;
+    DepthStencilState depth_stencil;
+
+    [[nodiscard]] u64 OptimizedHash(const Instance& instance) const;
+
+    static consteval u64 StructHash() {
+        constexpr u64 STRUCT_VERSION = 0;
+
+        using T = StaticPipelineInfo;
+        return Common::HashCombine(
+            STRUCT_VERSION,
+
+            // layout
+            LAYOUT_HASH,
+
+            // fields
+            FIELD_HASH(shader_ids), FIELD_HASH(blending), FIELD_HASH(attachments),
+            FIELD_HASH(vertex_layout), FIELD_HASH(rasterization), FIELD_HASH(depth_stencil),
+
+            // nested layout
+            BlendingState::StructHash(), AttachmentInfo::StructHash(), VertexLayout::StructHash(),
+            RasterizationState::StructHash(), DepthStencilState::StructHash());
+    }
+};
+static_assert(std::is_trivial_v<StaticPipelineInfo>);
+
+struct DynamicPipelineInfo {
     u32 blend_color = 0;
     u8 stencil_reference;
     u8 stencil_compare_mask;
@@ -93,61 +272,28 @@ struct DynamicState {
     Common::Rectangle<u32> scissor;
     Common::Rectangle<s32> viewport;
 
-    bool operator==(const DynamicState& other) const noexcept {
-        return std::memcmp(this, &other, sizeof(DynamicState)) == 0;
+    bool operator==(const DynamicPipelineInfo& other) const noexcept {
+        return std::memcmp(this, &other, sizeof(DynamicPipelineInfo)) == 0;
     }
-};
-
-union VertexBinding {
-    u16 value = 0;
-    BitField<0, 4, u16> binding;
-    BitField<4, 1, u16> fixed;
-    BitField<5, 11, u16> stride;
-};
-
-union VertexAttribute {
-    u32 value = 0;
-    BitField<0, 4, u32> binding;
-    BitField<4, 4, u32> location;
-    BitField<8, 3, Pica::PipelineRegs::VertexAttributeFormat> type;
-    BitField<11, 3, u32> size;
-    BitField<14, 11, u32> offset;
-};
-
-struct VertexLayout {
-    u8 binding_count;
-    u8 attribute_count;
-    std::array<VertexBinding, MAX_VERTEX_BINDINGS> bindings;
-    std::array<VertexAttribute, MAX_VERTEX_ATTRIBUTES> attributes;
-};
-
-struct AttachmentInfo {
-    VideoCore::PixelFormat color;
-    VideoCore::PixelFormat depth;
 };
 
 /**
  * Information about a graphics pipeline
  */
-struct PipelineInfo {
-    BlendingState blending;
-    AttachmentInfo attachments;
-    RasterizationState rasterization;
-    DepthStencilState depth_stencil;
-    DynamicState dynamic;
-    VertexLayout vertex_layout;
-
-    [[nodiscard]] u64 Hash(const Instance& instance) const;
+struct PipelineInfo : Common::HashableStruct<StaticPipelineInfo> {
+    DynamicPipelineInfo dynamic_info;
 
     [[nodiscard]] bool IsDepthWriteEnabled() const noexcept {
-        const bool has_stencil = attachments.depth == VideoCore::PixelFormat::D24S8;
+        const bool has_stencil = state.attachments.depth == VideoCore::PixelFormat::D24S8;
         const bool depth_write =
-            depth_stencil.depth_test_enable && depth_stencil.depth_write_enable;
-        const bool stencil_write =
-            has_stencil && depth_stencil.stencil_test_enable && dynamic.stencil_write_mask != 0;
+            state.depth_stencil.depth_test_enable && state.depth_stencil.depth_write_enable;
+        const bool stencil_write = has_stencil && state.depth_stencil.stencil_test_enable &&
+                                   dynamic_info.stencil_write_mask != 0;
 
         return depth_write || stencil_write;
     }
+
+    [[nodiscard]] u16 GetFinalColorWriteMask(const Instance& instance);
 };
 
 struct Shader : public Common::AsyncHandle {
@@ -195,3 +341,6 @@ private:
 };
 
 } // namespace Vulkan
+
+#undef LAYOUT_HASH
+#undef FIELD_HASH

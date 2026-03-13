@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <nihstro/shader_bytecode.h>
 #include "common/aarch64/cpu_detect.h"
 #include "common/aarch64/oaknut_abi.h"

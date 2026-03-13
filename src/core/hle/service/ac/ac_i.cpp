@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,7 +13,7 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
         {0x0001, &AC_I::CreateDefaultConfig, "CreateDefaultConfig"},
         {0x0004, &AC_I::ConnectAsync, "ConnectAsync"},
         {0x0005, &AC_I::GetConnectResult, "GetConnectResult"},
-        {0x0007, nullptr, "CancelConnectAsync"},
+        {0x0007, &AC_I::CancelConnectAsync, "CancelConnectAsync"},
         {0x0008, &AC_I::CloseAsync, "CloseAsync"},
         {0x0009, &AC_I::GetCloseResult, "GetCloseResult"},
         {0x000A, nullptr, "GetLastErrorCode"},
@@ -26,6 +26,7 @@ AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i"
         {0x0024, nullptr, "AddDenyApType"},
         {0x0027, &AC_I::GetInfraPriority, "GetInfraPriority"},
         {0x002D, &AC_I::SetRequestEulaVersion, "SetRequestEulaVersion"},
+        {0x002F, &AC_I::GetNZoneBeaconNotFoundEvent, "GetNZoneBeaconNotFoundEvent"},
         {0x0030, &AC_I::RegisterDisconnectEvent, "RegisterDisconnectEvent"},
         {0x0036, &AC_I::GetConnectingProxyEnable, "GetConnectingProxyEnable"},
         {0x003C, nullptr, "GetAPSSIDList"},

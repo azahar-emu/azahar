@@ -119,9 +119,17 @@
     <string name="search_installed">Installed</string>
 
     <!-- Input related strings -->
+    <string name="controller_auto_map">Auto-Map Controller</string>
+    <string name="controller_auto_map_description">Apply standard gamepad mapping for all buttons and axes</string>
+    <string name="auto_map_prompt">Press this button on your controller!</string>
+    <string name="auto_map_image_description">3DS face button diamond with A button highlighted</string>
+    <string name="controller_clear_all">Clear All Bindings</string>
+    <string name="controller_clear_all_confirm">This will remove all current controller bindings.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Hotkeys</string>
+    <string name="controller_hotkeys_description">If the "Hotkey Enable" key is mapped, that key must be pressed in addition to the mapped hotkey</string>
+    <string name="controller_hotkey_enable_button">Hotkey Enable</string>
     <string name="controller_triggers">Triggers</string>
     <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
@@ -250,6 +258,8 @@
     <string name="async_shaders_description">Compiles shaders in the background to reduce stuttering during gameplay. When enabled expect temporary graphical glitches</string>
     <string name="linear_filtering">Linear Filtering</string>
     <string name="linear_filtering_description">Enables linear filtering, which causes game visuals to appear smoother.</string>
+    <string name="use_integer_scaling">Integer Scaling</string>
+    <string name="use_integer_scaling_description">Scales the screens with an integer multiplier of the original 3DS screen. For layouts with two different screen sizes, the largest screen is integer-scaled.</string>
     <string name="texture_filter_name">Texture Filter</string>
     <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
     <string name="delay_render_thread">Delay Game Render Thread</string>
@@ -347,6 +357,8 @@
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
     <string name="enable_rpc_server">Enable RPC Server</string>
     <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
+    <string name="toggle_unique_data_console_type">Toggle unique data console type</string>
+    <string name="toggle_unique_data_console_type_desc">Toggles the unique data console type (Old 3DS &#8596; New 3DS) to be able to download the opposite system firmware type from system settings.</string>
     <string name="shader_jit">Enable Shader JIT</string>
     <string name="shader_jit_description">Use the JIT engine instead of the interpreter for software shader emulation.</string>
 
@@ -357,6 +369,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Reverse Landscape</string>
     <string name="layout_screen_orientation_portrait">Portrait</string>
     <string name="layout_screen_orientation_portrait_reverse">Reverse Portrait</string>
+    <string name="layouts_to_cycle">Layouts to Cycle</string>
+    <string name="layouts_to_cycle_description">Which layouts are cycled by the Cycle Layout hotkey</string>
     <string name="aspect_ratio_default">Default</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -571,7 +585,7 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparing Shaders</string>
-    <string name="building_shaders">Building Shaders</string>
+    <string name="building_shaders">Building %s</string>
 
     <!-- About Game Dialog -->
     <string name="play">Play</string>

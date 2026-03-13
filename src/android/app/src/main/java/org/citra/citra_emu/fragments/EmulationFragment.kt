@@ -11,6 +11,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -132,14 +133,16 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         var intentGame: Game? = null
         if (intentUri != null) {
             intentGame = if (Game.extensions.contains(FileUtil.getExtension(intentUri))) {
-                GameHelper.getGame(intentUri, isInstalled = false, addedToLibrary = false)
+                // isInstalled, addedToLibrary and mediaType do not matter here
+                GameHelper.getGame(intentUri, isInstalled = false, addedToLibrary = false, mediaType = Game.MediaType.GAME_CARD)
             } else {
                 null
             }
         } else if (oldIntentInfo.first != null) {
             val gameUri = Uri.parse(oldIntentInfo.first)
             intentGame = if (Game.extensions.contains(FileUtil.getExtension(gameUri))) {
-                GameHelper.getGame(gameUri, isInstalled = false, addedToLibrary = false)
+                // isInstalled, addedToLibrary and mediaType do not matter here
+                GameHelper.getGame(gameUri, isInstalled = false, addedToLibrary = false, mediaType = Game.MediaType.GAME_CARD)
             } else {
                 null
             }
@@ -175,6 +178,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEmulationBinding.inflate(inflater)
+        binding.inGameMenu.menu.findItem(R.id.menu_landscape_screen_layout).isVisible =
+            CitraApplication.appContext.resources.configuration.orientation !=
+                    Configuration.ORIENTATION_PORTRAIT
+        binding.inGameMenu.menu.findItem(R.id.menu_portrait_screen_layout).isVisible =
+            CitraApplication.appContext.resources.configuration.orientation ==
+                    Configuration.ORIENTATION_PORTRAIT
         return binding.root
     }
 

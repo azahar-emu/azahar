@@ -15,6 +15,7 @@
 #include "core/core.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_nand.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/archive_other_savedata.h"
 #include "core/file_sys/archive_savedata.h"
@@ -392,6 +393,28 @@ void ArchiveManager::RegisterArchiveTypes() {
     auto bossextsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(
         sdmc_directory, FileSys::ExtSaveDataType::Boss);
     RegisterArchiveType(std::move(bossextsavedata_factory), ArchiveIdCode::BossExtSaveData);
+
+    auto nand_rw = std::make_unique<FileSys::ArchiveFactory_NAND>(nand_directory,
+                                                                  FileSys::NANDArchiveType::RW);
+    if (nand_rw->Initialize())
+        RegisterArchiveType(std::move(nand_rw), ArchiveIdCode::NANDRW);
+    else
+        LOG_ERROR(Service_FS, "Can't instantiate NAND RW archive with path {}", nand_rw->GetPath());
+
+    auto nand_ro = std::make_unique<FileSys::ArchiveFactory_NAND>(nand_directory,
+                                                                  FileSys::NANDArchiveType::RO);
+    if (nand_ro->Initialize())
+        RegisterArchiveType(std::move(nand_ro), ArchiveIdCode::NANDRO);
+    else
+        LOG_ERROR(Service_FS, "Can't instantiate NAND RO archive with path {}", nand_ro->GetPath());
+
+    auto nand_ro_w = std::make_unique<FileSys::ArchiveFactory_NAND>(nand_directory,
+                                                                    FileSys::NANDArchiveType::RO_W);
+    if (nand_ro_w->Initialize())
+        RegisterArchiveType(std::move(nand_ro_w), ArchiveIdCode::NANDROW);
+    else
+        LOG_ERROR(Service_FS, "Can't instantiate NAND RO_W archive with path {}",
+                  nand_ro_w->GetPath());
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();

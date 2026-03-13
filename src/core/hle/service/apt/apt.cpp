@@ -39,6 +39,8 @@ SERVICE_CONSTRUCT_IMPL(Service::APT::Module)
 
 namespace Service::APT {
 
+constexpr u32 max_wireless_reboot_info_size = 0x10;
+
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
     DEBUG_SERIALIZATION_POINT;
@@ -64,7 +66,7 @@ std::shared_ptr<Module> Module::NSInterface::GetModule() const {
 
 void Module::NSInterface::SetWirelessRebootInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    const auto size = rp.Pop<u32>();
+    const auto size = std::min(rp.Pop<u32>(), max_wireless_reboot_info_size);
     const auto buffer = rp.PopStaticBuffer();
 
     apt->wireless_reboot_info = std::move(buffer);
@@ -1248,24 +1250,28 @@ void Module::APTInterface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     std::vector<u8> param;
     bool exists = false;
 
-    if (auto arg = apt->applet_manager->ReceiveDeliverArg()) {
-        param = std::move(arg->param);
+    const auto& jump_parameters = apt->applet_manager->GetApplicationJumpParameters();
 
-        // TODO: This is a complete guess based on observations. It is unknown how the OtherMedia
-        // type is handled and how it interacts with the OtherApp type, and it is unknown if
-        // this (checking the jump parameters) is indeed the way the 3DS checks the types.
-        const auto& jump_parameters = apt->applet_manager->GetApplicationJumpParameters();
-        switch (startup_argument_type) {
-        case StartupArgumentType::OtherApp:
-            exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
-                     jump_parameters.current_media_type == jump_parameters.next_media_type;
-            break;
-        case StartupArgumentType::Restart:
-            exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
-            break;
-        case StartupArgumentType::OtherMedia:
-            exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
-            break;
+    // TODO: This is a complete guess based on observations. It is unknown how the
+    // OtherMedia type is handled and how it interacts with the OtherApp type, and it is
+    // unknown if this (checking the jump parameters) is indeed the way the 3DS checks the
+    // types.
+    if (jump_parameters.Valid()) {
+        if (auto arg = apt->applet_manager->ReceiveDeliverArg()) {
+            param = std::move(arg->param);
+
+            switch (startup_argument_type) {
+            case StartupArgumentType::OtherApp:
+                exists = jump_parameters.current_title_id != jump_parameters.next_title_id &&
+                         jump_parameters.current_media_type == jump_parameters.next_media_type;
+                break;
+            case StartupArgumentType::Restart:
+                exists = jump_parameters.current_title_id == jump_parameters.next_title_id;
+                break;
+            case StartupArgumentType::OtherMedia:
+                exists = jump_parameters.current_media_type != jump_parameters.next_media_type;
+                break;
+            }
         }
     }
 

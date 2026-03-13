@@ -13,6 +13,8 @@
 #include "audio_core/input_details.h"
 #include "audio_core/sink_details.h"
 #include "common/common_types.h"
+#include "common/setting_keys.h"
+#include "common/string_util.h"
 #include "core/hle/service/cam/cam_params.h"
 
 namespace Settings {
@@ -34,7 +36,8 @@ enum class InitTicks : u32 {
 };
 
 /** Defines the layout option for desktop and mobile landscape */
-enum class LayoutOption : u32 {
+enum class LayoutOption : u32 { // Shouldn't these have set numbers to prevent last two from
+                                // shifting? -OS
     Default,
     SingleScreen,
     LargeScreen,
@@ -224,7 +227,7 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit Setting(const Type& default_val, const std::string& name)
+    explicit Setting(const Type& default_val, const std::string_view& name)
         requires(!ranged)
         : value{default_val}, default_value{default_val}, label{name} {}
     virtual ~Setting() = default;
@@ -238,10 +241,10 @@ public:
      * @param name Label for the setting
      */
     explicit Setting(const Type& default_val, const Type& min_val, const Type& max_val,
-                     const std::string& name)
+                     const std::string_view& name)
         requires(ranged)
         : value{default_val}, default_value{default_val}, maximum{max_val}, minimum{min_val},
-          label{name} {}
+          label{std::string(name)} {}
 
     /**
      *  Returns a reference to the setting's value.
@@ -327,7 +330,7 @@ public:
      * @param default_val Intial value of the setting, and default value of the setting
      * @param name Label for the setting
      */
-    explicit SwitchableSetting(const Type& default_val, const std::string& name)
+    explicit SwitchableSetting(const Type& default_val, const std::string_view& name)
         requires(!ranged)
         : Setting<Type>{default_val, name} {}
     virtual ~SwitchableSetting() = default;
@@ -341,7 +344,7 @@ public:
      * @param name Label for the setting
      */
     explicit SwitchableSetting(const Type& default_val, const Type& min_val, const Type& max_val,
-                               const std::string& name)
+                               const std::string_view& name)
         requires(ranged)
         : Setting<Type, true>{default_val, min_val, max_val, name} {}
 
@@ -439,6 +442,8 @@ struct InputProfile {
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
     std::string touch_device;
+    std::string controller_touch_device;
+    bool use_touchpad;
     bool use_touch_from_button;
     int touch_from_button_map_index;
     std::string udp_input_address;
@@ -461,35 +466,36 @@ struct Values {
     int current_input_profile_index;          ///< The current input profile index
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
     std::vector<TouchFromButtonMap> touch_from_button_maps;
-    Setting<bool> use_artic_base_controller{false, "use_artic_base_controller"};
+    Setting<bool> use_artic_base_controller{false, Keys::use_artic_base_controller};
 
-    SwitchableSetting<bool> enable_gamemode{true, "enable_gamemode"};
+    SwitchableSetting<bool> enable_gamemode{true, Keys::enable_gamemode};
 
     // Core
-    Setting<bool> use_cpu_jit{true, "use_cpu_jit"};
-    SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, "cpu_clock_percentage"};
-    SwitchableSetting<bool> is_new_3ds{true, "is_new_3ds"};
-    SwitchableSetting<bool> lle_applets{true, "lle_applets"};
-    SwitchableSetting<bool> deterministic_async_operations{false, "deterministic_async_operations"};
+    Setting<bool> use_cpu_jit{true, Keys::use_cpu_jit};
+    SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, Keys::cpu_clock_percentage};
+    SwitchableSetting<bool> is_new_3ds{true, Keys::is_new_3ds};
+    SwitchableSetting<bool> lle_applets{true, Keys::lle_applets};
+    SwitchableSetting<bool> deterministic_async_operations{false,
+                                                           Keys::deterministic_async_operations};
     SwitchableSetting<bool> enable_required_online_lle_modules{
-        false, "enable_required_online_lle_modules"};
+        false, Keys::enable_required_online_lle_modules};
 
     // Data Storage
-    Setting<bool> use_virtual_sd{true, "use_virtual_sd"};
-    Setting<bool> use_custom_storage{false, "use_custom_storage"};
-    Setting<bool> compress_cia_installs{false, "compress_cia_installs"};
+    Setting<bool> use_virtual_sd{true, Keys::use_virtual_sd};
+    Setting<bool> use_custom_storage{false, Keys::use_custom_storage};
+    Setting<bool> compress_cia_installs{false, Keys::compress_cia_installs};
 
     // System
-    SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, "region_value"};
-    Setting<InitClock> init_clock{InitClock::SystemTime, "init_clock"};
-    Setting<u64> init_time{946681277ULL, "init_time"};
-    Setting<s64> init_time_offset{0, "init_time_offset"};
-    Setting<InitTicks> init_ticks_type{InitTicks::Random, "init_ticks_type"};
-    Setting<s64> init_ticks_override{0, "init_ticks_override"};
-    Setting<bool> plugin_loader_enabled{false, "plugin_loader"};
-    Setting<bool> allow_plugin_loader{true, "allow_plugin_loader"};
-    Setting<u16> steps_per_hour{0, "steps_per_hour"};
-    Setting<bool> apply_region_free_patch{true, "apply_region_free_patch"};
+    SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, Keys::region_value};
+    Setting<InitClock> init_clock{InitClock::SystemTime, Keys::init_clock};
+    Setting<u64> init_time{946681277ULL, Keys::init_time};
+    Setting<s64> init_time_offset{0, Keys::init_time_offset};
+    Setting<InitTicks> init_ticks_type{InitTicks::Random, Keys::init_ticks_type};
+    Setting<s64> init_ticks_override{0, Keys::init_ticks_override};
+    Setting<bool> plugin_loader_enabled{false, Keys::plugin_loader};
+    Setting<bool> allow_plugin_loader{true, Keys::allow_plugin_loader};
+    Setting<u16> steps_per_hour{0, Keys::steps_per_hour};
+    Setting<bool> apply_region_free_patch{true, Keys::apply_region_free_patch};
 
     // Renderer
     SwitchableSetting<GraphicsAPI, true> graphics_api{
@@ -503,110 +509,120 @@ struct Values {
 // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
 #endif
-        GraphicsAPI::Software, GraphicsAPI::Vulkan, "graphics_api"};
-    SwitchableSetting<u32> physical_device{0, "physical_device"};
-    Setting<bool> use_gles{false, "use_gles"};
-    Setting<bool> renderer_debug{false, "renderer_debug"};
-    Setting<bool> dump_command_buffers{false, "dump_command_buffers"};
-    SwitchableSetting<bool> spirv_shader_gen{true, "spirv_shader_gen"};
-    SwitchableSetting<bool> disable_spirv_optimizer{true, "disable_spirv_optimizer"};
-    SwitchableSetting<bool> async_shader_compilation{false, "async_shader_compilation"};
-    SwitchableSetting<bool> async_presentation{true, "async_presentation"};
-    SwitchableSetting<bool> use_hw_shader{true, "use_hw_shader"};
-    SwitchableSetting<bool> use_disk_shader_cache{true, "use_disk_shader_cache"};
-    SwitchableSetting<bool> shaders_accurate_mul{true, "shaders_accurate_mul"};
+        GraphicsAPI::Software, GraphicsAPI::Vulkan, Keys::graphics_api};
+    SwitchableSetting<u32> physical_device{0, Keys::physical_device};
+    Setting<bool> use_gles{false, Keys::use_gles};
+    Setting<bool> renderer_debug{false, Keys::renderer_debug};
+    Setting<bool> dump_command_buffers{false, Keys::dump_command_buffers};
+    SwitchableSetting<bool> spirv_shader_gen{true, Keys::spirv_shader_gen};
+    SwitchableSetting<bool> disable_spirv_optimizer{true, Keys::disable_spirv_optimizer};
+    SwitchableSetting<bool> async_shader_compilation{false, Keys::async_shader_compilation};
+    SwitchableSetting<bool> async_presentation{true, Keys::async_presentation};
+    SwitchableSetting<bool> use_hw_shader{true, Keys::use_hw_shader};
+    SwitchableSetting<bool> use_disk_shader_cache{true, Keys::use_disk_shader_cache};
+    SwitchableSetting<bool> shaders_accurate_mul{true, Keys::shaders_accurate_mul};
 #ifdef ANDROID // TODO: Fuck this -OS
-    SwitchableSetting<bool> use_vsync{false, "use_vsync"};
+    SwitchableSetting<bool> use_vsync{false, Keys::use_vsync};
 #else
-    SwitchableSetting<bool> use_vsync{true, "use_vsync"};
+    SwitchableSetting<bool> use_vsync{true, Keys::use_vsync};
 #endif
     SwitchableSetting<bool> use_display_refresh_rate_detection{
-        true, "use_display_refresh_rate_detection"};
-    Setting<bool> use_shader_jit{true, "use_shader_jit"};
-    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, "resolution_factor"};
-    SwitchableSetting<double, true> frame_limit{100, 0, 1000, "frame_limit"};
-    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, "turbo_limit"};
-    SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, "texture_filter"};
+        true, Keys::use_display_refresh_rate_detection};
+    Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
+    SwitchableSetting<u32, true> resolution_factor{1, 0, 10, Keys::resolution_factor};
+    SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
+    SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
+    SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
+    SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, Keys::texture_filter};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
-                                                        "texture_sampling"};
+                                                        Keys::texture_sampling};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
-                                                             "delay_game_render_thread_us"};
+                                                             Keys::delay_game_render_thread_us};
 
-    SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, "layout_option"};
-    SwitchableSetting<bool> swap_screen{false, "swap_screen"};
-    SwitchableSetting<bool> upright_screen{false, "upright_screen"};
-    SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{SecondaryDisplayLayout::None,
-                                                                       "secondary_display_layout"};
+    SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, Keys::layout_option};
+    SwitchableSetting<bool> swap_screen{false, Keys::swap_screen};
+    SwitchableSetting<bool> upright_screen{false, Keys::upright_screen};
+    SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{
+        SecondaryDisplayLayout::None, Keys::secondary_display_layout};
+    SwitchableSetting<std::vector<LayoutOption>> layouts_to_cycle{
+        {LayoutOption::Default, LayoutOption::SingleScreen, LayoutOption::LargeScreen,
+         LayoutOption::SideScreen,
+#ifndef ANDROID
+         LayoutOption::SeparateWindows,
+#endif
+         LayoutOption::HybridScreen, LayoutOption::CustomLayout},
+        Keys::layouts_to_cycle};
     SwitchableSetting<float, true> large_screen_proportion{4.f, 1.f, 16.f,
-                                                           "large_screen_proportion"};
-    SwitchableSetting<int> screen_gap{0, "screen_gap"};
+                                                           Keys::large_screen_proportion};
+    SwitchableSetting<int> screen_gap{0, Keys::screen_gap};
     SwitchableSetting<SmallScreenPosition> small_screen_position{SmallScreenPosition::BottomRight,
-                                                                 "small_screen_position"};
-    Setting<u16> custom_top_x{0, "custom_top_x"};
-    Setting<u16> custom_top_y{0, "custom_top_y"};
-    Setting<u16> custom_top_width{800, "custom_top_width"};
-    Setting<u16> custom_top_height{480, "custom_top_height"};
-    Setting<u16> custom_bottom_x{80, "custom_bottom_x"};
-    Setting<u16> custom_bottom_y{500, "custom_bottom_y"};
-    Setting<u16> custom_bottom_width{640, "custom_bottom_width"};
-    Setting<u16> custom_bottom_height{480, "custom_bottom_height"};
-    Setting<u16> custom_second_layer_opacity{100, "custom_second_layer_opacity"};
-    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, "aspect_ratio"};
-    SwitchableSetting<bool> screen_top_stretch{false, "screen_top_stretch"};
-    Setting<u16> screen_top_leftright_padding{0, "screen_top_leftright_padding"};
-    Setting<u16> screen_top_topbottom_padding{0, "screen_top_topbottom_padding"};
-    SwitchableSetting<bool> screen_bottom_stretch{false, "screen_bottom_stretch"};
-    Setting<u16> screen_bottom_leftright_padding{0, "screen_bottom_leftright_padding"};
-    Setting<u16> screen_bottom_topbottom_padding{0, "screen_bottom_topbottom_padding"};
+                                                                 Keys::small_screen_position};
+    Setting<u16> custom_top_x{0, Keys::custom_top_x};
+    Setting<u16> custom_top_y{0, Keys::custom_top_y};
+    Setting<u16> custom_top_width{800, Keys::custom_top_width};
+    Setting<u16> custom_top_height{480, Keys::custom_top_height};
+    Setting<u16> custom_bottom_x{80, Keys::custom_bottom_x};
+    Setting<u16> custom_bottom_y{500, Keys::custom_bottom_y};
+    Setting<u16> custom_bottom_width{640, Keys::custom_bottom_width};
+    Setting<u16> custom_bottom_height{480, Keys::custom_bottom_height};
+    Setting<u16> custom_second_layer_opacity{100, Keys::custom_second_layer_opacity};
+    SwitchableSetting<AspectRatio> aspect_ratio{AspectRatio::Default, Keys::aspect_ratio};
+    SwitchableSetting<bool> screen_top_stretch{false, Keys::screen_top_stretch};
+    Setting<u16> screen_top_leftright_padding{0, Keys::screen_top_leftright_padding};
+    Setting<u16> screen_top_topbottom_padding{0, Keys::screen_top_topbottom_padding};
+    SwitchableSetting<bool> screen_bottom_stretch{false, Keys::screen_bottom_stretch};
+    Setting<u16> screen_bottom_leftright_padding{0, Keys::screen_bottom_leftright_padding};
+    Setting<u16> screen_bottom_topbottom_padding{0, Keys::screen_bottom_topbottom_padding};
 
     SwitchableSetting<PortraitLayoutOption> portrait_layout_option{
-        PortraitLayoutOption::PortraitTopFullWidth, "portrait_layout_option"};
-    Setting<u16> custom_portrait_top_x{0, "custom_portrait_top_x"};
-    Setting<u16> custom_portrait_top_y{0, "custom_portrait_top_y"};
-    Setting<u16> custom_portrait_top_width{800, "custom_portrait_top_width"};
-    Setting<u16> custom_portrait_top_height{480, "custom_portrait_top_height"};
-    Setting<u16> custom_portrait_bottom_x{80, "custom_portrait_bottom_x"};
-    Setting<u16> custom_portrait_bottom_y{500, "custom_portrait_bottom_y"};
-    Setting<u16> custom_portrait_bottom_width{640, "custom_portrait_bottom_width"};
-    Setting<u16> custom_portrait_bottom_height{480, "custom_portrait_bottom_height"};
+        PortraitLayoutOption::PortraitTopFullWidth, Keys::portrait_layout_option};
+    Setting<u16> custom_portrait_top_x{0, Keys::custom_portrait_top_x};
+    Setting<u16> custom_portrait_top_y{0, Keys::custom_portrait_top_y};
+    Setting<u16> custom_portrait_top_width{800, Keys::custom_portrait_top_width};
+    Setting<u16> custom_portrait_top_height{480, Keys::custom_portrait_top_height};
+    Setting<u16> custom_portrait_bottom_x{80, Keys::custom_portrait_bottom_x};
+    Setting<u16> custom_portrait_bottom_y{500, Keys::custom_portrait_bottom_y};
+    Setting<u16> custom_portrait_bottom_width{640, Keys::custom_portrait_bottom_width};
+    Setting<u16> custom_portrait_bottom_height{480, Keys::custom_portrait_bottom_height};
 
-    SwitchableSetting<float> bg_red{0.f, "bg_red"};
-    SwitchableSetting<float> bg_green{0.f, "bg_green"};
-    SwitchableSetting<float> bg_blue{0.f, "bg_blue"};
+    SwitchableSetting<float> bg_red{0.f, Keys::bg_red};
+    SwitchableSetting<float> bg_green{0.f, Keys::bg_green};
+    SwitchableSetting<float> bg_blue{0.f, Keys::bg_blue};
 
-    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, "render_3d"};
-    SwitchableSetting<u32> factor_3d{0, "factor_3d"};
-    SwitchableSetting<bool> swap_eyes_3d{false, "swap_eyes_3d"};
+    SwitchableSetting<StereoRenderOption> render_3d{StereoRenderOption::Off, Keys::render_3d};
+    SwitchableSetting<u32> factor_3d{0, Keys::factor_3d};
+    SwitchableSetting<bool> swap_eyes_3d{false, Keys::swap_eyes_3d};
 
     SwitchableSetting<StereoWhichDisplay> render_3d_which_display{StereoWhichDisplay::None,
-                                                                  "render_3d_which_display"};
+                                                                  Keys::render_3d_which_display};
     SwitchableSetting<MonoRenderOption> mono_render_option{MonoRenderOption::LeftEye,
-                                                           "mono_render_option"};
+                                                           Keys::mono_render_option};
 
-    Setting<u32> cardboard_screen_size{85, "cardboard_screen_size"};
-    Setting<s32> cardboard_x_shift{0, "cardboard_x_shift"};
-    Setting<s32> cardboard_y_shift{0, "cardboard_y_shift"};
+    Setting<u32> cardboard_screen_size{85, Keys::cardboard_screen_size};
+    Setting<s32> cardboard_x_shift{0, Keys::cardboard_x_shift};
+    Setting<s32> cardboard_y_shift{0, Keys::cardboard_y_shift};
 
-    SwitchableSetting<bool> filter_mode{true, "filter_mode"};
-    SwitchableSetting<std::string> pp_shader_name{"None (builtin)", "pp_shader_name"};
-    SwitchableSetting<std::string> anaglyph_shader_name{"Dubois (builtin)", "anaglyph_shader_name"};
+    SwitchableSetting<bool> filter_mode{true, Keys::filter_mode};
+    SwitchableSetting<std::string> pp_shader_name{"None (builtin)", Keys::pp_shader_name};
+    SwitchableSetting<std::string> anaglyph_shader_name{"Dubois (builtin)",
+                                                        Keys::anaglyph_shader_name};
 
-    SwitchableSetting<bool> dump_textures{false, "dump_textures"};
-    SwitchableSetting<bool> custom_textures{false, "custom_textures"};
-    SwitchableSetting<bool> preload_textures{false, "preload_textures"};
-    SwitchableSetting<bool> async_custom_loading{true, "async_custom_loading"};
-    SwitchableSetting<bool> disable_right_eye_render{false, "disable_right_eye_render"};
+    SwitchableSetting<bool> dump_textures{false, Keys::dump_textures};
+    SwitchableSetting<bool> custom_textures{false, Keys::custom_textures};
+    SwitchableSetting<bool> preload_textures{false, Keys::preload_textures};
+    SwitchableSetting<bool> async_custom_loading{true, Keys::async_custom_loading};
+    SwitchableSetting<bool> disable_right_eye_render{false, Keys::disable_right_eye_render};
 
     // Audio
     bool audio_muted;
-    SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, "audio_emulation"};
-    SwitchableSetting<bool> enable_audio_stretching{true, "enable_audio_stretching"};
-    SwitchableSetting<bool> enable_realtime_audio{false, "enable_realtime_audio"};
-    SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, "volume"};
-    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, "output_type"};
-    Setting<std::string> output_device{"Auto", "output_device"};
-    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, "input_type"};
-    Setting<std::string> input_device{"Auto", "input_device"};
+    SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, Keys::audio_emulation};
+    SwitchableSetting<bool> enable_audio_stretching{true, Keys::enable_audio_stretching};
+    SwitchableSetting<bool> enable_realtime_audio{false, Keys::enable_realtime_audio};
+    SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, Keys::volume};
+    Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, Keys::output_type};
+    Setting<std::string> output_device{"Auto", Keys::output_device};
+    Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, Keys::input_type};
+    Setting<std::string> input_device{"Auto", Keys::input_device};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;
@@ -616,15 +632,16 @@ struct Values {
     // Debugging
     bool record_frame_times;
     std::unordered_map<std::string, bool> lle_modules;
-    Setting<bool> delay_start_for_lle_modules{true, "delay_start_for_lle_modules"};
-    Setting<bool> use_gdbstub{false, "use_gdbstub"};
-    Setting<u16> gdbstub_port{24689, "gdbstub_port"};
-    Setting<bool> instant_debug_log{false, "instant_debug_log"};
-    Setting<bool> enable_rpc_server{false, "enable_rpc_server"};
+    Setting<bool> delay_start_for_lle_modules{true, Keys::delay_start_for_lle_modules};
+    Setting<bool> use_gdbstub{false, Keys::use_gdbstub};
+    Setting<u16> gdbstub_port{24689, Keys::gdbstub_port};
+    Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
+    Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
+    Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
 
     // Miscellaneous
-    Setting<std::string> log_filter{"*:Info", "log_filter"};
-    Setting<std::string> log_regex_filter{"", "log_regex_filter"};
+    Setting<std::string> log_filter{"*:Info", Keys::log_filter};
+    Setting<std::string> log_regex_filter{"", Keys::log_regex_filter};
 
     // Video Dumping
     std::string output_format;

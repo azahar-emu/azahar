@@ -267,6 +267,7 @@ private:
         DaemonStatus::Idle,
         DaemonStatus::Idle,
     };
+    std::array<u32, 4> daemon_suspend_counter{};
     ExclusiveState exclusive_state = ExclusiveState::None;
     u32 scan_interval = DEFAULT_SCAN_INTERVAL;
     u32 retry_interval = DEFAULT_RETRY_INTERVAL;
@@ -279,6 +280,7 @@ private:
         ar & daemon_bit_mask;
         ar & default_daemon_bit_mask;
         ar & daemon_status;
+        ar & daemon_suspend_counter;
         ar & exclusive_state;
         ar & scan_interval;
         ar & retry_interval;

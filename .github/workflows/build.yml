@@ -23,12 +23,12 @@ jobs:
           name: source
           path: artifacts/
 
-  linux:
+  linux-x86_64:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        target: ["appimage", "appimage-wayland", "fresh"]
+        target: ["appimage", "appimage-wayland", "gcc-nopch"]
     container:
       image: opensauce04/azahar-build-environment:latest
       options: -u 1001
@@ -49,9 +49,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
+          key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.target }}-
+            ${{ github.job }}-${{ matrix.target }}-
       - name: Build
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: ./.ci/linux.sh
@@ -68,11 +68,40 @@ jobs:
         if: ${{ contains(matrix.target, 'appimage') && env.SHOULD_RUN == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.OS }}-${{ env.TARGET }}
+          name: ${{ github.job }}-${{ matrix.target }}
           path: artifacts/
 
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["clang", "gcc-nopch"]
+    container:
+      image: opensauce04/azahar-build-environment:latest
+      options: -u 1001
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: time_macros
+      OS: linux
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
+          restore-keys: |
+            ${{ github.job }}-${{ matrix.target }}-
+      - name: Build
+        run: ./.ci/linux.sh
+
   macos:
-    runs-on: ${{ (matrix.target == 'x86_64' && 'macos-15-intel') || 'macos-26' }}
+    runs-on: ${{ (matrix.target == 'x86_64' && 'macos-26-intel') || 'macos-26' }}
     strategy:
       fail-fast: false
       matrix:

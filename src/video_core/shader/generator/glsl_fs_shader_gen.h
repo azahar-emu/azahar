@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,7 @@ namespace Pica::Shader::Generator::GLSL {
 
 class FragmentModule {
 public:
-    explicit FragmentModule(const FSConfig& config, const Profile& profile);
+    explicit FragmentModule(const FSConfig& config, const UserConfig& user, const Profile& profile);
     ~FragmentModule();
 
     /// Emits GLSL source corresponding to the provided pica fragment configuration
@@ -83,7 +83,8 @@ private:
     void DefineTexUnitSampler(u32 i);
 
 private:
-    const FSConfig& config;
+    FSConfig config;
+    const UserConfig& user;
     const Profile& profile;
     std::string out;
     bool use_blend_fallback{};
@@ -97,6 +98,7 @@ private:
  *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
  * @returns String of the shader source code
  */
-std::string GenerateFragmentShader(const FSConfig& config, const Profile& profile);
+std::string GenerateFragmentShader(const FSConfig& config, const UserConfig& user,
+                                   const Profile& profile);
 
 } // namespace Pica::Shader::Generator::GLSL

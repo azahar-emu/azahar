@@ -43,11 +43,7 @@ if (APPLE)
     endif()
 endif()
 
-target_link_libraries(citra_meta PRIVATE fmt)
-
-if (ENABLE_SDL2_FRONTEND)
-    target_link_libraries(citra_meta PRIVATE citra_sdl)
-endif()
+target_link_libraries(citra_meta PRIVATE citra_common fmt)
 
 if (ENABLE_QT)
     target_link_libraries(citra_meta PRIVATE citra_qt)

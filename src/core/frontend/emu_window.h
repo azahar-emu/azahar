@@ -27,6 +27,7 @@ enum class WindowSystemType : u8 {
     MacOS,
     X11,
     Wayland,
+    LibRetro,
 };
 
 struct Frame;
@@ -256,6 +257,33 @@ public:
     std::unique_ptr<TextureMailbox> mailbox = nullptr;
     bool isSecondary() const {
         return is_secondary;
+    }
+
+    /**
+     * Requests for a frontend to setup a framebuffer.
+     */
+    virtual void SetupFramebuffer() {}
+
+    /// Flags that the framebuffer should be cleared.
+    virtual bool NeedsClearing() const {
+        return true;
+    }
+
+    /// Cursor state for rendering a touch crosshair on the bottom screen.
+    struct CursorInfo {
+        bool visible = false;
+
+        /// Cursor position in bottom-screen-local pixel coordinates.
+        /// Origin is the top-left corner of the bottom screen, with x ranging
+        /// from 0 to bottom_screen.GetWidth() and y from 0 to
+        /// bottom_screen.GetHeight().
+        float projected_x = 0;
+        float projected_y = 0;
+    };
+
+    /// Returns the current cursor state. Override to provide cursor position.
+    virtual CursorInfo GetCursorInfo() const {
+        return {};
     }
 
     Settings::StereoRenderOption get3DMode() const;

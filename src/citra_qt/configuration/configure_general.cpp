@@ -163,7 +163,7 @@ void ConfigureGeneral::ResetDefaults() {
 
     FileUtil::Delete(FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "qt-config.ini");
     FileUtil::DeleteDirRecursively(FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) + "custom");
-    std::exit(0);
+    qApp->quit();
 }
 
 void ConfigureGeneral::ApplyConfiguration() {

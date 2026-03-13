@@ -58,7 +58,6 @@
     <string name="search_recently_added">Добавленные недавно</string>
     <string name="search_installed">Установленные</string>
 
-    <!-- Input related strings -->
     <string name="controller_circlepad">Джойстик</string>
     <string name="controller_c">C-стик</string>
     <string name="controller_hotkeys">Горячие клавиши</string>
@@ -304,8 +303,6 @@
     <string name="fatal_error_message">Возникла критическая ошибка. Откройте лог для получения информации.\nВозобновление эмуляции может привести к сбоям и вылетам.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Подготовка шейдеров</string>
-    <string name="building_shaders">Построение шейдеров</string>
-
     <!-- Cheats -->
     <string name="cheats">Чит-коды</string>
     <string name="cheats_add">Добавить чит-код</string>

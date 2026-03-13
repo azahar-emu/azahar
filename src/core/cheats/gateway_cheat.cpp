@@ -488,12 +488,14 @@ std::vector<std::shared_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string
     std::vector<std::shared_ptr<CheatBase>> cheats;
 
     if (!FileUtil::Exists(filepath)) {
+        LOG_INFO(Core_Cheats, "GatewayCheat::LoadFile failed, file doesn't exist: {}", filepath);
         return cheats;
     }
 
     boost::iostreams::stream<boost::iostreams::file_descriptor_source> file;
     FileUtil::OpenFStream<std::ios_base::in>(file, filepath);
     if (!file.is_open()) {
+        LOG_INFO(Core_Cheats, "GatewayCheat::LoadFile failed, file failed to open: {}", filepath);
         return cheats;
     }
 

@@ -67,7 +67,7 @@
     <string name="notification_warning">Ne pas autoriser les notifications ?</string>
     <string name="notification_warning_description">Azahar ne pourra pas vous avertir des informations importantes.</string>
     <string name="filesystem_permission_warning">Autorisations manquantes</string>
-    <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" avant de continuer.</string>
+    <string name="filesystem_permission_warning_description">Azahar a besoin de l\'autorisation de gérer les fichiers de cet appareil afin de stocker et gérer ses données.\n\nVeuillez accorder l\'autorisation \"Accès à tous les fichiers\" pour continuer.</string>
     <string name="camera_permission">Caméra</string>
     <string name="camera_permission_description">Accorder l\'autorisation de la caméra ci-dessous pour émuler la caméra 3DS.</string>
     <string name="microphone_permission">Microphone</string>
@@ -108,9 +108,17 @@
     <string name="search_installed">Installé</string>
 
     <!-- Input related strings -->
+    <string name="controller_auto_map">Assigner les boutons de la manette automatiquement</string>
+    <string name="controller_auto_map_description">Applique un assignement standard de manette pour tous les boutons et axes</string>
+    <string name="auto_map_prompt">Appuyez sur ce bouton de votre manette !</string>
+    <string name="auto_map_image_description">Les quatre boutons situés à droite de la 3DS avec le bouton A surligné</string>
+    <string name="controller_clear_all">Réinitialiser toutes les assignations de touche</string>
+    <string name="controller_clear_all_confirm">Cela effacera toutes les assignations de touche de manette actuelles.</string>
     <string name="controller_circlepad">Pad circulaire</string>
     <string name="controller_c">Stick C</string>
     <string name="controller_hotkeys">Raccourcis</string>
+    <string name="controller_hotkeys_description">Si la touche \"Activer les raccourcis\" est assignée, celle-ci doit être pressée en plus de tout autre touche de raccourci.</string>
+    <string name="controller_hotkey_enable_button">Activer les raccourcis</string>
     <string name="controller_triggers">Gachettes</string>
     <string name="controller_trigger">Déclencheur</string>
     <string name="controller_dpad">Manette +</string>
@@ -229,9 +237,11 @@
     <string name="async_shaders_description">Compile les shaders en arrière-plan pour réduire les saccades pendant le jeu. Lorsqu\'il est activé, prévoyez des problèmes graphiques temporaires.</string>
     <string name="linear_filtering">Filtrage linéaire</string>
     <string name="linear_filtering_description">Active le filtrage linéaire, qui améliorera le lissage graphique du jeu.</string>
+    <string name="use_integer_scaling">Redimensionnement par nombre entier</string>
+    <string name="use_integer_scaling_description">Redimensionne les écrans avec un multiple entier de la taille de l\'écran original de la 3DS. Pour les dispositions avec deux tailles d\'écrans différentes, c\'est l\'écran le plus large qui est redimensionné par un multiple entier.</string>
     <string name="texture_filter_name">Filtrage des textures</string>
     <string name="texture_filter_description">Améliore l\'aspect visuel des applications en appliquant un filtre aux textures. Les filtres pris en charge sont Anime4K Ultrafast, Bicubique, ScaleForce, xBRZ freescale et MMPX.</string>
-    <string name="delay_render_thread">Retarder le thread de rendu du jeu</string>
+    <string name="delay_render_thread">Retarder le fil de rendu du jeu</string>
     <string name="delay_render_thread_description">Délai le thread de rendu du jeu lorsqu\'il soumet des données au GPU. Cela permet de résoudre les problèmes de performance dans les (très rares) applications avec des fréquences d\'images dynamiques.</string>
     <string name="advanced">Avancé</string>
     <string name="texture_sampling_name">Échantillonnage de texture</string>
@@ -315,10 +325,10 @@
     <string name="hw_shaders_description">Utilise le hardware pour émuler les shaders de la 3DS. Lorsqu\'il est activé, la performance des jeux sera améliorée de manière significative.</string>
     <string name="cpu_clock_speed">Fréquence d\'horloge du CPU</string>
     <string name="vsync">Activer la synchronisation verticale (VSync)</string>
-    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil. Peut rajouter de la latence d\'entrée mais peut réduire le tearing dans certains cas.</string>
+    <string name="vsync_description">Synchronise la fréquence d\'images du jeu avec la fréquence de rafraîchissement de votre appareil. Peut rajouter de la latence d\'entrée mais peut réduire le déchirement d\'écran dans certains cas.</string>
     <string name="renderer_debug">Rendu de débogage</string>
     <string name="renderer_debug_description">Enregistre des informations de débogage supplémentaires liées aux graphiques. Lorsqu\'il est activé, les performances du jeu seront significativement réduites.</string>
-    <string name="instant_debug_log">Vider la sortie des logs sur chaque message</string>
+    <string name="instant_debug_log">Vider la sortie des logs à chaque message</string>
     <string name="instant_debug_log_description">Enregistre immédiatement le log de débogage dans un fichier. A utiliser si Azahar se plante et que la sortie du journal est coupée.</string>
     <string name="delay_start_lle_modules">Démarrage différé avec les modules LLE</string>
     <string name="delay_start_lle_modules_description">Retarde le démarrage de l\'application lorsque les modules LLE sont activés.</string>
@@ -326,6 +336,8 @@
     <string name="deterministic_async_operations_description">Rend les opérations asynchrones déterministes pour le débogage. L\'activation de cette fonction peut entraîner des blocages.</string>
     <string name="enable_rpc_server">Activer le serveur RPC</string>
     <string name="enable_rpc_server_desc">Active le serveur RPC sur le port 45987. Cela permet de lire/écrire à distance la mémoire invitée.</string>
+    <string name="toggle_unique_data_console_type">Basculer le type de console des données uniques</string>
+    <string name="toggle_unique_data_console_type_desc">Change le type de console des données uniques (Old 3DS &#8596; New 3DS) afin de pouvoir télécharger le firmware système opposé depuis les paramètres de la console.</string>
     <string name="shader_jit">Activer Shader JIT</string>
     <string name="shader_jit_description">Utilisez le moteur JIT à la place de l\'interpréteur pour l\'émulation des shaders logiciels.</string>
 
@@ -336,6 +348,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Paysage inversé</string>
     <string name="layout_screen_orientation_portrait">Portait</string>
     <string name="layout_screen_orientation_portrait_reverse">Portait inversé</string>
+    <string name="layouts_to_cycle">Dispositions à alterner</string>
+    <string name="layouts_to_cycle_description">Quelles dispositions sont alternées par le raccourci Alterner les dispositions</string>
     <string name="aspect_ratio_default">Par défaut</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -473,7 +487,7 @@
     <string name="emulation_custom_layout_y">Position Y</string>
     <string name="emulation_custom_layout_width">Largeur</string>
     <string name="emulation_custom_layout_height">Hauteur</string>
-    <string name="emulation_cycle_landscape_layouts">Dispositions de cycle</string>
+    <string name="emulation_cycle_landscape_layouts">Dispositions à alterner</string>
     <string name="emulation_swap_screens">Permuter les écrans</string>
     <string name="emulation_rotate_upright">Tourner l\'écran à la verticale</string>
     <string name="emulation_touch_overlay_reset">Réinitialiser l\'overlay</string>
@@ -550,7 +564,7 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Préparation des shaders</string>
-    <string name="building_shaders">Construction des shaders</string>
+    <string name="building_shaders">Construction %s</string>
 
     <!-- About Game Dialog -->
     <string name="play">Jouer</string>

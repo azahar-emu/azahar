@@ -33,6 +33,8 @@
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/game_list_worker.h"
 #include "citra_qt/uisettings.h"
+#include "common/common_paths.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -606,6 +608,36 @@ void ForEachOpenGLCacheFile(u64 program_id, auto func) {
         QFile file{QString::fromStdString(path)};
         func(file);
     }
+    const std::string path =
+        fmt::format("{}opengl/transferable/{:016X}.bin",
+                    FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir), program_id);
+    QFile file{QString::fromStdString(path)};
+    func(file);
+}
+#endif
+
+#ifdef ENABLE_VULKAN
+void ForEachVulkanCacheFile(u64 program_id, auto func) {
+    for (const std::string_view cache_type : {"vs", "fs", "gs", "pl"}) {
+        const std::string path = fmt::format("{}vulkan/transferable/{:016X}_{}.vkch",
+                                             FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir),
+                                             program_id, cache_type);
+        QFile file{QString::fromStdString(path)};
+        func(file);
+    }
+
+    FileUtil::ForeachDirectoryEntry(
+        nullptr,
+        fmt::format("{}vulkan/pipeline", FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir)),
+        [program_id, &func]([[maybe_unused]] u64* num_entries_out, const std::string& directory,
+                            const std::string& virtual_name) {
+            if (virtual_name.starts_with(fmt::format("{:016X}", program_id))) {
+                QFile file{QString::fromStdString(directory + DIR_SEP + virtual_name)};
+                func(file);
+            }
+
+            return true;
+        });
 }
 #endif
 
@@ -642,6 +674,10 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     QAction* delete_opengl_disk_shader_cache =
         shader_menu->addAction(tr("Delete OpenGL Shader Cache"));
 #endif
+#ifdef ENABLE_VULKAN
+    QAction* delete_vulkan_disk_shader_cache =
+        shader_menu->addAction(tr("Delete Vulkan Shader Cache"));
+#endif
 
     QMenu* uninstall_menu = context_menu.addMenu(tr("Uninstall"));
     QAction* uninstall_all = uninstall_menu->addAction(tr("Everything"));
@@ -676,6 +712,12 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
     bool opengl_cache_exists = false;
     ForEachOpenGLCacheFile(
         program_id, [&opengl_cache_exists](QFile& file) { opengl_cache_exists |= file.exists(); });
+#endif
+
+#ifdef ENABLE_VULKAN
+    bool vulkan_cache_exists = false;
+    ForEachVulkanCacheFile(
+        program_id, [&vulkan_cache_exists](QFile& file) { vulkan_cache_exists |= file.exists(); });
 #endif
 
     favorite->setVisible(program_id != 0);
@@ -719,6 +761,10 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
 
 #ifdef ENABLE_OPENGL
     delete_opengl_disk_shader_cache->setEnabled(opengl_cache_exists);
+#endif
+
+#ifdef ENABLE_VULKAN
+    delete_vulkan_disk_shader_cache->setEnabled(vulkan_cache_exists);
 #endif
 
     uninstall_all->setEnabled(is_installed || has_update || has_dlc);
@@ -799,6 +845,11 @@ void GameList::AddGamePopup(QMenu& context_menu, const QString& path, const QStr
 #ifdef ENABLE_OPENGL
     connect(delete_opengl_disk_shader_cache, &QAction::triggered, this, [program_id] {
         ForEachOpenGLCacheFile(program_id, [](QFile& file) { file.remove(); });
+    });
+#endif
+#ifdef ENABLE_VULKAN
+    connect(delete_vulkan_disk_shader_cache, &QAction::triggered, this, [program_id] {
+        ForEachVulkanCacheFile(program_id, [](QFile& file) { file.remove(); });
     });
 #endif
     connect(uninstall_all, &QAction::triggered, this, [=, this] {
