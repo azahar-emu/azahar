@@ -391,7 +391,7 @@
     <string name="learn_more">Learn More</string>
     <string name="close">Close</string>
     <string name="reset_to_default">Reset to Default</string>
-    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartidges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
+    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartridges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
     <string name="option_default">Default</string>
     <string name="none">None</string>
     <string name="auto">Auto</string>
