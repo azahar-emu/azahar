@@ -346,7 +346,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             UISettings::values.show_console = true;
             Debugger::ToggleConsole();
             Common::Log::Filter filter;
-            filter.ParseFilterString("*:Warning");
+            filter.ParseFilterString("*:Error");
             Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
@@ -371,7 +371,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             UISettings::values.show_console = true;
             Debugger::ToggleConsole();
             Common::Log::Filter filter;
-            filter.ParseFilterString("*:Warning");
+            filter.ParseFilterString("*:Error");
             Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
@@ -3362,7 +3362,7 @@ void GMainWindow::OnCompressFileCLI() {
 
         for (const QString& filepath : filepaths) {
             QFileInfo filepathInfo(filepath);
-            QTextStream(stdout) << "Compressing " << filepathInfo.fileName() << "\n";
+            QTextStream(stdout) << "Compressing \"" << filepathInfo.fileName() << "\"...\n";
             std::string in_path = filepath.toStdString();
 
             // Identify file type
@@ -3510,7 +3510,7 @@ void GMainWindow::OnDecompressFileCLI() {
 
         for (const QString& filepath : filepaths) {
             QFileInfo filepathInfo(filepath);
-            QTextStream(stdout) << "Decompressing " << filepathInfo.fileName() << "\n";
+            QTextStream(stdout) << "Decompressing \"" << filepathInfo.fileName() << "\"...\n";
             std::string in_path = filepath.toStdString();
 
             // Identify file type
