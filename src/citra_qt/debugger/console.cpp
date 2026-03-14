@@ -25,10 +25,13 @@ void ToggleConsole() {
 #ifdef _WIN32
     FILE* temp;
     if (UISettings::values.show_console) {
-        BOOL alloc_console_res = AllocConsole();
         DWORD last_error = 0;
+        BOOL alloc_console_res = AttachConsole(ATTACH_PARENT_PROCESS);
         if (!alloc_console_res) {
-            last_error = GetLastError();
+            alloc_console_res = AllocConsole();
+            if (!alloc_console_res) {
+                last_error = GetLastError();
+            }
         }
         // If the windows debugger already opened a console, calling AllocConsole again
         // will cause ERROR_ACCESS_DENIED. If that's the case assume a console is open.
