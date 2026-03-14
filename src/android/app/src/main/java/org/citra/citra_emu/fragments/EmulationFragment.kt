@@ -854,7 +854,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity.openFileLauncher.launch(false)
+                    emulationActivity.openAmiiboFileLauncher.launch(false)
                     true
                 }
 
