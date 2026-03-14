@@ -43,13 +43,19 @@ void ConfigureHotkeys::EmitHotkeysChanged() {
     emit HotkeysChanged(GetUsedKeyList());
 }
 
-QList<QKeySequence> ConfigureHotkeys::GetUsedKeyList() const {
-    QList<QKeySequence> list;
+QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureHotkeys::GetUsedKeyList() const {
+    QMap<QKeySequence, ConfigureInput::InputBinding> list;
     for (int r = 0; r < model->rowCount(); r++) {
         QStandardItem* parent = model->item(r, 0);
         for (int r2 = 0; r2 < parent->rowCount(); r2++) {
             QStandardItem* keyseq = parent->child(r2, 1);
-            list << QKeySequence::fromString(keyseq->text(), QKeySequence::NativeText);
+            auto seq = QKeySequence::fromString(keyseq->text(), QKeySequence::NativeText);
+            if (seq.count() == 1 &&
+                seq[0].keyboardModifiers() == Qt::KeyboardModifier::NoModifier) {
+                auto binding = ConfigureInput::InputBinding(
+                    "Hotkey", parent->child(r2, 0)->text().toStdString(), r2);
+                list[seq] = binding;
+            }
         }
     }
     return list;
@@ -75,7 +81,8 @@ void ConfigureHotkeys::Populate(const HotkeyRegistry& registry) {
     ui->hotkey_list->expandAll();
 }
 
-void ConfigureHotkeys::OnInputKeysChanged(QList<QKeySequence> new_key_list) {
+void ConfigureHotkeys::OnInputKeysChanged(
+    QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list) {
     input_keys_list = new_key_list;
 }
 
@@ -96,7 +103,7 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     if (return_code == QDialog::Rejected || key_sequence.isEmpty()) {
         return;
     }
-    const auto [key_sequence_used, used_action] = IsUsedKey(key_sequence);
+    const auto [key_sequence_used, current_binding] = IsUsedKey(key_sequence);
 
     // Check for turbo/per-game speed conflict. Needed to prevent the user from binding both hotkeys
     // to the same action. Which cuases problems resetting the frame limit.to the inititla value.
@@ -131,22 +138,43 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     }
 
     if (key_sequence_used && key_sequence != QKeySequence(previous_key.toString())) {
-        QMessageBox::warning(
-            this, tr("Conflicting Key Sequence"),
-            tr("The entered key sequence is already assigned to: %1").arg(used_action));
-    } else {
-        model->setData(index, key_sequence.toString(QKeySequence::NativeText));
-        EmitHotkeysChanged();
+        auto response =
+            QMessageBox::question(this, QStringLiteral("Duplicate mapping"),
+                                  QString::fromStdString("This will clear the mapping for " +
+                                                         current_binding.name + ". Proceed?"),
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        if (response == QMessageBox::No) {
+            return;
+        } else {
+            if (current_binding.binding_type == "Hotkey") {
+                model->setData(index.sibling(current_binding.index, hotkey_column),
+                               QStringLiteral(""));
+            } else {
+                emit ClearInputBinding(current_binding);
+            }
+        }
     }
+
+    model->setData(index, key_sequence.toString(QKeySequence::NativeText));
+    EmitHotkeysChanged();
 }
 
-std::pair<bool, QString> ConfigureHotkeys::IsUsedKey(QKeySequence key_sequence) const {
+void ConfigureHotkeys::OnClearBinding(ConfigureInput::InputBinding hotkey_to_clear) {
+    const auto index = ui->hotkey_list->currentIndex();
+    if (hotkey_to_clear.binding_type == "Hotkey") {
+        model->setData(index.sibling(hotkey_to_clear.index, hotkey_column), QStringLiteral(""));
+    }
+    EmitHotkeysChanged();
+}
+
+std::pair<bool, ConfigureInput::InputBinding> ConfigureHotkeys::IsUsedKey(
+    QKeySequence key_sequence) const {
     if (key_sequence == QKeySequence::fromString(QStringLiteral(""), QKeySequence::NativeText)) {
-        return std::make_pair(false, QString());
+        return std::make_pair(false, ConfigureInput::InputBinding{"", "", -1});
     }
 
     if (input_keys_list.contains(key_sequence)) {
-        return std::make_pair(true, tr("A 3ds button"));
+        return std::make_pair(true, input_keys_list[key_sequence]);
     }
 
     for (int r = 0; r < model->rowCount(); ++r) {
@@ -158,12 +186,14 @@ std::pair<bool, QString> ConfigureHotkeys::IsUsedKey(QKeySequence key_sequence) 
             const auto key_seq = QKeySequence::fromString(key_seq_str, QKeySequence::NativeText);
 
             if (key_sequence == key_seq) {
-                return std::make_pair(true, parent->child(r2, 0)->text());
+                return std::make_pair(
+                    true, ConfigureInput::InputBinding{
+                              "Hotkey", parent->child(r2, 0)->text().toStdString(), r2});
             }
         }
     }
 
-    return std::make_pair(false, QString());
+    return std::make_pair(false, ConfigureInput::InputBinding{"", "", -1});
 }
 
 void ConfigureHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
@@ -197,6 +227,7 @@ void ConfigureHotkeys::RestoreDefaults() {
                 ->setText(QtConfig::default_hotkeys[r2].shortcut.keyseq);
         }
     }
+    EmitHotkeysChanged();
 }
 
 void ConfigureHotkeys::ClearAll() {
@@ -207,6 +238,7 @@ void ConfigureHotkeys::ClearAll() {
             model->item(r, 0)->child(r2, hotkey_column)->setText(QString{});
         }
     }
+    EmitHotkeysChanged();
 }
 
 void ConfigureHotkeys::PopupContextMenu(const QPoint& menu_location) {
@@ -236,10 +268,11 @@ void ConfigureHotkeys::RestoreHotkey(QModelIndex index) {
     if (key_sequence_used && default_key_sequence != QKeySequence(model->data(index).toString())) {
         QMessageBox::warning(
             this, tr("Conflicting Key Sequence"),
-            tr("The default key sequence is already assigned to: %1").arg(used_action));
+            tr("The default key sequence is already assigned to: %1").arg(used_action.name));
     } else {
         model->setData(index, default_key_sequence.toString(QKeySequence::NativeText));
     }
+    EmitHotkeysChanged();
 }
 
 void ConfigureHotkeys::RetranslateUI() {
