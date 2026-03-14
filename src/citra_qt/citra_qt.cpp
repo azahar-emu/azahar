@@ -87,6 +87,7 @@
 #include "common/literals.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
+#include "common/logging/filter.h"
 #include "common/memory_detect.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
@@ -342,6 +343,11 @@ GMainWindow::GMainWindow(Core::System& system_)
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
+            UISettings::values.show_console = true;
+            Debugger::ToggleConsole();
+            Common::Log::Filter filter;
+            filter.ParseFilterString("*:Warning");
+            Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
                 QFileInfo currPath(args[i]);
@@ -362,6 +368,11 @@ GMainWindow::GMainWindow(Core::System& system_)
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
+            UISettings::values.show_console = true;
+            Debugger::ToggleConsole();
+            Common::Log::Filter filter;
+            filter.ParseFilterString("*:Warning");
+            Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
                 QFileInfo currPath(args[i]);
