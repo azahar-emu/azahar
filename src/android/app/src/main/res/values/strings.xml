@@ -355,6 +355,8 @@
     <string name="delay_start_lle_modules_description">Delays the start of the app when LLE modules are enabled.</string>
     <string name="deterministic_async_operations">Deterministic Async Operations</string>
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
+    <string name="show_version_on_apps_reselected">Show Azahar version when Applications is double-clicked</string>
+    <string name="show_version_on_apps_reselected_description">Provides a quick way to check which build is being used from the home screen, which is helpful for developers.</string>
     <string name="enable_rpc_server">Enable RPC Server</string>
     <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
     <string name="toggle_unique_data_console_type">Toggle unique data console type</string>

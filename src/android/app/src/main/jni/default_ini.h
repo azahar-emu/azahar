@@ -552,6 +552,11 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0: Off (default), 1: On
 )") DECLARE_KEY(deterministic_async_operations) BOOST_HANA_STRING(R"(
 
+# Show Azahar version when the Applications button is double-clicked
+# Provides a quick way to check which build is being used from the home screen, which is helpful for developers.
+# 0: Off (default), 1: On
+)") DECLARE_KEY(show_version_on_apps_reselected) BOOST_HANA_STRING(R"(
+
 # To LLE a service module add "LLE\<module name>=true"
 
 [WebService]

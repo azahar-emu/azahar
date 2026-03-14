@@ -1844,7 +1844,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.DETERMINISTIC_ASYNC_OPERATIONS.defaultValue
                 )
             )
-
+            add(
+                SwitchSetting(
+                    BooleanSetting.SHOW_VERSION_ON_APPS_RESELECTED,
+                    R.string.show_version_on_apps_reselected,
+                    R.string.show_version_on_apps_reselected_description,
+                    BooleanSetting.SHOW_VERSION_ON_APPS_RESELECTED.key,
+                    BooleanSetting.SHOW_VERSION_ON_APPS_RESELECTED.defaultValue
+                )
+            )
         }
     }
 
