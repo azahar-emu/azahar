@@ -219,10 +219,16 @@ object FileUtil {
      */
     @JvmStatic
     fun getFilename(uri: Uri): String {
-        val columns = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
         var filename = ""
         var c: Cursor? = null
         try {
+            if (uri.scheme == "file") {
+                BuildUtil.assertNotGooglePlay()
+                val file = File(uri.path!!);
+                return file.name
+            }
+
+            val columns = arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             c = context.contentResolver.query(
                 uri,
                 columns,
