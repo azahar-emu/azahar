@@ -45,6 +45,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
+import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
@@ -135,7 +136,14 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         setUpNavigation(navHostFragment.navController)
         (binding.navigationView as NavigationBarView).setOnItemReselectedListener {
             when (it.itemId) {
-                R.id.gamesFragment -> gamesViewModel.setShouldScrollToTop(true)
+                R.id.gamesFragment -> {
+                    val showVersionToast = BooleanSetting.SHOW_VERSION_ON_APPS_RESELECTED.boolean
+                    if (showVersionToast) {
+                        Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG)
+                            .show()
+                    }
+                    gamesViewModel.setShouldScrollToTop(true)
+                }
                 R.id.searchFragment -> gamesViewModel.setSearchFocused(true)
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,

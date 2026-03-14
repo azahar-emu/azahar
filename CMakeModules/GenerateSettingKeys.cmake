@@ -234,6 +234,7 @@ if (ANDROID)
         "android_hide_images"
         "screen_orientation"
         "performance_overlay_position"
+        "show_version_on_apps_reselected"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
