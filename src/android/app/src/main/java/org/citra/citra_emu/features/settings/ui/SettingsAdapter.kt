@@ -38,12 +38,15 @@ import org.citra.citra_emu.databinding.ListItemSettingsHeaderBinding
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
+import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
@@ -51,12 +54,14 @@ import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
+import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.viewholder.DateTimeViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.HeaderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.InputBindingSettingViewHolder
+import org.citra.citra_emu.features.settings.ui.viewholder.StringMultiChoiceViewHolder // TODO: Remove and integrate within MultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.MultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.RunnableViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder
@@ -137,6 +142,10 @@ class SettingsAdapter(
                 StringInputViewHolder(ListItemSettingBinding.inflate(inflater), this)
             }
 
+            SettingsItem.TYPE_MULTI_CHOICE, SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
+                StringMultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
+            }
+
             else -> {
                 // TODO: Create an error view since we can't return null now
                 HeaderViewHolder(ListItemSettingsHeaderBinding.inflate(inflater), this)
@@ -198,8 +207,13 @@ class SettingsAdapter(
                     SettingsItem.TYPE_SINGLE_CHOICE -> {
                         (oldItem as SingleChoiceSetting).isEnabled == (newItem as SingleChoiceSetting).isEnabled
                     }
+                    
                     SettingsItem.TYPE_MULTI_CHOICE -> {
                         (oldItem as MultiChoiceSetting).isEnabled == (newItem as MultiChoiceSetting).isEnabled
+                    }
+                    
+                    SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
+                        (oldItem as StringMultiChoiceSetting).isEnabled == (newItem as StringMultiChoiceSetting).isEnabled
                     }
 
                     SettingsItem.TYPE_DATETIME_SETTING -> {
@@ -746,4 +760,80 @@ class SettingsAdapter(
         }
         return BooleanArray(1){false};
     }
+    
+    //TODO: I only added MultiChoice for fleshing out backend, debating whether to remove MultiChoiceSetting and related code for cleaning up
+    override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
+        when (clickedItem) {
+            /*
+            is MultiChoiceSetting -> {
+                val scSetting = clickedItem as? MultiChoiceSetting
+                scSetting?.let {
+                    val setting = when (it.setting) {
+                        is AbstractMultiIntSetting -> {
+                            val value = getValueForMultiChoiceSelection(it, which, is_checked)
+                            if (value !in it.selectedValues) {
+                                it.removeSelectedValue(value)
+                                fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(value)
+                            }
+                        }
+
+                        is AbstractMultiShortSetting -> {
+                            val value = getValueForMultiChoiceSelection(it, which, is_checked).toShort()
+                            if (value !in it.selectedValues.map { it.toShort() }) {
+                                it.removeSelectedValue(value)
+                                fragmentView?.onSettingChanged()
+                            } else {
+                                it.addSelectedValue(value)
+                            }
+                        }
+
+                        else -> throw IllegalStateException("Unrecognized type used for MultiChoiceSetting!")
+                    }
+                    fragmentView?.putSetting(setting as AbstractSetting)
+                    //fragmentView.loadSettingsList()
+                    //closeDialog()
+                }
+            }
+
+             */
+
+            //TODO: Don't fully know how to grab the setting itself for the buttons so I'm adding them to a backing array to be called later
+            //TODO: Likely need to be reimplemented
+            is StringMultiChoiceSetting -> {
+                val mcSetting = clickedItem as? StringMultiChoiceSetting
+                mcSetting?.let {
+                    val setting = when (it.setting) {
+                        is AbstractMultiStringSetting -> {
+                            val value = it.getValueAt(which)
+                            if (value in it.selectedValues && !is_checked) {
+                                Settings.comboSelection.remove(value ?: "")
+                                it.removeSelectedValue(value ?: "")
+                            } else {
+                                Settings.comboSelection.add(value ?: "")
+                                it.addSelectedValue(value ?: "")
+                            }
+                        }
+
+                        is AbstractMultiShortSetting -> {
+                            if (is_checked != it.selectValueIndices[which]) {
+                                Settings.comboSelection.remove((it.getValueAt(which)?.toShort() ?: 1).toString())
+                                it.removeSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
+                            } else {
+                                Settings.comboSelection.add((it.getValueAt(which)?.toShort() ?: 1).toString())
+                                it.addSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
+                            }
+                        }
+
+                        else -> throw IllegalStateException("Unrecognized type used for StringMultiChoiceSetting!")
+                    }
+
+                    fragmentView?.onSettingChanged()
+                    fragmentView?.putSetting(setting as AbstractSetting)
+                    //fragmentView.loadSettingsList()
+                    //closeDialog()
+                }
+            }
+        }
 }
