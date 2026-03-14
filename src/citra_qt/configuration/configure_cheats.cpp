@@ -60,11 +60,11 @@ void ConfigureCheats::LoadCheats() {
             i, 2, new QTableWidgetItem(QString::fromStdString(cheats[i]->GetType())));
         enabled->setProperty("row", static_cast<int>(i));
 
-    #if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
+#if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
         connect(enabled, &QCheckBox::stateChanged, this, &ConfigureCheats::OnCheckChanged);
-    #else
+#else
         connect(enabled, &QCheckBox::checkStateChanged, this, &ConfigureCheats::OnCheckChanged);
-    #endif
+#endif
     }
 }
 
