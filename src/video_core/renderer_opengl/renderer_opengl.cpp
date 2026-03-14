@@ -196,6 +196,7 @@ void RendererOpenGL::PrepareRendertarget() {
 void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
                                      std::unique_ptr<Frontend::TextureMailbox>& mailbox,
                                      bool flipped) {
+    if ((Core::PerfStats::game_frames_updated && Settings::values.use_skip_duplicate_frames.GetValue()) || !Settings::values.use_skip_duplicate_frames.GetValue()){
 
     Frontend::Frame* frame;
     {
@@ -240,6 +241,9 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
         frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         glFlush();
         mailbox->ReleaseRenderFrame(frame);
+    }
+
+        Core::PerfStats::game_frames_updated = false;
     }
 }
 
