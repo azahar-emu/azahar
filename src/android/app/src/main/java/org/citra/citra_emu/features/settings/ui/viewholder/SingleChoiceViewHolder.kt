@@ -36,6 +36,8 @@ class SingleChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Setti
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
         }
+
+        showGlobalButtonIfNeeded(binding.buttonUseGlobal, position)
     }
 
     private fun getTextSetting(): String {

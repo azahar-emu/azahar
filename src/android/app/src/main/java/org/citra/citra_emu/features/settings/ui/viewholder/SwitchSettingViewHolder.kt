@@ -38,6 +38,8 @@ class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter
         val textAlpha = if (setting.isActive) 1f else 0.5f
         binding.textSettingName.alpha = textAlpha
         binding.textSettingDescription.alpha = textAlpha
+
+        showGlobalButtonIfNeeded(binding.buttonUseGlobal, position)
     }
 
     override fun onClick(clicked: View) {

@@ -66,6 +66,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     fun onViewCreated(settingsAdapter: SettingsAdapter) {
         this.settingsAdapter = settingsAdapter
         preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+        settingsAdapter.isPerGame = !TextUtils.isEmpty(gameId)
         loadSettingsList()
     }
 

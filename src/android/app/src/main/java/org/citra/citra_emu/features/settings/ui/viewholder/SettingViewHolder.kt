@@ -37,4 +37,22 @@ abstract class SettingViewHolder<out T: SettingsItem>(itemView: View, protected 
     abstract override fun onClick(clicked: View)
 
     abstract override fun onLongClick(clicked: View): Boolean
+
+    fun showGlobalButtonIfNeeded(buttonUseGlobal: View, position: Int) {
+        setting ?: return
+        // Show "Revert to global" button in Custom Settings if applicable.
+        val settings = adapter.fragmentView.activityView?.settings
+        val showGlobal = settings?.isPerGame() == true
+                && setting?.setting != null
+                && settings.hasOverride(setting!!.setting!!)
+
+        buttonUseGlobal.visibility = if (showGlobal) View.VISIBLE else View.GONE
+        if (showGlobal) {
+            buttonUseGlobal.setOnClickListener {
+                setting?.setting?.let { descriptor ->
+                    adapter.resetSettingToGlobal(descriptor, bindingAdapterPosition)
+                }
+            }
+        }
+    }
 }

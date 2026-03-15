@@ -79,28 +79,65 @@ static const std::array<int, Settings::NativeAnalog::NumAnalogs> default_analogs
 }};
 
 template <>
-void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
-    std::string setting_value =
-        android_config->Get(group, setting.GetLabel(), setting.GetDefault());
+std::string Config::GetSetting(const std::string& group, Settings::Setting<std::string>& setting) {
+    std::string setting_value = setting.GetDefault();
+    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+        setting_value = per_game_config->Get(group, setting.GetLabel(), setting_value);
+    } else if (android_config) {
+        setting_value = android_config->Get(group, setting.GetLabel(), setting_value);
+    }
     if (setting_value.empty()) {
         setting_value = setting.GetDefault();
     }
-    setting = std::move(setting_value);
+    return setting_value;
+}
+
+template <>
+void Config::ReadSetting(const std::string& group, Settings::Setting<std::string>& setting) {
+    setting = std::move(GetSetting(group, setting));
+}
+
+template <>
+bool Config::GetSetting(const std::string& group, Settings::Setting<bool>& setting) {
+    bool value = setting.GetDefault();
+    if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+        value = per_game_config->GetBoolean(group, setting.GetLabel(), value);
+    } else if (android_config) {
+        value = android_config->GetBoolean(group, setting.GetLabel(), value);
+    }
+    return value;
 }
 
 template <>
 void Config::ReadSetting(const std::string& group, Settings::Setting<bool>& setting) {
-    setting = android_config->GetBoolean(group, setting.GetLabel(), setting.GetDefault());
+    setting = GetSetting(group, setting);
+}
+
+//TODO: figure out why ranged isn't being used
+template <typename Type, bool ranged>
+Type Config::GetSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
+    if constexpr (std::is_floating_point_v<Type>) {
+        double value = static_cast<double>(setting.GetDefault());
+        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+            value = per_game_config->GetReal(group, setting.GetLabel(), value);
+        } else if (android_config) {
+            value = android_config->GetReal(group, setting.GetLabel(), value);
+        }
+        return static_cast<Type>(value);
+    } else {
+        long value = static_cast<long>(setting.GetDefault());
+        if (per_game_config && per_game_config->HasValue(group, setting.GetLabel())) {
+            value = per_game_config->GetInteger(group, setting.GetLabel(), value);
+        } else if (android_config) {
+            value = android_config->GetInteger(group, setting.GetLabel(), value);
+        }
+        return static_cast<Type>(value);
+    }
 }
 
 template <typename Type, bool ranged>
 void Config::ReadSetting(const std::string& group, Settings::Setting<Type, ranged>& setting) {
-    if constexpr (std::is_floating_point_v<Type>) {
-        setting = android_config->GetReal(group, setting.GetLabel(), setting.GetDefault());
-    } else {
-        setting = static_cast<Type>(android_config->GetInteger(
-            group, setting.GetLabel(), static_cast<long>(setting.GetDefault())));
-    }
+    setting = GetSetting(group, setting);
 }
 
 void Config::ReadValues() {
@@ -139,9 +176,8 @@ void Config::ReadValues() {
     ReadSetting("Core", Settings::values.cpu_clock_percentage);
 
     // Renderer
-    Settings::values.use_gles = android_config->GetBoolean("Renderer", "use_gles", true);
-    Settings::values.shaders_accurate_mul =
-        android_config->GetBoolean("Renderer", "shaders_accurate_mul", false);
+    ReadSetting("Renderer",Settings::values.use_gles);
+    ReadSetting("Renderer",Settings::values.shaders_accurate_mul);
     ReadSetting("Renderer", Settings::values.graphics_api);
     ReadSetting("Renderer", Settings::values.async_presentation);
     ReadSetting("Renderer", Settings::values.async_shader_compilation);
@@ -156,7 +192,14 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
     // Workaround to map Android setting for enabling the frame limiter to the format Citra expects
-    if (android_config->GetBoolean("Renderer", "use_frame_limit", true)) {
+    // TODO: test this!
+    bool use_frame_limit = false;
+    if (per_game_config && per_game_config->HasValue("Renderer", "use_frame_limit")) {
+        use_frame_limit = per_game_config->GetBoolean("Renderer", "use_frame_limit", true);
+    } else if (android_config) {
+        use_frame_limit = android_config->GetBoolean("Renderer", "use_frame_limit", true);
+    }
+    if (use_frame_limit) {
         ReadSetting("Renderer", Settings::values.frame_limit);
     } else {
         Settings::values.frame_limit = 0;
@@ -183,21 +226,10 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.swap_eyes_3d);
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
     // Layout
-    // Somewhat inelegant solution to ensure layout value is between 0 and 5 on read
-    // since older config files may have other values
-    int layoutInt = (int)android_config->GetInteger(
-        "Layout", "layout_option", static_cast<int>(Settings::LayoutOption::LargeScreen));
-    if (layoutInt < 0 || layoutInt > 5) {
-        layoutInt = static_cast<int>(Settings::LayoutOption::LargeScreen);
-    }
-    Settings::values.layout_option = static_cast<Settings::LayoutOption>(layoutInt);
-    Settings::values.screen_gap =
-        static_cast<int>(android_config->GetReal("Layout", "screen_gap", 0));
-    Settings::values.large_screen_proportion =
-        static_cast<float>(android_config->GetReal("Layout", "large_screen_proportion", 2.25));
-    Settings::values.small_screen_position = static_cast<Settings::SmallScreenPosition>(
-        android_config->GetInteger("Layout", "small_screen_position",
-                                   static_cast<int>(Settings::SmallScreenPosition::TopRight)));
+
+    ReadSetting("Layout",Settings::values.layout_option);
+    ReadSetting("Layout",Settings::values.screen_gap);
+    ReadSetting("Layout", Settings::values.small_screen_position);
     ReadSetting("Layout", Settings::values.screen_gap);
     ReadSetting("Layout", Settings::values.custom_top_x);
     ReadSetting("Layout", Settings::values.custom_top_y);
@@ -212,14 +244,8 @@ void Config::ReadValues() {
     ReadSetting("Layout", Settings::values.cardboard_x_shift);
     ReadSetting("Layout", Settings::values.cardboard_y_shift);
     ReadSetting("Layout", Settings::values.upright_screen);
-
-    Settings::values.portrait_layout_option =
-        static_cast<Settings::PortraitLayoutOption>(android_config->GetInteger(
-            "Layout", "portrait_layout_option",
-            static_cast<int>(Settings::PortraitLayoutOption::PortraitTopFullWidth)));
-    Settings::values.secondary_display_layout = static_cast<Settings::SecondaryDisplayLayout>(
-        android_config->GetInteger("Layout", Settings::HKeys::secondary_display_layout.c_str(),
-                                   static_cast<int>(Settings::SecondaryDisplayLayout::None)));
+    ReadSetting("Layout", Settings::values.portrait_layout_option);
+    ReadSetting("Layout", Settings::values.secondary_display_layout);
     ReadSetting("Layout", Settings::values.custom_portrait_top_x);
     ReadSetting("Layout", Settings::values.custom_portrait_top_y);
     ReadSetting("Layout", Settings::values.custom_portrait_top_width);
@@ -347,5 +373,39 @@ void Config::Reload() {
         }
     }
     LoadINI(DefaultINI::android_config_default_file_content);
+    ReadValues();
+}
+
+void Config::LoadPerGameConfig(u64 title_id, const std::string& fallback_name) {
+    // Determine file name
+    std::string name;
+    if (title_id != 0) {
+        std::ostringstream ss;
+        ss << std::uppercase << std::hex << std::setw(16) << std::setfill('0') << title_id;
+        name = ss.str();
+    } else {
+        name = fallback_name;
+    }
+    if (name.empty()) {
+        per_game_config.reset();
+        per_game_config_loc.clear();
+        return;
+    }
+
+    const auto base = FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir);
+    per_game_config_loc = base + "custom/" + name + ".ini";
+
+    std::string ini_buffer;
+    FileUtil::ReadFileToString(true, per_game_config_loc, ini_buffer);
+    if (!ini_buffer.empty()) {
+        per_game_config = std::make_unique<INIReader>(ini_buffer.c_str(), ini_buffer.size());
+        if (per_game_config->ParseError() < 0) {
+            per_game_config.reset();
+        }
+    } else {
+        per_game_config.reset();
+    }
+
+    // Re-apply values so that per-game overrides (if any) take effect immediately.
     ReadValues();
 }
