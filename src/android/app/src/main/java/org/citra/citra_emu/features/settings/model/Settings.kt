@@ -4,99 +4,73 @@
 
 package org.citra.citra_emu.features.settings.model
 
-import android.text.TextUtils
-import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
-import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.features.settings.utils.SettingsFile
-import java.util.TreeMap
 
 class Settings {
-    private var gameId: String? = null
+    private val globalValues = HashMap<String, Any>()
+    private val perGameOverrides = HashMap<String, Any>()
 
-    var isLoaded = false
+    var gameId: String? = null
+
+    fun hasPerGameSettings(): Boolean = gameId != null
+
+    fun <T> get(setting: AbstractSetting<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return (perGameOverrides[setting.key]
+            ?: globalValues[setting.key]
+            ?: setting.defaultValue) as T
+    }
+
+    fun <T> getGlobal(setting: AbstractSetting<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return (globalValues[setting.key] ?: setting.defaultValue) as T
+    }
+
+    fun <T> setGlobal(setting: AbstractSetting<T>, value: T) {
+        globalValues[setting.key] = value as Any
+    }
+
+    fun <T> setOverride(setting: AbstractSetting<T>, value: T) {
+        perGameOverrides[setting.key] = value as Any
+    }
+
+    /** Sets the per-game or global setting based on whether this file has ANY per-game setting.
+     * This should be used, for example, by the Settings Activity
+     */
+    fun <T> set(setting: AbstractSetting<T>, value: T) {
+        if (hasPerGameSettings()) setOverride(setting, value) else setGlobal(setting, value)
+    }
 
     /**
-     * A HashMap<String></String>, SettingSection> that constructs a new SettingSection instead of returning null
-     * when getting a key not already in the map
+     * Updates an existing setting honoring whether it is *currently* global or local. This will
+     * be used by the Quick Menu
      */
-    class SettingsSectionMap : HashMap<String, SettingSection?>() {
-        override operator fun get(key: String): SettingSection? {
-            if (!super.containsKey(key)) {
-                val section = SettingSection(key)
-                super.put(key, section)
-                return section
-            }
-            return super.get(key)
-        }
+    fun <T> update(setting: AbstractSetting<T>, value: T) {
+        if (hasOverride(setting)) setOverride(setting, value) else setGlobal(setting, value)
     }
 
-    var sections: HashMap<String, SettingSection?> = SettingsSectionMap()
-
-    fun getSection(sectionName: String): SettingSection? {
-        return sections[sectionName]
+    fun <T> clearOverride(setting: AbstractSetting<T>) {
+        perGameOverrides.remove(setting.key)
     }
 
-    val isEmpty: Boolean
-        get() = sections.isEmpty()
-
-    fun loadSettings(view: SettingsActivityView? = null) {
-        sections = SettingsSectionMap()
-        loadCitraSettings(view)
-        if (!TextUtils.isEmpty(gameId)) {
-            loadCustomGameSettings(gameId!!, view)
-        }
-        isLoaded = true
+    fun hasOverride(setting: AbstractSetting<*>): Boolean {
+        return perGameOverrides.containsKey(setting.key)
     }
 
-    private fun loadCitraSettings(view: SettingsActivityView?) {
-        for ((fileName) in configFileSectionsMap) {
-            sections.putAll(SettingsFile.readFile(fileName, view))
-        }
+    fun getAllOverrides(): Map<String, Any> = perGameOverrides.toMap()
+
+    fun getAllGlobal(): Map<String, Any> = globalValues.toMap()
+
+    fun clearAll() {
+        globalValues.clear()
+        perGameOverrides.clear()
     }
 
-    private fun loadCustomGameSettings(gameId: String, view: SettingsActivityView?) {
-        // Custom game settings
-        mergeSections(SettingsFile.readCustomGameSettings(gameId, view))
+    fun clearOverrides() {
+        perGameOverrides.clear()
     }
 
-    private fun mergeSections(updatedSections: HashMap<String, SettingSection?>) {
-        for ((key, updatedSection) in updatedSections) {
-            if (sections.containsKey(key)) {
-                val originalSection = sections[key]
-                originalSection!!.mergeSection(updatedSection!!)
-            } else {
-                sections[key] = updatedSection
-            }
-        }
-    }
-
-    fun loadSettings(gameId: String, view: SettingsActivityView) {
-        this.gameId = gameId
-        loadSettings(view)
-    }
-
-    fun saveSettings(view: SettingsActivityView) {
-        if (TextUtils.isEmpty(gameId)) {
-            view.showToastMessage(
-                CitraApplication.appContext.getString(R.string.ini_saved),
-                false
-            )
-            for ((fileName, sectionNames) in configFileSectionsMap.entries) {
-                val iniSections = TreeMap<String, SettingSection?>()
-                for (section in sectionNames) {
-                    iniSections[section] = sections[section]
-                }
-                SettingsFile.saveFile(fileName, iniSections, view)
-            }
-        } else {
-            // TODO: Implement per game settings
-        }
-    }
-
-    fun saveSetting(setting: AbstractSetting, filename: String) {
-        SettingsFile.saveFile(filename, setting)
-    }
 
     companion object {
         const val SECTION_CORE = "Core"

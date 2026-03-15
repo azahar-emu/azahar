@@ -204,7 +204,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // Show/hide the "Stats" overlay
         updateShowPerformanceOverlay()
 
-        val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
+        val position = settings.get(IntSetting.PERFORMANCE_OVERLAY_POSITION)
         updateStatsPosition(position)
 
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -491,7 +491,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             emulationState.pause()
 
             // If the overlay is enabled, we need to update the position if changed
-            val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
+            val position = settings.get(IntSetting.PERFORMANCE_OVERLAY_POSITION)
             updateStatsPosition(position)
 
             binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
@@ -686,7 +686,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
             findItem(R.id.menu_performance_overlay_show).isChecked =
-                BooleanSetting.PERF_OVERLAY_ENABLE.boolean
+                settings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
                 EmulationMenuSettings.joystickRelCenter
@@ -703,8 +703,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    BooleanSetting.PERF_OVERLAY_ENABLE.boolean = !BooleanSetting.PERF_OVERLAY_ENABLE.boolean
-                    settings.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, SettingsFile.FILE_NAME_CONFIG)
+                    settings.update(BooleanSetting.PERF_OVERLAY_ENABLE,!settings.get(BooleanSetting.PERF_OVERLAY_ENABLE))
+                    SettingsFile.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, settings)
                     updateShowPerformanceOverlay()
                     true
                 }
@@ -900,7 +900,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menuInflater.inflate(R.menu.menu_landscape_screen_layout, popupMenu.menu)
 
-        val layoutOptionMenuItem = when (IntSetting.SCREEN_LAYOUT.int) {
+        val layoutOptionMenuItem = when (settings.get(IntSetting.SCREEN_LAYOUT)) {
             ScreenLayout.ORIGINAL.int ->
                 R.id.menu_screen_layout_original
 
@@ -972,7 +972,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menuInflater.inflate(R.menu.menu_portrait_screen_layout, popupMenu.menu)
 
-        val layoutOptionMenuItem = when (IntSetting.PORTRAIT_SCREEN_LAYOUT.int) {
+        val layoutOptionMenuItem = when (settings.get(IntSetting.PORTRAIT_SCREEN_LAYOUT)) {
             PortraitScreenLayout.TOP_FULL_WIDTH.int ->
                 R.id.menu_portrait_layout_top_full
             PortraitScreenLayout.ORIGINAL.int ->
@@ -1239,7 +1239,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
         }
 
-        if (BooleanSetting.PERF_OVERLAY_ENABLE.boolean) {
+        if (settings.get(BooleanSetting.PERF_OVERLAY_ENABLE)) {
             val SYSTEM_FPS = 0
             val FPS = 1
             val SPEED = 2
@@ -1254,11 +1254,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 val perfStats = NativeLibrary.getPerfStats()
                 val dividerString = "\u00A0\u2502 "
                 if (perfStats[FPS] > 0) {
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_FPS.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FPS)) {
                         sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1273,7 +1273,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_SPEED.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_SPEED)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1283,14 +1283,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val appRamUsage =
                             File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
                         sb.append("Process\u00A0RAM:\u00A0$appRamUsage\u00A0MB")
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         context?.let { ctx ->
                             val activityManager =
@@ -1303,14 +1303,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         }
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val batteryTemp = getBatteryTemperature()
                         val tempF = celsiusToFahrenheit(batteryTemp)
                         sb.append(String.format("%.1f°C/%.1f°F", batteryTemp, tempF))
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_BACKGROUND.boolean) {
+                    if (settings.get(BooleanSetting.PERF_OVERLAY_BACKGROUND)) {
                         binding.performanceOverlayShowText.setBackgroundResource(R.color.citra_transparent_black)
                     } else {
                         binding.performanceOverlayShowText.setBackgroundResource(0)

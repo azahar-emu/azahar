@@ -12,6 +12,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileUtil
@@ -47,13 +48,12 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     }
 
     private fun loadSettingsUI() {
-        if (!settings.isLoaded) {
-            if (!TextUtils.isEmpty(gameId)) {
-                settings.loadSettings(gameId, activityView)
-            } else {
-                settings.loadSettings(activityView)
-            }
+        if (!TextUtils.isEmpty(gameId)) {
+            SettingsFile.loadSettings(settings, gameId, activityView)
+        } else {
+            SettingsFile.loadSettings(settings, activityView)
         }
+
         activityView.showSettingsFragment(menuTag, false, gameId)
         activityView.onSettingsFileLoaded()
     }
@@ -72,7 +72,8 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         val nomediaFileExists: Boolean
         try {
             dataDirTreeUri = PermissionsHandler.citraDirectory
-            dataDirDocument = DocumentFile.fromTreeUri(CitraApplication.appContext, dataDirTreeUri)!!
+            dataDirDocument =
+                DocumentFile.fromTreeUri(CitraApplication.appContext, dataDirTreeUri)!!
             nomediaFileDocument = dataDirDocument.findFile(".nomedia")
             nomediaFileExists = (nomediaFileDocument != null)
         } catch (e: Exception) {
@@ -80,7 +81,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             return
         }
 
-        if (BooleanSetting.ANDROID_HIDE_IMAGES.boolean) {
+        if (settings.get(BooleanSetting.ANDROID_HIDE_IMAGES)) {
             if (!nomediaFileExists) {
                 Log.info("[SettingsActivity]: Attempting to create .nomedia in user data directory")
                 FileUtil.createFile(dataDirTreeUri.toString(), ".nomedia")
@@ -94,14 +95,18 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
     fun onStop(finishing: Boolean) {
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
-            settings.saveSettings(activityView)
+            if (settings.hasPerGameSettings()) {
+               SettingsFile.saveCustomFile(settings,activityView)
+            }else{
+               SettingsFile.saveGlobalFile(settings,activityView)
+            }
             //added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
             NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
             updateAndroidImageVisibility()
-            TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
+            TurboHelper.reloadTurbo(false, settings) // TODO: Can this go somewhere else? -OS
+            NativeLibrary.reloadSettings()
         }
-        NativeLibrary.reloadSettings()
     }
 
     fun onSettingChanged() {

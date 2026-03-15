@@ -7,7 +7,6 @@ package org.citra.citra_emu.features.settings.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -30,7 +29,7 @@ import java.io.IOException
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
+import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.StringSetting
@@ -47,7 +46,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     private lateinit var binding: ActivitySettingsBinding
 
     private val settingsViewModel: SettingsViewModel by viewModels()
-
+    // totally fresh settings object, separate from the one owned by EmulationActivity
     override val settings: Settings get() = settingsViewModel.settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -210,13 +209,6 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }
         editor.apply()
-
-        // Reset the static memory representation of each setting
-        BooleanSetting.clear()
-        FloatSetting.clear()
-        ScaledFloatSetting.clear()
-        IntSetting.clear()
-        StringSetting.clear()
 
         // Delete settings file because the user may have changed values that do not exist in the UI
         val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)

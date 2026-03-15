@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
             DirectoryInitialization.areCitraDirectoriesReady() &&
             !CitraDirectoryUtils.needToUpdateManually()) {
-            settingsViewModel.settings.loadSettings()
+            SettingsFile.loadSettings(settingsViewModel.settings)
         }
 
         ThemeUtil.ThemeChangeListener(this)

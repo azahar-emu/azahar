@@ -173,7 +173,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                         swapScreen()
                     }
                     else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-                        TurboHelper.toggleTurbo(true)
+                        TurboHelper.toggleTurbo(true, settingsViewModel.settings)
                     }
 
                     NativeLibrary.onGamePadEvent(

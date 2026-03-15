@@ -14,9 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.divider.MaterialDividerItemDecoration
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
-import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
 class SettingsFragment : Fragment(), SettingsFragmentView {
@@ -86,10 +84,6 @@ class SettingsFragment : Fragment(), SettingsFragmentView {
 
     override fun showToastMessage(message: String?, is_long: Boolean) {
         activityView!!.showToastMessage(message!!, is_long)
-    }
-
-    override fun putSetting(setting: AbstractSetting) {
-        fragmentPresenter.putSetting(setting)
     }
 
     override fun onSettingChanged() {

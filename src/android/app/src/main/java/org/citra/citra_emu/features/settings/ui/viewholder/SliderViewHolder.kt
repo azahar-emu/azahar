@@ -6,10 +6,7 @@ package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
 import org.citra.citra_emu.databinding.ListItemSettingBinding
-import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
-import org.citra.citra_emu.features.settings.model.AbstractIntSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
@@ -28,12 +25,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
             binding.textSettingDescription.visibility = View.GONE
         }
         binding.textSettingValue.visibility = View.VISIBLE
-        binding.textSettingValue.text = when (setting.setting) {
-            is ScaledFloatSetting ->
-                "${(setting.setting as ScaledFloatSetting).float.toInt()}${setting.units}"
-            is FloatSetting -> "${(setting.setting as AbstractFloatSetting).float}${setting.units}"
-            else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
-        }
+        binding.textSettingValue.text = "${setting.valueAsString}${setting.units}"
 
         if (setting.isActive) {
             binding.textSettingName.alpha = 1f
