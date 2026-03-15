@@ -222,6 +222,10 @@ object FileUtil {
         var filename = ""
         var c: Cursor? = null
         try {
+            if (uri.scheme == "fd") {
+                return ""
+            }
+
             if (uri.scheme == "file") {
                 BuildUtil.assertNotGooglePlay()
                 val file = File(uri.path!!);
