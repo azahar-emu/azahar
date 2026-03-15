@@ -39,6 +39,8 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.NativeLibrary
@@ -130,12 +132,22 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             )
         }
 
+        var applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
         setUpNavigation(navHostFragment.navController)
         (binding.navigationView as NavigationBarView).setOnItemReselectedListener {
             when (it.itemId) {
-                R.id.gamesFragment -> gamesViewModel.setShouldScrollToTop(true)
+                R.id.gamesFragment -> {
+                    if (applicationsClickTimestamp.elapsedNow() < 300.milliseconds) {
+                        Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG)
+                            .show()
+                    }
+                    applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
+                    gamesViewModel.setShouldScrollToTop(true)
+                }
                 R.id.searchFragment -> gamesViewModel.setSearchFocused(true)
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,
