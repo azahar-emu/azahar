@@ -5,7 +5,6 @@
 package org.citra.citra_emu.adapters
 
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ShortcutInfo
@@ -54,10 +53,7 @@ import org.citra.citra_emu.adapters.GameAdapter.GameViewHolder
 import org.citra.citra_emu.databinding.CardGameBinding
 import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
-import org.citra.citra_emu.features.settings.model.CitraSettings
-import org.citra.citra_emu.features.settings.model.GraphicsAPI
-import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.TextureFilter
+import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
 import org.citra.citra_emu.model.Game
@@ -120,34 +116,6 @@ class GameAdapter(
             return
         }
         lastClickTime = SystemClock.elapsedRealtime()
-
-        // NOTE: We could make this check not hardcoded, but it's a temp thing anyway so probs not worth. -OS
-        // TODO: I think this will cause an issue if Graphics API is a per-game setting, since this hard checks
-        // before those settings are loaded.
-        if (
-            CitraSettings.activeSettings.get(IntSetting.GRAPHICS_API) == GraphicsAPI.VULKAN.int &&
-            CitraSettings.activeSettings.get(IntSetting.TEXTURE_FILTER) == TextureFilter.ANIME4K.int
-        ) {
-            MaterialAlertDialogBuilder(view.context)
-                .setTitle(R.string.incompatible_texture_filter)
-                .setMessage(R.string.incompatible_texture_filter_description)
-                .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
-                    CitraSettings.activeSettings.setBySettingsContext(
-                        IntSetting.TEXTURE_FILTER,
-                        TextureFilter.NOFILTER.int
-                    )
-                    SettingsFile.saveSetting(
-                        IntSetting.TEXTURE_FILTER,
-                        CitraSettings.activeSettings
-                    )
-                    this.onClick(view)
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-
-            // We're re-running the function above if dialog accepted, so exit this call early
-            return
-        }
 
         val holder = view.tag as GameViewHolder
         gameExists(holder)
@@ -665,6 +633,16 @@ class GameAdapter(
         bottomSheetView.findViewById<MaterialButton>(R.id.cheats).setOnClickListener {
             val action = CheatsFragmentDirections.actionGlobalCheatsFragment(holder.game.titleId)
             view.findNavController().navigate(action)
+            bottomSheetDialog.dismiss()
+        }
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.application_settings).setOnClickListener {
+            SettingsActivity.launch(
+                context,
+                SettingsFile.FILE_NAME_CONFIG,
+                String.format("%016X", holder.game.titleId),
+                holder.game.title
+            )
             bottomSheetDialog.dismiss()
         }
 
