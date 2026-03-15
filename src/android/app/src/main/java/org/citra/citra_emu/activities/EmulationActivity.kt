@@ -87,15 +87,25 @@ class EmulationActivity : AppCompatActivity() {
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
-
-
-        super.onCreate(savedInstanceState)
-
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: run {
+                Log.error("[EmulationActivity] Missing game data in intent extras")
+                return
+            }
+        } catch (e: Exception) {
+            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+            return
+        }
         // load global settings if for some reason they aren't (should be loaded in MainActivity)
         if (Settings.settings.getAllGlobal().isEmpty()) {
             SettingsFile.loadSettings(Settings.settings)
         }
-        // once per-game settings are added, load them here!
+        // load per-game settings
+        SettingsFile.loadSettings(Settings.settings, String.format("%016X", game.titleId))
+
+        super.onCreate(savedInstanceState)
 
         secondaryDisplay = SecondaryDisplay(this, Settings.settings)
         secondaryDisplay.updateDisplay()
@@ -127,18 +137,6 @@ class EmulationActivity : AppCompatActivity() {
         instance = this
 
         applyOrientationSettings() // Check for orientation settings at startup
-
-        val game = try {
-            intent.extras?.let { extras ->
-                BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: run {
-                Log.error("[EmulationActivity] Missing game data in intent extras")
-                return
-            }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
-            return
-        }
 
         NativeLibrary.playTimeManagerStart(game.titleId)
     }

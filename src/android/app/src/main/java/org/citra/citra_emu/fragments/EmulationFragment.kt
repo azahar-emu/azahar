@@ -35,7 +35,6 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
@@ -91,7 +90,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
-    private lateinit var emulationActivity: EmulationActivity
+    private var emulationActivity: EmulationActivity? = null
 
     private var _binding: FragmentEmulationBinding? = null
     private val binding get() = _binding!!
@@ -378,8 +377,31 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 R.id.menu_settings -> {
                     SettingsActivity.launch(
                         requireContext(),
-                        SettingsFile.FILE_NAME_CONFIG, null
+                        SettingsFile.FILE_NAME_CONFIG,
+                        ""
                     )
+
+                    true
+                }
+
+                R.id.menu_application_settings -> {
+                    val titleId = NativeLibrary.getRunningTitleId()
+                    if (titleId != 0L) {
+                        val gameId = java.lang.String.format("%016X", titleId)
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            gameId
+                        )
+                    } else {
+                        // Fallback: open global settings if title id unknown
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            ""
+                        )
+                    }
+
                     true
                 }
 
@@ -517,7 +539,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -532,6 +554,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDetach() {
+        emulationActivity = null
         NativeLibrary.clearEmulationActivity()
         super.onDetach()
     }
@@ -551,7 +574,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -870,7 +893,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity.openAmiiboFileLauncher.launch(false)
+                    emulationActivity!!.openAmiiboFileLauncher.launch(false)
                     true
                 }
 

@@ -72,6 +72,7 @@ class SettingsAdapter(
 ) : RecyclerView.Adapter<SettingViewHolder<SettingsItem>?>(), DialogInterface.OnClickListener,
     DialogInterface.OnMultiChoiceClickListener {
     private var settings: ArrayList<SettingsItem>? = null
+    var isPerGame: Boolean = false
     private var clickedItem: SettingsItem? = null
     private var clickedPosition: Int
     private var dialog: AlertDialog? = null
@@ -226,6 +227,8 @@ class SettingsAdapter(
         if (fragmentView.activityView != null)
         // Reload the settings list to update the UI
             fragmentView.loadSettingsList()
+
+        notifyItemChanged(position)
     }
 
     private fun onSingleChoiceClick(item: SingleChoiceSetting) {
@@ -543,10 +546,20 @@ class SettingsAdapter(
     }
 
     fun <T> resetSettingToDefault(setting: AbstractSetting<T>, position: Int) {
-        fragmentView.activityView?.settings?.set(setting,setting.defaultValue)
+        val settings = fragmentView.activityView?.settings ?: return
+        settings.set(setting,setting.defaultValue)
         notifyItemChanged(position)
         fragmentView.onSettingChanged()
         fragmentView.loadSettingsList()
+    }
+
+    fun <T> resetSettingToGlobal(setting: AbstractSetting<T>, position: Int) {
+        val settings = fragmentView.activityView?.settings ?: return
+        settings.clearOverride(setting)
+        notifyItemChanged(position)
+        fragmentView.onSettingChanged()
+        fragmentView.loadSettingsList()
+
     }
 
     fun onInputBindingLongClick(setting: InputBindingSetting, position: Int): Boolean {

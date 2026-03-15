@@ -175,7 +175,7 @@ class Settings {
             KEY_BUTTON_RIGHT
         )
         val axisTitles = listOf(
-           R.string.controller_axis_vertical,
+            R.string.controller_axis_vertical,
             R.string.controller_axis_horizontal
         )
         val dPadTitles = listOf(

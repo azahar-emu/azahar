@@ -34,6 +34,8 @@ class StringInputViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
         }
+
+        showGlobalButtonIfNeeded(binding.buttonUseGlobal, position)
     }
 
     override fun onClick(clicked: View) {

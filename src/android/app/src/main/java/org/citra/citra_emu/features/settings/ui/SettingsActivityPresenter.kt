@@ -27,12 +27,25 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView, 
     private var shouldSave = false
     private lateinit var menuTag: String
     private lateinit var gameId: String
+    private var perGameInGlobalContext = false
 
     fun onCreate(savedInstanceState: Bundle?, menuTag: String, gameId: String) {
         this.menuTag = menuTag
         this.gameId = gameId
-        // merge the active settings into the local settings activity instance
+
+        perGameInGlobalContext = gameId != "" && !Settings.settings.isPerGame()
+
+        // sync the active settings into my local settings appropriately
+        // if we are editing global settings rom a game, this should just work
+        // to sync only the global settings into the local version
+        settings.gameId = gameId
         settings.mergeSettings(Settings.settings)
+
+        // if we are editing per-game settings when the game is not loaded,
+        // we need to load the per-game settings now from the ini file
+        if (perGameInGlobalContext) {
+            SettingsFile.loadSettings(settings, gameId)
+        }
 
         if (savedInstanceState != null) {
             shouldSave = savedInstanceState.getBoolean(KEY_SHOULD_SAVE)

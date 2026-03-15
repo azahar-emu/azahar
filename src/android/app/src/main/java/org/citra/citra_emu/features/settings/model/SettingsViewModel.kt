@@ -7,7 +7,7 @@ package org.citra.citra_emu.features.settings.model
 import androidx.lifecycle.ViewModel
 
 class SettingsViewModel : ViewModel() {
-    // the Settings Activity will always work with a local copy of settings while
-    // editing, to avoid issues with conflicting active/edited settings
+   // the settings activity primarily manipulates its own copy of the settings object
+    // syncing it with the active settings only when saving
     val settings = Settings()
 }
