@@ -729,6 +729,10 @@ object NativeLibrary {
             return uriString
         }
 
+        if (uri.scheme == "file") {
+            return uri.path!!
+        }
+
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 

@@ -488,7 +488,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         super.onResume()
         Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
-            emulationState.pause()
+            emulationState.unpause()
 
             // If the overlay is enabled, we need to update the position if changed
             val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
@@ -854,7 +854,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity.openFileLauncher.launch(false)
+                    emulationActivity.openAmiiboFileLauncher.launch(false)
                     true
                 }
 
