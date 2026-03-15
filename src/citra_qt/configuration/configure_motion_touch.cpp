@@ -231,7 +231,7 @@ void ConfigureMotionTouch::ConnectEvents() {
         }
     });
 #if QT_VERSION < QT_VERSION_CHECK(6, 7, 0)
-    connect(ui->touchpad_checkbox, &QCheckBox::StateChanged, this, [this]() { UpdateUiDisplay(); });
+    connect(ui->touchpad_checkbox, &QCheckBox::stateChanged, this, [this]() { UpdateUiDisplay(); });
 #else
     connect(ui->touchpad_checkbox, &QCheckBox::checkStateChanged, this,
             [this]() { UpdateUiDisplay(); });
