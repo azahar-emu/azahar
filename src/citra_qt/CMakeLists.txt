@@ -277,6 +277,14 @@ target_link_libraries(citra_qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
 if (ENABLE_OPENGL)
     target_link_libraries(citra_qt PRIVATE glad)
+
+    file(GLOB SHADERS ${PROJECT_SOURCE_DIR}/dist/shaders/*)
+
+    qt_add_resources(citra_qt "shaders"
+    PREFIX "/shaders"
+    BASE "${PROJECT_SOURCE_DIR}/dist/shaders"
+    FILES ${SHADERS}
+    )
 endif()
 
 if (ENABLE_VULKAN)

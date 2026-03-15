@@ -164,7 +164,7 @@ void Config::ReadValues() {
 
     ReadSetting("Renderer", Settings::values.render_3d);
     ReadSetting("Renderer", Settings::values.factor_3d);
-    std::string default_shader = "None (builtin)";
+    std::string default_shader = "None";
     if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Anaglyph)
         default_shader = "Dubois (builtin)";
     else if (Settings::values.render_3d.GetValue() == Settings::StereoRenderOption::Interlaced)

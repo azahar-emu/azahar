@@ -398,7 +398,7 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
                render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
         shader_data += HostShaders::OPENGL_PRESENT_INTERLACED_FRAG;
     } else {
-        if (Settings::values.pp_shader_name.GetValue() == "None (builtin)") {
+        if (Settings::values.pp_shader_name.GetValue() == "None") {
             shader_data += HostShaders::OPENGL_PRESENT_FRAG;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
