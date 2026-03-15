@@ -415,6 +415,28 @@ class EmulationFragment :
                     true
                 }
 
+                R.id.menu_application_settings -> {
+                    val titleId = NativeLibrary.getRunningTitleId()
+                    if (titleId != 0L) {
+                        val gameId = java.lang.String.format("%016X", titleId)
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            gameId,
+                            game.title
+                        )
+                    } else {
+                        // Fallback: open global settings if title id unknown
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            null
+                        )
+                    }
+
+                    true
+                }
+
                 R.id.menu_exit -> {
                     emulationState.pause()
                     MaterialAlertDialogBuilder(requireContext())
@@ -548,7 +570,7 @@ class EmulationFragment :
         }
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -592,7 +614,7 @@ class EmulationFragment :
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -926,7 +948,7 @@ class EmulationFragment :
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity.openAmiiboFileLauncher.launch(false)
+                    emulationActivity!!.openAmiiboFileLauncher.launch(false)
                     true
                 }
 

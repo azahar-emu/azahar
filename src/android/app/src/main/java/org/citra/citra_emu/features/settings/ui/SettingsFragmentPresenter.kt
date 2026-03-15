@@ -55,29 +55,37 @@ class SettingsFragmentPresenter(
 ) {
     private var menuTag: String? = null
     private lateinit var gameId: String
+    private lateinit var gameTitle: String
     private var settingsList: ArrayList<SettingsItem>? = null
 
     private val settingsActivity get() = fragmentView.activityView as SettingsActivity
 
+    private var titleBase: String = ""
     private lateinit var settingsAdapter: SettingsAdapter
 
     private lateinit var preferences: SharedPreferences
 
-    fun onCreate(menuTag: String, gameId: String) {
+    fun onCreate(menuTag: String, gameId: String, gameTitle: String) {
         this.gameId = gameId
         this.menuTag = menuTag
+        this.gameTitle = gameTitle
     }
 
     fun onViewCreated(settingsAdapter: SettingsAdapter) {
         this.settingsAdapter = settingsAdapter
         preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+        settingsAdapter.isPerGame = !TextUtils.isEmpty(gameId)
         loadSettingsList()
     }
 
     fun loadSettingsList() {
-        if (!TextUtils.isEmpty(gameId)) {
-            settingsActivity.setToolbarTitle("Application Settings: $gameId")
+        titleBase = if (!TextUtils.isEmpty(gameId)) {
+            settingsActivity.getString(R.string.preferences_custom_settings) + " — " +
+                gameTitle
+        } else {
+            settingsActivity.getString(R.string.preferences_settings)
         }
+
         val sl = ArrayList<SettingsItem>()
         if (menuTag == null) {
             return
@@ -138,7 +146,7 @@ class SettingsFragmentPresenter(
     private fun getLargerDimension(): Int = getDimensions().max()
 
     private fun addConfigSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_settings))
+        settingsActivity.setToolbarTitle(titleBase)
         sl.apply {
             add(
                 SubmenuSetting(
@@ -215,7 +223,11 @@ class SettingsFragmentPresenter(
 
             add(
                 RunnableSetting(
-                    R.string.reset_to_default,
+                    if (editingSettings.isPerGame()) {
+                        R.string.reset_settings_to_global
+                    } else {
+                        R.string.reset_all_settings
+                    },
                     0,
                     false,
                     R.drawable.ic_restore,
@@ -231,7 +243,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addGeneralSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_general))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_general) + " — " + titleBase
+        )
         sl.apply {
             add(
                 SwitchSetting(
@@ -339,7 +353,9 @@ class SettingsFragmentPresenter(
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun addSystemSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_system))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_system) + " — " + titleBase
+        )
         sl.apply {
             add(HeaderSetting(R.string.emulation_settings))
             add(
@@ -622,7 +638,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addCameraSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.camera))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.camera) + " — " + titleBase
+        )
 
         // Get the camera IDs
         val cameraManager =
@@ -808,7 +826,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_controls) + " — " + titleBase
+        )
 
         sl.apply {
             add(
@@ -911,8 +931,11 @@ class SettingsFragmentPresenter(
             // TODO: make input mappings also work per-game, which will be easy if we move
             //  them to config files
         }
+
     private fun addGraphicsSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_graphics))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_graphics) + " — " + titleBase
+        )
         sl.apply {
             add(HeaderSetting(R.string.renderer))
             add(
@@ -1225,7 +1248,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addLayoutSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_layout))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_layout) + " — " + titleBase
+        )
         sl.apply {
             add(
                 SingleChoiceSetting(
@@ -1454,7 +1479,7 @@ class SettingsFragmentPresenter(
 
     private fun addPerformanceOverlaySettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.performance_overlay_options)
+            settingsActivity.getString(R.string.performance_overlay_options) + " — " + titleBase
         )
         sl.apply {
             add(HeaderSetting(R.string.visibility))
@@ -1564,7 +1589,8 @@ class SettingsFragmentPresenter(
 
     private fun addCustomLandscapeSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.emulation_landscape_custom_layout)
+            settingsActivity.getString(R.string.emulation_landscape_custom_layout) + " — " +
+                titleBase
         )
         sl.apply {
             add(HeaderSetting(R.string.emulation_top_screen))
@@ -1678,7 +1704,8 @@ class SettingsFragmentPresenter(
 
     private fun addCustomPortraitSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(
-            settingsActivity.getString(R.string.emulation_portrait_custom_layout)
+            settingsActivity.getString(R.string.emulation_portrait_custom_layout) + " — " +
+                titleBase
         )
         sl.apply {
             add(HeaderSetting(R.string.emulation_top_screen))
@@ -1791,7 +1818,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addNetworkSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_network) + " — " + titleBase
+        )
         sl.apply {
             add(
                 StringInputSetting(
@@ -1817,7 +1846,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addAudioSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_audio))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_audio) + " — " + titleBase
+        )
         sl.apply {
             add(
                 SliderSetting(
@@ -1891,7 +1922,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addDebugSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_debug))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_debug) + " — " + titleBase
+        )
         sl.apply {
             add(HeaderSetting(R.string.debug_warning))
             add(
@@ -2031,7 +2064,9 @@ class SettingsFragmentPresenter(
     }
 
     private fun addThemeSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_theme))
+        settingsActivity.setToolbarTitle(
+            settingsActivity.getString(R.string.preferences_theme) + " — " + titleBase
+        )
         sl.apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 add(

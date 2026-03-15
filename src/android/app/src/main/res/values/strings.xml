@@ -428,12 +428,15 @@
     <string name="off">Off</string>
     <string name="install">Install</string>
     <string name="delete">Delete</string>
-    <string name="reset_all_settings">Reset All Settings?</string>
-    <string name="reset_all_settings_description">All advanced settings will be reset to their default configuration. This can not be undone.</string>
+    <string name="reset_all_settings">Reset All Settings</string>
+    <string name="reset_all_settings_description">All settings will be reset to their default configuration, including all per-app settings. This can not be undone.</string>
     <string name="settings_reset">Settings reset</string>
+    <string name="reset_settings_to_global">Reset Per-Application Settings</string>
+    <string name="reset_settings_to_global_description">All custom settings for this application wil be reset to the global value. This cannot be undone. </string>
     <string name="select_rtc_date">Select RTC date</string>
     <string name="select_rtc_time">Select RTC time</string>
     <string name="reset_setting_confirmation">Do you want to reset this setting back to its default value?</string>
+    <string name="reset_setting_global_confirmation">Do you want to reset this custom setting back to the global value?</string>
     <string name="setting_not_editable">You can\'t edit this now</string>
     <string name="setting_disabled">Setting disabled</string>
     <string name="setting_disabled_description_incompatible_setting">This setting is currently disabled due to another setting not being the appropriate value.</string>
@@ -455,6 +458,7 @@
 
     <!-- Preferences Screen -->
     <string name="preferences_settings">Settings</string>
+    <string name="preferences_custom_settings">Per-Application Settings</string>
     <string name="preferences_general">General</string>
     <string name="preferences_system">System</string>
     <string name="preferences_camera">Camera</string>
@@ -587,6 +591,10 @@
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Load</string>
     <string name="menu_emulation_amiibo_remove">Remove</string>
+    <string name="application_settings">Per-Application Settings</string>
+    <string name="global_settings">Global Settings</string>
+    <string name="use_global">Customized: Long-press to reset to global</string>
+    <string name="editing_global_when_customized">Note: A custom setting is active for this, but you are editing the global settings.</string>
     <string name="select_amiibo">Select Amiibo File</string>
     <string name="amiibo_load_error">Error Loading Amiibo</string>
     <string name="amiibo_load_error_message">While loading the specified Amiibo file, an error occurred. Please check that the file is correct.</string>
@@ -835,7 +843,7 @@
     <string name="xbrz" translatable="false">xBRZ</string>
     <string name="mmpx" translatable="false">MMPX</string>
     <string name="incompatible_texture_filter">Incompatible texture filter</string>
-    <string name="incompatible_texture_filter_description">The selected texture filter (Anime4K) is not compatible with the Vulkan renderer.\nThe texture filter will be set to None.\nProceed?</string>
+    <string name="incompatible_texture_filter_description">The selected texture filter (Anime4K) is not compatible with the Vulkan renderer.\nThe texture filter will be set to None.</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Game Controlled</string>
