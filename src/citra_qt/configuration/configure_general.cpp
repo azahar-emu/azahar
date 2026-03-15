@@ -11,6 +11,10 @@
 #include "citra_qt/uisettings.h"
 #include "common/file_util.h"
 #include "common/settings.h"
+#include "core/core.h"
+#ifdef ENABLE_RETROACHIEVEMENTS
+#include "retroachievements/client.h"
+#endif
 #include "ui_configure_general.h"
 
 // The QSlider doesn't have an easy way to set a custom step amount,
@@ -47,6 +51,10 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->updates_group->setVisible(false);
 #endif
 
+#ifndef ENABLE_RETROACHIEVEMENTS
+    ui->retroachievements_group->setVisible(false);
+#endif
+
     SetupPerGameUI();
     SetConfiguration();
 
@@ -74,6 +82,9 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
         }
         ui->change_screenshot_dir->setEnabled(true);
     });
+
+    connect(ui->retroachievements_log_in_button, &QPushButton::clicked, this,
+            &ConfigureGeneral::RetroAchievementsLogIn);
 }
 
 ConfigureGeneral::~ConfigureGeneral() = default;
@@ -194,6 +205,16 @@ void ConfigureGeneral::ApplyConfiguration() {
 
 void ConfigureGeneral::RetranslateUI() {
     ui->retranslateUi(this);
+}
+
+void ConfigureGeneral::RetroAchievementsLogIn() {
+#ifdef ENABLE_RETROACHIEVEMENTS
+    std::string username = ui->retroachievements_username_input->text().toStdString(),
+                password = ui->retroachievements_password_input->text().toStdString();
+
+    Core::System::GetInstance().RetroAchievementsClient().LogInUser(username.c_str(),
+                                                                    password.c_str());
+#endif
 }
 
 void ConfigureGeneral::SetupPerGameUI() {
