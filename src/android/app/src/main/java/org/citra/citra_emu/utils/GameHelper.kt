@@ -75,7 +75,7 @@ object GameHelper {
         if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
             gameInfo = GameInfo(filePath)
         } else {
-            nativePath = if (uri.toString().startsWith("fd://")) {
+            nativePath = if (uri.scheme == "fd") {
                 uri.toString()
             } else {
                 "!" + NativeLibrary.getNativePath(uri)
