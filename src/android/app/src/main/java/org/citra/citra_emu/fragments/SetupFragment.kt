@@ -407,6 +407,8 @@ class SetupFragment : Fragment() {
             }
         )
 
+        binding.viewPager2.currentItem = homeViewModel.setupCurrentPage
+
         requireActivity().window.navigationBarColor =
             ContextCompat.getColor(requireContext(), android.R.color.transparent)
 
@@ -599,10 +601,12 @@ class SetupFragment : Fragment() {
 
     fun pageForward() {
         binding.viewPager2.currentItem = binding.viewPager2.currentItem + 1
+        homeViewModel.setupCurrentPage = binding.viewPager2.currentItem
     }
 
     fun pageBackward() {
         binding.viewPager2.currentItem = binding.viewPager2.currentItem - 1
+        homeViewModel.setupCurrentPage = binding.viewPager2.currentItem
     }
 
     fun setPageWarned(page: Int) {

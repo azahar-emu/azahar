@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -61,6 +61,8 @@ class HomeViewModel : ViewModel() {
     var copyInProgress = false
 
     var navigatedToSetup = false
+
+    var setupCurrentPage = 0
 
     fun setNavigationVisibility(visible: Boolean, animated: Boolean) {
         if (_navigationVisible.value.first == visible) {
