@@ -92,24 +92,6 @@ class SetupFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity = requireActivity() as MainActivity
 
-        homeViewModel.setNavigationVisibility(visible = false, animated = false)
-
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (binding.viewPager2.currentItem > 0) {
-                        pageBackward()
-                    } else {
-                        requireActivity().finish()
-                    }
-                }
-            }
-        )
-
-        requireActivity().window.navigationBarColor =
-            ContextCompat.getColor(requireContext(), android.R.color.transparent)
-
         pages = mutableListOf()
         pages.apply {
             add(
@@ -154,7 +136,6 @@ class SetupFragment : Fragment() {
                                     R.string.filesystem_permission,
                                     R.string.filesystem_permission_description,
                                     buttonAction = {
-                                        pageButtonCallback = it
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                             manageExternalStoragePermissionLauncher.launch(
                                                 Intent(
@@ -203,7 +184,6 @@ class SetupFragment : Fragment() {
                                     R.string.notifications,
                                     R.string.notifications_description,
                                     buttonAction = {
-                                        pageButtonCallback = it
                                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     },
                                     buttonState = {
@@ -228,7 +208,6 @@ class SetupFragment : Fragment() {
                                 R.string.microphone_permission,
                                 R.string.microphone_permission_description,
                                 buttonAction = {
-                                    pageButtonCallback = it
                                     permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 },
                                 buttonState = {
@@ -250,7 +229,6 @@ class SetupFragment : Fragment() {
                                 R.string.camera_permission,
                                 R.string.camera_permission_description,
                                 buttonAction = {
-                                    pageButtonCallback = it
                                     permissionLauncher.launch(Manifest.permission.CAMERA)
                                 },
                                 buttonState = {
@@ -319,7 +297,6 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder,
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
-                                    pageButtonCallback = it
                                     PermissionsHandler.compatibleSelectDirectory(openCitraDirectory)
                                 },
                                 buttonState = {
@@ -343,7 +320,6 @@ class SetupFragment : Fragment() {
                                 R.string.games,
                                 R.string.games_description,
                                 buttonAction =  {
-                                    pageButtonCallback = it
                                     getGamesDirectory.launch(
                                         Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data
                                     )
@@ -409,26 +385,30 @@ class SetupFragment : Fragment() {
         }
 
         binding.viewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
-            var previousPosition: Int = 0
 
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-
-                if (position == 1 && previousPosition == 0) {
-                    ViewUtils.showView(binding.buttonNext)
-                    ViewUtils.showView(binding.buttonBack)
-                } else if (position == 0 && previousPosition == 1) {
-                    ViewUtils.hideView(binding.buttonBack)
-                    ViewUtils.hideView(binding.buttonNext)
-                } else if (position == pages.size - 1 && previousPosition == pages.size - 2) {
-                    ViewUtils.hideView(binding.buttonNext)
-                } else if (position == pages.size - 2 && previousPosition == pages.size - 1) {
-                    ViewUtils.showView(binding.buttonNext)
-                }
-
-                previousPosition = position
+                updateNavigationButtons(position)
             }
         })
+
+        homeViewModel.setNavigationVisibility(visible = false, animated = false)
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (binding.viewPager2.currentItem > 0) {
+                        pageBackward()
+                    } else {
+                        requireActivity().finish()
+                    }
+                }
+            }
+        )
+
+        requireActivity().window.navigationBarColor =
+            ContextCompat.getColor(requireContext(), android.R.color.transparent)
 
         binding.buttonNext.setOnClickListener {
             val index = binding.viewPager2.currentItem
@@ -479,29 +459,23 @@ class SetupFragment : Fragment() {
         }
         binding.buttonBack.setOnClickListener { pageBackward() }
 
-        if (savedInstanceState != null) {
-            val nextIsVisible = savedInstanceState.getBoolean(KEY_NEXT_VISIBILITY)
-            val backIsVisible = savedInstanceState.getBoolean(KEY_BACK_VISIBILITY)
-            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED)!!
-
-            if (nextIsVisible) {
-                binding.buttonNext.visibility = View.VISIBLE
-            }
-            if (backIsVisible) {
-                binding.buttonBack.visibility = View.VISIBLE
-            }
-        } else {
+        if (savedInstanceState == null) {
             hasBeenWarned = BooleanArray(pages.size)
+        } else {
+            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED) ?: BooleanArray(pages.size)
         }
+
+        updateNavigationButtons(binding.viewPager2.currentItem)
 
         setInsets()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(KEY_NEXT_VISIBILITY, binding.buttonNext.isVisible)
-        outState.putBoolean(KEY_BACK_VISIBILITY, binding.buttonBack.isVisible)
-        outState.putBooleanArray(KEY_HAS_BEEN_WARNED, hasBeenWarned)
+
+        if (::hasBeenWarned.isInitialized) {
+            outState.putBooleanArray(KEY_HAS_BEEN_WARNED, hasBeenWarned)
+        }
     }
 
     override fun onDestroyView() {
@@ -509,17 +483,30 @@ class SetupFragment : Fragment() {
         _binding = null
     }
 
-    private lateinit var pageButtonCallback: SetupCallback
-    private val checkForButtonState: () -> Unit = {
-        val page = pages[binding.viewPager2.currentItem]
-        page.pageButtons?.forEach {
-            if (it.buttonState() == ButtonState.BUTTON_ACTION_COMPLETE) {
-                pageButtonCallback.onStepCompleted(it.titleId, pageFullyCompleted = false)
-            }
+    private fun updateNavigationButtons(position: Int) {
+        if (position == 0) {
+            ViewUtils.hideView(binding.buttonBack)
+        } else {
+            ViewUtils.showView(binding.buttonBack)
+        }
 
-            if (page.pageSteps() == PageState.PAGE_STEPS_COMPLETE) {
-                pageButtonCallback.onStepCompleted(0, pageFullyCompleted = true)
-            }
+        if (position == 0 || position == pages.size - 1) {
+            ViewUtils.hideView(binding.buttonNext)
+        } else {
+            ViewUtils.showView(binding.buttonNext)
+        }
+    }
+
+    private val checkForButtonState: () -> Unit = {
+        val currentIndex = binding.viewPager2.currentItem
+        val page = pages[currentIndex]
+
+        val isPageComplete = page.pageSteps() == PageState.PAGE_STEPS_COMPLETE
+
+        binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
+
+        if (isPageComplete) {
+            ViewUtils.showView(binding.buttonNext)
         }
     }
 
@@ -577,7 +564,8 @@ class SetupFragment : Fragment() {
             }
         }
 
-        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)
+        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result,
+             null, checkForButtonState)
     }
 
     private val getGamesDirectory =
