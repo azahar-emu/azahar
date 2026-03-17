@@ -9,6 +9,10 @@ import android.view.ViewGroup
 
 object ViewUtils {
     fun showView(view: View, length: Long = 300) {
+        if (view.visibility == View.VISIBLE) {
+            return
+        }
+
         view.apply {
             alpha = 0f
             visibility = View.VISIBLE
