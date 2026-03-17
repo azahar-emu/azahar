@@ -303,7 +303,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         app_loader = Loader::GetLoader(filepath);
     }
     if (!app_loader) {
-        LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
+        LOG_CRITICAL(Core, "Failed to obtain loader for {}", filepath);
         return ResultStatus::ErrorGetLoader;
     }
 
