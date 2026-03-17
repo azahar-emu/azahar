@@ -122,6 +122,16 @@ typedef struct stat file_stat_t;
 #define FERROR ferror
 #define FFLUSH std::fflush
 
+#ifdef _MSC_VER
+#define DUP_FD _dup
+#define FDOPEN _fdopen
+#define CLOSE_FD _close
+#else
+#define DUP_FD dup
+#define FDOPEN fdopen
+#define CLOSE_FD close
+#endif
+
 #endif
 
 // This namespace has various generic functions related to files and paths.
@@ -1261,6 +1271,44 @@ void IOFile::Swap(IOFile& other) noexcept {
 
 bool IOFile::Open() {
     Close();
+
+    // Any filename with the format fd://<file_descriptor> represents a file that
+    // must be opened by duplicating the provided file_descriptor. This is used
+    // on Android vanilla builds when the ROM absolute path is not known.
+    if (filename.starts_with("fd://")) {
+
+#if !defined(HAVE_LIBRETRO_VFS)
+        const std::string fd_str = filename.substr(5);
+
+        // Check that fd_str is not empty and contains only digits
+        if (fd_str.empty() || !std::all_of(fd_str.begin(), fd_str.end(), ::isdigit)) {
+            m_good = false;
+            return false;
+        }
+
+        int fd = std::stoi(fd_str);
+
+        int dup_fd = DUP_FD(fd);
+        if (dup_fd == -1) {
+            m_good = false;
+            return false;
+        }
+
+        m_file = FDOPEN(dup_fd, openmode.c_str());
+        if (!m_file) {
+            CLOSE_FD(dup_fd);
+            m_good = false;
+            return false;
+        }
+
+        m_good = true;
+        return true;
+#else
+        // TODO: Add support for libretro vfs when needed.
+        m_good = false;
+        return false;
+#endif
+    }
 
 #ifdef _WIN32
     // Open with FILE_SHARE_READ, FILE_SHARE_WRITE and FILE_SHARE_DELETE
