@@ -23,7 +23,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -32,7 +31,6 @@ import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
-import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -42,13 +40,11 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.ButtonState
 import org.citra.citra_emu.model.PageButton
 import org.citra.citra_emu.model.PageState
-import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.GameHelper
-import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -94,12 +90,16 @@ class SetupFragment : Fragment() {
         mainActivity = requireActivity() as MainActivity
 
         homeViewModel.selectedCitraDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
-            if (uri == null) return@observe
+            if (uri == null) {
+                return@observe
+            }
             onOpenCitraDirectory(uri)
             homeViewModel.selectedCitraDirectory = null
         }
         homeViewModel.selectedGamesDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
-            if (uri == null) return@observe
+            if (uri == null) {
+                return@observe
+            }
             onGetGamesDirectory(uri)
             homeViewModel.selectedGamesDirectory = null
         }
