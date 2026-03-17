@@ -48,6 +48,7 @@ import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CitraDirectoryHelper
 import org.citra.citra_emu.utils.GameHelper
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ViewUtils
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -91,6 +92,17 @@ class SetupFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity = requireActivity() as MainActivity
+
+        homeViewModel.selectedCitraDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
+            if (uri == null) return@observe
+            onOpenCitraDirectory(uri)
+            homeViewModel.selectedCitraDirectory = null
+        }
+        homeViewModel.selectedGamesDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
+            if (uri == null) return@observe
+            onGetGamesDirectory(uri)
+            homeViewModel.selectedGamesDirectory = null
+        }
 
         pages = mutableListOf()
         pages.apply {
@@ -297,7 +309,7 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder,
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
-                                    PermissionsHandler.compatibleSelectDirectory(openCitraDirectory)
+                                    PermissionsHandler.compatibleSelectDirectory(mainActivity.setupOpenCitraDirectory)
                                 },
                                 buttonState = {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {
@@ -320,7 +332,7 @@ class SetupFragment : Fragment() {
                                 R.string.games,
                                 R.string.games_description,
                                 buttonAction =  {
-                                    getGamesDirectory.launch(
+                                    mainActivity.setupGetGamesDirectory.launch(
                                         Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data
                                     )
                                 },
@@ -548,13 +560,7 @@ class SetupFragment : Fragment() {
             showPermissionDeniedSnackbar()
         }
 
-    private val openCitraDirectory = registerForActivityResult<Uri, Uri>(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { result: Uri? ->
-        if (result == null) {
-            return@registerForActivityResult
-        }
-
+    private fun onOpenCitraDirectory(result: Uri) {
         if (!BuildUtil.isGooglePlayBuild) {
             if (NativeLibrary.getNativePath(result) == "") {
                 SelectUserDirectoryDialogFragment.newInstance(
@@ -562,7 +568,7 @@ class SetupFragment : Fragment() {
                     R.string.invalid_selection,
                     R.string.invalid_user_directory
                 ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-                return@registerForActivityResult
+                return
             }
         }
 
@@ -570,27 +576,22 @@ class SetupFragment : Fragment() {
              null, checkForButtonState)
     }
 
-    private val getGamesDirectory =
-        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { result ->
-            if (result == null) {
-                return@registerForActivityResult
-            }
+    private fun onGetGamesDirectory(result: Uri) {
+        requireActivity().contentResolver.takePersistableUriPermission(
+            result,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
 
-            requireActivity().contentResolver.takePersistableUriPermission(
-                result,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+        // When a new directory is picked, we currently will reset the existing games
+        // database. This effectively means that only one game directory is supported.
+        preferences.edit()
+            .putString(GameHelper.KEY_GAME_PATH, result.toString())
+            .apply()
 
-            // When a new directory is picked, we currently will reset the existing games
-            // database. This effectively means that only one game directory is supported.
-            preferences.edit()
-                .putString(GameHelper.KEY_GAME_PATH, result.toString())
-                .apply()
+        homeViewModel.setGamesDir(requireActivity(), result.path!!)
 
-            homeViewModel.setGamesDir(requireActivity(), result.path!!)
-
-            checkForButtonState.invoke()
-        }
+        checkForButtonState.invoke()
+    }
 
     private fun finishSetup() {
         preferences.edit()

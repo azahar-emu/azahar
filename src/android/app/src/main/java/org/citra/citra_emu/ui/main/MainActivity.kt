@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -61,6 +62,7 @@ import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.ThemeUtil
@@ -78,6 +80,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     companion object {
         const val KEY_SETUP_CURRENT_PAGE = "SetupCurrentPage"
+        const val KEY_SELECTED_CITRA_DIRECTORY = "SelectedCitraDirectory"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -195,6 +198,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     override fun onSaveInstanceState(outState: Bundle) {
         // Save the user's current game state.
         outState.putInt(KEY_SETUP_CURRENT_PAGE, homeViewModel.setupCurrentPage)
+        outState.putString(KEY_SELECTED_CITRA_DIRECTORY, homeViewModel.selectedCitraDirectory.toString())
 
         // Always call the superclass so it can save the view hierarchy state.
         super.onSaveInstanceState(outState)
@@ -281,6 +285,12 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
         if (firstTimeSetup && !homeViewModel.navigatedToSetup) {
             homeViewModel.setupCurrentPage = savedInstanceState?.getInt(KEY_SETUP_CURRENT_PAGE) ?: 0
+            homeViewModel.selectedCitraDirectory =
+                savedInstanceState?.getString(KEY_SELECTED_CITRA_DIRECTORY)?.toUri()
+            if (homeViewModel.selectedCitraDirectory.toString() == "null") {
+                // Why is this necessary lol
+                homeViewModel.selectedCitraDirectory = null
+            }
             navController.navigate(R.id.firstTimeSetupFragment)
             homeViewModel.navigatedToSetup = true
         } else {
@@ -436,5 +446,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
         )
+    }
+
+    val setupOpenCitraDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { result: Uri? ->
+        homeViewModel.selectedCitraDirectory = result
+    }
+
+    val setupGetGamesDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { result: Uri? ->
+        homeViewModel.selectedGamesDirectory = result
     }
 }

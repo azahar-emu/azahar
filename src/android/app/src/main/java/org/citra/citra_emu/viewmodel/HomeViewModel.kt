@@ -7,6 +7,8 @@ package org.citra.citra_emu.viewmodel
 import android.content.res.Resources
 import android.net.Uri
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
@@ -63,6 +65,18 @@ class HomeViewModel : ViewModel() {
     var navigatedToSetup = false
 
     var setupCurrentPage = 0
+
+    private val _selectedCitraDirectory = MutableLiveData<Uri?>()
+    val selectedCitraDirectoryLiveData: LiveData<Uri?> = _selectedCitraDirectory
+    var selectedCitraDirectory: Uri?
+        get() = _selectedCitraDirectory.value
+        set(value) { _selectedCitraDirectory.value = value }
+
+    private val _selectedGamesDirectory = MutableLiveData<Uri?>()
+    val selectedGamesDirectoryLiveData: LiveData<Uri?> = _selectedGamesDirectory
+    var selectedGamesDirectory: Uri?
+        get() = _selectedGamesDirectory.value
+        set(value) { _selectedGamesDirectory.value = value }
 
     fun setNavigationVisibility(visible: Boolean, animated: Boolean) {
         if (_navigationVisible.value.first == visible) {
