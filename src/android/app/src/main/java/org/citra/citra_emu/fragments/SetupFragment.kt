@@ -40,6 +40,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.ButtonState
 import org.citra.citra_emu.model.PageButton
 import org.citra.citra_emu.model.PageState
+import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
@@ -148,6 +149,7 @@ class SetupFragment : Fragment() {
                                     R.string.filesystem_permission,
                                     R.string.filesystem_permission_description,
                                     buttonAction = {
+                                        pageButtonCallback = it
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                             manageExternalStoragePermissionLauncher.launch(
                                                 Intent(
@@ -196,6 +198,7 @@ class SetupFragment : Fragment() {
                                     R.string.notifications,
                                     R.string.notifications_description,
                                     buttonAction = {
+                                        pageButtonCallback = it
                                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                     },
                                     buttonState = {
@@ -220,6 +223,7 @@ class SetupFragment : Fragment() {
                                 R.string.microphone_permission,
                                 R.string.microphone_permission_description,
                                 buttonAction = {
+                                    pageButtonCallback = it
                                     permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 },
                                 buttonState = {
@@ -241,6 +245,7 @@ class SetupFragment : Fragment() {
                                 R.string.camera_permission,
                                 R.string.camera_permission_description,
                                 buttonAction = {
+                                    pageButtonCallback = it
                                     permissionLauncher.launch(Manifest.permission.CAMERA)
                                 },
                                 buttonState = {
@@ -309,6 +314,7 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder,
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
+                                    pageButtonCallback = it
                                     PermissionsHandler.compatibleSelectDirectory(mainActivity.setupOpenCitraDirectory)
                                 },
                                 buttonState = {
@@ -331,7 +337,8 @@ class SetupFragment : Fragment() {
                                 R.drawable.ic_controller,
                                 R.string.games,
                                 R.string.games_description,
-                                buttonAction =  {
+                                buttonAction = {
+                                    pageButtonCallback = it
                                     mainActivity.setupGetGamesDirectory.launch(
                                         Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data
                                     )
@@ -497,6 +504,8 @@ class SetupFragment : Fragment() {
         _binding = null
     }
 
+    private lateinit var pageButtonCallback: SetupCallback
+
     private fun updateNavigationButtons(position: Int) {
         if (position == 0) {
             ViewUtils.hideView(binding.buttonBack)
@@ -517,10 +526,19 @@ class SetupFragment : Fragment() {
 
         val isPageComplete = page.pageSteps() == PageState.PAGE_STEPS_COMPLETE
 
-        binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
-
         if (isPageComplete) {
+            binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
             ViewUtils.showView(binding.buttonNext)
+        } else {
+            page.pageButtons?.forEach {
+                if (it.buttonState() == ButtonState.BUTTON_ACTION_COMPLETE) {
+                    if (this::pageButtonCallback.isInitialized) {
+                        pageButtonCallback.onStepCompleted(it.titleId, pageFullyCompleted = false)
+                    } else {
+                        binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
+                    }
+                }
+            }
         }
     }
 
