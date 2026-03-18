@@ -959,6 +959,7 @@ object NativeLibrary {
         const val DPAD = 780
         const val BUTTON_DEBUG = 781
         const val BUTTON_GPIO14 = 782
+        // TODO: replace these with Hotkey buttons - they aren't native!
         const val BUTTON_SWAP = 800
         const val BUTTON_TURBO = 801
     }

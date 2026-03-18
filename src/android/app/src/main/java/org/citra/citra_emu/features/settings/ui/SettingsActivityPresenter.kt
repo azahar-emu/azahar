@@ -33,7 +33,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView, 
         this.menuTag = menuTag
         this.gameId = gameId
 
-        perGameInGlobalContext = gameId != "" && !Settings.settings.isPerGame()
+        perGameInGlobalContext = gameId != "" && ! Settings.settings.isPerGame()
 
         // sync the active settings into my local settings appropriately
         // if we are editing global settings rom a game, this should just work

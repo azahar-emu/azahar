@@ -248,7 +248,7 @@ class SettingsAdapter(
     private fun onMultiChoiceClick(item: MultiChoiceSetting) {
         clickedItem = item
 
-        val value: BooleanArray = getSelectionForMultiChoiceValue(item);
+        val value: BooleanArray = getSelectionForMultiChoiceValue(item)
         dialog = MaterialAlertDialogBuilder(context)
             .setTitle(item.nameId)
             .setMultiChoiceItems(item.choicesId, value, this)
@@ -268,7 +268,7 @@ class SettingsAdapter(
 
     private fun onStringSingleChoiceClick(item: StringSingleChoiceSetting) {
         clickedItem = item
-        dialog = context?.let {
+        dialog = context.let {
             MaterialAlertDialogBuilder(it)
                 .setTitle(item.nameId)
                 .setSingleChoiceItems(item.choices, item.selectValueIndex, this)
@@ -370,9 +370,9 @@ class SettingsAdapter(
             value = sliderProgress
             textSliderValue?.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
-                    var textValue = s.toString().toFloatOrNull();
+                    var textValue = s.toString().toFloatOrNull()
                     if (item.setting !is FloatSetting) {
-                        textValue = textValue?.roundToInt()?.toFloat();
+                        textValue = textValue?.roundToInt()?.toFloat()
                     }
                     if (textValue == null || textValue < valueFrom || textValue > valueTo) {
                         textInputLayout?.error = "Inappropriate value"
@@ -469,7 +469,7 @@ class SettingsAdapter(
                 val scSetting = clickedItem as? SingleChoiceSetting
                 scSetting?.let {
                     val value = getValueForSingleChoiceSelection(it, which)
-                    if (it.selectedValue != value) fragmentView?.onSettingChanged()
+                    if (it.selectedValue != value) fragmentView.onSettingChanged()
                     it.setSelectedValue(value)
                     fragmentView.loadSettingsList()
                     closeDialog()
@@ -480,7 +480,7 @@ class SettingsAdapter(
                 val scSetting = clickedItem as? StringSingleChoiceSetting
                 scSetting?.let {
                     val value = it.getValueAt(which) ?: ""
-                    if (it.selectedValue != value) fragmentView?.onSettingChanged()
+                    if (it.selectedValue != value) fragmentView.onSettingChanged()
                     it.setSelectedValue(value)
                     fragmentView.loadSettingsList()
                     closeDialog()
@@ -492,7 +492,6 @@ class SettingsAdapter(
                 sliderSetting?.let {
                     val sliderval = it.roundedFloat(sliderProgress)
                     if (sliderval != it.selectedFloat) fragmentView.onSettingChanged()
-                    val s = it.setting
                     when {
                         it.setting?.defaultValue  is Int -> it.setSelectedValue(sliderProgress.roundToInt())
                         else -> it.setSelectedValue(sliderProgress)
@@ -506,7 +505,7 @@ class SettingsAdapter(
                 val inputSetting = clickedItem as? StringInputSetting
                 inputSetting?.let {
                     if (it.selectedValue != textInputValue) {
-                        fragmentView?.onSettingChanged()
+                        fragmentView.onSettingChanged()
                     }
                     it.setSelectedValue(textInputValue)
                     fragmentView.loadSettingsList()
@@ -602,8 +601,9 @@ class SettingsAdapter(
     }
 
     fun onLongClickAutoMap(): Boolean {
+        val settings = fragmentView.activityView?.settings ?: return false
         showConfirmationDialog(R.string.controller_clear_all, R.string.controller_clear_all_confirm) {
-            InputBindingSetting.clearAllBindings()
+            settings.inputMappingManager.clear()
             fragmentView.loadSettingsList()
             fragmentView.onSettingChanged()
         }
@@ -682,18 +682,18 @@ class SettingsAdapter(
     }
 
     private fun getSelectionForMultiChoiceValue(item: MultiChoiceSetting): BooleanArray {
-        val value = item.selectedValues;
-        val valuesId = item.valuesId;
+        val value = item.selectedValues
+        val valuesId = item.valuesId
         if (valuesId > 0) {
-            val valuesArray = context.resources.getIntArray(valuesId);
+            val valuesArray = context.resources.getIntArray(valuesId)
             val res = BooleanArray(valuesArray.size){false}
             for (index in valuesArray.indices) {
                 if (value.contains(valuesArray[index])) {
-                    res[index] = true;
+                    res[index] = true
                 }
             }
-            return res;
+            return res
         }
-        return BooleanArray(1){false};
+        return BooleanArray(1){false}
     }
 }
