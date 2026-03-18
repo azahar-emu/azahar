@@ -22,10 +22,11 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
 import org.citra.citra_emu.display.StereoWhichDisplay
-import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.input.GamepadHelper
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.InputMappingSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
@@ -846,54 +847,34 @@ class SettingsFragmentPresenter(
             )
 
             add(HeaderSetting(R.string.generic_buttons))
-            CitraSettings.buttonKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.buttonTitles[i]))
+            GamepadHelper.buttonKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.buttonTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_circlepad))
-            CitraSettings.circlePadKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
+            GamepadHelper.circlePadKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.axisTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_c))
-            CitraSettings.cStickKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
+            GamepadHelper.cStickKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.axisTitles[i]))
             }
 
-            add(
-                HeaderSetting(
-                    R.string.controller_dpad_axis,
-                    R.string.controller_dpad_axis_description
-                )
-            )
-            CitraSettings.dPadAxisKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.axisTitles[i]))
-            }
-            add(
-                HeaderSetting(
-                    R.string.controller_dpad_button,
-                    R.string.controller_dpad_button_description
-                )
-            )
-            CitraSettings.dPadButtonKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.dPadTitles[i]))
+            add(HeaderSetting(R.string.controller_dpad, R.string.controller_dpad_axis_description))
+
+            GamepadHelper.dPadButtonKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.axisTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_triggers))
-            CitraSettings.triggerKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.triggerTitles[i]))
+            GamepadHelper.triggerKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.triggerTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_hotkeys, R.string.controller_hotkeys_description))
-            CitraSettings.hotKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, CitraSettings.hotkeyTitles[i]))
+            GamepadHelper.hotKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, editingSettings, GamepadHelper.hotkeyTitles[i]))
             }
 
             add(HeaderSetting(R.string.miscellaneous))
@@ -922,18 +903,6 @@ class SettingsFragmentPresenter(
             )
         }
     }
-
-    private fun getInputObject(key: String): AbstractSetting<String> =
-        object : AbstractSetting<String> {
-            override val key = key
-            override val section = CitraSettings.SECTION_CONTROLS
-            override val isRuntimeEditable = true
-            override val defaultValue = ""
-            override fun valueFromString(string: String): String = string
-            override fun valueToString(value: String): String = value
-            // TODO: make input mappings also work per-game, which will be easy if we move
-            //  them to config files
-        }
 
     private fun addGraphicsSettings(sl: ArrayList<SettingsItem>) {
         setSectionTitle(R.string.preferences_graphics)

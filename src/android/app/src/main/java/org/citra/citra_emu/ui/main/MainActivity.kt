@@ -97,7 +97,7 @@ class MainActivity :
             !CitraDirectoryUtils.needToUpdateManually()
         ) {
             // load the global settings from the config file at program launch
-            SettingsFile.loadSettings(CitraSettings.activeSettings)
+            SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
         }
 
         ThemeUtil.themeChangeListener(this)
@@ -294,7 +294,7 @@ class MainActivity :
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
-        SettingsFile.loadSettings(CitraSettings.activeSettings)
+        SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
     }
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {

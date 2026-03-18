@@ -7,7 +7,6 @@ package org.citra.citra_emu.activities
 import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -28,10 +27,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
-import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import org.citra.citra_emu.CitraApplication
+import kotlin.math.abs
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.NativeLibrary.ButtonState
 import org.citra.citra_emu.R
 import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
@@ -39,13 +38,14 @@ import org.citra.citra_emu.databinding.ActivityEmulationBinding
 import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
-import org.citra.citra_emu.features.hotkeys.HotkeyUtility
+import org.citra.citra_emu.features.input.GamepadEventHandler
+import org.citra.citra_emu.features.input.GamepadHelper
+import org.citra.citra_emu.features.input.InputMappingManager
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.CitraSettings
 import org.citra.citra_emu.features.settings.model.GraphicsAPI
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.TextureFilter
-import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
@@ -53,7 +53,6 @@ import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.CitraDirectoryUtils
-import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
@@ -67,13 +66,11 @@ import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
 
 class EmulationActivity : AppCompatActivity() {
-    private val preferences: SharedPreferences
-        get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
     var isActivityRecreated = false
     val emulationViewModel: EmulationViewModel by viewModels()
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
-    private lateinit var hotkeyUtility: HotkeyUtility
+    private lateinit var gamepadEventHandler: GamepadEventHandler
     lateinit var secondaryDisplayManager: SecondaryDisplay
 
     private val onShutdown = Runnable {
@@ -146,7 +143,7 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.initMultiplayer()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
+        gamepadEventHandler = GamepadEventHandler(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
         val navHostFragment =
@@ -228,7 +225,7 @@ class EmulationActivity : AppCompatActivity() {
 
         // load global settings from file if this is a fresh launch from a launcher
         if (CitraSettings.activeSettings.getAllGlobal().isEmpty()) {
-            SettingsFile.loadSettings(CitraSettings.activeSettings)
+            SettingsFile.loadGlobalSettings(CitraSettings.activeSettings)
         }
         val gameId = if (game == null ||
             game.titleId == 0L
@@ -243,7 +240,7 @@ class EmulationActivity : AppCompatActivity() {
             CitraSettings.activeSettings.changeToGlobalContext()
             if (gameId != null) {
                 CitraSettings.activeSettings.gameId = gameId
-                SettingsFile.loadSettings(
+                SettingsFile.loadCustomSettings(
                     CitraSettings.activeSettings,
                     gameId
                 )
@@ -445,16 +442,34 @@ class EmulationActivity : AppCompatActivity() {
 
                 if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                     // If the hotkey is pressed, we don't want to open the drawer
-                    if (!hotkeyUtility.hotkeyIsPressed) {
+                    if (!gamepadEventHandler.hotkeyIsPressed) {
                         onBackPressed()
                         return true
                     }
                 }
-                return hotkeyUtility.handleKeyPress(event)
+                return gamepadEventHandler.handleKeyPress(
+                    if (event.keyCode ==
+                        0
+                    ) {
+                        event.scanCode
+                    } else {
+                        event.keyCode
+                    },
+                    event.device.descriptor
+                )
             }
 
             KeyEvent.ACTION_UP -> {
-                return hotkeyUtility.handleKeyRelease(event)
+                return gamepadEventHandler.handleKeyRelease(
+                    if (event.keyCode ==
+                        0
+                    ) {
+                        event.scanCode
+                    } else {
+                        event.keyCode
+                    },
+                    event.device.descriptor
+                )
             }
 
             else -> {
@@ -487,209 +502,75 @@ class EmulationActivity : AppCompatActivity() {
         if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
             return true
         }
-        val input = event.device
-        val motions = input.motionRanges
-        val axisValuesCirclePad = floatArrayOf(0.0f, 0.0f)
-        val axisValuesCStick = floatArrayOf(0.0f, 0.0f)
-        val axisValuesDPad = floatArrayOf(0.0f, 0.0f)
-        var isTriggerPressedLMapped = false
-        var isTriggerPressedRMapped = false
-        var isTriggerPressedZLMapped = false
-        var isTriggerPressedZRMapped = false
-        var isTriggerPressedL = false
-        var isTriggerPressedR = false
-        var isTriggerPressedZL = false
-        var isTriggerPressedZR = false
-        for (range in motions) {
+        val device = event.device
+
+        val stickAccumulator = HashMap<Int, Pair<Float, Float>>()
+
+        for (range in device.motionRanges) {
             val axis = range.axis
             val origValue = event.getAxisValue(axis)
-            var value = ControllerMappingHelper.scaleAxis(input, axis, origValue)
-            val nextMapping =
-                preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
-            val guestOrientation =
-                preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
-            val inverted = preferences.getBoolean(
-                InputBindingSetting.getInputAxisInvertedKey(axis),
-                false
-            )
-            if (nextMapping == -1 || guestOrientation == -1) {
-                // Axis is unmapped
+            var value = GamepadHelper.scaleAxis(device, axis, origValue)
+            if (value > -0.1f && value < 0.1f) value = 0f
+
+            val axisPair = Pair(axis, if (value >= 0f) 1 else -1)
+
+            // special case where the axis value is 0 - we need to send releases to both directions
+            if (value == 0f) {
+                listOf(Pair(axis, 1), Pair(axis, -1)).forEach { zeroPair ->
+                    InputMappingManager.getOutAxesForAxis(zeroPair).forEach { (outAxis, outDir) ->
+                        val component =
+                            GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
+                        val current =
+                            stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
+                        stickAccumulator[component.joystickType] = if (component.isVertical) {
+                            Pair(current.first, 0f)
+                        } else {
+                            Pair(0f, current.second)
+                        }
+                    }
+                    InputMappingManager.getOutButtonsForAxis(zeroPair).forEach { outButton ->
+                        NativeLibrary.onGamePadEvent(
+                            device.descriptor,
+                            outButton,
+                            ButtonState.RELEASED
+                        )
+                    }
+                }
                 continue
             }
-            if ((value > 0f && value < 0.1f) || (value < 0f && value > -0.1f)) {
-                // Skip joystick wobble
-                value = 0f
+            // Axis to Axis mappings
+            InputMappingManager.getOutAxesForAxis(axisPair).forEach { (outAxis, outDir) ->
+                val component = GamepadHelper.getJoystickComponent(outAxis) ?: return@forEach
+                val current =
+                    stickAccumulator.getOrDefault(component.joystickType, Pair(0f, 0f))
+                val contribution = abs(value) * outDir
+                stickAccumulator[component.joystickType] = if (component.isVertical) {
+                    Pair(current.first, contribution)
+                } else {
+                    Pair(contribution, current.second)
+                }
             }
-            if (inverted) value = -value
 
-            when (nextMapping) {
-                NativeLibrary.ButtonType.STICK_LEFT -> {
-                    axisValuesCirclePad[guestOrientation] = value
-                }
-
-                NativeLibrary.ButtonType.STICK_C -> {
-                    axisValuesCStick[guestOrientation] = value
-                }
-
-                NativeLibrary.ButtonType.DPAD -> {
-                    axisValuesDPad[guestOrientation] = value
-                }
-
-                NativeLibrary.ButtonType.TRIGGER_L -> {
-                    isTriggerPressedLMapped = true
-                    isTriggerPressedL = value != 0f
-                }
-
-                NativeLibrary.ButtonType.TRIGGER_R -> {
-                    isTriggerPressedRMapped = true
-                    isTriggerPressedR = value != 0f
-                }
-
-                NativeLibrary.ButtonType.BUTTON_ZL -> {
-                    isTriggerPressedZLMapped = true
-                    isTriggerPressedZL = value != 0f
-                }
-
-                NativeLibrary.ButtonType.BUTTON_ZR -> {
-                    isTriggerPressedZRMapped = true
-                    isTriggerPressedZR = value != 0f
+            // Axis to Button mappings
+            InputMappingManager.getOutButtonsForAxis(axisPair).forEach { button ->
+                val mapping = InputMappingManager.getMappingForButton(button)
+                if (abs(value) > (mapping?.threshold ?: 0.5f)) {
+                    gamepadEventHandler.handleKeyPress(button, device.descriptor)
+                    NativeLibrary.onGamePadEvent(device.descriptor, button, ButtonState.PRESSED)
+                } else {
+                    NativeLibrary.onGamePadEvent(
+                        device.descriptor,
+                        button,
+                        ButtonState.RELEASED
+                    )
                 }
             }
         }
 
-        // Circle-Pad and C-Stick status
-        NativeLibrary.onGamePadMoveEvent(
-            input.descriptor,
-            NativeLibrary.ButtonType.STICK_LEFT,
-            axisValuesCirclePad[0],
-            axisValuesCirclePad[1]
-        )
-        NativeLibrary.onGamePadMoveEvent(
-            input.descriptor,
-            NativeLibrary.ButtonType.STICK_C,
-            axisValuesCStick[0],
-            axisValuesCStick[1]
-        )
-
-        // Triggers L/R and ZL/ZR
-        if (isTriggerPressedLMapped) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.TRIGGER_L,
-                if (isTriggerPressedL) {
-                    NativeLibrary.ButtonState.PRESSED
-                } else {
-                    NativeLibrary.ButtonState.RELEASED
-                }
-            )
-        }
-        if (isTriggerPressedRMapped) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.TRIGGER_R,
-                if (isTriggerPressedR) {
-                    NativeLibrary.ButtonState.PRESSED
-                } else {
-                    NativeLibrary.ButtonState.RELEASED
-                }
-            )
-        }
-        if (isTriggerPressedZLMapped) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.BUTTON_ZL,
-                if (isTriggerPressedZL) {
-                    NativeLibrary.ButtonState.PRESSED
-                } else {
-                    NativeLibrary.ButtonState.RELEASED
-                }
-            )
-        }
-        if (isTriggerPressedZRMapped) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.BUTTON_ZR,
-                if (isTriggerPressedZR) {
-                    NativeLibrary.ButtonState.PRESSED
-                } else {
-                    NativeLibrary.ButtonState.RELEASED
-                }
-            )
+        stickAccumulator.forEach { (outAxis, value) ->
+            NativeLibrary.onGamePadMoveEvent(device.descriptor, outAxis, value.first, value.second)
         }
 
-        // Work-around to allow D-pad axis to be bound to emulated buttons
-        if (axisValuesDPad[0] == 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_LEFT,
-                NativeLibrary.ButtonState.RELEASED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_RIGHT,
-                NativeLibrary.ButtonState.RELEASED
-            )
-        }
-        if (axisValuesDPad[0] < 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_LEFT,
-                NativeLibrary.ButtonState.PRESSED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_RIGHT,
-                NativeLibrary.ButtonState.RELEASED
-            )
-        }
-        if (axisValuesDPad[0] > 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_LEFT,
-                NativeLibrary.ButtonState.RELEASED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_RIGHT,
-                NativeLibrary.ButtonState.PRESSED
-            )
-        }
-        if (axisValuesDPad[1] == 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_UP,
-                NativeLibrary.ButtonState.RELEASED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_DOWN,
-                NativeLibrary.ButtonState.RELEASED
-            )
-        }
-        if (axisValuesDPad[1] < 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_UP,
-                NativeLibrary.ButtonState.PRESSED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_DOWN,
-                NativeLibrary.ButtonState.RELEASED
-            )
-        }
-        if (axisValuesDPad[1] > 0f) {
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_UP,
-                NativeLibrary.ButtonState.RELEASED
-            )
-            NativeLibrary.onGamePadEvent(
-                NativeLibrary.TOUCHSCREEN_DEVICE,
-                NativeLibrary.ButtonType.DPAD_DOWN,
-                NativeLibrary.ButtonState.PRESSED
-            )
-        }
         return true
     }
 

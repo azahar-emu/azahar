@@ -136,6 +136,8 @@
     <string name="auto_map_image_description">3DS face button diamond with A button highlighted</string>
     <string name="controller_clear_all">Clear All Bindings</string>
     <string name="controller_clear_all_confirm">This will remove all current controller bindings.</string>
+    <string name="controller_reset_all">Reset All Bindings to Global</string>
+    <string name="controller_reset_all_confirm">This will reset all controller bindings to the global binding.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Hotkeys</string>

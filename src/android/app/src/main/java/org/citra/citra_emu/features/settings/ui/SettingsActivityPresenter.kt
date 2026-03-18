@@ -48,7 +48,7 @@ class SettingsActivityPresenter(
             // if we are editing per-game settings when the game is not loaded,
             // we need to load the per-game settings now from the ini file
             if (gameId != "" && CitraSettings.activeSettings.gameId != gameId) {
-                SettingsFile.loadSettings(editingSettings, gameId)
+                SettingsFile.loadCustomSettings(editingSettings, gameId)
             }
         }
     }
