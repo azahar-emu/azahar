@@ -1270,6 +1270,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
+
+
     fun updateShowPerformanceOverlay() {
         if (perfStatsUpdater != null) {
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)

@@ -19,7 +19,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
@@ -198,13 +197,6 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     fun onSettingsReset() {
         // Prevents saving to a non-existent settings file
         presenter.onSettingsReset()
-
-        val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-                Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
-        val editor =
-            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
-        controllerKeys.forEach { editor.remove(it) }
-        editor.apply()
 
         // Delete settings file because the user may have changed values that do not exist in the UI
         val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)

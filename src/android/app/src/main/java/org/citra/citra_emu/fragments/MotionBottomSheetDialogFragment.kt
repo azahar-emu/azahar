@@ -56,36 +56,18 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
         isCancelable = false
         view.requestFocus()
         view.setOnFocusChangeListener { v, hasFocus -> if (!hasFocus) v.requestFocus() }
-        if (setting!!.isButtonMappingSupported()) {
-            dialog?.setOnKeyListener { _, _, event -> onKeyEvent(event) }
-        }
-        if (setting!!.isAxisMappingSupported()) {
-            binding.root.setOnGenericMotionListener { _, event -> onMotionEvent(event) }
-        }
+        dialog?.setOnKeyListener { _, _, event -> onKeyEvent(event) }
+        binding.root.setOnGenericMotionListener { _, event -> onMotionEvent(event) }
 
-        val inputTypeId = when {
-            setting!!.isCirclePad() -> R.string.controller_circlepad
-            setting!!.isCStick() -> R.string.controller_c
-            setting!!.isDPad() -> R.string.controller_dpad
-            setting!!.isTrigger() -> R.string.controller_trigger
-            else -> R.string.button
-        }
+
         binding.textTitle.text =
             String.format(
                 getString(R.string.input_dialog_title),
-                getString(inputTypeId),
-                getString(setting!!.nameId)
+                setting!!.value,""
             )
 
-        var messageResId: Int = R.string.input_dialog_description
-        if (setting!!.isAxisMappingSupported() && !setting!!.isTrigger()) {
-            // Use specialized message for axis left/right or up/down
-            messageResId = if (setting!!.isHorizontalOrientation()) {
-                R.string.input_binding_description_horizontal_axis
-            } else {
-                R.string.input_binding_description_vertical_axis
-            }
-        }
+        val messageResId: Int = R.string.input_dialog_description
+
         binding.textMessage.text = getString(messageResId)
 
         binding.buttonClear.setOnClickListener {
@@ -140,7 +122,7 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
         var numMovedAxis = 0
         var axisMoveValue = 0.0f
         var lastMovedRange: InputDevice.MotionRange? = null
-        var lastMovedDir = '?'
+        var lastMovedDir = 0
         if (waitingForEvent) {
             for (i in motionRanges.indices) {
                 val range = motionRanges[i]
@@ -164,7 +146,7 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
                             axisMoveValue = origValue
                             numMovedAxis++
                             lastMovedRange = range
-                            lastMovedDir = if (origValue < 0.0f) '-' else '+'
+                            lastMovedDir = if (origValue < 0.0f) -1 else 1
                         }
                     } else if (abs(origValue) < 0.25f && abs(previousValue) > 0.75f) {
                         // Special case for d-pads (axis value jumps between 0 and 1 without any values
@@ -172,7 +154,7 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
                         // due to the first press being caught by the "if (firstEvent)" case further up.
                         numMovedAxis++
                         lastMovedRange = range
-                        lastMovedDir = if (previousValue < 0.0f) '-' else '+'
+                        lastMovedDir = if (previousValue < 0.0f) -1 else 1
                     }
                 }
                 previousValues[i] = origValue
@@ -181,7 +163,7 @@ class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
             // If only one axis moved, that's the winner.
             if (numMovedAxis == 1) {
                 waitingForEvent = false
-                setting?.onMotionInput(input, lastMovedRange!!, lastMovedDir)
+                setting?.onMotionInput(lastMovedRange!!, lastMovedDir)
                 dismiss()
             }
         }

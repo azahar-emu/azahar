@@ -12,6 +12,7 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
+import org.citra.citra_emu.features.settings.model.InputMappingSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
@@ -37,7 +38,8 @@ object SettingsFile {
                 IntSetting.values().toList() +
                 FloatSetting.values().toList() +
                 StringSetting.values().toList() +
-                IntListSetting.values().toList()
+                IntListSetting.values().toList() +
+                InputMappingSetting.values().toList()
     }
 
     private fun findSettingByKey(key: String): AbstractSetting<*>? =
@@ -96,6 +98,7 @@ object SettingsFile {
      */
     fun loadSettings(settings: Settings, view: SettingsActivityView? = null) {
         readFile(getSettingsFile(FILE_NAME_CONFIG),settings,false,view)
+        settings.inputMappingManager.rebuild(settings)
     }
 
     /**
@@ -106,6 +109,7 @@ object SettingsFile {
         loadSettings(settings, view)
         val file = findCustomGameSettingsFile(gameId) ?: return
         readFile(file, settings, true, view)
+        settings.inputMappingManager.rebuild(settings)
     }
 
     /**

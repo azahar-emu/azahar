@@ -19,7 +19,6 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
 import org.citra.citra_emu.display.StereoWhichDisplay
-import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -45,6 +44,8 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
 import kotlin.math.roundToInt
+import org.citra.citra_emu.features.input.GamepadHelper
+import org.citra.citra_emu.features.settings.model.InputMappingSetting
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
     private var menuTag: String? = null
@@ -754,45 +755,36 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(HeaderSetting(R.string.generic_buttons))
-            Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.buttonTitles[i]))
+            GamepadHelper.buttonKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings, GamepadHelper.buttonTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_circlepad))
-            Settings.circlePadKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+            GamepadHelper.circlePadKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings,GamepadHelper.axisTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_c))
-            Settings.cStickKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
+            GamepadHelper.cStickKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings, GamepadHelper.axisTitles[i]))
             }
 
-            add(HeaderSetting(R.string.controller_dpad_axis,R.string.controller_dpad_axis_description))
-            Settings.dPadAxisKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.axisTitles[i]))
-            }
-            add(HeaderSetting(R.string.controller_dpad_button,R.string.controller_dpad_button_description))
-            Settings.dPadButtonKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.dPadTitles[i]))
+            add(HeaderSetting(R.string.controller_dpad,R.string.controller_dpad_axis_description))
+
+            GamepadHelper.dPadButtonKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings, GamepadHelper.axisTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_triggers))
-            Settings.triggerKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.triggerTitles[i]))
+            GamepadHelper.triggerKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings, GamepadHelper.triggerTitles[i]))
             }
 
             add(HeaderSetting(R.string.controller_hotkeys,R.string.controller_hotkeys_description))
-            Settings.hotKeys.forEachIndexed { i: Int, key: String ->
-                val button = getInputObject(key)
-                add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
+            GamepadHelper.hotKeys.forEachIndexed { i: Int, setting: InputMappingSetting ->
+                add(InputBindingSetting(setting, settings, GamepadHelper.hotkeyTitles[i]))
             }
+
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(
@@ -804,19 +796,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
-        }
-    }
-
-    private fun getInputObject(key: String): AbstractSetting<String> {
-        return object : AbstractSetting<String> {
-            override val key = key
-            override val section = Settings.SECTION_CONTROLS
-            override val isRuntimeEditable = true
-            override val defaultValue = ""
-            override fun valueFromString(string: String): String = string
-            override fun valueToString(value: String): String = value
-            // TODO: make input mappings also work per-game, which will be easy if we move
-            //  them to config files
         }
     }
 

@@ -173,7 +173,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                         continue
                     }
                     anyOverlayStateChanged = true
-
+                    // TODO - switch these to using standard hotkey buttons instead of nativelibrary buttons
                     if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
                         swapScreen()
                     }
