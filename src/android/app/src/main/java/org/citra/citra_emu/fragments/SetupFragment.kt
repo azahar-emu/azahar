@@ -23,7 +23,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -32,7 +31,6 @@ import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
-import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
@@ -92,23 +90,20 @@ class SetupFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         mainActivity = requireActivity() as MainActivity
 
-        homeViewModel.setNavigationVisibility(visible = false, animated = false)
-
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (binding.viewPager2.currentItem > 0) {
-                        pageBackward()
-                    } else {
-                        requireActivity().finish()
-                    }
-                }
+        homeViewModel.selectedCitraDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
+            if (uri == null) {
+                return@observe
             }
-        )
-
-        requireActivity().window.navigationBarColor =
-            ContextCompat.getColor(requireContext(), android.R.color.transparent)
+            onOpenCitraDirectory(uri)
+            homeViewModel.selectedCitraDirectory = null
+        }
+        homeViewModel.selectedGamesDirectoryLiveData.observe(viewLifecycleOwner) { uri ->
+            if (uri == null) {
+                return@observe
+            }
+            onGetGamesDirectory(uri)
+            homeViewModel.selectedGamesDirectory = null
+        }
 
         pages = mutableListOf()
         pages.apply {
@@ -320,7 +315,7 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
                                     pageButtonCallback = it
-                                    PermissionsHandler.compatibleSelectDirectory(openCitraDirectory)
+                                    PermissionsHandler.compatibleSelectDirectory(mainActivity.setupOpenCitraDirectory)
                                 },
                                 buttonState = {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {
@@ -342,9 +337,9 @@ class SetupFragment : Fragment() {
                                 R.drawable.ic_controller,
                                 R.string.games,
                                 R.string.games_description,
-                                buttonAction =  {
+                                buttonAction = {
                                     pageButtonCallback = it
-                                    getGamesDirectory.launch(
+                                    mainActivity.setupGetGamesDirectory.launch(
                                         Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).data
                                     )
                                 },
@@ -409,26 +404,32 @@ class SetupFragment : Fragment() {
         }
 
         binding.viewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
-            var previousPosition: Int = 0
 
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-
-                if (position == 1 && previousPosition == 0) {
-                    ViewUtils.showView(binding.buttonNext)
-                    ViewUtils.showView(binding.buttonBack)
-                } else if (position == 0 && previousPosition == 1) {
-                    ViewUtils.hideView(binding.buttonBack)
-                    ViewUtils.hideView(binding.buttonNext)
-                } else if (position == pages.size - 1 && previousPosition == pages.size - 2) {
-                    ViewUtils.hideView(binding.buttonNext)
-                } else if (position == pages.size - 2 && previousPosition == pages.size - 1) {
-                    ViewUtils.showView(binding.buttonNext)
-                }
-
-                previousPosition = position
+                updateNavigationButtons(position)
             }
         })
+
+        homeViewModel.setNavigationVisibility(visible = false, animated = false)
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (binding.viewPager2.currentItem > 0) {
+                        pageBackward()
+                    } else {
+                        requireActivity().finish()
+                    }
+                }
+            }
+        )
+
+        binding.viewPager2.currentItem = homeViewModel.setupCurrentPage
+
+        requireActivity().window.navigationBarColor =
+            ContextCompat.getColor(requireContext(), android.R.color.transparent)
 
         binding.buttonNext.setOnClickListener {
             val index = binding.viewPager2.currentItem
@@ -479,29 +480,23 @@ class SetupFragment : Fragment() {
         }
         binding.buttonBack.setOnClickListener { pageBackward() }
 
-        if (savedInstanceState != null) {
-            val nextIsVisible = savedInstanceState.getBoolean(KEY_NEXT_VISIBILITY)
-            val backIsVisible = savedInstanceState.getBoolean(KEY_BACK_VISIBILITY)
-            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED)!!
-
-            if (nextIsVisible) {
-                binding.buttonNext.visibility = View.VISIBLE
-            }
-            if (backIsVisible) {
-                binding.buttonBack.visibility = View.VISIBLE
-            }
-        } else {
+        if (savedInstanceState == null) {
             hasBeenWarned = BooleanArray(pages.size)
+        } else {
+            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED) ?: BooleanArray(pages.size)
         }
+
+        updateNavigationButtons(binding.viewPager2.currentItem)
 
         setInsets()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(KEY_NEXT_VISIBILITY, binding.buttonNext.isVisible)
-        outState.putBoolean(KEY_BACK_VISIBILITY, binding.buttonBack.isVisible)
-        outState.putBooleanArray(KEY_HAS_BEEN_WARNED, hasBeenWarned)
+
+        if (::hasBeenWarned.isInitialized) {
+            outState.putBooleanArray(KEY_HAS_BEEN_WARNED, hasBeenWarned)
+        }
     }
 
     override fun onDestroyView() {
@@ -510,15 +505,39 @@ class SetupFragment : Fragment() {
     }
 
     private lateinit var pageButtonCallback: SetupCallback
-    private val checkForButtonState: () -> Unit = {
-        val page = pages[binding.viewPager2.currentItem]
-        page.pageButtons?.forEach {
-            if (it.buttonState() == ButtonState.BUTTON_ACTION_COMPLETE) {
-                pageButtonCallback.onStepCompleted(it.titleId, pageFullyCompleted = false)
-            }
 
-            if (page.pageSteps() == PageState.PAGE_STEPS_COMPLETE) {
-                pageButtonCallback.onStepCompleted(0, pageFullyCompleted = true)
+    private fun updateNavigationButtons(position: Int) {
+        if (position == 0) {
+            ViewUtils.hideView(binding.buttonBack)
+        } else {
+            ViewUtils.showView(binding.buttonBack)
+        }
+
+        if (position == 0 || position == pages.size - 1) {
+            ViewUtils.hideView(binding.buttonNext)
+        } else {
+            ViewUtils.showView(binding.buttonNext)
+        }
+    }
+
+    private val checkForButtonState: () -> Unit = {
+        val currentIndex = binding.viewPager2.currentItem
+        val page = pages[currentIndex]
+
+        val isPageComplete = page.pageSteps() == PageState.PAGE_STEPS_COMPLETE
+
+        if (isPageComplete) {
+            binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
+            ViewUtils.showView(binding.buttonNext)
+        } else {
+            page.pageButtons?.forEach {
+                if (it.buttonState() == ButtonState.BUTTON_ACTION_COMPLETE) {
+                    if (this::pageButtonCallback.isInitialized) {
+                        pageButtonCallback.onStepCompleted(it.titleId, pageFullyCompleted = false)
+                    } else {
+                        binding.viewPager2.adapter?.notifyItemChanged(currentIndex)
+                    }
+                }
             }
         }
     }
@@ -559,13 +578,7 @@ class SetupFragment : Fragment() {
             showPermissionDeniedSnackbar()
         }
 
-    private val openCitraDirectory = registerForActivityResult<Uri, Uri>(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { result: Uri? ->
-        if (result == null) {
-            return@registerForActivityResult
-        }
-
+    private fun onOpenCitraDirectory(result: Uri) {
         if (!BuildUtil.isGooglePlayBuild) {
             if (NativeLibrary.getNativePath(result) == "") {
                 SelectUserDirectoryDialogFragment.newInstance(
@@ -573,34 +586,30 @@ class SetupFragment : Fragment() {
                     R.string.invalid_selection,
                     R.string.invalid_user_directory
                 ).show(mainActivity.supportFragmentManager, SelectUserDirectoryDialogFragment.TAG)
-                return@registerForActivityResult
+                return
             }
         }
 
-        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result, pageButtonCallback, checkForButtonState)
+        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result,
+             null, checkForButtonState)
     }
 
-    private val getGamesDirectory =
-        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { result ->
-            if (result == null) {
-                return@registerForActivityResult
-            }
+    private fun onGetGamesDirectory(result: Uri) {
+        requireActivity().contentResolver.takePersistableUriPermission(
+            result,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
 
-            requireActivity().contentResolver.takePersistableUriPermission(
-                result,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
+        // When a new directory is picked, we currently will reset the existing games
+        // database. This effectively means that only one game directory is supported.
+        preferences.edit()
+            .putString(GameHelper.KEY_GAME_PATH, result.toString())
+            .apply()
 
-            // When a new directory is picked, we currently will reset the existing games
-            // database. This effectively means that only one game directory is supported.
-            preferences.edit()
-                .putString(GameHelper.KEY_GAME_PATH, result.toString())
-                .apply()
+        homeViewModel.setGamesDir(requireActivity(), result.path!!)
 
-            homeViewModel.setGamesDir(requireActivity(), result.path!!)
-
-            checkForButtonState.invoke()
-        }
+        checkForButtonState.invoke()
+    }
 
     private fun finishSetup() {
         preferences.edit()
@@ -611,10 +620,12 @@ class SetupFragment : Fragment() {
 
     fun pageForward() {
         binding.viewPager2.currentItem = binding.viewPager2.currentItem + 1
+        homeViewModel.setupCurrentPage = binding.viewPager2.currentItem
     }
 
     fun pageBackward() {
         binding.viewPager2.currentItem = binding.viewPager2.currentItem - 1
+        homeViewModel.setupCurrentPage = binding.viewPager2.currentItem
     }
 
     fun setPageWarned(page: Int) {
