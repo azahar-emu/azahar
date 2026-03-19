@@ -107,9 +107,18 @@
     <string name="search_recently_added">Ostatnio dodane</string>
     <string name="search_installed">Zainstalowane</string>
 
+    <!-- Input related strings -->
+    <string name="controller_auto_map">Auto-mapowanie Kontrolera</string>
+    <string name="controller_auto_map_description">Zastosuj standardowe mapowanie gamepada dla wszystkich przycisków i osi.</string>
+    <string name="auto_map_prompt">Naciśnij ten przycisk na kontrolerze!</string>
+    <string name="auto_map_image_description">Przycisk kierunkowy 3DS z zaznaczonym przyciskiem A</string>
+    <string name="controller_clear_all">Wyczyść wszystkie mapowania</string>
+    <string name="controller_clear_all_confirm">Spowoduje to usunięcie wszystkich bieżących mapowań kontrolera.</string>
     <string name="controller_circlepad">Analog</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Skróty klawiszowe</string>
+    <string name="controller_hotkeys_description">Jeśli opcja \"Włącz skrót klawiszowy” jest włączona, należy nacisnąć ten klawisz oprócz przypisanego skrótu klawiszowego.</string>
+    <string name="controller_hotkey_enable_button">Włącz skrót klawiszowy</string>
     <string name="controller_triggers">Spusty</string>
     <string name="controller_trigger">Spust</string>
     <string name="controller_dpad">Krzyżak</string>
@@ -327,6 +336,8 @@
     <string name="deterministic_async_operations_description">Sprawia, że operacje asynchroniczne są deterministyczne dla debugowania. Włączenie tej opcji może powodować zawieszanie się gry.</string>
     <string name="enable_rpc_server">Włącz serwer RPC</string>
     <string name="enable_rpc_server_desc">Włącza serwer RPC na porcie 45987. Pozwala to na zdalny odczyt/zapis pamięci gościa. Nie włączaj tej opcji, jeśli nie wiesz, co robisz.</string>
+    <string name="toggle_unique_data_console_type">Przełącz typ indywidualnych danych konsoli</string>
+    <string name="toggle_unique_data_console_type_desc">Przełącza unikalny typ konsoli danych (Old 3DS &#8596; New 3DS), aby umożliwić pobranie oprogramowania układowego przeciwnego typu z ustawień systemowych.</string>
     <string name="shader_jit">Aktywuj Shader JIT</string>
     <string name="shader_jit_description">Używa silnika JIT zamiast interpretera do programowej emulacji shaderów.</string>
 
@@ -337,6 +348,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Odwrócony widok</string>
     <string name="layout_screen_orientation_portrait">Ekran</string>
     <string name="layout_screen_orientation_portrait_reverse">Odwrócony Ekran</string>
+    <string name="layouts_to_cycle">Układy do cyklu</string>
+    <string name="layouts_to_cycle_description">Które układy są przełączane za pomocą skrótu do układu cyklu</string>
     <string name="aspect_ratio_default">Domyślny</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -357,7 +370,7 @@
     <string name="learn_more">Dowiedz się więcej</string>
     <string name="close">Zamknij</string>
     <string name="reset_to_default">Przywróć ustawienia domyślne</string>
-    <string name="redump_games"><![CDATA[Postępuj zgodnie z poniższymi krokami, aby ponownie zrzucić <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">kartridże z grami</a> lub <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">zainstalowane tytuły</a>.]]></string>
+    <string name="redump_games"><![CDATA[Postępuj zgodnie z poniższymi krokami, aby zrzucić <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">kartridże z grami</a> lub <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">zainstalowane tytuły</a>.]]></string>
     <string name="option_default">Domyślne</string>
     <string name="none">Brak</string>
     <string name="auto">Automatyczne</string>
