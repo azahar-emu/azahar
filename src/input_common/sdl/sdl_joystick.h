@@ -1,3 +1,9 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
 #include <unordered_set>
 #include <SDL.h>
 #include "sdl_impl.h"
@@ -120,6 +126,10 @@ public:
      */
     int GetPort() const {
         return port;
+    }
+
+    std::tuple<float, float, float> GetTouch(int pad) const {
+        return state.touchpad.at(pad);
     }
 
     SDL_Joystick* GetSDLJoystick() const {

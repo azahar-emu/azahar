@@ -22,7 +22,6 @@
 #include "common/threadsafe_queue.h"
 #include "core/frontend/input.h"
 #include "input_common/sdl/sdl_impl.h"
-#include "input_common/sdl/sdl_joystick.h"
 
 // These structures are not actually defined in the headers, so we need to define them here to use
 // them.
@@ -716,7 +715,8 @@ public:
         const std::string guid = params.Get("guid", "0");
         const int port = params.Get("port", 0);
         const int touchpad = params.Get("touchpad", 0);
-        auto joystick = state.GetSDLJoystickByGUID(guid, port);
+        auto joysticks = state.GetJoysticksByGUID(guid);
+        auto joystick = joysticks->size() > port ? joysticks->at(port) : joysticks->at(0);
         return std::make_unique<SDLTouch>(joystick, touchpad);
     }
 
