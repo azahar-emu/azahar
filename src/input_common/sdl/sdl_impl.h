@@ -10,13 +10,7 @@
 #include <unordered_map>
 #include "common/settings.h"
 #include "common/threadsafe_queue.h"
-#include "input_common/sdl/sdl.h"
 #include "input_common/sdl/sdl_joystick.h"
-
-union SDL_Event;
-using SDL_Joystick = struct _SDL_Joystick;
-using SDL_JoystickID = s32;
-using SDL_GameController = struct _SDL_GameController;
 
 namespace InputCommon::SDL {
 
