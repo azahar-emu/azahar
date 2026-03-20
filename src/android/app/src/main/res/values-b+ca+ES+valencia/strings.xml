@@ -371,6 +371,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="learn_more">Més Informació</string>
     <string name="close">Tancar</string>
     <string name="reset_to_default">Restablir valors de fàbrica</string>
+    <string name="redump_games"><![CDATA[Per favor, seguix les guies per a bolcar els teus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartutxos de joc</a> i/o <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títols instal·lats</a>.]]></string>
     <string name="option_default">Per omissió</string>
     <string name="none">Cap</string>
     <string name="auto">Auto</string>

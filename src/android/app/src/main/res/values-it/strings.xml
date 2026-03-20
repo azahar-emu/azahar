@@ -80,7 +80,7 @@
     <string name="permissions">Permessi</string>
     <string name="select_emulator_data_folders">Cartella dati</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Seleziona la cartella dati<br/>(La cartella utente è richiesta)]]></string>
-    <string name="permissions_description">Concedere autorizzazioni opzionali per utilizzare specifiche funzionalità dell\'emulatore</string>
+    <string name="permissions_description">Concedi permessi facoltativi per utilizzare funzionalità specifiche dell\'emulatore</string>
     <string name="warning_help">Aiuto</string>
     <string name="warning_skip">Salta</string>
     <string name="warning_cancel">Annulla</string>
@@ -95,7 +95,7 @@
     <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Seleziona nuovamente la cartella per ripristinare i permessi e continuare.</string>
     <string name="invalid_selection">Selezione non valida</string>
     <string name="invalid_user_directory">La cartella utente selezionata non è valida.\nSelezionala di nuovo assicurandoti di partire dalla memoria principale del dispositivo.</string>
-    <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti di app o Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
+    <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti dell\' app o di Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
     <string name="set_up_theme_settings">Impostazioni tema</string>
     <string name="setup_theme_settings_description">Configura le impostazioni del tema di Azahar.</string>
     <string name="setup_set_theme">Imposta tema</string>
