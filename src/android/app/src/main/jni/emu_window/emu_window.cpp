@@ -25,9 +25,10 @@ bool EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
     render_window = surface;
     window_info.type = Frontend::WindowSystemType::Android;
     window_info.render_surface = surface;
-    window_width = ANativeWindow_getWidth(surface);
-    window_height = ANativeWindow_getHeight(surface);
-
+    if (surface != nullptr) {
+        window_width = ANativeWindow_getWidth(surface);
+        window_height = ANativeWindow_getHeight(surface);
+    }
     StopPresenting();
     OnFramebufferSizeChanged();
     return true;
