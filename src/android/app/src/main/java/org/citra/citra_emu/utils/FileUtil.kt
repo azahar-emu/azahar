@@ -547,7 +547,7 @@ object FileUtil {
     }
 
     @JvmStatic
-    fun isNativePath(path: String): Boolean =
+    fun isNativePath(path: String): Boolean = // FIXME: This function name is bullshit -OS
         try {
             path[0] == '/'
         } catch (e: StringIndexOutOfBoundsException) {
