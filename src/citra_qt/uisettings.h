@@ -13,6 +13,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVector>
+#include "citra_qt/setting_qkeys.h"
 #include "common/settings.h"
 
 namespace UISettings {
@@ -164,6 +165,11 @@ struct Values {
     Settings::Setting<bool> show_console{false, "showConsole"};
 
     bool shortcut_already_warned = false;
+
+    // this isn't really a UI setting, but it's a citra_qt exclusive setting so here we are
+    Settings::Setting<Settings::InputMappingType> controller_hotkey_maptype{
+        Settings::InputMappingType::AllControllers,
+        Settings::QKeys::controller_hotkey_maptype.toStdString()};
 };
 
 extern Values values;

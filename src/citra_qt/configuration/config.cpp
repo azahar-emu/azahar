@@ -336,8 +336,8 @@ void QtConfig::ReadControlValues() {
 
     ReadBasicSetting(Settings::values.use_artic_base_controller);
 
-    Settings::values.controller_hotkey_maptype = static_cast<Settings::InputMappingType>(
-        ReadSetting(QString::fromStdString(Settings::Keys::controller_hotkey_maptype),
+    UISettings::values.controller_hotkey_maptype = static_cast<Settings::InputMappingType>(
+        ReadSetting(Settings::QKeys::controller_hotkey_maptype,
                     static_cast<int>(Settings::InputMappingType::AllControllers))
             .toInt());
 
@@ -380,7 +380,7 @@ void QtConfig::ReadControlValues() {
         profile.name =
             ReadSetting(Settings::QKeys::name, QStringLiteral("Default")).toString().toStdString();
         profile.maptype = static_cast<Settings::InputMappingType>(
-            ReadSetting(QString::fromStdString(Settings::Keys::input_maptype), 2).toInt());
+            ReadSetting(Settings::QKeys::input_maptype, 2).toInt());
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -993,8 +993,8 @@ void QtConfig::SaveControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     WriteBasicSetting(Settings::values.use_artic_base_controller);
-    WriteSetting(QString::fromStdString(Settings::Keys::controller_hotkey_maptype),
-                 static_cast<int>(Settings::values.controller_hotkey_maptype.GetValue()),
+    WriteSetting(Settings::QKeys::controller_hotkey_maptype,
+                 static_cast<int>(UISettings::values.controller_hotkey_maptype.GetValue()),
                  static_cast<int>(Settings::InputMappingType::GuidPort));
     WriteSetting(Settings::QKeys::profile, Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray(QStringLiteral("profiles"));
@@ -1003,8 +1003,7 @@ void QtConfig::SaveControlValues() {
         const auto& profile = Settings::values.input_profiles[p];
         WriteSetting(Settings::QKeys::name, QString::fromStdString(profile.name),
                      QStringLiteral("default"));
-        WriteSetting(QString::fromStdString(Settings::Keys::input_maptype),
-                     static_cast<int>(profile.maptype),
+        WriteSetting(Settings::QKeys::input_maptype, static_cast<int>(profile.maptype),
                      static_cast<int>(Settings::InputMappingType::GuidPort));
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);

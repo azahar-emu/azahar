@@ -472,9 +472,7 @@ struct Values {
     Setting<bool> use_artic_base_controller{false, Keys::use_artic_base_controller};
 
     SwitchableSetting<bool> enable_gamemode{true, Keys::enable_gamemode};
-    // Should this be a QT setting somehow?
-    SwitchableSetting<InputMappingType> controller_hotkey_maptype{
-        Settings::InputMappingType::AllControllers, Keys::controller_hotkey_maptype};
+
     // Core
     Setting<bool> use_cpu_jit{true, Keys::use_cpu_jit};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, Keys::cpu_clock_percentage};

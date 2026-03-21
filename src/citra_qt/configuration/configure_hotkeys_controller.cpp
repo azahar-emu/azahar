@@ -22,7 +22,7 @@ ConfigureControllerHotkeys::ConfigureControllerHotkeys(QWidget* parent)
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
     ui->comboBoxMappingType->setCurrentIndex(
-        static_cast<int>(Settings::values.controller_hotkey_maptype.GetValue()));
+        static_cast<int>(UISettings::values.controller_hotkey_maptype.GetValue()));
     model = new QStandardItemModel(this);
     model->setColumnCount(2);
     model->setHorizontalHeaderLabels({tr("Action"), tr("Controller Hotkey")});
@@ -85,7 +85,7 @@ void ConfigureControllerHotkeys::Configure(QModelIndex index) {
 }
 
 void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
-    Settings::InputMappingType maptype = Settings::values.controller_hotkey_maptype =
+    Settings::InputMappingType maptype = UISettings::values.controller_hotkey_maptype =
         static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
 
     for (int key_id = 0; key_id < model->rowCount(); key_id++) {

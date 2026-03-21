@@ -8,7 +8,6 @@
 foreach(KEY IN ITEMS
     "use_artic_base_controller"
     "enable_gamemode"
-    "controller_hotkey_maptype"
     "use_cpu_jit"
     "cpu_clock_percentage"
     "is_new_3ds"
@@ -203,6 +202,8 @@ if (ENABLE_QT)
         "use_touchpad"
         "controller_touch_device"
         "use_touch_from_button"
+        "input_maptype"
+        "controller_hotkey_maptype"
         "touch_from_button_map"
         "touch_from_button_maps" # Why are these two so similar? Basically typo bait
         "nand_directory"
