@@ -3,7 +3,7 @@
 
     <string name="app_disclaimer">Este software irá executar aplicativos feitos para o console portátil Nintendo 3DS. Nenhum jogo está incluído.\n\nAntes de começar a emulação, selecione uma pasta para armazenar os dados do usuário do Azahar.\n\nO que é isto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dados e armazenamento do usuário do Azahar para Android</a></string>
     <string name="app_notification_channel_description">Notificações do emulador Azahar 3DS</string>
-    <string name="app_notification_running">Azahar está Executando</string>
+    <string name="app_notification_running">Azahar em Execução</string>
     <string name="app_game_install_description">Em seguida, você precisará selecionar uma pasta de Aplicativos. O Azahar exibirá todas as ROMs de 3DS dentro da pasta selecionada no aplicativo.\n\nROMs, atualizações e DLC no formato CIA precisarão ser instaladas separadamente clicando no ícone da pasta e selecionando Instalar CIA.</string>
 
     <!-- Home Strings -->
@@ -23,8 +23,8 @@
     <string name="custom_driver_not_supported">Drivers personalizados não suportados</string>
     <string name="custom_driver_not_supported_description">O carregamento de driver personalizado não é suportado atualmente para este dispositivo.\nVerifique esta opção novamente no futuro para ver se o suporte foi adicionado!</string>
     <string name="share_log_not_found">Nenhum arquivo de log encontrado</string>
-    <string name="select_games_folder">Selecione a Pasta de Aplicativos</string>
-    <string name="select_games_folder_description">Permitir que o Azahar preencha a lista de aplicativos</string>
+    <string name="select_games_folder">Selecionar Pasta de Aplicativos</string>
+    <string name="select_games_folder_description">Permite que o Azahar preencha a lista de aplicativos</string>
     <string name="about">Sobre</string>
     <string name="citra_description">Um emulador de 3DS de código aberto</string>
     <string name="about_description">Versão da compilação, créditos e mais</string>
@@ -107,9 +107,18 @@
     <string name="search_recently_added">Recentemente adicionado</string>
     <string name="search_installed">Instalado</string>
 
+    <!-- Input related strings -->
+    <string name="controller_auto_map">Mapeamento Automático do Controle</string>
+    <string name="controller_auto_map_description">Aplicar mapeamento padrão do controle para todos os botões e eixos</string>
+    <string name="auto_map_prompt">Pressione este botão no seu controle!</string>
+    <string name="auto_map_image_description">Botões de face em diamante do 3DS com o botão A destacado</string>
+    <string name="controller_clear_all">Limpar Todos os Mapeamentos</string>
+    <string name="controller_clear_all_confirm">Isso removerá todos os mapeamentos de controle atuais.</string>
     <string name="controller_circlepad">Analógico</string>
     <string name="controller_c">Direcional C-Stick</string>
     <string name="controller_hotkeys">Teclas de atalho</string>
+    <string name="controller_hotkeys_description">Se a tecla \"Ativar Atalho\" estiver mapeada, ela deve ser pressionada em conjunto com o atalho mapeado</string>
+    <string name="controller_hotkey_enable_button">Ativar Atalho</string>
     <string name="controller_triggers">Gatilhos</string>
     <string name="controller_trigger">Gatilho</string>
     <string name="controller_dpad">Direcional D-Pad</string>
@@ -228,6 +237,8 @@
     <string name="async_shaders_description">Compila shaders em segundo plano para reduzir travamentos durante o jogo. Quando ativado, espere falhas gráficas temporárias</string>
     <string name="linear_filtering">Filtragem Linear</string>
     <string name="linear_filtering_description">Ativa a filtragem linear, que suaviza o visual do jogo.</string>
+    <string name="use_integer_scaling">Escala Inteira</string>
+    <string name="use_integer_scaling_description">Garante que a tela maior em todos os layouts tenha uma escala inteira de 240px de altura, correspondente à tela original do 3DS.</string>
     <string name="texture_filter_name">Filtro de texturas</string>
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
     <string name="delay_render_thread">Atrasar Thread de Renderização do Aplicativo</string>
@@ -325,6 +336,8 @@
     <string name="deterministic_async_operations_description">Torna as operações assíncronas determinísticas para depuração. Ativar essa opção pode causar congelamentos.</string>
     <string name="enable_rpc_server">Ativar servidor RPC</string>
     <string name="enable_rpc_server_desc">Ativa o servidor RPC na porta 45987. Isso permite ler e escrever remotamente a memória do sistema emulado.</string>
+    <string name="toggle_unique_data_console_type">Alternar tipo de console de dados únicos</string>
+    <string name="toggle_unique_data_console_type_desc">Alterna o tipo de console de dados únicos (Old 3DS &#8596; New 3DS) para permitir o download do firmware do sistema oposto nas configurações do sistema. </string>
     <string name="shader_jit">Ativar Shader JIT</string>
     <string name="shader_jit_description">Usa o mecanismo JIT em vez do interpretador para a emulação de shaders por software.</string>
 
@@ -335,6 +348,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Paisagem Reversa</string>
     <string name="layout_screen_orientation_portrait">Retrato</string>
     <string name="layout_screen_orientation_portrait_reverse">Retrato Reverso</string>
+    <string name="layouts_to_cycle">Layouts para Alternar</string>
+    <string name="layouts_to_cycle_description">Quais layouts são percorridos pela tecla de atalho \"Alternar Layout\"</string>
     <string name="aspect_ratio_default">Padrão</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -355,7 +370,7 @@
     <string name="learn_more">Saber mais</string>
     <string name="close">Fechar</string>
     <string name="reset_to_default">Redefinir para o Padrão</string>
-    <string name="redump_games"><![CDATA[Por favor, siga os tutoriais para recarregar seus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuchos de jogos</a> ou <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títulos instalados</a>.]]></string>
+    <string name="redump_games"><![CDATA[Por favor, siga os guias para extrair novamente seus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuchos de jogo</a> ou <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títulos instalados</a>.]]></string>
     <string name="option_default">Padrão</string>
     <string name="none">Nenhum</string>
     <string name="auto">Automático</string>
@@ -472,7 +487,7 @@
     <string name="emulation_custom_layout_y">Posição Y</string>
     <string name="emulation_custom_layout_width">Largura</string>
     <string name="emulation_custom_layout_height">Altura</string>
-    <string name="emulation_cycle_landscape_layouts">Trocar Disposições</string>
+    <string name="emulation_cycle_landscape_layouts">Alternar Layout</string>
     <string name="emulation_swap_screens">Trocar telas</string>
     <string name="emulation_rotate_upright">Girar Tela para Posição Vertical</string>
     <string name="emulation_touch_overlay_reset">Redefinir sobreposição</string>

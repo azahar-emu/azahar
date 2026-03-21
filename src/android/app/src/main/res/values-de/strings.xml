@@ -325,7 +325,6 @@
     <string name="learn_more">Mehr erfahren</string>
     <string name="close">Schließen</string>
     <string name="reset_to_default">Auf Standard zurücksetzen</string>
-    <string name="redump_games"><![CDATA[Bitte befolge die Anweisungen, um deine Spiele (<a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">Karten</a> oder <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">Downloadtitel</a>)erneut zu dumpen.]]></string>
     <string name="option_default">Standard</string>
     <string name="none">Keine</string>
     <string name="auto">Auto</string>

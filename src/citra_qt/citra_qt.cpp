@@ -1290,7 +1290,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
-            LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename.toStdString());
+            LOG_CRITICAL(Frontend, "Failed to obtain loader for {}", filename.toStdString());
             QMessageBox::critical(
                 this, tr("Invalid App Format"),
                 tr("Your app format is not supported.<br/>Please follow the guides to redump your "

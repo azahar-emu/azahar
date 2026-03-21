@@ -39,6 +39,8 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationBarView
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.NativeLibrary
@@ -73,6 +75,10 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     override var themeId: Int = 0
+
+    companion object {
+        const val KEY_SETUP_CURRENT_PAGE = "SetupCurrentPage"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         RefreshRateUtil.enforceRefreshRate(this)
@@ -130,12 +136,22 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             )
         }
 
+        var applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
-        setUpNavigation(navHostFragment.navController)
+        setUpNavigation(savedInstanceState, navHostFragment.navController)
         (binding.navigationView as NavigationBarView).setOnItemReselectedListener {
             when (it.itemId) {
-                R.id.gamesFragment -> gamesViewModel.setShouldScrollToTop(true)
+                R.id.gamesFragment -> {
+                    if (applicationsClickTimestamp.elapsedNow() < 300.milliseconds) {
+                        Toast.makeText(this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG)
+                            .show()
+                    }
+                    applicationsClickTimestamp = TimeSource.Monotonic.markNow()
+
+                    gamesViewModel.setShouldScrollToTop(true)
+                }
                 R.id.searchFragment -> gamesViewModel.setSearchFocused(true)
                 R.id.homeSettingsFragment -> SettingsActivity.launch(
                     this,
@@ -174,6 +190,14 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         }
 
         setInsets()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        // Save the user's current game state.
+        outState.putInt(KEY_SETUP_CURRENT_PAGE, homeViewModel.setupCurrentPage)
+
+        // Always call the superclass so it can save the view hierarchy state.
+        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() {
@@ -251,11 +275,12 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
     }
 
-    private fun setUpNavigation(navController: NavController) {
+    private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {
         val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
 
         if (firstTimeSetup && !homeViewModel.navigatedToSetup) {
+            homeViewModel.setupCurrentPage = savedInstanceState?.getInt(KEY_SETUP_CURRENT_PAGE) ?: 0
             navController.navigate(R.id.firstTimeSetupFragment)
             homeViewModel.navigatedToSetup = true
         } else {
@@ -411,5 +436,17 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
         )
+    }
+
+    val setupOpenCitraDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { result: Uri? ->
+        homeViewModel.selectedCitraDirectory = result
+    }
+
+    val setupGetGamesDirectory = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { result: Uri? ->
+        homeViewModel.selectedGamesDirectory = result
     }
 }

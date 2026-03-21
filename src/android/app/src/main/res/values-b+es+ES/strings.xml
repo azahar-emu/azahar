@@ -463,8 +463,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="bg_red">Rojo</string>
     <string name="bg_green">Verde</string>
     <string name="bg_blue">Azul</string>
-    <string name="second_screen_opacity">Opacidad personalizado de la segunda pantalla</string>
-    <string name="second_screen_opacity_description">La opacidad de la segunda pantalla de 3DS al usar el pantalla personalizado. Útil si la segunda pantalla ésta posicionada en la parte superior de la primera pantalla.</string>
+    <string name="second_screen_opacity">Opacidad personalizada de la segunda pantalla</string>
+    <string name="second_screen_opacity_description">La opacidad de la segunda pantalla de 3DS al usar la pantalla personalizada. Útil si la segunda pantalla ésta posicionada en la parte superior de la primera pantalla.</string>
     <string name="emulation_small_screen_position">Posición Pantalla Pequeña</string>
     <string name="small_screen_position_description">¿Dónde debería aparecer la pantalla pequeña en relación con la grande en Disposicion de Pantalla Grande?</string>
     <string name="small_screen_position_top_right">Arriba a la Derecha</string>
