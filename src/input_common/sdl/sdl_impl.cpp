@@ -463,8 +463,8 @@ public:
 private:
     std::shared_ptr<std::vector<std::shared_ptr<SDLJoystick>>> joysticks;
     int hat;
-    int port;
     Uint8 direction;
+    int port;
 };
 
 class SDLAxisButton final : public Input::ButtonDevice {

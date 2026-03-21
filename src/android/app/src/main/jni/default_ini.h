@@ -36,7 +36,7 @@ constexpr std::array android_config_omitted_keys = {
     Keys::audio_encoder_options,
     Keys::audio_bitrate,
     Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
-};
+    Keys::controller_hotkey_maptype};
 
 // clang-format off
 
