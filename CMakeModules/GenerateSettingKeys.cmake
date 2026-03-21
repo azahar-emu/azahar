@@ -136,7 +136,6 @@ foreach(KEY IN ITEMS
     "last_artic_base_addr"
     "motion_device"
     "touch_device"
-    "input_maptype"
     "udp_input_address"
     "udp_input_port"
     "udp_pad_index"
