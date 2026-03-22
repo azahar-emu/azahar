@@ -261,15 +261,15 @@ AppLoader_THREEDSX::AppLoader_THREEDSX(Core::System& system_, FileUtil::IOFile&&
 }
 
 FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile* file) {
-    u32 magic;
-    file->Seek(0, SEEK_SET);
-    if (1 != file->ReadArray<u32>(&magic, 1))
-        return FileType::Error;
+    u32 magic{};
 
-    if (MakeMagic('3', 'D', 'S', 'X') == magic ||
-        (MakeMagic('Z', '3', 'D', 'S') == magic &&
-         FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) == MakeMagic('3', 'D', 'S', 'X')))
-        return FileType::THREEDSX;
+    if (file->Seek(0, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
+        if (MakeMagic('3', 'D', 'S', 'X') == magic ||
+            (MakeMagic('Z', '3', 'D', 'S') == magic &&
+             FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) ==
+                 MakeMagic('3', 'D', 'S', 'X')))
+            return FileType::THREEDSX;
+    }
 
     return FileType::Error;
 }

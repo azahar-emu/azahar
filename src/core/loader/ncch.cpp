@@ -37,40 +37,40 @@ static constexpr u64 UPDATE_TID_HIGH = 0x0004000e00000000;
 static constexpr u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
 
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile* file) {
-    u32 magic;
-    file->Seek(0x100, SEEK_SET);
-    if (1 != file->ReadArray<u32>(&magic, 1))
-        return FileType::Error;
-
-    if (MakeMagic('N', 'C', 'S', 'D') == magic)
-        return FileType::CCI;
-
-    if (MakeMagic('N', 'C', 'C', 'H') == magic)
-        return FileType::CXI;
+    u32 magic{};
 
     std::unique_ptr<FileUtil::IOFile> file_crypto = HW::UniqueData::OpenUniqueCryptoFile(
         file->Filename(), "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
 
-    file_crypto->Seek(0x100, SEEK_SET);
-    if (1 != file_crypto->ReadArray<u32>(&magic, 1))
-        return FileType::Error;
-
-    if (MakeMagic('N', 'C', 'S', 'D') == magic)
-        return FileType::CCI;
-
-    if (MakeMagic('N', 'C', 'C', 'H') == magic)
-        return FileType::CXI;
-
+    // Check compressed NCCH file
     std::optional<u32> magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file);
     if (!magic_zstd.has_value()) {
+        // Handle compressed and crypto NCCH file
         magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file_crypto.get());
     }
-
     if (magic_zstd.has_value()) {
         if (MakeMagic('N', 'C', 'S', 'D') == magic_zstd)
             return FileType::CCI;
 
         if (MakeMagic('N', 'C', 'C', 'H') == magic_zstd)
+            return FileType::CXI;
+    }
+
+    // Check normal NCCH file
+    if (file->Seek(0x100, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
+        if (MakeMagic('N', 'C', 'S', 'D') == magic)
+            return FileType::CCI;
+
+        if (MakeMagic('N', 'C', 'C', 'H') == magic)
+            return FileType::CXI;
+    }
+
+    // Check crypto NCCH file
+    if (file_crypto->Seek(0x100, SEEK_SET) && 1 == file_crypto->ReadArray<u32>(&magic, 1)) {
+        if (MakeMagic('N', 'C', 'S', 'D') == magic)
+            return FileType::CCI;
+
+        if (MakeMagic('N', 'C', 'C', 'H') == magic)
             return FileType::CXI;
     }
 
