@@ -253,7 +253,7 @@ if (ENABLE_LIBRETRO)
         "analog_deadzone"
         "enable_mouse_touchscreen"
         "enable_touch_touchscreen"
-        "render_touchscreen"
+        "enable_touch_pointer_timeout"
         "enable_motion"
         "motion_sensitivity"
     )

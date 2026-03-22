@@ -341,7 +341,7 @@ void EmuWindow_LibRetro::DestroyContext() {
 }
 
 Frontend::EmuWindow::CursorInfo EmuWindow_LibRetro::GetCursorInfo() const {
-    if (enableEmulatedPointer && tracker && LibRetro::settings.render_touchscreen) {
+    if (enableEmulatedPointer && tracker) {
         return tracker->GetCursorInfo();
     }
     return {};
