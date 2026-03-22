@@ -1169,9 +1169,10 @@ void SOC_U::SendToOther(Kernel::HLERequestContext& ctx) {
 
     LOG_SEND_RECV(Service_SOC, "called, fd={}, ret={}", socket_handle, static_cast<s32>(ret));
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(ResultSuccess);
     rb.Push(ret);
+    rb.PushMappedBuffer(input_mapped_buff);
 }
 
 s32 SOC_U::SendToImpl(SocketHolder& holder, u32 len, u32 flags, u32 addr_len,
