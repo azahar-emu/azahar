@@ -75,7 +75,7 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
         result = update_loader->ReadIcon(update_smdh);
         if (result != Loader::ResultStatus::Success) {
             is_encrypted = result == Loader::ResultStatus::ErrorEncrypted;
-            return {};
+            return original_smdh;
         }
         return update_smdh;
     }();
