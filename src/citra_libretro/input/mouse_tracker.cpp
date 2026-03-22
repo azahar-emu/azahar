@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <memory>
 
@@ -112,6 +113,8 @@ MouseTracker::MouseTracker() {
         cursor_renderer = std::make_unique<SoftwareCursorRenderer>();
         break;
     }
+
+    last_moved = std::chrono::steady_clock::time_point::min();
 }
 
 MouseTracker::~MouseTracker() = default;
@@ -129,6 +132,7 @@ void MouseTracker::Restrict(int minX, int minY, int maxX, int maxY) {
 void MouseTracker::Update(int bufferWidth, int bufferHeight,
                           const Layout::FramebufferLayout& layout) {
     bool state = false;
+    bool wasMoved = false;
 
     if (LibRetro::settings.enable_mouse_touchscreen) {
         // Check mouse input
@@ -203,14 +207,18 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
              INT16_MAX);
 
         // Deadzone the controller inputs
-        float smoothedX = std::abs(controllerX);
-        float smoothedY = std::abs(controllerY);
+        float magnitudeX = std::abs(controllerX);
+        float magnitudeY = std::abs(controllerY);
 
-        if (smoothedX < LibRetro::settings.analog_deadzone) {
+        if (magnitudeX < LibRetro::settings.analog_deadzone) {
             controllerX = 0;
         }
-        if (smoothedY < LibRetro::settings.analog_deadzone) {
+        if (magnitudeY < LibRetro::settings.analog_deadzone) {
             controllerY = 0;
+        }
+
+        if (controllerX != 0 || controllerY != 0) {
+            wasMoved = true;
         }
 
         OnMouseMove(static_cast<int>(controllerX * widthSpeed),
@@ -225,11 +233,15 @@ void MouseTracker::Update(int bufferWidth, int bufferHeight,
 
     isPressed = state;
 
+    if (wasMoved) {
+        last_moved = std::chrono::steady_clock::now();
+    }
+
     this->framebuffer_layout = layout;
 }
 
 void MouseTracker::Render(int bufferWidth, int bufferHeight, void* framebuffer_data) {
-    if (!LibRetro::settings.render_touchscreen) {
+    if (GetCursorInfo().visible == false) {
         return;
     }
 
@@ -243,6 +255,18 @@ void MouseTracker::Render(int bufferWidth, int bufferHeight, void* framebuffer_d
         cursor_renderer->Render(bufferWidth, bufferHeight, abs_x, abs_y, ratio, framebuffer_layout,
                                 framebuffer_data);
     }
+}
+
+Frontend::EmuWindow::CursorInfo MouseTracker::GetCursorInfo() {
+    bool visible = true;
+    auto current = std::chrono::steady_clock::now();
+    uint64_t since_last_moved =
+        std::chrono::duration_cast<std::chrono::seconds>(current - last_moved).count();
+    constexpr auto timeout_secs = 4; // TODO: Make this configurable maybe? -OS
+    if (LibRetro::settings.enable_touch_pointer_timeout && since_last_moved >= timeout_secs) {
+        visible = false;
+    }
+    return {visible, projectedX, projectedY};
 }
 
 #ifdef ENABLE_OPENGL

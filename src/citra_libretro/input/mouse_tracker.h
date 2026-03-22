@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chrono>
 #include "common/math_util.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
@@ -55,9 +56,7 @@ public:
     }
 
     /// Get cursor rendering state for external renderers (e.g. Vulkan).
-    Frontend::EmuWindow::CursorInfo GetCursorInfo() const {
-        return {true, projectedX, projectedY};
-    }
+    Frontend::EmuWindow::CursorInfo GetCursorInfo();
 
 private:
     int x;
@@ -69,6 +68,7 @@ private:
     float projectedX;
     float projectedY;
 
+    std::chrono::steady_clock::time_point last_moved;
     bool isPressed;
 
     Layout::FramebufferLayout framebuffer_layout;
