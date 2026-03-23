@@ -393,6 +393,8 @@ ResultStatus AppLoader_ELF::Load(std::shared_ptr<Kernel::Process>& process) {
     process->resource_limit =
         system.Kernel().ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
 
+    process->resource_limit->ApplyAppMaxCPUSetting(process, 1, 89);
+
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
     is_loaded = true;

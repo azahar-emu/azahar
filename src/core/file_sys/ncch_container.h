@@ -182,7 +182,14 @@ struct ExHeader_ARM11_SystemLocalCaps {
         BitField<4, 4, u8> system_mode;
     };
     u8 priority;
-    u8 resource_limit_descriptor[0x10][2];
+    union {
+        u16 core1_schedule_flags;
+        BitField<0, 7, u16> max_cpu;
+        // Schedule mode flag, 0 -> "single", 1 -> "multi"
+        BitField<7, 1, u16> schedule_mode;
+        BitField<8, 8, u16> unknown;
+    };
+    u8 resource_limit_descriptor[0xF][2]; // Always 0 (unused?)
     ExHeader_StorageInfo storage_info;
     u8 service_access_control[0x20][8];
     u8 ex_service_access_control[0x2][8];

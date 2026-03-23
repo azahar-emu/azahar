@@ -293,6 +293,8 @@ ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process)
     process->resource_limit =
         system.Kernel().ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
 
+    process->resource_limit->ApplyAppMaxCPUSetting(process, 1, 89);
+
     // On real HW this is done with FS:Reg, but we can be lazy
     auto fs_user = system.ServiceManager().GetService<Service::FS::FS_USER>("fs:USER");
     fs_user->RegisterProgramInfo(process->GetObjectId(), process->codeset->program_id, filepath);
