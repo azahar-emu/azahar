@@ -465,24 +465,10 @@ GMainWindow::GMainWindow(Core::System& system_)
 
 #ifdef ENABLE_OPENGL
     gl_renderer = GetOpenGLRenderer();
-#if defined(_WIN32)
-    if (gl_renderer.startsWith(QStringLiteral("D3D12"))) {
-        // OpenGLOn12 supports but does not yet advertise OpenGL 4.0+
-        // We can override the version here to allow Citra to work.
-        // TODO: Remove this when OpenGL 4.0+ is advertised.
-        qputenv("MESA_GL_VERSION_OVERRIDE", "4.6");
-    }
-#endif
 #endif
 
 #ifdef ENABLE_VULKAN
     physical_devices = GetVulkanPhysicalDevices();
-    if (physical_devices.empty()) {
-        QMessageBox::warning(this, tr("No Suitable Vulkan Devices Detected"),
-                             tr("Vulkan initialization failed during boot.<br/>"
-                                "Your GPU may not support Vulkan 1.1, or you do not "
-                                "have the latest graphics driver."));
-    }
 #endif
 
     if (!game_path.isEmpty()) {
