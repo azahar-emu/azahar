@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,9 +21,9 @@ namespace Kernel {
 template <typename Context>
 class SVCWrapper {
 protected:
-    template <auto F>
+    template <auto F, int ID = 0xFF>
     void Wrap() {
-        WrapHelper<decltype(F)>::Call(*static_cast<Context*>(this), F);
+        WrapHelper<decltype(F)>::Call(*static_cast<Context*>(this), F, ID);
     };
 
 private:
@@ -249,18 +249,18 @@ private:
         // T is the current param to do I/O.
         // Ts are params whose I/O is not handled yet.
         template <typename... Us>
-        static void Call(Context& context, SVCT svc, Us... u) {
+        static void Call(Context& context, SVCT svc, int id, Us... u) {
             static_assert(std::is_same_v<SVCT, R (Context::*)(Us..., T, Ts...)>);
             constexpr std::size_t current_param_index = sizeof...(Us);
             if constexpr (std::is_pointer_v<T>) {
                 using OutputT = std::remove_pointer_t<T>;
                 OutputT output;
-                WrapPass<SVCT, R, Ts...>::Call(context, svc, u..., &output);
+                WrapPass<SVCT, R, Ts...>::Call(context, svc, id, u..., &output);
                 SetParam<current_param_index, OutputT, R, Us..., T, Ts...>(context, output);
             } else {
                 T input;
                 GetParam<current_param_index, T, R, Us..., T, Ts...>(context, input);
-                WrapPass<SVCT, R, Ts...>::Call(context, svc, u..., input);
+                WrapPass<SVCT, R, Ts...>::Call(context, svc, id, u..., input);
             }
         }
     };
@@ -269,7 +269,7 @@ private:
     struct WrapPass<SVCT, R /*empty for T, Ts...*/> {
         // Call function R(Context::svc)(Us...) and transfer the return value to registers
         template <typename... Us>
-        static void Call(Context& context, SVCT svc, Us... u) {
+        static void Call(Context& context, SVCT svc, [[maybe_unused]] int id, Us... u) {
             static_assert(std::is_same_v<SVCT, R (Context::*)(Us...)>);
             if constexpr (std::is_void_v<R>) {
                 (context.*svc)(u...);
@@ -284,16 +284,18 @@ private:
     struct WrapPass<SVCT, Result /*empty for T, Ts...*/> {
         // Call function R(Context::svc)(Us...) and transfer the return value to registers
         template <typename... Us>
-        static void Call(Context& context, SVCT svc, Us... u) {
+        static void Call(Context& context, SVCT svc, int id, Us... u) {
             static_assert(std::is_same_v<SVCT, Result (Context::*)(Us...)>);
             if constexpr (std::is_void_v<Result>) {
                 (context.*svc)(u...);
             } else {
                 Result r = (context.*svc)(u...);
                 if (r.IsError()) {
-                    LOG_ERROR(Kernel_SVC, "level={} summary={} module={} description={}",
-                              r.level.ExtractValue(r.raw), r.summary.ExtractValue(r.raw),
-                              r.module.ExtractValue(r.raw), r.description.ExtractValue(r.raw));
+                    LOG_ERROR(
+                        Kernel_SVC,
+                        "svc=0x{:02X} raw=0x{:08X} level={} summary={} module={} description={}",
+                        id, r.raw, r.level.ExtractValue(r.raw), r.summary.ExtractValue(r.raw),
+                        r.module.ExtractValue(r.raw), r.description.ExtractValue(r.raw));
                 }
                 SetParam<INDEX_RETURN, Result, Result, Us...>(context, r);
             }
@@ -305,8 +307,8 @@ private:
 
     template <typename R, typename... T>
     struct WrapHelper<R (Context::*)(T...)> {
-        static void Call(Context& context, R (Context::*svc)(T...)) {
-            WrapPass<decltype(svc), R, T...>::Call(context, svc /*Empty for Us*/);
+        static void Call(Context& context, R (Context::*svc)(T...), int id) {
+            WrapPass<decltype(svc), R, T...>::Call(context, svc, id /*Empty for Us*/);
         }
     };
 };
