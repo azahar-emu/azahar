@@ -90,7 +90,7 @@ private:
 
 private:
     const Instance& instance;
-    vk::SwapchainKHR swapchain{};
+    vk::SwapchainKHR swapchain{VK_NULL_HANDLE};
     vk::SurfaceKHR surface{};
     vk::SurfaceFormatKHR surface_format;
     vk::PresentModeKHR present_mode;
