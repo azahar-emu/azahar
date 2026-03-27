@@ -111,7 +111,13 @@ endif()
 
 # Oaknut
 if ("arm64" IN_LIST ARCHITECTURE)
-    add_subdirectory(oaknut EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_OAKNUT)
+        find_package(oaknut REQUIRED)
+        add_library(oaknut INTERFACE)
+        target_link_libraries(oaknut INTERFACE merry::oaknut)
+    else()
+        add_subdirectory(oaknut EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 # Dynarmic
