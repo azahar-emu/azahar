@@ -11,9 +11,8 @@ import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
-    private lateinit var setting: SettingsItem
-
+    SettingViewHolder<SettingsItem>(binding.root, adapter) {
+    override lateinit var setting: SettingsItem
     override fun bind(item: SettingsItem) {
         setting = item
         binding.textSettingName.setText(item.nameId)
@@ -35,6 +34,8 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
             binding.textSettingDescription.alpha = 0.5f
             binding.textSettingValue.alpha = 0.5f
         }
+
+        showGlobalButtonIfNeeded(binding.buttonUseGlobal, position)
     }
 
     private fun getTextSetting(): String {

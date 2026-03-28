@@ -44,7 +44,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -70,7 +69,6 @@ import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.Game
@@ -78,7 +76,6 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationMenuSettings
-import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -93,7 +90,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
-    private lateinit var emulationActivity: EmulationActivity
+    private var emulationActivity: EmulationActivity? = null
 
     private var _binding: FragmentEmulationBinding? = null
     private val binding get() = _binding!!
@@ -104,8 +101,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
 
     private val emulationViewModel: EmulationViewModel by activityViewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
-    private val settings get() = settingsViewModel.settings
 
     private val onPause = Runnable{ togglePause() }
     private val onShutdown = Runnable{ emulationState.stop() }
@@ -184,7 +179,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         retainInstance = true
         emulationState = EmulationState(game.path)
         emulationActivity = requireActivity() as EmulationActivity
-        screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
+        screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, Settings.settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
     }
@@ -211,7 +206,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (requireActivity().isFinishing) {
             return
         }
-
+        binding.surfaceInputOverlay.initializeSettings(Settings.settings)
         binding.surfaceEmulation.holder.addCallback(this)
         binding.doneControlConfig.setOnClickListener {
             binding.doneControlConfig.visibility = View.GONE
@@ -221,7 +216,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // Show/hide the "Stats" overlay
         updateShowPerformanceOverlay()
 
-        val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
+        val position = Settings.settings.get(IntSetting.PERFORMANCE_OVERLAY_POSITION)
         updateStatsPosition(position)
 
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
@@ -389,6 +384,27 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_application_settings -> {
+                    val titleId = NativeLibrary.getRunningTitleId()
+                    if (titleId != 0L) {
+                        val gameId = java.lang.String.format("%016X", titleId)
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            gameId
+                        )
+                    } else {
+                        // Fallback: open global settings if title id unknown
+                        SettingsActivity.launch(
+                            requireContext(),
+                            SettingsFile.FILE_NAME_CONFIG,
+                            ""
+                        )
+                    }
+
+                    true
+                }
+
                 R.id.menu_exit -> {
                     emulationState.pause()
                     MaterialAlertDialogBuilder(requireContext())
@@ -508,7 +524,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             emulationState.unpause()
 
             // If the overlay is enabled, we need to update the position if changed
-            val position = IntSetting.PERFORMANCE_OVERLAY_POSITION.int
+            val position = Settings.settings.get(IntSetting.PERFORMANCE_OVERLAY_POSITION)
             updateStatsPosition(position)
 
             binding.inGameMenu.menu.findItem(R.id.menu_emulation_pause)?.let { menuItem ->
@@ -523,7 +539,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         if (DirectoryInitialization.areCitraDirectoriesReady()) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else {
             setupCitraDirectoriesThenStartEmulation()
         }
@@ -538,6 +554,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDetach() {
+        emulationActivity = null
         NativeLibrary.clearEmulationActivity()
         super.onDetach()
     }
@@ -557,7 +574,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         if (directoryInitializationState ===
             DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
         ) {
-            emulationState.run(emulationActivity.isActivityRecreated)
+            emulationState.run(emulationActivity!!.isActivityRecreated)
         } else if (directoryInitializationState ===
             DirectoryInitializationState.EXTERNAL_STORAGE_PERMISSION_NEEDED
         ) {
@@ -707,7 +724,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.menu.apply {
             findItem(R.id.menu_show_overlay).isChecked = EmulationMenuSettings.showOverlay
             findItem(R.id.menu_performance_overlay_show).isChecked =
-                BooleanSetting.PERF_OVERLAY_ENABLE.boolean
+                Settings.settings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
             findItem(R.id.menu_haptic_feedback).isChecked = EmulationMenuSettings.hapticFeedback
             findItem(R.id.menu_emulation_joystick_rel_center).isChecked =
                 EmulationMenuSettings.joystickRelCenter
@@ -724,8 +741,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    BooleanSetting.PERF_OVERLAY_ENABLE.boolean = !BooleanSetting.PERF_OVERLAY_ENABLE.boolean
-                    settings.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, SettingsFile.FILE_NAME_CONFIG)
+                    Settings.settings.update(BooleanSetting.PERF_OVERLAY_ENABLE,
+                        Settings.settings.get(BooleanSetting.PERF_OVERLAY_ENABLE))
+                    SettingsFile.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, Settings.settings)
                     updateShowPerformanceOverlay()
                     true
                 }
@@ -875,7 +893,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.menu_emulation_amiibo_load -> {
-                    emulationActivity.openAmiiboFileLauncher.launch(false)
+                    emulationActivity!!.openAmiiboFileLauncher.launch(false)
                     true
                 }
 
@@ -921,7 +939,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menuInflater.inflate(R.menu.menu_landscape_screen_layout, popupMenu.menu)
 
-        val layoutOptionMenuItem = when (IntSetting.SCREEN_LAYOUT.int) {
+        val layoutOptionMenuItem = when (Settings.settings.get(IntSetting.SCREEN_LAYOUT)) {
             ScreenLayout.ORIGINAL.int ->
                 R.id.menu_screen_layout_original
 
@@ -993,7 +1011,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.menuInflater.inflate(R.menu.menu_portrait_screen_layout, popupMenu.menu)
 
-        val layoutOptionMenuItem = when (IntSetting.PORTRAIT_SCREEN_LAYOUT.int) {
+        val layoutOptionMenuItem = when (Settings.settings.get(IntSetting.PORTRAIT_SCREEN_LAYOUT)) {
             PortraitScreenLayout.TOP_FULL_WIDTH.int ->
                 R.id.menu_portrait_layout_top_full
             PortraitScreenLayout.ORIGINAL.int ->
@@ -1255,12 +1273,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.surfaceInputOverlay.resetButtonPlacement()
     }
 
+
+
     fun updateShowPerformanceOverlay() {
         if (perfStatsUpdater != null) {
             perfStatsUpdateHandler.removeCallbacks(perfStatsUpdater!!)
         }
 
-        if (BooleanSetting.PERF_OVERLAY_ENABLE.boolean) {
+        if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_ENABLE)) {
             val SYSTEM_FPS = 0
             val FPS = 1
             val SPEED = 2
@@ -1275,11 +1295,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 val perfStats = NativeLibrary.getPerfStats()
                 val dividerString = "\u00A0\u2502 "
                 if (perfStats[FPS] > 0) {
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_FPS.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FPS)) {
                         sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1294,7 +1314,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_SPEED.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_SPEED)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         sb.append(
                             String.format(
@@ -1304,14 +1324,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         )
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_APP_RAM_USAGE)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val appRamUsage =
                             File("/proc/self/statm").readLines()[0].split(' ')[1].toLong() * 4096 / 1000000
                         sb.append("Process\u00A0RAM:\u00A0$appRamUsage\u00A0MB")
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_AVAILABLE_RAM)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         context?.let { ctx ->
                             val activityManager =
@@ -1324,14 +1344,14 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         }
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_BATTERY_TEMP)) {
                         if (sb.isNotEmpty()) sb.append(dividerString)
                         val batteryTemp = getBatteryTemperature()
                         val tempF = celsiusToFahrenheit(batteryTemp)
                         sb.append(String.format("%.1f°C/%.1f°F", batteryTemp, tempF))
                     }
 
-                    if (BooleanSetting.PERF_OVERLAY_BACKGROUND.boolean) {
+                    if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_BACKGROUND)) {
                         binding.performanceOverlayShowText.setBackgroundResource(R.color.citra_transparent_black)
                     } else {
                         binding.performanceOverlayShowText.setBackgroundResource(0)

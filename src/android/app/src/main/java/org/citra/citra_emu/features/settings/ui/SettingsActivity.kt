@@ -7,7 +7,6 @@ package org.citra.citra_emu.features.settings.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
@@ -20,20 +19,14 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
 import java.io.IOException
-import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
-import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
@@ -42,12 +35,13 @@ import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 
 class SettingsActivity : AppCompatActivity(), SettingsActivityView {
-    private val presenter = SettingsActivityPresenter(this)
 
     private lateinit var binding: ActivitySettingsBinding
+    val settingsViewModel: SettingsViewModel by viewModels()
 
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    private val presenter by lazy { SettingsActivityPresenter(this, settingsViewModel) }
 
+    // the activity will work with the fresh Settings() object created and stored in the viewmodel
     override val settings: Settings get() = settingsViewModel.settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,9 +57,9 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val launcher = intent
-        val gameID = launcher.getStringExtra(ARG_GAME_ID)
-        val menuTag = launcher.getStringExtra(ARG_MENU_TAG)
-        presenter.onCreate(savedInstanceState, menuTag!!, gameID!!)
+        val gameID = launcher.getStringExtra(ARG_GAME_ID) ?: ""
+        val menuTag = launcher.getStringExtra(ARG_MENU_TAG) ?: ""
+        presenter.onCreate(savedInstanceState, menuTag, gameID)
 
         // Show "Back" button in the action bar for navigation
         setSupportActionBar(binding.toolbarSettings)
@@ -203,20 +197,6 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
     fun onSettingsReset() {
         // Prevents saving to a non-existent settings file
         presenter.onSettingsReset()
-
-        val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-                Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
-        val editor =
-            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
-        controllerKeys.forEach { editor.remove(it) }
-        editor.apply()
-
-        // Reset the static memory representation of each setting
-        BooleanSetting.clear()
-        FloatSetting.clear()
-        ScaledFloatSetting.clear()
-        IntSetting.clear()
-        StringSetting.clear()
 
         // Delete settings file because the user may have changed values that do not exist in the UI
         val settingsFile = SettingsFile.getSettingsFile(SettingsFile.FILE_NAME_CONFIG)

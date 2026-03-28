@@ -24,6 +24,7 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
 import java.lang.NullPointerException
@@ -45,7 +46,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
-    private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
+    private lateinit var settings: Settings
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -69,6 +70,10 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
 
         // Request focus for the overlay so it has priority on presses.
         requestFocus()
+    }
+
+    fun initializeSettings(settings: Settings) {
+        this.settings = settings
     }
 
     override fun draw(canvas: Canvas) {
@@ -168,12 +173,12 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                         continue
                     }
                     anyOverlayStateChanged = true
-
+                    // TODO - switch these to using standard hotkey buttons instead of nativelibrary buttons
                     if (button.id == NativeLibrary.ButtonType.BUTTON_SWAP && button.status == NativeLibrary.ButtonState.PRESSED) {
                         swapScreen()
                     }
                     else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
-                        TurboHelper.toggleTurbo(true)
+                        TurboHelper.toggleTurbo(true, settings)
                     }
 
                     NativeLibrary.onGamePadEvent(
