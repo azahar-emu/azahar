@@ -2078,7 +2078,7 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
         std::size_t pos = 0;
         addrinfo* cur = out;
         while (cur != nullptr) {
-            if (pos <= out_size - sizeof(CTRAddrInfo)) {
+            if (sizeof(CTRAddrInfo) <= out_size - pos) {
                 // According to 3dbrew, this function fills whatever it can and does not error even
                 // if the buffer is not big enough. However the count returned is always correct.
                 CTRAddrInfo ctr_addr = CTRAddrInfo::FromPlatform(*cur);
