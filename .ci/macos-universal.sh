@@ -2,13 +2,14 @@
 
 ARTIFACTS_LIST=($ARTIFACTS)
 
-BUNDLE_DIR=build/bundle
-mkdir build
+BUILD_DIR=build
+UNIVERSAL_DIR=$BUILD_DIR/universal
+BUNDLE_DIR=$UNIVERSAL_DIR/bundle
+OTHER_BUNDLE_DIR=$BUILD_DIR/x86_64/bundle
 
-# Set up the base artifact to combine into.
-BASE_ARTIFACT=${ARTIFACTS_LIST[0]}
-BASE_ARTIFACT_ARCH="${BASE_ARTIFACT##*-}"
-mv $BASE_ARTIFACT $BUNDLE_DIR
+# Set up the base bundle to combine into.
+mkdir $UNIVERSAL_DIR
+cp -a $BUILD_DIR/arm64/bundle $UNIVERSAL_DIR
 
 # Executable binary paths that need to be combined.
 BIN_PATHS=(Azahar.app/Contents/MacOS/azahar)
@@ -19,21 +20,18 @@ DYLIB_PATHS=($(cd $BUNDLE_DIR && find . -name '*.dylib'))
 unset IFS
 
 # Combine all of the executable binaries and dylibs.
-for OTHER_ARTIFACT in "${ARTIFACTS_LIST[@]:1}"; do
-    OTHER_ARTIFACT_ARCH="${OTHER_ARTIFACT##*-}"
+for BIN_PATH in "${BIN_PATHS[@]}"; do
+    lipo -create -output $BUNDLE_DIR/$BIN_PATH $BUNDLE_DIR/$BIN_PATH $OTHER_BUNDLE_DIR/$BIN_PATH
+done
 
-    for BIN_PATH in "${BIN_PATHS[@]}"; do
-        lipo -create -output $BUNDLE_DIR/$BIN_PATH $BUNDLE_DIR/$BIN_PATH $OTHER_ARTIFACT/$BIN_PATH
-    done
+for DYLIB_PATH in "${DYLIB_PATHS[@]}"; do
+    # Only merge if the libraries do not have conflicting arches, otherwise it will fail.
+    DYLIB_INFO=`file $BUNDLE_DIR/$DYLIB_PATH`
 
-    for DYLIB_PATH in "${DYLIB_PATHS[@]}"; do
-        # Only merge if the libraries do not have conflicting arches, otherwise it will fail.
-        DYLIB_INFO=`file $BUNDLE_DIR/$DYLIB_PATH`
-        OTHER_DYLIB_INFO=`file $OTHER_ARTIFACT/$DYLIB_PATH`
-        if ! [[ "$DYLIB_INFO" =~ "$OTHER_ARTIFACT_ARCH" ]] && ! [[ "$OTHER_DYLIB_INFO" =~ "$BASE_ARTIFACT_ARCH" ]]; then
-            lipo -create -output $BUNDLE_DIR/$DYLIB_PATH $BUNDLE_DIR/$DYLIB_PATH $OTHER_ARTIFACT/$DYLIB_PATH
-        fi
-    done
+    OTHER_DYLIB_INFO=`file $OTHER_BUNDLE_DIR/$DYLIB_PATH`
+    if ! [[ "$DYLIB_INFO" =~ "x86_64" ]] && ! [[ "$OTHER_DYLIB_INFO" =~ "arm64" ]]; then
+        lipo -create -output $BUNDLE_DIR/$DYLIB_PATH $BUNDLE_DIR/$DYLIB_PATH $OTHER_BUNDLE_DIR/$DYLIB_PATH
+    fi
 done
 
 # Remove leftover libs so that they aren't distributed
