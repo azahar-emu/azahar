@@ -262,6 +262,14 @@ static const std::unordered_map<int, int> error_map = {{
     {ERRNO(ETIMEDOUT), 76},
 }};
 
+static const std::unordered_map<int, int> gai_error_map = {{
+    {EAI_AGAIN, 302},
+    {EAI_FAMILY, 303},
+    {EAI_MEMORY, 304},
+    {EAI_NONAME, 305},
+    {EAI_SOCKTYPE, 307},
+}};
+
 /// Converts a network error from platform-specific to 3ds-specific
 static int TranslateError(int error) {
     const auto& found = error_map.find(error);
@@ -269,6 +277,15 @@ static int TranslateError(int error) {
         return -found->second;
     }
     return error;
+}
+
+/// Converts a getaddrinfo/getnameinfo error from platform-specific to 3ds-specific
+static int TranslateGaiError(int gai_error) {
+    if (const auto& known_soc_errno = gai_error_map.find(gai_error);
+        known_soc_errno != gai_error_map.end()) {
+        return -known_soc_errno->second;
+    }
+    return gai_error;
 }
 
 struct CTRLinger {
@@ -2050,8 +2067,12 @@ void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     std::vector<u8> out_buff(out_size);
     u32 count = 0;
 
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+    if (ret != 0) {
+#ifdef _WIN32
+        ret = TranslateGaiError(ret);
+#else
+        ret = ret == EAI_SYSTEM ? TranslateError(GET_ERRNO) : TranslateGaiError(ret);
+#endif
         out_buff.resize(0);
     } else {
         std::size_t pos = 0;
@@ -2097,8 +2118,12 @@ void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
 
     s32 ret = getnameinfo(reinterpret_cast<sockaddr*>(&sa), sa_len, host_data, hostlen, serv_data,
                           servlen, flags);
-    if (ret == SOCKET_ERROR_VALUE) {
-        ret = TranslateError(GET_ERRNO);
+    if (ret != 0) {
+#ifdef _WIN32
+        ret = TranslateGaiError(ret);
+#else
+        ret = ret == EAI_SYSTEM ? TranslateError(GET_ERRNO) : TranslateGaiError(ret);
+#endif
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
