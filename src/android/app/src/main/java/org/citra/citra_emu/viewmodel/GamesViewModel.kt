@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -78,8 +78,9 @@ class GamesViewModel : ViewModel() {
         val filteredList = sortedList.filter {
             if (it.isSystemTitle) {
                 it.isVisibleSystemTitle
+            } else {
+                true
             }
-            true
         }
 
         _games.value = filteredList
