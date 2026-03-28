@@ -136,6 +136,43 @@ private:
     friend class boost::serialization::access;
 };
 
+enum class Core1ScheduleMode : u32 {
+    // https://github.com/LumaTeam/Luma3DS/blob/e35972ea/sysmodules/pm/source/reslimit.c#L144
+    // Starting by "sysmodule" threads, alternatively allow (if preemptible) only sysmodule
+    // threads, and then only application threads to run. This happens at a rate of 2ms *
+    // (cpuTime/100).
+    Multi,
+    // This divides the core1 time into slices of 25ms. Only one application thread is allowed to be
+    // created on core1. The "application" thread is given cpuTime% of the slice. The "sysmodules"
+    // threads are given a total of (90 - cpuTime)% of the slice. 10% remain for other threads. This
+    // mode is half-broken due to a kernel bug.
+    Single,
+};
+
+class Core1CpuTime {
+public:
+    Core1CpuTime() = default;
+    constexpr Core1CpuTime(s32 value) : raw(value) {}
+
+    static const Core1CpuTime PREEMPTION_DISABLED;
+    static const Core1CpuTime PREEMPTION_SYSMODULE;
+    static const Core1CpuTime PREEMPTION_EXCEMPTED;
+
+    operator s32() const {
+        return raw;
+    }
+
+private:
+    s32 raw{};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+    friend class boost::serialization::access;
+};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_DISABLED{0};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_SYSMODULE{1000};
+inline constexpr Core1CpuTime Core1CpuTime::PREEMPTION_EXCEMPTED{10000};
+
 class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
@@ -378,6 +415,10 @@ public:
 
     void RestoreMemoryState(u64 title_id);
 
+    void SetCore1ScheduleMode(Core1ScheduleMode mode);
+
+    void UpdateCore1AppCpuLimit();
+
 private:
     void MemoryInit(MemoryMode memory_mode, u64 override_init_time);
 
@@ -447,3 +488,4 @@ private:
 } // namespace Kernel
 
 BOOST_CLASS_EXPORT_KEY(Kernel::New3dsHwCapabilities)
+BOOST_CLASS_EXPORT_KEY(Kernel::Core1CpuTime)

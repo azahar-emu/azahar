@@ -203,6 +203,14 @@ ResultStatus Apploader_Artic::LoadExecImpl(std::shared_ptr<Kernel::Process>& pro
         exheader.arm11_system_local_caps.resource_limit_category);
     process->resource_limit = system.Kernel().ResourceLimit().GetForCategory(category);
 
+    // Update application max cpu setting. PM module uses the launch flags to determine
+    // this, but using the resource limit category is close enough.
+    if (category == Kernel::ResourceLimitCategory::Application) {
+        process->resource_limit->ApplyAppMaxCPUSetting(
+            process, exheader.arm11_system_local_caps.schedule_mode,
+            exheader.arm11_system_local_caps.max_cpu);
+    }
+
     // When running N3DS-unaware titles pm will lie about the amount of memory available.
     // This means RESLIMIT_COMMIT = APPMEMALLOC doesn't correspond to the actual size of
     // APPLICATION. See:
