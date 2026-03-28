@@ -191,6 +191,28 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     EGLContext* shared_context;
+
+
+    // Load game-specific settings overlay if available
+    u64 program_id{};
+    FileUtil::SetCurrentRomPath(filepath);
+    auto app_loader = Loader::GetLoader(filepath);
+    if (app_loader) {
+        app_loader->ReadProgramId(program_id);
+        system.RegisterAppLoaderEarly(app_loader);
+    }
+
+    // Forces a config reload on game boot, if the user changed settings in the UI
+    Config global_config{};
+
+    // Use filename as fallback if title id is zero (e.g., homebrew)
+    const std::string fallback_name =
+            program_id == 0 ? std::string(FileUtil::GetFilename(filepath)) : std::string{};
+    global_config.LoadPerGameConfig(program_id, fallback_name);
+    system.ApplySettings();
+    Settings::LogSettings();
+
+
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
@@ -228,18 +250,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         break;
     }
 
-    // Forces a config reload on game boot, if the user changed settings in the UI
-    Config{};
-    // Replace with game-specific settings
-    u64 program_id{};
-    FileUtil::SetCurrentRomPath(filepath);
-    auto app_loader = Loader::GetLoader(filepath);
-    if (app_loader) {
-        app_loader->ReadProgramId(program_id);
-        system.RegisterAppLoaderEarly(app_loader);
-    }
-    system.ApplySettings();
-    Settings::LogSettings();
+
 
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImage::Factory>());
 
@@ -913,13 +924,18 @@ void Java_org_citra_citra_1emu_NativeLibrary_logUserDirectory(JNIEnv* env,
 
 void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNIEnv* env,
                                                             [[maybe_unused]] jobject obj) {
-    Config{};
+    Config cfg{};
     Core::System& system{Core::System::GetInstance()};
 
-    // Replace with game-specific settings
+    // Load game-specific settings overlay (if a game is running)
     if (system.IsPoweredOn()) {
         u64 program_id{};
         system.GetAppLoader().ReadProgramId(program_id);
+        // Use the registered ROM path (if any) to derive a fallback name
+        const std::string current_rom_path = FileUtil::GetCurrentRomPath();
+        const std::string fallback_name =
+            program_id == 0 ? std::string(FileUtil::GetFilename(current_rom_path)) : std::string{};
+        cfg.LoadPerGameConfig(program_id, fallback_name);
     }
 
     system.ApplySettings();

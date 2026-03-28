@@ -38,7 +38,7 @@ import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
@@ -52,14 +52,13 @@ import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
     var isActivityRecreated = false
-    private val emulationViewModel: EmulationViewModel by viewModels()
-    val settingsViewModel: SettingsViewModel by viewModels()
-
+    val emulationViewModel: EmulationViewModel by viewModels()
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
@@ -88,14 +87,32 @@ class EmulationActivity : AppCompatActivity() {
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
-        settingsViewModel.settings.loadSettings()
+        val game = try {
+            intent.extras?.let { extras ->
+                BundleCompat.getParcelable(extras, "game", Game::class.java)
+            } ?: run {
+                Log.error("[EmulationActivity] Missing game data in intent extras")
+                return
+            }
+        } catch (e: Exception) {
+            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+            return
+        }
+        // load global settings if for some reason they aren't (should be loaded in MainActivity)
+        if (Settings.settings.getAllGlobal().isEmpty()) {
+            SettingsFile.loadSettings(Settings.settings)
+        }
+        // load per-game settings
+        SettingsFile.loadSettings(Settings.settings, String.format("%016X", game.titleId))
+
         super.onCreate(savedInstanceState)
-        secondaryDisplay = SecondaryDisplay(this)
+
+        secondaryDisplay = SecondaryDisplay(this, Settings.settings)
         secondaryDisplay.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
-        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
+        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, Settings.settings)
+        hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this, Settings.settings)
         setContentView(binding.root)
 
         val navHostFragment =
@@ -121,18 +138,6 @@ class EmulationActivity : AppCompatActivity() {
 
         applyOrientationSettings() // Check for orientation settings at startup
 
-        val game = try {
-            intent.extras?.let { extras ->
-                BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: run {
-                Log.error("[EmulationActivity] Missing game data in intent extras")
-                return
-            }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
-            return
-        }
-
         NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
@@ -142,7 +147,7 @@ class EmulationActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         enableFullscreenImmersive()
-        applyOrientationSettings() // Check for orientation settings changes on runtime
+        applyOrientationSettings()
     }
 
     override fun onStop() {
@@ -178,6 +183,8 @@ class EmulationActivity : AppCompatActivity() {
         instance = null
         secondaryDisplay.releasePresentation()
         secondaryDisplay.releaseVD()
+
+        Settings.settings.removePerGameSettings()
 
         super.onDestroy()
     }
@@ -229,11 +236,11 @@ class EmulationActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun enableFullscreenImmersive() {
+    fun enableFullscreenImmersive() {
         val attributes = window.attributes
 
         attributes.layoutInDisplayCutoutMode =
-            if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+            if (Settings.settings.get(BooleanSetting.EXPAND_TO_CUTOUT_AREA)) {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             } else {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
@@ -250,8 +257,8 @@ class EmulationActivity : AppCompatActivity() {
         }
     }
 
-    private fun applyOrientationSettings() {
-        val orientationOption = IntSetting.ORIENTATION_OPTION.int
+    fun applyOrientationSettings() {
+        val orientationOption = Settings.settings.get(IntSetting.ORIENTATION_OPTION)
         screenAdjustmentUtil.changeActivityOrientation(orientationOption)
     }
 
