@@ -87,6 +87,7 @@
 #include "common/literals.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
+#include "common/logging/filter.h"
 #include "common/memory_detect.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
@@ -336,6 +337,56 @@ GMainWindow::GMainWindow(Core::System& system_)
         if (i == args.size() - 1 && !args[i].startsWith(QChar::fromLatin1('-'))) {
             game_path = args[i];
             continue;
+        }
+
+        // Compress files in place
+        if (args[i] == QStringLiteral("--compress") || args[i] == QStringLiteral("-c")) {
+            if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
+                continue;
+            }
+            UISettings::values.show_console = true;
+            Debugger::ToggleConsole();
+            Common::Log::Filter filter;
+            filter.ParseFilterString("*:Error");
+            Common::Log::SetGlobalFilter(filter);
+            i++;
+            for (; i < args.size(); i++){
+                QFileInfo currPath(args[i]);
+                if (currPath.isFile()){
+                    compress_paths.append(args[i]);
+                } else {
+                    QTextStream(stderr) << "Error: " << args[i] << " is not a file!\n";
+                    exit(1);
+                }
+            }
+            GMainWindow::OnCompressFileCLI();
+            compression_future.waitForFinished();
+            exit(0);
+        }
+
+        // Decompress files in place
+        if (args[i] == QStringLiteral("--decompress") || args[i] == QStringLiteral("-x")) {
+            if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
+                continue;
+            }
+            UISettings::values.show_console = true;
+            Debugger::ToggleConsole();
+            Common::Log::Filter filter;
+            filter.ParseFilterString("*:Error");
+            Common::Log::SetGlobalFilter(filter);
+            i++;
+            for (; i < args.size(); i++){
+                QFileInfo currPath(args[i]);
+                if (currPath.isFile()){
+                    decompress_paths.append(args[i]);
+                } else {
+                    QTextStream(stderr) << "Error: " << args[i] << " is not a file!\n";
+                    exit(1);
+                }
+            }
+            GMainWindow::OnDecompressFileCLI();
+            compression_future.waitForFinished();
+            exit(0);
         }
     }
 
@@ -3281,6 +3332,72 @@ void GMainWindow::OnCompressFile() {
     });
 }
 
+void GMainWindow::OnCompressFileCLI() {
+    // NOTE: Encrypted files SHOULD NEVER be compressed, otherwise the resulting
+    // compressed file will have very poor compression ratios, due to the high
+    // entropy caused by encryption. This may cause confusion to the user as they
+    // will see the files do not compress well and blame the emulator.
+    //
+    // This is enforced using the loaders as they already return an error on encryption.
+
+    QString out_path;
+    QStringList filepaths = compress_paths;
+    if (compress_paths.isEmpty()) {
+        return;
+    }
+
+    bool single_file = filepaths.size() == 1;
+
+    // Set the output directory based on the starting file
+    QFileInfo startFileInfo(filepaths[0]);
+    out_path = startFileInfo.absolutePath();
+    if (out_path.isEmpty()) {
+        return;
+    }
+
+    compression_future = QtConcurrent::run([&, filepaths, out_path] {
+        bool single_file = filepaths.size() == 1;
+        QString out_filepath;
+        bool total_success = true;
+
+        for (const QString& filepath : filepaths) {
+            QFileInfo filepathInfo(filepath);
+            QTextStream(stdout) << "Compressing \"" << filepathInfo.fileName() << "\"...\n";
+            std::string in_path = filepath.toStdString();
+
+            // Identify file type
+            auto compress_info = GetCompressFileInfo(filepath.toStdString(), true);
+            if (!compress_info.has_value()) {
+                total_success = false;
+                continue;
+            }
+
+            QFileInfo fileinfo(filepath);
+            out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                           QStringLiteral(".") +
+                           QString::fromStdString(
+                               compress_info.value().first.recommended_compressed_extension);
+
+            std::string out_path = out_filepath.toStdString();
+            emit UpdateProgress(0, 0);
+            const auto progress = [&](std::size_t written, std::size_t total) {
+                emit UpdateProgress(written, total);
+            };
+            bool success = FileUtil::CompressZ3DSFile(in_path, out_path,
+                                                      compress_info.value().first.underlying_magic,
+                                                      compress_info.value().second, progress,
+                                                      compress_info.value().first.default_metadata);
+            if (!success) {
+                total_success = false;
+                FileUtil::Delete(out_path);
+            }
+        }
+        emit CompressFinished(true, total_success);
+    });
+}
+
+
+
 void GMainWindow::OnDecompressFile() {
 
     QStringList filepaths = QFileDialog::getOpenFileNames(
@@ -3370,6 +3487,58 @@ void GMainWindow::OnDecompressFile() {
             }
         }
 
+        emit CompressFinished(false, total_success);
+    });
+}
+
+void GMainWindow::OnDecompressFileCLI() {
+    QStringList filepaths = decompress_paths;
+    QString out_path;
+
+    if (filepaths.isEmpty()) {
+        return;
+    }
+
+    bool single_file = filepaths.size() == 1;
+    QFileInfo startFileInfo(filepaths[0]);
+    out_path = startFileInfo.absolutePath();
+
+    compression_future = QtConcurrent::run([&, filepaths, out_path] {
+        bool single_file = filepaths.size() == 1;
+        QString out_filepath;
+        bool total_success = true;
+
+        for (const QString& filepath : filepaths) {
+            QFileInfo filepathInfo(filepath);
+            QTextStream(stdout) << "Decompressing \"" << filepathInfo.fileName() << "\"...\n";
+            std::string in_path = filepath.toStdString();
+
+            // Identify file type
+            auto compress_info = GetCompressFileInfo(filepath.toStdString(), false);
+            if (!compress_info.has_value()) {
+                total_success = false;
+                continue;
+            }
+
+            QFileInfo fileinfo(filepath);
+
+            out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+                           QStringLiteral(".") +
+                           QString::fromStdString(
+                               compress_info.value().first.recommended_uncompressed_extension);
+            std::string out_path = out_filepath.toStdString();
+            emit UpdateProgress(0, 0);
+            const auto progress = [&](std::size_t written, std::size_t total) {
+                emit UpdateProgress(written, total);
+            };
+
+            // TODO(PabloMK7): What should we do with the metadata?
+            bool success = FileUtil::DeCompressZ3DSFile(in_path, out_path, progress);
+            if (!success) {
+                total_success = false;
+                FileUtil::Delete(out_path);
+            }
+        }
         emit CompressFinished(false, total_success);
     });
 }

@@ -15,6 +15,8 @@ constexpr char help_string[] =
     "-g, --gdbport [port]        Enable gdb stub on the given port\n"
     "-h, --help                  Display this help and exit\n"
     "-i, --install [path]        Install a CIA file at the given path\n"
+    "-c, --compress [path]       Compress the cci/3ds/cxi/app/3dsx/cia file at the given path\n"
+    "-x, --decompress [path]     Decompress zcci/zcxi/z3dsx/zcia file at the given path\n"
     "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
     "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
     "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used "
