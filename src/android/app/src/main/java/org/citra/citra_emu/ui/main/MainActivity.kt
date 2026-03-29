@@ -48,7 +48,6 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
 import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.GrantMissingFilesystemPermissionFragment
@@ -72,7 +71,6 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val gamesViewModel: GamesViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override var themeId: Int = 0
 
@@ -95,7 +93,8 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
             DirectoryInitialization.areCitraDirectoriesReady() &&
             !CitraDirectoryUtils.needToUpdateManually()) {
-            settingsViewModel.settings.loadSettings()
+            // load the global settings from the config file at program launch
+            SettingsFile.loadSettings(Settings.settings)
         }
 
         ThemeUtil.ThemeChangeListener(this)

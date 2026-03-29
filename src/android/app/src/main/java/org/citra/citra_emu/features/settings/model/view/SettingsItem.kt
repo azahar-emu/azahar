@@ -16,7 +16,7 @@ import org.citra.citra_emu.features.settings.model.AbstractSetting
  * file.)
  */
 abstract class SettingsItem(
-    var setting: AbstractSetting?,
+    var setting: AbstractSetting<*>?,
     val nameId: Int,
     val descriptionId: Int
 ) {
@@ -34,6 +34,8 @@ abstract class SettingsItem(
         get() {
             return this.isEditable && this.isEnabled
         }
+
+
 
     companion object {
         const val TYPE_HEADER = 0
