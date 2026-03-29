@@ -1275,7 +1275,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1298,7 +1298,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1321,7 +1321,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue.toInt()
             }
             add(
                 SliderSetting(
