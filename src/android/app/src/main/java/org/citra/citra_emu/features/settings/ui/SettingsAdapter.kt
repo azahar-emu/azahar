@@ -624,7 +624,7 @@ class SettingsAdapter(
                     val value = it.getValueAt(which)
                     if (it.selectedValues.contains(value) != isChecked) {
                         val setting =
-                            it.setSelectedValue((if (isChecked) it.selectedValues + value.toString() else it.selectedValues - value.toString()).sorted())
+                            it.setSelectedValue((if (isChecked) it.selectedValues + value.toString() else it.selectedValues - value.toString()))
                         fragmentView?.putSetting(setting)
                         fragmentView?.onSettingChanged()
                     }
@@ -803,14 +803,14 @@ class SettingsAdapter(
     private fun getSelectionForStringMultiChoiceValue(item: StringMultiChoiceSetting): BooleanArray {
         val values = item.selectedValues;
         val available_values = item.values;
-        val res = BooleanArray(available_values?.size ?: 0){false}
-        var index = 0;
+        val res = BooleanArray(available_values?.size ?: 10){false}
+
 
         if (available_values != null) {
             for (choice_val in available_values) {
                 if (values.contains(choice_val)) {
+                    val index = available_values.indexOf(choice_val)
                     res[index] = true;
-                    index++;
                 }
             }
         }
@@ -820,85 +820,4 @@ class SettingsAdapter(
             BooleanArray(1) { false };
         }
     }
-
-
-
-    //TODO: I only added MultiChoice for fleshing out backend, debating whether to remove MultiChoiceSetting and related code for cleaning up
-    /*
-    override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
-        when (clickedItem) {
-            /*
-            is MultiChoiceSetting -> {
-                val scSetting = clickedItem as? MultiChoiceSetting
-                scSetting?.let {
-                    val setting = when (it.setting) {
-                        is AbstractMultiIntSetting -> {
-                            val value = getValueForMultiChoiceSelection(it, which, is_checked)
-                            if (value !in it.selectedValues) {
-                                it.removeSelectedValue(value)
-                                fragmentView?.onSettingChanged()
-                            } else {
-                                it.addSelectedValue(value)
-                            }
-                        }
-
-                        is AbstractMultiShortSetting -> {
-                            val value = getValueForMultiChoiceSelection(it, which, is_checked).toShort()
-                            if (value !in it.selectedValues.map { it.toShort() }) {
-                                it.removeSelectedValue(value)
-                                fragmentView?.onSettingChanged()
-                            } else {
-                                it.addSelectedValue(value)
-                            }
-                        }
-
-                        else -> throw IllegalStateException("Unrecognized type used for MultiChoiceSetting!")
-                    }
-                    fragmentView?.putSetting(setting as AbstractSetting)
-                    //fragmentView.loadSettingsList()
-                    //closeDialog()
-                }
-            }
-
-             */
-
-            //TODO: Don't fully know how to grab the setting itself for the buttons so I'm adding them to a backing array to be called later
-            //TODO: Likely need to be reimplemented
-            is StringMultiChoiceSetting -> {
-                val mcSetting = clickedItem as? StringMultiChoiceSetting
-                mcSetting?.let {
-                    val setting = when (it.setting) {
-                        is AbstractMultiStringSetting -> {
-                            val value = it.getValueAt(which)
-                            if (value in it.selectedValues && !is_checked) {
-                                Settings.comboSelection.remove(value ?: "")
-                                it.removeSelectedValue(value ?: "")
-                            } else {
-                                Settings.comboSelection.add(value ?: "")
-                                it.addSelectedValue(value ?: "")
-                            }
-                        }
-
-                        is AbstractMultiShortSetting -> {
-                            if (is_checked != it.selectValueIndices[which]) {
-                                Settings.comboSelection.remove((it.getValueAt(which)?.toShort() ?: 1).toString())
-                                it.removeSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
-                            } else {
-                                Settings.comboSelection.add((it.getValueAt(which)?.toShort() ?: 1).toString())
-                                it.addSelectedValue(it.getValueAt(which)?.toShort() ?: 1)
-                            }
-                        }
-
-                        else -> throw IllegalStateException("Unrecognized type used for StringMultiChoiceSetting!")
-                    }
-
-                    fragmentView?.onSettingChanged()
-                    fragmentView?.putSetting(setting as AbstractSetting)
-                    //fragmentView.loadSettingsList()
-                    //closeDialog()
-                }
-            }
-        }
-
-     */
 }

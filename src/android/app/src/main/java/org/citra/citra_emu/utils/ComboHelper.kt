@@ -5,7 +5,6 @@
 package org.citra.citra_emu.utils
 
 import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.overlay.InputOverlayDrawableButton
 import org.citra.citra_emu.features.settings.model.StringListSetting
 
