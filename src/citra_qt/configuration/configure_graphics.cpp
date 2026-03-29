@@ -7,6 +7,7 @@
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_graphics.h"
 #include "common/settings.h"
+#include "configuration/ui_configure_graphics.h"
 #include "ui_configure_graphics.h"
 #ifdef ENABLE_VULKAN
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -144,6 +145,7 @@ void ConfigureGraphics::SetConfiguration() {
     ui->toggle_accurate_mul->setChecked(Settings::values.shaders_accurate_mul.GetValue());
     ui->toggle_disk_shader_cache->setChecked(Settings::values.use_disk_shader_cache.GetValue());
     ui->toggle_vsync->setChecked(Settings::values.use_vsync.GetValue());
+    ui->toggle_skip_duplicate_frames->setChecked(Settings::values.use_skip_duplicate_frames.GetValue());
     ui->spirv_shader_gen->setChecked(Settings::values.spirv_shader_gen.GetValue());
     ui->disable_spirv_optimizer->setChecked(Settings::values.disable_spirv_optimizer.GetValue());
     ui->toggle_async_shaders->setChecked(Settings::values.async_shader_compilation.GetValue());
@@ -179,6 +181,8 @@ void ConfigureGraphics::ApplyConfiguration() {
                                              ui->toggle_disk_shader_cache, use_disk_shader_cache);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_vsync, ui->toggle_vsync,
                                              use_vsync);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_skip_duplicate_frames, ui->toggle_skip_duplicate_frames,
+                                             use_skip_duplicate_frames);
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
         [this](s32) { return ui->delay_render_slider->value(); });
@@ -204,6 +208,8 @@ void ConfigureGraphics::SetupPerGameUI() {
             Settings::values.use_disk_shader_cache.UsingGlobal());
         ui->toggle_vsync->setEnabled(ui->toggle_vsync->isEnabled() &&
                                      Settings::values.use_vsync.UsingGlobal());
+        ui->toggle_skip_duplicate_frames->setEnabled(ui->toggle_skip_duplicate_frames->isEnabled() &&
+                                     Settings::values.use_skip_duplicate_frames.UsingGlobal());
         ui->toggle_async_shaders->setEnabled(
             Settings::values.async_shader_compilation.UsingGlobal());
         ui->widget_texture_sampling->setEnabled(Settings::values.texture_sampling.UsingGlobal());
@@ -244,6 +250,8 @@ void ConfigureGraphics::SetupPerGameUI() {
                                             use_disk_shader_cache);
     ConfigurationShared::SetColoredTristate(ui->toggle_vsync, Settings::values.use_vsync,
                                             use_vsync);
+    ConfigurationShared::SetColoredTristate(ui->toggle_skip_duplicate_frames, Settings::values.use_skip_duplicate_frames,
+                                            use_skip_duplicate_frames);
     ConfigurationShared::SetColoredTristate(ui->toggle_async_shaders,
                                             Settings::values.async_shader_compilation,
                                             async_shader_compilation);
