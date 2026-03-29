@@ -7,11 +7,24 @@ package org.citra.citra_emu.features.settings.model
 enum class StringListSetting(
     override val key: String,
     override val section: String,
-    override val defaultValue: List<String>
+    override val defaultValue: List<String>,
+    val canBeEmpty: Boolean = true
 ) : AbstractListSetting<String> {
-    COMBO_KEY_LIST("combo_key_list", Settings.SECTION_CONTROLS, listOf("A", "B", "X", "Y", "L", "R", "ZL", "ZR", "Start", "Select"));
+    COMBO_KEYS("combo_keys", Settings.SECTION_CONTROLS, listOf("A", "B", "X", "Y", "L", "R", "ZL", "ZR", "Start", "Select"));
 
-    override var list: List<String> = defaultValue
+    private var backingList: List<String> = defaultValue
+    private var lastValidList : List<String> = defaultValue
+
+    override var list: List<String>
+        get() = backingList
+        set(value) {
+            if (!canBeEmpty && value.isEmpty()) {
+                backingList = lastValidList
+            } else {
+                backingList = value
+                lastValidList = value
+            }
+        }
 
     override val valueAsString: String
         get() = list.joinToString()

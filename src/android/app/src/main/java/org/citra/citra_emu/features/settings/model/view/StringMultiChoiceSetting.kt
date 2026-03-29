@@ -3,12 +3,8 @@
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.model.view
-
 import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
-import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.StringListSetting
-
 class StringMultiChoiceSetting(
     setting: AbstractSetting?,
     titleId: Int,
@@ -29,77 +25,29 @@ class StringMultiChoiceSetting(
             ""
         }
     }
-
     val selectedValues: List<String>
         get() {
             if (setting == null) {
                 return defaultValue!!
             }
-
             try {
-                val setting = setting as AbstractMultiStringSetting
-                return setting.strings.toList()
-            } catch (_: ClassCastException) {
-            }
-
-            try {
-                val setting = setting as AbstractMultiShortSetting
-                return setting.shorts.map { it.toString() }
-            } catch (_: ClassCastException) {
+                val setting = setting as StringListSetting
+                return setting.list
+            }catch (_: ClassCastException) {
             }
             return defaultValue!!
         }
 
-    val selectValueIndices: BooleanArray
-        get() {
-            val noneList = values?.let {
-                ArrayList(BooleanArray(it.size) { false }.toList())
-            } ?: ArrayList()
-
-            val chosenindices = mutableListOf<Boolean>()
-            val selectedValues = selectedValues
-            for (i in values!!.indices) {
-                if (values[i] in selectedValues) {
-                    chosenindices.add(true)
-                } else {
-                    chosenindices.add(false)
-                }
-            }
-            if (chosenindices == null) {
-                return noneList.toBooleanArray()
-            } else {
-                return chosenindices.toBooleanArray()
-            }
-
-        }
-
     /**
-     * Add values to multi choice through the backing mutable sets.
+     * Write a value to the backing list. If that list was previously null,
+     * initializes a new one and returns it, so it can be added to the Hashmap.
      *
      * @param selection New value of the int.
-     * @return the existing setting with the new value added.
+     * @return the existing setting with the new value applied.
      */
-    fun addSelectedValue(selection: String): AbstractMultiStringSetting {
-        val stringSetting = setting as AbstractMultiStringSetting
-        stringSetting.strings.add(selection)
+    fun setSelectedValue(selection: List<String>): StringListSetting {
+        val stringSetting = setting as StringListSetting
+        stringSetting.list = selection
         return stringSetting
-    }
-
-    fun addSelectedValue(selection: Short): AbstractMultiShortSetting {
-        val shortSetting = setting as AbstractMultiShortSetting
-        shortSetting.shorts.add(selection)
-        return shortSetting
-    }
-
-    fun removeSelectedValue(selection: String): AbstractMultiStringSetting {
-        val stringSetting = setting as AbstractMultiStringSetting
-        stringSetting.strings.remove(selection)
-        return stringSetting
-    }
-
-    fun removeSelectedValue(selection: Short): AbstractMultiShortSetting {
-        val shortSetting = setting as AbstractMultiShortSetting
-        shortSetting.shorts.remove(selection)
-        return shortSetting
     }
 }

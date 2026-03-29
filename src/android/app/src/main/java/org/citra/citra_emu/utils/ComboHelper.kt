@@ -7,6 +7,7 @@ package org.citra.citra_emu.utils
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.overlay.InputOverlayDrawableButton
+import org.citra.citra_emu.features.settings.model.StringListSetting
 
 object ComboHelper {
 
@@ -27,16 +28,17 @@ object ComboHelper {
     }
 
     fun comboActivate(button: InputOverlayDrawableButton) {
-        var comboArray = Settings.comboSelection
-        for (selectedbutton in comboArray) {
-            var nativebutton = getButton(selectedbutton)
-            if (nativebutton == -1)
+        var comboArray = StringListSetting.COMBO_KEYS.list
+        for (selected_button in comboArray) {
+            var native_button = getButton(selected_button)
+            if (native_button == -1)
             {
+                //TODO: Need proper error handling here
                 println("Bad Button")
             }
             else
             {
-                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, nativebutton, button.status)
+                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, native_button, button.status)
             }
         }
     }

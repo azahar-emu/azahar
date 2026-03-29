@@ -38,7 +38,6 @@ import org.citra.citra_emu.databinding.ListItemSettingsHeaderBinding
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
-import org.citra.citra_emu.features.settings.model.AbstractMultiShortSetting
 import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
@@ -61,7 +60,6 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.viewholder.DateTimeViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.HeaderViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.InputBindingSettingViewHolder
-import org.citra.citra_emu.features.settings.ui.viewholder.StringMultiChoiceViewHolder // TODO: Remove and integrate within MultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.MultiChoiceViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.RunnableViewHolder
 import org.citra.citra_emu.features.settings.ui.viewholder.SettingViewHolder
@@ -143,7 +141,7 @@ class SettingsAdapter(
             }
 
             SettingsItem.TYPE_MULTI_CHOICE, SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
-                StringMultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
+                MultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
             }
 
             else -> {
@@ -283,6 +281,26 @@ class SettingsAdapter(
     fun onMultiChoiceClick(item: MultiChoiceSetting, position: Int) {
         clickedPosition = position
         onMultiChoiceClick(item)
+    }
+
+    private fun onStringMultiChoiceClick(item: StringMultiChoiceSetting) {
+        clickedItem = item
+        val values: BooleanArray = getSelectionForStringMultiChoiceValue(item);
+        dialog = MaterialAlertDialogBuilder(context)
+            .setTitle(item.nameId)
+            .setMultiChoiceItems(item.choices, values, this)
+            .setOnDismissListener {
+                if (clickedPosition != -1) {
+                    notifyItemChanged(clickedPosition)
+                    clickedPosition = -1
+                }
+            }
+            .show()
+    }
+
+    fun onStringMultiChoiceClick(item: StringMultiChoiceSetting, position: Int) {
+        clickedPosition = position
+        onStringMultiChoiceClick(item)
     }
 
     private fun onStringSingleChoiceClick(item: StringSingleChoiceSetting) {
@@ -585,15 +603,34 @@ class SettingsAdapter(
 
     //onclick for multichoice
     override fun onClick(dialog: DialogInterface?, which: Int, isChecked: Boolean) {
-        val mcsetting = clickedItem as? MultiChoiceSetting
-        mcsetting?.let {
-            val value = getValueForMultiChoiceSelection(it, which)
-            if (it.selectedValues.contains(value) != isChecked) {
-                val setting = it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
-                fragmentView?.putSetting(setting)
-                fragmentView?.onSettingChanged()
+        when (clickedItem) {
+            is MultiChoiceSetting -> {
+                val mcsetting = clickedItem as? MultiChoiceSetting
+                mcsetting?.let {
+                    val value = getValueForMultiChoiceSelection(it, which)
+                    if (it.selectedValues.contains(value) != isChecked) {
+                        val setting =
+                            it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
+                        fragmentView?.putSetting(setting)
+                        fragmentView?.onSettingChanged()
+                    }
+                    fragmentView.loadSettingsList()
+                }
             }
-            fragmentView.loadSettingsList()
+
+            is StringMultiChoiceSetting -> {
+                val mcsetting = clickedItem as? StringMultiChoiceSetting
+                mcsetting?.let {
+                    val value = it.getValueAt(which)
+                    if (it.selectedValues.contains(value) != isChecked) {
+                        val setting =
+                            it.setSelectedValue((if (isChecked) it.selectedValues + value.toString() else it.selectedValues - value.toString()).sorted())
+                        fragmentView?.putSetting(setting)
+                        fragmentView?.onSettingChanged()
+                    }
+                    fragmentView.loadSettingsList()
+                }
+            }
         }
     }
 
@@ -728,6 +765,7 @@ class SettingsAdapter(
         }
     }
 
+
     private fun getSelectionForSingleChoiceValue(item: SingleChoiceSetting): Int {
         val value = item.selectedValue
         val valuesId = item.valuesId
@@ -760,8 +798,33 @@ class SettingsAdapter(
         }
         return BooleanArray(1){false};
     }
-    
+
+    //TODO: Properly Implement in line with string single choice
+    private fun getSelectionForStringMultiChoiceValue(item: StringMultiChoiceSetting): BooleanArray {
+        val values = item.selectedValues;
+        val available_values = item.values;
+        val res = BooleanArray(available_values?.size ?: 0){false}
+        var index = 0;
+
+        if (available_values != null) {
+            for (choice_val in available_values) {
+                if (values.contains(choice_val)) {
+                    res[index] = true;
+                    index++;
+                }
+            }
+        }
+        return if (res.isNotEmpty()) {
+            res;
+        } else {
+            BooleanArray(1) { false };
+        }
+    }
+
+
+
     //TODO: I only added MultiChoice for fleshing out backend, debating whether to remove MultiChoiceSetting and related code for cleaning up
+    /*
     override fun onClick(dialog: DialogInterface?, which: Int, is_checked: Boolean) {
         when (clickedItem) {
             /*
@@ -836,4 +899,6 @@ class SettingsAdapter(
                 }
             }
         }
+
+     */
 }
