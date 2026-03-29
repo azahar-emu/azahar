@@ -8,6 +8,7 @@ import android.view.View
 import org.citra.citra_emu.databinding.ListItemSettingBinding
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
+import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
@@ -51,6 +52,16 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
                 return resList.joinToString();
             }
 
+            is StringMultiChoiceSetting -> {
+                var resList:List<String> = emptyList();
+                item.values?.forEachIndexed { i: Int, value: String ->
+                    if (value in item.selectedValues) {
+                        resList = resList + item.choices[i]
+                    }
+                }
+                return resList.joinToString()
+            }
+
             else -> return ""
         }
     }
@@ -64,6 +75,12 @@ class MultiChoiceViewHolder(val binding: ListItemSettingBinding, adapter: Settin
         if (setting is MultiChoiceSetting) {
             adapter.onMultiChoiceClick(
                 (setting as MultiChoiceSetting),
+                bindingAdapterPosition
+            )
+        }
+        if (setting is StringMultiChoiceSetting) {
+            adapter.onStringMultiChoiceClick(
+                (setting as StringMultiChoiceSetting),
                 bindingAdapterPosition
             )
         }
