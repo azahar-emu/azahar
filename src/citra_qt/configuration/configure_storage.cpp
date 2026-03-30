@@ -6,12 +6,17 @@
 #include <QFileDialog>
 #include <QUrl>
 #include "citra_qt/configuration/configure_storage.h"
+
+#include <QMessageBox>
+#include <QProgressDialog>
+
 #include "common/file_util.h"
 #include "common/settings.h"
 #include "ui_configure_storage.h"
 
 ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureStorage>()), is_powered_on{is_powered_on_} {
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureStorage>()), is_powered_on{is_powered_on_},
+      parent{parent} {
     ui->setupUi(this);
     SetConfiguration();
 
@@ -22,12 +27,15 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
 
     connect(ui->change_nand_dir, &QPushButton::clicked, this, [this]() {
         ui->change_nand_dir->setEnabled(false);
+        const QString og_path =
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir));
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select NAND Directory"),
             QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
             FileUtil::UpdateUserPath(FileUtil::UserPath::NANDDir, dir_path.toStdString());
+            MigrateFolder(og_path, dir_path);
             SetConfiguration();
         }
         ui->change_nand_dir->setEnabled(true);
@@ -40,12 +48,15 @@ ConfigureStorage::ConfigureStorage(bool is_powered_on_, QWidget* parent)
 
     connect(ui->change_sdmc_dir, &QPushButton::clicked, this, [this]() {
         ui->change_sdmc_dir->setEnabled(false);
+        const QString og_path =
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir));
         const QString dir_path = QFileDialog::getExistingDirectory(
             this, tr("Select SDMC Directory"),
             QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)),
             QFileDialog::ShowDirsOnly);
         if (!dir_path.isEmpty()) {
             FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir, dir_path.toStdString());
+            MigrateFolder(og_path, dir_path);
             SetConfiguration();
         }
         ui->change_sdmc_dir->setEnabled(true);
@@ -92,6 +103,102 @@ void ConfigureStorage::ApplyConfiguration() {
                                  GetDefaultUserPath(FileUtil::UserPath::NANDDir));
         FileUtil::UpdateUserPath(FileUtil::UserPath::SDMCDir,
                                  GetDefaultUserPath(FileUtil::UserPath::SDMCDir));
+    }
+}
+
+void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
+    namespace fs = std::filesystem;
+
+    std::error_code ec;
+
+    bool source_exists = fs::exists(from.toStdString(), ec);
+    bool dest_exists = fs::exists(dest.toStdString(), ec);
+
+    bool dest_has_content = false;
+    bool source_has_content = false;
+
+    if (source_exists) {
+        bool source_empty = fs::is_empty(from.toStdString(), ec);
+        source_has_content = !ec && !source_empty;
+    }
+
+    if (dest_exists) {
+        bool dest_empty = fs::is_empty(dest.toStdString(), ec);
+        dest_has_content = !ec && !dest_empty;
+    }
+
+    if (!source_has_content) {
+        QMessageBox::information(this, tr("Migration"),
+                                 tr("The source directory is empty. No data to migrate."));
+        return;
+    }
+
+    QString message;
+    if (dest_has_content) {
+        message = tr("Data exists in both the old and new locations.\n\n"
+                     "Old: %1\n"
+                     "New: %2\n\n"
+                     "Would you like to migrate the data from the old location?\n"
+                     "WARNING: This will overwrite any data in the new location!")
+                      .arg(from)
+                      .arg(dest);
+    } else {
+        message = tr("Would you like to migrate your data to the new location?\n\n"
+                     "From: %1\n"
+                     "To: %2")
+                      .arg(from)
+                      .arg(dest);
+    }
+
+    QMessageBox::StandardButton reply =
+        QMessageBox::question(parent, tr("Migrate Save Data"), message,
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
+
+    QProgressDialog progress(tr("Migrating save data..."), tr("Cancel"), 0, 0, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    progress.show();
+
+    if (!dest_exists) {
+        if (!fs::create_directories(dest.toStdString(), ec)) {
+            progress.close();
+            QMessageBox::warning(this, tr("Migration Failed"),
+                                 tr("Failed to create destination directory:\n%1")
+                                     .arg(QString::fromStdString(ec.message())));
+            return;
+        }
+    }
+
+    fs::copy(from.toStdString(), dest.toStdString(),
+             fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
+
+    progress.close();
+
+    if (ec) {
+        QMessageBox::warning(
+            this, tr("Migration Failed"),
+            tr("Failed to migrate data:\n%1").arg(QString::fromStdString(ec.message())));
+        return;
+    }
+
+    QMessageBox::StandardButton deleteReply =
+        QMessageBox::question(this, tr("Migration Complete"),
+                              tr("Data has been migrated successfully.\n\n"
+                                 "Would you like to delete the old data?"),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+    if (deleteReply == QMessageBox::Yes) {
+        std::error_code delete_ec;
+        fs::remove_all(from.toStdString(), delete_ec);
+        if (delete_ec) {
+            QMessageBox::warning(this, tr("Deletion Failed"),
+                                 tr("Failed to delete old data:\n%1")
+                                     .arg(QString::fromStdString(delete_ec.message())));
+        }
     }
 }
 
