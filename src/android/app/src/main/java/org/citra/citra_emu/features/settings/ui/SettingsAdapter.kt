@@ -38,7 +38,6 @@ import org.citra.citra_emu.databinding.ListItemSettingsHeaderBinding
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
-import org.citra.citra_emu.features.settings.model.AbstractMultiStringSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.AbstractStringSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
@@ -803,7 +802,8 @@ class SettingsAdapter(
     private fun getSelectionForStringMultiChoiceValue(item: StringMultiChoiceSetting): BooleanArray {
         val values = item.selectedValues;
         val available_values = item.values;
-        val res = BooleanArray(available_values?.size ?: 10){false}
+        val res = BooleanArray(available_values?.size ?: 10){false} // 10 is used because we have 10 reasonable options.
+                                                                    // prob shouldn't hardcode the size value here
 
 
         if (available_values != null) {

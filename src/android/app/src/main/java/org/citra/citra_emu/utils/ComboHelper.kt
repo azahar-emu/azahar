@@ -27,13 +27,13 @@ object ComboHelper {
     }
 
     fun comboActivate(button: InputOverlayDrawableButton) {
-        var comboArray = StringListSetting.COMBO_KEYS.list
+        val comboArray = StringListSetting.COMBO_KEYS.list
         for (selected_button in comboArray) {
-            var native_button = getButton(selected_button)
+            val native_button = getButton(selected_button)
             if (native_button == -1)
             {
-                //TODO: Need proper error handling here
-                println("Bad Button")
+                val cause = IllegalStateException("Button is not in bindable inputs.")
+                throw IllegalArgumentException("Input must be non-negative.", cause)
             }
             else
             {
