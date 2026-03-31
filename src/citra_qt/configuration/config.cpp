@@ -896,6 +896,8 @@ void QtConfig::ReadUILayoutValues() {
     UISettings::values.state = ReadSetting(Settings::QKeys::state).toByteArray();
     UISettings::values.renderwindow_geometry =
         ReadSetting(Settings::QKeys::geometryRenderWindow).toByteArray();
+    UISettings::values.secondarywindow_geometry =
+        ReadSetting(Settings::QKeys::geometrySecondaryWindow).toByteArray();
     UISettings::values.gamelist_header_state =
         ReadSetting(Settings::QKeys::gameListHeaderState).toByteArray();
     UISettings::values.microprofile_geometry =
@@ -1429,6 +1431,8 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(Settings::QKeys::geometry, UISettings::values.geometry);
     WriteSetting(Settings::QKeys::state, UISettings::values.state);
     WriteSetting(Settings::QKeys::geometryRenderWindow, UISettings::values.renderwindow_geometry);
+    WriteSetting(Settings::QKeys::geometrySecondaryWindow,
+                 UISettings::values.secondarywindow_geometry);
     WriteSetting(Settings::QKeys::gameListHeaderState, UISettings::values.gamelist_header_state);
     WriteSetting(Settings::QKeys::microProfileDialogGeometry,
                  UISettings::values.microprofile_geometry);
