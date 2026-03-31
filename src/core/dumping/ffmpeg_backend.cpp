@@ -16,6 +16,11 @@
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
 
+
+#ifndef AV_OPT_TYPE_CHANNEL_LAYOUT
+#define AV_OPT_TYPE_CHANNEL_LAYOUT AV_OPT_TYPE_CHLAYOUT
+#endif
+
 using namespace DynamicLibrary;
 
 namespace VideoDumper {
