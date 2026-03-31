@@ -128,8 +128,6 @@ void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
     }
 
     if (!source_has_content) {
-        QMessageBox::information(this, tr("Migration"),
-                                 tr("The source directory is empty. No data to migrate."));
         return;
     }
 
