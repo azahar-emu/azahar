@@ -948,4 +948,11 @@
     <string name="decompress_failed">Decompression failed.</string>
     <string name="compress_decompress_installed_app">Already installed applications cannot be compressed or decompressed.</string>
 
+    <!-- Input Overlay Settings -->
+    <string name="preferences_input_overlay">Input Overlay</string>
+    <string name="enable_input_overlay">Enable Touch Input Overlay</string>
+    <string name="edit_overlay_layout">Edit Touch Input Overlay</string>
+    <string name="realtime_edit">Edit in realtime</string>
+    <string name="edit_overlay_layout_description">Edit the touch overlay without having to open a game.</string>
+
 </resources>

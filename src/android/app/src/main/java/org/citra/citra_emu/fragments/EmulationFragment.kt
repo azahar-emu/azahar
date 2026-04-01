@@ -129,6 +129,10 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (args.noGameEditMode) {
+            return
+        }
+
         val intent = requireActivity().intent
         var intentUri: Uri? = intent.data
         val oldIntentInfo = Pair(
@@ -209,6 +213,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (requireActivity().isFinishing) {
+            return
+        }
+
+        if (args.noGameEditMode) {
+            setupNoGameEditMode()
             return
         }
 
@@ -503,6 +512,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     override fun onResume() {
         super.onResume()
+
+        if (args.noGameEditMode) {
+            return
+        }
+
         Choreographer.getInstance().postFrameCallback(this)
         if (NativeLibrary.isRunning()) {
             emulationState.unpause()
@@ -530,7 +544,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onPause() {
-        if (NativeLibrary.isRunning()) {
+        if (!args.noGameEditMode && NativeLibrary.isRunning()) {
             emulationState.pause()
         }
         Choreographer.getInstance().removeFrameCallback(this)
@@ -572,6 +586,37 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun setupNoGameEditMode() {
+        binding.surfaceInputOverlay.post {
+            binding.surfaceInputOverlay.refreshControls(true)
+        }
+
+        binding.doneControlConfig.setOnClickListener {
+            finishNoGameEditMode()
+        }
+
+        binding.doneControlConfig.visibility = View.VISIBLE
+        binding.surfaceInputOverlay.setIsInEditMode(true)
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+        binding.surfaceInputOverlay.visibility = View.VISIBLE
+        binding.loadingIndicator.visibility = View.GONE
+
+        // in no game edit mode, back = done
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    finishNoGameEditMode()
+                }
+            }
+        )
+    }
+
+    private fun finishNoGameEditMode() {
+        binding.surfaceInputOverlay.setIsInEditMode(false)
+        emulationActivity.finish()
     }
 
     private fun showSavestateMenu() {
@@ -1236,7 +1281,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             .show()
     }
 
-    private fun resetInputOverlay() {
+     fun resetInputOverlay() {
         resetAllScales()
         preferences.edit()
             .putInt("controlOpacity", 50)
