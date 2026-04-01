@@ -531,9 +531,15 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
 
 void ConfigureInput::AutoMap() {
     ui->buttonAutoMap->setEnabled(false);
-    if (QMessageBox::information(this, tr("Information"),
-                                 tr("After pressing OK, press any button on your joystick"),
-                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+    QMessageBox box(this);
+    box.setWindowTitle(tr("Auto map Controller"));
+    box.setText(tr("After pressing OK, press the A (right) button on your gamepad"));
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    QPixmap pixmap(QStringLiteral(":/icons/default/256x256/automap_face_buttons.png"));
+    pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    box.setIconPixmap(pixmap);
+    int result = box.exec();
+    if (result == QMessageBox::Cancel) {
         ui->buttonAutoMap->setEnabled(true);
         return;
     }
