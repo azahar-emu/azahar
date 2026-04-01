@@ -143,6 +143,8 @@ option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via 
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
 
+set(AZAHAR_IPC_SOCKET_NAME "" CACHE STRING "Override IPC socket name (e.g. azahar-prof-ipc)")
+
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
     # Check for explicitly-set conflicting options
@@ -351,7 +353,7 @@ if (ENABLE_QT)
         download_qt(6.9.3)
     endif()
 
-    find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia Concurrent Network)
 
     if (UNIX AND NOT APPLE)
         find_package(Qt6 REQUIRED COMPONENTS DBus)

@@ -32,6 +32,7 @@
 class AboutDialog;
 class QtConfig;
 class ClickableLabel;
+class DevIpcServer;
 class EmuThread;
 class GameList;
 enum class GameListOpenTarget;
@@ -120,6 +121,13 @@ public:
 
     void UninstallTitles(
         const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles);
+
+    bool IsEmulationRunning() const {
+        return emulation_running;
+    }
+    u64 GetGameTitleId() const {
+        return game_title_id;
+    }
 
 public slots:
     void OnAppFocusStateChanged(Qt::ApplicationState state);
@@ -315,6 +323,7 @@ private slots:
 #ifdef ENABLE_DEVELOPER_OPTIONS
     void StartLaunchStressTest(const QString& game_path);
 #endif
+    void OnHotReloadRequested(const QString& file_path, bool purge, bool wipe_saves);
 
 private:
     Q_INVOKABLE void OnMoviePlaybackCompleted();
@@ -443,6 +452,11 @@ private:
     HotkeyRegistry hotkey_registry;
 
     std::shared_ptr<Camera::QtMultimediaCameraHandlerFactory> qt_cameras;
+
+    DevIpcServer* dev_ipc_server_ = nullptr;
+    bool hot_reload_pending_ = false;
+    QString hot_reload_cia_path_;
+    Service::AM::InstallStatus hot_reload_install_status_{};
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
     // Prompt shown when update check succeeds

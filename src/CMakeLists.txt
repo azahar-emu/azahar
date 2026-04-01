@@ -197,6 +197,7 @@ endif()
 
 if (ENABLE_QT)
     add_subdirectory(citra_qt)
+    add_subdirectory(azahar_ctl)
 endif()
 
 if (ENABLE_QT) # Or any other hypothetical future frontends
