@@ -169,6 +169,27 @@ constexpr std::array<SDL_GameControllerButton, Settings::NativeButton::NumButton
         SDL_CONTROLLER_BUTTON_GUIDE,
         SDL_CONTROLLER_BUTTON_INVALID,
     }};
+constexpr std::array<SDL_GameControllerButton, Settings::NativeButton::NumButtons>
+    nintendo_to_3ds_mapping = {{
+        SDL_CONTROLLER_BUTTON_A,
+        SDL_CONTROLLER_BUTTON_B,
+        SDL_CONTROLLER_BUTTON_X,
+        SDL_CONTROLLER_BUTTON_Y,
+        SDL_CONTROLLER_BUTTON_DPAD_UP,
+        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+        SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+        SDL_CONTROLLER_BUTTON_START,
+        SDL_CONTROLLER_BUTTON_BACK,
+        SDL_CONTROLLER_BUTTON_INVALID,
+        SDL_CONTROLLER_BUTTON_INVALID,
+        SDL_CONTROLLER_BUTTON_INVALID,
+        SDL_CONTROLLER_BUTTON_INVALID,
+        SDL_CONTROLLER_BUTTON_GUIDE,
+        SDL_CONTROLLER_BUTTON_INVALID,
+    }};
 
 const std::map<Uint8, std::string> axis_names = {
     {SDL_CONTROLLER_AXIS_LEFTX, "Left Stick X"},
@@ -249,13 +270,31 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
     return nullptr;
 }
 
-Common::ParamPackage SDLState::GetSDLControllerButtonBind(const std::string& guid, int port,
-                                                          Settings::NativeButton::Values button) {
+/**
+ * Return the button binds param package for the button assuming the params passed in is for the
+ * n3ds "A" button to determine whether this is xbox or nintendo layout. If the passed in button
+ * is neither A nor B, default to xbox layout as the most common on desktop.
+ */
+Common::ParamPackage SDLState::GetSDLControllerButtonBind(
+    const Common::ParamPackage a_button_params, Settings::NativeButton::Values button) {
+    auto guid = a_button_params.Get("guid", 0);
+    auto port = a_button_params.Get("port", 0);
+    auto a_button = a_button_params.Get("button", -1);
+    auto api = a_button_params.Get("api", "joystick");
+    // for xinputs, the "A" or right button would normally register as the B button. But if the
+    // user is either using a nintendo-layout controller or using xinput but would rather the labels
+    // match than the icons, they can press the button that appears as "A" and trigger nintendo
+    // automap
+    bool is_nintendo_layout =
+        api == "controller" && a_button == SDL_GameControllerButton::SDL_CONTROLLER_BUTTON_A;
+
     Common::ParamPackage params({{"engine", "sdl"}});
     params.Set("guid", guid);
     params.Set("port", port);
 
-    auto mapped_button = xinput_to_3ds_mapping[static_cast<int>(button)];
+    auto mapped_button = is_nintendo_layout ? nintendo_to_3ds_mapping[static_cast<int>(button)]
+                                            : xinput_to_3ds_mapping[static_cast<int>(button)];
+
     params.Set("api", "controller");
     if (button == Settings::NativeButton::Values::ZL) {
         params.Set("axis", SDL_CONTROLLER_AXIS_TRIGGERLEFT);
