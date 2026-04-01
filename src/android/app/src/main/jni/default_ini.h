@@ -192,9 +192,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): None, 1: MSAAx2, 2: MSAAx4, 3: MSAAx8, 4: MSAAx16
 )") DECLARE_KEY(antialiasing) BOOST_HANA_STRING(R"(
 
-# Use Integer Scaling when the layout allows
-# 0: Off (default), 1: On
-)") DECLARE_KEY(use_integer_scaling) BOOST_HANA_STRING(R"(
+# Which scaling mode should be used
+# 0 (default): Fit to Screen
+# 1: Fit to Screen with Integer Scaling
+)") DECLARE_KEY(scaling_mode) BOOST_HANA_STRING(R"(
 
 # Turns on the frame limiter, which will limit frames output to the target game speed
 # 0: Off, 1: On (default)
