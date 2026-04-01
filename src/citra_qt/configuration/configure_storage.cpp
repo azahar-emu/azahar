@@ -107,24 +107,18 @@ void ConfigureStorage::ApplyConfiguration() {
 }
 
 void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
-    namespace fs = std::filesystem;
-
-    std::error_code ec;
-
-    bool source_exists = fs::exists(from.toStdString(), ec);
-    bool dest_exists = fs::exists(dest.toStdString(), ec);
+    bool source_exists = FileUtil::Exists(from.toStdString());
+    bool dest_exists = FileUtil::Exists(dest.toStdString());
 
     bool dest_has_content = false;
     bool source_has_content = false;
 
     if (source_exists) {
-        bool source_empty = fs::is_empty(from.toStdString(), ec);
-        source_has_content = !ec && !source_empty;
+        source_has_content = !FileUtil::IsEmptyDir(from.toStdString());
     }
 
     if (dest_exists) {
-        bool dest_empty = fs::is_empty(dest.toStdString(), ec);
-        dest_has_content = !ec && !dest_empty;
+        dest_has_content = !FileUtil::IsEmptyDir(dest.toStdString());
     }
 
     if (!source_has_content) {
@@ -162,26 +156,17 @@ void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
     progress.show();
 
     if (!dest_exists) {
-        if (!fs::create_directories(dest.toStdString(), ec)) {
+        if (!FileUtil::CreateFullPath(dest.toStdString())) {
             progress.close();
             QMessageBox::warning(this, tr("Migration Failed"),
-                                 tr("Failed to create destination directory:\n%1")
-                                     .arg(QString::fromStdString(ec.message())));
+                                 tr("Failed to create destination directory."));
             return;
         }
     }
 
-    fs::copy(from.toStdString(), dest.toStdString(),
-             fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
+    FileUtil::CopyDir(from.toStdString() + "/", dest.toStdString() + "/");
 
     progress.close();
-
-    if (ec) {
-        QMessageBox::warning(
-            this, tr("Migration Failed"),
-            tr("Failed to migrate data:\n%1").arg(QString::fromStdString(ec.message())));
-        return;
-    }
 
     QMessageBox::StandardButton deleteReply =
         QMessageBox::question(this, tr("Migration Complete"),
@@ -190,12 +175,9 @@ void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
                               QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
     if (deleteReply == QMessageBox::Yes) {
-        std::error_code delete_ec;
-        fs::remove_all(from.toStdString(), delete_ec);
-        if (delete_ec) {
+        if (!FileUtil::DeleteDirRecursively(from.toStdString())) {
             QMessageBox::warning(this, tr("Deletion Failed"),
-                                 tr("Failed to delete old data:\n%1")
-                                     .arg(QString::fromStdString(delete_ec.message())));
+                                 tr("Failed to delete old data."));
         }
     }
 }
