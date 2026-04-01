@@ -176,8 +176,7 @@ void ConfigureStorage::MigrateFolder(const QString& from, const QString& dest) {
 
     if (deleteReply == QMessageBox::Yes) {
         if (!FileUtil::DeleteDirRecursively(from.toStdString())) {
-            QMessageBox::warning(this, tr("Deletion Failed"),
-                                 tr("Failed to delete old data."));
+            QMessageBox::warning(this, tr("Deletion Failed"), tr("Failed to delete old data."));
         }
     }
 }
