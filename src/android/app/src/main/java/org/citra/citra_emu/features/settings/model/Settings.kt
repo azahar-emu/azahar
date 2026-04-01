@@ -104,6 +104,7 @@ class Settings {
         const val SECTION_CAMERA = "Camera"
         const val SECTION_CONTROLS = "Controls"
         const val SECTION_RENDERER = "Renderer"
+        const val SECTION_INPUT_OVERLAY = "Input Overlay"
         const val SECTION_LAYOUT = "Layout"
         const val SECTION_UTILITY = "Utility"
         const val SECTION_AUDIO = "Audio"
@@ -242,6 +243,7 @@ class Settings {
                     SECTION_CAMERA,
                     SECTION_CONTROLS,
                     SECTION_RENDERER,
+                    SECTION_INPUT_OVERLAY,
                     SECTION_LAYOUT,
                     SECTION_STORAGE,
                     SECTION_UTILITY,
