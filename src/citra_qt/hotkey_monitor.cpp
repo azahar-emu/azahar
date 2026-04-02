@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <iostream>
+#include <QApplication>
 #include <QShortcut>
 #include <QTimer>
 #include <QWidget>
@@ -39,8 +40,11 @@ void ControllerHotkeyMonitor::removeButton(const QString& name) {
 }
 
 void ControllerHotkeyMonitor::checkAllButtons() {
+    // Controller Hotkeys
     for (auto& [name, it] : *m_buttons) {
         bool trigger = false;
+        if (!it.hk || !it.hk->button_device)
+            continue;
         bool currentStatus = it.hk->button_device->GetStatus();
         if (it.hk->button_device2) {
             // two buttons, need both pressed and one *just now* pressed
@@ -60,7 +64,24 @@ void ControllerHotkeyMonitor::checkAllButtons() {
             for (auto const& [name, hotkey_shortcut] : it.hk->shortcuts) {
                 if (hotkey_shortcut && hotkey_shortcut->isEnabled()) {
                     QWidget* parent = qobject_cast<QWidget*>(hotkey_shortcut->parent());
-                    if (parent && parent->isActiveWindow()) {
+                    if (!parent)
+                        continue;
+                    if (name == QStringLiteral("move down")) {
+                        std::cout << "move down triggered before context check" << std::endl;
+                    }
+                    bool shouldFire = true;
+                    // Code to honor context, so we can set different contexts and parents
+                    // appropriately
+                    if (hotkey_shortcut->context() == Qt::WidgetShortcut) {
+                        shouldFire = parent == QApplication::focusWidget();
+                    } else if (hotkey_shortcut->context() == Qt::WidgetWithChildrenShortcut) {
+                        shouldFire = parent == QApplication::focusWidget() ||
+                                     parent->isAncestorOf(QApplication::focusWidget());
+                    } else if (hotkey_shortcut->context() == Qt::WindowShortcut) {
+                        shouldFire = parent->window()->isActiveWindow();
+                    }
+
+                    if (shouldFire) {
                         hotkey_shortcut->activated();
                         break;
                     }
