@@ -63,6 +63,9 @@ QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureHotkeys::GetUsedKeyLis
 
 void ConfigureHotkeys::Populate(const HotkeyRegistry& registry) {
     for (const auto& group : registry.hotkey_groups) {
+        // skip the controller navigation group in the keyboard hotkey config window
+        if (group.first == QStringLiteral("Navigation"))
+            continue;
         QStandardItem* parent_item = new QStandardItem(group.first);
         parent_item->setEditable(false);
         for (const auto& hotkey : group.second) {
