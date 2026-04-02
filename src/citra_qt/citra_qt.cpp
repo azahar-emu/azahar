@@ -499,6 +499,7 @@ void GMainWindow::InitializeWidgets() {
     action_secondary_rotate_screen = new QAction(secondary_window);
 
     game_list = new GameList(*play_time_manager, this);
+
     ui->horizontalLayout->addWidget(game_list);
 
     game_list_placeholder = new GameListPlaceholder(this);
@@ -780,15 +781,13 @@ void GMainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
     hotkey_registry.buttonMonitor.start(16);
     LOG_DEBUG(Frontend, "Initializing hotkeys");
-    const QString main_window = QStringLiteral("Main Window");
     const QString fullscreen = QStringLiteral("Fullscreen");
-
     // QAction Hotkeys
     const auto link_action_shortcut = [&](QAction* action, const QString& action_name,
-                                          const bool primary_only = false) {
-        static const QString main_window = QStringLiteral("Main Window");
-        auto context = hotkey_registry.GetShortcutContext(main_window, action_name);
-        auto shortcut = hotkey_registry.GetKeySequence(main_window, action_name);
+                                          const bool primary_only = false,
+                                          const QString group = QStringLiteral("Main Window")) {
+        auto context = hotkey_registry.GetShortcutContext(group, action_name);
+        auto shortcut = hotkey_registry.GetKeySequence(group, action_name);
         action->setShortcut(shortcut);
         action->setShortcutContext(context);
         action->setAutoRepeat(false);
@@ -837,9 +836,13 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Leave_Room, QStringLiteral("Multiplayer Leave Room"));
 
     // QShortcut Hotkeys
-    const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
-        const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
-        connect(hotkey, &QShortcut::activated, this, function);
+    const auto connect_shortcut = [&](const QString& action_name, const auto& function,
+                                      const QString& group = QStringLiteral("Main Window"),
+                                      QObject* parent = nullptr) {
+        if (parent == nullptr)
+            parent = this;
+        const auto* hotkey = hotkey_registry.GetHotkey(group, action_name, parent);
+        connect(hotkey, &QShortcut::activated, parent, function);
     };
 
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
@@ -899,6 +902,36 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
+
+    // Navigation Actions - send keyboard shortcuts from controller buttons, but only when
+    // a game window is NOT in focus
+    const auto connect_navigation_shortcut =
+        [&](const QString& action_name, Qt::Key key, Qt::KeyboardModifier mod = Qt::NoModifier,
+            const QString& group = QStringLiteral("Navigation"), QObject* parent = nullptr) {
+            if (parent == nullptr)
+                parent = this;
+            const auto* hotkey = hotkey_registry.GetHotkey(group, action_name, parent);
+            connect(hotkey, &QShortcut::activated, this, [this, key, mod] {
+                if (QApplication::focusWidget() == render_window ||
+                    QApplication::focusWidget() == secondary_window)
+                    return;
+                QKeyEvent press(QEvent::KeyPress, key, mod);
+                QKeyEvent release(QEvent::KeyRelease, key, mod);
+                QApplication::sendEvent(QApplication::focusWidget(), &press);
+                QApplication::sendEvent(QApplication::focusWidget(), &release);
+            });
+        };
+
+    // TODO: Improve keyboard navigation everywhere so these actually work everywhere
+    connect_navigation_shortcut(QStringLiteral("Move down (Down Arrow)"), Qt::Key_Down);
+    connect_navigation_shortcut(QStringLiteral("Move up (Up Arrow)"), Qt::Key_Up);
+    connect_navigation_shortcut(QStringLiteral("Move left (Left Arrow)"), Qt::Key_Left);
+    connect_navigation_shortcut(QStringLiteral("Move right (Right Arrow)"), Qt::Key_Right);
+    connect_navigation_shortcut(QStringLiteral("Confirm / Run game (Enter)"), Qt::Key_Enter);
+    connect_navigation_shortcut(QStringLiteral("Go back / Cancel (Esc)"), Qt::Key_Escape);
+    connect_navigation_shortcut(QStringLiteral("Change Focus Forward (Tab)"), Qt::Key_Tab);
+    connect_navigation_shortcut(QStringLiteral("Change Focus Backward (Shift+Tab)"), Qt::Key_Tab,
+                                Qt::ShiftModifier);
 
     // Secondary Window QAction Hotkeys
     const auto add_secondary_window_hotkey = [this](QAction* action, QKeySequence hotkey,
