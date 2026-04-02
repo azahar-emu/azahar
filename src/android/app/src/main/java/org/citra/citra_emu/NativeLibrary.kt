@@ -527,6 +527,13 @@ object NativeLibrary {
         sEmulationActivity.clear()
     }
 
+    // Update checker
+    external fun getUpdateTag(): String
+    external fun isUpdateCheckerEnabled(): Boolean
+    external fun getUpdateUrl(): String
+    // Sets the path to CA certificates for SSL/TLS verification.
+    external fun setCACertificatePath(path: String)
+
     private val cameraPermissionLock = Object()
     private var cameraPermissionGranted = false
     const val REQUEST_CODE_NATIVE_CAMERA = 800

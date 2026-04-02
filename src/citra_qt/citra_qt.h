@@ -10,7 +10,7 @@
 #ifdef __unix__
 #include <QDBusObjectPath>
 #endif
-#ifdef ENABLE_QT_UPDATE_CHECKER
+#ifdef ENABLE_UPDATE_CHECKER
 #include <QFuture>
 #include <QFutureWatcher>
 #endif
@@ -307,7 +307,7 @@ private slots:
     void OnDecreaseVolume();
     void OnIncreaseVolume();
     void OnMute();
-#ifdef ENABLE_QT_UPDATE_CHECKER
+#ifdef ENABLE_UPDATE_CHECKER
     void OnEmulatorUpdateAvailable();
 #endif
     void OnSwitchDiskResources(VideoCore::LoadCallbackStage stage, std::size_t value,
@@ -444,7 +444,7 @@ private:
 
     std::shared_ptr<Camera::QtMultimediaCameraHandlerFactory> qt_cameras;
 
-#ifdef ENABLE_QT_UPDATE_CHECKER
+#ifdef ENABLE_UPDATE_CHECKER
     // Prompt shown when update check succeeds
     QFuture<QString> update_future;
     QFutureWatcher<QString> update_watcher;

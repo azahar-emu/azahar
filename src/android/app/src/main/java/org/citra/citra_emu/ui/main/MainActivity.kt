@@ -21,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -38,6 +39,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationBarView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
@@ -47,6 +49,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityMainBinding
+import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
@@ -189,6 +192,13 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
             }
         }
 
+        val firstTimeSetup = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+            .getBoolean(Settings.PREF_FIRST_APP_LAUNCH, true)
+
+        if (!firstTimeSetup && NativeLibrary.isUpdateCheckerEnabled() && BooleanSetting.CHECK_FOR_UPDATES.boolean) {
+            checkForUpdates()
+        }
+
         setInsets()
     }
 
@@ -268,6 +278,37 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
                 }
             }
         }
+    }
+
+    private fun checkForUpdates() {
+        Thread {
+            val latestVersion = NativeLibrary.getUpdateTag()
+            if (!latestVersion.isEmpty()) {
+                runOnUiThread {
+                    showUpdateDialog(latestVersion)
+                }
+            }
+        }.start()
+    }
+
+    private fun showUpdateDialog(version: String) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.update_available)
+            .setMessage(getString(R.string.update_available_description, version))
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val url = NativeLibrary.getUpdateUrl()
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                startActivity(intent)
+            }
+            .setNeutralButton(android.R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.dont_show_again) { dialog, _ ->
+                BooleanSetting.CHECK_FOR_UPDATES.boolean = false
+                settingsViewModel.settings.saveSetting(BooleanSetting.CHECK_FOR_UPDATES, SettingsFile.FILE_NAME_CONFIG)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     fun finishSetup(navController: NavController) {

@@ -19,6 +19,13 @@
 
 namespace Settings {
 
+class UpdateCheckChannels {
+public:
+    static constexpr int STABLE = 0;
+    static constexpr int PRERELEASE = 1;
+};
+
+
 enum class GraphicsAPI {
     Software = 0,
     OpenGL = 1,
@@ -642,6 +649,11 @@ struct Values {
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};
     Setting<std::string> log_regex_filter{"", Keys::log_regex_filter};
+#ifdef ENABLE_UPDATE_CHECKER
+    Settings::Setting<bool> check_for_update_on_start{true, Keys::check_for_update_on_start};
+    Settings::Setting<int> update_check_channel{UpdateCheckChannels::STABLE,
+                                                Keys::update_check_channel};
+#endif
 
     // Video Dumping
     std::string output_format;

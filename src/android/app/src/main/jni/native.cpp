@@ -52,6 +52,10 @@
 #include "jni/camera/still_image_camera.h"
 #include "jni/config.h"
 
+#ifdef ENABLE_UPDATE_CHECKER
+#include "common/update_checker.h"
+#endif
+
 #ifdef ENABLE_OPENGL
 #include "jni/emu_window/emu_window_gl.h"
 #endif
@@ -645,6 +649,79 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_getRecommendedExtension(
 
     return env->NewStringUTF(j_should_compress ? compressed_ext.c_str() : uncompressed_ext.c_str());
 }
+
+JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_NativeLibrary_isUpdateCheckerEnabled(
+        JNIEnv* env,
+        jobject obj) {
+#ifdef ENABLE_UPDATE_CHECKER
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef ENABLE_UPDATE_CHECKER
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_setCACertificatePath(
+        JNIEnv* env,
+        jobject obj,
+        jstring path) {
+    const char* path_str = env->GetStringUTFChars(path, nullptr);
+    UpdateChecker::SetCACertPath(path_str);
+}
+
+bool IsPrereleaseBuild() {
+    return ((strstr(Common::g_build_fullname, "alpha") != nullptr) ||
+            (strstr(Common::g_build_fullname, "beta") != nullptr) ||
+            (strstr(Common::g_build_fullname, "rc") != nullptr));
+}
+
+static bool ShouldCheckForPrereleaseUpdates() {
+    const bool update_channel = Settings::values.update_check_channel.GetValue();
+    const bool using_prerelease_channel =
+            (update_channel == Settings::UpdateCheckChannels::PRERELEASE);
+    return (IsPrereleaseBuild() || using_prerelease_channel);
+}
+
+static int GetMajorVersion(const std::string& version) {
+    size_t dot = version.find('.');
+    try {
+        return std::stoi(version.substr(0, dot));
+    } catch (...) {
+        return 0;
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateTag(
+        JNIEnv* env,
+        jobject obj) {
+    const std::optional<std::string> latest_release_tag =
+            UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
+
+    if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
+        const int latest_major_version = GetMajorVersion(latest_release_tag.value());
+        const int current_major_version = GetMajorVersion(Common::g_build_fullname);
+        if (current_major_version <= latest_major_version) {
+            return env->NewStringUTF(latest_release_tag->c_str());
+        }
+    }
+
+    return env->NewStringUTF("");
+}
+
+JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateUrl(
+        JNIEnv* env,
+        jobject obj) {
+    std::string update_page_url;
+    if (ShouldCheckForPrereleaseUpdates()) {
+        update_page_url = "https://github.com/azahar-emu/azahar/releases";
+    } else {
+        update_page_url = "https://azahar-emu.org/pages/download/";
+    }
+
+    return env->NewStringUTF(update_page_url.c_str());
+}
+
+#endif
 
 void Java_org_citra_citra_1emu_NativeLibrary_setUserDirectory(JNIEnv* env,
                                                               [[maybe_unused]] jobject obj,
