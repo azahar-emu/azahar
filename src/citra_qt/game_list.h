@@ -95,6 +95,10 @@ public:
 
     static const QStringList supported_file_extensions;
 
+    GameListTreeView* GetGameTreeView() {
+        return tree_view;
+    }
+
 signals:
     void GameChosen(const QString& game_path);
     void ShouldCancelWorker();
@@ -138,6 +142,7 @@ private:
     void changeEvent(QEvent*) override;
     void RetranslateUI();
 
+protected:
     GameListSearchField* search_field;
     GMainWindow* main_window = nullptr;
     QVBoxLayout* layout = nullptr;
