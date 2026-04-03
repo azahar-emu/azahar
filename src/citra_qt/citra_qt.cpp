@@ -357,11 +357,16 @@ GMainWindow::GMainWindow(Core::System& system_)
             for (; i < args.size(); i++){
                 if (args[i] == QStringLiteral("-o") || args[i] == QStringLiteral("--output")){
                     i++;
-                    QFileInfo outputPath(args[i]);
-                    if (outputPath.isDir()){
-                        cli_out_path = args[i];
+                    if (i < args.size()){
+                        QFileInfo outputPath(args[i]);
+                        if (outputPath.isDir()){
+                            cli_out_path = args[i];
+                        } else {
+                            QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                            exit(1);
+                        }
                     } else {
-                        QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                        QTextStream(stderr) << "Error: No directory specified";
                         exit(1);
                     }
                     break;
@@ -393,11 +398,16 @@ GMainWindow::GMainWindow(Core::System& system_)
             for (; i < args.size(); i++){
                 if (args[i] == QStringLiteral("-o") || args[i] == QStringLiteral("--output")){
                     i++;
-                    QFileInfo outputPath(args[i]);
-                    if (outputPath.isDir()){
-                        cli_out_path = args[i];
+                    if (i < args.size()){
+                        QFileInfo outputPath(args[i]);
+                        if (outputPath.isDir()){
+                            cli_out_path = args[i];
+                        } else {
+                            QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                            exit(1);
+                        }
                     } else {
-                        QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                        QTextStream(stderr) << "Error: No directory specified";
                         exit(1);
                     }
                     break;
