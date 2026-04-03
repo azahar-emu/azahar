@@ -247,7 +247,12 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
 
         if (args[i] == QStringLiteral("--help") || args[i] == QStringLiteral("-h")) {
-            ShowCommandOutput("Help", fmt::format(Common::help_string, args[0].toStdString()));
+            UISettings::values.show_console = true;
+            Debugger::ToggleConsole();
+            Common::Log::Filter filter;
+            filter.ParseFilterString("*:Error");
+            QFileInfo azaharFile(args[0]);
+            QTextStream(stdout) << QString::fromStdString(fmt::format(Common::help_string, azaharFile.fileName().toStdString()));
             exit(0);
         }
 
@@ -350,6 +355,17 @@ GMainWindow::GMainWindow(Core::System& system_)
             Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
+                if (args[i] == QStringLiteral("-o") || args[i] == QStringLiteral("--output")){
+                    i++;
+                    QFileInfo outputPath(args[i]);
+                    if (outputPath.isDir()){
+                        cli_out_path = args[i];
+                    } else {
+                        QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                        exit(1);
+                    }
+                    break;
+                }
                 QFileInfo currPath(args[i]);
                 if (currPath.isFile()){
                     compress_paths.append(args[i]);
@@ -375,6 +391,17 @@ GMainWindow::GMainWindow(Core::System& system_)
             Common::Log::SetGlobalFilter(filter);
             i++;
             for (; i < args.size(); i++){
+                if (args[i] == QStringLiteral("-o") || args[i] == QStringLiteral("--output")){
+                    i++;
+                    QFileInfo outputPath(args[i]);
+                    if (outputPath.isDir()){
+                        cli_out_path = args[i];
+                    } else {
+                        QTextStream(stderr) << "Error: " << args[i] << " is not a directory!\n";
+                        exit(1);
+                    }
+                    break;
+                }
                 QFileInfo currPath(args[i]);
                 if (currPath.isFile()){
                     decompress_paths.append(args[i]);
@@ -3340,20 +3367,13 @@ void GMainWindow::OnCompressFileCLI() {
     //
     // This is enforced using the loaders as they already return an error on encryption.
 
-    QString out_path;
+    QString out_path = cli_out_path;
     QStringList filepaths = compress_paths;
     if (compress_paths.isEmpty()) {
         return;
     }
 
     bool single_file = filepaths.size() == 1;
-
-    // Set the output directory based on the starting file
-    QFileInfo startFileInfo(filepaths[0]);
-    out_path = startFileInfo.absolutePath();
-    if (out_path.isEmpty()) {
-        return;
-    }
 
     compression_future = QtConcurrent::run([&, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
@@ -3373,7 +3393,13 @@ void GMainWindow::OnCompressFileCLI() {
             }
 
             QFileInfo fileinfo(filepath);
-            out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+            if (out_path.isEmpty()){
+                out_filepath = fileinfo.absolutePath();
+            } else {
+                out_filepath = out_path;
+            }
+
+            out_filepath = out_filepath + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
                            QStringLiteral(".") +
                            QString::fromStdString(
                                compress_info.value().first.recommended_compressed_extension);
@@ -3493,15 +3519,13 @@ void GMainWindow::OnDecompressFile() {
 
 void GMainWindow::OnDecompressFileCLI() {
     QStringList filepaths = decompress_paths;
-    QString out_path;
+    QString out_path = cli_out_path;
 
     if (filepaths.isEmpty()) {
         return;
     }
 
     bool single_file = filepaths.size() == 1;
-    QFileInfo startFileInfo(filepaths[0]);
-    out_path = startFileInfo.absolutePath();
 
     compression_future = QtConcurrent::run([&, filepaths, out_path] {
         bool single_file = filepaths.size() == 1;
@@ -3522,7 +3546,12 @@ void GMainWindow::OnDecompressFileCLI() {
 
             QFileInfo fileinfo(filepath);
 
-            out_filepath = out_path + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
+            if (out_path.isEmpty()){
+                out_filepath = fileinfo.absolutePath();
+            } else {
+                out_filepath = out_path;
+            }
+            out_filepath = out_filepath + QStringLiteral(DIR_SEP) + fileinfo.completeBaseName() +
                            QStringLiteral(".") +
                            QString::fromStdString(
                                compress_info.value().first.recommended_uncompressed_extension);

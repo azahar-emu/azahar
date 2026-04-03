@@ -404,6 +404,7 @@ private:
     // Compress/Decompress Paths and Future
     QStringList compress_paths;
     QStringList decompress_paths;
+    QString cli_out_path;
     QFuture<void> compression_future;
 
     // Whether game shutdown is delayed due to video dumping
