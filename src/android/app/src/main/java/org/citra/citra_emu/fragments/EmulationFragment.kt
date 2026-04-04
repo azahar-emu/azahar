@@ -602,16 +602,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
         binding.surfaceInputOverlay.visibility = View.VISIBLE
         binding.loadingIndicator.visibility = View.GONE
-
-        // in no game edit mode, back = done
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    finishNoGameEditMode()
-                }
-            }
-        )
     }
 
     private fun finishNoGameEditMode() {
