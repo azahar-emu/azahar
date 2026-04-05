@@ -23,6 +23,11 @@ add_executable(tests
 
 create_target_directory_groups(tests)
 
+if (BSD STREQUAL "NetBSD")
+    include(DisablePaxMprotect)
+    disable_pax_mprotect(tests)
+endif()
+
 target_link_libraries(tests PRIVATE citra_common citra_core video_core audio_core)
 target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers Threads::Threads)
 
