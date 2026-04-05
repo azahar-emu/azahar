@@ -543,6 +543,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDestroy() {
+        if (::emulationState.isInitialized) {
+            emulationState.stop()
+        }
         EmulationLifecycleUtil.removeHook(onPause)
         EmulationLifecycleUtil.removeHook(onShutdown)
         if (gameFd != null) {
