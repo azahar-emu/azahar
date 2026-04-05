@@ -36,6 +36,10 @@ if (ENABLE_LIBRETRO)
 endif()
 
 add_test(NAME tests COMMAND tests)
+if(NOT ANDROID)
+    catch_discover_tests(tests)
+endif()
+
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(tests PRIVATE precompiled_headers.h)
