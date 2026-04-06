@@ -759,7 +759,7 @@ void BlitHelper::FilterPass(Surface& surface, vk::Pipeline pipeline, vk::Pipelin
             },
     };
     renderpass_cache.BeginRendering(render_pass);
-    const float src_scale = static_cast<float>(surface.GetResScale());
+    const float src_scale = static_cast<float>(surface.GetResScale()) / 100.0f;
     // Calculate normalized texture coordinates like OpenGL does
     const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
     const float tex_scale_x =
@@ -845,7 +845,7 @@ void BlitHelper::FilterPassThreeTextures(Surface& surface, vk::Pipeline pipeline
     };
     renderpass_cache.BeginRendering(render_pass);
 
-    const float src_scale = static_cast<float>(surface.GetResScale());
+    const float src_scale = static_cast<float>(surface.GetResScale()) / 100.0f;
     // Calculate normalized texture coordinates like OpenGL does
     const auto src_extent = surface.RealExtent(false); // Get unscaled texture extent
     const float tex_scale_x =

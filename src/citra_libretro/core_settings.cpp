@@ -363,19 +363,29 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         nullptr,
         config::category::graphics,
         {
-            { "1", "1x (Native 400x240)" },
-            { "2", "2x (800x480)" },
-            { "3", "3x (1200x720)" },
-            { "4", "4x (1600x960)" },
-            { "5", "5x (2000x1200)" },
-            { "6", "6x (2400x1440)" },
-            { "7", "7x (2800x1680)" },
-            { "8", "8x (3200x1920)" },
-            { "9", "9x (3600x2160)" },
-            { "10", "10x (4000x2400)" },
+            { "50", "0.5x (200x120)" },
+            { "100", "1x Native (400x240)" },
+            { "150", "1.5x (600x360)" },
+            { "200", "2x (800x480)" },
+            { "250", "2.5x (1000x600)" },
+            { "300", "3x (1200x720)" },
+            { "350", "3.5x (1400x840)" },
+            { "400", "4x (1600x960)" },
+            { "450", "4.5x (1800x1080)" },
+            { "500", "5x (2000x1200)" },
+            { "550", "5.5x (2200x1320)" },
+            { "600", "6x (2400x1440)" },
+            { "650", "6.5x (2600x1560)" },
+            { "700", "7x (2800x1680)" },
+            { "750", "7.5x (3000x1800)" },
+            { "800", "8x (3200x1920)" },
+            { "850", "8.5x (3400x2040)" },
+            { "900", "9x (3600x2160)" },
+            { "950", "9.5x (3800x2280)" },
+            { "1000", "10x (4000x2400)" },
             { nullptr, nullptr }
         },
-        "1"
+        "100"
     },
     {
         config::graphics::texture_filter,
@@ -922,7 +932,7 @@ static void ParseGraphicsOptions(void) {
         LibRetro::FetchVariable(config::graphics::use_disk_shader_cache, config::enabled) ==
         config::enabled;
 
-    auto resolution = LibRetro::FetchVariable(config::graphics::resolution_factor, "1");
+    auto resolution = LibRetro::FetchVariable(config::graphics::resolution_factor, "100");
     Settings::values.resolution_factor = std::stoi(resolution);
 
     Settings::values.texture_filter =

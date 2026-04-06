@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -328,7 +328,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         texture_type == VideoCore::TextureType::CubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 
     textures[0] = MakeHandle(target, width, height, levels, tuple, DebugName(false));
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         textures[1] = MakeHandle(target, GetScaledWidth(), GetScaledHeight(), levels, tuple,
                                  DebugName(true, false));
     }
@@ -349,7 +349,7 @@ Surface::Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
     material = mat;
 
     textures[0] = MakeHandle(target, mat->width, mat->height, levels, tuple, DebugName(false));
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         textures[1] = MakeHandle(target, mat->width, mat->height, levels, DEFAULT_TUPLE,
                                  DebugName(true, true));
     }
@@ -406,9 +406,9 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
         .src_level = upload.texture_level,
         .dst_level = upload.texture_level,
         .src_rect = upload.texture_rect,
-        .dst_rect = upload.texture_rect * res_scale,
+        .dst_rect = ScaleRect(upload.texture_rect),
     };
-    if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+    if (res_scale != 100 && !runtime->blit_helper.Filter(*this, blit)) {
         BlitScale(blit, true);
     }
 }
@@ -440,7 +440,7 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
         .src_rect = filter_rect,
         .dst_rect = filter_rect,
     };
-    if (res_scale != 1 && !runtime->blit_helper.Filter(*this, blit)) {
+    if (res_scale != 100 && !runtime->blit_helper.Filter(*this, blit)) {
         BlitScale(blit, true);
     }
     for (u32 i = 1; i < VideoCore::MAX_MAPS; i++) {
@@ -463,11 +463,11 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
     glPixelStorei(GL_UNPACK_ROW_LENGTH, unscaled_width);
 
     // Scale down upscaled data before downloading it
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         const VideoCore::TextureBlit blit = {
             .src_level = download.texture_level,
             .dst_level = download.texture_level,
-            .src_rect = download.texture_rect * res_scale,
+            .src_rect = ScaleRect(download.texture_rect),
             .dst_rect = download.texture_rect,
         };
         BlitScale(blit, false);
@@ -554,7 +554,7 @@ void Surface::Attach(GLenum target, u32 level, u32 layer, bool scaled) {
 }
 
 void Surface::ScaleUp(u32 new_scale) {
-    if (res_scale == new_scale || new_scale == 1) {
+    if (res_scale == new_scale || new_scale == 100) {
         return;
     }
 
@@ -603,7 +603,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
                          const Surface* color, const Surface* depth)
     : VideoCore::FramebufferParams{params},
-      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
+      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 100u)} {
 
     if (shadow_rendering && !color) {
         return;
@@ -624,9 +624,9 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
 
     if (shadow_rendering) {
         glFramebufferParameteri(GL_DRAW_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH,
-                                color->width * res_scale);
+                                (color->width * res_scale) / 100);
         glFramebufferParameteri(GL_DRAW_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT,
-                                color->height * res_scale);
+                                (color->height * res_scale) / 100);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
                                0);

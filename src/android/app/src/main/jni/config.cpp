@@ -150,6 +150,12 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.use_hw_shader);
     ReadSetting("Renderer", Settings::values.use_shader_jit);
     ReadSetting("Renderer", Settings::values.resolution_factor);
+    {
+        const u32 rf = Settings::values.resolution_factor.GetValue();
+        if (rf >= 1 && rf <= 10) {
+            Settings::values.resolution_factor.SetValue(rf * 100);
+        }
+    }
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync);
     ReadSetting("Renderer", Settings::values.texture_filter);

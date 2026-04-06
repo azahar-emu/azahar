@@ -766,14 +766,14 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
                                traits.aspect, need_format_list, DebugName(false));
     raw_images[num_images++] = handles[Type::Base].image;
 
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         handles[Type::Scaled].Create(GetScaledWidth(), GetScaledHeight(), levels, texture_type,
                                      format, usage, flags, traits.aspect, need_format_list,
                                      DebugName(true));
         raw_images[num_images++] = handles[Type::Scaled].image;
     }
 
-    current = res_scale != 1 ? Type::Scaled : Type::Base;
+    current = res_scale != 100 ? Type::Scaled : Type::Base;
 
     runtime.renderpass_cache.EndRendering();
     scheduler.Record([raw_images, num_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
@@ -810,7 +810,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
                                flags, traits.aspect, false, debug_name);
     raw_images[num_images++] = handles[Type::Base].image;
 
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         handles[Type::Scaled].Create(mat->width, mat->height, levels, texture_type,
                                      vk::Format::eR8G8B8A8Unorm, traits.usage, flags, traits.aspect,
                                      false, debug_name);
@@ -822,7 +822,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
         raw_images[num_images++] = handles[Type::Custom].image;
     }
 
-    current = res_scale != 1 ? Type::Scaled : Type::Base;
+    current = res_scale != 100 ? Type::Scaled : Type::Base;
 
     runtime.renderpass_cache.EndRendering();
     scheduler.Record([raw_images, num_images, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
@@ -910,14 +910,14 @@ void Surface::Upload(const VideoCore::BufferTextureCopy& upload,
 
     runtime.upload_buffer.Commit(staging.size);
 
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         ASSERT_MSG(handles[Type::Scaled], "Scaled allocation missing during upload");
 
         const VideoCore::TextureBlit blit = {
             .src_level = upload.texture_level,
             .dst_level = upload.texture_level,
             .src_rect = upload.texture_rect,
-            .dst_rect = upload.texture_rect * res_scale,
+            .dst_rect = ScaleRect(upload.texture_rect),
         };
         if ((type != SurfaceType::Color && type != SurfaceType::Texture) ||
             !runtime.blit_helper.Filter(*this, blit)) {
@@ -1013,11 +1013,11 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
         return;
     }
 
-    if (res_scale != 1) {
+    if (res_scale != 100) {
         const VideoCore::TextureBlit blit = {
             .src_level = download.texture_level,
             .dst_level = download.texture_level,
-            .src_rect = download.texture_rect * res_scale,
+            .src_rect = ScaleRect(download.texture_rect),
             .dst_rect = download.texture_rect,
         };
 
@@ -1086,7 +1086,7 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 }
 
 void Surface::ScaleUp(u32 new_scale) {
-    if (res_scale == new_scale || new_scale == 1) {
+    if (res_scale == new_scale || new_scale == 100) {
         return;
     }
 
@@ -1437,7 +1437,7 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
                          Surface* color, Surface* depth)
     : VideoCore::FramebufferParams{params}, instance{runtime.GetInstance()},
-      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
+      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 100u)} {
     auto& renderpass_cache = runtime.GetRenderpassCache();
     if (shadow_rendering && !color) {
         return;

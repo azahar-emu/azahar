@@ -305,7 +305,7 @@ public:
           formats(std::exchange(
               other.formats, {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid})),
           width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
-          res_scale(std::exchange(other.res_scale, 1)) {}
+          res_scale(std::exchange(other.res_scale, 100)) {}
 
     Framebuffer& operator=(Framebuffer&& other) noexcept {
         VideoCore::FramebufferParams::operator=(std::move(other));
@@ -319,7 +319,7 @@ public:
                                 {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid});
         width = std::exchange(other.width, 0);
         height = std::exchange(other.height, 0);
-        res_scale = std::exchange(other.res_scale, 1);
+        res_scale = std::exchange(other.res_scale, 100);
 
         return *this;
     }
@@ -364,7 +364,7 @@ private:
                                                   VideoCore::PixelFormat::Invalid};
     u32 width{};
     u32 height{};
-    u32 res_scale{1};
+    u32 res_scale{100};
 };
 
 class Sampler {
