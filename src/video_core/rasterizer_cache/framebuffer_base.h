@@ -69,7 +69,7 @@ public:
                                Common::Rectangle<u32> surfaces_rect)
         : res_cache{res_cache_}, fb{fb_} {
         const u32 res_scale = fb->Scale();
-        const u32 height = surfaces_rect.GetHeight() / res_scale;
+        const u32 height = (surfaces_rect.GetHeight() * 100) / res_scale;
 
         // Determine the draw rectangle (render area + scissor)
         Common::Rectangle viewport_rect = regs.GetViewportRect();
@@ -77,45 +77,53 @@ public:
             viewport_rect = viewport_rect.VerticalMirror(height);
         }
 
-        draw_rect.left =
-            std::clamp<s32>(static_cast<s32>(surfaces_rect.left) + viewport_rect.left * res_scale,
-                            surfaces_rect.left, surfaces_rect.right);
-        draw_rect.top =
-            std::clamp<s32>(static_cast<s32>(surfaces_rect.bottom) + viewport_rect.top * res_scale,
-                            surfaces_rect.bottom, surfaces_rect.top);
-        draw_rect.right =
-            std::clamp<s32>(static_cast<s32>(surfaces_rect.left) + viewport_rect.right * res_scale,
-                            surfaces_rect.left, surfaces_rect.right);
+        draw_rect.left = std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
+                                             (viewport_rect.left * res_scale) / 100,
+                                         surfaces_rect.left, surfaces_rect.right);
+        draw_rect.top = std::clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
+                                            (viewport_rect.top * res_scale) / 100,
+                                        surfaces_rect.bottom, surfaces_rect.top);
+        draw_rect.right = std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
+                                              (viewport_rect.right * res_scale) / 100,
+                                          surfaces_rect.left, surfaces_rect.right);
         draw_rect.bottom = std::clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
-                                               viewport_rect.bottom * res_scale,
+                                               (viewport_rect.bottom * res_scale) / 100,
                                            surfaces_rect.bottom, surfaces_rect.top);
 
         // Update viewport
-        viewport.x = static_cast<s32>(surfaces_rect.left) + viewport_rect.left * res_scale;
-        viewport.y = static_cast<s32>(surfaces_rect.bottom) + viewport_rect.bottom * res_scale;
-        viewport.width = static_cast<s32>(viewport_rect.GetWidth() * res_scale);
-        viewport.height = static_cast<s32>(viewport_rect.GetHeight() * res_scale);
+        viewport.x = static_cast<s32>(surfaces_rect.left) + (viewport_rect.left * res_scale) / 100;
+        viewport.y =
+            static_cast<s32>(surfaces_rect.bottom) + (viewport_rect.bottom * res_scale) / 100;
+        viewport.width = static_cast<s32>((viewport_rect.GetWidth() * res_scale) / 100);
+        viewport.height = static_cast<s32>((viewport_rect.GetHeight() * res_scale) / 100);
 
         // Scissor checks are window-, not viewport-relative, which means that if the cached texture
         // sub-rect changes, the scissor bounds also need to be updated.
-        scissor_rect.left = static_cast<s32>(surfaces_rect.left + regs.scissor_test.x1 * res_scale);
+        scissor_rect.left =
+            static_cast<s32>(surfaces_rect.left + (regs.scissor_test.x1 * res_scale) / 100);
         scissor_rect.bottom =
-            static_cast<s32>(surfaces_rect.bottom + regs.scissor_test.y1 * res_scale);
+            static_cast<s32>(surfaces_rect.bottom + (regs.scissor_test.y1 * res_scale) / 100);
 
         // x2, y2 have +1 added to cover the entire pixel area, otherwise you might get cracks when
         // scaling or doing multisampling.
         scissor_rect.right =
-            static_cast<s32>(surfaces_rect.left + (regs.scissor_test.x2 + 1) * res_scale);
+            static_cast<s32>(surfaces_rect.left + ((regs.scissor_test.x2 + 1) * res_scale) / 100);
         scissor_rect.top =
-            static_cast<s32>(surfaces_rect.bottom + (regs.scissor_test.y2 + 1) * res_scale);
+            static_cast<s32>(surfaces_rect.bottom + ((regs.scissor_test.y2 + 1) * res_scale) / 100);
 
         if (flip_rect) {
-            scissor_rect = scissor_rect.VerticalMirror(height);
+            scissor_rect = scissor_rect.VerticalMirror(surfaces_rect.GetHeight());
         }
     }
 
     ~FramebufferHelper() {
-        const Common::Rectangle draw_rect_unscaled{draw_rect / fb->Scale()};
+        const u32 scale = fb->Scale();
+        const Common::Rectangle<u32> draw_rect_unscaled{
+            (draw_rect.left * 100) / scale,
+            (draw_rect.top * 100) / scale,
+            (draw_rect.right * 100) / scale,
+            (draw_rect.bottom * 100) / scale,
+        };
         const auto invalidate = [&](SurfaceId surface_id, u32 level) {
             const auto& surface = res_cache->GetSurface(surface_id);
             const SurfaceInterval interval = surface.GetSubRectInterval(draw_rect_unscaled, level);

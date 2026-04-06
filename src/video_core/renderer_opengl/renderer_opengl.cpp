@@ -556,10 +556,11 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
 
     const u32 scale_factor = GetResolutionScaleFactor();
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
-    glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
-                static_cast<float>(screen_info.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
+    glUniform4f(uniform_i_resolution,
+                static_cast<float>((screen_info.texture.width * scale_factor) / 100.0f),
+                static_cast<float>((screen_info.texture.height * scale_factor) / 100.0f),
+                100.0f / static_cast<float>(screen_info.texture.width * scale_factor),
+                100.0f / static_cast<float>(screen_info.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
@@ -627,10 +628,10 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     const u32 scale_factor = GetResolutionScaleFactor();
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
     glUniform4f(uniform_i_resolution,
-                static_cast<float>(screen_info_l.texture.width * scale_factor),
-                static_cast<float>(screen_info_l.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
+                static_cast<float>((screen_info_l.texture.width * scale_factor) / 100.0f),
+                static_cast<float>((screen_info_l.texture.height * scale_factor) / 100.0f),
+                100.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
+                100.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;

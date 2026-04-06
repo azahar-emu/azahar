@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -64,11 +64,18 @@ public:
     }
 
     [[nodiscard]] u32 GetScaledWidth() const noexcept {
-        return width * res_scale;
+        return (width * res_scale) / 100;
     }
 
     [[nodiscard]] u32 GetScaledHeight() const noexcept {
-        return height * res_scale;
+        return (height * res_scale) / 100;
+    }
+
+    /// Returns the scaled version of an unscaled rectangle using the 100-based res_scale
+    [[nodiscard]] Common::Rectangle<u32> ScaleRect(
+        const Common::Rectangle<u32>& rect) const noexcept {
+        return {(rect.left * res_scale) / 100, (rect.top * res_scale) / 100,
+                (rect.right * res_scale) / 100, (rect.bottom * res_scale) / 100};
     }
 
     [[nodiscard]] Common::Rectangle<u32> GetRect(u32 level = 0) const noexcept {
@@ -103,7 +110,7 @@ public:
     u32 height = 0;
     u32 stride = 0;
     u32 levels = 1;
-    u32 res_scale = 1;
+    u32 res_scale = 100;
 
     bool is_tiled = false;
     TextureType texture_type = TextureType::Texture2D;

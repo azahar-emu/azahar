@@ -783,10 +783,10 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float x, float y, float w, 
 
     const u32 scale_factor = GetResolutionScaleFactor();
     draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info.texture.width * scale_factor),
-                        static_cast<f32>(screen_info.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
+        Common::MakeVec(static_cast<f32>((screen_info.texture.width * scale_factor) / 100.0f),
+                        static_cast<f32>((screen_info.texture.height * scale_factor) / 100.0f),
+                        100.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
+                        100.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
     draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
     draw_info.screen_id_l = screen_id;
 
@@ -855,10 +855,10 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
 
     const u32 scale_factor = GetResolutionScaleFactor();
     draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        static_cast<f32>(screen_info_l.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor));
+        Common::MakeVec(static_cast<f32>((screen_info_l.texture.width * scale_factor) / 100.0f),
+                        static_cast<f32>((screen_info_l.texture.height * scale_factor) / 100.0f),
+                        100.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor),
+                        100.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor));
     draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;

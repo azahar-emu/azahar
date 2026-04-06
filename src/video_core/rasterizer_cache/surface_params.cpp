@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -98,7 +98,9 @@ Common::Rectangle<u32> SurfaceParams::GetSubRect(const SurfaceParams& sub_surfac
 }
 
 Common::Rectangle<u32> SurfaceParams::GetScaledSubRect(const SurfaceParams& sub_surface) const {
-    return GetSubRect(sub_surface) * res_scale;
+    auto rect = GetSubRect(sub_surface);
+    return {(rect.left * res_scale) / 100, (rect.top * res_scale) / 100,
+            (rect.right * res_scale) / 100, (rect.bottom * res_scale) / 100};
 }
 
 SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {

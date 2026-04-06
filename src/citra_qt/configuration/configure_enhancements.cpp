@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <array>
 #include <QColorDialog>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_enhancements.h"
@@ -10,6 +12,19 @@
 #ifdef ENABLE_OPENGL
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #endif
+
+static constexpr std::array<u32, 21> RESOLUTION_FACTOR_VALUES = {
+    0,   50,  100, 150, 200, 250, 300, 350, 400, 450,  500,
+    550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
+};
+
+static int ResolutionFactorToIndex(u32 value) {
+    const auto it =
+        std::find(RESOLUTION_FACTOR_VALUES.begin(), RESOLUTION_FACTOR_VALUES.end(), value);
+    return (it != RESOLUTION_FACTOR_VALUES.end())
+               ? static_cast<int>(std::distance(RESOLUTION_FACTOR_VALUES.begin(), it))
+               : 0;
+}
 
 ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureEnhancements>()) {
@@ -42,15 +57,20 @@ ConfigureEnhancements::~ConfigureEnhancements() = default;
 void ConfigureEnhancements::SetConfiguration() {
 
     if (!Settings::IsConfiguringGlobal()) {
-        ConfigurationShared::SetPerGameSetting(ui->resolution_factor_combobox,
-                                               &Settings::values.resolution_factor);
+        if (Settings::values.resolution_factor.UsingGlobal()) {
+            ui->resolution_factor_combobox->setCurrentIndex(ConfigurationShared::USE_GLOBAL_INDEX);
+        } else {
+            ui->resolution_factor_combobox->setCurrentIndex(
+                ResolutionFactorToIndex(Settings::values.resolution_factor.GetValue()) +
+                ConfigurationShared::USE_GLOBAL_OFFSET);
+        }
         ConfigurationShared::SetPerGameSetting(ui->texture_filter_combobox,
                                                &Settings::values.texture_filter);
         ConfigurationShared::SetHighlight(ui->widget_texture_filter,
                                           !Settings::values.texture_filter.UsingGlobal());
     } else {
         ui->resolution_factor_combobox->setCurrentIndex(
-            Settings::values.resolution_factor.GetValue());
+            ResolutionFactorToIndex(Settings::values.resolution_factor.GetValue()));
         ui->texture_filter_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.texture_filter.GetValue()));
     }
@@ -109,8 +129,13 @@ void ConfigureEnhancements::RetranslateUI() {
 }
 
 void ConfigureEnhancements::ApplyConfiguration() {
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.resolution_factor,
-                                             ui->resolution_factor_combobox);
+    ConfigurationShared::ApplyPerGameSetting(
+        &Settings::values.resolution_factor, ui->resolution_factor_combobox, [](s32 index) -> s32 {
+            if (index >= 0 && index < static_cast<s32>(RESOLUTION_FACTOR_VALUES.size())) {
+                return static_cast<s32>(RESOLUTION_FACTOR_VALUES[index]);
+            }
+            return 0;
+        });
     Settings::values.render_3d =
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.swap_eyes_3d = ui->swap_eyes_3d->isChecked();
@@ -187,7 +212,8 @@ void ConfigureEnhancements::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredComboBox(
         ui->resolution_factor_combobox, ui->widget_resolution,
-        static_cast<int>(Settings::values.resolution_factor.GetValue(true)));
+        ResolutionFactorToIndex(
+            static_cast<u32>(Settings::values.resolution_factor.GetValue(true))));
 
     ConfigurationShared::SetColoredComboBox(
         ui->texture_filter_combobox, ui->widget_texture_filter,

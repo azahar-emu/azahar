@@ -239,7 +239,7 @@ LayoutGeometry ComputeLayoutGeometry() {
     unsigned baseY;
     bool emulated_pointer = true;
 
-    float scaling = Settings::values.resolution_factor.GetValue();
+    float scaling = Settings::values.resolution_factor.GetValue() / 100.0f;
     bool swapped = Settings::values.swap_screen.GetValue();
 
     switch (Settings::values.layout_option.GetValue()) {
@@ -264,7 +264,7 @@ LayoutGeometry ComputeLayoutGeometry() {
             baseY = Core::kScreenTopHeight;
         }
 
-        if (scaling < 4) {
+        if (scaling < 4.0f) {
             // Unfortunately, to get this aspect ratio correct (and have non-blurry 1x scaling),
             //  we have to have a pretty large buffer for the minimum ratio.
             baseX *= 4;

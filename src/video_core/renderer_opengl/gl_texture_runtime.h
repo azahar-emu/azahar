@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -182,7 +182,7 @@ public:
     }
 
 private:
-    u32 res_scale{1};
+    u32 res_scale{100};
     std::array<GLuint, 2> attachments{};
     OGLFramebuffer framebuffer;
 };

@@ -375,7 +375,7 @@ FramebufferLayout CustomFrameLayout(u32 width, u32 height, bool is_swapped, bool
 FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondary,
                                                  bool is_portrait) {
     u32 width, height, gap;
-    gap = (int)(Settings::values.screen_gap.GetValue()) * res_scale;
+    gap = (Settings::values.screen_gap.GetValue() * res_scale) / 100;
 
     FramebufferLayout layout;
     if (is_portrait) {
@@ -395,18 +395,18 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
 
             break;
         case Settings::PortraitLayoutOption::PortraitTopFullWidth:
-            width = Core::kScreenTopWidth * res_scale;
+            width = (Core::kScreenTopWidth * res_scale) / 100;
             // clang-format off
-            height = (static_cast<int>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25) *
-                     res_scale) + gap;
+            height = (static_cast<u32>(Core::kScreenTopHeight + Core::kScreenBottomHeight * 1.25f) *
+                     res_scale) / 100 + gap;
             // clang-format on
             layout =
                 PortraitTopFullFrameLayout(width, height, Settings::values.swap_screen.GetValue(),
                                            Settings::values.upright_screen.GetValue());
             break;
         case Settings::PortraitLayoutOption::PortraitOriginal:
-            width = Core::kScreenTopWidth * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            width = (Core::kScreenTopWidth * res_scale) / 100;
+            height = ((Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale) / 100;
             layout = PortraitOriginalLayout(width, height, Settings::values.swap_screen.GetValue());
             break;
         }
@@ -428,11 +428,11 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
         case Settings::LayoutOption::SingleScreen: {
             const bool swap_screens = is_secondary || Settings::values.swap_screen.GetValue();
             if (swap_screens) {
-                width = Core::kScreenBottomWidth * res_scale;
-                height = Core::kScreenBottomHeight * res_scale;
+                width = (Core::kScreenBottomWidth * res_scale) / 100;
+                height = (Core::kScreenBottomHeight * res_scale) / 100;
             } else {
-                width = Core::kScreenTopWidth * res_scale;
-                height = Core::kScreenTopHeight * res_scale;
+                width = (Core::kScreenTopWidth * res_scale) / 100;
+                height = (Core::kScreenTopHeight * res_scale) / 100;
             }
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
@@ -459,11 +459,11 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 Settings::values.small_screen_position.GetValue() ==
                     Settings::SmallScreenPosition::BelowLarge) {
                 // vertical, so height is sum of heights, width is larger of widths
-                width = std::max(largeWidth, smallWidth) * res_scale;
-                height = (largeHeight + smallHeight) * res_scale + gap;
+                width = (static_cast<u32>(std::max(largeWidth, smallWidth)) * res_scale) / 100;
+                height = ((largeHeight + smallHeight) * res_scale) / 100 + gap;
             } else {
-                width = (largeWidth + smallWidth) * res_scale + gap;
-                height = std::max(largeHeight, smallHeight) * res_scale;
+                width = ((largeWidth + smallWidth) * res_scale) / 100 + gap;
+                height = (static_cast<u32>(std::max(largeHeight, smallHeight)) * res_scale) / 100;
             }
 
             if (Settings::values.upright_screen.GetValue()) {
@@ -476,8 +476,8 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             break;
         }
         case Settings::LayoutOption::SideScreen:
-            width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale + gap;
-            height = Core::kScreenTopHeight * res_scale;
+            width = ((Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale) / 100 + gap;
+            height = (Core::kScreenTopHeight * res_scale) / 100;
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
@@ -487,7 +487,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                                       Settings::SmallScreenPosition::MiddleRight);
             break;
         case Settings::LayoutOption::HybridScreen:
-            height = Core::kScreenTopHeight * res_scale;
+            height = (Core::kScreenTopHeight * res_scale) / 100;
 
             if (Settings::values.swap_screen.GetValue()) {
                 width = Core::kScreenBottomWidth;
@@ -495,7 +495,7 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
                 width = Core::kScreenTopWidth;
             }
             // 2.25f comes from HybridScreenLayout's scale_factor value.
-            width = static_cast<int>((width + (Core::kScreenTopWidth / 2.25f)) * res_scale);
+            width = static_cast<u32>((width + (Core::kScreenTopWidth / 2.25f)) * res_scale) / 100;
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
@@ -506,8 +506,8 @@ FramebufferLayout FrameLayoutFromResolutionScale(u32 res_scale, bool is_secondar
             break;
         case Settings::LayoutOption::Default:
         default:
-            width = Core::kScreenTopWidth * res_scale;
-            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale + gap;
+            width = (Core::kScreenTopWidth * res_scale) / 100;
+            height = ((Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale) / 100 + gap;
 
             if (Settings::values.upright_screen.GetValue()) {
                 std::swap(width, height);
