@@ -498,8 +498,11 @@ struct Values {
     Setting<bool> apply_region_free_patch{true, Keys::apply_region_free_patch};
 
     // Renderer
+    // clang-format off
     SwitchableSetting<GraphicsAPI, true> graphics_api{
-#if defined(ENABLE_OPENGL)
+#if defined(ANDROID) && defined(ENABLE_VULKAN) // Prefer Vulkan on Android, OpenGL on everything else
+        GraphicsAPI::Vulkan,
+#elif defined(ENABLE_OPENGL)
         GraphicsAPI::OpenGL,
 #elif defined(ENABLE_VULKAN)
         GraphicsAPI::Vulkan,
@@ -510,6 +513,7 @@ struct Values {
 #error "At least one renderer must be enabled."
 #endif
         GraphicsAPI::Software, GraphicsAPI::Vulkan, Keys::graphics_api};
+    // clang-format on
     SwitchableSetting<u32> physical_device{0, Keys::physical_device};
     Setting<bool> use_gles{false, Keys::use_gles};
     Setting<bool> renderer_debug{false, Keys::renderer_debug};
