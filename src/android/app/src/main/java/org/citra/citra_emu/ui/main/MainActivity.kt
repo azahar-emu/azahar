@@ -93,14 +93,16 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
         if (PermissionsHandler.hasWriteAccess(applicationContext) &&
             DirectoryInitialization.areCitraDirectoriesReady() &&
             !CitraDirectoryUtils.needToUpdateManually()) {
+            // load the global settings from the config file at program launch
+            // if the directory is available
+            SettingsFile.loadSettings(Settings.settings)
         }
 
         ThemeUtil.ThemeChangeListener(this)
         ThemeUtil.setTheme(this)
         super.onCreate(savedInstanceState)
 
-        // load the global settings from the config file at program launch
-        SettingsFile.loadSettings(Settings.settings)
+
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -273,6 +275,7 @@ class MainActivity : AppCompatActivity(), ThemeProvider {
     fun finishSetup(navController: NavController) {
         navController.navigate(R.id.action_firstTimeSetupFragment_to_gamesFragment)
         (binding.navigationView as NavigationBarView).setupWithNavController(navController)
+        SettingsFile.loadSettings(Settings.settings)
     }
 
     private fun setUpNavigation(savedInstanceState: Bundle?, navController: NavController) {
