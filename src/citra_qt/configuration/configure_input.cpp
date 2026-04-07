@@ -376,7 +376,7 @@ void ConfigureInput::ApplyConfiguration() {
                        }
                        return param.Serialize();
                    });
-    Settings::SaveProfile(ui->profile->currentIndex());
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::ApplyProfile() {
