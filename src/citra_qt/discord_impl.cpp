@@ -37,6 +37,7 @@ void DiscordImpl::Update() {
     std::string title;
     const bool is_powered_on = system.IsPoweredOn();
     if (is_powered_on) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         system.GetAppLoader().ReadTitle(title);
     }
 
