@@ -865,12 +865,13 @@ void JitShader::Compile_SETE(Instruction instr) {
 
     l(have_emitter);
 
-    MOV(XSCRATCH1.toW(), instr.setemit.vertex_id);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, vertex_id)));
-    MOV(XSCRATCH1.toW(), instr.setemit.prim_emit);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, prim_emit)));
-    MOV(XSCRATCH1.toW(), instr.setemit.winding);
-    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, winding)));
+    const GeometryEmitter::EmitState new_state{
+        .winding = instr.setemit.winding != 0,
+        .prim_emit = instr.setemit.prim_emit != 0,
+        .vertex_id = static_cast<uint8_t>(instr.setemit.vertex_id),
+    };
+    MOV(XSCRATCH1.toW(), new_state.raw);
+    STRB(XSCRATCH1.toW(), XSCRATCH0, u32(offsetof(GeometryEmitter, emit_state)));
 
     l(end);
 }

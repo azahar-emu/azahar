@@ -90,7 +90,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 
 [Renderer]
 # Whether to render using OpenGL
-# 1: OpenGL ES (default), 2: Vulkan
+# 1: OpenGL ES, 2: Vulkan (default)
 )") DECLARE_KEY(graphics_api) BOOST_HANA_STRING(R"(
 
 # Whether to compile shaders on multiple worker threads (Vulkan only)

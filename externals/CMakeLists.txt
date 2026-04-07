@@ -60,6 +60,7 @@ if (ENABLE_TESTS)
         add_subdirectory(catch2)
     endif()
     target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
+    include(Catch)
 endif()
 
 # Crypto++
