@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <iostream>
 #include <memory>
 #include <thread>
 #include "common/param_package.h"
@@ -75,9 +76,10 @@ std::string ButtonToText(const Common::ParamPackage& param) {
         return "[not set]";
     }
     const auto engine_str = param.Get("engine", "");
-    // keyboard should be handled by the frontend
+    // if this is a keyboard string, return the param package back as a string
+    // to be handled at the frontend
     if (engine_str == "keyboard") {
-        return "keyboard code " + param.Get("code", 0);
+        return param.Serialize();
     }
 
     if (engine_str == "sdl") {
