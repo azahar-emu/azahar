@@ -61,12 +61,12 @@ void ControllerHotkeyMonitor::checkAllButtons() {
             if (it.hk->action) {
                 it.hk->action->trigger();
             }
-            for (auto const& [name, hotkey_shortcut] : it.hk->shortcuts) {
+            for (auto const& [hotkey_name, hotkey_shortcut] : it.hk->shortcuts) {
                 if (hotkey_shortcut && hotkey_shortcut->isEnabled()) {
                     QWidget* parent = qobject_cast<QWidget*>(hotkey_shortcut->parent());
                     if (!parent)
                         continue;
-                    if (name == QStringLiteral("move down")) {
+                    if (hotkey_name == QStringLiteral("move down")) {
                         std::cout << "move down triggered before context check" << std::endl;
                     }
                     bool shouldFire = true;

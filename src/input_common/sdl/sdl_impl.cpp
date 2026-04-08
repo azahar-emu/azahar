@@ -463,7 +463,8 @@ public:
         : joysticks(joysticks_), button(button_), isController(isController_), port(port_) {}
 
     bool GetStatus() const override {
-        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+        if (port >= 0 && joysticks && static_cast<int>(joysticks->size()) > port &&
+            joysticks->at(port)) {
             return joysticks->at(port)->GetButton(button, isController);
         }
         for (const auto& joystick : *joysticks) {
@@ -489,7 +490,8 @@ public:
         : joysticks(joysticks_), hat(hat_), direction(direction_), port(port_) {}
 
     bool GetStatus() const override {
-        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+        if (port >= 0 && joysticks && static_cast<int>(joysticks->size()) > port &&
+            joysticks->at(port)) {
             return joysticks->at(port)->GetHatDirection(hat, direction);
         }
         for (const auto& joystick : *joysticks) {
@@ -515,7 +517,8 @@ public:
           trigger_if_greater(trigger_if_greater_), isController(isController_), port(port_) {}
 
     bool GetStatus() const override {
-        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+        if (port >= 0 && joysticks && static_cast<int>(joysticks->size()) > port &&
+            joysticks->at(port)) {
             return joysticks->at(port)->GetAxis(axis, isController);
         }
         for (const auto& joystick : *joysticks) {
@@ -548,7 +551,8 @@ public:
 
     std::tuple<float, float> GetStatus() const override {
         float rMax = 0.0f, xMax = 0.0f, yMax = 0.0f;
-        if (port >= 0 && joysticks && joysticks->size() > port && joysticks->at(port)) {
+        if (port >= 0 && joysticks && static_cast<int>(joysticks->size()) > port &&
+            joysticks->at(port)) {
             const auto [x, y] = joysticks->at(port)->GetAnalog(axis_x, axis_y, isController);
             const float r = std::sqrt((x * x) + (y * y));
             if (r > deadzone) {
@@ -663,7 +667,6 @@ public:
         }
 
         if (params.Has("axis")) {
-            bool controller = params.Get("api", "joystick") == "controller";
             const int axis = params.Get("axis", 0);
             const float threshold = params.Get("threshold", 0.5f);
             const std::string direction_name = params.Get("direction", "");
@@ -730,7 +733,8 @@ public:
         auto joysticks = state.GetJoysticksByGUID(guid);
         if (joysticks->empty())
             return std::make_unique<SDLMotion>(nullptr);
-        auto joystick = joysticks->size() > port ? joysticks->at(port) : joysticks->at(0);
+        auto joystick =
+            static_cast<int>(joysticks->size()) > port ? joysticks->at(port) : joysticks->at(0);
         return std::make_unique<SDLMotion>(joystick);
     }
 
@@ -755,7 +759,8 @@ public:
         const int port = params.Get("port", 0);
         const int touchpad = params.Get("touchpad", 0);
         auto joysticks = state.GetJoysticksByGUID(guid);
-        auto joystick = joysticks->size() > port ? joysticks->at(port) : joysticks->at(0);
+        auto joystick =
+            static_cast<int>(joysticks->size()) > port ? joysticks->at(port) : joysticks->at(0);
         return std::make_unique<SDLTouch>(joystick, touchpad);
     }
 
@@ -975,7 +980,6 @@ public:
             auto id = event.jaxis.which;
             auto value = event.jaxis.value;
             auto timestamp = event.jaxis.timestamp;
-            auto button = event.jbutton.button;
             bool controller = false;
             switch (event.type) {
             case SDL_CONTROLLERAXISMOTION: {

@@ -78,6 +78,16 @@ static QString ButtonToText(const Common::ParamPackage& param) {
 }
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
+    // If this is an analog stick made from buttons, keyboards will need to be handled
+    // here at the frontend rather than at InputCommon
+    // It might be nice to move the GetKeyName code to input_common, but would need a non-QT way of
+    // doing it
+    if (param.Get("engine", "") == "analog_from_button") {
+        auto dirParam = Common::ParamPackage(param.Get(dir, ""));
+        if (dirParam.Get("engine", "") == "keyboard") {
+            return GetKeyName(dirParam.Get("code", 0));
+        }
+    }
     return QString::fromStdString(InputCommon::AnalogToText(param, dir));
 }
 
