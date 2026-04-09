@@ -6,6 +6,11 @@ add_executable(citra_meta
 
 set_target_properties(citra_meta PROPERTIES OUTPUT_NAME "azahar")
 
+if (BSD STREQUAL "NetBSD")
+    include(DisablePaxMprotect)
+    disable_pax_mprotect(citra_meta)
+endif()
+
 if (APPLE)
     set(DIST_DIR "../../dist/apple")
     set(APPLE_RESOURCES

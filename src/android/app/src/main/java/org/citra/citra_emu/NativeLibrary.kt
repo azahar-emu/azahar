@@ -504,8 +504,9 @@ object NativeLibrary {
             const val ErrorSystemFiles = 8
             const val ErrorSavestate = 9
             const val ErrorArticDisconnected = 10
-            const val ShutdownRequested = 11
-            const val ErrorUnknown = 12
+            const val ErrorN3DSApplication = 11
+            const val ShutdownRequested = 12
+            const val ErrorUnknown = 13
 
             fun newInstance(resultCode: Int): EmulationErrorDialogFragment {
                 val args = Bundle()

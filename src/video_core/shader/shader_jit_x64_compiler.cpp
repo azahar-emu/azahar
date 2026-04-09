@@ -905,9 +905,12 @@ void JitShader::Compile_SETE(Instruction instr) {
     jmp(end);
 
     L(have_emitter);
-    mov(byte[rax + offsetof(GeometryEmitter, vertex_id)], instr.setemit.vertex_id);
-    mov(byte[rax + offsetof(GeometryEmitter, prim_emit)], instr.setemit.prim_emit);
-    mov(byte[rax + offsetof(GeometryEmitter, winding)], instr.setemit.winding);
+    const GeometryEmitter::EmitState new_state{
+        .winding = instr.setemit.winding != 0,
+        .prim_emit = instr.setemit.prim_emit != 0,
+        .vertex_id = static_cast<uint8_t>(instr.setemit.vertex_id),
+    };
+    mov(byte[rax + offsetof(GeometryEmitter, emit_state)], new_state.raw);
     L(end);
 }
 

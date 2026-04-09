@@ -174,6 +174,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
+    notification_led.cpp
+    notification_led.h
     precompiled_headers.h
     qt_image_interface.cpp
     qt_image_interface.h

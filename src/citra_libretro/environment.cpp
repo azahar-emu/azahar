@@ -61,7 +61,14 @@ bool GetMicrophoneInterface(struct retro_microphone_interface* mic_interface) {
 }
 
 Settings::GraphicsAPI GetPreferredRenderer() {
-    // try and maintain the current driver
+    // On Android, we really want to default to Vulkan if we can, so we'll ignore the frontend's
+    // recommendation if possible...
+#if defined(ANDROID) && defined(ENABLE_VULKAN)
+    return Settings::GraphicsAPI::Vulkan;
+#endif
+    // ...Otherwise negotiate with the RetroArch frontend as usual
+
+    // Attempt to use the renderer recommended by the frontend if possible
     retro_hw_context_type context_type = RETRO_HW_CONTEXT_OPENGL;
     environ_cb(RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER, &context_type);
     switch (context_type) {
@@ -80,7 +87,7 @@ Settings::GraphicsAPI GetPreferredRenderer() {
     default:
         break;
     }
-    // we can't maintain the current driver, need to switch
+    // We can't get a recommendation from the frontend, so fall back to whatever's available
 #if defined(ENABLE_VULKAN)
     return Settings::GraphicsAPI::Vulkan;
 #elif defined(ENABLE_OPENGL)
