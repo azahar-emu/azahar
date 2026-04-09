@@ -590,6 +590,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
     }
 
+    SetInfoLEDColor({});
+
     LOG_DEBUG(Core, "Initialized OK");
 
     is_powered_on = true;
@@ -719,6 +721,8 @@ void System::Shutdown(bool is_deserializing) {
     }
 
     memory.reset();
+
+    SetInfoLEDColor({});
 
     LOG_DEBUG(Core, "Shutdown OK");
 }
