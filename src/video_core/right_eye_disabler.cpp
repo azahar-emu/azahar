@@ -9,7 +9,8 @@
 
 namespace VideoCore {
 bool RightEyeDisabler::ShouldAllowCmdQueueTrigger(PAddr addr, u32 size) {
-    if (!enabled || !enable_for_frame)
+    if (!enabled || !enable_for_frame ||
+        Settings::values.render_3d.GetValue() != Settings::StereoRenderOption::Off)
         return true;
 
     constexpr u32 top_screen_size = 0x00469000;
@@ -36,7 +37,8 @@ bool RightEyeDisabler::ShouldAllowCmdQueueTrigger(PAddr addr, u32 size) {
     return true;
 }
 bool RightEyeDisabler::ShouldAllowDisplayTransfer(PAddr src_address, size_t size) {
-    if (!enabled || !enable_for_frame)
+    if (!enabled || !enable_for_frame ||
+        Settings::values.render_3d.GetValue() != Settings::StereoRenderOption::Off)
         return true;
 
     if (size >= 400 && !top_screen_blocked) {
@@ -55,7 +57,7 @@ bool RightEyeDisabler::ShouldAllowDisplayTransfer(PAddr src_address, size_t size
     return true;
 }
 void RightEyeDisabler::ReportEndFrame() {
-    if (!enabled)
+    if (!enabled || Settings::values.render_3d.GetValue() != Settings::StereoRenderOption::Off)
         return;
 
     enable_for_frame = Settings::values.disable_right_eye_render.GetValue();
