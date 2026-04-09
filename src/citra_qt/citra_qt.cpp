@@ -352,6 +352,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>(qt_cameras));
 
+    system.RegisterInfoLEDColorChanged([this]() { emit InfoLEDColorChanged(); });
+
     LoadTranslation();
 
     Pica::g_debug_context = Pica::DebugContext::Construct();
@@ -605,6 +607,20 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
+
+    QFrame* sep = new QFrame(this);
+    sep->setFrameShape(QFrame::VLine);
+    sep->setFrameShadow(QFrame::Sunken);
+    sep->setFixedHeight(16);
+    statusBar()->addPermanentWidget(sep);
+
+    notification_led = new LedWidget();
+    notification_led->setToolTip(tr("Emulated notification LED"));
+    statusBar()->addPermanentWidget(notification_led);
+    connect(this, &GMainWindow::InfoLEDColorChanged, this, [this] {
+        auto led_color = system.GetInfoLEDColor();
+        notification_led->setColor(QColor(led_color.r(), led_color.g(), led_color.b()));
+    });
 
     statusBar()->setVisible(true);
 
@@ -1600,6 +1616,7 @@ void GMainWindow::ShutdownGame() {
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
     emu_frametime_label->setVisible(false);
+    notification_led->setColor(QColor(0, 0, 0));
 
     UpdateSaveStates();
 
