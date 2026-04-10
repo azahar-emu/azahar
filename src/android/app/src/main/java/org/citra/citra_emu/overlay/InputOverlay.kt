@@ -570,7 +570,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
         }
     }
 
-    fun refreshControls() {
+    fun refreshControls(noGameEdit: Boolean = false) {
         // Remove all the overlay buttons from the HashSet.
         overlayButtons.clear()
         overlayDpads.clear()
@@ -583,7 +583,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
             }
 
         // Add all the enabled overlay items back to the HashSet.
-        if (EmulationMenuSettings.showOverlay) {
+        if (noGameEdit || EmulationMenuSettings.showOverlay) {
             addOverlayControls(orientation)
         }
         invalidate()

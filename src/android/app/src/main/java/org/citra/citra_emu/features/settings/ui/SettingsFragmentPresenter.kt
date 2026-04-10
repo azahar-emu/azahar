@@ -5,6 +5,7 @@
 package org.citra.citra_emu.features.settings.ui
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.hardware.camera2.CameraAccessException
@@ -17,6 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
 import org.citra.citra_emu.display.StereoWhichDisplay
@@ -99,6 +101,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             Settings.SECTION_CAMERA -> addCameraSettings(sl)
             Settings.SECTION_CONTROLS -> addControlsSettings(sl)
             Settings.SECTION_RENDERER -> addGraphicsSettings(sl)
+            Settings.SECTION_INPUT_OVERLAY -> addInputOverlaySettings(sl)
             Settings.SECTION_LAYOUT -> addLayoutSettings(sl)
             Settings.SECTION_AUDIO -> addAudioSettings(sl)
             Settings.SECTION_DEBUG -> addDebugSettings(sl)
@@ -177,6 +180,14 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     0,
                     R.drawable.ic_graphics,
                     Settings.SECTION_RENDERER
+                )
+            )
+            add(
+                SubmenuSetting(
+                    R.string.preferences_input_overlay,
+                    0,
+                    R.drawable.dpad,
+                    Settings.SECTION_INPUT_OVERLAY
                 )
             )
             add(
@@ -1124,6 +1135,58 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             //         BooleanSetting.PRELOAD_TEXTURES.defaultValue
             //     )
             // )
+        }
+    }
+
+    private fun addInputOverlaySettings(sl: ArrayList<SettingsItem>) {
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_input_overlay))
+        sl.apply {
+            val inputOverlayOpacitySetting = object : AbstractBooleanSetting {
+                private val preferences =
+                    PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+
+                override var boolean: Boolean
+                    get() = preferences.getBoolean("EmulationMenuSettings_ShowOverlay", true)
+                    set(value) {
+                        preferences.edit()
+                            .putBoolean("EmulationMenuSettings_ShowOverlay", value)
+                            .apply()
+                    }
+
+                override val key: String? = null
+                override val section: String? = null
+                override val isRuntimeEditable: Boolean = true
+                override val valueAsString: String
+                    get() = preferences.getBoolean("EmulationMenuSettings_ShowOverlay", true)
+                        .toString()
+                override val defaultValue = true
+            }
+
+            add(
+                SwitchSetting(
+                    inputOverlayOpacitySetting,
+                    R.string.enable_input_overlay,
+                    0
+                )
+            )
+            add(
+                HeaderSetting(
+                    R.string.realtime_edit,
+                )
+            )
+            add(
+                RunnableSetting(
+                    R.string.edit_overlay_layout,
+                    R.string.edit_overlay_layout_description,
+                    false,
+                    R.drawable.dpad,
+                    runnable = {
+                        val intent = EmulationActivity.launchForOverlayEdit(CitraApplication.appContext)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        CitraApplication.appContext.startActivity(intent)
+                    },
+                )
+            )
         }
     }
 
