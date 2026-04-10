@@ -136,10 +136,12 @@ enum class SecureDataLoadStatus {
     Loaded = 0,
     InvalidSignature = 1,
     RegionChanged = 2,
+    CannotValidateSignature = 3,
 
     NotFound = -1,
     Invalid = -2,
     IOError = -3,
+    NoCryptoKeys = -4,
 };
 
 SecureDataLoadStatus LoadSecureInfoA();
