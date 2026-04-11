@@ -161,7 +161,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/game_button_tray"
+            android:id="@+id/horizontal_layout_2"
             style="@style/ThemeOverlay.Material3.Button.IconButton.Filled.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -199,19 +199,24 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/compress_tray"
+            android:id="@+id/horizontal_layout_3"
             style="@style/ThemeOverlay.Material3.Button.IconButton.Filled.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="start|center"
             android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/game_button_tray">
+            app:layout_constraintTop_toBottomOf="@+id/horizontal_layout_2">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/delete_cache"
+                style="@style/Widget.Material3.Button.TonalButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/delete_shader_cache"
+                android:text="@string/delete_shader_cache" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
