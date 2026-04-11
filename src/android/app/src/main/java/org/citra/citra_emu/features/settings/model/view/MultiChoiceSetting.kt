@@ -5,26 +5,34 @@
 package org.citra.citra_emu.features.settings.model.view
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
+import org.citra.citra_emu.features.settings.model.Settings
+
 class MultiChoiceSetting(
-    setting: AbstractSetting?,
+    val settings: Settings,
+    setting: AbstractSetting<List<Int>>?,
     titleId: Int,
     descriptionId: Int,
     val choicesId: Int,
     val valuesId: Int,
     val key: String? = null,
     val defaultValue: List<Int>? = null,
-    override var isEnabled: Boolean = true
+    override var isEnabled: Boolean = true,
+    private val getValue: (()->List<Int>)? = null,
+    private val setValue: ((List<Int>)-> Unit)? = null
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_MULTI_CHOICE
 
     val selectedValues: List<Int>
         get() {
+            if (getValue != null) {
+                @Suppress("UNCHECKED_CAST")
+                return getValue.invoke()
+            }
             if (setting == null) {
                 return defaultValue!!
             }
             try {
-                val setting = setting as IntListSetting
-                return setting.list
+                return settings.get(setting as IntListSetting)
             }catch (_: ClassCastException) {
             }
             return defaultValue!!
@@ -35,12 +43,14 @@ class MultiChoiceSetting(
      * initializes a new one and returns it, so it can be added to the Hashmap.
      *
      * @param selection New value of the int.
-     * @return the existing setting with the new value applied.
      */
-    fun setSelectedValue(selection: List<Int>): IntListSetting {
-        val intSetting = setting as IntListSetting
-        intSetting.list = selection
-        return intSetting
+    fun setSelectedValue(selection: List<Int>) {
+        if (setValue != null) {
+            setValue(selection)
+        }else {
+            val intSetting = setting as IntListSetting
+            settings.set(intSetting, selection)
+        }
     }
 
 }

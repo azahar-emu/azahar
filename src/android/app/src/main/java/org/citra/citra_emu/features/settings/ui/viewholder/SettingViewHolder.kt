@@ -9,14 +9,17 @@ import androidx.recyclerview.widget.RecyclerView
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
-abstract class SettingViewHolder(itemView: View, protected val adapter: SettingsAdapter) :
+abstract class SettingViewHolder<out T: SettingsItem>(itemView: View, protected val adapter: SettingsAdapter) :
     RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
-
     init {
         itemView.setOnClickListener(this)
         itemView.setOnLongClickListener(this)
     }
 
+    /**
+     * The SettingsItem we are holding
+     */
+    abstract val setting: T?
     /**
      * Called by the adapter to set this ViewHolder's child views to display the list item
      * it must now represent.
@@ -34,4 +37,22 @@ abstract class SettingViewHolder(itemView: View, protected val adapter: Settings
     abstract override fun onClick(clicked: View)
 
     abstract override fun onLongClick(clicked: View): Boolean
+
+    fun showGlobalButtonIfNeeded(buttonUseGlobal: View, position: Int) {
+        setting ?: return
+        // Show "Revert to global" button in Custom Settings if applicable.
+        val settings = adapter.fragmentView.activityView?.settings
+        val showGlobal = settings?.isPerGame() == true
+                && setting?.setting != null
+                && settings.hasOverride(setting!!.setting!!)
+
+        buttonUseGlobal.visibility = if (showGlobal) View.VISIBLE else View.GONE
+        if (showGlobal) {
+            buttonUseGlobal.setOnClickListener {
+                setting?.setting?.let { descriptor ->
+                    adapter.resetSettingToGlobal(descriptor, bindingAdapterPosition)
+                }
+            }
+        }
+    }
 }

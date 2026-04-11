@@ -9,6 +9,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.features.settings.model.Settings
 
 object TurboHelper {
     private var turboSpeedEnabled = false
@@ -17,12 +18,12 @@ object TurboHelper {
         return turboSpeedEnabled
     }
 
-    fun reloadTurbo(showToast: Boolean) {
+    fun reloadTurbo(showToast: Boolean, settings: Settings) {
         val context = CitraApplication.appContext
         val toastMessage: String
 
         if (turboSpeedEnabled) {
-            NativeLibrary.setTemporaryFrameLimit(IntSetting.TURBO_LIMIT.int.toDouble())
+            NativeLibrary.setTemporaryFrameLimit(settings.get(IntSetting.TURBO_LIMIT).toDouble())
             toastMessage = context.getString(R.string.turbo_enabled_toast)
         } else {
             NativeLibrary.disableTemporaryFrameLimit()
@@ -34,12 +35,12 @@ object TurboHelper {
         }
     }
 
-    fun setTurboEnabled(state: Boolean, showToast: Boolean) {
+    fun setTurboEnabled(state: Boolean, showToast: Boolean, settings: Settings) {
         turboSpeedEnabled = state
-        reloadTurbo(showToast)
+        reloadTurbo(showToast, settings)
     }
 
-    fun toggleTurbo(showToast: Boolean) {
-        setTurboEnabled(!TurboHelper.isTurboSpeedEnabled(), showToast)
+    fun toggleTurbo(showToast: Boolean, settings: Settings) {
+        setTurboEnabled(!TurboHelper.isTurboSpeedEnabled(), showToast, settings)
     }
 }

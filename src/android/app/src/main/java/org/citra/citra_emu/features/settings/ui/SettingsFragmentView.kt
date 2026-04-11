@@ -1,10 +1,9 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.features.settings.ui
 
-import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
 /**
@@ -44,13 +43,6 @@ interface SettingsFragmentView {
      * @param is_long Whether this should be a long Toast or short one.
      */
     fun showToastMessage(message: String?, is_long: Boolean)
-
-    /**
-     * Have the fragment add a setting to the HashMap.
-     *
-     * @param setting The (possibly previously missing) new setting.
-     */
-    fun putSetting(setting: AbstractSetting)
 
     /**
      * Have the fragment tell the containing Activity that a setting was modified.
