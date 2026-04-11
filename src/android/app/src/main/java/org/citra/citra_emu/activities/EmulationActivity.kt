@@ -8,6 +8,7 @@ import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -80,7 +81,9 @@ class EmulationActivity : AppCompatActivity() {
             return navHostFragment.getChildFragmentManager().fragments.last() as EmulationFragment
         }
 
+    private var isRotationBlocked: Boolean = true
     private var isEmulationRunning: Boolean = false
+    private var isEmulationReady: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -89,12 +92,20 @@ class EmulationActivity : AppCompatActivity() {
 
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
+
+        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
+
+        // Block orientation until emulation is ready to prevent unneccesary
+        // surface recreation until the renderer is ready.
+        isRotationBlocked = true
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+
         super.onCreate(savedInstanceState)
+
         secondaryDisplay = SecondaryDisplay(this)
         secondaryDisplay.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
@@ -119,8 +130,6 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = true
         instance = this
 
-        applyOrientationSettings() // Check for orientation settings at startup
-
         val game = try {
             intent.extras?.let { extras ->
                 BundleCompat.getParcelable(extras, "game", Game::class.java)
@@ -140,9 +149,18 @@ class EmulationActivity : AppCompatActivity() {
     // rotations. Here we set full screen immersive repeatedly in onResume and in
     // onWindowFocusChanged to prevent the unwanted status bar state.
     override fun onResume() {
-        super.onResume()
         enableFullscreenImmersive()
-        applyOrientationSettings() // Check for orientation settings changes on runtime
+        if (isEmulationReady) {
+            // If emulation is ready then unblock rotation
+            isRotationBlocked = false
+            applyOrientationSettings()
+            emulationViewModel.setEmulationStarted(true)
+        } else {
+            if (!isRotationBlocked) {
+                applyOrientationSettings()
+            }
+        }
+        super.onResume()
     }
 
     override fun onStop() {
@@ -151,8 +169,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
         enableFullscreenImmersive()
+        super.onWindowFocusChanged(hasFocus)
     }
 
     public override fun onRestart() {
@@ -164,11 +182,15 @@ class EmulationActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("isEmulationRunning", isEmulationRunning)
+        outState.putBoolean("isEmulationReady", isEmulationReady)
+        outState.putBoolean("isRotationBlocked", isRotationBlocked)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         isEmulationRunning = savedInstanceState.getBoolean("isEmulationRunning", false)
+        isEmulationReady = savedInstanceState.getBoolean("isEmulationReady", false)
+        isRotationBlocked = savedInstanceState.getBoolean("isRotationBlocked", isRotationBlocked)
     }
 
     override fun onDestroy() {
@@ -222,6 +244,11 @@ class EmulationActivity : AppCompatActivity() {
 
     fun onEmulationStarted() {
         emulationViewModel.setEmulationStarted(true)
+        isEmulationReady = true
+        if (isRotationBlocked) {
+            isRotationBlocked = false
+            applyOrientationSettings()
+        }
         Toast.makeText(
             applicationContext,
             getString(R.string.emulation_menu_help),
