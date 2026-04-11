@@ -511,6 +511,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
                                   Kernel::MemoryMode memory_mode, u32 num_cores) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
+    is_powered_on = true;
+
     memory = std::make_unique<Memory::MemorySystem>(*this);
 
     timing = std::make_unique<Timing>(num_cores, Settings::values.cpu_clock_percentage.GetValue(),
@@ -593,8 +595,6 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     SetInfoLEDColor({});
 
     LOG_DEBUG(Core, "Initialized OK");
-
-    is_powered_on = true;
 
     return ResultStatus::Success;
 }
@@ -689,9 +689,6 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
 
 void System::Shutdown(bool is_deserializing) {
 
-    // Shutdown emulation session
-    is_powered_on = false;
-
     gpu.reset();
     if (!is_deserializing) {
         lle_modules.clear();
@@ -725,6 +722,9 @@ void System::Shutdown(bool is_deserializing) {
     SetInfoLEDColor({});
 
     LOG_DEBUG(Core, "Shutdown OK");
+
+    // Shutdown emulation session
+    is_powered_on = false;
 }
 
 void System::Reset() {
