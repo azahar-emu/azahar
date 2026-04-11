@@ -586,6 +586,10 @@
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparing Shaders</string>
     <string name="building_shaders">Building %s</string>
+    <string name="delete_shader_cache">Delete Shader Cache</string>
+    <string name="delete_cache_select_backend">Select which graphics API to delete the shader cache</string>
+    <string name="deleting_shader_cache">Deleting shader cache for title, please wait…</string>
+    <string name="shader_cache_deleted">Shader cache deleted</string>
 
     <!-- About Game Dialog -->
     <string name="play">Play</string>
