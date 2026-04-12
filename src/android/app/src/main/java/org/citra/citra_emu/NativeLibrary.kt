@@ -258,6 +258,9 @@ object NativeLibrary {
 
     external fun nativeFileExists(path: String): Boolean
 
+    external fun deleteOpenGLShaderCache(titleId: Long)
+    external fun deleteVulkanShaderCache(titleId: Long)
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 

@@ -350,6 +350,8 @@ add_library(citra_core STATIC
     hle/service/ldr_ro/ldr_ro.h
     hle/service/mcu/mcu_hwc.cpp
     hle/service/mcu/mcu_hwc.h
+    hle/service/mcu/mcu_rtc.cpp
+    hle/service/mcu/mcu_rtc.h
     hle/service/mcu/mcu.cpp
     hle/service/mcu/mcu.h
     hle/service/mic/mic_u.cpp

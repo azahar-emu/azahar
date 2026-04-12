@@ -109,6 +109,9 @@ bool HasUpdatedConfig();
 /// Returns the current framebuffer.
 uintptr_t GetFramebuffer();
 
+/// Sets the callback used by GetFramebuffer().
+void SetFramebufferCallback(retro_hw_get_current_framebuffer_t cb);
+
 /// Tells the frontend that we are done.
 bool Shutdown();
 
