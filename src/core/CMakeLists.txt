@@ -464,7 +464,6 @@ add_library(citra_core STATIC
     hw/aes/key.h
     hw/ecc.cpp
     hw/ecc.h
-    hw/default_keys.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
     hw/unique_data.cpp
@@ -501,6 +500,10 @@ add_library(citra_core STATIC
     tracer/recorder.cpp
     tracer/recorder.h
 )
+
+if (ENABLE_BUILTIN_KEYBLOB)
+    target_sources(citra_core PRIVATE hw/default_keys.h)
+endif()
 
 create_target_directory_groups(citra_core)
 
