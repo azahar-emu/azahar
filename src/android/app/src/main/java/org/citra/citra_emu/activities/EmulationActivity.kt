@@ -145,6 +145,30 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+        NativeLibrary.stopEmulation()
+        NativeLibrary.playTimeManagerStop()
+
+        isEmulationReady = false
+        isRotationBlocked = true
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        emulationViewModel.setEmulationStarted(false)
+
+        val game = intent.extras?.let { extras ->
+            BundleCompat.getParcelable(extras, "game", Game::class.java)
+        }
+        if (game != null) {
+            NativeLibrary.playTimeManagerStart(game.titleId)
+        }
+
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
+        navHostFragment.navController.setGraph(R.navigation.emulation_navigation, intent.extras)
+    }
+
     // On some devices, the system bars will not disappear on first boot or after some
     // rotations. Here we set full screen immersive repeatedly in onResume and in
     // onWindowFocusChanged to prevent the unwanted status bar state.
