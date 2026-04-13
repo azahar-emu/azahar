@@ -105,31 +105,6 @@ unsigned retro_api_version() {
     return RETRO_API_VERSION;
 }
 
-void LibRetro::OnConfigureEnvironment() {
-
-#ifdef HAVE_LIBRETRO_VFS
-    struct retro_vfs_interface_info vfs_iface_info{1, nullptr};
-    LibRetro::SetVFSCallback(&vfs_iface_info);
-#endif
-
-    LibRetro::RegisterCoreOptions();
-
-    static const struct retro_controller_description controllers[] = {
-        {"Nintendo 3DS", RETRO_DEVICE_JOYPAD},
-    };
-
-    static const struct retro_controller_info ports[] = {
-        {controllers, 1},
-        {nullptr, 0},
-    };
-
-    LibRetro::SetControllerInfo(ports);
-}
-
-uintptr_t LibRetro::GetFramebuffer() {
-    return emu_instance->hw_render.get_current_framebuffer();
-}
-
 /**
  * Updates Citra's settings with Libretro's.
  */
@@ -598,6 +573,7 @@ bool retro_load_game(const struct retro_game_info* info) {
             LibRetro::DisplayMessage("Failed to set HW renderer");
             return false;
         }
+        LibRetro::SetFramebufferCallback(emu_instance->hw_render.get_current_framebuffer);
 #endif
         break;
     case Settings::GraphicsAPI::Vulkan:

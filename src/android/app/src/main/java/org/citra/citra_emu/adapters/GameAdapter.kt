@@ -36,6 +36,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.PopupMenu
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -512,6 +513,63 @@ class GameAdapter(
 
         bottomSheetView.findViewById<MaterialButton>(R.id.menu_button_uninstall).setOnClickListener {
             showUninstallContextMenu(it, game, bottomSheetDialog)
+        }
+
+        bottomSheetView.findViewById<MaterialButton>(R.id.delete_cache).setOnClickListener {
+            val options = arrayOf(context.getString(R.string.vulkan), context.getString(R.string.opengles))
+            var selectedIndex = -1
+            val dialog = MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.delete_cache_select_backend)
+                .setSingleChoiceItems(options, -1) { dialog, which ->
+                    selectedIndex = which
+                }
+                .setPositiveButton(android.R.string.ok) {_, _ ->
+                    val progToast = Toast.makeText(
+                        CitraApplication.appContext,
+                        R.string.deleting_shader_cache,
+                        Toast.LENGTH_LONG
+                    )
+                    progToast.show()
+
+                    activity.lifecycleScope.launch(Dispatchers.IO) {
+
+                        when (selectedIndex) {
+                            0 -> {
+                                NativeLibrary.deleteVulkanShaderCache(game.titleId)
+                            }
+                            1 -> {
+                                NativeLibrary.deleteOpenGLShaderCache(game.titleId)
+                            }
+                        }
+
+                        activity.runOnUiThread {
+                            progToast.cancel()
+                            Toast.makeText(
+                                CitraApplication.appContext,
+                                R.string.shader_cache_deleted,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+
+            dialog.setOnShowListener {
+                val positiveButton = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+
+                positiveButton.isEnabled = false
+
+                val listView = dialog.listView
+                listView.setOnItemClickListener { _, _, position, _ ->
+                    selectedIndex = position
+                    positiveButton.isEnabled = true
+                }
+            }
+
+            dialog.show()
         }
 
         val bottomSheetBehavior = bottomSheetDialog.getBehavior()
