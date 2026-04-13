@@ -30,12 +30,11 @@ void DiscordImpl::Pause() {
     Discord_ClearPresence();
 }
 
-void DiscordImpl::Update() {
+void DiscordImpl::Update(bool is_powered_on) {
     s64 start_time = std::chrono::duration_cast<std::chrono::seconds>(
                          std::chrono::system_clock::now().time_since_epoch())
                          .count();
     std::string title;
-    const bool is_powered_on = system.IsPoweredOn();
     if (is_powered_on) {
         system.GetAppLoader().ReadTitle(title);
     }
