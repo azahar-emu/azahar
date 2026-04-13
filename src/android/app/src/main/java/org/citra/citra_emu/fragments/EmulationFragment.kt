@@ -543,7 +543,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     override fun onDestroy() {
-        if (::emulationState.isInitialized) {
+        if (::emulationState.isInitialized && requireActivity().isFinishing) {
             emulationState.stop()
         }
         EmulationLifecycleUtil.removeHook(onPause)
