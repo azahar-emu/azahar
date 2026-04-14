@@ -182,13 +182,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                         ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
                     }
 
-                    /*
-                    else if (button.id == NativeLibrary.ButtonType.BUTTON_COMBO) {
-                        ComboHelper.comboActivate(button)
-                    }
-                    */
-
-
                     NativeLibrary.onGamePadEvent(
                         NativeLibrary.TouchScreenDevice,
                         button.id,
