@@ -1345,7 +1345,7 @@ void FragmentModule::DefineBindingsGL() {
         out += "layout(binding = 6) uniform sampler2D tex_normal;\n";
     }
     if (use_blend_fallback) {
-        out += "layout(location = 7) uniform sampler2D tex_color;\n";
+        out += "layout(binding = 7) uniform sampler2D tex_color;\n";
     }
 
     // Shadow textures
