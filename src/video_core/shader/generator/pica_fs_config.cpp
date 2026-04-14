@@ -21,13 +21,13 @@ FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs) {
     logic_op.Assign(Pica::FramebufferRegs::LogicOp::Copy);
 
     if (alphablend_enable) {
-        rgb_blend.eq = output_merger.alpha_blending.blend_equation_rgb.Value();
-        rgb_blend.src_factor = output_merger.alpha_blending.factor_source_rgb;
-        rgb_blend.dst_factor = output_merger.alpha_blending.factor_dest_rgb;
+        requested_rgb_blend.eq = output_merger.alpha_blending.blend_equation_rgb.Value();
+        requested_rgb_blend.src_factor = output_merger.alpha_blending.factor_source_rgb;
+        requested_rgb_blend.dst_factor = output_merger.alpha_blending.factor_dest_rgb;
 
-        alpha_blend.eq = output_merger.alpha_blending.blend_equation_a.Value();
-        alpha_blend.src_factor = output_merger.alpha_blending.factor_source_a;
-        alpha_blend.dst_factor = output_merger.alpha_blending.factor_dest_a;
+        requested_alpha_blend.eq = output_merger.alpha_blending.blend_equation_a.Value();
+        requested_alpha_blend.src_factor = output_merger.alpha_blending.factor_source_a;
+        requested_alpha_blend.dst_factor = output_merger.alpha_blending.factor_dest_a;
     }
 }
 
@@ -37,17 +37,10 @@ void FramebufferConfig::ApplyProfile(const Profile& profile) {
         logic_op.Assign(requested_logic_op);
     }
 
-    // Min/max blend emulation
-    if (!profile.has_blend_minmax_factor && alphablend_enable) {
-        if (rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Min &&
-            rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Max) {
-            rgb_blend = {};
-        }
-
-        if (alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Min &&
-            alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Max) {
-            alpha_blend = {};
-        }
+    // Check if we don't need blend min/max emulation.
+    if ((profile.has_blend_minmax_factor || profile.is_vulkan) && alphablend_enable) {
+        requested_rgb_blend.SetMinMaxEmulationDisabled();
+        requested_alpha_blend.SetMinMaxEmulationDisabled();
     }
 }
 
