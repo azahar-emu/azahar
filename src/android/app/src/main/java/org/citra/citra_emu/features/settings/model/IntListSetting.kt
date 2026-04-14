@@ -11,7 +11,8 @@ enum class IntListSetting(
     val canBeEmpty: Boolean = true
 ) : AbstractListSetting<Int> {
 
-    LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false);
+    LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false),
+    COMBO_KEYS("combo_keys", Settings.SECTION_CONTROLS, listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), canBeEmpty = true);
 
     private var backingList: List<Int> = defaultValue
     private var lastValidList : List<Int> = defaultValue

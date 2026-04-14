@@ -125,7 +125,7 @@ class InputBindingSetting(
                 Settings.KEY_BUTTON_SELECT -> NativeLibrary.ButtonType.BUTTON_SELECT
                 Settings.KEY_BUTTON_START -> NativeLibrary.ButtonType.BUTTON_START
                 Settings.KEY_BUTTON_HOME -> NativeLibrary.ButtonType.BUTTON_HOME
-                Settings.KEY_BUTTON_COMBO -> NativeLibrary.ButtonType.BUTTON_COMBO
+                //Settings.KEY_BUTTON_COMBO -> NativeLibrary.ButtonType.BUTTON_COMBO
                 Settings.KEY_BUTTON_UP -> NativeLibrary.ButtonType.DPAD_UP
                 Settings.KEY_BUTTON_DOWN -> NativeLibrary.ButtonType.DPAD_DOWN
                 Settings.KEY_BUTTON_LEFT -> NativeLibrary.ButtonType.DPAD_LEFT
@@ -138,6 +138,7 @@ class InputBindingSetting(
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKlOAD -> Hotkey.QUICKLOAD.button
                 Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_KEY.button
                 else -> -1
             }
 

@@ -31,7 +31,6 @@ import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.features.settings.model.StringListSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.HeaderSetting
@@ -42,7 +41,6 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
-import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
@@ -843,16 +841,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
 
-            val buttons = settingsActivity.resources.getStringArray(R.array.n3dsButtons).take(10).toTypedArray()
             add(
-                StringMultiChoiceSetting(
-                    StringListSetting.COMBO_KEYS,
+                MultiChoiceSetting(
+                    IntListSetting.COMBO_KEYS,
                     R.string.combo_key_options,
                     R.string.combo_key_description,
-                    buttons,
-                    buttons,
-                    StringListSetting.COMBO_KEYS.key,
-                    StringListSetting.COMBO_KEYS.defaultValue
+                    R.array.comboOptions,
+                    R.array.comboOptionValues,
+                    IntListSetting.COMBO_KEYS.key,
+                    IntListSetting.COMBO_KEYS.defaultValue
                 )
             )
         }

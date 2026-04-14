@@ -184,6 +184,33 @@
         <item>@string/button_combo</item>
     </string-array>
 
+    <string-array name="comboOptions">
+        <item>@string/button_a</item>
+        <item>@string/button_b</item>
+        <item>@string/button_x</item>
+        <item>@string/button_y</item>
+        <item>@string/button_l</item>
+        <item>@string/button_r</item>
+        <item>@string/button_zl</item>
+        <item>@string/button_zr</item>
+        <item>@string/button_start</item>
+        <item>@string/button_select</item>
+    </string-array>
+
+    <integer-array name="comboOptionValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </integer-array>
+
+
     <string-array name="cameraImageSourceNames">
         <item>@string/blank</item>
         <item>@string/still_image</item>

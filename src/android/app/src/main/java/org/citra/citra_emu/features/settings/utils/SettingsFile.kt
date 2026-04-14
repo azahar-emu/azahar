@@ -17,7 +17,6 @@ import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.SettingSection
 import org.citra.citra_emu.features.settings.model.Settings.SettingsSectionMap
-import org.citra.citra_emu.features.settings.model.StringListSetting
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.utils.BiMap
@@ -256,15 +255,10 @@ object SettingsFile {
             stringSetting.string = value
             return stringSetting
         }
-
-        val stringListSetting = StringListSetting.from(key)
-        if (stringListSetting != null) {
-            stringListSetting.list = value.split(", ").map { it }
-        }
         
         val intListSetting = IntListSetting.from(key)
         if (intListSetting != null) {
-            intListSetting.list = value.split(", ").map { it.toInt() }
+            intListSetting.list = value.split(", ").mapNotNull { it.toIntOrNull() }
         }
 
         return null

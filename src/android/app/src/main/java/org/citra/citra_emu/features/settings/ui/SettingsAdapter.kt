@@ -52,7 +52,6 @@ import org.citra.citra_emu.features.settings.model.view.SingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.MultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.model.view.StringInputSetting
-import org.citra.citra_emu.features.settings.model.view.StringMultiChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSetting
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
@@ -139,10 +138,6 @@ class SettingsAdapter(
                 StringInputViewHolder(ListItemSettingBinding.inflate(inflater), this)
             }
 
-            SettingsItem.TYPE_MULTI_CHOICE, SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
-                MultiChoiceViewHolder(ListItemSettingBinding.inflate(inflater), this)
-            }
-
             else -> {
                 // TODO: Create an error view since we can't return null now
                 HeaderViewHolder(ListItemSettingsHeaderBinding.inflate(inflater), this)
@@ -207,10 +202,6 @@ class SettingsAdapter(
                     
                     SettingsItem.TYPE_MULTI_CHOICE -> {
                         (oldItem as MultiChoiceSetting).isEnabled == (newItem as MultiChoiceSetting).isEnabled
-                    }
-                    
-                    SettingsItem.TYPE_STRING_MULTI_CHOICE -> {
-                        (oldItem as StringMultiChoiceSetting).isEnabled == (newItem as StringMultiChoiceSetting).isEnabled
                     }
 
                     SettingsItem.TYPE_DATETIME_SETTING -> {
@@ -280,26 +271,6 @@ class SettingsAdapter(
     fun onMultiChoiceClick(item: MultiChoiceSetting, position: Int) {
         clickedPosition = position
         onMultiChoiceClick(item)
-    }
-
-    private fun onStringMultiChoiceClick(item: StringMultiChoiceSetting) {
-        clickedItem = item
-        val values: BooleanArray = getSelectionForStringMultiChoiceValue(item);
-        dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(item.nameId)
-            .setMultiChoiceItems(item.choices, values, this)
-            .setOnDismissListener {
-                if (clickedPosition != -1) {
-                    notifyItemChanged(clickedPosition)
-                    clickedPosition = -1
-                }
-            }
-            .show()
-    }
-
-    fun onStringMultiChoiceClick(item: StringMultiChoiceSetting, position: Int) {
-        clickedPosition = position
-        onStringMultiChoiceClick(item)
     }
 
     private fun onStringSingleChoiceClick(item: StringSingleChoiceSetting) {
@@ -616,20 +587,6 @@ class SettingsAdapter(
                     fragmentView.loadSettingsList()
                 }
             }
-
-            is StringMultiChoiceSetting -> {
-                val mcsetting = clickedItem as? StringMultiChoiceSetting
-                mcsetting?.let {
-                    val value = it.getValueAt(which)
-                    if (it.selectedValues.contains(value) != isChecked) {
-                        val setting =
-                            it.setSelectedValue((if (isChecked) it.selectedValues + value.toString() else it.selectedValues - value.toString()))
-                        fragmentView?.putSetting(setting)
-                        fragmentView?.onSettingChanged()
-                    }
-                    fragmentView.loadSettingsList()
-                }
-            }
         }
     }
 
@@ -798,26 +755,4 @@ class SettingsAdapter(
         return BooleanArray(1){false};
     }
 
-    //TODO: Properly Implement in line with string single choice
-    private fun getSelectionForStringMultiChoiceValue(item: StringMultiChoiceSetting): BooleanArray {
-        val values = item.selectedValues;
-        val available_values = item.values;
-        val res = BooleanArray(available_values?.size ?: 10){false} // 10 is used because we have 10 reasonable options.
-                                                                    // prob shouldn't hardcode the size value here
-
-
-        if (available_values != null) {
-            for (choice_val in available_values) {
-                if (values.contains(choice_val)) {
-                    val index = available_values.indexOf(choice_val)
-                    res[index] = true;
-                }
-            }
-        }
-        return if (res.isNotEmpty()) {
-            res;
-        } else {
-            BooleanArray(1) { false };
-        }
-    }
 }
