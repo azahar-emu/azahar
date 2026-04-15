@@ -197,17 +197,18 @@
         <item>@string/button_select</item>
     </string-array>
 
+    <!-- Ints refer to button values in NativeLibrary -->
     <integer-array name="comboOptionValues">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
+        <item>700</item>
+        <item>701</item>
+        <item>702</item>
+        <item>703</item>
+        <item>773</item>
+        <item>774</item>
+        <item>707</item>
+        <item>708</item>
+        <item>704</item>
+        <item>705</item>
     </integer-array>
 
 
