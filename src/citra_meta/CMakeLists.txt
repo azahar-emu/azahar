@@ -48,6 +48,22 @@ if (APPLE)
     endif()
 endif()
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND WIN32 AND MINGW)
+    # TODO: This is placeholder bullshit, we need to find out a way to do actual dependency resolution.
+    #       Can we use Wine maybe? -OS
+    set(EXTRA_LIBS /mxe/usr/x86_64-w64-mingw32.shared/bin/*.dll )
+    add_custom_command(TARGET citra_meta POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:citra_meta> ${EXTRA_LIBS} $<TARGET_FILE_DIR:citra_meta>
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:citra_meta>/plugins/"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory /mxe/usr/x86_64-w64-mingw32.shared/qt6/plugins/ "$<TARGET_FILE_DIR:citra_meta>/plugins/"
+        COMMAND_EXPAND_LISTS
+    )
+    add_custom_command(TARGET citra_meta POST_BUILD
+        COMMAND_EXPAND_LISTS
+    )
+    unset(EXTRA_LIBS)
+endif()
+
 target_link_libraries(citra_meta PRIVATE citra_common fmt)
 
 if (ENABLE_QT)
