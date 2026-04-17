@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,14 +19,14 @@ enum class SurfaceFlagBits : u32 {
     Picked = 1 << 1,       ///< Surface has been picked when searching for a match.
     Tracked = 1 << 2,      ///< Surface is part of a texture cube and should be tracked.
     Custom = 1 << 3,       ///< Surface texture has been replaced with a custom texture.
-    ShadowMap = 1 << 4,    ///< Surface is used during shadow rendering.
+    ShadowSource = 1 << 4, ///< Surface is used as a shadow source.
     RenderTarget = 1 << 5, ///< Surface was a render target.
 };
 DECLARE_ENUM_FLAG_OPERATORS(SurfaceFlagBits);
 
 class SurfaceBase : public SurfaceParams {
 public:
-    SurfaceBase(const SurfaceParams& params);
+    SurfaceBase(const SurfaceParams& params, const SurfaceFlagBits& initial_flag_bits);
     ~SurfaceBase();
 
     /// Returns true when this surface can be used to fill the fill_interval of dest_surface
@@ -88,7 +88,7 @@ public:
     const Material* material = nullptr;
     SurfaceRegions invalid_regions;
     u32 fill_size = 0;
-    std::array<u8, 4> fill_data;
+    std::array<u8, 4> fill_data{};
     u64 modification_tick = 1;
 };
 
