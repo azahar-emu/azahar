@@ -45,7 +45,11 @@ add_library(audio_core STATIC
 create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC citra_common citra_core)
-target_link_libraries(audio_core PRIVATE faad2 SoundTouch teakra)
+if(USE_SYSTEM_FAAD)
+    target_link_libraries(audio_core PRIVATE faad SoundTouch teakra)
+else()
+    target_link_libraries(audio_core PRIVATE faad2 SoundTouch teakra)
+endif()
 
 if(ENABLE_SDL2)
     target_link_libraries(audio_core PRIVATE SDL2::SDL2)
