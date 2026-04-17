@@ -29,7 +29,7 @@ ConfigureHotkeys::ConfigureHotkeys(QWidget* parent)
     ui->hotkey_list->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->hotkey_list->setModel(model);
 
-    ui->hotkey_list->setColumnWidth(0, 250);
+    ui->hotkey_list->setColumnWidth(0, 300);
     ui->hotkey_list->resizeColumnToContents(hotkey_column);
 
     connect(ui->button_restore_defaults, &QPushButton::clicked, this,
@@ -57,17 +57,18 @@ QList<QKeySequence> ConfigureHotkeys::GetUsedKeyList() const {
 
 void ConfigureHotkeys::Populate(const HotkeyRegistry& registry) {
     for (const auto& group : registry.hotkey_groups) {
+        // skip the controller navigation group in the keyboard hotkey config window
+        if (group.first == QStringLiteral("Navigation"))
+            continue;
         QStandardItem* parent_item = new QStandardItem(group.first);
         parent_item->setEditable(false);
         for (const auto& hotkey : group.second) {
             QStandardItem* action = new QStandardItem(hotkey.first);
             QStandardItem* keyseq =
                 new QStandardItem(hotkey.second.keyseq.toString(QKeySequence::NativeText));
-            QStandardItem* controller_keyseq = new QStandardItem(hotkey.second.controller_keyseq);
             action->setEditable(false);
             keyseq->setEditable(false);
-            controller_keyseq->setEditable(false);
-            parent_item->appendRow({action, keyseq, controller_keyseq});
+            parent_item->appendRow({action, keyseq});
         }
         model->appendRow(parent_item);
     }

@@ -501,6 +501,7 @@ void GMainWindow::InitializeWidgets() {
     action_secondary_rotate_screen = new QAction(secondary_window);
 
     game_list = new GameList(*play_time_manager, this);
+
     ui->horizontalLayout->addWidget(game_list);
 
     game_list_placeholder = new GameListPlaceholder(this);
@@ -794,19 +795,32 @@ void GMainWindow::InitializeSaveStateMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     hotkey_registry.LoadHotkeys();
-
-    const QString main_window = QStringLiteral("Main Window");
+    hotkey_registry.buttonMonitor.start(16);
+    LOG_DEBUG(Frontend, "Initializing hotkeys");
     const QString fullscreen = QStringLiteral("Fullscreen");
-
     // QAction Hotkeys
     const auto link_action_shortcut = [&](QAction* action, const QString& action_name,
-                                          const bool primary_only = false) {
-        static const QString main_window = QStringLiteral("Main Window");
-        action->setShortcut(hotkey_registry.GetKeySequence(main_window, action_name));
+                                          const bool primary_only = false,
+                                          const QString group = QStringLiteral("Main Window")) {
+        auto context = hotkey_registry.GetShortcutContext(group, action_name);
+        auto shortcut = hotkey_registry.GetKeySequence(group, action_name);
+        action->setShortcut(shortcut);
+        action->setShortcutContext(context);
         action->setAutoRepeat(false);
         this->addAction(action);
+<<<<<<< HEAD
         if (!primary_only)
             secondary_window->addAction(action);
+        hotkey_registry.SetAction(main_window, action_name, action);
+=======
+        // handle the shortcuts that are different per-screen
+        if (context == Qt::WidgetShortcut) {
+            render_window->addAction(action);
+            if (!primary_only) {
+                secondary_window->addAction(action);
+            }
+        }
+>>>>>>> 88d1bef1c (Bugfix: All desktop hotkeys now work in dual-window mode.)
     };
 
     link_action_shortcut(ui->action_Load_File, QStringLiteral("Load File"));
@@ -818,7 +832,7 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Stop, QStringLiteral("Stop Emulation"));
     link_action_shortcut(ui->action_Show_Filter_Bar, QStringLiteral("Toggle Filter Bar"));
     link_action_shortcut(ui->action_Show_Status_Bar, QStringLiteral("Toggle Status Bar"));
-    link_action_shortcut(ui->action_Fullscreen, fullscreen, true);
+    link_action_shortcut(ui->action_Fullscreen, fullscreen);
     link_action_shortcut(ui->action_Capture_Screenshot, QStringLiteral("Capture Screenshot"));
     link_action_shortcut(ui->action_Screen_Layout_Swap_Screens, QStringLiteral("Swap Screens"));
     link_action_shortcut(ui->action_Screen_Layout_Upright_Screens,
@@ -838,12 +852,13 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Leave_Room, QStringLiteral("Multiplayer Leave Room"));
 
     // QShortcut Hotkeys
-    const auto connect_shortcut = [&](const QString& action_name, const auto& function) {
-        const auto* hotkey = hotkey_registry.GetHotkey(main_window, action_name, this);
-        const auto* secondary_hotkey =
-            hotkey_registry.GetHotkey(main_window, action_name, secondary_window);
-        connect(hotkey, &QShortcut::activated, this, function);
-        connect(secondary_hotkey, &QShortcut::activated, this, function);
+    const auto connect_shortcut = [&](const QString& action_name, const auto& function,
+                                      const QString& group = QStringLiteral("Main Window"),
+                                      QObject* parent = nullptr) {
+        if (parent == nullptr)
+            parent = this;
+        const auto* hotkey = hotkey_registry.GetHotkey(group, action_name, parent);
+        connect(hotkey, &QShortcut::activated, parent, function);
     };
 
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
@@ -904,6 +919,36 @@ void GMainWindow::InitializeHotkeys() {
         }
     });
 
+    // Navigation Actions - send keyboard shortcuts from controller buttons, but only when
+    // a game window is NOT in focus
+    const auto connect_navigation_shortcut =
+        [&](const QString& action_name, Qt::Key key, Qt::KeyboardModifier mod = Qt::NoModifier,
+            const QString& group = QStringLiteral("Navigation"), QObject* parent = nullptr) {
+            if (parent == nullptr)
+                parent = this;
+            const auto* hotkey = hotkey_registry.GetHotkey(group, action_name, parent);
+            connect(hotkey, &QShortcut::activated, this, [this, key, mod] {
+                if (QApplication::focusWidget() == render_window ||
+                    QApplication::focusWidget() == secondary_window)
+                    return;
+                QKeyEvent press(QEvent::KeyPress, key, mod);
+                QKeyEvent release(QEvent::KeyRelease, key, mod);
+                QApplication::sendEvent(QApplication::focusWidget(), &press);
+                QApplication::sendEvent(QApplication::focusWidget(), &release);
+            });
+        };
+
+    // TODO: Improve keyboard navigation everywhere so these actually work everywhere
+    connect_navigation_shortcut(QStringLiteral("Move down (Down Arrow)"), Qt::Key_Down);
+    connect_navigation_shortcut(QStringLiteral("Move up (Up Arrow)"), Qt::Key_Up);
+    connect_navigation_shortcut(QStringLiteral("Move left (Left Arrow)"), Qt::Key_Left);
+    connect_navigation_shortcut(QStringLiteral("Move right (Right Arrow)"), Qt::Key_Right);
+    connect_navigation_shortcut(QStringLiteral("Confirm / Run game (Enter)"), Qt::Key_Enter);
+    connect_navigation_shortcut(QStringLiteral("Go back / Cancel (Esc)"), Qt::Key_Escape);
+    connect_navigation_shortcut(QStringLiteral("Change Focus Forward (Tab)"), Qt::Key_Tab);
+    connect_navigation_shortcut(QStringLiteral("Change Focus Backward (Shift+Tab)"), Qt::Key_Tab,
+                                Qt::ShiftModifier);
+
     // Secondary Window QAction Hotkeys
     const auto add_secondary_window_hotkey = [this](QAction* action, QKeySequence hotkey,
                                                     const char* slot) {
@@ -913,11 +958,6 @@ void GMainWindow::InitializeHotkeys() {
         connect(action, SIGNAL(triggered()), this, slot);
         secondary_window->addAction(action);
     };
-
-    // Use the same fullscreen hotkey as the main window
-    const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
-    add_secondary_window_hotkey(action_secondary_fullscreen, fullscreen_hotkey,
-                                SLOT(ToggleSecondaryFullscreen()));
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -936,6 +976,7 @@ void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
     render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
+    secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
 #if MICROPROFILE_ENABLED
     microProfileDialog->restoreGeometry(UISettings::values.microprofile_geometry);
     microProfileDialog->setVisible(UISettings::values.microprofile_visible.GetValue());
@@ -2612,14 +2653,25 @@ void GMainWindow::ToggleSecondaryFullscreen() {
 }
 
 void GMainWindow::ShowFullscreen() {
+    QWidget* window_to_change =
+        ui->action_Single_Window_Mode->isChecked() ? static_cast<QWidget*>(this) : render_window;
+
     if (ui->action_Single_Window_Mode->isChecked()) {
         UISettings::values.geometry = saveGeometry();
         ui->menubar->hide();
         statusBar()->hide();
-        showFullScreen();
     } else {
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
-        render_window->showFullScreen();
+    }
+
+    bool secondary_on_same = window_to_change->screen() == secondary_window->screen();
+    window_to_change->showFullScreen();
+
+    // try to fullscreen the second window if it is visible and on a different screen from main
+    if (secondary_window->isVisible() && !secondary_on_same) {
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
+        LOG_INFO(Frontend, "Attempting to fullscreen secondary window");
+        secondary_window->showFullScreen();
     }
 }
 
@@ -2633,12 +2685,16 @@ void GMainWindow::HideFullscreen() {
         render_window->showNormal();
         render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
     }
+    if (secondary_window->isFullScreen()) {
+        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
+        secondary_window->showNormal();
+    }
 }
 
 void GMainWindow::ToggleWindowMode() {
     if (ui->action_Single_Window_Mode->isChecked()) {
         // Render in the main window...
-        render_window->BackupGeometry();
+        UISettings::values.renderwindow_geometry = render_window->saveGeometry();
         ui->horizontalLayout->addWidget(render_window);
         render_window->setFocusPolicy(Qt::StrongFocus);
         if (emulation_running) {
@@ -2654,7 +2710,7 @@ void GMainWindow::ToggleWindowMode() {
         render_window->setFocusPolicy(Qt::NoFocus);
         if (emulation_running) {
             render_window->setVisible(true);
-            render_window->RestoreGeometry();
+            render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
             game_list->show();
         }
     }
@@ -2665,10 +2721,10 @@ void GMainWindow::UpdateSecondaryWindowVisibility() {
         return;
     }
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
-        secondary_window->RestoreGeometry();
+        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
         secondary_window->show();
     } else {
-        secondary_window->BackupGeometry();
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
         secondary_window->hide();
     }
 }
@@ -3096,7 +3152,6 @@ void GMainWindow::OnCaptureScreenshot() {
                                           .toString(QStringLiteral("dd.MM.yy_hh.mm.ss.z"))
                                           .toStdString();
         path.append(fmt::format("/{}_{}.png", filename, timestamp));
-
         auto* const screenshot_window =
             secondary_window->HasFocus() ? secondary_window : render_window;
         screenshot_window->CaptureScreenshot(
@@ -4158,6 +4213,7 @@ void GMainWindow::UpdateUISettings() {
     if (!ui->action_Fullscreen->isChecked()) {
         UISettings::values.geometry = saveGeometry();
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
     }
     UISettings::values.state = saveState();
 #if MICROPROFILE_ENABLED

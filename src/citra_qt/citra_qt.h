@@ -173,6 +173,7 @@ private:
     bool LoadROM(const QString& filename);
     void BootGame(const QString& filename);
     void ShutdownGame();
+    std::vector<std::unique_ptr<Hotkey>> m_test_hotkeys;
 
 #ifdef USE_DISCORD_PRESENCE
     void SetDiscordEnabled(bool state);
@@ -375,6 +376,7 @@ private:
 
     // Hotkeys
     bool turbo_mode_active = false;
+    std::vector<std::unique_ptr<Hotkey>> nav_hotkeys;
 
     // Whether emulation is currently running in Citra.
     bool emulation_running = false;
