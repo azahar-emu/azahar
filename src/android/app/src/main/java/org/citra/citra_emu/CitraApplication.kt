@@ -16,6 +16,11 @@ import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.MemoryUtil
+import java.io.File
+import java.io.FileOutputStream
+import java.security.KeyStore
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 class CitraApplication : Application() {
     private fun createNotificationChannel() {
@@ -59,6 +64,46 @@ class CitraApplication : Application() {
         logDeviceInfo()
         createNotificationChannel()
         NativeLibrary.playTimeManagerInit()
+
+        if (NativeLibrary.isUpdateCheckerEnabled()) {
+            initializeCACertificates()
+        }
+    }
+
+    // needed for update checking
+    private fun initializeCACertificates() {
+        try {
+            val factory = TrustManagerFactory.getInstance(
+                TrustManagerFactory.getDefaultAlgorithm()
+            )
+            factory.init(null as KeyStore?)
+
+            val trustManager = factory.trustManagers[0] as X509TrustManager
+
+            val certFile = File(filesDir, "cacert.pem")
+
+            if (!certFile.exists()) {
+                FileOutputStream(certFile).use { out ->
+                    trustManager.acceptedIssuers.forEach { cert ->
+                        out.write("-----BEGIN CERTIFICATE-----\n".toByteArray())
+
+                        val encoded = android.util.Base64.encodeToString(
+                            cert.encoded,
+                            android.util.Base64.NO_WRAP // 👈 important
+                        )
+
+                        out.write(encoded.toByteArray())
+                        out.write("\n-----END CERTIFICATE-----\n".toByteArray())
+                    }
+                }
+            }
+
+            NativeLibrary.setCACertificatePath(certFile.absolutePath)
+
+            Log.info("[SSL] CA certs ready: ${certFile.absolutePath}")
+        } catch (e: Exception) {
+            Log.error("[SSL] Failed to init CA certs: ${e.message}")
+        }
     }
 
     fun logDeviceInfo() {

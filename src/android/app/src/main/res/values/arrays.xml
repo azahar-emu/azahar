@@ -55,6 +55,15 @@
         <item>3</item>
     </integer-array>
 
+    <string-array name="updateCheckChannelNames">
+        <item>@string/update_check_channel_stable</item>
+        <item>@string/update_check_channel_pre_release</item>
+    </string-array>
+    <integer-array name="updateCheckChannelValues">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
     <string-array name="smallScreenPositions">
         <item>@string/small_screen_position_top_right</item>
         <item>@string/small_screen_position_middle_right</item>
@@ -646,4 +655,6 @@
         <item>9</item>
     </integer-array>
 
+    <string name="update_check_channel_stable">Stable</string>
+    <string name="update_check_channel_pre_release">Pre-Release</string>
 </resources>

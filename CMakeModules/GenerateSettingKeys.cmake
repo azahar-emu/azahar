@@ -143,6 +143,8 @@ foreach(KEY IN ITEMS
     "web_api_url"
     "citra_username"
     "citra_token"
+    "check_for_update_on_start"
+    "update_check_channel"
 )
     set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
     set(SETTING_KEY_DEFINITIONS "${SETTING_KEY_DEFINITIONS}\nDEFINE_KEY(${KEY})")

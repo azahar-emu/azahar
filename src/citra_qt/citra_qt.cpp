@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
 #ifdef __APPLE__
 #include <unistd.h> // for chdir
 #endif
@@ -74,8 +75,8 @@
 #include "citra_qt/qt_swizzle.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
-#ifdef ENABLE_QT_UPDATE_CHECKER
-#include "citra_qt/update_checker.h"
+#ifdef ENABLE_UPDATE_CHECKER
+#include "common/update_checker.h"
 #endif
 #include "citra_qt/util/clickable_label.h"
 #include "citra_qt/util/graphics_device_info.h"
@@ -180,11 +181,11 @@ bool IsPrereleaseBuild() {
             (strstr(Common::g_build_fullname, "rc") != NULL));
 }
 
-#ifdef ENABLE_QT_UPDATE_CHECKER
+#ifdef ENABLE_UPDATE_CHECKER
 static bool ShouldCheckForPrereleaseUpdates() {
-    const bool update_channel = UISettings::values.update_check_channel.GetValue();
+    const bool update_channel = Settings::values.update_check_channel.GetValue();
     const bool using_prerelease_channel =
-        (update_channel == UISettings::UpdateCheckChannels::PRERELEASE);
+        (update_channel == Settings::UpdateCheckChannels::PRERELEASE);
     return (IsPrereleaseBuild() || using_prerelease_channel);
 }
 
@@ -440,8 +441,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 #endif
 
-#ifdef ENABLE_QT_UPDATE_CHECKER
-    if (UISettings::values.check_for_update_on_start) {
+#ifdef ENABLE_UPDATE_CHECKER
+    if (Settings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
             const std::optional<std::string> latest_release_tag =
                 UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
@@ -4101,7 +4102,7 @@ void GMainWindow::OnMoviePlaybackCompleted() {
     QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
 }
 
-#ifdef ENABLE_QT_UPDATE_CHECKER
+#ifdef ENABLE_UPDATE_CHECKER
 void GMainWindow::OnEmulatorUpdateAvailable() {
     QString version_string = update_future.result();
     if (version_string.isEmpty())

@@ -16,6 +16,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
@@ -1849,7 +1850,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     }
 
     private fun addThemeSettings(sl: ArrayList<SettingsItem>) {
-        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_theme))
+        settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.app_settings))
         sl.apply {
             val theme: AbstractBooleanSetting = object : AbstractBooleanSetting {
                 override var boolean: Boolean
@@ -1868,6 +1869,37 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val defaultValue = false
             }
 
+            if (NativeLibrary.isUpdateCheckerEnabled()) {
+                add(
+                    HeaderSetting(
+                        R.string.app_settings,
+                    )
+                )
+                add(
+                    SwitchSetting(
+                        BooleanSetting.CHECK_FOR_UPDATES,
+                        R.string.check_for_updates_on_start,
+                        R.string.check_for_updates_on_start_description,
+                    )
+                )
+                add(
+                    SingleChoiceSetting(
+                        IntSetting.UPDATE_CHECK_CHANNEL,
+                        R.string.update_check_channel,
+                        0,
+                        R.array.updateCheckChannelNames,
+                        R.array.updateCheckChannelValues,
+                        IntSetting.UPDATE_CHECK_CHANNEL.key,
+                        IntSetting.UPDATE_CHECK_CHANNEL.defaultValue
+                    )
+                )
+            }
+
+            add(
+                HeaderSetting(
+                    R.string.set_up_theme_settings,
+                )
+            )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 add(
                     SwitchSetting(

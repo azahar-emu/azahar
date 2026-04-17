@@ -7,8 +7,13 @@
 #include <fmt/format.h>
 #include <httplib.h>
 #include <json.hpp>
-#include "common/logging/log.h"
+#include "logging/log.h"
 #include "update_checker.h"
+
+std::string g_ca_cert_path;
+void UpdateChecker::SetCACertPath(std::string path) {
+    g_ca_cert_path = std::move(path);
+}
 
 std::optional<std::string> GetResponse(std::string url, std::string path) {
     constexpr std::size_t timeout_seconds = 15;
@@ -17,6 +22,8 @@ std::optional<std::string> GetResponse(std::string url, std::string path) {
     client->set_connection_timeout(timeout_seconds);
     client->set_read_timeout(timeout_seconds);
     client->set_write_timeout(timeout_seconds);
+
+    client->set_ca_cert_path(g_ca_cert_path.c_str());
 
     if (client == nullptr) {
         LOG_ERROR(Frontend, "Invalid URL {}{}", url, path);
@@ -50,7 +57,9 @@ std::optional<std::string> GetResponse(std::string url, std::string path) {
 }
 
 std::optional<std::string> UpdateChecker::GetLatestRelease(bool include_prereleases) {
+
     constexpr auto update_check_url = "http://api.github.com";
+
     std::string update_check_path = "/repos/azahar-emu/azahar";
     try {
         if (include_prereleases) { // This can return either a prerelease or a stable release,

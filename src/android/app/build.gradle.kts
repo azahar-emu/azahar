@@ -169,6 +169,11 @@ android {
             isDefault = true
             dimension = "version"
             versionNameSuffix = "-vanilla"
+            externalNativeBuild {
+                cmake {
+                    arguments += "-DENABLE_UPDATE_CHECKER=ON"
+                }
+            }
         }
         register("googlePlay") {
             dimension = "version"
