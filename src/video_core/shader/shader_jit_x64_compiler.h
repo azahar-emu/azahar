@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -115,9 +115,8 @@ private:
     /**
      * Emits data and code for utility functions.
      */
-    void CompilePrelude();
-    Xbyak::Label CompilePrelude_Log2();
-    Xbyak::Label CompilePrelude_Exp2();
+    void Compile_Log2(Xbyak::Label subroutine);
+    void Compile_Exp2(Xbyak::Label subroutine);
 
     const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code = nullptr;
     const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data = nullptr;
@@ -137,6 +136,10 @@ private:
 
     using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program = nullptr;
+
+    /// Library functions, emitted as used
+    bool log2_used : 1 = false;
+    bool exp2_used : 1 = false;
 
     Xbyak::Label log2_subroutine;
     Xbyak::Label exp2_subroutine;
