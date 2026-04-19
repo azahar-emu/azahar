@@ -132,8 +132,8 @@ public:
     /// Attaches a handle of surface to the specified framebuffer target
     void Attach(GLenum target, u32 level, u32 layer, bool scaled = true);
 
-    /// Scales up the surface to match the new resolution scale.
-    void ScaleUp(u32 new_scale);
+    /// Scales up the surface to match the new resolution scale and sample-count.
+    void ScaleUp(u32 new_scale, u8 new_sample_count);
 
     /// Returns the bpp of the internal surface format
     u32 GetInternalBytesPerPixel() const;

@@ -556,23 +556,31 @@ void Surface::Attach(GLenum target, u32 level, u32 layer, bool scaled) {
     }
 }
 
-void Surface::ScaleUp(u32 new_scale) {
-    if (res_scale == new_scale || new_scale == 1) {
+void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
+    if (res_scale == new_scale && sample_count == new_sample_count) {
         return;
     }
 
     res_scale = new_scale;
-    textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, tuple,
-                             DebugName(true));
+    sample_count = new_sample_count;
 
-    for (u32 level = 0; level < levels; level++) {
-        const VideoCore::TextureBlit blit = {
-            .src_level = level,
-            .dst_level = level,
-            .src_rect = GetRect(level),
-            .dst_rect = GetScaledRect(level),
-        };
-        BlitScale(blit, true);
+    if (res_scale > 1) {
+
+        textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, tuple,
+                                 DebugName(true));
+        for (u32 level = 0; level < levels; level++) {
+            const VideoCore::TextureBlit blit = {
+                .src_level = level,
+                .dst_level = level,
+                .src_rect = GetRect(level),
+                .dst_rect = GetScaledRect(level),
+            };
+            BlitScale(blit, true);
+        }
+    }
+
+    if (new_sample_count > 1) {
+        // Todo(wunk): OpenGL MSAA
     }
 }
 

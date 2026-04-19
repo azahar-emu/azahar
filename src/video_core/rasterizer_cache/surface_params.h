@@ -51,7 +51,7 @@ public:
     u32 LevelOf(PAddr addr) const;
 
     /// Returns a string identifier of the params object
-    std::string DebugName(bool scaled, bool custom = false) const noexcept;
+    std::string DebugName(bool scaled, bool custom = false, u8 sample_count = 1) const noexcept;
 
     bool operator==(const SurfaceParams& other) const noexcept;
 
@@ -69,6 +69,10 @@ public:
 
     [[nodiscard]] u32 GetScaledHeight() const noexcept {
         return height * res_scale;
+    }
+
+    [[nodiscard]] u8 GetSampleCount() const noexcept {
+        return sample_count;
     }
 
     [[nodiscard]] Common::Rectangle<u32> GetRect(u32 level = 0) const noexcept {
@@ -104,6 +108,7 @@ public:
     u32 stride = 0;
     u32 levels = 1;
     u32 res_scale = 1;
+    u8 sample_count = 1;
 
     bool is_tiled = false;
     TextureType texture_type = TextureType::Texture2D;
