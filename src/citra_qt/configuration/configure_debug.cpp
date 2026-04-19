@@ -110,6 +110,8 @@ void ConfigureDebug::SetConfiguration() {
 #ifndef ENABLE_SCRIPTING
     ui->enable_rpc_server->setVisible(false);
 #endif // !ENABLE_SCRIPTING
+    ui->enable_dev_ipc_server->setChecked(
+        UISettings::values.enable_dev_ipc_server.GetValue());
     ui->toggle_unique_data_console_type->setChecked(
         Settings::values.toggle_unique_data_console_type.GetValue());
 
@@ -151,6 +153,7 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.deterministic_async_operations =
         ui->deterministic_async_operations->isChecked();
     Settings::values.enable_rpc_server = ui->enable_rpc_server->isChecked();
+    UISettings::values.enable_dev_ipc_server = ui->enable_dev_ipc_server->isChecked();
     Settings::values.toggle_unique_data_console_type =
         ui->toggle_unique_data_console_type->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
