@@ -10,20 +10,24 @@ namespace Common {
 
 constexpr char help_string[] =
     "Usage: {} [options] <file path>\n"
-    "-d, --dump-video [path]     Dump video recording of emulator playback to the given file path\n"
-    "-f, --fullscreen            Start in fullscreen mode\n"
-    "-g, --gdbport [port]        Enable gdb stub on the given port\n"
-    "-h, --help                  Display this help and exit\n"
-    "-i, --install [path]        Install a CIA file at the given path\n"
-    "-p, --movie-play [path]     Play a TAS movie located at the given path\n"
-    "-r, --movie-record [path]   Record a TAS movie to the given file path\n"
+    "-d, --dump-video [path]              Dump video recording of emulator playback to the given file path\n"
+    "-f, --fullscreen                     Start in fullscreen mode\n"
+    "-g, --gdbport [port]                 Enable gdb stub on the given port\n"
+    "-h, --help                           Display this help and exit\n"
+    "-i, --install [path]                 Install a CIA file at the given path\n"
+    "-c, --compress [path]... -o [path]   Compress the cci/3ds/cxi/app/3dsx/cia files at the given path\n"
+    "                                     If \'-o [path]\' isnt used, it compresses in place\n"
+    "-x, --decompress [path]... -o [path] Decompress zcci/zcxi/z3dsx/zcia files at the given path\n"
+    "                                     If \'-o [path]\' isnt used, it decompresses in place\n"
+    "-p, --movie-play [path]              Play a TAS movie located at the given path\n"
+    "-r, --movie-record [path]            Record a TAS movie to the given file path\n"
     "-a, --movie-record-author [author]   Set the author for the recorded TAS movie (to be used "
     "alongside --movie-record)\n"
 #ifdef ENABLE_ROOM
-    "    --room                  Utilize dedicated multiplayer room functionality (equivalent to "
+    "    --room                           Utilize dedicated multiplayer room functionality (equivalent to "
     "the old citra-room executable)\n"
 #endif
-    "-v, --version               Output version information and exit\n"
-    "-w, --windowed              Start in windowed mode";
+    "-v, --version                        Output version information and exit\n"
+    "-w, --windowed                       Start in windowed mode";
 
 } // namespace Common

@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <qfuture.h>
 #ifdef __unix__
 #include <QDBusObjectPath>
 #endif
@@ -292,7 +293,9 @@ private slots:
     void OnCaptureScreenshot();
     void OnDumpVideo();
     void OnCompressFile();
+    void OnCompressFileCLI();
     void OnDecompressFile();
+    void OnDecompressFileCLI();
 #ifdef _WIN32
     void OnOpenFFmpeg();
 #endif
@@ -401,6 +404,13 @@ private:
     // Video dumping
     bool video_dumping_on_start = false;
     QString video_dumping_path;
+
+    // Compress/Decompress Paths and Future
+    QStringList compress_paths;
+    QStringList decompress_paths;
+    QString cli_out_path;
+    QFuture<void> compression_future;
+
     // Whether game shutdown is delayed due to video dumping
     bool game_shutdown_delayed = false;
     // Whether game was paused due to stopping video dumping
@@ -408,7 +418,6 @@ private:
 
     QString gl_renderer;
     std::vector<QString> physical_devices;
-
     // Debugger panes
     ProfilerWidget* profilerWidget;
 #if MICROPROFILE_ENABLED
