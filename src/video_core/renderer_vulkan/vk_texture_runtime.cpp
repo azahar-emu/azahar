@@ -887,7 +887,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     }
 
     // Upscaled+MSAA image
-    if (vk::SampleCountFlagBits(sample_count) > vk::SampleCountFlagBits::e1) {
+    if (sample_count > 1) {
         handles[Type::MultiSampled].Create(
             GetScaledWidth(), GetScaledHeight(), levels, texture_type, format,
             vk::SampleCountFlagBits(sample_count), traits.usage, flags, traits.aspect,
@@ -895,8 +895,6 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         raw_images.emplace_back(handles[Type::MultiSampled].image);
     }
 
-    // current = sample_count != 1 ? Type::MultiSampled : res_scale != 1 ? Type::Scaled :
-    // Type::Base;
     current = res_scale != 1 ? Type::Scaled : Type::Base;
 
     runtime.renderpass_cache.EndRendering();
@@ -956,8 +954,6 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
         raw_images.emplace_back(handles[Type::Custom].image);
     }
 
-    // current = sample_count != 1 ? Type::MultiSampled : res_scale != 1 ? Type::Scaled :
-    // Type::Base;
     current = res_scale != 1 ? Type::Scaled : Type::Base;
 
     runtime.renderpass_cache.EndRendering();
@@ -1223,7 +1219,6 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
 }
 
 void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
-
     const bool is_mutable = pixel_format == VideoCore::PixelFormat::RGBA8;
 
     vk::ImageCreateFlags flags{};
@@ -1234,13 +1229,15 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
         flags |= vk::ImageCreateFlagBits::eMutableFormat;
     }
 
+    bool res_scale_modified = false;
     if (res_scale != new_scale && res_scale > 1) {
+        res_scale_modified = res_scale != new_scale;
+        res_scale = new_scale;
 
         handles[Type::Scaled].Create(GetScaledWidth(), GetScaledHeight(), levels, texture_type,
                                      traits.native, vk::SampleCountFlagBits::e1, traits.usage,
                                      flags, traits.aspect, false, DebugName(true));
         current = Type::Scaled;
-        res_scale = new_scale;
 
         runtime.renderpass_cache.EndRendering();
         scheduler.Record(
@@ -1263,23 +1260,23 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
         }
     }
 
-    if (sample_count != new_sample_count && sample_count > 1) {
+    if ((res_scale_modified || sample_count != new_sample_count) && sample_count > 1) {
+        sample_count = new_sample_count;
         handles[Type::MultiSampled].Create(GetScaledWidth(), GetScaledHeight(), levels,
                                            texture_type, traits.native,
                                            vk::SampleCountFlagBits(sample_count), traits.usage,
                                            flags, traits.aspect, false, DebugName(true));
         // current = Type::MultiSampled;
-        sample_count = new_sample_count;
 
         runtime.renderpass_cache.EndRendering();
         scheduler.Record([raw_images = std::array{Image(Type::MultiSampled)},
                           aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
-                std::array<vk::ImageMemoryBarrier, 1> barriers;
-                MakeInitBarriers(aspect, 1, raw_images, barriers);
-                cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-                                       vk::PipelineStageFlagBits::eTopOfPipe,
-                                       vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
-            });
+            std::array<vk::ImageMemoryBarrier, 1> barriers;
+            MakeInitBarriers(aspect, 1, raw_images, barriers);
+            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+                                   vk::PipelineStageFlagBits::eTopOfPipe,
+                                   vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
+        });
     }
 }
 
