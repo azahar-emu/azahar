@@ -449,6 +449,8 @@ bool Instance::CreateDevice() {
 
     add_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
+    create_renderpass2 = add_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
+    depth_stencil_resolve = add_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     external_memory_host = add_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
     tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME);
@@ -518,9 +520,11 @@ bool Instance::CreateDevice() {
             .features{
                 .robustBufferAccess = features.robustBufferAccess,
                 .geometryShader = features.geometryShader,
+                .sampleRateShading = features.sampleRateShading,
                 .logicOp = features.logicOp,
                 .samplerAnisotropy = features.samplerAnisotropy,
                 .fragmentStoresAndAtomics = features.fragmentStoresAndAtomics,
+                .shaderStorageImageMultisample = features.shaderStorageImageMultisample,
                 .shaderClipDistance = features.shaderClipDistance,
             },
         },
