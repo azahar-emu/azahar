@@ -231,7 +231,7 @@ private:
     void ShowFFmpegErrorMessage();
 
 private slots:
-    void OnStartGame();
+    void OnResumeGame(bool first_start);
     void OnRestartGame();
     void OnPauseGame();
     void OnPauseContinueGame();

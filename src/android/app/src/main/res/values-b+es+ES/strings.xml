@@ -566,6 +566,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>
+    <string name="delete_shader_cache">Eliminar caché de sombreadores </string>
+    <string name="delete_cache_select_backend">Selecciona la API gráfica para eliminar la caché de sombreadores</string>
+    <string name="deleting_shader_cache">Eliminando la caché de sombreadores, por favor espere…</string>
+    <string name="shader_cache_deleted">Caché de sombreadores eliminada</string>
 
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>

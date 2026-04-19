@@ -366,7 +366,7 @@ GMainWindow::GMainWindow(Core::System& system_)
 
 #ifdef USE_DISCORD_PRESENCE
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
-    discord_rpc->Update();
+    discord_rpc->Update(false);
 #endif
 
     play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
@@ -975,7 +975,7 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
             OnPauseGame();
         } else if (!emu_thread->IsRunning() && auto_paused && state == Qt::ApplicationActive) {
             auto_paused = false;
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
     if (UISettings::values.mute_when_in_background) {
@@ -1530,7 +1530,7 @@ void GMainWindow::BootGame(const QString& filename) {
         ShowFullscreen();
     }
 
-    OnStartGame();
+    OnResumeGame(true);
 }
 
 void GMainWindow::ShutdownGame() {
@@ -1583,7 +1583,7 @@ void GMainWindow::ShutdownGame() {
     OnCloseMovie();
 
 #ifdef USE_DISCORD_PRESENCE
-    discord_rpc->Update();
+    discord_rpc->Update(false);
 #endif
 #ifdef __unix__
     Common::Linux::StopGamemode();
@@ -2508,7 +2508,7 @@ void GMainWindow::OnMenuRecentFile() {
     }
 }
 
-void GMainWindow::OnStartGame() {
+void GMainWindow::OnResumeGame(bool first_start) {
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2525,9 +2525,12 @@ void GMainWindow::OnStartGame() {
     play_time_manager->SetProgramId(game_title_id);
     play_time_manager->Start();
 
+    if (first_start) {
 #ifdef USE_DISCORD_PRESENCE
-    discord_rpc->Update();
+        discord_rpc->Update(true);
 #endif
+    }
+
 #ifdef __unix__
     Common::Linux::StartGamemode();
 #endif
@@ -2563,7 +2566,7 @@ void GMainWindow::OnPauseContinueGame() {
         if (emu_thread->IsRunning() && !system.frame_limiter.IsFrameAdvancing()) {
             OnPauseGame();
         } else {
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
 }
@@ -2865,6 +2868,7 @@ void GMainWindow::OnConfigure() {
 #ifdef USE_DISCORD_PRESENCE
         if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
+            discord_rpc->Update(system.IsPoweredOn());
         }
 #endif
 #ifdef __unix__
@@ -3032,7 +3036,7 @@ void GMainWindow::OnCloseMovie() {
         }
 
         if (was_running) {
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
 
@@ -3054,7 +3058,7 @@ void GMainWindow::OnSaveMovie() {
     }
 
     if (was_running) {
-        OnStartGame();
+        OnResumeGame(false);
     }
 }
 
@@ -3098,7 +3102,7 @@ void GMainWindow::OnCaptureScreenshot() {
         screenshot_window->CaptureScreenshot(
             UISettings::values.screenshot_resolution_factor.GetValue(),
             QString::fromStdString(path));
-        OnStartGame();
+        OnResumeGame(false);
     }
 }
 
@@ -3501,7 +3505,7 @@ void GMainWindow::OnStopVideoDumping() {
                 ShutdownGame();
             } else if (game_paused_for_dumping) {
                 game_paused_for_dumping = false;
-                OnStartGame();
+                OnResumeGame(false);
             }
         });
         future_watcher->setFuture(future);
@@ -4235,7 +4239,6 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
     } else {
         discord_rpc = std::make_unique<DiscordRPC::NullImpl>();
     }
-    discord_rpc->Update();
 }
 #endif
 

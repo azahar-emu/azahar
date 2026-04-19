@@ -648,7 +648,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
             case TextureType::Shadow2D: {
                 Surface& surface = res_cache.GetTextureSurface(texture);
                 Sampler& sampler = res_cache.GetSampler(texture.config);
-                surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+                surface.flags |= VideoCore::SurfaceFlagBits::ShadowSource;
                 update_queue.AddImageSampler(texture_set, texture_index, 0, surface.StorageView(),
                                              sampler.Handle());
                 continue;
@@ -704,7 +704,7 @@ void RasterizerVulkan::BindShadowCube(const Pica::TexturingRegs::FullTextureConf
 
         const VideoCore::SurfaceId surface_id = res_cache.GetTextureSurface(info);
         Surface& surface = res_cache.GetSurface(surface_id);
-        surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+        surface.flags |= VideoCore::SurfaceFlagBits::ShadowSource;
         update_queue.AddImageSampler(texture_set, 0, binding, surface.StorageView(),
                                      sampler.Handle());
     }

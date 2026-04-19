@@ -566,6 +566,10 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparant ombrejadors</string>
     <string name="building_shaders">Construint%s</string>
+    <string name="delete_shader_cache">Eliminar cache d\'ombrejadors</string>
+    <string name="delete_cache_select_backend">Selecciona l\'API gràfica per a eliminar la cache d\'ombrejadors</string>
+    <string name="deleting_shader_cache">Eliminant la caché d\'ombrejadors, per favor espere…</string>
+    <string name="shader_cache_deleted">Caché d\'ombrejadors eliminada</string>
 
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>

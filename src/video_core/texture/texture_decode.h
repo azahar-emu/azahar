@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,6 +19,7 @@ struct TextureInfo {
     u32 height;
     ptrdiff_t stride;
     TexturingRegs::TextureFormat format;
+    bool is_shadow_source;
 
     static TextureInfo FromPicaRegister(const TexturingRegs::TextureConfig& config,
                                         const TexturingRegs::TextureFormat& format);
