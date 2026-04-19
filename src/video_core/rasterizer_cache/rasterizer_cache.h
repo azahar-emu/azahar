@@ -780,7 +780,6 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         .color_level = color_level,
         .depth_level = depth_level,
         .shadow_rendering = regs.framebuffer.IsShadowRendering(),
-        .sample_count = sample_count,
     };
 
     auto [it, new_framebuffer] = framebuffers.try_emplace(fb_params);
