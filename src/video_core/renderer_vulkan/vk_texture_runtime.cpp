@@ -742,7 +742,8 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
                  const VideoCore::SurfaceFlagBits& initial_flag_bits)
     : SurfaceBase{params, initial_flag_bits}, runtime{runtime_}, instance{runtime_.GetInstance()},
       scheduler{runtime_.GetScheduler()}, traits{instance.GetTraits(pixel_format)},
-      handles{Handle(instance), Handle(instance), Handle(instance), Handle(instance)} {
+      handles{Handle(instance), Handle(instance), Handle(instance), Handle(instance),
+              Handle(instance)} {
 
     if (pixel_format == VideoCore::PixelFormat::Invalid || !traits.transfer_support) {
         return;
@@ -816,7 +817,8 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
                  const VideoCore::Material* mat)
     : SurfaceBase{surface}, runtime{runtime_}, instance{runtime_.GetInstance()},
       scheduler{runtime_.GetScheduler()}, traits{instance.GetTraits(mat->format)},
-      handles{Handle(instance), Handle(instance), Handle(instance), Handle(instance)} {
+      handles{Handle(instance), Handle(instance), Handle(instance), Handle(instance),
+              Handle(instance)} {
     if (!traits.transfer_support) {
         return;
     }
@@ -1112,12 +1114,13 @@ void Surface::Download(const VideoCore::BufferTextureCopy& download,
         });
 }
 
-void Surface::ScaleUp(u32 new_scale) {
-    if (res_scale == new_scale || new_scale == 1) {
+void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
+    if (res_scale == new_scale && sample_count == new_sample_count) {
         return;
     }
 
     res_scale = new_scale;
+    sample_count = new_sample_count;
 
     const bool is_mutable = pixel_format == VideoCore::PixelFormat::RGBA8;
 
@@ -1129,10 +1132,12 @@ void Surface::ScaleUp(u32 new_scale) {
         flags |= vk::ImageCreateFlagBits::eMutableFormat;
     }
 
-    handles[Type::Scaled].Create(GetScaledWidth(), GetScaledHeight(), levels, texture_type,
-                                 traits.native, traits.usage, flags, traits.aspect, false,
-                                 DebugName(true));
-    current = Type::Scaled;
+    if (res_scale > 1) {
+
+        handles[Type::Scaled].Create(GetScaledWidth(), GetScaledHeight(), levels, texture_type,
+                                     traits.native, traits.usage, flags, traits.aspect, false,
+                                     DebugName(true));
+        current = Type::Scaled;
 
     handles[Type::Copy].Destroy();
 
@@ -1146,14 +1151,19 @@ void Surface::ScaleUp(u32 new_scale) {
                                    vk::DependencyFlagBits::eByRegion, {}, {}, barriers);
         });
 
-    for (u32 level = 0; level < levels; level++) {
-        const VideoCore::TextureBlit blit = {
-            .src_level = level,
-            .dst_level = level,
-            .src_rect = GetRect(level),
-            .dst_rect = GetScaledRect(level),
-        };
-        BlitScale(blit, true);
+        for (u32 level = 0; level < levels; level++) {
+            const VideoCore::TextureBlit blit = {
+                .src_level = level,
+                .dst_level = level,
+                .src_rect = GetRect(level),
+                .dst_rect = GetScaledRect(level),
+            };
+            BlitScale(blit, true);
+        }
+    }
+
+    if (new_sample_count > 1) {
+        // Todo(wunk): Vulkan MSAA
     }
 }
 
