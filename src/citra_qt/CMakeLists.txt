@@ -277,6 +277,10 @@ target_link_libraries(citra_qt PRIVATE audio_core citra_common citra_core input_
 target_link_libraries(citra_qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
 target_link_libraries(citra_qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
+if (MINGW)
+    target_link_libraries(citra_qt PRIVATE dwmapi)
+endif()
+
 if (ENABLE_OPENGL)
     target_link_libraries(citra_qt PRIVATE glad)
 endif()

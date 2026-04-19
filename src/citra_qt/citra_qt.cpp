@@ -142,6 +142,61 @@ constexpr int default_mouse_timeout = 2500;
 
 const int GMainWindow::max_recent_files_item;
 
+// There is a bug in the QT implementation on MSYS2 builds
+// that cause corners to appear when the app is switched to
+// fullscreen. The following code aims to fix that issue
+// until it is addressed upstream. It works by manually
+// disabling corners through the DWM API.
+// TODO(PabloMK7): Remove once the upstream bug is solved.
+#if defined(_WIN32) && !defined(_MSC_VER)
+#define NEEDS_ROUND_CORNERS_FIX
+#endif
+
+#ifdef NEEDS_ROUND_CORNERS_FIX
+#include <dwmapi.h>
+class WindowCornerManager {
+public:
+    static WindowCornerManager& instance() {
+        static WindowCornerManager inst;
+        return inst;
+    }
+
+    void blockRoundedCorners(QWidget* widget, bool block) {
+        HWND hwnd = reinterpret_cast<HWND>(widget->winId());
+        DWORD pref;
+
+        if (block) {
+            pref = DWMWCP_DEFAULT;
+            if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref,
+                                                sizeof(pref)))) {
+                original_prefs[hwnd] = pref;
+            } else {
+                original_prefs[hwnd] = DWMWCP_DEFAULT;
+            }
+
+            pref = DWMWCP_DONOTROUND;
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+        } else {
+            auto it = original_prefs.find(hwnd);
+            if (it == original_prefs.end())
+                return;
+
+            pref = it->second;
+
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+
+            original_prefs.erase(it);
+        }
+    }
+
+private:
+    WindowCornerManager() = default;
+    ~WindowCornerManager() = default;
+
+    std::unordered_map<HWND, DWORD> original_prefs;
+};
+#endif
+
 static QString PrettyProductName() {
 #ifdef _WIN32
     // After Windows 10 Version 2004, Microsoft decided to switch to a different notation: 20H2
@@ -2605,8 +2660,14 @@ void GMainWindow::ToggleSecondaryFullscreen() {
         return;
     }
     if (secondary_window->isFullScreen()) {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(secondary_window, false);
+#endif
         secondary_window->showNormal();
     } else {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(secondary_window, true);
+#endif
         secondary_window->showFullScreen();
     }
 }
@@ -2616,9 +2677,15 @@ void GMainWindow::ShowFullscreen() {
         UISettings::values.geometry = saveGeometry();
         ui->menubar->hide();
         statusBar()->hide();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(this, true);
+#endif
         showFullScreen();
     } else {
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(render_window, true);
+#endif
         render_window->showFullScreen();
     }
 }
@@ -2627,9 +2694,15 @@ void GMainWindow::HideFullscreen() {
     if (ui->action_Single_Window_Mode->isChecked()) {
         statusBar()->setVisible(ui->action_Show_Status_Bar->isChecked());
         ui->menubar->show();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(this, false);
+#endif
         showNormal();
         restoreGeometry(UISettings::values.geometry);
     } else {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(render_window, false);
+#endif
         render_window->showNormal();
         render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
     }
