@@ -45,6 +45,7 @@ import org.citra.citra_emu.features.settings.model.view.StringSingleChoiceSettin
 import org.citra.citra_emu.features.settings.model.view.SubmenuSetting
 import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
+import org.citra.citra_emu.fragments.DisplayProfilesDialogFragment
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
 import org.citra.citra_emu.utils.Log
@@ -1201,6 +1202,20 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.secondaryLayoutValues,
                     IntSetting.SECONDARY_DISPLAY_LAYOUT.key,
                     IntSetting.SECONDARY_DISPLAY_LAYOUT.defaultValue
+                )
+            )
+            add(
+                RunnableSetting(
+                    R.string.display_profiles,
+                    R.string.display_profiles_description,
+                    false,
+                    R.drawable.ic_fit_screen,
+                    {
+                        DisplayProfilesDialogFragment().show(
+                            settingsActivity.supportFragmentManager,
+                            DisplayProfilesDialogFragment.TAG
+                        )
+                    }
                 )
             )
             add(
