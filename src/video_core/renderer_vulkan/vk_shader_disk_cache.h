@@ -142,13 +142,13 @@ private:
     static_assert(sizeof(GSConfigEntry) == 48);
 
     struct PLConfigEntry {
-        static constexpr u8 EXPECTED_VERSION = 0;
+        static constexpr u8 EXPECTED_VERSION = 1;
 
         u64 version; // Surprise tool that can help us later
 
         StaticPipelineInfo pl_info;
     };
-    static_assert(sizeof(PLConfigEntry) == 152);
+    static_assert(sizeof(PLConfigEntry) == 160);
 
     class CacheFile;
     class CacheEntry {
