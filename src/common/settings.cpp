@@ -97,6 +97,7 @@ void LogSettings() {
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
     log_setting("Renderer_UseResolutionFactor", values.resolution_factor.GetValue());
+    log_setting("Renderer_SampleCount", values.sample_count.GetValue());
     log_setting("Renderer_UseIntegerScaling", values.use_integer_scaling.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
     log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
@@ -210,6 +211,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
+    values.sample_count.SetGlobal(true);
     values.use_integer_scaling.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);

@@ -21,6 +21,8 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     const auto graphics_api = Settings::values.graphics_api.GetValue();
     const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
     ui->resolution_factor_combobox->setEnabled(res_scale_enabled);
+    const bool msaa_enabled = graphics_api == Settings::GraphicsAPI::Vulkan;
+    ui->sample_count_combobox->setEnabled(msaa_enabled);
 
     connect(ui->render_3d_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
@@ -44,6 +46,8 @@ void ConfigureEnhancements::SetConfiguration() {
     if (!Settings::IsConfiguringGlobal()) {
         ConfigurationShared::SetPerGameSetting(ui->resolution_factor_combobox,
                                                &Settings::values.resolution_factor);
+        ConfigurationShared::SetPerGameSetting(ui->sample_count_combobox,
+                                               &Settings::values.sample_count);
         ConfigurationShared::SetPerGameSetting(ui->texture_filter_combobox,
                                                &Settings::values.texture_filter);
         ConfigurationShared::SetHighlight(ui->widget_texture_filter,
@@ -51,6 +55,8 @@ void ConfigureEnhancements::SetConfiguration() {
     } else {
         ui->resolution_factor_combobox->setCurrentIndex(
             Settings::values.resolution_factor.GetValue());
+        ui->sample_count_combobox->setCurrentIndex(
+            static_cast<int>(Settings::values.sample_count.GetValue()));
         ui->texture_filter_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.texture_filter.GetValue()));
     }
@@ -111,6 +117,8 @@ void ConfigureEnhancements::RetranslateUI() {
 void ConfigureEnhancements::ApplyConfiguration() {
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.resolution_factor,
                                              ui->resolution_factor_combobox);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.sample_count,
+                                             ui->sample_count_combobox);
     Settings::values.render_3d =
         static_cast<Settings::StereoRenderOption>(ui->render_3d_combobox->currentIndex());
     Settings::values.swap_eyes_3d = ui->swap_eyes_3d->isChecked();
@@ -149,6 +157,7 @@ void ConfigureEnhancements::SetupPerGameUI() {
     // Block the global settings if a game is currently running that overrides them
     if (Settings::IsConfiguringGlobal()) {
         ui->widget_resolution->setEnabled(Settings::values.resolution_factor.UsingGlobal());
+        ui->widget_sample_count->setEnabled(Settings::values.sample_count.UsingGlobal());
         ui->widget_texture_filter->setEnabled(Settings::values.texture_filter.UsingGlobal());
         ui->toggle_linear_filter->setEnabled(Settings::values.filter_mode.UsingGlobal());
         ui->use_integer_scaling->setEnabled(Settings::values.use_integer_scaling.UsingGlobal());
@@ -188,6 +197,10 @@ void ConfigureEnhancements::SetupPerGameUI() {
     ConfigurationShared::SetColoredComboBox(
         ui->resolution_factor_combobox, ui->widget_resolution,
         static_cast<int>(Settings::values.resolution_factor.GetValue(true)));
+
+    ConfigurationShared::SetColoredComboBox(
+        ui->sample_count_combobox, ui->widget_sample_count,
+        static_cast<int>(Settings::values.sample_count.GetValue(true)));
 
     ConfigurationShared::SetColoredComboBox(
         ui->texture_filter_combobox, ui->widget_texture_filter,
