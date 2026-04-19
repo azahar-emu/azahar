@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <limits>
+#include <boost/container/static_vector.hpp>
 #include "common/assert.h"
 #include "video_core/rasterizer_cache/pixel_format.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -37,7 +39,7 @@ void RenderManager::BeginRendering(const Framebuffer* framebuffer,
         .framebuffer = framebuffer->Handle(),
         .render_pass = framebuffer->RenderPass(),
         .render_area = render_area,
-        .clear = {},
+        .clears = {},
         .do_clear = false,
     };
     images = framebuffer->Images();
@@ -58,8 +60,8 @@ void RenderManager::BeginRendering(const RenderPass& new_pass) {
             .renderPass = info.render_pass,
             .framebuffer = info.framebuffer,
             .renderArea = info.render_area,
-            .clearValueCount = info.do_clear ? 1u : 0u,
-            .pClearValues = &info.clear,
+            .clearValueCount = info.do_clear ? 2u : 0u,
+            .pClearValues = info.clears.data(),
         };
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
     });
@@ -77,7 +79,7 @@ void RenderManager::EndRendering() {
         u32 num_barriers = 0;
         vk::PipelineStageFlags pipeline_flags{};
         vk::AccessFlags src_access_flags{};
-        std::array<vk::ImageMemoryBarrier, 2> barriers;
+        std::array<vk::ImageMemoryBarrier, 4> barriers;
         for (u32 i = 0; i < images.size(); i++) {
             if (!images[i]) {
                 continue;
@@ -138,7 +140,8 @@ void RenderManager::EndRendering() {
 }
 
 vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
-                                            VideoCore::PixelFormat depth, bool is_clear) {
+                                            VideoCore::PixelFormat depth, bool is_clear,
+                                            u8 sample_count) {
     std::scoped_lock lock{cache_mutex};
 
     const u32 color_index =
@@ -151,13 +154,23 @@ vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
     ASSERT_MSG(color_index <= NumColorFormats && depth_index <= NumDepthFormats,
                "Invalid color index {} and/or depth_index {}", color_index, depth_index);
 
-    vk::UniqueRenderPass& renderpass = cached_renderpasses[color_index][depth_index][is_clear];
+    ASSERT_MSG(sample_count && std::has_single_bit(sample_count) && sample_count <= MaxSamples,
+               "Invalid sample count {}", static_cast<u32>(sample_count));
+
+    const u32 samples_index = static_cast<u32>(std::bit_width(sample_count) - 1);
+
+    vk::UniqueRenderPass& renderpass =
+        cached_renderpasses[color_index][depth_index][samples_index][is_clear];
     if (!renderpass) {
         const vk::Format color_format = instance.GetTraits(color).native;
         const vk::Format depth_format = instance.GetTraits(depth).native;
         const vk::AttachmentLoadOp load_op =
             is_clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
-        renderpass = CreateRenderPass(color_format, depth_format, load_op);
+
+        renderpass = (sample_count > 1)
+                         ? CreateRenderPassMSAA(color_format, depth_format, load_op,
+                                                static_cast<vk::SampleCountFlagBits>(sample_count))
+                         : CreateRenderPass(color_format, depth_format, load_op);
     }
 
     return *renderpass;
@@ -165,27 +178,27 @@ vk::RenderPass RenderManager::GetRenderpass(VideoCore::PixelFormat color,
 
 vk::UniqueRenderPass RenderManager::CreateRenderPass(vk::Format color, vk::Format depth,
                                                      vk::AttachmentLoadOp load_op) const {
-    u32 attachment_count = 0;
-    std::array<vk::AttachmentDescription, 2> attachments;
 
+    boost::container::static_vector<vk::AttachmentDescription, 2> attachments{};
     bool use_color = false;
     vk::AttachmentReference color_attachment_ref{};
     bool use_depth = false;
     vk::AttachmentReference depth_attachment_ref{};
 
     if (color != vk::Format::eUndefined) {
-        attachments[attachment_count] = vk::AttachmentDescription{
+        attachments.emplace_back(vk::AttachmentDescription{
             .format = color,
+            .samples = vk::SampleCountFlagBits::e1,
             .loadOp = load_op,
             .storeOp = vk::AttachmentStoreOp::eStore,
             .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
             .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
             .initialLayout = vk::ImageLayout::eGeneral,
             .finalLayout = vk::ImageLayout::eGeneral,
-        };
+        });
 
         color_attachment_ref = vk::AttachmentReference{
-            .attachment = attachment_count++,
+            .attachment = static_cast<u32>(attachments.size() - 1),
             .layout = vk::ImageLayout::eGeneral,
         };
 
@@ -193,18 +206,19 @@ vk::UniqueRenderPass RenderManager::CreateRenderPass(vk::Format color, vk::Forma
     }
 
     if (depth != vk::Format::eUndefined) {
-        attachments[attachment_count] = vk::AttachmentDescription{
+        attachments.emplace_back(vk::AttachmentDescription{
             .format = depth,
+            .samples = vk::SampleCountFlagBits::e1,
             .loadOp = load_op,
             .storeOp = vk::AttachmentStoreOp::eStore,
             .stencilLoadOp = load_op,
             .stencilStoreOp = vk::AttachmentStoreOp::eStore,
             .initialLayout = vk::ImageLayout::eGeneral,
             .finalLayout = vk::ImageLayout::eGeneral,
-        };
+        });
 
         depth_attachment_ref = vk::AttachmentReference{
-            .attachment = attachment_count++,
+            .attachment = static_cast<u32>(attachments.size() - 1),
             .layout = vk::ImageLayout::eGeneral,
         };
 
@@ -217,12 +231,11 @@ vk::UniqueRenderPass RenderManager::CreateRenderPass(vk::Format color, vk::Forma
         .pInputAttachments = nullptr,
         .colorAttachmentCount = use_color ? 1u : 0u,
         .pColorAttachments = &color_attachment_ref,
-        .pResolveAttachments = 0,
         .pDepthStencilAttachment = use_depth ? &depth_attachment_ref : nullptr,
     };
 
     const vk::RenderPassCreateInfo renderpass_info = {
-        .attachmentCount = attachment_count,
+        .attachmentCount = static_cast<u32>(attachments.size()),
         .pAttachments = attachments.data(),
         .subpassCount = 1,
         .pSubpasses = &subpass,
@@ -231,6 +244,134 @@ vk::UniqueRenderPass RenderManager::CreateRenderPass(vk::Format color, vk::Forma
     };
 
     return instance.GetDevice().createRenderPassUnique(renderpass_info);
+}
+
+vk::UniqueRenderPass RenderManager::CreateRenderPassMSAA(
+    vk::Format color, vk::Format depth, vk::AttachmentLoadOp load_op,
+    vk::SampleCountFlagBits sample_count) const {
+    boost::container::static_vector<vk::AttachmentDescription2, 4> attachments{};
+
+    vk::AttachmentReference2 color_resolve_attachment = {.attachment = VK_ATTACHMENT_UNUSED};
+    vk::AttachmentReference2 depth_resolve_attachment = {.attachment = VK_ATTACHMENT_UNUSED};
+
+    bool use_color = false;
+    vk::AttachmentReference2 color_attachment_ref{};
+    bool use_depth = false;
+    vk::AttachmentReference2 depth_attachment_ref{};
+
+    if (color != vk::Format::eUndefined) {
+        attachments.emplace_back(vk::AttachmentDescription2{
+            .format = color,
+            .samples = vk::SampleCountFlagBits::e1,
+            .loadOp = load_op,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+            .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+            .initialLayout = vk::ImageLayout::eGeneral,
+            .finalLayout = vk::ImageLayout::eGeneral,
+        });
+
+        color_attachment_ref = vk::AttachmentReference2{
+            .attachment = static_cast<u32>(attachments.size() - 1),
+            .layout = vk::ImageLayout::eGeneral,
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+        };
+
+        use_color = true;
+    }
+
+    if (depth != vk::Format::eUndefined) {
+        attachments.emplace_back(vk::AttachmentDescription2{
+            .format = depth,
+            .samples = vk::SampleCountFlagBits::e1,
+            .loadOp = load_op,
+            .storeOp = vk::AttachmentStoreOp::eStore,
+            .stencilLoadOp = load_op,
+            .stencilStoreOp = vk::AttachmentStoreOp::eStore,
+            .initialLayout = vk::ImageLayout::eGeneral,
+            .finalLayout = vk::ImageLayout::eGeneral,
+        });
+
+        depth_attachment_ref = vk::AttachmentReference2{
+            .attachment = static_cast<u32>(attachments.size() - 1),
+            .layout = vk::ImageLayout::eGeneral,
+            .aspectMask = vk::ImageAspectFlagBits::eDepth,
+        };
+
+        use_depth = true;
+    }
+
+    // In the case of MSAA, each attachment gets an additional MSAA attachment that now becomes the
+    // main attachment and the original attachments now get resolved into
+    if (sample_count > vk::SampleCountFlagBits::e1) {
+        if (color != vk::Format::eUndefined) {
+            attachments.emplace_back(vk::AttachmentDescription2{
+                .format = color,
+                .samples = sample_count,
+                .loadOp = load_op,
+                .storeOp = vk::AttachmentStoreOp::eStore,
+                .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+                .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+                .initialLayout = vk::ImageLayout::eGeneral,
+                .finalLayout = vk::ImageLayout::eGeneral,
+            });
+
+            color_resolve_attachment = color_attachment_ref;
+
+            color_attachment_ref = vk::AttachmentReference2{
+                .attachment = static_cast<u32>(attachments.size() - 1),
+                .layout = vk::ImageLayout::eGeneral,
+            };
+        }
+
+        if (depth != vk::Format::eUndefined) {
+            attachments.emplace_back(vk::AttachmentDescription2{
+                .format = depth,
+                .samples = sample_count,
+                .loadOp = load_op,
+                .storeOp = vk::AttachmentStoreOp::eStore,
+                .stencilLoadOp = load_op,
+                .stencilStoreOp = vk::AttachmentStoreOp::eStore,
+                .initialLayout = vk::ImageLayout::eGeneral,
+                .finalLayout = vk::ImageLayout::eGeneral,
+            });
+
+            depth_resolve_attachment = depth_attachment_ref;
+
+            depth_attachment_ref = vk::AttachmentReference2{
+                .attachment = static_cast<u32>(attachments.size() - 1),
+                .layout = vk::ImageLayout::eGeneral,
+            };
+        }
+    }
+
+    const vk::StructureChain<vk::SubpassDescription2, vk::SubpassDescriptionDepthStencilResolve>
+        subpass = {
+            vk::SubpassDescription2{
+                .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+                .inputAttachmentCount = 0,
+                .pInputAttachments = nullptr,
+                .colorAttachmentCount = use_color ? 1u : 0u,
+                .pColorAttachments = &color_attachment_ref,
+                .pResolveAttachments = &color_resolve_attachment,
+                .pDepthStencilAttachment = use_depth ? &depth_attachment_ref : nullptr,
+            },
+            vk::SubpassDescriptionDepthStencilResolve{
+                .depthResolveMode = vk::ResolveModeFlagBits::eSampleZero,
+                .stencilResolveMode = vk::ResolveModeFlagBits::eSampleZero,
+                .pDepthStencilResolveAttachment = &depth_resolve_attachment},
+        };
+
+    const vk::RenderPassCreateInfo2 renderpass_info = {
+        .attachmentCount = static_cast<u32>(attachments.size()),
+        .pAttachments = attachments.data(),
+        .subpassCount = 1,
+        .pSubpasses = &subpass.get(),
+        .dependencyCount = 0,
+        .pDependencies = nullptr,
+    };
+
+    return instance.GetDevice().createRenderPass2Unique(renderpass_info);
 }
 
 } // namespace Vulkan
