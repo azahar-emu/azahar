@@ -195,7 +195,7 @@ private:
 
     std::unordered_map<HWND, DWORD> original_prefs;
 };
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
 
 static QString PrettyProductName() {
 #ifdef _WIN32
@@ -2662,12 +2662,12 @@ void GMainWindow::ToggleSecondaryFullscreen() {
     if (secondary_window->isFullScreen()) {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, false);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         secondary_window->showNormal();
     } else {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, true);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         secondary_window->showFullScreen();
     }
 }
@@ -2679,13 +2679,13 @@ void GMainWindow::ShowFullscreen() {
         statusBar()->hide();
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(this, true);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         showFullScreen();
     } else {
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(render_window, true);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         render_window->showFullScreen();
     }
 }
@@ -2696,13 +2696,13 @@ void GMainWindow::HideFullscreen() {
         ui->menubar->show();
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(this, false);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         showNormal();
         restoreGeometry(UISettings::values.geometry);
     } else {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(render_window, false);
-#endif // NEEDS_ROUND_CORNERS_FIX
+#endif
         render_window->showNormal();
         render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
     }
