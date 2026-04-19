@@ -308,7 +308,8 @@ public:
           formats(std::exchange(
               other.formats, {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid})),
           width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
-          res_scale(std::exchange(other.res_scale, 1)) {}
+          res_scale(std::exchange(other.res_scale, 1)),
+          sample_count(std::exchange(other.sample_count, 1)) {}
 
     Framebuffer& operator=(Framebuffer&& other) noexcept {
         VideoCore::FramebufferParams::operator=(std::move(other));
@@ -323,6 +324,7 @@ public:
         width = std::exchange(other.width, 0);
         height = std::exchange(other.height, 0);
         res_scale = std::exchange(other.res_scale, 1);
+        sample_count = std::exchange(other.sample_count, 1);
 
         return *this;
     }
@@ -351,12 +353,12 @@ public:
         return render_pass;
     }
 
-    u8 Samples() const noexcept {
-        return sample_count;
-    }
-
     u32 Scale() const noexcept {
         return res_scale;
+    }
+
+    u8 Samples() const noexcept {
+        return sample_count;
     }
 
 private:
