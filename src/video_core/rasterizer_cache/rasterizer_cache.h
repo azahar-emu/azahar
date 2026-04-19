@@ -38,7 +38,7 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
                                     Pica::RegsInternal& regs_, RendererBase& renderer_)
     : memory{memory_}, custom_tex_manager{custom_tex_manager_}, runtime{runtime_}, regs{regs_},
       renderer{renderer_}, resolution_scale_factor{renderer.GetResolutionScaleFactor()},
-      filter{Settings::values.texture_filter.GetValue()},
+      sample_count{renderer.GetSampleCount()}, filter{Settings::values.texture_filter.GetValue()},
       dump_textures{Settings::values.dump_textures.GetValue()},
       use_custom_textures{Settings::values.custom_textures.GetValue()} {
     using TextureConfig = Pica::TexturingRegs::TextureConfig;
@@ -96,12 +96,15 @@ void RasterizerCache<T>::TickFrame() {
     }
 
     const u32 scale_factor = renderer.GetResolutionScaleFactor();
+    const u32 samples = renderer.GetSampleCount();
     const bool resolution_scale_changed = resolution_scale_factor != scale_factor;
+    const bool sample_count_changed = sample_count != samples;
     const bool use_custom_texture_changed =
         Settings::values.custom_textures.GetValue() != use_custom_textures;
 
-    if (resolution_scale_changed || use_custom_texture_changed) {
+    if (resolution_scale_changed || use_custom_texture_changed || sample_count_changed) {
         resolution_scale_factor = scale_factor;
+        sample_count = renderer.GetSampleCount();
         use_custom_textures = Settings::values.custom_textures.GetValue();
         if (use_custom_textures) {
             custom_tex_manager.FindCustomTextures();
@@ -287,6 +290,7 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const Pica::DisplayTransferCo
                                                          : config.output_height.Value();
     dst_params.is_tiled = config.input_linear != config.dont_swizzle;
     dst_params.pixel_format = PixelFormatFromGPUPixelFormat(config.output_format);
+    dst_params.sample_count = sample_count;
     dst_params.UpdateParams();
 
     // Using flip_vertically alongside crop_input_lines produces skewed output on hardware.
@@ -302,6 +306,7 @@ bool RasterizerCache<T>::AccelerateDisplayTransfer(const Pica::DisplayTransferCo
     }
 
     dst_params.res_scale = slot_surfaces[src_surface_id].res_scale;
+    dst_params.sample_count = slot_surfaces[src_surface_id].sample_count;
 
     const auto [dst_surface_id, dst_rect] =
         GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false);
@@ -432,8 +437,10 @@ void RasterizerCache<T>::CopySurface(Surface& src_surface, Surface& dst_surface,
 
     const u32 src_scale = src_surface.res_scale;
     const u32 dst_scale = dst_surface.res_scale;
-    if (src_scale > dst_scale) {
-        dst_surface.ScaleUp(src_scale);
+    const u32 src_sample_count = src_surface.sample_count;
+    const u32 dst_sample_count = dst_surface.sample_count;
+    if ((src_scale > dst_scale) || (src_sample_count > dst_sample_count)) {
+        dst_surface.ScaleUp(src_scale, src_sample_count);
     }
 
     const auto src_rect = src_surface.GetScaledSubRect(subrect_params);
@@ -502,6 +509,7 @@ typename RasterizerCache<T>::SurfaceRect_Tuple RasterizerCache<T>::GetSurfaceSub
         if (surface_id) {
             SurfaceParams new_params = slot_surfaces[surface_id];
             new_params.res_scale = params.res_scale;
+            new_params.sample_count = params.sample_count;
 
             surface_id = CreateSurface(new_params, create_initial_flags);
             RegisterSurface(surface_id);
@@ -706,6 +714,7 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
     SurfaceParams color_params;
     color_params.is_tiled = true;
     color_params.res_scale = resolution_scale_factor;
+    color_params.sample_count = sample_count;
     color_params.width = config.GetWidth();
     color_params.height = config.GetHeight();
     SurfaceParams depth_params = color_params;
@@ -771,6 +780,7 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         .color_level = color_level,
         .depth_level = depth_level,
         .shadow_rendering = regs.framebuffer.IsShadowRendering(),
+        .sample_count = sample_count,
     };
 
     auto [it, new_framebuffer] = framebuffers.try_emplace(fb_params);
@@ -861,12 +871,16 @@ SurfaceId RasterizerCache<T>::FindMatch(const SurfaceParams& params, ScaleMatch 
     SurfaceId match_id{};
     bool match_valid = false;
     u32 match_scale = 0;
+    u8 match_sample_count = 0;
     SurfaceInterval match_interval{};
 
     ForEachSurfaceInRegion(params.addr, params.size, [&](SurfaceId surface_id, Surface& surface) {
         const bool res_scale_matched = match_scale_type == ScaleMatch::Exact
                                            ? (params.res_scale == surface.res_scale)
                                            : (params.res_scale <= surface.res_scale);
+        const bool sample_count_matched = match_scale_type == ScaleMatch::Exact
+                                              ? (params.sample_count == surface.sample_count)
+                                              : (params.sample_count <= surface.sample_count);
         const bool is_valid =
             True(find_flags & MatchFlags::Copy)
                 ? true
@@ -886,11 +900,16 @@ SurfaceId RasterizerCache<T>::FindMatch(const SurfaceParams& params, ScaleMatch 
                 surface.type != SurfaceType::Fill)
                 return;
 
+            if (!sample_count_matched && match_scale_type != ScaleMatch::Ignore &&
+                surface.type != SurfaceType::Fill)
+                return;
+
             // Found a match, update only if this is better than the previous one
             auto UpdateMatch = [&] {
                 match_id = surface_id;
                 match_valid = is_valid;
                 match_scale = surface.res_scale;
+                match_sample_count = surface.sample_count;
                 match_interval = surface_interval;
             };
 
@@ -898,6 +917,13 @@ SurfaceId RasterizerCache<T>::FindMatch(const SurfaceParams& params, ScaleMatch 
                 UpdateMatch();
                 return;
             } else if (surface.res_scale < match_scale) {
+                return;
+            }
+
+            if (surface.sample_count > match_sample_count) {
+                UpdateMatch();
+                return;
+            } else if (surface.sample_count < match_sample_count) {
                 return;
             }
 
@@ -1189,8 +1215,9 @@ bool RasterizerCache<T>::ValidateByReinterpretation(Surface& surface, SurfacePar
             return false;
         }
         const u32 res_scale = src_surface.res_scale;
-        if (res_scale > surface.res_scale) {
-            surface.ScaleUp(res_scale);
+        const u8 sample_count = src_surface.sample_count;
+        if ((res_scale > surface.res_scale) || (sample_count > surface.sample_count)) {
+            surface.ScaleUp(res_scale, sample_count);
         }
         const PAddr addr = boost::icl::lower(interval);
         const SurfaceParams copy_params = surface.FromInterval(copy_interval);
@@ -1357,8 +1384,8 @@ SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params,
         return surface_id;
     }();
     Surface& surface = slot_surfaces[surface_id];
-    if (params.res_scale > surface.res_scale) {
-        surface.ScaleUp(params.res_scale);
+    if ((params.res_scale > surface.res_scale) || (params.sample_count > surface.sample_count)) {
+        surface.ScaleUp(params.res_scale, params.sample_count);
     }
     surface.MarkInvalid(surface.GetInterval());
     return surface_id;
