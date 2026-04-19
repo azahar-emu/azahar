@@ -27,7 +27,8 @@ struct FramebufferParams {
     u32 color_level;
     u32 depth_level;
     bool shadow_rendering;
-    INSERT_PADDING_BYTES(3);
+    u8 sample_count;
+    INSERT_PADDING_BYTES(2);
 
     bool operator==(const FramebufferParams& params) const noexcept {
         return std::memcmp(this, &params, sizeof(FramebufferParams)) == 0;
