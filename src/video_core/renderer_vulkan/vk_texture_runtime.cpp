@@ -1270,8 +1270,8 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
         sample_count = new_sample_count;
 
         runtime.renderpass_cache.EndRendering();
-        scheduler.Record(
-            [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
+        scheduler.Record([raw_images = std::array{Image(Type::MultiSampled)},
+                          aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
                 std::array<vk::ImageMemoryBarrier, 1> barriers;
                 MakeInitBarriers(aspect, 1, raw_images, barriers);
                 cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
