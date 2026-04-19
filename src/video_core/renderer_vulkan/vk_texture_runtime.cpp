@@ -615,81 +615,83 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     };
 
     // Todo(wunk): Add a "dirty" flag for msaa resolves to avoid redundant image resolves
-    const auto resolve_image = [&](Surface& msaa_surface) {
-        scheduler.Record([&msaa_surface](vk::CommandBuffer cmdbuf) {
+    const auto resolve_image = [&](const Surface& msaa_surface) {
+        scheduler.Record([width = msaa_surface.GetScaledWidth(),
+                          height = msaa_surface.GetScaledHeight(), aspect = msaa_surface.Aspect(),
+                          access_flags = msaa_surface.AccessFlags(),
+                          pipeline_state_flags = msaa_surface.PipelineStageFlags(),
+                          msaa_image = msaa_surface.Image(Type::MultiSampled),
+                          dest_image = msaa_surface.Image()](vk::CommandBuffer cmdbuf) {
             const vk::ImageResolve resolve_area = {
                 .srcSubresource{
-                    .aspectMask = msaa_surface.Aspect(),
+                    .aspectMask = aspect,
                     .mipLevel = 0,
                     .baseArrayLayer = 0,
                     .layerCount = 1,
                 },
                 .srcOffset = {},
                 .dstSubresource{
-                    .aspectMask = msaa_surface.Aspect(),
+                    .aspectMask = aspect,
                     .mipLevel = 0,
                     .baseArrayLayer = 0,
                     .layerCount = 1,
                 },
                 .dstOffset = {},
-                .extent{msaa_surface.GetScaledWidth(), msaa_surface.GetScaledHeight(), 1},
+                .extent{width, height, 1},
             };
 
             const std::array read_barriers = {
                 vk::ImageMemoryBarrier{
-                    .srcAccessMask = msaa_surface.AccessFlags(),
+                    .srcAccessMask = access_flags,
                     .dstAccessMask = vk::AccessFlagBits::eTransferRead,
                     .oldLayout = vk::ImageLayout::eGeneral,
                     .newLayout = vk::ImageLayout::eTransferSrcOptimal,
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = msaa_surface.Image(Type::MultiSampled),
-                    .subresourceRange = MakeSubresourceRange(msaa_surface.Aspect(), 0),
+                    .image = msaa_image,
+                    .subresourceRange = MakeSubresourceRange(aspect, 0),
                 },
                 vk::ImageMemoryBarrier{
-                    .srcAccessMask = msaa_surface.AccessFlags(),
+                    .srcAccessMask = access_flags,
                     .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
                     .oldLayout = vk::ImageLayout::eGeneral,
                     .newLayout = vk::ImageLayout::eTransferDstOptimal,
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = msaa_surface.Image(),
-                    .subresourceRange = MakeSubresourceRange(msaa_surface.Aspect(), 0),
+                    .image = dest_image,
+                    .subresourceRange = MakeSubresourceRange(aspect, 0),
                 },
             };
             const std::array write_barriers = {
                 vk::ImageMemoryBarrier{
                     .srcAccessMask = vk::AccessFlagBits::eTransferRead,
-                    .dstAccessMask = msaa_surface.AccessFlags(),
+                    .dstAccessMask = access_flags,
                     .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
                     .newLayout = vk::ImageLayout::eGeneral,
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = msaa_surface.Image(Type::MultiSampled),
-                    .subresourceRange = MakeSubresourceRange(msaa_surface.Aspect(), 0),
+                    .image = msaa_image,
+                    .subresourceRange = MakeSubresourceRange(aspect, 0),
                 },
                 vk::ImageMemoryBarrier{
                     .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
-                    .dstAccessMask = msaa_surface.AccessFlags(),
+                    .dstAccessMask = access_flags,
                     .oldLayout = vk::ImageLayout::eTransferDstOptimal,
                     .newLayout = vk::ImageLayout::eGeneral,
                     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
                     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                    .image = msaa_surface.Image(),
-                    .subresourceRange = MakeSubresourceRange(msaa_surface.Aspect(), 0),
+                    .image = dest_image,
+                    .subresourceRange = MakeSubresourceRange(aspect, 0),
                 },
             };
 
-            cmdbuf.pipelineBarrier(msaa_surface.PipelineStageFlags(),
-                                   vk::PipelineStageFlagBits::eTransfer,
+            cmdbuf.pipelineBarrier(pipeline_state_flags, vk::PipelineStageFlagBits::eTransfer,
                                    vk::DependencyFlagBits::eByRegion, {}, {}, read_barriers);
 
-            cmdbuf.resolveImage(msaa_surface.Image(Type::MultiSampled),
-                                vk::ImageLayout::eTransferSrcOptimal, msaa_surface.Image(),
+            cmdbuf.resolveImage(msaa_image, vk::ImageLayout::eTransferSrcOptimal, dest_image,
                                 vk::ImageLayout::eTransferDstOptimal, resolve_area);
 
-            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-                                   msaa_surface.PipelineStageFlags(),
+            cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, pipeline_state_flags,
                                    vk::DependencyFlagBits::eByRegion, {}, {}, write_barriers);
         });
     };
