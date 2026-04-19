@@ -508,6 +508,10 @@ if (ENABLE_VULKAN)
             # prefix location. -OS
             target_include_directories(vulkan-headers INTERFACE
                 /usr/pkg/share/x11-links/include)
+        elseif (BSD STREQUAL "OpenBSD")
+            # This is fine to hardcode because it'll never change
+            target_include_directories(vulkan-headers INTERFACE
+                /usr/X11R6/include)
         endif()
     endif()
 

@@ -25,6 +25,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
 endif()
 
+if (BSD STREQUAL "OpenBSD")
+    add_link_options(-z wxneeded)
+endif()
+
 option(ENABLE_LIBRETRO "Build as a LibRetro core" OFF)
 
 # Some submodules like to pick their own default build type if not specified.
