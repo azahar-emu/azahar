@@ -165,17 +165,7 @@ public:
         HWND hwnd = reinterpret_cast<HWND>(widget->winId());
         DWORD pref;
 
-        if (!block) {
-            auto it = original_prefs.find(hwnd);
-            if (it == original_prefs.end())
-                return;
-
-            pref = it->second;
-
-            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
-
-            original_prefs.erase(it);
-        } else {
+        if (block) {
             pref = DWMWCP_DEFAULT;
             if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref,
                                                 sizeof(pref)))) {
@@ -186,6 +176,16 @@ public:
 
             pref = DWMWCP_DONOTROUND;
             DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+        } else {
+            auto it = original_prefs.find(hwnd);
+            if (it == original_prefs.end())
+                return;
+
+            pref = it->second;
+
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+
+            original_prefs.erase(it);
         }
     }
 
