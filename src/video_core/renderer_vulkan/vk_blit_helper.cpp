@@ -14,6 +14,7 @@
 #include "video_core/renderer_vulkan/vk_texture_runtime.h"
 
 #include "video_core/host_shaders/format_reinterpreter/vulkan_d24s8_to_rgba8_comp.h"
+#include "video_core/host_shaders/format_reinterpreter/vulkan_d24s8_to_rgba8_ms_comp.h"
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/vulkan_blit_depth_stencil_frag.h"
 #include "video_core/host_shaders/vulkan_depth_to_buffer_comp.h"
@@ -248,6 +249,8 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                                vk::ShaderStageFlagBits::eVertex, device)},
       d24s8_to_rgba8_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_COMP,
                                   vk::ShaderStageFlagBits::eCompute, device)},
+      d24s8_to_rgba8_ms_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_MS_COMP,
+                                     vk::ShaderStageFlagBits::eCompute, device)},
       depth_to_buffer_comp{Compile(HostShaders::VULKAN_DEPTH_TO_BUFFER_COMP,
                                    vk::ShaderStageFlagBits::eCompute, device)},
       blit_depth_stencil_frag{VK_NULL_HANDLE},
@@ -260,6 +263,8 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
       mmpx_frag{Compile(HostShaders::MMPX_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       refine_frag{Compile(HostShaders::REFINE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       d24s8_to_rgba8_pipeline{MakeComputePipeline(d24s8_to_rgba8_comp, compute_pipeline_layout)},
+      d24s8_to_rgba8_ms_pipeline{
+          MakeComputePipeline(d24s8_to_rgba8_ms_comp, compute_pipeline_layout)},
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
       depth_blit_pipeline{VK_NULL_HANDLE},
@@ -289,6 +294,7 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
             SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
         }
         SetObjectName(device, d24s8_to_rgba8_pipeline, "BlitHelper: d24s8_to_rgba8_pipeline");
+        SetObjectName(device, d24s8_to_rgba8_ms_pipeline, "BlitHelper: d24s8_to_rgba8_ms_pipeline");
         SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
         if (depth_blit_pipeline) {
             SetObjectName(device, depth_blit_pipeline, "BlitHelper: depth_blit_pipeline");
@@ -322,6 +328,7 @@ BlitHelper::~BlitHelper() {
     device.destroyShaderModule(refine_frag);
     device.destroyPipeline(depth_to_buffer_pipeline);
     device.destroyPipeline(d24s8_to_rgba8_pipeline);
+    device.destroyPipeline(d24s8_to_rgba8_ms_pipeline);
     device.destroyPipeline(depth_blit_pipeline);
     device.destroySampler(linear_sampler);
     device.destroySampler(nearest_sampler);
@@ -401,15 +408,22 @@ bool BlitHelper::BlitDepthStencil(Surface& source, Surface& dest,
 
 bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
                                       const VideoCore::TextureCopy& copy) {
+
+    const bool multisample = (source.sample_count > 1) && (dest.sample_count > 1);
+    const Type src_type = multisample ? Type::MultiSampled : Type::Current;
+    const auto pipeline = multisample ? d24s8_to_rgba8_ms_pipeline : d24s8_to_rgba8_pipeline;
+
     const auto descriptor_set = compute_provider.Commit();
-    update_queue.AddImageSampler(descriptor_set, 0, 0, source.DepthView(), VK_NULL_HANDLE,
-                                 vk::ImageLayout::eDepthStencilReadOnlyOptimal);
-    update_queue.AddImageSampler(descriptor_set, 1, 0, source.StencilView(), VK_NULL_HANDLE,
+    update_queue.AddImageSampler(descriptor_set, 0, 0, source.ImageView(ViewType::Depth, src_type),
+                                 VK_NULL_HANDLE, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+    update_queue.AddImageSampler(descriptor_set, 1, 0,
+                                 source.ImageView(ViewType::Stencil, src_type), VK_NULL_HANDLE,
                                  vk::ImageLayout::eDepthStencilReadOnlyOptimal);
     update_queue.AddStorageImage(descriptor_set, 2, dest.ImageView());
 
     renderpass_cache.EndRendering();
-    scheduler.Record([this, descriptor_set, copy, src_image = source.Image(),
+
+    scheduler.Record([this, pipeline, descriptor_set, copy, src_image = source.Image(),
                       dst_image = dest.Image()](vk::CommandBuffer cmdbuf) {
         const std::array pre_barriers = {
             vk::ImageMemoryBarrier{
@@ -488,7 +502,7 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
 
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eCompute, compute_pipeline_layout, 0,
                                   descriptor_set, {});
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eCompute, d24s8_to_rgba8_pipeline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline);
 
         const ComputeInfo info = {
             .src_offset = Common::Vec2i{static_cast<int>(copy.src_offset.x),
