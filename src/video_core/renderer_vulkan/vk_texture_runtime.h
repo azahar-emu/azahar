@@ -80,8 +80,9 @@ struct Handle {
     }
 
     void Create(u32 width, u32 height, u32 levels, VideoCore::TextureType type, vk::Format format,
-                vk::ImageUsageFlags usage, vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect,
-                bool need_format_list, std::string_view debug_name = {});
+                vk::SampleCountFlagBits samples, vk::ImageUsageFlags usage,
+                vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect, bool need_format_list,
+                std::string_view debug_name = {});
 
     void Destroy();
 
@@ -338,16 +339,20 @@ public:
         return framebuffer;
     }
 
-    [[nodiscard]] std::array<vk::Image, 2> Images() const noexcept {
+    [[nodiscard]] std::array<vk::Image, 4> Images() const noexcept {
         return images;
     }
 
-    [[nodiscard]] std::array<vk::ImageAspectFlags, 2> Aspects() const noexcept {
+    [[nodiscard]] std::array<vk::ImageAspectFlags, 4> Aspects() const noexcept {
         return aspects;
     }
 
     [[nodiscard]] vk::RenderPass RenderPass() const noexcept {
         return render_pass;
+    }
+
+    u8 Samples() const noexcept {
+        return sample_count;
     }
 
     u32 Scale() const noexcept {
@@ -356,17 +361,20 @@ public:
 
 private:
     const Instance& instance;
-    std::array<vk::Image, 2> images{};
-    std::array<vk::ImageView, 2> image_views{};
+    // Color, Depth, ColorMSAA, DepthMSAA
+    std::array<vk::Image, 4> images{};
+    std::array<vk::ImageView, 4> image_views{};
     vk::Framebuffer framebuffer{};
     vk::RenderPass render_pass{};
     std::vector<vk::UniqueImageView> framebuffer_views;
-    std::array<vk::ImageAspectFlags, 2> aspects{};
-    std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
-                                                  VideoCore::PixelFormat::Invalid};
+    std::array<vk::ImageAspectFlags, 4> aspects{};
+    std::array<VideoCore::PixelFormat, 4> formats{
+        VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid,
+        VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid};
     u32 width{};
     u32 height{};
     u32 res_scale{1};
+    u8 sample_count{1};
 };
 
 class Sampler {
