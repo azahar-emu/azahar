@@ -778,6 +778,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+
         sl.apply {
             add(
                 RunnableSetting(
@@ -839,8 +840,22 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
+
+            add(
+                MultiChoiceSetting(
+                    IntListSetting.COMBO_KEYS,
+                    R.string.combo_key_options,
+                    R.string.combo_key_description,
+                    R.array.comboOptions,
+                    R.array.comboOptionValues,
+                    IntListSetting.COMBO_KEYS.key,
+                    IntListSetting.COMBO_KEYS.defaultValue
+                )
+            )
         }
     }
+
+
 
     private fun getInputObject(key: String): AbstractStringSetting {
         return object : AbstractStringSetting {
