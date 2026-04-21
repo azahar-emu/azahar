@@ -565,6 +565,11 @@
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando Shaders</string>
     <string name="building_shaders">Construindo %s</string>
+    <string name="delete_shader_cache">Excluir Cache de Shaders</string>
+    <string name="delete_cache_select_backend">Selecione a API gráfica para excluir o cache de shaders</string>
+    <string name="deleting_shader_cache">Excluindo cache de shaders do título, aguarde...</string>
+    <string name="shader_cache_deleted">Cache de shaders excluído</string>
+
     <!-- About Game Dialog -->
     <string name="play">Jogar</string>
     <string name="uninstall_cia">Desinstalar Aplicativo</string>
