@@ -16,6 +16,7 @@ The scripts in this directory assume that your current working directory is the 
 - [ ] Publish to Google Play Store
 - [ ] Publish files to the official Internet Archive account (incl. changelog as .md file)
 - [ ] Publish to Flathub
+- [ ] Force-push tagged commit to retroarch-live branch
 
 ### Note:
 
