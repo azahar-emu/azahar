@@ -549,7 +549,7 @@ class InputBindingSetting(
             return buttonCodes.mapNotNull { it.toIntOrNull() }.toMutableSet()
         }
 
-        private fun getInputButtonKey(keyId: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyId}"
+        fun getInputButtonKey(keyId: Int): String = "${INPUT_MAPPING_PREFIX}_HostAxis_${keyId}"
 
         /** Falls back to the scan code when keyCode is KEYCODE_UNKNOWN. */
         fun getInputButtonKey(event: KeyEvent): String = getInputButtonKey(translateEventToKeyId(event))

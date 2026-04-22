@@ -379,10 +379,17 @@ class EmulationActivity : AppCompatActivity() {
         var isTriggerPressedR = false
         var isTriggerPressedZL = false
         var isTriggerPressedZR = false
+        val touchOnlyAxisState = mutableMapOf<Int, Boolean>()
         for (range in motions) {
             val axis = range.axis
             val origValue = event.getAxisValue(axis)
             var value = ControllerMappingHelper.scaleAxis(input, axis, origValue)
+            val touchButton = preferences.getInt(
+                InputBindingSetting.getInputAxisButtonKey(axis) + "_Touch", -1
+            )
+            if (touchButton != -1) {
+                touchOnlyAxisState[touchButton] = kotlin.math.abs(value) > 0.5f
+            }
             val nextMapping =
                 preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
             val guestOrientation =
@@ -490,6 +497,14 @@ class EmulationActivity : AppCompatActivity() {
                 } else {
                     NativeLibrary.ButtonState.RELEASED
                 }
+            )
+        }
+        for ((touchButtonType, pressed) in touchOnlyAxisState) {
+            NativeLibrary.onGamePadEvent(
+                NativeLibrary.TouchScreenDevice,
+                touchButtonType,
+                if (pressed) NativeLibrary.ButtonState.PRESSED
+                else NativeLibrary.ButtonState.RELEASED
             )
         }
 

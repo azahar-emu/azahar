@@ -74,6 +74,15 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # The pad to request data on. Should be between 0 (Pad 1) and 3 (Pad 4). (Default 0)
 )") DECLARE_KEY(udp_pad_index) BOOST_HANA_STRING(R"(
 
+# Whether to use touch-from-button mapping
+# Maps controller button presses to touch points on the 3DS bottom screen
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(use_touch_from_button) BOOST_HANA_STRING(R"(
+
+# The index of the active touch-from-button map profile
+# Default: 0
+)") DECLARE_KEY(touch_from_button_map) BOOST_HANA_STRING(R"(
+
 # Use Artic Controller when connected to Artic Base Server. (Default 0)
 )") DECLARE_KEY(use_artic_base_controller) BOOST_HANA_STRING(R"(
 

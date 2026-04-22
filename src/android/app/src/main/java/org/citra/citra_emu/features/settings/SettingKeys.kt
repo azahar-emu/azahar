@@ -122,6 +122,8 @@ object SettingKeys {
     external fun udp_input_address(): String
     external fun udp_input_port(): String
     external fun udp_pad_index(): String
+    external fun use_touch_from_button(): String
+    external fun touch_from_button_map(): String
     external fun record_frame_times(): String
 
     // Android

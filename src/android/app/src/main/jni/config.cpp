@@ -132,6 +132,45 @@ void Config::ReadValues() {
         static_cast<u16>(android_config->GetInteger("Controls", "udp_input_port",
                                                     InputCommon::CemuhookUDP::DEFAULT_PORT));
 
+    // Touch from button mapping setup
+    Settings::values.current_input_profile.use_touch_from_button =
+        android_config->GetBoolean("Controls", "use_touch_from_button", false);
+    Settings::values.current_input_profile.touch_from_button_map_index =
+        static_cast<int>(android_config->GetInteger("Controls", "touch_from_button_map", 0));
+
+    Settings::values.touch_from_button_maps.clear();
+    int num_touch_maps =
+        static_cast<int>(android_config->GetInteger("Controls", "touch_from_button_map_count", 0));
+    if (num_touch_maps == 0) {
+        Settings::TouchFromButtonMap default_map;
+        default_map.name = "default";
+        Settings::values.touch_from_button_maps.push_back(std::move(default_map));
+    } else {
+        for (int i = 0; i < num_touch_maps; ++i) {
+            Settings::TouchFromButtonMap map;
+            map.name = android_config->GetString(
+                "Controls", "touch_from_button_map_" + std::to_string(i) + "_name", "default");
+            int num_binds = static_cast<int>(android_config->GetInteger(
+                "Controls", "touch_from_button_map_" + std::to_string(i) + "_bind_count", 0));
+            for (int j = 0; j < num_binds; ++j) {
+                std::string bind = android_config->GetString(
+                    "Controls",
+                    "touch_from_button_map_" + std::to_string(i) + "_bind_" + std::to_string(j),
+                    "");
+                if (!bind.empty()) {
+                    map.buttons.push_back(std::move(bind));
+                }
+            }
+            Settings::values.touch_from_button_maps.push_back(std::move(map));
+        }
+    }
+
+    if (Settings::values.current_input_profile.touch_from_button_map_index < 0 ||
+        Settings::values.current_input_profile.touch_from_button_map_index >=
+            static_cast<int>(Settings::values.touch_from_button_maps.size())) {
+        Settings::values.current_input_profile.touch_from_button_map_index = 0;
+    }
+
     ReadSetting("Controls", Settings::values.use_artic_base_controller);
 
     // Core

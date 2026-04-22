@@ -839,6 +839,31 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
                 )
             )
+            add(HeaderSetting(R.string.touch_from_button))
+            add(
+                SwitchSetting(
+                    BooleanSetting.USE_TOUCH_FROM_BUTTON,
+                    R.string.use_touch_from_button,
+                    R.string.use_touch_from_button_description,
+                    BooleanSetting.USE_TOUCH_FROM_BUTTON.key,
+                    BooleanSetting.USE_TOUCH_FROM_BUTTON.defaultValue
+                )
+            )
+            add(
+                RunnableSetting(
+                    R.string.edit_touch_from_button_maps,
+                    R.string.edit_touch_from_button_maps_description,
+                    false,
+                    R.drawable.ic_controller,
+                    {
+                        val intent = android.content.Intent(
+                            settingsActivity,
+                            org.citra.citra_emu.features.settings.ui.TouchFromButtonMapActivity::class.java
+                        )
+                        settingsActivity.startActivity(intent)
+                    }
+                )
+            )
         }
     }
 

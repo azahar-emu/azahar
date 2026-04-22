@@ -39,7 +39,18 @@ enum ButtonType {
     N3DS_TRIGGER_L = 773,
     N3DS_TRIGGER_R = 774,
     N3DS_BUTTON_DEBUG = 781,
-    N3DS_BUTTON_GPIO14 = 782
+    N3DS_BUTTON_GPIO14 = 782,
+    // Dedicated touch buttons used for touch mapping.
+    TOUCH_ONLY_1 = 900,
+    TOUCH_ONLY_2 = 901,
+    TOUCH_ONLY_3 = 902,
+    TOUCH_ONLY_4 = 903,
+    TOUCH_ONLY_5 = 904,
+    TOUCH_ONLY_6 = 905,
+    TOUCH_ONLY_7 = 906,
+    TOUCH_ONLY_8 = 907,
+    TOUCH_ONLY_9 = 908,
+    TOUCH_ONLY_10 = 909
 };
 
 class ButtonList;

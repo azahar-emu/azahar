@@ -124,6 +124,12 @@ object NativeLibrary {
 
     external fun reloadSettings()
 
+    external fun getTouchFromButtonMapCount(): Int
+    external fun getTouchFromButtonMapName(index: Int): String
+    external fun getTouchFromButtonMapBinds(index: Int): Array<String>
+    external fun setTouchFromButtonMaps(mapNames: Array<String>, mapBinds: Array<Array<String>>)
+    external fun reloadTouchFromButtonMaps()
+
     external fun getTitleId(filename: String): Long
 
     external fun getIsSystemTitle(path: String): Boolean
@@ -965,6 +971,17 @@ object NativeLibrary {
         const val BUTTON_GPIO14 = 782
         const val BUTTON_SWAP = 800
         const val BUTTON_TURBO = 801
+        // Touch-from-button: dedicated button IDs for touch-only mappings
+        const val TOUCH_ONLY_1 = 900
+        const val TOUCH_ONLY_2 = 901
+        const val TOUCH_ONLY_3 = 902
+        const val TOUCH_ONLY_4 = 903
+        const val TOUCH_ONLY_5 = 904
+        const val TOUCH_ONLY_6 = 905
+        const val TOUCH_ONLY_7 = 906
+        const val TOUCH_ONLY_8 = 907
+        const val TOUCH_ONLY_9 = 908
+        const val TOUCH_ONLY_10 = 909
     }
 
     /**

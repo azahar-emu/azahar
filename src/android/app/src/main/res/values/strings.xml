@@ -518,6 +518,25 @@
     <string name="miscellaneous">Miscellaneous</string>
     <string name="use_artic_base_controller">Use Artic Controller when connected to Artic Base Server</string>
     <string name="use_artic_base_controller_description">Use the controls provided by Artic Base Server when connected to it instead of the configured input device.</string>
+
+    <!-- Touch from Button Mapping -->
+    <string name="touch_from_button">Touch From Button</string>
+    <string name="use_touch_from_button">Enable Touch From Button Mapping</string>
+    <string name="use_touch_from_button_description">Map controller buttons to touch points on the 3DS bottom screen</string>
+    <string name="touch_from_button_map_profile">Active Touch Map</string>
+    <string name="edit_touch_from_button_maps">Edit Touch Maps</string>
+    <string name="edit_touch_from_button_maps_description">Configure touch point mappings for controller buttons</string>
+    <string name="touch_from_button_new_map">New Map</string>
+    <string name="touch_from_button_delete_map">Delete Map</string>
+    <string name="touch_from_button_rename_map">Rename Map</string>
+    <string name="touch_from_button_add_binding">Add Binding</string>
+    <string name="touch_from_button_enter_map_name">Enter map name</string>
+    <string name="touch_from_button_press_button">Press a button on your controller…</string>
+    <string name="touch_from_button_tap_position">Tap where you want the touch point on the 3DS bottom screen</string>
+    <string name="touch_from_button_no_maps">No touch maps configured</string>
+    <string name="touch_from_button_delete_confirm">Delete this touch map?</string>
+    <string name="touch_from_button_binding_format">%1$s → (%2$d, %3$d)</string>
+
     <string name="emulation_close_game_message">Are you sure that you would like to close the current game?</string>
     <string name="menu_emulation_amiibo">Amiibo</string>
     <string name="menu_emulation_amiibo_load">Load</string>

@@ -1170,4 +1170,71 @@ void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env
         });
 }
 
+jint Java_org_citra_citra_1emu_NativeLibrary_getTouchFromButtonMapCount(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    return static_cast<jint>(Settings::values.touch_from_button_maps.size());
+}
+
+jstring Java_org_citra_citra_1emu_NativeLibrary_getTouchFromButtonMapName(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jint index) {
+    if (index < 0 || index >= static_cast<jint>(Settings::values.touch_from_button_maps.size())) {
+        return env->NewStringUTF("");
+    }
+    return env->NewStringUTF(Settings::values.touch_from_button_maps[index].name.c_str());
+}
+
+jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getTouchFromButtonMapBinds(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jint index) {
+    if (index < 0 || index >= static_cast<jint>(Settings::values.touch_from_button_maps.size())) {
+        return env->NewObjectArray(0, env->FindClass("java/lang/String"), nullptr);
+    }
+    const auto& buttons = Settings::values.touch_from_button_maps[index].buttons;
+    jobjectArray result = env->NewObjectArray(static_cast<jsize>(buttons.size()),
+                                              env->FindClass("java/lang/String"), nullptr);
+    for (jsize i = 0; i < static_cast<jsize>(buttons.size()); ++i) {
+        env->SetObjectArrayElement(result, i, env->NewStringUTF(buttons[i].c_str()));
+    }
+    return result;
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setTouchFromButtonMaps(
+    JNIEnv* env, [[maybe_unused]] jobject obj, jobjectArray j_map_names,
+    jobjectArray j_map_binds_arrays) {
+    const jsize map_count = env->GetArrayLength(j_map_names);
+    Settings::values.touch_from_button_maps.clear();
+    for (jsize i = 0; i < map_count; ++i) {
+        Settings::TouchFromButtonMap map;
+        auto j_name = static_cast<jstring>(env->GetObjectArrayElement(j_map_names, i));
+        map.name = GetJString(env, j_name);
+
+        auto j_binds =
+            static_cast<jobjectArray>(env->GetObjectArrayElement(j_map_binds_arrays, i));
+        const jsize bind_count = env->GetArrayLength(j_binds);
+        for (jsize j = 0; j < bind_count; ++j) {
+            auto j_bind = static_cast<jstring>(env->GetObjectArrayElement(j_binds, j));
+            map.buttons.push_back(GetJString(env, j_bind));
+        }
+        Settings::values.touch_from_button_maps.push_back(std::move(map));
+    }
+
+    if (Settings::values.touch_from_button_maps.empty()) {
+        Settings::TouchFromButtonMap default_map;
+        default_map.name = "default";
+        Settings::values.touch_from_button_maps.push_back(std::move(default_map));
+    }
+
+    if (Settings::values.current_input_profile.touch_from_button_map_index >=
+        static_cast<int>(Settings::values.touch_from_button_maps.size())) {
+        Settings::values.current_input_profile.touch_from_button_map_index = 0;
+    }
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_reloadTouchFromButtonMaps(
+    [[maybe_unused]] JNIEnv* env, [[maybe_unused]] jobject obj) {
+    Core::System& system{Core::System::GetInstance()};
+    if (system.IsPoweredOn()) {
+        system.ApplySettings();
+    }
+}
+
 } // extern "C"

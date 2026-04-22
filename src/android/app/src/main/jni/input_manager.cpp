@@ -14,6 +14,7 @@
 #include "common/param_package.h"
 #include "input_common/main.h"
 #include "input_common/sdl/sdl.h"
+#include "input_common/touch_from_button.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
 
@@ -318,12 +319,15 @@ void Init() {
     Input::RegisterFactory<Input::ButtonDevice>("gamepad", button);
     Input::RegisterFactory<Input::AnalogDevice>("gamepad", analog);
     Input::RegisterFactory<Input::MotionDevice>("motion_emu", motion);
+    Input::RegisterFactory<Input::TouchDevice>("touch_from_button",
+                                               std::make_shared<InputCommon::TouchFromButtonFactory>());
 }
 
 void Shutdown() {
     Input::UnregisterFactory<Input::ButtonDevice>("gamepad");
     Input::UnregisterFactory<Input::AnalogDevice>("gamepad");
     Input::UnregisterFactory<Input::MotionDevice>("motion_emu");
+    Input::UnregisterFactory<Input::TouchDevice>("touch_from_button");
     button.reset();
     analog.reset();
     motion.reset();

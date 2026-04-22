@@ -52,6 +52,7 @@ enum class BooleanSetting(
     DEBUG_RENDERER(SettingKeys.renderer_debug(), Settings.SECTION_DEBUG, false),
     DISABLE_RIGHT_EYE_RENDER(SettingKeys.disable_right_eye_render(), Settings.SECTION_RENDERER, false),
     USE_ARTIC_BASE_CONTROLLER(SettingKeys.use_artic_base_controller(), Settings.SECTION_CONTROLS, false),
+    USE_TOUCH_FROM_BUTTON(SettingKeys.use_touch_from_button(), Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN(SettingKeys.upright_screen(), Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),
     ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_MISC, false),

@@ -56,7 +56,8 @@ enum class IntSetting(
     TURBO_LIMIT(SettingKeys.turbo_limit(), Settings.SECTION_CORE, 200),
     PERFORMANCE_OVERLAY_POSITION(SettingKeys.performance_overlay_position(), Settings.SECTION_LAYOUT, 0),
     RENDER_3D_WHICH_DISPLAY(SettingKeys.render_3d_which_display(),Settings.SECTION_RENDERER,0),
-    ASPECT_RATIO(SettingKeys.aspect_ratio(), Settings.SECTION_LAYOUT, 0);
+    ASPECT_RATIO(SettingKeys.aspect_ratio(), Settings.SECTION_LAYOUT, 0),
+    TOUCH_FROM_BUTTON_MAP(SettingKeys.touch_from_button_map(), Settings.SECTION_CONTROLS, 0);
 
     override var int: Int = defaultValue
 

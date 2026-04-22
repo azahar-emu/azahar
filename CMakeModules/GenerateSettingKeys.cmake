@@ -138,6 +138,8 @@ foreach(KEY IN ITEMS
     "udp_input_address"
     "udp_input_port"
     "udp_pad_index"
+    "use_touch_from_button"
+    "touch_from_button_map"
     "record_frame_times"
     "language" # FIXME: DUPLICATE KEY (libretro equivalent: language_value)
     "web_api_url"

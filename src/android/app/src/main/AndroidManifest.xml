@@ -85,6 +85,12 @@
             android:exported="false"
             android:theme="@style/Theme.Citra.Main"
             android:label="@string/cheats"/>
+
+        <activity
+            android:name="org.citra.citra_emu.features.settings.ui.TouchFromButtonMapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Citra.Main"
+            android:label="@string/edit_touch_from_button_maps"/>
     </application>
 
 </manifest>
