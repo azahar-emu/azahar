@@ -563,7 +563,11 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
                 1.0f / static_cast<float>(screen_info.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info.texture.width * scale_factor));
     glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
-    glUniform1i(uniform_cursor_enable, 1);
+    if (currScreenDraw == 1){
+        glUniform1i(uniform_cursor_enable, 1);
+    } else {
+        glUniform1i(uniform_cursor_enable, 0);
+    }
     glUniform2f(uniform_cursor_pos, 159.0f/320.0f, 119.0f/240.0f);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
@@ -740,6 +744,7 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     if (!layout.top_screen_enabled) {
         return;
     }
+    currScreenDraw = 0;
     int leftside, rightside;
     leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
     rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
@@ -801,7 +806,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     if (!layout.bottom_screen_enabled) {
         return;
     }
-
+    currScreenDraw = 1;
     const float bottom_screen_left = static_cast<float>(bottom_screen.left);
     const float bottom_screen_top = static_cast<float>(bottom_screen.top);
     const float bottom_screen_width = static_cast<float>(bottom_screen.GetWidth());

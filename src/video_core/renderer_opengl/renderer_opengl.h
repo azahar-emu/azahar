@@ -113,6 +113,7 @@ private:
     // Shader attribute input indices
     GLuint attrib_position;
     GLuint attrib_tex_coord;
+    int currScreenDraw; // 0 is Top, 1 is Bottom
 
     FrameDumperOpenGL frame_dumper;
 };
