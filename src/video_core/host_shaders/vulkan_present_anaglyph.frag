@@ -24,6 +24,8 @@ layout (push_constant, std140) uniform DrawInfo {
     mat4 modelview_matrix;
     vec4 i_resolution;
     vec4 o_resolution;
+    vec2 cursor_pos;
+    int cursor_enable;
     int screen_id_l;
     int screen_id_r;
     int layer;

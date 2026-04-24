@@ -640,6 +640,12 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
                 1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor));
     glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
+    if (currScreenDraw == 1){
+        glUniform1i(uniform_cursor_enable, 1);
+    } else {
+        glUniform1i(uniform_cursor_enable, 0);
+    }
+    glUniform2f(uniform_cursor_pos, cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = sampler;

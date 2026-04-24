@@ -783,11 +783,17 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float x, float y, float w, 
 
     const u32 scale_factor = GetResolutionScaleFactor();
     draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info.texture.width * scale_factor),
-                        static_cast<f32>(screen_info.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
+        Common::MakeVec(static_cast<f32>(screen_info.texture.height * scale_factor),
+                        static_cast<f32>(screen_info.texture.width * scale_factor),
+                        1.0f / static_cast<f32>(screen_info.texture.height * scale_factor),
+                        1.0f / static_cast<f32>(screen_info.texture.width * scale_factor));
+    draw_info.o_resolution = Common::MakeVec(w, h, 1.0f / w, 1.0f / h);
+    if (currScreenDraw == 1){
+        draw_info.cursor_enable = 1;
+    } else {
+        draw_info.cursor_enable = 0;
+    }
+    draw_info.cursor_pos = Common::MakeVec(cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
     draw_info.screen_id_l = screen_id;
 
     scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
@@ -855,11 +861,17 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
 
     const u32 scale_factor = GetResolutionScaleFactor();
     draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        static_cast<f32>(screen_info_l.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
+        Common::MakeVec(static_cast<f32>(screen_info_l.texture.height * scale_factor),
+                        static_cast<f32>(screen_info_l.texture.width * scale_factor),
+                        1.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor),
+                        1.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor));
+    draw_info.o_resolution = Common::MakeVec(w, h, 1.0f / w, 1.0f / h);
+    if (currScreenDraw == 1){
+        draw_info.cursor_enable = 1;
+    } else {
+        draw_info.cursor_enable = 0;
+    }
+    draw_info.cursor_pos = Common::MakeVec(cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;
 
@@ -886,6 +898,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
     if (!layout.top_screen_enabled) {
         return;
     }
+    currScreenDraw = 0;
     int leftside, rightside;
     leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
     rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
@@ -944,7 +957,7 @@ void RendererVulkan::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     if (!layout.bottom_screen_enabled) {
         return;
     }
-
+    currScreenDraw = 1;
     const float bottom_screen_left = static_cast<float>(bottom_screen.left);
     const float bottom_screen_top = static_cast<float>(bottom_screen.top);
     const float bottom_screen_width = static_cast<float>(bottom_screen.GetWidth());
