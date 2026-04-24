@@ -7,7 +7,7 @@
 
 layout (location = 0) in vec2 frag_tex_coord;
 layout (location = 0) out vec4 color;
-
+layout (location = 1) in vec2 pixelUnit;
 layout (push_constant, std140) uniform DrawInfo {
     mat4 modelview_matrix;
     vec4 i_resolution;
@@ -21,6 +21,7 @@ layout (push_constant, std140) uniform DrawInfo {
 };
 
 layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
+
 
 vec4 GetScreen(int screen_id) {
 #ifdef ARRAY_DYNAMIC_INDEX
@@ -38,5 +39,42 @@ vec4 GetScreen(int screen_id) {
 }
 
 void main() {
-    color = GetScreen(screen_id_l);
+    vec4 pixel = GetScreen(screen_id_l);
+    vec2 rfrag_tex_coord = vec2(frag_tex_coord.y, 1.0 - frag_tex_coord.x);
+    //Cursor
+    if (cursor_enable == 1){
+        //Black Outline
+        if (rfrag_tex_coord.x <= (cursor_pos.x + (2.0*pixelUnit.x)) &&
+            rfrag_tex_coord.x >= (cursor_pos.x - (1.0*pixelUnit.x))) {
+            if (rfrag_tex_coord.y <= (cursor_pos.y + (5.0*pixelUnit.y)) &&
+                rfrag_tex_coord.y >= (cursor_pos.y - (4.0*pixelUnit.y))) {
+                pixel = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+
+        if (rfrag_tex_coord.y <= (cursor_pos.y + (2.0*pixelUnit.y)) &&
+            rfrag_tex_coord.y >= (cursor_pos.y - (1.0*pixelUnit.y))) {
+            if (rfrag_tex_coord.x <= (cursor_pos.x + (5.0*pixelUnit.x)) &&
+                rfrag_tex_coord.x >= (cursor_pos.x - (4.0*pixelUnit.x))) {
+                pixel = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+        }
+        //White Cross
+        if (rfrag_tex_coord.x <= (cursor_pos.x + (1.0*pixelUnit.x)) &&
+            rfrag_tex_coord.x >= (cursor_pos.x - (0.0*pixelUnit.x))) {
+            if (rfrag_tex_coord.y <= (cursor_pos.y + (4.0*pixelUnit.y)) &&
+                rfrag_tex_coord.y >= (cursor_pos.y - (3.0*pixelUnit.y))) {
+                pixel = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        }
+
+        if (rfrag_tex_coord.y <= (cursor_pos.y + (1.0*pixelUnit.y)) &&
+            rfrag_tex_coord.y >= (cursor_pos.y - (0.0*pixelUnit.y))) {
+            if (rfrag_tex_coord.x <= (cursor_pos.x + (4.0*pixelUnit.x)) &&
+                rfrag_tex_coord.x >= (cursor_pos.x - (3.0*pixelUnit.x))) {
+                pixel = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        }
+    }
+    color = vec4(pixel.rgb, 1.0);
 }

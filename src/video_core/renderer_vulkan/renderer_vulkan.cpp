@@ -1020,7 +1020,8 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     if (settings.shader_update_requested.exchange(false)) {
         ReloadPipeline(layout.render_3d_mode);
     }
-
+    cursor_pos[0] += 1;
+    cursor_pos[1] += 1;
     PrepareDraw(frame, layout);
 
     const auto& top_screen = layout.top_screen;
