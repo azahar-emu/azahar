@@ -17,7 +17,7 @@ uniform int layer;
 in vec2 pixelUnit;
 void main() {
     vec4 pixel = texture(color_texture, frag_tex_coord);
-    vec2 rfrag_tex_coord = vec2(frag_tex_coord.yx);
+    vec2 rfrag_tex_coord = vec2(frag_tex_coord.y, 1.0 - frag_tex_coord.x);
     //Cursor
     if (cursor_enable){
         //Black Outline

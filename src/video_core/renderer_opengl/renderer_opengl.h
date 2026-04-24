@@ -114,6 +114,7 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
     int currScreenDraw; // 0 is Top, 1 is Bottom
+    std::array<int, 2> cursor_pos = {0,0};
 
     FrameDumperOpenGL frame_dumper;
 };

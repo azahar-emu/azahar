@@ -568,7 +568,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
     } else {
         glUniform1i(uniform_cursor_enable, 0);
     }
-    glUniform2f(uniform_cursor_pos, 159.0f/320.0f, 119.0f/240.0f);
+    glUniform2f(uniform_cursor_pos, cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
     state.Apply();
@@ -700,6 +700,8 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     }
 
     glUniform1i(uniform_layer, 0);
+    cursor_pos[0] += 1;
+    cursor_pos[1] += 1;
     if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen);
         glUniform1i(uniform_layer, 0);
