@@ -107,6 +107,9 @@ private:
     GLuint uniform_o_resolution;
     GLuint uniform_layer;
 
+    // Shader uniform for onscreen cursor
+    GLuint uniform_cursor_pos;
+    GLuint uniform_cursor_enable;
     // Shader attribute input indices
     GLuint attrib_position;
     GLuint attrib_tex_coord;
