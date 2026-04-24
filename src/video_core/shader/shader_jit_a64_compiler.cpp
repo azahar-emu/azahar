@@ -508,6 +508,7 @@ void JitShader::Compile_DPH(Instruction instr) {
 void JitShader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     STR(X30, SP, POST_INDEXED, -16);
+    exp2_used = true;
     BL(exp2_subroutine);
     LDR(X30, SP, PRE_INDEXED, 16);
     Compile_DestEnable(instr, SRC1);
@@ -516,6 +517,7 @@ void JitShader::Compile_EX2(Instruction instr) {
 void JitShader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     STR(X30, SP, POST_INDEXED, -16);
+    log2_used = true;
     BL(log2_subroutine);
     LDR(X30, SP, PRE_INDEXED, 16);
     Compile_DestEnable(instr, SRC1);
@@ -994,6 +996,14 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     // Compile entire program
     Compile_Block(static_cast<u32>(program_code->size()));
 
+    // Compile utility functions
+    if (log2_used) {
+        Compile_Log2(log2_subroutine);
+    }
+    if (exp2_used) {
+        Compile_Exp2(exp2_subroutine);
+    }
+
     // Free memory that's no longer needed
     program_code = nullptr;
     swizzle_data = nullptr;
@@ -1021,18 +1031,9 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     code_vec.shrink_to_fit();
 }
 
-JitShader::JitShader() : oaknut::VectorCodeGenerator(code_vec) {
-    CompilePrelude();
-}
+JitShader::JitShader() : oaknut::VectorCodeGenerator(code_vec) {}
 
-void JitShader::CompilePrelude() {
-    log2_subroutine = CompilePrelude_Log2();
-    exp2_subroutine = CompilePrelude_Exp2();
-}
-
-Label JitShader::CompilePrelude_Log2() {
-    Label subroutine;
-
+void JitShader::Compile_Log2(Label subroutine) {
     // We perform this approximation by first performing a range reduction into the range
     // [1.0, 2.0). A minimax polynomial which was fit for the function log2(x) / (x - 1) is then
     // evaluated. We multiply the result by (x - 1) then restore the result into the appropriate
@@ -1136,13 +1137,9 @@ Label JitShader::CompilePrelude_Log2() {
     DUP(SRC1.S4(), SRC1.Selem()[0]);
 
     RET();
-
-    return subroutine;
 }
 
-Label JitShader::CompilePrelude_Exp2() {
-    Label subroutine;
-
+void JitShader::Compile_Exp2(Label subroutine) {
     // This approximation first performs a range reduction into the range [-0.5, 0.5). A minmax
     // polynomial which was fit for the function exp2(x) is then evaluated. We then restore the
     // result into the appropriate range.
@@ -1241,8 +1238,6 @@ Label JitShader::CompilePrelude_Exp2() {
     DUP(SRC1.S4(), SRC1.Selem()[0]);
 
     RET();
-
-    return subroutine;
 }
 
 } // namespace Pica::Shader
