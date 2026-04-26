@@ -62,7 +62,7 @@ enum class SecondaryDisplayLayout : u32 {
     TopScreenOnly,
     BottomScreenOnly,
     SideBySide,
-    ReversePrimary,
+    OppositeScreenOnly,
     Original,
     Hybrid,
     LargeScreen
