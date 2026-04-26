@@ -24,7 +24,7 @@
         android:checkableBehavior="single"
         android:id="@+id/menu_secondary_layout_group">
         <item
-            android:id="@+id/menu_secondary_layout_reverse_primary"
+            android:id="@+id/menu_secondary_layout_opposite"
             android:title="@string/emulation_secondary_display_opposite" />
 
         <item
