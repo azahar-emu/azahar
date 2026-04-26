@@ -324,8 +324,8 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
         return HybridScreenLayout(width, height, false, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::None:
         // this should never happen - if "none" is set this method shouldn't run - but if it does,
-        // somehow, use ReversePrimary
-    case Settings::SecondaryDisplayLayout::ReversePrimary:
+        // somehow, use OppositeScreenOnly
+    case Settings::SecondaryDisplayLayout::OppositeScreenOnly:
     default:
         return SingleFrameLayout(width, height, !Settings::values.swap_screen.GetValue(),
                                  Settings::values.upright_screen.GetValue());
