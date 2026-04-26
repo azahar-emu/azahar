@@ -25,7 +25,7 @@
         android:id="@+id/menu_secondary_layout_group">
         <item
             android:id="@+id/menu_secondary_layout_reverse_primary"
-            android:title="@string/emulation_secondary_display_reverse_primary" />
+            android:title="@string/emulation_secondary_display_opposite" />
 
         <item
             android:id="@+id/menu_secondary_layout_top"
