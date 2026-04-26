@@ -120,6 +120,7 @@ if (APPLE AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PUBLIC
     apple_authorization.h
     apple_authorization.cpp
+    apple_utils.cpp
     apple_utils.h
     apple_utils.mm
   )

@@ -31,6 +31,11 @@ add_library(azahar_libretro SHARED
 
 create_target_directory_groups(azahar_libretro)
 
+if (BSD STREQUAL "NetBSD")
+    include(DisablePaxMprotect)
+    disable_pax_mprotect(azahar_libretro)
+endif()
+
 target_link_libraries(citra_common PRIVATE libretro)
 target_link_libraries(citra_core PRIVATE libretro)
 target_link_libraries(video_core PRIVATE libretro)

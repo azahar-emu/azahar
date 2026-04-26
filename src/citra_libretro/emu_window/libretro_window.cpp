@@ -9,6 +9,7 @@
 
 #include "audio_core/audio_types.h"
 #include "citra_libretro/citra_libretro.h"
+#include "citra_libretro/core_settings.h"
 #include "citra_libretro/environment.h"
 #include "citra_libretro/input/input_factory.h"
 #include "common/settings.h"
@@ -85,9 +86,7 @@ void EmuWindow_LibRetro::SwapBuffers() {
     }
     case Settings::GraphicsAPI::Vulkan: {
 #ifdef ENABLE_VULKAN
-        if (enableEmulatedPointer && tracker) {
-            tracker->Render(width, height);
-        }
+        // Cursor is drawn inside the Vulkan render pass (RendererVulkan::DrawCursor)
         LibRetro::UploadVideoFrame(RETRO_HW_FRAME_BUFFER_VALID, static_cast<unsigned>(width),
                                    static_cast<unsigned>(height), 0);
 #endif
@@ -339,4 +338,11 @@ void EmuWindow_LibRetro::CreateContext() {
 
 void EmuWindow_LibRetro::DestroyContext() {
     tracker = nullptr;
+}
+
+Frontend::EmuWindow::CursorInfo EmuWindow_LibRetro::GetCursorInfo() const {
+    if (enableEmulatedPointer && tracker) {
+        return tracker->GetCursorInfo();
+    }
+    return {};
 }

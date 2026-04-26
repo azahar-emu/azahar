@@ -442,6 +442,8 @@ struct InputProfile {
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
     std::string touch_device;
+    std::string controller_touch_device;
+    bool use_touchpad;
     bool use_touch_from_button;
     int touch_from_button_map_index;
     std::string udp_input_address;
@@ -496,8 +498,11 @@ struct Values {
     Setting<bool> apply_region_free_patch{true, Keys::apply_region_free_patch};
 
     // Renderer
+    // clang-format off
     SwitchableSetting<GraphicsAPI, true> graphics_api{
-#if defined(ENABLE_OPENGL)
+#if defined(ANDROID) && defined(ENABLE_VULKAN) // Prefer Vulkan on Android, OpenGL on everything else
+        GraphicsAPI::Vulkan,
+#elif defined(ENABLE_OPENGL)
         GraphicsAPI::OpenGL,
 #elif defined(ENABLE_VULKAN)
         GraphicsAPI::Vulkan,
@@ -508,6 +513,7 @@ struct Values {
 #error "At least one renderer must be enabled."
 #endif
         GraphicsAPI::Software, GraphicsAPI::Vulkan, Keys::graphics_api};
+    // clang-format on
     SwitchableSetting<u32> physical_device{0, Keys::physical_device};
     Setting<bool> use_gles{false, Keys::use_gles};
     Setting<bool> renderer_debug{false, Keys::renderer_debug};
@@ -635,6 +641,7 @@ struct Values {
     Setting<u16> gdbstub_port{24689, Keys::gdbstub_port};
     Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
     Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
+    Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};

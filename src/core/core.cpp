@@ -303,7 +303,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         app_loader = Loader::GetLoader(filepath);
     }
     if (!app_loader) {
-        LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
+        LOG_CRITICAL(Core, "Failed to obtain loader for {}", filepath);
         return ResultStatus::ErrorGetLoader;
     }
 
@@ -469,7 +469,6 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     m_emu_window = &emu_window;
     m_secondary_window = secondary_window;
     m_filepath = filepath;
-    self_delete_pending = false;
 
     // Reset counters and set time origin to current frame
     [[maybe_unused]] const PerfStats::Results result = GetAndResetPerfStats();
@@ -590,6 +589,8 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
         plg_ldr->SetEnabled(Settings::values.plugin_loader_enabled.GetValue());
         plg_ldr->SetAllowGameChangeState(Settings::values.allow_plugin_loader.GetValue());
     }
+
+    SetInfoLEDColor({});
 
     LOG_DEBUG(Core, "Initialized OK");
 
@@ -721,9 +722,7 @@ void System::Shutdown(bool is_deserializing) {
 
     memory.reset();
 
-    if (self_delete_pending)
-        FileUtil::Delete(m_filepath);
-    self_delete_pending = false;
+    SetInfoLEDColor({});
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

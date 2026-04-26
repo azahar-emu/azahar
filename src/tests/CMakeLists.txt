@@ -23,6 +23,11 @@ add_executable(tests
 
 create_target_directory_groups(tests)
 
+if (BSD STREQUAL "NetBSD")
+    include(DisablePaxMprotect)
+    disable_pax_mprotect(tests)
+endif()
+
 target_link_libraries(tests PRIVATE citra_common citra_core video_core audio_core)
 target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers Threads::Threads)
 
@@ -31,6 +36,10 @@ if (ENABLE_LIBRETRO)
 endif()
 
 add_test(NAME tests COMMAND tests)
+if(NOT ANDROID)
+    catch_discover_tests(tests)
+endif()
+
 
 if (CITRA_USE_PRECOMPILED_HEADERS)
     target_precompile_headers(tests PRIVATE precompiled_headers.h)

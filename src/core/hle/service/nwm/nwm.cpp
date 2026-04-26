@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -20,7 +20,7 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<NWM_EXT>()->InstallAsService(service_manager);
     std::make_shared<NWM_INF>()->InstallAsService(service_manager);
     std::make_shared<NWM_SAP>()->InstallAsService(service_manager);
-    std::make_shared<NWM_SOC>()->InstallAsService(service_manager);
+    std::make_shared<NWM_SOC>(system)->InstallAsService(service_manager);
     std::make_shared<NWM_TST>()->InstallAsService(service_manager);
     std::make_shared<NWM_UDS>(system)->InstallAsService(service_manager);
 }

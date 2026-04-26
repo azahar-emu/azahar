@@ -1290,7 +1290,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1313,7 +1313,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1336,7 +1336,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1830,6 +1830,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.enable_rpc_server_desc,
                     BooleanSetting.ENABLE_RPC_SERVER.key,
                     BooleanSetting.ENABLE_RPC_SERVER.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE,
+                    R.string.toggle_unique_data_console_type,
+                    R.string.toggle_unique_data_console_type_desc,
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE.key,
+                    BooleanSetting.TOGGLE_UNIQUE_DATA_CONSOLE_TYPE.defaultValue
                 )
             )
             add(

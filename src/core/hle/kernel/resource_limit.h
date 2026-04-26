@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,6 +42,7 @@ public:
      * Creates a resource limit object.
      */
     static std::shared_ptr<ResourceLimit> Create(KernelSystem& kernel,
+                                                 ResourceLimitCategory category,
                                                  std::string name = "Unknown");
 
     std::string GetTypeName() const override {
@@ -56,15 +57,25 @@ public:
         return HANDLE_TYPE;
     }
 
+    ResourceLimitCategory GetCategory() const {
+        return m_category;
+    }
+
     s32 GetCurrentValue(ResourceLimitType type) const;
     s32 GetLimitValue(ResourceLimitType type) const;
 
+    void SetCurrentValue(ResourceLimitType name, s32 value);
     void SetLimitValue(ResourceLimitType name, s32 value);
 
     bool Reserve(ResourceLimitType type, s32 amount);
     bool Release(ResourceLimitType type, s32 amount);
 
+    void ApplyAppMaxCPUSetting(std::shared_ptr<Kernel::Process>& process, u8 exh_mode,
+                               u8 exh_cpu_limit);
+
 private:
+    Kernel::KernelSystem& kernel;
+    ResourceLimitCategory m_category;
     using ResourceArray = std::array<s32, static_cast<std::size_t>(ResourceLimitType::Max)>;
     ResourceArray m_limit_values{};
     ResourceArray m_current_values{};

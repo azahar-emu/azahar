@@ -36,6 +36,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.PopupMenu
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
@@ -54,8 +55,10 @@ import org.citra.citra_emu.databinding.DialogShortcutBinding
 import org.citra.citra_emu.features.cheats.ui.CheatsFragmentDirections
 import org.citra.citra_emu.fragments.IndeterminateProgressDialogFragment
 import org.citra.citra_emu.model.Game
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameIconUtils
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.viewmodel.GamesViewModel
 
 class GameAdapter(
@@ -136,7 +139,7 @@ class GameAdapter(
         val holder = view.tag as GameViewHolder
         gameExists(holder)
 
-        if (holder.game.titleId == 0L) {
+        if (!holder.game.valid) {
             MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.properties)
                 .setMessage(R.string.properties_not_loaded)
@@ -153,12 +156,21 @@ class GameAdapter(
         if (holder.game.isInstalled) {
             return true
         }
-
-        val gameExists = DocumentFile.fromSingleUri(
-            CitraApplication.appContext,
-            Uri.parse(holder.game.path)
-        )?.exists() == true
+        val path = holder.game.path
+        val pathUri = path.toUri()
+        var gameExists: Boolean
+        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(path)) {
+            gameExists =
+                DocumentFile.fromSingleUri(
+                    CitraApplication.appContext,
+                    pathUri
+                )?.exists() == true
+        } else {
+            val nativePath = NativeLibrary.getNativePath(pathUri)
+            gameExists = NativeLibrary.nativeFileExists(nativePath)
+        }
         return if (!gameExists) {
+            Log.error("[GameAdapter] ROM file does not exist: $path")
             Toast.makeText(
                 CitraApplication.appContext,
                 R.string.loader_error_file_not_found,
@@ -323,14 +335,16 @@ class GameAdapter(
             }
         }
 
+        val titleId = game.titleId
+        val dlcTitleId = titleId or 0x8C00000000L
+        val updateTitleId = titleId or 0xE00000000L
+
         popup.setOnMenuItemClickListener { menuItem ->
             val uninstallAction: () -> Unit = {
                 when (menuItem.itemId) {
-                    R.id.game_context_uninstall -> CitraApplication.documentsTree.deleteDocument(dirs.gameDir)
-                    R.id.game_context_uninstall_dlc -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.dlcDir)
-                        .toString())
-                    R.id.game_context_uninstall_updates -> FileUtil.deleteDocument(CitraApplication.documentsTree.folderUriHelper(dirs.updatesDir)
-                        .toString())
+                    R.id.game_context_uninstall -> NativeLibrary.uninstallTitle(titleId, game.mediaType)
+                    R.id.game_context_uninstall_dlc -> NativeLibrary.uninstallTitle(dlcTitleId, Game.MediaType.SDMC)
+                    R.id.game_context_uninstall_updates -> NativeLibrary.uninstallTitle(updateTitleId, Game.MediaType.SDMC)
                 }
                 ViewModelProvider(activity)[GamesViewModel::class.java].reloadGames(true)
                 bottomSheetDialog.dismiss()
@@ -501,6 +515,63 @@ class GameAdapter(
             showUninstallContextMenu(it, game, bottomSheetDialog)
         }
 
+        bottomSheetView.findViewById<MaterialButton>(R.id.delete_cache).setOnClickListener {
+            val options = arrayOf(context.getString(R.string.vulkan), context.getString(R.string.opengles))
+            var selectedIndex = -1
+            val dialog = MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.delete_cache_select_backend)
+                .setSingleChoiceItems(options, -1) { dialog, which ->
+                    selectedIndex = which
+                }
+                .setPositiveButton(android.R.string.ok) {_, _ ->
+                    val progToast = Toast.makeText(
+                        CitraApplication.appContext,
+                        R.string.deleting_shader_cache,
+                        Toast.LENGTH_LONG
+                    )
+                    progToast.show()
+
+                    activity.lifecycleScope.launch(Dispatchers.IO) {
+
+                        when (selectedIndex) {
+                            0 -> {
+                                NativeLibrary.deleteVulkanShaderCache(game.titleId)
+                            }
+                            1 -> {
+                                NativeLibrary.deleteOpenGLShaderCache(game.titleId)
+                            }
+                        }
+
+                        activity.runOnUiThread {
+                            progToast.cancel()
+                            Toast.makeText(
+                                CitraApplication.appContext,
+                                R.string.shader_cache_deleted,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+                .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                    dialog.dismiss()
+                }
+                .create()
+
+            dialog.setOnShowListener {
+                val positiveButton = dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)
+
+                positiveButton.isEnabled = false
+
+                val listView = dialog.listView
+                listView.setOnItemClickListener { _, _, position, _ ->
+                    selectedIndex = position
+                    positiveButton.isEnabled = true
+                }
+            }
+
+            dialog.show()
+        }
+
         val bottomSheetBehavior = bottomSheetDialog.getBehavior()
         bottomSheetBehavior.skipCollapsed = true
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
@@ -556,7 +627,9 @@ class GameAdapter(
 
     private class DiffCallback : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean {
-            return oldItem.titleId == newItem.titleId
+            // The title is taken into account to support 3DSX, which all have the titleID 0.
+            // This only works now because we always return the English title, adjust if that changes.
+            return oldItem.titleId == newItem.titleId && oldItem.title == newItem.title
         }
 
         override fun areContentsTheSame(oldItem: Game, newItem: Game): Boolean {

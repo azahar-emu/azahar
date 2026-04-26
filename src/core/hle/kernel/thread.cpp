@@ -37,6 +37,9 @@ void ThreadManager::serialize(Archive& ar, const unsigned int) {
     ar & ready_queue;
     ar & wakeup_callback_table;
     ar & thread_list;
+    ar & current_schedule_mode;
+    ar & single_time_limiter;
+    ar & multi_time_limiter;
 }
 SERIALIZE_IMPL(ThreadManager)
 
@@ -56,6 +59,7 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
     ar & held_mutexes;
     ar & pending_mutexes;
     ar & owner_process;
+    ar & resource_limit_category;
     ar & wait_objects;
     ar & wait_address;
     ar & name;
@@ -179,33 +183,49 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
 }
 
 Thread* ThreadManager::PopNextReadyThread() {
-    Thread* next = nullptr;
+    Thread* next;
     Thread* thread = GetCurrentThread();
 
-    if (thread && thread->status == ThreadStatus::Running) {
-        do {
-            // We have to do better than the current thread.
-            // This call returns null when that's not possible.
-            next = ready_queue.pop_first_better(thread->current_priority);
-            if (!next) {
-                // Otherwise just keep going with the current thread
-                next = thread;
-                break;
-            } else if (!next->can_schedule)
-                unscheduled_ready_queue.push_back(next);
-        } while (!next->can_schedule);
-    } else {
-        do {
-            next = ready_queue.pop_first();
-            if (next && !next->can_schedule)
-                unscheduled_ready_queue.push_back(next);
-        } while (next && !next->can_schedule);
-    }
+    while (true) {
+        std::vector<std::pair<u32, Thread*>> skipped;
+        u32 next_priority{};
+        next = nullptr;
 
-    while (!unscheduled_ready_queue.empty()) {
-        auto t = std::move(unscheduled_ready_queue.back());
-        ready_queue.push_back(t->current_priority, t);
-        unscheduled_ready_queue.pop_back();
+        if (thread && thread->status == ThreadStatus::Running) {
+            do {
+                // We have to do better than the current thread.
+                // This call returns null when that's not possible.
+                std::tie(next_priority, next) =
+                    ready_queue.pop_first_better(thread->current_priority);
+                if (!next) {
+                    // Otherwise just keep going with the current thread
+                    next = thread;
+                    break;
+                } else if (!next->can_schedule) {
+                    skipped.push_back({next_priority, next});
+                }
+
+            } while (!next->can_schedule);
+        } else {
+            do {
+                std::tie(next_priority, next) = ready_queue.pop_first();
+                if (next && !next->can_schedule) {
+                    skipped.push_back({next_priority, next});
+                }
+            } while (next && !next->can_schedule);
+        }
+
+        for (auto it = skipped.rbegin(); it != skipped.rend(); it++) {
+            ready_queue.push_front(it->first, it->second);
+        }
+
+        // Try to time limit the selected thread on core 1
+        if (core_id == 1 && next && GetCpuLimiter()->DoTimeLimit(next)) {
+            // If the thread is time limited, select the next one
+            continue;
+        }
+
+        break;
     }
 
     return next;
@@ -392,6 +412,7 @@ ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(
     thread->name = std::move(name);
     thread_managers[processor_id]->wakeup_callback_table[thread->thread_id] = thread.get();
     thread->owner_process = owner_process;
+    thread->resource_limit_category = owner_process->resource_limit->GetCategory();
     CASCADE_RESULT(thread->tls_address, owner_process->AllocateThreadLocalStorage());
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
@@ -455,9 +476,9 @@ std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u
     }
 
     // Initialize new "main" thread
-    auto thread_res =
-        kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
-                            Memory::HEAP_VADDR_END, owner_process, sleep_time_ns == 0);
+    auto thread_res = kernel.CreateThread(
+        fmt::format("{}-main", owner_process->codeset->name), entry_point, priority, 0,
+        owner_process->ideal_processor, Memory::HEAP_VADDR_END, owner_process, sleep_time_ns == 0);
 
     std::shared_ptr<Thread> thread = std::move(thread_res).Unwrap();
 
@@ -516,10 +537,158 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + command_header_offset;
 }
 
-ThreadManager::ThreadManager(Kernel::KernelSystem& kernel, u32 core_id) : kernel(kernel) {
+CpuLimiter::~CpuLimiter() {}
+
+CpuLimiterMulti::CpuLimiterMulti(Kernel::KernelSystem& _kernel) : kernel(_kernel) {}
+
+void CpuLimiterMulti::Initialize(bool is_single) {
+    // TODO(PabloMK7): The is_single variable is needed to prevent
+    // registering an event twice with the same name. Once CpuLimiterSingle
+    // is implemented we can remove it.
+    tick_event = kernel.timing.RegisterEvent(
+        fmt::format("Kernel::{}::tick_event", is_single ? "CpuLimiterSingle" : "CpuLimiterMulti"),
+        [this](u64, s64 cycles_late) { this->OnTick(cycles_late); });
+}
+
+void CpuLimiterMulti::Start() {
+    if (ready) {
+        return;
+    }
+    ready = true;
+    active = false;
+    curr_state = SchedState::APP; // So that ChangeState starts with SYS
+    app_cpu_time = Core1CpuTime::PREEMPTION_DISABLED;
+}
+
+void CpuLimiterMulti::End() {
+    if (!ready) {
+        return;
+    }
+    ready = false;
+    active = false;
+    kernel.timing.UnscheduleEvent(tick_event, 0);
+    WakeupSleepingThreads();
+}
+
+void CpuLimiterMulti::UpdateAppCpuLimit() {
+    if (!ready) {
+        return;
+    }
+
+    app_cpu_time = static_cast<u32>(kernel.ResourceLimit()
+                                        .GetForCategory(Kernel::ResourceLimitCategory::Application)
+                                        ->GetCurrentValue(Kernel::ResourceLimitType::CpuTime));
+    if (app_cpu_time == Core1CpuTime::PREEMPTION_DISABLED) {
+        // No preemption, disable event
+        active = false;
+        kernel.timing.UnscheduleEvent(tick_event, 0);
+        WakeupSleepingThreads();
+    } else {
+        // Start preempting, enable event
+        if (active) {
+            // If we were active already, unschedule first
+            // so that the event is not scheduled twice.
+            // We could just not call ChangeState instead,
+            // but this allows adjusting the timing of the
+            // event sooner.
+            kernel.timing.UnscheduleEvent(tick_event, 0);
+        }
+        active = true;
+        ChangeState(0);
+    }
+}
+
+bool CpuLimiterMulti::DoTimeLimit(Thread* thread) {
+    if (!ready || !active) {
+        // Preemption is not active, don't do anything.
+        return false;
+    }
+    if (kernel.ResourceLimit()
+            .GetForCategory(thread->resource_limit_category)
+            ->GetLimitValue(ResourceLimitType::CpuTime) == Core1CpuTime::PREEMPTION_EXCEMPTED) {
+        // The thread is excempted from preemption
+        return false;
+    }
+
+    // On real hardware, the kernel uses a KPreemptionTimer to determine if a
+    // thread needs to be time limited. This properly uses the resource limit
+    // value to check if it is a sysmodule or not. We can do this instead and
+    // it should be good enough. TODO(PabloMK7): fix?
+    if (thread->resource_limit_category == ResourceLimitCategory::Application &&
+            curr_state == SchedState::SYS ||
+        thread->resource_limit_category == ResourceLimitCategory::Other &&
+            curr_state == SchedState::APP) {
+        // Block thread as not in the current mode
+        thread->status = ThreadStatus::WaitSleep;
+        sleeping_thread_ids.push(thread->thread_id);
+        return true;
+    }
+    return false;
+}
+
+void CpuLimiterMulti::OnTick(s64 cycles_late) {
+    WakeupSleepingThreads();
+    ChangeState(cycles_late);
+}
+
+void CpuLimiterMulti::ChangeState(s64 cycles_late) {
+    curr_state = (curr_state == SchedState::SYS) ? SchedState::APP : SchedState::SYS;
+
+    s64 next_timer = base_tick_interval * (app_cpu_time / 100.f);
+    if (curr_state == SchedState::SYS) {
+        next_timer = base_tick_interval - next_timer;
+    }
+    if (next_timer > cycles_late) {
+        next_timer -= cycles_late;
+    }
+    kernel.timing.ScheduleEvent(next_timer, tick_event, 0, 1);
+}
+
+void CpuLimiterMulti::WakeupSleepingThreads() {
+    while (!sleeping_thread_ids.empty()) {
+        u32 curr_id = sleeping_thread_ids.front();
+
+        auto thread = kernel.GetThreadManager(1).GetThreadByID(curr_id);
+        if (thread && thread->status == ThreadStatus::WaitSleep) {
+            thread->ResumeFromWait();
+        }
+
+        sleeping_thread_ids.pop();
+    }
+}
+
+template <class Archive>
+void CpuLimiterMulti::serialize(Archive& ar, const unsigned int) {
+    ar & ready;
+    ar & active;
+    ar & app_cpu_time;
+    ar & curr_state;
+    std::vector<u32> v;
+    if (Archive::is_loading::value) {
+        ar & v;
+        for (auto it : v) {
+            sleeping_thread_ids.push(it);
+        }
+    } else {
+        std::queue<u32> temp = sleeping_thread_ids;
+        while (!temp.empty()) {
+            v.push_back(temp.front());
+            temp.pop();
+        }
+        ar & v;
+    }
+}
+
+ThreadManager::ThreadManager(Kernel::KernelSystem& kernel, u32 core_id)
+    : kernel(kernel), core_id(core_id), current_schedule_mode(Core1ScheduleMode::Multi),
+      single_time_limiter(kernel), multi_time_limiter(kernel) {
     ThreadWakeupEventType = kernel.timing.RegisterEvent(
         "ThreadWakeupCallback_" + std::to_string(core_id),
         [this](u64 thread_id, s64 cycle_late) { ThreadWakeupCallback(thread_id, cycle_late); });
+    if (core_id == 1) {
+        single_time_limiter.Initialize(true);
+        multi_time_limiter.Initialize(false);
+    }
 }
 
 ThreadManager::~ThreadManager() {
@@ -532,13 +701,33 @@ std::span<const std::shared_ptr<Thread>> ThreadManager::GetThreadList() const {
     return thread_list;
 }
 
+std::shared_ptr<Thread> ThreadManager::GetThreadByID(u32 thread_id) const {
+    for (auto& thread : thread_list) {
+        if (thread->thread_id == thread_id) {
+            return thread;
+        }
+    }
+    return nullptr;
+}
+
+void ThreadManager::SetScheduleMode(Core1ScheduleMode mode) {
+    GetCpuLimiter()->End();
+    current_schedule_mode = mode;
+    if (mode == Core1ScheduleMode::Single) {
+        LOG_WARNING(Kernel, "Unimplemented \"Single\" schedule mode.");
+    }
+    GetCpuLimiter()->Start();
+}
+
+void ThreadManager::UpdateAppCpuLimit() {
+    GetCpuLimiter()->UpdateAppCpuLimit();
+}
+
 std::shared_ptr<Thread> KernelSystem::GetThreadByID(u32 thread_id) const {
     for (u32 core_id = 0; core_id < Core::System::GetInstance().GetNumCores(); core_id++) {
-        const auto thread_list = GetThreadManager(core_id).GetThreadList();
-        for (auto& thread : thread_list) {
-            if (thread->thread_id == thread_id) {
-                return thread;
-            }
+        auto ret = GetThreadManager(core_id).GetThreadByID(thread_id);
+        if (ret) {
+            return ret;
         }
     }
     return nullptr;

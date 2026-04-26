@@ -46,6 +46,8 @@ add_library(citra_core STATIC
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
     file_sys/archive_extsavedata.h
+    file_sys/archive_nand.cpp
+    file_sys/archive_nand.h
     file_sys/archive_ncch.cpp
     file_sys/archive_ncch.h
     file_sys/archive_other_savedata.cpp
@@ -348,6 +350,8 @@ add_library(citra_core STATIC
     hle/service/ldr_ro/ldr_ro.h
     hle/service/mcu/mcu_hwc.cpp
     hle/service/mcu/mcu_hwc.h
+    hle/service/mcu/mcu_rtc.cpp
+    hle/service/mcu/mcu_rtc.h
     hle/service/mcu/mcu.cpp
     hle/service/mcu/mcu.h
     hle/service/mic/mic_u.cpp
@@ -460,7 +464,6 @@ add_library(citra_core STATIC
     hw/aes/key.h
     hw/ecc.cpp
     hw/ecc.h
-    hw/default_keys.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
     hw/unique_data.cpp
@@ -497,6 +500,10 @@ add_library(citra_core STATIC
     tracer/recorder.cpp
     tracer/recorder.h
 )
+
+if (ENABLE_BUILTIN_KEYBLOB)
+    target_sources(citra_core PRIVATE hw/default_keys.h)
+endif()
 
 create_target_directory_groups(citra_core)
 

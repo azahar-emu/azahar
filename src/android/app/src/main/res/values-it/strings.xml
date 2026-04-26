@@ -73,29 +73,29 @@
     <string name="microphone_permission">Microfono</string>
     <string name="microphone_permission_description">Concedi il permesso all\'utilizzo del microfono per emulare il microfono del 3DS.</string>
     <string name="filesystem_permission">Filesystem</string>
-    <string name="filesystem_permission_description">Dare il permesso del file system qui sotto per consentire ad Azahar di archiviare file.</string>
+    <string name="filesystem_permission_description">Autorizza l\'accesso al filesystem per consentire il salvataggio dei dati.</string>
     <string name="permission_denied">Permesso negato</string>
     <string name="add_games_warning">Saltare la selezione della cartella applicazioni?</string>
     <string name="add_games_warning_description">Non verrà mostrato alcun software nella lista applicazioni se non viene selezionata alcuna cartella.</string>
     <string name="permissions">Permessi</string>
     <string name="select_emulator_data_folders">Cartella dati</string>
     <string name="select_emulator_data_folders_description"><![CDATA[Seleziona la cartella dati<br/>(La cartella utente è richiesta)]]></string>
-    <string name="permissions_description">Concedere autorizzazioni opzionali per utilizzare specifiche funzionalità dell\'emulatore</string>
+    <string name="permissions_description">Concedi permessi facoltativi per utilizzare funzionalità specifiche dell\'emulatore</string>
     <string name="warning_help">Aiuto</string>
     <string name="warning_skip">Salta</string>
     <string name="warning_cancel">Annulla</string>
     <string name="select_citra_user_folder">Seleziona cartella utente</string>
     <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">utente</a> usando il pulsante qui sotto.]]></string>
-    <string name="select_which_user_directory_to_use">Sembra che tu abbia impostato la cartella utente sia per Lime3DS che per Azahar. Questo probabilmente è dovuto al fatto che hai eseguito l\'aggiornamento ad Azahar e, al momento della richiesta, hai scelto una directory utente diversa da quella utilizzata per Lime3DS.\n\nQuesto potrebbe averti fatto pensare di aver perso salvataggi o altre impostazioni - ci scusiamo se è successo.\n\nDesideri tornare a utilizzare la tua cartella utente originale di Lime3DS, ripristinando impostazioni e salvataggi da Lime3DS, oppure preferisci mantenere la cartella utente attuale di Azahar?\n\nNessuna delle cartelle verrà eliminata, indipendentemente dalla tua scelta, e potrai passare liberamente da una all\'altra utilizzando l\'opzione \"Seleziona Cartella Utente\".</string>
+    <string name="select_which_user_directory_to_use">Sembra che tu abbia impostato cartelle utente sia per Lime3DS che per Azahar. Questo è probabilmente dovuto al fatto che hai eseguito l\'aggiornamento ad Azahar e, al momento della richiesta, hai scelto una cartella utente diversa da quella utilizzata per Lime3DS.\n\nQuesto potrebbe averti fatto pensare di aver perso salvataggi o altre impostazioni - ci scusiamo se è successo.\n\nDesideri tornare a utilizzare la tua cartella utente originale di Lime3DS, ripristinando impostazioni e salvataggi da Lime3DS, oppure preferisci mantenere la cartella utente attuale di Azahar?\n\nNessuna delle cartelle verrà eliminata, indipendentemente dalla tua scelta, e potrai passare liberamente da una all\'altra utilizzando l\'opzione \"Seleziona Cartella Utente\".</string>
     <string name="keep_current_azahar_directory">Mantieni la cartella di Azahar attuale</string>
     <string name="use_prior_lime3ds_directory">Usa la cartella precedente di Lime3DS</string>
     <string name="select">Seleziona</string>
     <string name="cannot_skip">Non puoi saltare la configurazione della cartella utente</string>
-    <string name="cannot_skip_directory_description">Questo passaggio è richiesto per permettere che Azahar funzioni. Quando la cartella verrà selezionata potrai continuare.</string>
-    <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Ri-seleziona la cartella per recuperare le autorizzazioni in modo da poter continuare.</string>
+    <string name="cannot_skip_directory_description">Questo passaggio è necessario per consentire ad Azahar di funzionare. Seleziona una cartella per poter continuare.</string>
+    <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Seleziona nuovamente la cartella per ripristinare i permessi e continuare.</string>
     <string name="invalid_selection">Selezione non valida</string>
-    <string name="invalid_user_directory">La selezione della directory utente non era valida.\nSeleziona nuovamente la directory utente, assicurandoti di accedervi dalla radice dello spazio di archiviazione del tuo dispositivo.</string>
-    <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti di app o Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
+    <string name="invalid_user_directory">La cartella utente selezionata non è valida.\nSelezionala di nuovo assicurandoti di partire dalla memoria principale del dispositivo.</string>
+    <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti dell\' app o di Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
     <string name="set_up_theme_settings">Impostazioni tema</string>
     <string name="setup_theme_settings_description">Configura le impostazioni del tema di Azahar.</string>
     <string name="setup_set_theme">Imposta tema</string>
@@ -218,7 +218,7 @@
     <string name="outer_left_camera">Fotocamera Esterna di Sinistra</string>
     <string name="outer_right_camera">Fotocamera Esterna di Destra</string>
     <string name="image_source">Sorgente Fotocamera</string>
-    <string name="image_source_description">Imposta l\'immagine sorgente della fotocamera virtuale. Puoi utilizzare un file immagine, oppure la fotocamera del dispositivo quando supportato.</string>
+    <string name="image_source_description">Imposta la sorgente dell\'immagine per la fotocamera virtuale. Puoi usare un file immagine o la fotocamera del dispositivo, se supportata.</string>
     <string name="camera_device">Fotocamera</string>
     <string name="camera_device_description">Se l\'impostazione \"Origine immagine\" è impostata su \"Fotocamera dispositivo\", questa imposta la fotocamera fisica da utilizzare.</string>
     <string name="camera_facing_front">Fronte</string>
@@ -280,7 +280,7 @@
     <string name="render3d_description">Scegli la modalità 3D stereoscopica per il rendering 3D. Le modalità \"Affiancato\" sono le più comuni nell\'uso moderno. Le modalità \"Anaglifo\" e \"Interlacciato\" si applicheranno sempre a tutti i display collegati.</string>
     <string name="factor3d">Profondità</string>
     <string name="factor3d_description">Specifica il valore del regolatore di profondità 3D. Questo valore deve essere impostato su un valore superiore allo 0% quando è abilitato il 3D stereoscopico.\nNota: Valori di profondità superiori al 100% non sono possibili su un dispositivo reale e possono causare problemi grafici</string>
-    <string name="disable_right_eye_render">Disabilita il rendering dell\'occhio destro</string>
+    <string name="disable_right_eye_render">Disattiva rendering occhio destro</string>
     <string name="disable_right_eye_render_description">Migliora notevolmente le prestazioni in alcune applicazioni, ma può causare flickering in altre.</string>
     <string name="swap_eyes_3d">Inverti occhi</string>
     <string name="swap_eyes_3d_description">Cambia quale occhio viene visualizzato in quale lato. In combinazione con la modalità \"Affiancato\" è possibile vedere il 3D incrociando gli occhi!</string>
@@ -336,6 +336,8 @@
     <string name="deterministic_async_operations_description">Rende le operazioni asincrone deterministiche per il debug. Abilitare questa opzione potrebbe causare blocchi.</string>
     <string name="enable_rpc_server">Abilita server RPC</string>
     <string name="enable_rpc_server_desc">Abilita il server RPC sulla porta 45987. Questo permette di leggere e scrivere remotamente la memoria guest.</string>
+    <string name="toggle_unique_data_console_type">Alterna tipo dati univoci console</string>
+    <string name="toggle_unique_data_console_type_desc">Alterna il tipo di console (Old 3DS &#8596; New 3DS) per scaricare il firmware del sistema opposto dalle impostazioni.</string>
     <string name="shader_jit">Abilita shader JIT</string>
     <string name="shader_jit_description">Usa il motore JIT al posto dell\'interprete per l\'emulazione software degli shader.</string>
 
@@ -368,7 +370,7 @@
     <string name="learn_more">Scopri di più</string>
     <string name="close">Chiudi</string>
     <string name="reset_to_default">Reimposta</string>
-    <string name="redump_games"><![CDATA[Per favore segui le guide per dumpare le tue <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuccie di gioco</a> o <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">titoli installati</a>.]]></string>
+    <string name="redump_games"><![CDATA[Per favore segui le guide per dumpare nuovamente le tue <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuccie di gioco</a> o <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">titoli installati</a>.]]></string>
     <string name="option_default">Standard</string>
     <string name="none">Nessuno</string>
     <string name="auto">Auto</string>
@@ -507,7 +509,7 @@
     <string name="lock_drawer">Blocca menù laterale</string>
     <string name="unlock_drawer">Sblocca menù laterale</string>
 
-    <string name="write_permission_needed">L\'emulatore ha bisogno dei permessi per l\'archiviazione dei dati su memoria esterna per funzionare correttamente</string>
+    <string name="write_permission_needed">Accesso alla memoria esterna richiesto per il funzionamento dell\'emulatore</string>
     <string name="load_settings">Caricando le Impostazioni...</string>
 
     <string name="external_storage_not_mounted">La memoria esterna deve essere disponibile per poter utilizzare Azahar</string>
@@ -563,6 +565,10 @@
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparazione degli shader</string>
     <string name="building_shaders">Compilazione %s</string>
+    <string name="delete_shader_cache">Cancella cache shader</string>
+    <string name="delete_cache_select_backend">Seleziona per quale API grafica eliminare la cache shader</string>
+    <string name="deleting_shader_cache">Eliminazione della cache shader per il titolo, attendi...</string>
+    <string name="shader_cache_deleted">Cache shader cancellate</string>
 
     <!-- About Game Dialog -->
     <string name="play">Riproduci</string>
@@ -645,7 +651,7 @@
     <string name="cia_install_error_aborted">L\'installazione di \"%s\" è stata annullata.\n Consulta i log per maggiori dettagli</string>
     <string name="cia_install_error_invalid">\"%s\" non è un CIA valido</string>
     <string name="cia_install_error_encrypted">\"%s\" deve essere decriptato prima di essere usato in Azahar.\n Un 3DS reale è richiesto</string>
-    <string name="cia_install_error_unknown">Errore Sconosciuto durante l\'installazione di \"%s\".\n Consulta i log per maggiori dettagli</string>
+    <string name="cia_install_error_unknown">Errore sconosciuto durante l\'installazione di \"%s\".\n Consulta i log per maggiori dettagli</string>
 
     <!-- Memory Sizes -->
     <string name="memory_formatted">%1$s%2$s</string>

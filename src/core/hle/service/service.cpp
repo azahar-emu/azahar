@@ -69,16 +69,16 @@ const std::array<ServiceModuleInfo, 41> service_module_map{
      {"AC", 0x00040130'00002402, AC::InstallInterfaces, false},
      {"ACT", 0x00040130'00003802, ACT::InstallInterfaces, true},
      {"AM", 0x00040130'00001502, AM::InstallInterfaces, false},
-     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces, false},
+     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces, true},
      {"CAM", 0x00040130'00001602,
       [](Core::System& system) {
           CAM::InstallInterfaces(system);
           Y2R::InstallInterfaces(system);
       },
       false},
-     {"CECD", 0x00040130'00002602, CECD::InstallInterfaces, false},
+     {"CECD", 0x00040130'00002602, CECD::InstallInterfaces, true},
      {"CFG", 0x00040130'00001702, CFG::InstallInterfaces, false},
-     {"DLP", 0x00040130'00002802, DLP::InstallInterfaces, true},
+     {"DLP", 0x00040130'00002802, DLP::InstallInterfaces, false},
      {"DSP", 0x00040130'00001A02, DSP::InstallInterfaces, false},
      {"FRD", 0x00040130'00003202, FRD::InstallInterfaces, true},
      {"GSP", 0x00040130'00001C02, GSP::InstallInterfaces, false},

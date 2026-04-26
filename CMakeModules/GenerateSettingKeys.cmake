@@ -114,6 +114,7 @@ foreach(KEY IN ITEMS
     "enable_rpc_server"
     "log_filter"
     "log_regex_filter"
+    "toggle_unique_data_console_type"
     "use_integer_scaling"
     "layouts_to_cycle"
     "camera_inner_flip"
@@ -198,6 +199,8 @@ if (ENABLE_QT)
         "name"
         "bind"
         "profile"
+        "use_touchpad"
+        "controller_touch_device"
         "use_touch_from_button"
         "touch_from_button_map"
         "touch_from_button_maps" # Why are these two so similar? Basically typo bait
@@ -250,7 +253,7 @@ if (ENABLE_LIBRETRO)
         "analog_deadzone"
         "enable_mouse_touchscreen"
         "enable_touch_touchscreen"
-        "render_touchscreen"
+        "enable_touch_pointer_timeout"
         "enable_motion"
         "motion_sensitivity"
     )

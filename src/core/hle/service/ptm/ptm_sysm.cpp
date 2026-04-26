@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,9 +41,9 @@ PTM_S_Common::PTM_S_Common(std::shared_ptr<Module> ptm, const char* name)
         {0x0408, nullptr, "Awake"},
         {0x0409, nullptr, "RebootAsync"},
         {0x040A, &PTM_S_Common::CheckNew3DS, "CheckNew3DS"},
-        {0x0801, nullptr, "SetInfoLEDPattern"},
-        {0x0802, nullptr, "SetInfoLEDPatternHeader"},
-        {0x0803, nullptr, "GetInfoLEDStatus"},
+        {0x0801, &PTM_S_Common::SetInfoLEDPattern, "SetInfoLEDPattern"},
+        {0x0802, &PTM_S_Common::SetInfoLEDPatternHeader, "SetInfoLEDPatternHeader"},
+        {0x0803, &PTM_S_Common::GetInfoLEDStatus, "GetInfoLEDStatus"},
         {0x0804, nullptr, "SetBatteryEmptyLEDPattern"},
         {0x0805, nullptr, "ClearStepHistory"},
         {0x0806, nullptr, "SetStepHistory"},

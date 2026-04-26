@@ -90,7 +90,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 
 [Renderer]
 # Whether to render using OpenGL
-# 1: OpenGL ES (default), 2: Vulkan
+# 1: OpenGL ES, 2: Vulkan (default)
 )") DECLARE_KEY(graphics_api) BOOST_HANA_STRING(R"(
 
 # Whether to compile shaders on multiple worker threads (Vulkan only)
@@ -538,6 +538,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Enable RPC server for scripting purposes. Allows accessing guest memory remotely.
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(enable_rpc_server) BOOST_HANA_STRING(R"(
+
+# Enables toggling the unique data console type (Old 3DS <-> New 3DS) to be able to download the opposite system firmware type from system settings.
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(toggle_unique_data_console_type) BOOST_HANA_STRING(R"(
 
 # Delay the start of apps when LLE modules are enabled
 # 0: Off, 1 (default): On

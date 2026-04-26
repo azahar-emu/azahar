@@ -174,6 +174,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
+    notification_led.cpp
+    notification_led.h
     precompiled_headers.h
     qt_image_interface.cpp
     qt_image_interface.h
@@ -223,10 +225,13 @@ if (ENABLE_QT_TRANSLATION)
     if (GENERATE_QT_TRANSLATION)
         get_target_property(QT_SRCS citra_qt SOURCES)
         get_target_property(QT_INCLUDES citra_qt INCLUDE_DIRECTORIES)
-        qt_add_lupdate(citra_qt TS_FILES ${CITRA_QT_LANGUAGES}/en.ts
+        qt_add_lupdate(
+            LUPDATE_TARGET citra_qt_lupdate
             SOURCES ${QT_SRCS} ${UIS}
+            TS_FILES ${CITRA_QT_LANGUAGES}/en.ts
             INCLUDE_DIRECTORIES ${QT_INCLUDES}
-            NO_GLOBAL_TARGET)
+            NO_GLOBAL_TARGET
+        )
         add_custom_target(translation ALL DEPENDS citra_qt_lupdate)
     endif()
 
@@ -274,6 +279,10 @@ create_target_directory_groups(citra_qt)
 target_link_libraries(citra_qt PRIVATE audio_core citra_common citra_core input_common network video_core)
 target_link_libraries(citra_qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
 target_link_libraries(citra_qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+
+if (MINGW)
+    target_link_libraries(citra_qt PRIVATE dwmapi)
+endif()
 
 if (ENABLE_OPENGL)
     target_link_libraries(citra_qt PRIVATE glad)

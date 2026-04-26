@@ -60,6 +60,7 @@ if (ENABLE_TESTS)
         add_subdirectory(catch2)
     endif()
     target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
+    include(Catch)
 endif()
 
 # Crypto++
@@ -111,7 +112,13 @@ endif()
 
 # Oaknut
 if ("arm64" IN_LIST ARCHITECTURE)
-    add_subdirectory(oaknut EXCLUDE_FROM_ALL)
+    if(USE_SYSTEM_OAKNUT)
+        find_package(oaknut REQUIRED)
+        add_library(oaknut INTERFACE)
+        target_link_libraries(oaknut INTERFACE merry::oaknut)
+    else()
+        add_subdirectory(oaknut EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 # Dynarmic
@@ -407,6 +414,9 @@ if (ENABLE_OPENAL)
         find_package(OpenAL REQUIRED)
         target_link_libraries(OpenAL INTERFACE OpenAL::OpenAL)
     else()
+        if (BSD STREQUAL "OpenBSD")
+            set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "")
+        endif()
         set(ALSOFT_EMBED_HRTF_DATA OFF CACHE BOOL "")
         set(ALSOFT_EXAMPLES OFF CACHE BOOL "")
         set(ALSOFT_INSTALL OFF CACHE BOOL "")
@@ -493,6 +503,19 @@ if (ENABLE_VULKAN)
     else()
         target_include_directories(vulkan-headers INTERFACE ./vulkan-headers/include)
         target_disable_warnings(vulkan-headers)
+        if (BSD STREQUAL "NetBSD")
+            # There may be a better way to do this with
+            # find_package(X11), but I couldn't get
+            # CMake to do it, so we're depending on
+            # the x11-links package and assuming the
+            # prefix location. -OS
+            target_include_directories(vulkan-headers INTERFACE
+                /usr/pkg/share/x11-links/include)
+        elseif (BSD STREQUAL "OpenBSD")
+            # This is fine to hardcode because it'll never change
+            target_include_directories(vulkan-headers INTERFACE
+                /usr/X11R6/include)
+        endif()
     endif()
 
     # adrenotools

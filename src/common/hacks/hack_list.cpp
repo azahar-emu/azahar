@@ -187,6 +187,16 @@ HackManager hack_manager = {
                      0x00040000001AA300, // 3 (JPN)
                  },
          }},
-
+        {HackType::SPOOF_FRIEND_CODE_SEED,
+         HackEntry{
+             .mode = HackAllowMode::FORCE,
+             .affected_title_ids =
+                 {
+                     // Luigi's Mansion 3ds
+                     0x00040000001D1800, // JPN
+                     0x00040000001D1900, // USA
+                     0x00040000001D1A00, // EUR
+                 },
+         }},
     }};
 }

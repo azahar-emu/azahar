@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <chrono>
 #include "common/math_util.h"
+#include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
 
 #ifdef ENABLE_OPENGL
@@ -47,11 +49,14 @@ public:
         return isPressed;
     }
 
-    /// Get the pressed position, relative to the framebuffer.
+    /// Get the pressed position in layout-absolute coordinates.
     std::pair<unsigned, unsigned> GetPressedPosition() {
-        return {static_cast<const unsigned int&>(projectedX),
-                static_cast<const unsigned int&>(projectedY)};
+        return {static_cast<unsigned>(framebuffer_layout.bottom_screen.left + projectedX),
+                static_cast<unsigned>(framebuffer_layout.bottom_screen.top + projectedY)};
     }
+
+    /// Get cursor rendering state for external renderers (e.g. Vulkan).
+    Frontend::EmuWindow::CursorInfo GetCursorInfo();
 
 private:
     int x;
@@ -62,8 +67,8 @@ private:
 
     float projectedX;
     float projectedY;
-    float renderRatio;
 
+    std::chrono::steady_clock::time_point last_moved;
     bool isPressed;
 
     Layout::FramebufferLayout framebuffer_layout;

@@ -63,6 +63,21 @@ void Module::Interface::GetConnectResult(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
+void Module::Interface::CancelConnectAsync(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    rp.Skip(2, false); // ProcessId descriptor
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ac->ac_connected ? Result(static_cast<ErrorDescription>(301), ErrorModule::AC,
+                                      ErrorSummary::InvalidState, ErrorLevel::Usage)
+                             : Result(static_cast<ErrorDescription>(302), ErrorModule::AC,
+                                      ErrorSummary::InvalidState, ErrorLevel::Usage));
+
+    LOG_WARNING(Service_AC, "(STUBBED) called");
 }
 
 void Module::Interface::CloseAsync(Kernel::HLERequestContext& ctx) {
@@ -140,6 +155,20 @@ void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_AC, "(STUBBED) called, major={}, minor={}", major, minor);
 }
 
+void Module::Interface::GetNZoneBeaconNotFoundEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    rp.Skip(2, false); // ProcessId descriptor
+
+    ac->nintendo_zone_beacon_not_found_event = rp.PopObject<Kernel::Event>();
+
+    ac->nintendo_zone_beacon_not_found_event->Signal();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
 void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     rp.Skip(2, false); // ProcessId descriptor
@@ -211,6 +240,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar & close_event;
     ar & connect_event;
     ar & disconnect_event;
+    ar & nintendo_zone_beacon_not_found_event;
     // default_config is never written to
 }
 SERIALIZE_IMPL(Module)

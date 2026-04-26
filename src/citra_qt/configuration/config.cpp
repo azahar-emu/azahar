@@ -405,6 +405,11 @@ void QtConfig::ReadControlValues() {
             ReadSetting(Settings::QKeys::touch_device, QStringLiteral("engine:emu_window"))
                 .toString()
                 .toStdString();
+        profile.use_touchpad = ReadSetting(Settings::QKeys::use_touchpad, false).toBool();
+        profile.controller_touch_device =
+            ReadSetting(Settings::QKeys::controller_touch_device, QStringLiteral(""))
+                .toString()
+                .toStdString();
         profile.use_touch_from_button =
             ReadSetting(Settings::QKeys::use_touch_from_button, false).toBool();
         profile.touch_from_button_map_index =
@@ -504,6 +509,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
+    ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -1004,6 +1010,9 @@ void QtConfig::SaveControlValues() {
             QStringLiteral("engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0"));
         WriteSetting(Settings::QKeys::touch_device, QString::fromStdString(profile.touch_device),
                      QStringLiteral("engine:emu_window"));
+        WriteSetting(Settings::QKeys::use_touchpad, profile.use_touchpad, false);
+        WriteSetting(Settings::QKeys::controller_touch_device,
+                     QString::fromStdString(profile.controller_touch_device), QStringLiteral(""));
         WriteSetting(Settings::QKeys::use_touch_from_button, profile.use_touch_from_button, false);
         WriteSetting(Settings::QKeys::touch_from_button_map, profile.touch_from_button_map_index,
                      0);
@@ -1084,6 +1093,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.renderer_debug);
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
+    WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {

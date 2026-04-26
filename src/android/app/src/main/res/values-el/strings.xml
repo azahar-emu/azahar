@@ -1,10 +1,400 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_notification_running">Το Azahar εκτελείται</string>
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Ρυθμίσεις</string>
+    <string name="home_options">Επιλογές</string>
+    <string name="home_search">Αναζήτηση</string>
+    <string name="home_games">Εφαρμογές</string>
     <string name="install_game_content">Εγκατάσταση αρχείου CIA</string>
-    <string name="about">Σχετικά</string>
+    <string name="about">Πληροφορίες</string>
+    <string name="citra_description">Ένας εξομοιωτής 3DS ανοικτού κώδικα</string>
     <string name="install_cia_title">Εγκατάσταση CIA</string>
 
     <string name="select_gpu_driver_install">Εγκατάσταση</string>
-    <string name="select_gpu_driver_install_success">Εγκαταστάθηκε %s</string>
+    <string name="select_gpu_driver_default">Προεπιλογή</string>
+    <string name="select_gpu_driver_install_success">Εγκαταστάθηκε το %s</string>
+    <string name="licenses">Άδειες χρήσης</string>
+    <!-- Setup strings -->
+    <string name="welcome">Καλώς ορίσατε!</string>
+    <string name="step_complete">Ολοκληρώθηκε!</string>
+    <string name="games">Εφαρμογές</string>
+    <string name="done">Τέλος</string>
+    <string name="text_continue">Συνέχεια</string>
+    <string name="notifications">Ειδοποιήσεις</string>
+    <string name="camera_permission">Κάμερα</string>
+    <string name="microphone_permission">Μικρόφωνο</string>
+    <string name="filesystem_permission">Σύστημα αρχείων</string>
+    <string name="select_emulator_data_folders">Φάκελοι δεδομένων</string>
+    <string name="warning_help">Βοήθεια</string>
+    <string name="warning_skip">Παράλειψη</string>
+    <string name="warning_cancel">Ακύρωση</string>
+    <string name="select">Επιλογή</string>
+    <string name="invalid_selection">Μη έγκυρη επιλογή</string>
+    <string name="set_up_theme_settings">Ρυθμίσεις θέματος</string>
+    <string name="setup_set_theme">Ορισμός θέματος</string>
+
+    <string name="controller_axis_vertical">Κάθετος άξονας</string>
+    <string name="controller_axis_horizontal">Οριζόντιος άξονας</string>
+    <string name="button_swap">Εναλλαγή οθονών</string>
+    <!-- System files strings -->
+    <string name="setup_system_files">Αρχεία συστήματος</string>
+    <string name="setup_system_files_o3ds">Ρύθμιση για Old 3DS</string>
+    <string name="setup_system_files_n3ds">Ρύθμιση για New 3DS</string>
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Κουμπιά</string>
+    <string name="button">Κουμπί</string>
+
+    <!-- System settings strings -->
+    <string name="emulation_settings">Ρυθμίσεις εξομοίωσης</string>
+    <string name="username">Όνομα χρήστη</string>
+    <string name="new_3ds">Λειτουργία New 3DS</string>
+    <string name="clock">Ρολόι</string>
+    <string name="init_clock">Ρολόι</string>
+    <string name="device_clock">Ρολόι συσκευής</string>
+    <string name="simulated_clock">Εξομοιωμένο ρολόι</string>
+    <string name="profile_settings">Ρυθμίσεις προφίλ</string>
+    <string name="emulated_region">Περιοχή</string>
+    <string name="emulated_language">Γλώσσα</string>
+    <string name="birthday">Γενέθλια</string>
+    <string name="birthday_month">Μήνας</string>
+    <string name="birthday_day">Ημέρα</string>
+    <string name="country">Χώρα</string>
+    <string name="mac_address">Διεύθυνση MAC</string>
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Εσωτερική κάμερα</string>
+    <string name="camera_device">Κάμερα</string>
+    <string name="graphics_api">API γραφικών</string>
+    <string name="texture_filter_name">Φίλτρο υφής</string>
+    <string name="shaders_accurate_mul">Ακριβής πολλαπλασιασμός</string>
+    <string name="frame_limit_enable">Περιορισμός ταχύτητας</string>
+    <string name="internal_resolution">Εσωτερική ανάλυση</string>
+    <string name="internal_resolution_setting_1x">Εγγενής (400x240)</string>
+    <string name="factor3d">Βάθος</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="dump_textures">Αποτύπωση υφών</string>
+    <string name="custom_textures">Προσαρμοσμένες υφές</string>
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Ένταση ήχου</string>
+    <string name="audio_input_type">Συσκευή εισόδου ήχου</string>
+    <string name="sound_output_mode">Λειτουργία εξόδου ήχου</string>
+
+    <string name="vsync">Ενεργοποίηση V-Sync</string>
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">Προσανατολισμός οθόνης</string>
+    <string name="aspect_ratio_default">Προεπιλογή</string>
+    <string name="aspect_ratio_16_9">16:9</string>
+    <string name="aspect_ratio_4_3">4:3</string>
+    <string name="aspect_ratio_21_9_fullscreen">21:9</string>
+    <string name="aspect_ratio_16_10_fullscreen_stretched">16:10</string>
+    <!-- Miscellaneous -->
+    <string name="clear">Απαλοιφή</string>
+    <string name="slider_default">Προεπιλογή</string>
+    <string name="saving">Αποθήκευση…</string>
+    <string name="loading">Φόρτωση…</string>
+    <string name="next">Επόμενο</string>
+    <string name="back">Πίσω</string>
+    <string name="learn_more">Μάθετε περισσότερα</string>
+    <string name="close">Κλείσιμο</string>
+    <string name="option_default">Προεπιλογή</string>
+    <string name="install">Εγκατάσταση</string>
+    <string name="delete">Διαγραφή</string>
+    <string name="reset_all_settings">Επαναφορά όλων των ρυθμίσεων;</string>
+    <string name="auto_select">Αυτόματη επιλογή</string>
+    <string name="cancelling">Ακύρωση…</string>
+    <string name="visibility">Ορατότητα</string>
+    <string name="information">Πληροφορίες</string>
+
+    <!-- Add Directory Screen-->
+    <string name="select_game_folder">Επιλογή φακέλου παιχνιδιού</string>
+
+    <!-- Game Properties -->
+    <string name="properties">Ιδιότητες</string>
+    <!-- Preferences Screen -->
+    <string name="preferences_settings">Ρυθμίσεις</string>
+    <string name="preferences_general">Γενικά</string>
+    <string name="preferences_system">Σύστημα</string>
+    <string name="preferences_camera">Κάμερα</string>
+    <string name="preferences_graphics">Γραφικά</string>
+    <string name="preferences_audio">Ήχος</string>
+    <string name="preferences_debug">Έλεγχος σφαλμάτων</string>
+    <string name="preferences_theme">Θέμα και χρώμα</string>
+    <string name="preferences_layout">Διάταξη</string>
+
+    <string name="loader_error_invalid_format">Μη έγκυρη μορφή ROM</string>
+    <string name="emulation_save_state">Αποθήκευση κατάστασης</string>
+    <string name="emulation_load_state">Φόρτωση κατάστασης</string>
+    <string name="emulation_edit_layout">Επεξεργασία διάταξης</string>
+    <string name="emulation_done">Τέλος</string>
+    <string name="emulation_control_scale">Προσαρμογή κλίμακας</string>
+    <string name="emulation_control_scale_global">Καθολική κλίμακα</string>
+    <string name="emulation_control_scale_reset_all">Επαναφορά όλων</string>
+    <string name="emulation_control_opacity">Προσαρμογή αδιαφάνειας</string>
+    <string name="emulation_open_cheats">Άνοιγμα cheat</string>
+    <string name="emulation_screen_layout_largescreen">Μεγάλη οθόνη</string>
+    <string name="emulation_screen_layout_single">Μονή οθόνη</string>
+    <string name="emulation_screen_layout_hybrid">Υβριδικές οθόνες</string>
+    <string name="emulation_portrait_layout_top_full">Προεπιλογή</string>
+    <string name="emulation_screen_layout_custom">Προσαρμοσμένη διάταξη</string>
+    <string name="bg_red">Κόκκινο</string>
+    <string name="bg_green">Πράσινο</string>
+    <string name="bg_blue">Μπλε</string>
+    <string name="emulation_top_screen">Πάνω οθόνη</string>
+    <string name="emulation_bottom_screen">Κάτω οθόνη</string>
+    <string name="emulation_custom_layout_x">Θέση X</string>
+    <string name="emulation_custom_layout_y">Θέση Y</string>
+    <string name="emulation_custom_layout_width">Πλάτος</string>
+    <string name="emulation_custom_layout_height">Ύψος</string>
+    <string name="emulation_close_game">Κλείσιμο παιχνιδιού</string>
+    <string name="menu_emulation_amiibo">Amiibo</string>
+    <string name="menu_emulation_amiibo_load">Φόρτωση</string>
+    <string name="menu_emulation_amiibo_remove">Αφαίρεση</string>
+    <string name="select_amiibo">Επιλογή αρχείου Amiibo</string>
+    <string name="amiibo_load_error">Σφάλμα φόρτωσης Amiibo</string>
+    <string name="pause_emulation">Παύση εξομοίωσης</string>
+    <string name="resume_emulation">Συνέχιση εξομοίωσης</string>
+    <string name="load_settings">Φόρτωση ρυθμίσεων…</string>
+
+    <string name="move_data">Μετακίνηση δεδομένων</string>
+    <string name="moving_data">Μετακίνηση δεδομένων…</string>
+    <string name="copy_file_name">Αντιγραφή αρχείου: %s</string>
+    <!-- Software Keyboard -->
+    <string name="software_keyboard">Εικονικό πληκτρολόγιο</string>
+    <!-- Camera -->
+    <string name="camera_select_image">Επιλογή εικόνας</string>
+    <string name="camera">Κάμερα</string>
+    <!-- Microphone -->
+    <string name="microphone">Μικρόφωνο</string>
+    <!-- Core Errors -->
+    <string name="abort_button">Ακύρωση</string>
+    <string name="continue_button">Συνέχεια</string>
+    <string name="system_archive_general">Ένα αρχείο συστήματος</string>
+    <string name="save_load_error">Σφάλμα αποθήκευσης/φόρτωσης</string>
+    <string name="fatal_error">Κρίσιμο σφάλμα</string>
+    <string name="unsupported_encrypted">Μη υποστηριζόμενη κρυπτογραφημένη εφαρμογή</string>
+    <string name="game_context_open_app">Άνοιγμα φακέλου εφαρμογής</string>
+    <string name="shortcut">Συντόμευση</string>
+    <string name="shortcut_name">Όνομα συντόμευσης</string>
+    <string name="edit_icon">Επεξεργασία εικονιδίου</string>
+    <string name="create_shortcut">Δημιουργία συντόμευσης</string>
+    <string name="game_context_file">Αρχείο:</string>
+    <string name="game_context_type">Τύπος:</string>
+    <string name="performance_overlay_show_speed">Εμφάνιση ταχύτητας</string>
+    <!-- Cheats -->
+    <string name="cheats">Cheat</string>
+    <string name="cheats_add">Προσθήκη cheat</string>
+    <string name="cheats_name">Όνομα</string>
+    <string name="cheats_notes">Σημειώσεις</string>
+    <string name="cheats_code">Κώδικας</string>
+    <string name="cheats_edit">Επεξεργασία</string>
+    <string name="cheats_delete">Διαγραφή</string>
+    <string name="cia_install_notification_title">Εγκατάσταση CIA</string>
+    <!-- Memory Sizes -->
+    <string name="memory_formatted">%1$s %2$s</string>
+    <string name="memory_byte">Byte</string>
+    <string name="memory_byte_shorthand">B</string>
+    <string name="memory_kilobyte">KB</string>
+    <string name="memory_megabyte">MB</string>
+    <string name="memory_gigabyte">GB</string>
+    <string name="memory_terabyte">TB</string>
+    <string name="memory_petabyte">PB</string>
+    <string name="memory_exabyte">EB</string>
+
+    <!-- Material You theme -->
+    <string name="material_you">Material You</string>
+    <!-- Static theme color -->
+    <string name="static_theme_color">Χρώμα θέματος</string>
+    <!-- Region names -->
+    <string name="system_region_jpn">JPN</string>
+    <string name="system_region_usa">USA</string>
+    <string name="system_region_eur">EUR</string>
+    <string name="system_region_aus">AUS</string>
+    <string name="system_region_chn">CHN</string>
+    <string name="system_region_kor">KOR</string>
+    <string name="system_region_twn">TWN</string>
+
+    <!-- Language names -->
+    <string name="language_japanese">Ιαπωνικά (日本語)</string>
+    <string name="language_french">Γαλλικά (Français)</string>
+    <string name="language_german">Γερμανικά (Deutsch)</string>
+    <string name="language_italian">Ιταλικά (Italiano)</string>
+    <string name="language_spanish">Ισπανικά (Español)</string>
+    <string name="language_simplified_chinese">Απλοποιημένα Κινεζικά (简体中文)</string>
+    <string name="language_korean">Κορεατικά (한국어)</string>
+    <string name="language_dutch">Ολλανδικά (Nederlands)</string>
+    <string name="language_portuguese">Πορτογαλικά (Português)</string>
+    <string name="language_russian">Ρωσικά (Русский)</string>
+    <string name="language_traditional_chinese">Παραδοσιακά Κινεζικά (正體中文)</string>
+
+    <string name="device_camera">Κάμερα συσκευής</string>
+
+    <!-- Graphics API names -->
+    <string name="opengles">OpenGLES</string>
+    <string name="vulkan">Vulkan</string>
+
+    <!-- Texture filter names -->
+    <string name="anime4k">Anime4K</string>
+    <string name="xbrz">xBRZ</string>
+    <string name="mmpx">MMPX</string>
+
+    <!-- Countries -->
+    <string name="japan">Ιαπωνία</string>
+    <string name="anguilla">Ανγκουίλα</string>
+    <string name="antigua_and_barbuda">Αντίγκουα και Μπαρμπούντα</string>
+    <string name="argentina">Αργεντινή</string>
+    <string name="aruba">Αρούμπα</string>
+    <string name="bahamas">Μπαχάμες</string>
+    <string name="barbados">Μπαρμπάντος</string>
+    <string name="belize">Μπελίζ</string>
+    <string name="bolivia">Βολιβία</string>
+    <string name="brazil">Βραζιλία</string>
+    <string name="british_virgin_islands">Βρετανικές Παρθένοι Νήσοι</string>
+    <string name="canada">Καναδάς</string>
+    <string name="cayman_islands">Νήσοι Κέιμαν</string>
+    <string name="chile">Χιλή</string>
+    <string name="colombia">Κολομβία</string>
+    <string name="costa_rica">Κόστα Ρίκα</string>
+    <string name="dominica">Δομινίκα</string>
+    <string name="dominican_republic">Δομινικανή Δημοκρατία</string>
+    <string name="ecuador">Εκουαδόρ</string>
+    <string name="el_salvador">Ελ Σαλβαδόρ</string>
+    <string name="french_guiana">Γαλλική Γουιάνα</string>
+    <string name="grenada">Γρενάδα</string>
+    <string name="guadeloupe">Γουαδελούπη</string>
+    <string name="guatemala">Γουατεμάλα</string>
+    <string name="guyana">Γουιάνα</string>
+    <string name="haiti">Αϊτή</string>
+    <string name="honduras">Ονδούρα</string>
+    <string name="jamaica">Τζαμάικα</string>
+    <string name="matinique">Μαρτινίκα</string>
+    <string name="mexico">Μεξικό</string>
+    <string name="monsterrat">Μοντσερράτ</string>
+    <string name="netherlands_antilles">Ολλανδικές Αντίλλες</string>
+    <string name="nicaragua">Νικαράγουα</string>
+    <string name="panama">Παναμάς</string>
+    <string name="paraguay">Παραγουάη</string>
+    <string name="peru">Περού</string>
+    <string name="saint_lucia">Αγία Λουκία</string>
+    <string name="suriname">Σουρινάμ</string>
+    <string name="trinidad_and_tobago">Τρινιντάντ και Τομπάγκο</string>
+    <string name="united_states">Ηνωμένες Πολιτείες</string>
+    <string name="uruguay">Ουρουγουάη</string>
+    <string name="us_virgin_islands">Αμερικανικές Παρθένοι Νήσοι</string>
+    <string name="venezuela">Βενεζουέλα</string>
+    <string name="albania">Αλβανία</string>
+    <string name="australia">Αυστραλία</string>
+    <string name="austria">Αυστρία</string>
+    <string name="belgium">Βέλγιο</string>
+    <string name="bosnia_and_herzegovnia">Βοσνία και Ερζεγοβίνη</string>
+    <string name="botswana">Μποτσουάνα</string>
+    <string name="bulgaria">Βουλγαρία</string>
+    <string name="croatia">Κροατία</string>
+    <string name="cyprus">Κύπρος</string>
+    <string name="czech_republic">Τσεχία</string>
+    <string name="denmark">Δανία</string>
+    <string name="estonia">Εσθονία</string>
+    <string name="finland">Φινλανδία</string>
+    <string name="france">Γαλλία</string>
+    <string name="germany">Γερμανία</string>
+    <string name="greece">Ελλάδα</string>
+    <string name="hungary">Ουγγαρία</string>
+    <string name="iceland">Ισλανδία</string>
+    <string name="ireland">Ιρλανδία</string>
+    <string name="italy">Ιταλία</string>
+    <string name="latvia">Λετονία</string>
+    <string name="lesotho">Λεσότο</string>
+    <string name="liechtenstein">Λιχτενστάιν</string>
+    <string name="lithuania">Λιθουανία</string>
+    <string name="luxembourg">Λουξεμβούργο</string>
+    <string name="macedonia">Βόρεια Μακεδονία</string>
+    <string name="malta">Μάλτα</string>
+    <string name="montenegro">Μαυροβούνιο</string>
+    <string name="mozambique">Μοζαμβίκη</string>
+    <string name="namibia">Ναμίμπια</string>
+    <string name="netherlands">Ολλανδία</string>
+    <string name="new_zealand">Νέα Ζηλανδία</string>
+    <string name="norway">Νορβηγία</string>
+    <string name="poland">Πολωνία</string>
+    <string name="portugal">Πορτογαλία</string>
+    <string name="romania">Ρουμανία</string>
+    <string name="russia">Ρωσία</string>
+    <string name="serbia">Σερβία</string>
+    <string name="slovakia">Σλοβακία</string>
+    <string name="slovenia">Σλοβενία</string>
+    <string name="south_africa">Νότια Αφρική</string>
+    <string name="spain">Ισπανία</string>
+    <string name="swaziland">Εσουατίνι</string>
+    <string name="sweden">Σουηδία</string>
+    <string name="switzerland">Ελβετία</string>
+    <string name="turkey">Τουρκία</string>
+    <string name="united_kingdom">Ηνωμένο Βασίλειο</string>
+    <string name="zambia">Ζάμπια</string>
+    <string name="zimbabwe">Ζιμπάμπουε</string>
+    <string name="azerbaijan">Αζερμπαϊτζάν</string>
+    <string name="mauritania">Μαυριτανία</string>
+    <string name="mali">Μάλι</string>
+    <string name="niger">Νίγηρας</string>
+    <string name="chad">Τσαντ</string>
+    <string name="sudan">Σουδάν</string>
+    <string name="eritrea">Ερυθραία</string>
+    <string name="djibouti">Τζιμπουτί</string>
+    <string name="somalia">Σομαλία</string>
+    <string name="andorra">Ανδόρρα</string>
+    <string name="gibraltar">Γιβραλτάρ</string>
+    <string name="guernsey">Γκέρνζι</string>
+    <string name="isle_of_man">Νήσος του Μαν</string>
+    <string name="jersey">Τζέρσεϊ</string>
+    <string name="monaco">Μονακό</string>
+    <string name="taiwan">Ταϊβάν</string>
+    <string name="south_korea">Νότια Κορέα</string>
+    <string name="hong_kong">Χονγκ Κονγκ</string>
+    <string name="macau">Μακάο</string>
+    <string name="indonesia">Ινδονησία</string>
+    <string name="singapore">Σιγκαπούρη</string>
+    <string name="thailand">Ταϊλάνδη</string>
+    <string name="philippines">Φιλιππίνες</string>
+    <string name="malaysia">Μαλαισία</string>
+    <string name="china">Κίνα</string>
+    <string name="united_arab_emirates">Ηνωμένα Αραβικά Εμιράτα</string>
+    <string name="india">Ινδία</string>
+    <string name="egypt">Αίγυπτος</string>
+    <string name="oman">Ομάν</string>
+    <string name="qatar">Κατάρ</string>
+    <string name="kuwait">Κουβέιτ</string>
+    <string name="saudi_arabia">Σαουδική Αραβία</string>
+    <string name="syria">Συρία</string>
+    <string name="bahrain">Μπαχρέιν</string>
+    <string name="jordan">Ιορδανία</string>
+    <string name="san_marino">Άγιος Μαρίνος</string>
+    <string name="vatican_city">Βατικανό</string>
+    <string name="bermuda">Βερμούδες</string>
+
+    <!-- Months -->
+    <string name="january">Ιανουάριος</string>
+    <string name="february">Φεβρουάριος</string>
+    <string name="march">Μάρτιος</string>
+    <string name="april">Απρίλιος</string>
+    <string name="may">Μάιος</string>
+    <string name="june">Ιούνιος</string>
+    <string name="july">Ιούλιος</string>
+    <string name="august">Αύγουστος</string>
+    <string name="september">Σεπτέμβριος</string>
+    <string name="october">Οκτώβριος</string>
+    <string name="november">Νοέμβριος</string>
+    <string name="december">Δεκέμβριος</string>
+
+    <string name="artic_base">Artic Base</string>
+    <!-- Quickload&Save-->
+    <string name="emulation_quicksave_slot">Γρήγορη αποθήκευση</string>
+    <string name="emulation_quicksave">Γρήγορη αποθήκευση</string>
+    <string name="emulation_quickload">Γρήγορη φόρτωση</string>
+    <string name="emulation_occupied_quicksave_slot">Γρήγορη αποθήκευση - %1$tF %1$tR</string>
+    <!-- File Compression -->
+    <string name="compress">Συμπίεση</string>
+    <string name="compressing">Συμπίεση…</string>
+    <string name="decompress">Αποσυμπίεση</string>
+    <string name="decompressing">Αποσυμπίεση…</string>
+    <string name="compress_failed">Η συμπίεση απέτυχε.</string>
+    <string name="decompress_failed">Η αποσυμπίεση απέτυχε.</string>
     </resources>

@@ -362,6 +362,8 @@
     <string name="deterministic_async_operations_description">Makes async operations deterministic for debugging. Enabling this may cause freezes.</string>
     <string name="enable_rpc_server">Enable RPC Server</string>
     <string name="enable_rpc_server_desc">Enables the RPC server on port 45987. This allows remotely reading/writing guest memory.</string>
+    <string name="toggle_unique_data_console_type">Toggle unique data console type</string>
+    <string name="toggle_unique_data_console_type_desc">Toggles the unique data console type (Old 3DS &#8596; New 3DS) to be able to download the opposite system firmware type from system settings.</string>
     <string name="shader_jit">Enable Shader JIT</string>
     <string name="shader_jit_description">Use the JIT engine instead of the interpreter for software shader emulation.</string>
 
@@ -394,7 +396,7 @@
     <string name="learn_more">Learn More</string>
     <string name="close">Close</string>
     <string name="reset_to_default">Reset to Default</string>
-    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartidges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
+    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartridges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
     <string name="option_default">Default</string>
     <string name="none">None</string>
     <string name="auto">Auto</string>
@@ -589,6 +591,10 @@
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparing Shaders</string>
     <string name="building_shaders">Building %s</string>
+    <string name="delete_shader_cache">Delete Shader Cache</string>
+    <string name="delete_cache_select_backend">Select which graphics API to delete the shader cache</string>
+    <string name="deleting_shader_cache">Deleting shader cache for title, please wait…</string>
+    <string name="shader_cache_deleted">Shader cache deleted</string>
 
     <!-- About Game Dialog -->
     <string name="play">Play</string>

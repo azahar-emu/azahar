@@ -82,6 +82,10 @@ public:
         secure_value_backend = backend;
     }
 
+    static ResultVal<u16> GetSpecialContentIndexFromGameCard(u64 title_id, SpecialContentType type);
+    static ResultVal<u16> GetSpecialContentIndexFromTMD(MediaType media_type, u64 title_id,
+                                                        SpecialContentType type);
+
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
 
@@ -739,10 +743,6 @@ private:
      *      4-5 : Secure Value
      */
     void GetSaveDataSecureValue(Kernel::HLERequestContext& ctx);
-
-    static ResultVal<u16> GetSpecialContentIndexFromGameCard(u64 title_id, SpecialContentType type);
-    static ResultVal<u16> GetSpecialContentIndexFromTMD(MediaType media_type, u64 title_id,
-                                                        SpecialContentType type);
 
     std::unordered_map<u32, ProgramInfo> program_info_map;
     std::string current_gamecard_path;

@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -185,7 +185,7 @@ static Result DeleteDirectoryHelper(const Path& path, const std::string& mount_p
     }
 
     if (path_parser.IsRootDirectory())
-        return ResultNotFound;
+        return ResultInvalidOpenFlags;
 
     const auto full_path = path_parser.BuildHostPath(mount_point);
 

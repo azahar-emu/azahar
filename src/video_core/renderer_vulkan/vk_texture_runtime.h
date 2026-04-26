@@ -155,7 +155,7 @@ public:
     void GenerateMipmaps(Surface& surface);
 
     /// Returns true if the provided pixel format needs convertion
-    bool NeedsConversion(VideoCore::PixelFormat format) const;
+    bool NeedsConversion(const Surface& surface) const;
 
 private:
     /// Clears a partial texture rect using a clear rectangle
@@ -175,7 +175,8 @@ class Surface : public VideoCore::SurfaceBase {
     friend class TextureRuntime;
 
 public:
-    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
+    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params,
+                     const VideoCore::SurfaceFlagBits& initial_flag_bits = {});
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
 
@@ -295,7 +296,8 @@ public:
     Framebuffer& operator=(const Framebuffer&) = delete;
 
     Framebuffer(Framebuffer&& other) noexcept
-        : instance(other.instance), images(std::exchange(other.images, {})),
+        : VideoCore::FramebufferParams(std::move(other)), instance(other.instance),
+          images(std::exchange(other.images, {})),
           image_views(std::exchange(other.image_views, {})),
           framebuffer(std::exchange(other.framebuffer, VK_NULL_HANDLE)),
           render_pass(std::exchange(other.render_pass, VK_NULL_HANDLE)),
@@ -307,7 +309,7 @@ public:
           res_scale(std::exchange(other.res_scale, 1)) {}
 
     Framebuffer& operator=(Framebuffer&& other) noexcept {
-
+        VideoCore::FramebufferParams::operator=(std::move(other));
         images = std::exchange(other.images, {});
         image_views = std::exchange(other.image_views, {});
         framebuffer = std::exchange(other.framebuffer, VK_NULL_HANDLE);

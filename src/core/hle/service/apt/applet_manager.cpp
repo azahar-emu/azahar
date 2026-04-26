@@ -1456,6 +1456,8 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
 
     capture_buffer_info.reset();
 
+    app_jump_parameters.Invalidate();
+
     return ResultSuccess;
 }
 

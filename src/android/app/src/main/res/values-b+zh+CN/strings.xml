@@ -334,7 +334,6 @@
     <string name="learn_more">了解更多</string>
     <string name="close">关闭</string>
     <string name="reset_to_default">恢复默认</string>
-    <string name="redump_games"><![CDATA[请按照指南以转储您的<a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">游戏卡带</a>或<a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">已安装的应用</a>。]]></string>
     <string name="option_default">默认</string>
     <string name="none">无</string>
     <string name="auto">自动</string>

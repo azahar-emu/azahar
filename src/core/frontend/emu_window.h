@@ -269,6 +269,23 @@ public:
         return true;
     }
 
+    /// Cursor state for rendering a touch crosshair on the bottom screen.
+    struct CursorInfo {
+        bool visible = false;
+
+        /// Cursor position in bottom-screen-local pixel coordinates.
+        /// Origin is the top-left corner of the bottom screen, with x ranging
+        /// from 0 to bottom_screen.GetWidth() and y from 0 to
+        /// bottom_screen.GetHeight().
+        float projected_x = 0;
+        float projected_y = 0;
+    };
+
+    /// Returns the current cursor state. Override to provide cursor position.
+    virtual CursorInfo GetCursorInfo() const {
+        return {};
+    }
+
     Settings::StereoRenderOption get3DMode() const;
 
 protected:

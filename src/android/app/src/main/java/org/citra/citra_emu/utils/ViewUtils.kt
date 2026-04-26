@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,10 @@ import android.view.ViewGroup
 
 object ViewUtils {
     fun showView(view: View, length: Long = 300) {
+        if (view.visibility == View.VISIBLE) {
+            return
+        }
+
         view.apply {
             alpha = 0f
             visibility = View.VISIBLE

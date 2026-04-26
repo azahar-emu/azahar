@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/version.hpp>
 #include "common/common_types.h"
+#include "common/vector_math.h"
 #include "core/arm/arm_interface.h"
 #include "core/cheats/cheats.h"
 #include "core/hle/service/apt/applet_manager.h"
@@ -366,15 +367,6 @@ public:
 
     bool LoadStateBuffer(std::vector<u8> buffer);
 
-    /// Self delete ncch
-    bool SetSelfDelete(const std::string& file) {
-        if (m_filepath == file) {
-            self_delete_pending = true;
-            return true;
-        }
-        return false;
-    }
-
     /// Applies any changes to settings to this core instance.
     void ApplySettings();
 
@@ -389,6 +381,27 @@ public:
     }
 
     bool IsInitialSetup();
+
+    // This returns the 3DS notification LED RGB value.
+    // Keep in mind this is used as a PWM duty cycle on real HW,
+    // so the percieved LED brightness is not linear.
+    const Common::Vec3<u8>& GetInfoLEDColor() const {
+        return info_led_color;
+    }
+
+    void SetInfoLEDColor(const Common::Vec3<u8>& color) {
+        if (color == info_led_color)
+            return;
+
+        info_led_color = color;
+        if (info_led_color_changed) {
+            info_led_color_changed();
+        }
+    }
+
+    void RegisterInfoLEDColorChanged(const std::function<void()>& func) {
+        info_led_color_changed = func;
+    }
 
 private:
     /**
@@ -480,7 +493,6 @@ private:
     std::string m_chainloadpath;
     std::optional<u8> m_mem_mode;
     u64 title_id;
-    bool self_delete_pending;
 
     std::mutex signal_mutex;
     Signal current_signal;
@@ -496,6 +508,9 @@ private:
     std::vector<u8> restore_wireless_reboot_info;
 
     std::vector<u64> lle_modules;
+
+    Common::Vec3<u8> info_led_color;
+    std::function<void()> info_led_color_changed;
 
     friend class boost::serialization::access;
     template <typename Archive>

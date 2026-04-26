@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -29,15 +29,15 @@ void ShaderUnit::WriteOutput(const ShaderRegs& config, AttributeBuffer& buffer) 
 }
 
 void GeometryEmitter::Emit(std::span<Common::Vec4<f24>, 16> output_regs) {
-    ASSERT(vertex_id < 3);
+    ASSERT(emit_state.vertex_id < 3);
 
     u32 output_index{};
     for (u32 reg : Common::BitSet<u32>(output_mask)) {
-        buffer[vertex_id][output_index++] = output_regs[reg];
+        buffer[emit_state.vertex_id][output_index++] = output_regs[reg];
     }
 
-    if (prim_emit) {
-        if (winding) {
+    if (emit_state.prim_emit) {
+        if (emit_state.winding) {
             handlers->winding_setter();
         }
         for (std::size_t i = 0; i < buffer.size(); ++i) {

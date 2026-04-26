@@ -116,6 +116,7 @@
 
 #ifdef __APPLE__
 #include "common/apple_authorization.h"
+#include "common/apple_utils.h"
 Q_IMPORT_PLUGIN(QDarwinCameraPermissionPlugin);
 #endif
 
@@ -140,6 +141,61 @@ constexpr int default_mouse_timeout = 2500;
  */
 
 const int GMainWindow::max_recent_files_item;
+
+// There is a bug in the QT implementation on MSYS2 builds
+// that cause corners to appear when the app is switched to
+// fullscreen. The following code aims to fix that issue
+// until it is addressed upstream. It works by manually
+// disabling corners through the DWM API.
+// TODO(PabloMK7): Remove once the upstream bug is solved.
+#if defined(_WIN32) && !defined(_MSC_VER)
+#define NEEDS_ROUND_CORNERS_FIX
+#endif
+
+#ifdef NEEDS_ROUND_CORNERS_FIX
+#include <dwmapi.h>
+class WindowCornerManager {
+public:
+    static WindowCornerManager& instance() {
+        static WindowCornerManager inst;
+        return inst;
+    }
+
+    void blockRoundedCorners(QWidget* widget, bool block) {
+        HWND hwnd = reinterpret_cast<HWND>(widget->winId());
+        DWORD pref;
+
+        if (block) {
+            pref = DWMWCP_DEFAULT;
+            if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref,
+                                                sizeof(pref)))) {
+                original_prefs[hwnd] = pref;
+            } else {
+                original_prefs[hwnd] = DWMWCP_DEFAULT;
+            }
+
+            pref = DWMWCP_DONOTROUND;
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+        } else {
+            auto it = original_prefs.find(hwnd);
+            if (it == original_prefs.end())
+                return;
+
+            pref = it->second;
+
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &pref, sizeof(pref));
+
+            original_prefs.erase(it);
+        }
+    }
+
+private:
+    WindowCornerManager() = default;
+    ~WindowCornerManager() = default;
+
+    std::unordered_map<HWND, DWORD> original_prefs;
+};
+#endif
 
 static QString PrettyProductName() {
 #ifdef _WIN32
@@ -180,11 +236,20 @@ bool IsPrereleaseBuild() {
 }
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
-bool ShouldCheckForPrereleaseUpdates() {
+static bool ShouldCheckForPrereleaseUpdates() {
     const bool update_channel = UISettings::values.update_check_channel.GetValue();
     const bool using_prerelease_channel =
         (update_channel == UISettings::UpdateCheckChannels::PRERELEASE);
     return (IsPrereleaseBuild() || using_prerelease_channel);
+}
+
+static int GetMajorVersion(const std::string& version) {
+    size_t dot = version.find('.');
+    try {
+        return std::stoi(version.substr(0, dot));
+    } catch (...) {
+        return 0;
+    }
 }
 #endif
 
@@ -342,6 +407,8 @@ GMainWindow::GMainWindow(Core::System& system_)
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>(qt_cameras));
 
+    system.RegisterInfoLEDColorChanged([this]() { emit InfoLEDColorChanged(); });
+
     LoadTranslation();
 
     Pica::g_debug_context = Pica::DebugContext::Construct();
@@ -354,7 +421,7 @@ GMainWindow::GMainWindow(Core::System& system_)
 
 #ifdef USE_DISCORD_PRESENCE
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
-    discord_rpc->Update();
+    discord_rpc->Update(false);
 #endif
 
     play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
@@ -415,6 +482,19 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     show();
 
+#ifdef __APPLE__
+    if (AppleUtils::IsRunningFromTerminal()) {
+        QMessageBox::warning(
+            this, tr("Warning"),
+            tr("The `azahar` executable is being run directly rather than via the Azahar.app "
+               "bundle.\n\n"
+               "When run this way, the app may be missing certain functionality such as camera "
+               "emulation.\n\n"
+               "It is recommended to instead run Azahar using the `open` command, e.g.:\n"
+               "`open ./Azahar.app`"));
+    }
+#endif
+
 #ifdef ENABLE_QT_UPDATE_CHECKER
     if (UISettings::values.check_for_update_on_start) {
         update_future = QtConcurrent::run([]() -> QString {
@@ -422,7 +502,11 @@ GMainWindow::GMainWindow(Core::System& system_)
                 UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
 
             if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
-                return QString::fromStdString(latest_release_tag.value());
+                const int latest_major_version = GetMajorVersion(latest_release_tag.value());
+                const int current_major_version = GetMajorVersion(Common::g_build_fullname);
+                if (current_major_version <= latest_major_version) {
+                    return QString::fromStdString(latest_release_tag.value());
+                }
             }
             return QString{};
         });
@@ -438,24 +522,10 @@ GMainWindow::GMainWindow(Core::System& system_)
 
 #ifdef ENABLE_OPENGL
     gl_renderer = GetOpenGLRenderer();
-#if defined(_WIN32)
-    if (gl_renderer.startsWith(QStringLiteral("D3D12"))) {
-        // OpenGLOn12 supports but does not yet advertise OpenGL 4.0+
-        // We can override the version here to allow Citra to work.
-        // TODO: Remove this when OpenGL 4.0+ is advertised.
-        qputenv("MESA_GL_VERSION_OVERRIDE", "4.6");
-    }
-#endif
 #endif
 
 #ifdef ENABLE_VULKAN
     physical_devices = GetVulkanPhysicalDevices();
-    if (physical_devices.empty()) {
-        QMessageBox::warning(this, tr("No Suitable Vulkan Devices Detected"),
-                             tr("Vulkan initialization failed during boot.<br/>"
-                                "Your GPU may not support Vulkan 1.1, or you do not "
-                                "have the latest graphics driver."));
-    }
 #endif
 
     if (!game_path.isEmpty()) {
@@ -592,6 +662,20 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
+
+    QFrame* sep = new QFrame(this);
+    sep->setFrameShape(QFrame::VLine);
+    sep->setFrameShadow(QFrame::Sunken);
+    sep->setFixedHeight(16);
+    statusBar()->addPermanentWidget(sep);
+
+    notification_led = new LedWidget();
+    notification_led->setToolTip(tr("Emulated notification LED"));
+    statusBar()->addPermanentWidget(notification_led);
+    connect(this, &GMainWindow::InfoLEDColorChanged, this, [this] {
+        auto led_color = system.GetInfoLEDColor();
+        notification_led->setColor(QColor(led_color.r(), led_color.g(), led_color.b()));
+    });
 
     statusBar()->setVisible(true);
 
@@ -946,7 +1030,7 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
             OnPauseGame();
         } else if (!emu_thread->IsRunning() && auto_paused && state == Qt::ApplicationActive) {
             auto_paused = false;
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
     if (UISettings::values.mute_when_in_background) {
@@ -1263,7 +1347,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
-            LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename.toStdString());
+            LOG_CRITICAL(Frontend, "Failed to obtain loader for {}", filename.toStdString());
             QMessageBox::critical(
                 this, tr("Invalid App Format"),
                 tr("Your app format is not supported.<br/>Please follow the guides to redump your "
@@ -1501,7 +1585,7 @@ void GMainWindow::BootGame(const QString& filename) {
         ShowFullscreen();
     }
 
-    OnStartGame();
+    OnResumeGame(true);
 }
 
 void GMainWindow::ShutdownGame() {
@@ -1554,7 +1638,7 @@ void GMainWindow::ShutdownGame() {
     OnCloseMovie();
 
 #ifdef USE_DISCORD_PRESENCE
-    discord_rpc->Update();
+    discord_rpc->Update(false);
 #endif
 #ifdef __unix__
     Common::Linux::StopGamemode();
@@ -1587,6 +1671,7 @@ void GMainWindow::ShutdownGame() {
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
     emu_frametime_label->setVisible(false);
+    notification_led->setColor(QColor(0, 0, 0));
 
     UpdateSaveStates();
 
@@ -2478,7 +2563,7 @@ void GMainWindow::OnMenuRecentFile() {
     }
 }
 
-void GMainWindow::OnStartGame() {
+void GMainWindow::OnResumeGame(bool first_start) {
     qt_cameras->ResumeCameras();
 
     PreventOSSleep();
@@ -2495,9 +2580,12 @@ void GMainWindow::OnStartGame() {
     play_time_manager->SetProgramId(game_title_id);
     play_time_manager->Start();
 
+    if (first_start) {
 #ifdef USE_DISCORD_PRESENCE
-    discord_rpc->Update();
+        discord_rpc->Update(true);
 #endif
+    }
+
 #ifdef __unix__
     Common::Linux::StartGamemode();
 #endif
@@ -2533,7 +2621,7 @@ void GMainWindow::OnPauseContinueGame() {
         if (emu_thread->IsRunning() && !system.frame_limiter.IsFrameAdvancing()) {
             OnPauseGame();
         } else {
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
 }
@@ -2572,8 +2660,14 @@ void GMainWindow::ToggleSecondaryFullscreen() {
         return;
     }
     if (secondary_window->isFullScreen()) {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(secondary_window, false);
+#endif
         secondary_window->showNormal();
     } else {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(secondary_window, true);
+#endif
         secondary_window->showFullScreen();
     }
 }
@@ -2583,9 +2677,15 @@ void GMainWindow::ShowFullscreen() {
         UISettings::values.geometry = saveGeometry();
         ui->menubar->hide();
         statusBar()->hide();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(this, true);
+#endif
         showFullScreen();
     } else {
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(render_window, true);
+#endif
         render_window->showFullScreen();
     }
 }
@@ -2594,9 +2694,15 @@ void GMainWindow::HideFullscreen() {
     if (ui->action_Single_Window_Mode->isChecked()) {
         statusBar()->setVisible(ui->action_Show_Status_Bar->isChecked());
         ui->menubar->show();
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(this, false);
+#endif
         showNormal();
         restoreGeometry(UISettings::values.geometry);
     } else {
+#ifdef NEEDS_ROUND_CORNERS_FIX
+        WindowCornerManager::instance().blockRoundedCorners(render_window, false);
+#endif
         render_window->showNormal();
         render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
     }
@@ -2835,6 +2941,7 @@ void GMainWindow::OnConfigure() {
 #ifdef USE_DISCORD_PRESENCE
         if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
+            discord_rpc->Update(system.IsPoweredOn());
         }
 #endif
 #ifdef __unix__
@@ -3002,7 +3109,7 @@ void GMainWindow::OnCloseMovie() {
         }
 
         if (was_running) {
-            OnStartGame();
+            OnResumeGame(false);
         }
     }
 
@@ -3024,7 +3131,7 @@ void GMainWindow::OnSaveMovie() {
     }
 
     if (was_running) {
-        OnStartGame();
+        OnResumeGame(false);
     }
 }
 
@@ -3068,7 +3175,7 @@ void GMainWindow::OnCaptureScreenshot() {
         screenshot_window->CaptureScreenshot(
             UISettings::values.screenshot_resolution_factor.GetValue(),
             QString::fromStdString(path));
-        OnStartGame();
+        OnResumeGame(false);
     }
 }
 
@@ -3471,7 +3578,7 @@ void GMainWindow::OnStopVideoDumping() {
                 ShutdownGame();
             } else if (game_paused_for_dumping) {
                 game_paused_for_dumping = false;
-                OnStartGame();
+                OnResumeGame(false);
             }
         });
         future_watcher->setFuture(future);
@@ -4205,7 +4312,6 @@ void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
     } else {
         discord_rpc = std::make_unique<DiscordRPC::NullImpl>();
     }
-    discord_rpc->Update();
 }
 #endif
 

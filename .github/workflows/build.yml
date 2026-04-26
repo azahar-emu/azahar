@@ -23,12 +23,12 @@ jobs:
           name: source
           path: artifacts/
 
-  linux:
+  linux-x86_64:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        target: ["appimage", "appimage-wayland", "fresh"]
+        target: ["appimage", "appimage-wayland", "gcc-nopch"]
     container:
       image: opensauce04/azahar-build-environment:latest
       options: -u 1001
@@ -49,9 +49,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
+          key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.target }}-
+            ${{ github.job }}-${{ matrix.target }}-
       - name: Build
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: ./.ci/linux.sh
@@ -68,20 +68,23 @@ jobs:
         if: ${{ contains(matrix.target, 'appimage') && env.SHOULD_RUN == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.OS }}-${{ env.TARGET }}
+          name: ${{ github.job }}-${{ matrix.target }}
           path: artifacts/
 
-  macos:
-    runs-on: ${{ (matrix.target == 'x86_64' && 'macos-26-intel') || 'macos-26' }}
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
-        target: ["x86_64", "arm64"]
+        target: ["clang", "gcc-nopch"]
+    container:
+      image: opensauce04/azahar-build-environment:latest
+      options: -u 1001
     env:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
-      OS: macos
+      OS: linux
       TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
@@ -91,58 +94,52 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
+          key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.target }}-
-      - name: Install tools
-        run: brew install ccache ninja spirv-tools
+            ${{ github.job }}-${{ matrix.target }}-
       - name: Build
-        run: ./.ci/macos.sh
-      - name: Prepare outputs for caching
-        run: cp -R build/bundle $OS-$TARGET
-      - name: Cache outputs for universal build
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.OS }}-${{ env.TARGET }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Pack
-        run: ./.ci/pack.sh
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.OS }}-${{ env.TARGET }}
-          path: artifacts/
+        run: ./.ci/linux.sh
 
-  macos-universal:
-    runs-on: macos-26
-    needs: macos
+  macos:
+    runs-on: 'macos-26'
     env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_COMPILERCHECK: content
+      CCACHE_SLOPPINESS: time_macros
       OS: macos
-      TARGET: universal
     steps:
       - uses: actions/checkout@v4
-      - name: Download x86_64 build from cache
-        uses: actions/cache/restore@v4
         with:
-          path: ${{ env.OS }}-x86_64
-          key: ${{ runner.os }}-x86_64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          fail-on-cache-miss: true
-      - name: Download ARM64 build from cache
-        uses: actions/cache/restore@v4
+          submodules: recursive
+      - name: Set up cache
+        uses: actions/cache@v4
         with:
-          path: ${{ env.OS }}-arm64
-          key: ${{ runner.os }}-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          fail-on-cache-miss: true
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-
+      - name: Install tools
+        run: brew install ccache ninja spirv-tools
+      - name: Build (x86_64)
+        run: BUILD_ARCH=x86_64 ./.ci/macos.sh
+      - name: Build (arm64)
+        run: BUILD_ARCH=arm64 ./.ci/macos.sh
       - name: Create universal app
         run: ./.ci/macos-universal.sh
-        env:
-          ARTIFACTS: ${{ env.OS }}-x86_64 ${{ env.OS }}-arm64
+      - name: Prepare for packing
+        run: |
+          mkdir build/bundle
+          cp -r build/x86_64/bundle build/bundle/x86_64
+          cp -r build/arm64/bundle build/bundle/arm64
+          cp -r build/universal/bundle build/bundle/universal
       - name: Pack
+        env:
+          PACK_INDIVIDUALLY: 1
         run: ./.ci/pack.sh
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.OS }}-${{ env.TARGET }}
+          name: ${{ env.OS }}
           path: artifacts/
 
   windows:
@@ -259,15 +256,18 @@ jobs:
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
+      - name: Update Android SDK CMake version
+        if: ${{ env.SHOULD_RUN == 'true' }}
+        run: |
+          yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Install tools
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           sudo apt-get update -y
-          sudo apt-get install ccache apksigner -y
-      - name: Update Android SDK CMake version
-        if: ${{ env.SHOULD_RUN == 'true' }}
-        run: |
-          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
+          sudo apt-get install -y apksigner ccache
+          echo "Checking ninja version..."
+          /usr/local/bin/ninja --version
+          ln -sf /usr/local/bin/ninja /usr/local/lib/android/sdk/cmake/3.30.3/bin/ninja
       - name: Build
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh

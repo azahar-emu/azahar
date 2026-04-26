@@ -38,7 +38,14 @@ void Swapchain::Create(u32 width_, u32 height_, vk::SurfaceKHR surface_, bool lo
     Destroy();
 
     SetPresentMode();
+    if (needs_recreation) {
+        return;
+    }
+
     SetSurfaceProperties();
+    if (needs_recreation) {
+        return;
+    }
 
     const std::array queue_family_indices = {
         instance.GetGraphicsQueueFamilyIndex(),
@@ -70,9 +77,13 @@ void Swapchain::Create(u32 width_, u32 height_, vk::SurfaceKHR surface_, bool lo
 
     try {
         swapchain = instance.GetDevice().createSwapchainKHR(swapchain_info);
+    } catch (vk::SurfaceLostKHRError&) {
+        LOG_ERROR(Render_Vulkan, "Surface lost during swapchain creation");
+        needs_recreation = true;
+        return;
     } catch (vk::SystemError& err) {
         LOG_CRITICAL(Render_Vulkan, "{}", err.what());
-        UNREACHABLE();
+        throw;
     }
 
     SetupImages();
@@ -160,7 +171,15 @@ void Swapchain::FindPresentFormat() {
 }
 
 void Swapchain::SetPresentMode() {
-    const auto modes = instance.GetPhysicalDevice().getSurfacePresentModesKHR(surface);
+    std::vector<vk::PresentModeKHR> modes;
+    try {
+        modes = instance.GetPhysicalDevice().getSurfacePresentModesKHR(surface);
+    } catch (vk::SurfaceLostKHRError&) {
+        LOG_ERROR(Render_Vulkan, "Surface lost during swapchain creation");
+        needs_recreation = true;
+        return;
+    }
+
     const bool use_vsync = Settings::values.use_vsync.GetValue();
     const auto find_mode = [&modes](vk::PresentModeKHR requested) {
         const auto it =
@@ -203,8 +222,14 @@ void Swapchain::SetPresentMode() {
 }
 
 void Swapchain::SetSurfaceProperties() {
-    const vk::SurfaceCapabilitiesKHR capabilities =
-        instance.GetPhysicalDevice().getSurfaceCapabilitiesKHR(surface);
+    vk::SurfaceCapabilitiesKHR capabilities;
+    try {
+        capabilities = instance.GetPhysicalDevice().getSurfaceCapabilitiesKHR(surface);
+    } catch (vk::SurfaceLostKHRError&) {
+        LOG_ERROR(Render_Vulkan, "Surface lost during swapchain creation");
+        needs_recreation = true;
+        return;
+    }
 
     extent = capabilities.currentExtent;
     if (capabilities.currentExtent.width == std::numeric_limits<u32>::max()) {
@@ -237,6 +262,7 @@ void Swapchain::Destroy() {
     vk::Device device = instance.GetDevice();
     if (swapchain) {
         device.destroySwapchainKHR(swapchain);
+        swapchain = VK_NULL_HANDLE;
     }
     for (u32 i = 0; i < image_count; i++) {
         device.destroySemaphore(image_acquired[i]);

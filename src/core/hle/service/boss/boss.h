@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -980,10 +980,10 @@ private:
     Core::System& system;
     std::shared_ptr<Kernel::Event> task_finish_event;
 
-    u8 new_arrival_flag;
-    u8 ns_data_new_flag;
-    u8 ns_data_new_flag_privileged;
-    u8 output_flag;
+    u8 new_arrival_flag{};
+    u8 ns_data_new_flag{};
+    u8 ns_data_new_flag_privileged{};
+    u8 output_flag{};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

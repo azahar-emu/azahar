@@ -21,6 +21,7 @@
 #include <QTranslator>
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/hotkeys.h"
+#include "citra_qt/notification_led.h"
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
@@ -147,6 +148,7 @@ signals:
     void CIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void CompressFinished(bool is_compress, bool success);
     void CIAInstallFinished();
+    void InfoLEDColorChanged();
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
 
@@ -229,7 +231,7 @@ private:
     void ShowFFmpegErrorMessage();
 
 private slots:
-    void OnStartGame();
+    void OnResumeGame(bool first_start);
     void OnRestartGame();
     void OnPauseGame();
     void OnPauseContinueGame();
@@ -363,6 +365,8 @@ private:
     bool message_label_used_for_movie = false;
 
     MultiplayerState* multiplayer_state = nullptr;
+
+    LedWidget* notification_led = nullptr;
 
     // Created before `config` to ensure that emu data directory
     // isn't created before the check is performed
