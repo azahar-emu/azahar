@@ -1605,7 +1605,7 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
                          Surface* color, Surface* depth)
     : VideoCore::FramebufferParams{params}, instance{runtime.GetInstance()},
       res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)},
-      sample_count{color ? color->sample_count : (depth ? depth->sample_count : 1u)} {
+      sample_count{color ? color->sample_count : (depth ? depth->sample_count : u8(1u))} {
     auto& renderpass_cache = runtime.GetRenderpassCache();
     if (shadow_rendering && !color) {
         return;
