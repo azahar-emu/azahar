@@ -335,7 +335,8 @@ public:
     void UseArticClient(const std::shared_ptr<Network::ArticBase::Client>& client);
 
     void ReloadInputDevices();
-    std::array<float, 4> getStylusInputs();
+    static std::array<float, 4> getStylusInputs();
+    static std::array<float, 11> getModButtons();
     const PadState& GetState() const;
 
     // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
@@ -396,7 +397,8 @@ private:
     std::unique_ptr<Input::TouchDevice> controller_touch_device;
     std::unique_ptr<Input::TouchDevice> touch_device;
     std::unique_ptr<Input::TouchDevice> touch_btn_device;
-    std::array<float, 4> stylusInput = {0};
+    static std::array<float, 4> stylusInput;
+    static std::array<float, 11> modButtons;
     std::shared_ptr<ArticBaseController> artic_controller;
     std::shared_ptr<Network::ArticBase::Client> artic_client;
 

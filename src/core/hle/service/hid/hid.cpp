@@ -24,11 +24,14 @@
 #include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/service.h"
 #include "core/movie.h"
+#include "hid.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
 SERIALIZE_EXPORT_IMPL(Service::HID::Module)
 
 namespace Service::HID {
+std::array<float, 4> Module::stylusInput = {0};
+std::array<float, 11> Module::modButtons = {0};
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
@@ -223,7 +226,6 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
         state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
 
-
         // Setting up inputs for Cursor Class.
         float c_stick_x_f, c_stick_y_f;
         std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
@@ -231,7 +233,9 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         stylusInput[1] = c_stick_y_f;
         stylusInput[2] = zl_button->GetStatus();
         stylusInput[3] = zr_button->GetStatus();
-        // LOG_INFO(Service_HID, "C-Stick X: {}, C-Stick Y: {}, ZL: {}, ZR: {}", stylusInput[0], stylusInput[1], stylusInput[2], stylusInput[3]);
+        for (int i = 0; i < 12; i++){
+            modButtons[i] = buttons[i - BUTTON_HID_BEGIN]->GetStatus();
+        }
 
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
@@ -338,6 +342,10 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
 std::array<float, 4> Module::getStylusInputs(){
     return stylusInput;
+}
+
+std::array<float, 11> Module::getModButtons(){
+    return modButtons;
 }
 
 void Module::UpdateAccelerometerCallback(std::uintptr_t user_data, s64 cycles_late) {
