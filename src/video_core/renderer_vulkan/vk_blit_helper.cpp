@@ -289,6 +289,7 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                       "BlitHelper: three_textures_pipeline_layout");
         SetObjectName(device, full_screen_vert, "BlitHelper: full_screen_vert");
         SetObjectName(device, d24s8_to_rgba8_comp, "BlitHelper: d24s8_to_rgba8_comp");
+        SetObjectName(device, d24s8_to_rgba8_ms_comp, "BlitHelper: d24s8_to_rgba8_ms_comp");
         SetObjectName(device, depth_to_buffer_comp, "BlitHelper: depth_to_buffer_comp");
         if (blit_depth_stencil_frag) {
             SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
@@ -316,6 +317,7 @@ BlitHelper::~BlitHelper() {
     device.destroyPipelineLayout(three_textures_pipeline_layout);
     device.destroyShaderModule(full_screen_vert);
     device.destroyShaderModule(d24s8_to_rgba8_comp);
+    device.destroyShaderModule(d24s8_to_rgba8_ms_comp);
     device.destroyShaderModule(depth_to_buffer_comp);
     if (blit_depth_stencil_frag) {
         device.destroyShaderModule(blit_depth_stencil_frag);
