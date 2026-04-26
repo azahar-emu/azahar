@@ -1477,7 +1477,7 @@ vk::Framebuffer Surface::Framebuffer(Type type) noexcept {
     boost::container::small_vector<vk::ImageView, 2> image_views;
     if (sample_count > 1) {
         // Main surface + MSAA surface
-        image_views.emplace_back(ImageView(ViewType::Mip0));
+        image_views.emplace_back(ImageView(ViewType::Mip0, type));
         image_views.emplace_back(ImageView(ViewType::Mip0, Type::MultiSampled));
     } else {
         image_views.emplace_back(ImageView(ViewType::Mip0, type));
