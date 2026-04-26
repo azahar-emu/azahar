@@ -1083,11 +1083,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
         val layoutOptionMenuItem = when (selectedLayout) {
             SecondaryDisplayLayout.NONE.int -> {
-                R.id.menu_secondary_layout_reverse_primary
+                R.id.menu_secondary_layout_opposite
             }
 
             SecondaryDisplayLayout.REVERSE_PRIMARY.int ->
-                R.id.menu_secondary_layout_reverse_primary
+                R.id.menu_secondary_layout_opposite
 
             SecondaryDisplayLayout.TOP_SCREEN.int ->
                 R.id.menu_secondary_layout_top
@@ -1142,7 +1142,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
-                R.id.menu_secondary_layout_reverse_primary -> {
+                R.id.menu_secondary_layout_opposite -> {
                     screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.REVERSE_PRIMARY.int)
                     true
                 }
