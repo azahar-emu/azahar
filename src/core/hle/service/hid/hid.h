@@ -242,7 +242,7 @@ public:
     class Interface : public ServiceFramework<Interface> {
     public:
         Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session);
-
+        // Stylus X, Y, ZL, ZR
         std::shared_ptr<Module> GetModule() const;
 
     protected:
@@ -335,7 +335,7 @@ public:
     void UseArticClient(const std::shared_ptr<Network::ArticBase::Client>& client);
 
     void ReloadInputDevices();
-
+    std::array<float, 4> getStylusInputs();
     const PadState& GetState() const;
 
     // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
@@ -388,12 +388,15 @@ private:
     std::atomic<bool> is_device_reload_pending{true};
     std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
         buttons;
+    std::unique_ptr<Input::ButtonDevice> zl_button;
+    std::unique_ptr<Input::ButtonDevice> zr_button;
     std::unique_ptr<Input::AnalogDevice> circle_pad;
+    std::unique_ptr<Input::AnalogDevice> c_stick;
     std::unique_ptr<Input::MotionDevice> motion_device;
     std::unique_ptr<Input::TouchDevice> controller_touch_device;
     std::unique_ptr<Input::TouchDevice> touch_device;
     std::unique_ptr<Input::TouchDevice> touch_btn_device;
-
+    std::array<float, 4> stylusInput = {0};
     std::shared_ptr<ArticBaseController> artic_controller;
     std::shared_ptr<Network::ArticBase::Client> artic_client;
 

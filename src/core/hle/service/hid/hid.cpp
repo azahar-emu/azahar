@@ -121,9 +121,15 @@ void Module::LoadInputDevices() {
                    Settings::values.current_input_profile.buttons.begin() +
                        Settings::NativeButton::BUTTON_HID_END,
                    buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
+    zl_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZL]);
+    zr_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZR]);
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CirclePad]);
-    motion_device = Input::CreateDevice<Input::MotionDevice>(
+    c_stick = Input::CreateDevice<Input::AnalogDevice>(
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CStick]);
+        motion_device = Input::CreateDevice<Input::MotionDevice>(
         Settings::values.current_input_profile.motion_device);
     touch_device = Input::CreateDevice<Input::TouchDevice>(
         Settings::values.current_input_profile.touch_device);
@@ -216,6 +222,16 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
         state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
         state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
+
+
+        // Setting up inputs for Cursor Class.
+        float c_stick_x_f, c_stick_y_f;
+        std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
+        stylusInput[0] = c_stick_x_f;
+        stylusInput[1] = c_stick_y_f;
+        stylusInput[2] = zl_button->GetStatus();
+        stylusInput[3] = zr_button->GetStatus();
+        // LOG_INFO(Service_HID, "C-Stick X: {}, C-Stick Y: {}, ZL: {}, ZR: {}", stylusInput[0], stylusInput[1], stylusInput[2], stylusInput[3]);
 
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
@@ -318,6 +334,10 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
+}
+
+std::array<float, 4> Module::getStylusInputs(){
+    return stylusInput;
 }
 
 void Module::UpdateAccelerometerCallback(std::uintptr_t user_data, s64 cycles_late) {
