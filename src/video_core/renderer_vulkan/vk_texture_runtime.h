@@ -163,6 +163,9 @@ private:
     /// Clears a partial texture rect using a clear rectangle
     void ClearTextureWithRenderpass(Surface& surface, const VideoCore::TextureClear& clear);
 
+    /// Resolves the multi-sampled texture of a surface, if available, into the current texture
+    void ResolveTexture(Surface& surface);
+
 private:
     const Instance& instance;
     Scheduler& scheduler;
