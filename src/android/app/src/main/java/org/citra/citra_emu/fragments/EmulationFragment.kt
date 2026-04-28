@@ -78,7 +78,6 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationMenuSettings
-import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -93,7 +92,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
-    private lateinit var emulationActivity: EmulationActivity
+    private val emulationActivity: EmulationActivity
+        get() = (requireActivity() as EmulationActivity)
 
     private var _binding: FragmentEmulationBinding? = null
     private val binding get() = _binding!!
@@ -116,8 +116,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is EmulationActivity) {
-            emulationActivity = context
-            NativeLibrary.setEmulationActivity(context)
+             NativeLibrary.setEmulationActivity(context)
         } else {
             throw IllegalStateException("EmulationFragment must have EmulationActivity parent")
         }
@@ -183,7 +182,6 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
         emulationState = EmulationState(game.path)
-        emulationActivity = requireActivity() as EmulationActivity
         screenAdjustmentUtil =
             ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
@@ -197,7 +195,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     ): View {
         _binding = FragmentEmulationBinding.inflate(inflater)
         binding.inGameMenu.menu.findItem(R.id.menu_secondary_screen_layout).isVisible =
-            emulationActivity.secondaryDisplay.getSecondaryDisplays(emulationActivity).isNotEmpty()
+            emulationActivity.secondaryDisplayManager.availableDisplays.isNotEmpty()
         binding.inGameMenu.menu.findItem(R.id.menu_landscape_screen_layout).isVisible =
             CitraApplication.appContext.resources.configuration.orientation !=
                     Configuration.ORIENTATION_PORTRAIT
@@ -1070,7 +1068,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         val enableSecondaryCheckbox = popupMenu.menu.findItem(R.id.menu_secondary_layout_none)
         chooserMenu?.subMenu?.removeGroup(R.id.menu_secondary_management_display_group)
         val displays =
-            emulationActivity.secondaryDisplay.getSecondaryDisplays(emulationActivity)
+            emulationActivity.secondaryDisplayManager.availableDisplays
 
         if (selectedLayout == SecondaryDisplayLayout.NONE.int) {
             enableSecondaryCheckbox.isChecked = false
@@ -1082,9 +1080,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             chooserMenu.isVisible = (displays.size > 1)
         }
         val layoutOptionMenuItem = when (selectedLayout) {
-            SecondaryDisplayLayout.NONE.int -> {
+            SecondaryDisplayLayout.NONE.int ->
                 R.id.menu_secondary_layout_opposite
-            }
 
             SecondaryDisplayLayout.REVERSE_PRIMARY.int ->
                 R.id.menu_secondary_layout_opposite
@@ -1108,9 +1105,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 R.id.menu_secondary_layout_side_by_side
         }
         popupMenu.menu.findItem(layoutOptionMenuItem).isChecked = true
-
+        // Add the available secondary displays to the display chooser list
+        // Use the display ID as the menu ID - since generated menu IDs are all > 1,000,000 this
+        // *should* result in unique ids
         if (displays.size > 1 && selectedLayout != SecondaryDisplayLayout.NONE.int) {
-            val current = emulationActivity.secondaryDisplay.currentDisplayId
+            val current = emulationActivity.secondaryDisplayManager.currentDisplayId
             chooserMenu.isVisible = true
             displays.forEachIndexed { index, display ->
                 chooserMenu?.subMenu?.add(
@@ -1137,7 +1136,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     } else {
                         screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.NONE.int)
                     }
-                    emulationActivity.secondaryDisplay.updateDisplay()
+                    emulationActivity.secondaryDisplayManager.updateDisplay()
                     showSecondaryScreenLayoutMenu() // reopen menu to get new behaviors
                     true
                 }
@@ -1183,8 +1182,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 else -> {
                     // display ID selection
-                    emulationActivity.secondaryDisplay.preferredDisplayId = it.itemId
-                    emulationActivity.secondaryDisplay.updateDisplay()
+                    // If we are clicking on a menu item that isn't one of the options above, it must
+                    // be one of the dynamically generated menu items added to the secondary display
+                    // choice list.
+                    emulationActivity.secondaryDisplayManager.preferredDisplayId = it.itemId
+                    emulationActivity.secondaryDisplayManager.updateDisplay()
                     true
                 }
             }

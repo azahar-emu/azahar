@@ -18,20 +18,16 @@
 #include "video_core/renderer_base.h"
 
 bool EmuWindow_Android::OnSurfaceChanged(ANativeWindow* surface) {
-    int w = surface == NULL ? 0 : ANativeWindow_getWidth(surface);
-    int h = surface == NULL ? 0 : ANativeWindow_getHeight(surface);
-    if (render_window == surface && w == window_width && h == window_height) {
+    int temp_width = surface == nullptr ? 0 : ANativeWindow_getWidth(surface);
+    int temp_height = surface == nullptr ? 0 : ANativeWindow_getHeight(surface);
+    if (render_window == surface && temp_width == window_width && temp_height == window_height) {
         return false;
     }
-    window_width = w;
-    window_height = h;
+    window_width = temp_width;
+    window_height = temp_height;
     render_window = surface;
     window_info.type = Frontend::WindowSystemType::Android;
     window_info.render_surface = surface;
-    if (surface != nullptr) {
-        window_width = ANativeWindow_getWidth(surface);
-        window_height = ANativeWindow_getHeight(surface);
-    }
     StopPresenting();
     OnFramebufferSizeChanged();
     return true;
