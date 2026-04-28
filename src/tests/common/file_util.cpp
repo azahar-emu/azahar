@@ -24,3 +24,14 @@ TEST_CASE("SplitFilename83 Sanity", "[common]") {
     REQUIRE(std::memcmp(short_name.data(), expected_short_name.data(), short_name.size()) == 0);
     REQUIRE(std::memcmp(extension.data(), expected_extension.data(), extension.size()) == 0);
 }
+
+TEST_CASE("NormalizeUTF8ToNFC Sanity", "[common]") {
+    const std::string decomposed = "i\xCC\x81";
+    const std::string composed = "\xC3\xAD";
+
+#if defined(__APPLE__)
+    REQUIRE(Common::NormalizeUTF8ToNFC(decomposed) == composed);
+#else
+    REQUIRE(Common::NormalizeUTF8ToNFC(decomposed) == decomposed);
+#endif
+}
