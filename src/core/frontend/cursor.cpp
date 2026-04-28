@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include "common/logging/log.h"
+#include "common/logging/types.h"
 #include "core\hle\service\hid\hid.h"
 
 
@@ -9,10 +10,12 @@ void Cursor::update(){
   if (emuWindow != nullptr){
     stylusInput = Service::HID::Module::getStylusInputs();
     modButtons = Service::HID::Module::getModButtons();
+    setRotation();
     if (deviceInUse == 0){
       if (inMacro){
         runMacro();
       } else {
+        // LOG_INFO(Core, "Stylus X: {:.2f}, Stylus Y: {:.2f}, Stylus Mod: {}, Stylus Touch: {}", stylusInput[0], stylusInput[1], stylusInput[2], stylusInput[3]);
         // Reset the cursor position if macro was just played
         if (justFinishedMacro > 0){
           justFinishedMacro = 0;
@@ -47,7 +50,7 @@ void Cursor::update(){
         int maxSpeed = 50;
         float multiplier = 0.5f * pow(4.0f, maxSpeed / 100.0f); // 0 is 0.5x speed, 100 is 2.0x speed.
         float heightSpeed = (240.0f / 33.0f) * multiplier;
-        bool stylusModPressed = stylusInput[3];
+        bool stylusModPressed = stylusInput[2];
         float responsecurve = 175.0f / 100.0f;
         float speedupratio = 400.0f / 100.0f;
         float joystickScaled[2] = {0.0f};
@@ -97,10 +100,10 @@ void Cursor::update(){
         updateCursorPos();
 
         // Handle stylus touch button presses
-        if (stylusInput[5]){
+        if (stylusInput[3]){
           touchScreen();
           wasTouching = true;
-        } else if (wasTouching && !stylusInput[5]){
+        } else if (wasTouching && !stylusInput[3]){
           release();
           wasTouching = false;
         }
@@ -111,10 +114,10 @@ void Cursor::update(){
       updateCursorPos();
 
       // Handle stylus touch button presses
-      if (stylusInput[5]){
+      if (stylusInput[3]){
         touchScreen();
         wasTouching = true;
-      } else if (wasTouching && !stylusInput[5]){
+      } else if (wasTouching && !stylusInput[3]){
         release();
         wasTouching = false;
       }
@@ -237,11 +240,12 @@ void Cursor::runMacro(){
     }
 }
 
-void Cursor::setRotation(int rot){
-  rotation = rot;
-}
-void Cursor::setLayout(int lay){
-  layout = lay;
+void Cursor::setRotation(){
+  if (emuWindow->GetFramebufferLayout().is_portrait){
+    rotation = 3;
+  } else {
+    rotation = 0;
+  }
 }
 
 std::vector<std::array<float, 2>> Cursor::rotateVector(std::vector<std::array<float, 2>> input){

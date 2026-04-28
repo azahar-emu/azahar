@@ -193,12 +193,13 @@ bool EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
 }
 
 bool EmuWindow::TouchDirectlyPressed(unsigned internal_x, unsigned internal_y) {
+    //This assumes 0, 0 is bottom left corner
     std::scoped_lock guard{touch_state->mutex};
     std::clamp<unsigned>(internal_x, 0, 319);
     std::clamp<unsigned>(internal_y, 0, 239);
     touch_state->touch_pressed = true;
-    touch_state->touch_x = internal_x;
-    touch_state->touch_y = internal_y;
+    touch_state->touch_x = internal_x/319.0f;
+    touch_state->touch_y = (239-internal_y)/239.0f;
     return true;
 }
 void EmuWindow::TouchReleased() {

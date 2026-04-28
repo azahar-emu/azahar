@@ -127,6 +127,8 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
                                          update_queue,
                                          main_present_window.ImageCount()},
       present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
+    vCursor = new Cursor();
+    vCursor->setEmuWindow(&window);
     CompileShaders();
     BuildLayouts();
     BuildPipelines();
@@ -249,7 +251,7 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
     clear_color.float32[1] = Settings::values.bg_green.GetValue();
     clear_color.float32[2] = Settings::values.bg_blue.GetValue();
     clear_color.float32[3] = 1.0f;
-
+    vCursor->update();
     DrawScreens(frame, layout, flipped);
     scheduler.Flush(frame->render_ready);
 
@@ -793,7 +795,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float x, float y, float w, 
     } else {
         draw_info.cursor_enable = 0;
     }
-    draw_info.cursor_pos = Common::MakeVec(cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
+    draw_info.cursor_pos = Common::MakeVec(vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     draw_info.screen_id_l = screen_id;
 
     scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
@@ -871,7 +873,7 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
     } else {
         draw_info.cursor_enable = 0;
     }
-    draw_info.cursor_pos = Common::MakeVec(cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
+    draw_info.cursor_pos = Common::MakeVec(vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;
 
@@ -1020,8 +1022,6 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     if (settings.shader_update_requested.exchange(false)) {
         ReloadPipeline(layout.render_3d_mode);
     }
-    cursor_pos[0] += 1;
-    cursor_pos[1] += 1;
     PrepareDraw(frame, layout);
 
     const auto& top_screen = layout.top_screen;

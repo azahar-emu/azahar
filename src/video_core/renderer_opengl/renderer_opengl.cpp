@@ -78,6 +78,8 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
       rasterizer{system.Memory(), pica, system.CustomTexManager(), *this, driver},
       frame_dumper{system, window} {
     const bool has_debug_tool = driver.HasDebugTool();
+    vCursor = new Cursor();
+    vCursor->setEmuWindow(&window);
     window.mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
     if (secondary_window) {
         secondary_window->mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
@@ -235,6 +237,7 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
 
         state.draw.draw_framebuffer = frame->render.handle;
         state.Apply();
+        vCursor->update();
         DrawScreens(layout, flipped);
         // Create a fence for the frontend to wait on and swap this frame to OffTex
         frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -568,7 +571,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
     } else {
         glUniform1i(uniform_cursor_enable, 0);
     }
-    glUniform2f(uniform_cursor_pos, cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
+    glUniform2f(uniform_cursor_pos, vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
     state.Apply();
@@ -645,7 +648,7 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     } else {
         glUniform1i(uniform_cursor_enable, 0);
     }
-    glUniform2f(uniform_cursor_pos, cursor_pos[0]/320.0f, cursor_pos[1]/240.0f);
+    glUniform2f(uniform_cursor_pos, vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = sampler;
@@ -706,8 +709,6 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     }
 
     glUniform1i(uniform_layer, 0);
-    cursor_pos[0] += 1;
-    cursor_pos[1] += 1;
     if (!Settings::values.swap_screen.GetValue()) {
         DrawTopScreen(layout, top_screen);
         glUniform1i(uniform_layer, 0);

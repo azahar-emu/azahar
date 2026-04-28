@@ -30,8 +30,8 @@ SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
 SERIALIZE_EXPORT_IMPL(Service::HID::Module)
 
 namespace Service::HID {
-std::array<float, 4> Module::stylusInput = {0};
-std::array<float, 11> Module::modButtons = {0};
+std::array<float, 4> Module::stylusInput = {};
+std::array<float, 4> Module::modButtons = {};
 
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
@@ -231,12 +231,11 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
         stylusInput[0] = c_stick_x_f;
         stylusInput[1] = c_stick_y_f;
-        stylusInput[2] = zl_button->GetStatus();
-        stylusInput[3] = zr_button->GetStatus();
-        for (int i = 0; i < 12; i++){
-            modButtons[i] = buttons[i - BUTTON_HID_BEGIN]->GetStatus();
+        stylusInput[2] = static_cast<float>(zl_button->GetStatus());
+        stylusInput[3] = static_cast<float>(zr_button->GetStatus());
+        for (int i = 0; i < 4; i++){
+            modButtons[i] = zl_button->GetStatus() && buttons[i - BUTTON_HID_BEGIN]->GetStatus();
         }
-
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
         std::tie(circle_pad_x_f, circle_pad_y_f) = circle_pad->GetStatus();
@@ -344,7 +343,7 @@ std::array<float, 4> Module::getStylusInputs(){
     return stylusInput;
 }
 
-std::array<float, 11> Module::getModButtons(){
+std::array<float, 4> Module::getModButtons(){
     return modButtons;
 }
 

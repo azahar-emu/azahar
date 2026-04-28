@@ -40,7 +40,7 @@ vec4 GetScreen(int screen_id) {
 
 void main() {
     vec4 pixel = GetScreen(screen_id_l);
-    vec2 rfrag_tex_coord = vec2(frag_tex_coord.y, 1.0 - frag_tex_coord.x);
+    vec2 rfrag_tex_coord = vec2(frag_tex_coord.y, frag_tex_coord.x);
     //Cursor
     if (cursor_enable == 1){
         //Black Outline

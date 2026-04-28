@@ -15,8 +15,7 @@ public:
   void setRawCursorPos(float x, float y);
   void setDeviceInUse(int device);
   void setEmuWindow(Frontend::EmuWindow* emuWindow);
-  void setRotation(int rot);
-  void setLayout(int layout);
+  void setRotation();
   int cursorPos[2];
   float normStylusDirection[2];
   bool cursorEnabled = true;
@@ -29,7 +28,7 @@ private:
   void updateCursorPos();
   bool wasTouching;
   std::array<float, 4> stylusInput;
-  std::array<float, 11> modButtons;
+  std::array<float, 4> modButtons;
   void circle(int direction); //0 is clockwise, 1 is counter clockwise
   void rub();
   void runMacro();
@@ -43,7 +42,6 @@ private:
   int justFinishedMacro;
   std::array<float, 2> macroInitPos;
   int rotation;
-  int layout;
   int deviceInUse; //0 is Gamepad, 1 is Mouse/Tablet
 };
 

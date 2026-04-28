@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "core/frontend/cursor.h"
 #include "video_core/renderer_base.h"
 #ifdef HAVE_LIBRETRO
 #include "citra_libretro/libretro_vk.h"
@@ -154,7 +155,6 @@ private:
     vk::Pipeline cursor_pipeline{};
     vk::UniquePipelineLayout cursor_pipeline_layout{};
     int currScreenDraw; // 0 is Top, 1 is Bottom
-    std::array<int, 2> cursor_pos = {0,0};
 };
 
 } // namespace Vulkan

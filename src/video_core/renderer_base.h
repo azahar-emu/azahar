@@ -7,6 +7,8 @@
 #include "common/common_types.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/rasterizer_interface.h"
+#include "core\frontend\cursor.h"
+class Cursor;
 
 namespace Frontend {
 class EmuWindow;
@@ -109,6 +111,7 @@ protected:
     RendererSettings settings;
     Frontend::EmuWindow& render_window;    /// Reference to the render window handle.
     Frontend::EmuWindow* secondary_window; /// Reference to the secondary render window handle.
+    Cursor* vCursor;
 
 protected:
     f32 current_fps = 0.0f; /// Current framerate, should be set by the renderer
