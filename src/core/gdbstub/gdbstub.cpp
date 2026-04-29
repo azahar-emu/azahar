@@ -137,8 +137,6 @@ static Kernel::Thread* current_thread = nullptr;
 // so default to a port outside of that range.
 u16 gdbstub_port = 24689;
 
-bool halt_loop = true;
-bool step_loop = false;
 bool send_trap = false;
 
 // If set to false, the server will never be started and no
@@ -666,7 +664,6 @@ static void ReadCommand() {
         return;
     } else if (c == 0x03) {
         LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
-        halt_loop = true;
         SendSignal(current_thread, SIGTRAP);
         return;
     } else if (c != GDB_STUB_START) {
@@ -916,18 +913,6 @@ void Break(bool is_memory_break) {
     memory_break = is_memory_break;
 }
 
-/// Tell the CPU that it should perform a single step.
-static void Step() {
-    if (command_length > 1) {
-        RegWrite(PC_REGISTER, GdbHexToInt(command_buffer + 1), current_thread);
-        UpdateCPUThreadContext();
-    }
-    step_loop = true;
-    halt_loop = true;
-    send_trap = true;
-    ClearAllInstructionCache();
-}
-
 bool IsMemoryBreak() {
     if (!IsConnected()) {
         return false;
@@ -939,8 +924,6 @@ bool IsMemoryBreak() {
 /// Tell the CPU to continue executing.
 static void Continue() {
     memory_break = false;
-    step_loop = false;
-    halt_loop = false;
     ClearAllInstructionCache();
 }
 
@@ -1132,7 +1115,8 @@ void HandlePacket(Core::System& system) {
         WriteMemory();
         break;
     case 's':
-        Step();
+        // Single step, return ENOTSUP
+        SendReply("E5F");
         return;
     case 'C':
     case 'c':
@@ -1181,16 +1165,8 @@ void DeferStart() {
 
 static void Init(u16 port) {
     if (!server_enabled) {
-        // Set the halt loop to false in case the user enabled the gdbstub mid-execution.
-        // This way the CPU can still execute normally.
-        halt_loop = false;
-        step_loop = false;
         return;
     }
-
-    // Setup initial gdbstub status
-    halt_loop = true;
-    step_loop = false;
 
     breakpoints_execute.clear();
     breakpoints_read.clear();
@@ -1239,9 +1215,6 @@ static void Init(u16 port) {
     if (gdbserver_socket < 0) {
         // In the case that we couldn't start the server for whatever reason, just start CPU
         // execution like normal.
-        halt_loop = false;
-        step_loop = false;
-
         LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
     } else {
         LOG_INFO(Debug_GDBStub, "Client connected.\n");
@@ -1285,22 +1258,6 @@ bool IsConnected() {
     return IsServerEnabled() && gdbserver_socket != -1;
 }
 
-bool GetCpuHaltFlag() {
-    return halt_loop;
-}
-
-void SetCpuHaltFlag(bool halt) {
-    halt_loop = halt;
-}
-
-bool GetCpuStepFlag() {
-    return step_loop;
-}
-
-void SetCpuStepFlag(bool is_step) {
-    step_loop = is_step;
-}
-
 void SendTrap(Kernel::Thread* thread, int trap) {
     if (!send_trap) {
         return;
@@ -1310,7 +1267,6 @@ void SendTrap(Kernel::Thread* thread, int trap) {
 
     SendSignal(thread, trap);
 
-    halt_loop = true;
     send_trap = false;
 }
 }; // namespace GDBStub
