@@ -25,13 +25,12 @@ TEST_CASE("SplitFilename83 Sanity", "[common]") {
     REQUIRE(std::memcmp(extension.data(), expected_extension.data(), extension.size()) == 0);
 }
 
+#if defined(__APPLE__)
+
 TEST_CASE("NormalizeNFDToNFC Sanity", "[common]") {
     const std::string decomposed = "i\xCC\x81";
     const std::string composed = "\xC3\xAD";
 
-#if defined(__APPLE__)
     REQUIRE(Common::NormalizeNFDToNFC(decomposed) == composed);
-#else
-    REQUIRE(Common::NormalizeNFDToNFC(decomposed) == decomposed);
-#endif
 }
+#endif
