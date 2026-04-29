@@ -523,6 +523,11 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
                                    vk::PipelineStageFlagBits::eTransfer,
                                vk::DependencyFlagBits::eByRegion, {}, {}, post_barriers);
     });
+
+    if (multisample) {
+        // Resolve the destination image if needed
+        ResolveTexture(dest);
+    }
     return true;
 }
 
@@ -599,6 +604,99 @@ bool BlitHelper::DepthToBuffer(Surface& source, vk::Buffer buffer,
                                vk::DependencyFlagBits::eByRegion, {}, {}, post_barrier);
     });
     return true;
+}
+
+void BlitHelper::ResolveTexture(Surface& surface) {
+
+    scheduler.Record([width = surface.GetScaledWidth(), height = surface.GetScaledHeight(),
+                      aspect = surface.Aspect(), access_flags = surface.AccessFlags(),
+                      pipeline_state_flags = surface.PipelineStageFlags(),
+                      msaa_image = surface.Image(Type::MultiSampled),
+                      dest_image = surface.Image()](vk::CommandBuffer cmdbuf) {
+        const vk::ImageResolve resolve_area = {
+            .srcSubresource{
+                .aspectMask = aspect,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+            .srcOffset = {},
+            .dstSubresource{
+                .aspectMask = aspect,
+                .mipLevel = 0,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+            .dstOffset = {},
+            .extent{
+                .width = width,
+                .height = height,
+                .depth = 1,
+            },
+        };
+
+        const vk::ImageSubresourceRange subresource_range = vk::ImageSubresourceRange{
+            .aspectMask = aspect,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = VK_REMAINING_ARRAY_LAYERS,
+        };
+
+        const std::array read_barriers = {
+            vk::ImageMemoryBarrier{
+                .srcAccessMask = access_flags,
+                .dstAccessMask = vk::AccessFlagBits::eTransferRead,
+                .oldLayout = vk::ImageLayout::eGeneral,
+                .newLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = msaa_image,
+                .subresourceRange = subresource_range,
+            },
+            vk::ImageMemoryBarrier{
+                .srcAccessMask = access_flags,
+                .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
+                .oldLayout = vk::ImageLayout::eGeneral,
+                .newLayout = vk::ImageLayout::eTransferDstOptimal,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = dest_image,
+                .subresourceRange = subresource_range,
+            },
+        };
+        const std::array write_barriers = {
+            vk::ImageMemoryBarrier{
+                .srcAccessMask = vk::AccessFlagBits::eTransferRead,
+                .dstAccessMask = access_flags,
+                .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
+                .newLayout = vk::ImageLayout::eGeneral,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = msaa_image,
+                .subresourceRange = subresource_range,
+            },
+            vk::ImageMemoryBarrier{
+                .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+                .dstAccessMask = access_flags,
+                .oldLayout = vk::ImageLayout::eTransferDstOptimal,
+                .newLayout = vk::ImageLayout::eGeneral,
+                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                .image = dest_image,
+                .subresourceRange = subresource_range,
+            },
+        };
+
+        cmdbuf.pipelineBarrier(pipeline_state_flags, vk::PipelineStageFlagBits::eTransfer,
+                               vk::DependencyFlagBits::eByRegion, {}, {}, read_barriers);
+
+        cmdbuf.resolveImage(msaa_image, vk::ImageLayout::eTransferSrcOptimal, dest_image,
+                            vk::ImageLayout::eTransferDstOptimal, resolve_area);
+
+        cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, pipeline_state_flags,
+                               vk::DependencyFlagBits::eByRegion, {}, {}, write_barriers);
+    });
 }
 
 vk::Pipeline BlitHelper::MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout) {

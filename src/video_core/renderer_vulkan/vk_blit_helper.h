@@ -39,6 +39,8 @@ public:
     bool DepthToBuffer(Surface& source, vk::Buffer buffer,
                        const VideoCore::BufferTextureCopy& copy);
 
+    void ResolveTexture(Surface& surface);
+
 private:
     vk::Pipeline MakeComputePipeline(vk::ShaderModule shader, vk::PipelineLayout layout);
     vk::Pipeline MakeDepthStencilBlitPipeline();
