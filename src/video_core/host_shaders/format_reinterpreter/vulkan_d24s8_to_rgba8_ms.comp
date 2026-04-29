@@ -17,10 +17,10 @@ layout(push_constant, std140) uniform ComputeInfo {
 };
 
 void main() {
-    int sample_count = textureSamples(depth);
-
     ivec2 src_coord = src_offset + ivec2(gl_GlobalInvocationID.xy);
     ivec2 dst_coord = dst_offset + ivec2(gl_GlobalInvocationID.xy);
+
+    int sample_count = textureSamples(depth);
     for(int sample_index = 0; sample_index < sample_count; ++sample_index)
     {
         highp uint depth_val = uint(texelFetch(depth, src_coord, sample_index).x * (exp2(32.0) - 1.0));
