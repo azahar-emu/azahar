@@ -425,8 +425,11 @@ void TextureRuntime::ClearTextureWithRenderpass(Surface& surface,
         .src_image = surface.Image(),
     };
 
-    scheduler.Record([params, is_color, clear, render_pass,
-                      framebuffer = surface.Framebuffer()](vk::CommandBuffer cmdbuf) {
+    // Ensure we get the MSAA framebuffer if we are are doing an MSAA texture
+    const vk::Framebuffer framebuffer =
+        surface.Framebuffer((surface.GetSampleCount() > 1) ? Type::MultiSampled : Type::Current);
+
+    scheduler.Record([params, is_color, clear, render_pass, framebuffer](vk::CommandBuffer cmdbuf) {
         const vk::AccessFlags access_flag =
             is_color ? vk::AccessFlagBits::eColorAttachmentRead |
                            vk::AccessFlagBits::eColorAttachmentWrite
