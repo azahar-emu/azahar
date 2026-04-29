@@ -495,93 +495,6 @@ void TextureRuntime::ClearTextureWithRenderpass(Surface& surface,
     });
 }
 
-void TextureRuntime::ResolveTexture(Surface& surface) {
-
-    scheduler.Record([width = surface.GetScaledWidth(), height = surface.GetScaledHeight(),
-                      aspect = surface.Aspect(), access_flags = surface.AccessFlags(),
-                      pipeline_state_flags = surface.PipelineStageFlags(),
-                      msaa_image = surface.Image(Type::MultiSampled),
-                      dest_image = surface.Image()](vk::CommandBuffer cmdbuf) {
-        const vk::ImageResolve resolve_area = {
-            .srcSubresource{
-                .aspectMask = aspect,
-                .mipLevel = 0,
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-            .srcOffset = {},
-            .dstSubresource{
-                .aspectMask = aspect,
-                .mipLevel = 0,
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-            .dstOffset = {},
-            .extent{
-                .width = width,
-                .height = height,
-                .depth = 1,
-            },
-        };
-
-        const vk::ImageSubresourceRange subresource_range = MakeSubresourceRange(aspect, 0);
-
-        const std::array read_barriers = {
-            vk::ImageMemoryBarrier{
-                .srcAccessMask = access_flags,
-                .dstAccessMask = vk::AccessFlagBits::eTransferRead,
-                .oldLayout = vk::ImageLayout::eGeneral,
-                .newLayout = vk::ImageLayout::eTransferSrcOptimal,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .image = msaa_image,
-                .subresourceRange = subresource_range,
-            },
-            vk::ImageMemoryBarrier{
-                .srcAccessMask = access_flags,
-                .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
-                .oldLayout = vk::ImageLayout::eGeneral,
-                .newLayout = vk::ImageLayout::eTransferDstOptimal,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .image = dest_image,
-                .subresourceRange = subresource_range,
-            },
-        };
-        const std::array write_barriers = {
-            vk::ImageMemoryBarrier{
-                .srcAccessMask = vk::AccessFlagBits::eTransferRead,
-                .dstAccessMask = access_flags,
-                .oldLayout = vk::ImageLayout::eTransferSrcOptimal,
-                .newLayout = vk::ImageLayout::eGeneral,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .image = msaa_image,
-                .subresourceRange = subresource_range,
-            },
-            vk::ImageMemoryBarrier{
-                .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
-                .dstAccessMask = access_flags,
-                .oldLayout = vk::ImageLayout::eTransferDstOptimal,
-                .newLayout = vk::ImageLayout::eGeneral,
-                .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                .image = dest_image,
-                .subresourceRange = subresource_range,
-            },
-        };
-
-        cmdbuf.pipelineBarrier(pipeline_state_flags, vk::PipelineStageFlagBits::eTransfer,
-                               vk::DependencyFlagBits::eByRegion, {}, {}, read_barriers);
-
-        cmdbuf.resolveImage(msaa_image, vk::ImageLayout::eTransferSrcOptimal, dest_image,
-                            vk::ImageLayout::eTransferDstOptimal, resolve_area);
-
-        cmdbuf.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, pipeline_state_flags,
-                               vk::DependencyFlagBits::eByRegion, {}, {}, write_barriers);
-    });
-}
-
 bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
                                   std::span<const VideoCore::TextureCopy> copies) {
     renderpass_cache.EndRendering();
@@ -697,10 +610,10 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     // Must resolve images first
     // Todo(wunk): Add a "dirty" flag for msaa resolves to avoid redundant image resolves
     if (source.sample_count > 1) {
-        ResolveTexture(source);
+        blit_helper.ResolveTexture(source);
     }
     if (dest.sample_count > 1) {
-        ResolveTexture(dest);
+        blit_helper.ResolveTexture(dest);
     }
 
     const RecordParams params = {
