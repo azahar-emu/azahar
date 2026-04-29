@@ -1234,9 +1234,8 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
         flags |= vk::ImageCreateFlagBits::eMutableFormat;
     }
 
-    bool res_scale_modified = false;
-    if (res_scale != new_scale && res_scale > 1) {
-        res_scale_modified = res_scale != new_scale;
+    const bool res_scale_modified = res_scale != new_scale;
+    if (res_scale_modified && new_scale > 1) {
         res_scale = new_scale;
 
         handles[Type::Scaled].Create(GetScaledWidth(), GetScaledHeight(), levels, texture_type,
@@ -1265,7 +1264,7 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
         }
     }
 
-    if ((res_scale_modified || sample_count != new_sample_count) && sample_count > 1) {
+    if ((res_scale_modified || sample_count != new_sample_count) && new_sample_count > 1) {
         sample_count = new_sample_count;
         handles[Type::MultiSampled].Create(GetScaledWidth(), GetScaledHeight(), levels,
                                            texture_type, traits.native,
