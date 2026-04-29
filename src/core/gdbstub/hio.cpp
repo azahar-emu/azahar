@@ -23,9 +23,6 @@ enum class Status {
 
 static std::atomic<Status> request_status{Status::NoRequest};
 
-static std::atomic<bool> was_halted = false;
-static std::atomic<bool> was_stepping = false;
-
 } // namespace
 
 /**
@@ -97,14 +94,9 @@ void SetHioRequest(Core::System& system, const VAddr addr) {
     current_hio_request_addr = addr;
     request_status = Status::NotSent;
 
-    was_halted = GetCpuHaltFlag();
-    was_stepping = GetCpuStepFlag();
-
     // Now halt, so that no further instructions are executed until the request
     // is processed by the client. We will continue after the reply comes back
     Break();
-    SetCpuHaltFlag(true);
-    SetCpuStepFlag(false);
     system.GetRunningCore().ClearInstructionCache();
 }
 
@@ -195,8 +187,6 @@ void HandleHioReply(Core::System& system, const u8* const command_buffer,
     request_status = Status::NoRequest;
 
     // Restore state from before the request came in
-    SetCpuStepFlag(was_stepping);
-    SetCpuHaltFlag(was_halted);
     system.GetRunningCore().ClearInstructionCache();
 }
 
