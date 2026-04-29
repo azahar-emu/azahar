@@ -421,12 +421,12 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
     update_queue.AddImageSampler(descriptor_set, 1, 0,
                                  source.ImageView(ViewType::Stencil, src_type), VK_NULL_HANDLE,
                                  vk::ImageLayout::eDepthStencilReadOnlyOptimal);
-    update_queue.AddStorageImage(descriptor_set, 2, dest.ImageView());
+    update_queue.AddStorageImage(descriptor_set, 2, dest.ImageView(ViewType::Sample, src_type));
 
     renderpass_cache.EndRendering();
 
-    scheduler.Record([this, pipeline, descriptor_set, copy, src_image = source.Image(),
-                      dst_image = dest.Image()](vk::CommandBuffer cmdbuf) {
+    scheduler.Record([this, pipeline, descriptor_set, copy, src_image = source.Image(src_type),
+                      dst_image = dest.Image(src_type)](vk::CommandBuffer cmdbuf) {
         const std::array pre_barriers = {
             vk::ImageMemoryBarrier{
                 .srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite,
