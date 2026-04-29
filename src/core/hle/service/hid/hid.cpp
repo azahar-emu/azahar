@@ -32,7 +32,7 @@ SERIALIZE_EXPORT_IMPL(Service::HID::Module)
 namespace Service::HID {
 std::array<float, 4> Module::stylusInput = {};
 std::array<float, 4> Module::modButtons = {};
-
+bool Module::cstickEnabled = false;
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
     DEBUG_SERIALIZATION_POINT;
@@ -128,6 +128,8 @@ void Module::LoadInputDevices() {
         Settings::values.current_input_profile.buttons[Settings::NativeButton::ZL]);
     zr_button = Input::CreateDevice<Input::ButtonDevice>(
         Settings::values.current_input_profile.buttons[Settings::NativeButton::ZR]);
+    toggle_cstick_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ToggleCStick]);
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CirclePad]);
     c_stick = Input::CreateDevice<Input::AnalogDevice>(
@@ -236,6 +238,14 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         for (int i = 0; i < 4; i++){
             modButtons[i] = zl_button->GetStatus() && buttons[i - BUTTON_HID_BEGIN]->GetStatus();
         }
+
+        //Toggle for Cstick
+        if (!prev_toggle_cstick_button_state && toggle_cstick_button->GetStatus()){
+            cstickEnabled = !cstickEnabled;
+        }
+        //LOG_INFO(Service_HID, "C-Stick Enabled: {}, Prev C-Stick Button State {}, Current C-Stick Button State {}", cstickEnabled, prev_toggle_cstick_button_state, toggle_cstick_button->GetStatus());
+        prev_toggle_cstick_button_state = toggle_cstick_button->GetStatus();
+
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
         std::tie(circle_pad_x_f, circle_pad_y_f) = circle_pad->GetStatus();

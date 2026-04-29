@@ -12,100 +12,102 @@ void Cursor::update(){
     modButtons = Service::HID::Module::getModButtons();
     setRotation();
     if (deviceInUse == 0){
-      if (inMacro){
-        runMacro();
-      } else {
-        // LOG_INFO(Core, "Stylus X: {:.2f}, Stylus Y: {:.2f}, Stylus Mod: {}, Stylus Touch: {}", stylusInput[0], stylusInput[1], stylusInput[2], stylusInput[3]);
-        // Reset the cursor position if macro was just played
-        if (justFinishedMacro > 0){
-          justFinishedMacro = 0;
-          rawCursorPos[0] = macroInitPos[0];
-          rawCursorPos[1] = macroInitPos[1];
-        }
-
-        // Macros
-        if (modButtons[0]){
-          circle(0);
-          return;
-        } else if (modButtons[1]){
-          rub();
-          return;
-        } else if (modButtons[2]){
-          if (!macroBtnPressed){
-            // Add macro
-            return;
-          }
-        } else if (modButtons[3]){
-          circle(1);
-          return;
+      if (!Service::HID::Module::cstickEnabled){
+        if (inMacro){
+          runMacro();
         } else {
-          if (macroBtnPressed){
-            macroBtnPressed = false;
+          // LOG_INFO(Core, "Stylus X: {:.2f}, Stylus Y: {:.2f}, Stylus Mod: {}, Stylus Touch: {}", stylusInput[0], stylusInput[1], stylusInput[2], stylusInput[3]);
+          // Reset the cursor position if macro was just played
+          if (justFinishedMacro > 0){
+            justFinishedMacro = 0;
+            rawCursorPos[0] = macroInitPos[0];
+            rawCursorPos[1] = macroInitPos[1];
           }
-        }
 
-        normStylusDirection[0] = stylusInput[0];
-        normStylusDirection[1] = stylusInput[1];
+          // Macros
+          if (modButtons[0]){
+            circle(0);
+            return;
+          } else if (modButtons[1]){
+            rub();
+            return;
+          } else if (modButtons[2]){
+            if (!macroBtnPressed){
+              // Add macro
+              return;
+            }
+          } else if (modButtons[3]){
+            circle(1);
+            return;
+          } else {
+            if (macroBtnPressed){
+              macroBtnPressed = false;
+            }
+          }
 
-        int maxSpeed = 50;
-        float multiplier = 0.5f * pow(4.0f, maxSpeed / 100.0f); // 0 is 0.5x speed, 100 is 2.0x speed.
-        float heightSpeed = (240.0f / 33.0f) * multiplier;
-        bool stylusModPressed = stylusInput[2];
-        float responsecurve = 175.0f / 100.0f;
-        float speedupratio = 400.0f / 100.0f;
-        float joystickScaled[2] = {0.0f};
-        float radialLength = std::sqrt((normStylusDirection[0] * normStylusDirection[0]) + (normStylusDirection[1] * normStylusDirection[1]));
-        float finalLength;
-        float curvedLength;
-        if (radialLength > 0) {
-            // Get X and Y as a relation to the radial length
-            float rComponents[2];
-            rComponents[0] = normStylusDirection[0]/radialLength;
-            rComponents[1] = normStylusDirection[1]/radialLength;
-            // Apply response curve and output
-            curvedLength = std::pow(radialLength, responsecurve);
-            finalLength = stylusModPressed ? curvedLength * speedupratio : curvedLength;
-            joystickScaled[0] = rComponents[0] * finalLength;
-            joystickScaled[1] = rComponents[1] * finalLength;
-        }
-        // The code below sets the cursor position to the position of the joystick (absolute). Needs to be readjusted for standalone melonDS
-        // _joystickCursorPosition = vec2((NDS_SCREEN_WIDTH/2.0f)+(std::min<float>(1.0,(normStylusDirection[0]/0.7071))*(NDS_SCREEN_WIDTH/2.0f)), (NDS_SCREEN_HEIGHT/2.0f)+(std::min<float>(1.0,(normStylusDirection[1]/0.7071))*(NDS_SCREEN_HEIGHT/2.0f)));
+          normStylusDirection[0] = stylusInput[0];
+          normStylusDirection[1] = stylusInput[1];
 
-        float tempX = joystickScaled[0];
-        float tempY = joystickScaled[1];
+          int maxSpeed = 50;
+          float multiplier = 0.5f * pow(4.0f, maxSpeed / 100.0f); // 0 is 0.5x speed, 100 is 2.0x speed.
+          float heightSpeed = (240.0f / 33.0f) * multiplier;
+          bool stylusModPressed = stylusInput[2];
+          float responsecurve = 175.0f / 100.0f;
+          float speedupratio = 400.0f / 100.0f;
+          float joystickScaled[2] = {0.0f};
+          float radialLength = std::sqrt((normStylusDirection[0] * normStylusDirection[0]) + (normStylusDirection[1] * normStylusDirection[1]));
+          float finalLength;
+          float curvedLength;
+          if (radialLength > 0) {
+              // Get X and Y as a relation to the radial length
+              float rComponents[2];
+              rComponents[0] = normStylusDirection[0]/radialLength;
+              rComponents[1] = normStylusDirection[1]/radialLength;
+              // Apply response curve and output
+              curvedLength = std::pow(radialLength, responsecurve);
+              finalLength = stylusModPressed ? curvedLength * speedupratio : curvedLength;
+              joystickScaled[0] = rComponents[0] * finalLength;
+              joystickScaled[1] = rComponents[1] * finalLength;
+          }
+          // The code below sets the cursor position to the position of the joystick (absolute). Needs to be readjusted for standalone melonDS
+          // _joystickCursorPosition = vec2((NDS_SCREEN_WIDTH/2.0f)+(std::min<float>(1.0,(normStylusDirection[0]/0.7071))*(NDS_SCREEN_WIDTH/2.0f)), (NDS_SCREEN_HEIGHT/2.0f)+(std::min<float>(1.0,(normStylusDirection[1]/0.7071))*(NDS_SCREEN_HEIGHT/2.0f)));
 
-        switch (rotation)
-        {
-            case 1: // 90°
-                joystickScaled[0] =  tempY;
-                joystickScaled[1] = -tempX;
-                break;
-            case 2: // 180°
-                joystickScaled[0] = -tempX;
-                joystickScaled[1] = -tempY;
-                break;
-            case 3: // 270°
-                joystickScaled[0] = -tempY;
-                joystickScaled[1] =  tempX;
-                break;
-            default:
-                break;
-        }
+          float tempX = joystickScaled[0];
+          float tempY = joystickScaled[1];
 
-        rawCursorPos[0] += joystickScaled[0]*heightSpeed;
-        rawCursorPos[1] += joystickScaled[1]*heightSpeed;
+          switch (rotation)
+          {
+              case 1: // 90°
+                  joystickScaled[0] =  tempY;
+                  joystickScaled[1] = -tempX;
+                  break;
+              case 2: // 180°
+                  joystickScaled[0] = -tempX;
+                  joystickScaled[1] = -tempY;
+                  break;
+              case 3: // 270°
+                  joystickScaled[0] = -tempY;
+                  joystickScaled[1] =  tempX;
+                  break;
+              default:
+                  break;
+          }
 
-        // Clamp to region and ready position information for touchscreen
-        clamp();
-        updateCursorPos();
+          rawCursorPos[0] += joystickScaled[0]*heightSpeed;
+          rawCursorPos[1] += joystickScaled[1]*heightSpeed;
 
-        // Handle stylus touch button presses
-        if (stylusInput[3]){
-          touchScreen();
-          wasTouching = true;
-        } else if (wasTouching && !stylusInput[3]){
-          release();
-          wasTouching = false;
+          // Clamp to region and ready position information for touchscreen
+          clamp();
+          updateCursorPos();
+
+          // Handle stylus touch button presses
+          if (stylusInput[3]){
+            touchScreen();
+            wasTouching = true;
+          } else if (wasTouching && !stylusInput[3]){
+            release();
+            wasTouching = false;
+          }
         }
       }
     } else {
