@@ -170,12 +170,12 @@ std::u16string UTF8ToUTF16(std::string_view input) {
     return boost::locale::conv::utf_to_utf<char16_t>(input.data(), input.data() + input.size());
 }
 
+#if defined(__APPLE__)
 // macOS filesystems may expose decomposed Unicode names through directory listings.
 // Normalize to NFC before passing names to guest APIs that expect stable text.
-std::string NormalizeUTF8ToNFC(std::string_view input) {
+std::string NormalizeNFDToNFC(std::string_view input) {
     const std::string fallback(input);
 
-#if defined(__APPLE__)
     //Core Foundation string
     CFStringRef source = CFStringCreateWithBytes(
         kCFAllocatorDefault,
@@ -221,10 +221,8 @@ std::string NormalizeUTF8ToNFC(std::string_view input) {
 
     output.resize(std::strlen(output.c_str()));
     return output;
-#else
-    return fallback;
-#endif
 }
+#endif
 
 #ifdef _WIN32
 static std::wstring CPToUTF16(u32 code_page, const std::string& input) {
