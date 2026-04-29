@@ -38,6 +38,9 @@
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 
+// Uncomment to log all GDB traffic
+// #define PRINT_GDB_TRAFFIC
+
 namespace GDBStub {
 namespace {
 constexpr int GDB_BUFFER_SIZE = 10000;
@@ -225,6 +228,13 @@ static void FpuWrite(std::size_t id, u64 val, Kernel::Thread* thread = nullptr) 
         thread->context.fpu_registers[2 * (id - D0_REGISTER) + 1] = static_cast<u32>(val >> 32);
     } else if (id == FPSCR_REGISTER) {
         thread->context.fpscr = static_cast<u32>(val);
+    }
+}
+
+// Clear instruction cache for all cores.
+static void ClearAllInstructionCache() {
+    for (int i = 0; i < Core::GetNumCores(); i++) {
+        Core::GetCore(i).ClearInstructionCache();
     }
 }
 
@@ -493,6 +503,15 @@ void SendReply(const char* reply) {
     std::memset(command_buffer, 0, sizeof(command_buffer));
 
     command_length = static_cast<u32>(strlen(reply));
+
+#ifdef PRINT_GDB_TRAFFIC
+    if (command_length > 0) {
+        LOG_INFO(Debug_GDBStub, "Req: {} {}", *reply, reply + 1);
+    } else {
+        LOG_INFO(Debug_GDBStub, "Req:");
+    }
+#endif
+
     if (command_length + 4 > sizeof(command_buffer)) {
         LOG_ERROR(Debug_GDBStub, "command_buffer overflow in SendReply");
         return;
@@ -762,6 +781,17 @@ static void ReadRegisters() {
     SendReply(reinterpret_cast<char*>(buffer));
 }
 
+static void UpdateCPUThreadContext() {
+    u32 core_id = current_thread->core_id;
+    auto& system = Core::System::GetInstance();
+    auto& thread_manager = system.Kernel().GetThreadManager(core_id);
+    if (thread_manager.GetCurrentThread() == current_thread) {
+        // Only update CPU context if current thread is active,
+        // otherwise it will be updated when the thread is selected
+        Core::GetCore(current_thread->core_id).LoadContext(current_thread->context);
+    }
+}
+
 /// Modify data of register specified by gdb client.
 static void WriteRegister() {
     const u8* buffer_ptr = command_buffer + 3;
@@ -785,7 +815,7 @@ static void WriteRegister() {
         return SendReply("E01");
     }
 
-    Core::GetRunningCore().LoadContext(current_thread->context);
+    UpdateCPUThreadContext();
 
     SendReply("OK");
 }
@@ -799,23 +829,23 @@ static void WriteRegisters() {
 
     for (u32 i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
         if (reg <= PC_REGISTER) {
-            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
+            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
         } else if (reg == CPSR_REGISTER) {
-            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
+            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
         } else if (reg == CPSR_REGISTER - 1) {
             // Dummy FPA register, ignore
         } else if (reg < CPSR_REGISTER) {
             // Dummy FPA registers, ignore
             i += 2;
         } else if (reg >= D0_REGISTER && reg < FPSCR_REGISTER) {
-            FpuWrite(reg, GdbHexToLong(buffer_ptr + i * 16));
+            FpuWrite(reg, GdbHexToLong(buffer_ptr + i * 16), current_thread);
             i++; // Skip padding
         } else if (reg == FPSCR_REGISTER) {
-            FpuWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
+            FpuWrite(reg, GdbHexToInt(buffer_ptr + i * 8), current_thread);
         }
     }
 
-    Core::GetRunningCore().LoadContext(current_thread->context);
+    UpdateCPUThreadContext();
 
     SendReply("OK");
 }
@@ -876,7 +906,7 @@ static void WriteMemory() {
 
     GdbHexToMem(data.data(), len_pos + 1, len);
     memory.WriteBlock(addr, data.data(), len);
-    Core::GetRunningCore().ClearInstructionCache();
+    ClearAllInstructionCache();
     SendReply("OK");
 }
 
@@ -890,12 +920,12 @@ void Break(bool is_memory_break) {
 static void Step() {
     if (command_length > 1) {
         RegWrite(PC_REGISTER, GdbHexToInt(command_buffer + 1), current_thread);
-        Core::GetRunningCore().LoadContext(current_thread->context);
+        UpdateCPUThreadContext();
     }
     step_loop = true;
     halt_loop = true;
     send_trap = true;
-    Core::GetRunningCore().ClearInstructionCache();
+    ClearAllInstructionCache();
 }
 
 bool IsMemoryBreak() {
@@ -911,7 +941,7 @@ static void Continue() {
     memory_break = false;
     step_loop = false;
     halt_loop = false;
-    Core::GetRunningCore().ClearInstructionCache();
+    ClearAllInstructionCache();
 }
 
 /**
@@ -937,7 +967,7 @@ static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
         Core::System::GetInstance().Memory().WriteBlock(
             *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, btrap.data(),
             btrap.size());
-        Core::GetRunningCore().ClearInstructionCache();
+        ClearAllInstructionCache();
     }
     p.insert({addr, breakpoint});
 
@@ -1056,6 +1086,11 @@ void HandlePacket(Core::System& system) {
     if (command_length == 0) {
         return;
     }
+
+#ifdef PRINT_GDB_TRAFFIC
+    std::string cmd_str(command_buffer + 1, command_buffer + command_length);
+    LOG_INFO(Debug_GDBStub, "Res: {:c} {}", command_buffer[0], cmd_str);
+#endif
 
     LOG_DEBUG(Debug_GDBStub, "Packet: {0:d} ('{0:c}')", command_buffer[0]);
 
