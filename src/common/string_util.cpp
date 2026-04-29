@@ -24,8 +24,6 @@
 #include <CoreFoundation/CFString.h>
 #endif
 
-
-
 namespace Common {
 
 /// Make a char lowercase
@@ -176,21 +174,17 @@ std::u16string UTF8ToUTF16(std::string_view input) {
 std::string NormalizeNFDToNFC(std::string_view input) {
     const std::string fallback(input);
 
-    //Core Foundation string
-    CFStringRef source = CFStringCreateWithBytes(
-        kCFAllocatorDefault,
-        reinterpret_cast<const UInt8*>(input.data()),
-        static_cast<CFIndex>(input.size()),
-        kCFStringEncodingUTF8,
-        false);
+    // Core Foundation string
+    CFStringRef source =
+        CFStringCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(input.data()),
+                                static_cast<CFIndex>(input.size()), kCFStringEncodingUTF8, false);
 
     if (source == nullptr) {
         return fallback;
     }
 
     // Mutable copy of the source string
-    CFMutableStringRef normalized =
-        CFStringCreateMutableCopy(kCFAllocatorDefault, 0, source);
+    CFMutableStringRef normalized = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, source);
     CFRelease(source);
 
     if (normalized == nullptr) {
@@ -199,19 +193,15 @@ std::string NormalizeNFDToNFC(std::string_view input) {
     // Normalize the string to NFC form
     CFStringNormalize(normalized, kCFStringNormalizationFormC);
 
-    const CFIndex max_size =
-        CFStringGetMaximumSizeForEncoding(
-            CFStringGetLength(normalized),
-            kCFStringEncodingUTF8) + 1; // +1 for null terminator
+    const CFIndex max_size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(normalized),
+                                                               kCFStringEncodingUTF8) +
+                             1; // +1 for null terminator
 
     std::string output(static_cast<std::size_t>(max_size), '\0');
 
     // Convert the normalized string back to UTF-8
-    const bool converted = CFStringGetCString(
-        normalized,
-        &output[0],
-        max_size,
-        kCFStringEncodingUTF8);
+    const bool converted =
+        CFStringGetCString(normalized, &output[0], max_size, kCFStringEncodingUTF8);
 
     CFRelease(normalized);
 

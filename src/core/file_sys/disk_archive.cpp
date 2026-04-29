@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <memory>
 #include <iterator>
+#include <memory>
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -67,9 +67,9 @@ u32 DiskDirectory::Read(const u32 count, Entry* entries) {
         // Directory entries are exposed to the guest as UTF-16. Normalize host UTF-8 names first
         // so host Unicode normalization differences do not leak into guest-visible SDMC paths.
 #if defined(__APPLE__)
-            const std::string filename = Common::NormalizeNFDToNFC(file.virtualName);
+        const std::string filename = Common::NormalizeNFDToNFC(file.virtualName);
 #else
-            const std::string& filename = file.virtualName;
+        const std::string& filename = file.virtualName;
 #endif
         const std::u16string filename_utf16 = Common::UTF8ToUTF16(filename);
         Entry& entry = entries[entries_read];
