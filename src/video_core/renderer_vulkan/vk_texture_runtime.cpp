@@ -949,10 +949,10 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
         raw_images.emplace_back(handles[Type::Scaled].image);
     }
     if (sample_count > 1) {
-        handles[Type::MultiSampled].Create(GetScaledWidth(), GetScaledHeight(), levels,
-                                           texture_type, format,
-                                           vk::SampleCountFlagBits(sample_count), traits.usage,
-                                           flags, traits.aspect, false, debug_name);
+        handles[Type::MultiSampled].Create(
+            GetScaledWidth(), GetScaledHeight(), levels, texture_type, format,
+            vk::SampleCountFlagBits(sample_count), traits.usage, flags, traits.aspect, false,
+            DebugName(res_scale != 1, true, sample_count));
         raw_images.emplace_back(handles[Type::MultiSampled].image);
     }
     if (has_normal) {
@@ -1269,10 +1269,14 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
 
     if ((res_scale_modified || sample_count != new_sample_count) && new_sample_count > 1) {
         sample_count = new_sample_count;
-        handles[Type::MultiSampled].Create(GetScaledWidth(), GetScaledHeight(), levels,
-                                           texture_type, traits.native,
-                                           vk::SampleCountFlagBits(sample_count), traits.usage,
-                                           flags, traits.aspect, false, DebugName(true));
+        handles[Type::MultiSampled].Create(
+            GetScaledWidth(), GetScaledHeight(), levels, texture_type, traits.native,
+            vk::SampleCountFlagBits(sample_count), traits.usage, flags, traits.aspect, false,
+            DebugName(res_scale != 1, false, sample_count));
+
+        // The multi-sampled image is just a transient image that is almost always immediately
+        // resolved into the current image, and should not be representative of the entire surface!
+        //
         // current = Type::MultiSampled;
 
         runtime.renderpass_cache.EndRendering();
