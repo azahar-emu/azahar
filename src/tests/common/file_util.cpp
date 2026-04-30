@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,3 +24,13 @@ TEST_CASE("SplitFilename83 Sanity", "[common]") {
     REQUIRE(std::memcmp(short_name.data(), expected_short_name.data(), short_name.size()) == 0);
     REQUIRE(std::memcmp(extension.data(), expected_extension.data(), extension.size()) == 0);
 }
+
+#if defined(__APPLE__)
+
+TEST_CASE("NormalizeNFDToNFC Sanity", "[common]") {
+    const std::string decomposed = "i\xCC\x81";
+    const std::string composed = "\xC3\xAD";
+
+    REQUIRE(Common::NormalizeNFDToNFC(decomposed) == composed);
+}
+#endif

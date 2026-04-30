@@ -49,6 +49,10 @@ void BuildCompleteFilename(std::string& _CompleteFilename, const std::string& _P
 
 [[nodiscard]] std::string UTF16ToUTF8(std::u16string_view input);
 [[nodiscard]] std::u16string UTF8ToUTF16(std::string_view input);
+// Returns UTF-8 normalized to NFC on platforms that need explicit Unicode normalization.
+#if defined(__APPLE__)
+[[nodiscard]] std::string NormalizeNFDToNFC(std::string_view input);
+#endif
 
 #ifdef _WIN32
 [[nodiscard]] std::string UTF16ToUTF8(const std::wstring& input);
