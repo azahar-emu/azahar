@@ -1,13 +1,15 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include "common/archives.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"
 
@@ -62,22 +64,29 @@ u32 DiskDirectory::Read(const u32 count, Entry* entries) {
 
     while (entries_read < count && children_iterator != directory.children.cend()) {
         const FileUtil::FSTEntry& file = *children_iterator;
+        // Directory entries are exposed to the guest as UTF-16. Normalize host UTF-8 names first
+        // so host Unicode normalization differences do not leak into guest-visible SDMC paths.
+#if defined(__APPLE__)
+        const std::string filename = Common::NormalizeNFDToNFC(file.virtualName);
+#else
         const std::string& filename = file.virtualName;
+#endif
+        const std::u16string filename_utf16 = Common::UTF8ToUTF16(filename);
         Entry& entry = entries[entries_read];
 
         LOG_TRACE(Service_FS, "File {}: size={} dir={}", filename, file.size, file.isDirectory);
 
-        // TODO(Link Mauve): use a proper conversion to UTF-16.
-        for (std::size_t j = 0; j < FILENAME_LENGTH; ++j) {
-            entry.filename[j] = filename[j];
-            if (!filename[j])
-                break;
+        std::fill(std::begin(entry.filename), std::end(entry.filename), u'\0');
+
+        const std::size_t copy_length = std::min(filename_utf16.size(), FILENAME_LENGTH - 1);
+        for (std::size_t j = 0; j < copy_length; ++j) {
+            entry.filename[j] = filename_utf16[j];
         }
 
         FileUtil::SplitFilename83(filename, entry.short_name, entry.extension);
 
         entry.is_directory = file.isDirectory;
-        entry.is_hidden = (filename[0] == '.');
+        entry.is_hidden = (!filename.empty() && filename[0] == '.');
         entry.is_read_only = 0;
         entry.file_size = file.size;
 
@@ -92,5 +101,4 @@ u32 DiskDirectory::Read(const u32 count, Entry* entries) {
     }
     return entries_read;
 }
-
 } // namespace FileSys

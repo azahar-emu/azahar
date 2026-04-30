@@ -1,4 +1,4 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,6 +18,10 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#endif
+
+#if defined(__APPLE__)
+#include <CoreFoundation/CFString.h>
 #endif
 
 namespace Common {
@@ -163,6 +167,52 @@ std::string UTF16ToUTF8(std::u16string_view input) {
 std::u16string UTF8ToUTF16(std::string_view input) {
     return boost::locale::conv::utf_to_utf<char16_t>(input.data(), input.data() + input.size());
 }
+
+#if defined(__APPLE__)
+// macOS filesystems may expose decomposed Unicode names through directory listings.
+// Normalize to NFC before passing names to guest APIs that expect stable text.
+std::string NormalizeNFDToNFC(std::string_view input) {
+    const std::string fallback(input);
+
+    // Core Foundation string
+    CFStringRef source =
+        CFStringCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(input.data()),
+                                static_cast<CFIndex>(input.size()), kCFStringEncodingUTF8, false);
+
+    if (source == nullptr) {
+        return fallback;
+    }
+
+    // Mutable copy of the source string
+    CFMutableStringRef normalized = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, source);
+    CFRelease(source);
+
+    if (normalized == nullptr) {
+        return fallback;
+    }
+    // Normalize the string to NFC form
+    CFStringNormalize(normalized, kCFStringNormalizationFormC);
+
+    const CFIndex max_size = CFStringGetMaximumSizeForEncoding(CFStringGetLength(normalized),
+                                                               kCFStringEncodingUTF8) +
+                             1; // +1 for null terminator
+
+    std::string output(static_cast<std::size_t>(max_size), '\0');
+
+    // Convert the normalized string back to UTF-8
+    const bool converted =
+        CFStringGetCString(normalized, &output[0], max_size, kCFStringEncodingUTF8);
+
+    CFRelease(normalized);
+
+    if (!converted) {
+        return fallback;
+    }
+
+    output.resize(std::strlen(output.c_str()));
+    return output;
+}
+#endif
 
 #ifdef _WIN32
 static std::wstring CPToUTF16(u32 code_page, const std::string& input) {
