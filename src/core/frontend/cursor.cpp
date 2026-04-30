@@ -244,7 +244,7 @@ void Cursor::runMacro(){
 
 void Cursor::setRotation(){
   if (emuWindow->GetFramebufferLayout().is_portrait){
-    rotation = 3;
+    rotation = 1;
   } else {
     rotation = 0;
   }

@@ -639,6 +639,7 @@ FramebufferLayout reverseLayout(FramebufferLayout layout) {
         layout.additional_screen.top = layout.height - oldRight;
         layout.additional_screen.bottom = layout.height - oldLeft;
     }
+    layout.is_portrait = true;
     return layout;
 }
 

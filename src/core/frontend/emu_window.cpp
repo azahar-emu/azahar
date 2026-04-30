@@ -198,8 +198,8 @@ bool EmuWindow::TouchDirectlyPressed(unsigned internal_x, unsigned internal_y) {
     std::clamp<unsigned>(internal_x, 0, 319);
     std::clamp<unsigned>(internal_y, 0, 239);
     touch_state->touch_pressed = true;
-    touch_state->touch_x = internal_x/319.0f;
-    touch_state->touch_y = (239-internal_y)/239.0f;
+    touch_state->touch_x = internal_x/320.0f;
+    touch_state->touch_y = (239-internal_y)/240.0f;
     return true;
 }
 void EmuWindow::TouchReleased() {
