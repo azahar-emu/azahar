@@ -434,6 +434,7 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     }
     uniform_i_resolution = glGetUniformLocation(shader.handle, "i_resolution");
     uniform_o_resolution = glGetUniformLocation(shader.handle, "o_resolution");
+    uniform_convert_colors = glGetUniformLocation(shader.handle, "convert_colors");
     uniform_layer = glGetUniformLocation(shader.handle, "layer");
     attrib_position = glGetAttribLocation(shader.handle, "vert_position");
     attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
@@ -543,75 +544,69 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° Counter Clockkwise internally)
     std::array<ScreenRectVertex, 4> landscape_rotation_vertices;
     landscape_rotation_vertices = {{
-            ScreenRectVertex(0.f, 0.f, 1.f, 0.f),  //Left, Top
-            ScreenRectVertex(textureWidth, 0.f, 1.f, 1.f), //Right, Top
-            ScreenRectVertex(0.f, textureHeight, 0.f, 0.f),  //Left, Bottom
-            ScreenRectVertex(textureWidth, textureHeight, 0.f, 1.f), //Right, Bottom
+            ScreenRectVertex(-1.f, 1.f, 1.f, 0.f),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, 0.f, 1.f),   //Right, Bottom
     }};
 
 
     // Vertices for 1:1 Texture Mapping.
     std::array<ScreenRectVertex, 4> pass_through_vertices;
     pass_through_vertices = {{
-            ScreenRectVertex(0.f, 0.f, 0.f, 1.f),  //Left, Top
-            ScreenRectVertex(textureWidth, 0.f, 1.f, 1.f), //Right, Top
-            ScreenRectVertex(0.f, textureHeight, 0.f, 0.f),  //Left, Bottom
-            ScreenRectVertex(textureWidth, textureHeight, 1.f, 0.f), //Right, Bottom
+            ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
     }};
 
     // Rotate for Output Orientation,
+    // MAKE SURE TO USE ORTHOGRAPHIC MATRIX
     std::array<ScreenRectVertex, 4> output_vertices;
-    output_vertices = {{
-            ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),  //Left, Top
-            ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f), //Right, Top
-            ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),  //Left, Bottom
-            ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f), //Right, Bottom
-    }};
-
-
-    // switch (orientation) {
-    // case Layout::DisplayOrientation::Landscape:
-    //     vertices = {{
-    //         ScreenRectVertex(x, y, texcoords.bottom, texcoords.left), //Top Left
-    //         ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right), //Top Right
-    //         ScreenRectVertex(x, y + h, texcoords.top, texcoords.left), //Bottom Left
-    //         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right), //Bottom Right
-    //     }};
-    //     break;
-    // case Layout::DisplayOrientation::Portrait:
-    //     vertices = {{
-    //         ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-    //         ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-    //         ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-    //         ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
-    //     }};
-    //     std::swap(h, w);
-    //     break;
-    // case Layout::DisplayOrientation::LandscapeFlipped:
-    //     vertices = {{
-    //         ScreenRectVertex(x, y, texcoords.top, texcoords.right),
-    //         ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
-    //         ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
-    //         ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
-    //     }};
-    //     break;
-    // case Layout::DisplayOrientation::PortraitFlipped:
-    //     vertices = {{
-    //         ScreenRectVertex(x, y, texcoords.top, texcoords.left),
-    //         ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
-    //         ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
-    //         ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
-    //     }};
-    //     std::swap(h, w);
-    //     break;
-    // default:
-    //     LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
-    //     break;
-    // }
+    switch (orientation) {
+    case Layout::DisplayOrientation::Landscape:
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),  //Right, Bottom
+        }};
+        break;
+    case Layout::DisplayOrientation::Portrait:
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 1.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 0.f),  //Right, Bottom
+        }};
+        std::swap(screenHeight, screenWidth);
+        break;
+    case Layout::DisplayOrientation::LandscapeFlipped:
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
+        }};
+        break;
+    case Layout::DisplayOrientation::PortraitFlipped:
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
+        }};
+        std::swap(screenHeight, screenWidth);
+        break;
+    default:
+        LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
+        break;
+    }
 
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
     glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
     glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+    glUniform1i(uniform_convert_colors, 1);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
     state.Apply();
@@ -625,6 +620,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         Then do:
         initial rotation shader -> opengl_present shader (and all the variants)
 
+        simple present is used for internal textures. It uses ndc coordinates directly
+        present is used for final mapping to screen. It uses screen coordinates, and transforms it accordingly
     */
 
     GLuint old_read_fb = state.draw.read_framebuffer;

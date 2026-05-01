@@ -102,6 +102,9 @@ private:
     GLuint uniform_color_texture;
     GLuint uniform_color_texture_r;
 
+    // Shader Uniform for converting colors. 0 is no conversion, 1 is Linear -> sRGB, 2 is sRGB -> linear
+    GLuint uniform_convert_colors;
+
     // Shader uniform for Dolphin compatibility
     GLuint uniform_i_resolution;
     GLuint uniform_o_resolution;
