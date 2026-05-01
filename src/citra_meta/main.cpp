@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "citra_cli/citra_cli.h"
 #include "common/detached_tasks.h"
 #include "common/scope_exit.h"
 
@@ -58,6 +59,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 #endif
+
+    if (CitraCLI::CheckForOptions(CitraCLI::cli_capture_optstring, argc, argv)) {
+        return CitraCLI::ParseCommand(argc, argv);
+    }
 
 #if ENABLE_ROOM
     bool launch_room = false;
