@@ -611,17 +611,24 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     state.texture_units[0].sampler = sampler;
     state.Apply();
 
-
     /*
     TODO:
-    Implement Two Pass Gamma Corrected Linear Filtering
-        Create A Shader for initial rotation that'll be used for everything
+    Implement Gamma Corrected Linear Filtering
+        use Simple Present Shader with landscape_rotation_vertices and convert_colors set to 1
+        use Regular Present Shader with output_vertices and convert_colors set to 2
 
-        Then do:
-        initial rotation shader -> opengl_present shader (and all the variants)
+    Implement FXAA:
+        use Simple Present Shader with landscape_rotation_vertices and convert_colors set to 0
+        use FXAA shader with pass_through_vertices
+        use Simple Present Shader with pass_through_vertices and convert colors set to 1
+        use Regular Present Shader with output_vertices and convert_colors set to 2
 
-        simple present is used for internal textures. It uses ndc coordinates directly
-        present is used for final mapping to screen. It uses screen coordinates, and transforms it accordingly
+    Implement SMAA:
+        use Simple Present Shader with landscape_rotation_vertices and convert_colors set to 1
+        use SMAA pass 1 with pass_through_vertices
+        use SMAA pass 2 with pass_through_vertices
+        use SMAA pass 3 with pass_through_vertices
+        use Regular Present Shader with output_vertices and convert_colors set to 2
     */
 
     GLuint old_read_fb = state.draw.read_framebuffer;

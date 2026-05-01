@@ -21,9 +21,9 @@ vec3 LinearTosRGB(vec3 c) {
 
 void main() {
     vec4 pixel = texture(color_texture, frag_tex_coord);
-    if (convert_colors == 1){
+    if (convert_colors == 2){
         pixel = vec4(LinearTosRGB(pixel.rgb), pixel.a);
-    } else if (convert_colors == 2){
+    } else if (convert_colors == 1){
         pixel = vec4(sRGBToLinear(pixel.rgb), pixel.a);
     }
     color = pixel;
