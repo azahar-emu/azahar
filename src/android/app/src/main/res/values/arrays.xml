@@ -36,8 +36,7 @@
     </string-array>
 
     <string-array name="secondaryLayouts">
-        <item>@string/emulation_secondary_display_default</item>
-        <item>@string/emulation_secondary_display_opposite</item>
+        <item>@string/emulation_secondary_display_reverse_primary</item>
         <item>@string/emulation_top_screen</item>
         <item>@string/emulation_bottom_screen</item>
         <item>@string/emulation_screen_layout_sidebyside</item>
@@ -54,7 +53,6 @@
     </integer-array>
 
     <integer-array name="secondaryLayoutValues">
-        <item>0</item>
         <item>4</item>
         <item>1</item>
         <item>2</item>

@@ -1201,6 +1201,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.PORTRAIT_SCREEN_LAYOUT.defaultValue
                 )
             )
+            add (
+                SwitchSetting(
+                    BooleanSetting.ENABLE_SECONDARY_DISPLAY,
+                    R.string.emulation_secondary_display_enable,
+                    R.string.emulation_secondary_display_enable_description,
+                    BooleanSetting.ENABLE_SECONDARY_DISPLAY.key,
+                    BooleanSetting.ENABLE_SECONDARY_DISPLAY.defaultValue
+                )
+            )
             add(
                 SingleChoiceSetting(
                     IntSetting.SECONDARY_DISPLAY_LAYOUT,
@@ -1209,7 +1218,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.secondaryLayouts,
                     R.array.secondaryLayoutValues,
                     IntSetting.SECONDARY_DISPLAY_LAYOUT.key,
-                    IntSetting.SECONDARY_DISPLAY_LAYOUT.defaultValue
+                    IntSetting.SECONDARY_DISPLAY_LAYOUT.defaultValue,
+                    BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean
                 )
             )
             add(
