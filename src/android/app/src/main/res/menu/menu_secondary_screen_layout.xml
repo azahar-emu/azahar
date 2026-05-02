@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_secondary_layout_none"
+        android:id="@+id/menu_enable_secondary_layout"
         android:title="@string/emulation_secondary_display_enable"
         android:checkable="true"
         android:checked="true"/>
@@ -24,8 +24,8 @@
         android:checkableBehavior="single"
         android:id="@+id/menu_secondary_layout_group">
         <item
-            android:id="@+id/menu_secondary_layout_opposite"
-            android:title="@string/emulation_secondary_display_opposite" />
+            android:id="@+id/menu_secondary_layout_reverse_primary"
+            android:title="@string/emulation_secondary_display_reverse_primary" />
 
         <item
             android:id="@+id/menu_secondary_layout_top"

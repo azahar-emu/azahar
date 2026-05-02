@@ -343,6 +343,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(expand_to_cutout_area) BOOST_HANA_STRING(R"(
 
+# Allows Azahar to use externally connected displays
+# 0: Off, 1: On (default)
+)") DECLARE_KEY(enable_secondary_display) BOOST_HANA_STRING(R"(
+
 # Secondary Display Layout
 # What the game should do if a secondary display is connected physically or using
 # Miracast / Chromecast screen mirroring

@@ -78,6 +78,17 @@ class ScreenAdjustmentUtil(
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
     }
 
+    fun enableSecondaryDisplay(layoutOption: Int) {
+        BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = true
+        settings.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, SettingsFile.FILE_NAME_CONFIG)
+        changeSecondaryOrientation(layoutOption)
+    }
+
+    fun disableSecondaryDisplay() {
+        BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = false
+        settings.saveSetting(BooleanSetting.ENABLE_SECONDARY_DISPLAY, SettingsFile.FILE_NAME_CONFIG)
+    }
+
     fun changeActivityOrientation(orientationOption: Int) {
         val activity = context as? Activity ?: return
         IntSetting.ORIENTATION_OPTION.int = orientationOption

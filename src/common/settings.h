@@ -62,7 +62,7 @@ enum class SecondaryDisplayLayout : u32 {
     TopScreenOnly,
     BottomScreenOnly,
     SideBySide,
-    OppositeScreenOnly,
+    ReversePrimaryScreen,
     Original,
     Hybrid,
     LargeScreen
@@ -556,7 +556,7 @@ struct Values {
     SwitchableSetting<bool> swap_screen{false, Keys::swap_screen};
     SwitchableSetting<bool> upright_screen{false, Keys::upright_screen};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{
-        SecondaryDisplayLayout::None, Keys::secondary_display_layout};
+            SecondaryDisplayLayout::ReversePrimaryScreen, Keys::secondary_display_layout};
     SwitchableSetting<std::vector<LayoutOption>> layouts_to_cycle{
         {LayoutOption::Default, LayoutOption::SingleScreen, LayoutOption::LargeScreen,
          LayoutOption::SideScreen,

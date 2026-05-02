@@ -1065,26 +1065,27 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         var selectedLayout = IntSetting.SECONDARY_DISPLAY_LAYOUT.int
         val chooserMenu = popupMenu.menu.findItem(R.id.menu_secondary_choose)
-        val enableSecondaryCheckbox = popupMenu.menu.findItem(R.id.menu_secondary_layout_none)
+        val enableSecondaryCheckbox = popupMenu.menu.findItem(R.id.menu_enable_secondary_layout)
         chooserMenu?.subMenu?.removeGroup(R.id.menu_secondary_management_display_group)
         val displays =
             emulationActivity.secondaryDisplayManager.availableDisplays
 
-        if (selectedLayout == SecondaryDisplayLayout.NONE.int) {
+        if (selectedLayout == SecondaryDisplayLayout.NONE.int || !BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean) {
+            BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = false
             enableSecondaryCheckbox.isChecked = false
             chooserMenu.isVisible = false
             popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, false)
-            selectedLayout = SecondaryDisplayLayout.REVERSE_PRIMARY.int
+
         } else {
             popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, true)
             chooserMenu.isVisible = (displays.size > 1)
         }
         val layoutOptionMenuItem = when (selectedLayout) {
             SecondaryDisplayLayout.NONE.int ->
-                R.id.menu_secondary_layout_opposite
+                R.id.menu_secondary_layout_reverse_primary
 
             SecondaryDisplayLayout.REVERSE_PRIMARY.int ->
-                R.id.menu_secondary_layout_opposite
+                R.id.menu_secondary_layout_reverse_primary
 
             SecondaryDisplayLayout.TOP_SCREEN.int ->
                 R.id.menu_secondary_layout_top
@@ -1130,18 +1131,18 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.menu_secondary_layout_none -> {
+                R.id.menu_enable_secondary_layout -> {
                     if (!it.isChecked) {
-                        screenAdjustmentUtil.changeSecondaryOrientation(selectedLayout)
+                        screenAdjustmentUtil.enableSecondaryDisplay(selectedLayout)
                     } else {
-                        screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.NONE.int)
+                        screenAdjustmentUtil.disableSecondaryDisplay()
                     }
                     emulationActivity.secondaryDisplayManager.updateDisplay()
                     showSecondaryScreenLayoutMenu() // reopen menu to get new behaviors
                     true
                 }
 
-                R.id.menu_secondary_layout_opposite -> {
+                R.id.menu_secondary_layout_reverse_primary -> {
                     screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.REVERSE_PRIMARY.int)
                     true
                 }

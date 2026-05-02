@@ -53,6 +53,8 @@ enum class PortraitScreenLayout(val int: Int) {
 
 enum class SecondaryDisplayLayout(val int: Int) {
     // These must match what is defined in src/common/settings.h
+    // NONE is no longer selectable in the interface, having been replaced with
+    // the boolean ENABLE_SECONDARY_DISPLAY setting, but is left here for backwards compatibility
     NONE(0),
     TOP_SCREEN(1),
     BOTTOM_SCREEN(2),
