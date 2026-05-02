@@ -80,6 +80,7 @@ private:
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
                             bool right_eye, const Pica::ColorFill& color_fill);
+    void AttachUniforms();
 
 private:
     Pica::PicaCore& pica;
@@ -91,6 +92,11 @@ private:
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
     OGLProgram shader;
+    OGLProgram SimplePresent_shader;
+    OGLProgram FXAA_shader;
+    OGLProgram SMAA_PASS_0_shader;
+    OGLProgram SMAA_PASS_1_shader;
+    OGLProgram SMAA_PASS_2_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 

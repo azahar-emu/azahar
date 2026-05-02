@@ -13,11 +13,21 @@ set(SHADER_FILES
     texture_filtering/mmpx.frag
     texture_filtering/x_gradient.frag
     texture_filtering/y_gradient.frag
+    antialiasing/opengl_fxaa.frag
+    antialiasing/opengl_fxaa.vert
+    antialiasing/opengl_smaa_pass0.frag
+    antialiasing/opengl_smaa_pass0.vert
+    antialiasing/opengl_smaa_pass1.frag
+    antialiasing/opengl_smaa_pass1.vert
+    antialiasing/opengl_smaa_pass2.frag
+    antialiasing/opengl_smaa_pass2.vert
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert
     opengl_present_anaglyph.frag
     opengl_present_interlaced.frag
+    opengl_simple_present.frag
+    opengl_simple_present.vert
     vulkan_depth_to_buffer.comp
     vulkan_present.frag
     vulkan_present.vert
