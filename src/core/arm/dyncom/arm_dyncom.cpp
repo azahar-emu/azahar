@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,10 +24,16 @@ ARM_DynCom::ARM_DynCom(Core::System& system_, Memory::MemorySystem& memory,
 ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::Run() {
+    if (break_flag) [[unlikely]] {
+        return;
+    }
     ExecuteInstructions(std::max<s64>(timer->GetDowncount(), 0));
 }
 
 void ARM_DynCom::Step() {
+    if (break_flag) [[unlikely]] {
+        return;
+    }
     ExecuteInstructions(1);
 }
 

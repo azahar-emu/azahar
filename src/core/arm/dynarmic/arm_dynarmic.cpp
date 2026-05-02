@@ -1,7 +1,8 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <csignal>
 #include <cstring>
 #include <dynarmic/interface/A32/a32.h>
 #include <dynarmic/interface/optimization_flags.h>
@@ -17,6 +18,14 @@
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
+#ifndef SIGILL
+constexpr u32 SIGILL = 4;
+#endif
+
+#ifndef SIGTRAP
+constexpr u32 SIGTRAP = 5;
+#endif
+
 namespace Core {
 
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
@@ -24,6 +33,21 @@ public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
         : parent(parent), svc_context(parent.system), memory(parent.memory) {}
     ~DynarmicUserCallbacks() = default;
+
+    std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) override {
+        constexpr VAddr low_page_limit = 0x1000;
+
+        // This check prevents a common cascading error that results from the
+        // memory system allowing unmapped memory accesses (in some situations,
+        // a vtable is read from an invalid address and execution jumps to the
+        // zero page). On real hw, it's not normally possible to map the zero page.
+        if (vaddr < low_page_limit) [[unlikely]] {
+            LOG_CRITICAL(Debug, "Tried to read code from low address 0x{:08x}", vaddr);
+            return {};
+        }
+
+        return MemoryRead32(vaddr);
+    }
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
         return memory.Read8(vaddr);
@@ -83,9 +107,8 @@ public:
             break;
         case Dynarmic::A32::Exception::Breakpoint:
             if (GDBStub::IsConnected()) {
-                parent.jit->HaltExecution();
                 parent.SetPC(pc);
-                parent.ServeBreak();
+                parent.ServeBreak(SIGTRAP);
                 return;
             }
             break;
@@ -99,11 +122,19 @@ public:
         case Dynarmic::A32::Exception::PreloadInstruction:
             return;
         }
-        for (int i = 0; i < 16; i++) {
-            LOG_CRITICAL(Debug, "r{:02d} = {:08X}", i, parent.GetReg(i));
+
+        parent.SetPC(pc);
+        if (GDBStub::IsConnected()) {
+            parent.ServeBreak(SIGILL);
+        } else {
+            std::string error;
+            for (int i = 0; i < 16; i++) {
+                error += fmt::format("r{:02d} = {:08X}\n", i, parent.GetReg(i));
+            }
+            error += fmt::format("ExceptionRaised(exception = {}, pc = {:08X})", exception, pc);
+            parent.system.SetStatus(Core::System::ResultStatus::ErrorCoreExceptionRaised,
+                                    error.c_str());
         }
-        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})", exception,
-                   pc, MemoryReadCode(pc).value());
     }
 
     void AddTicks(std::uint64_t ticks) override {
@@ -138,16 +169,19 @@ MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 void ARM_Dynarmic::Run() {
     ASSERT(memory.GetCurrentPageTable() == current_page_table);
     MICROPROFILE_SCOPE(ARM_Jit);
+    if (break_flag) [[unlikely]] {
+        return;
+    }
 
     jit->Run();
 }
 
 void ARM_Dynarmic::Step() {
-    jit->Step();
-
-    if (GDBStub::IsConnected()) {
-        ServeBreak();
+    if (break_flag) [[unlikely]] {
+        return;
     }
+
+    jit->Step();
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
@@ -294,11 +328,8 @@ void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_t
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
-void ARM_Dynarmic::ServeBreak() {
-    Kernel::Thread* thread = system.Kernel().GetCurrentThreadManager().GetCurrentThread();
-    SaveContext(thread->context);
-    GDBStub::Break();
-    GDBStub::SendTrap(thread, 5);
+void ARM_Dynarmic::ServeBreak(int signal) {
+    GDBStub::Break(signal);
 }
 
 std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {

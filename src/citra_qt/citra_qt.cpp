@@ -3880,6 +3880,18 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
+        title = tr("An exception occurred");
+        message = tr("An exception occurred while executing the emulated application.\n\n");
+        message += QString::fromStdString(details);
+        error_severity_icon = QMessageBox::Icon::Critical;
+        can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
+        title = tr("An invalid memory access occurred");
+        message =
+            tr("An invalid memory access occurred while executing the emulated application.\n\n");
+        message += QString::fromStdString(details);
+        error_severity_icon = QMessageBox::Icon::Critical;
     } else {
         title = tr("Fatal Error");
         message = tr("A fatal error occurred. "

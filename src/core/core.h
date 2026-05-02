@@ -103,8 +103,10 @@ public:
         ErrorSavestate,            ///< Error saving or loading
         ErrorArticDisconnected,    ///< Error when artic base disconnects
         ErrorN3DSApplication,      ///< Error launching New 3DS application in Old 3DS mode
-        ShutdownRequested,         ///< Emulated program requested a system shutdown
-        ErrorUnknown               ///< Any other error
+        ErrorCoreExceptionRaised,  ///< The CPU emulation raised an exception
+        ErrorMemoryExceptionRaised, ///< Unmmaped memory was accessed
+        ShutdownRequested,          ///< Emulated program requested a system shutdown
+        ErrorUnknown                ///< Any other error
     };
 
     explicit System();

@@ -592,6 +592,42 @@ Result Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
     return ResultSuccess;
 }
 
+std::vector<std::shared_ptr<Kernel::Thread>> Kernel::Process::GetThreadList() {
+    std::vector<std::shared_ptr<Kernel::Thread>> ret;
+    for (u32 core = 0; core < Core::GetNumCores(); core++) {
+        auto thread_list = kernel.GetThreadManager(core).GetThreadList();
+        for (auto& thread : thread_list) {
+            if (thread->owner_process.lock().get() == this) {
+                ret.push_back(thread);
+            }
+        }
+    }
+    return ret;
+}
+
+void Kernel::Process::SetDebugBreak(bool debug_break, std::vector<u32> thread_ids) {
+    auto thread_list = GetThreadList();
+    bool needs_reschedule = false;
+    for (auto& t : thread_list) {
+
+        if (!thread_ids.empty()) {
+            u32 thread_id = t->thread_id;
+            if (std::find(thread_ids.begin(), thread_ids.end(), thread_id) == thread_ids.end()) {
+                continue;
+            }
+        }
+
+        needs_reschedule |= t->SetDebugBreak(debug_break);
+    }
+
+    if (needs_reschedule) {
+        for (u32 i = 0; i < Core::GetNumCores(); i++) {
+            Core::GetCore(i).PrepareReschedule();
+            kernel.GetThreadManager(i).Reschedule();
+        }
+    }
+}
+
 void Process::FreeAllMemory() {
     if (memory_region == nullptr || resource_limit == nullptr) {
         return;

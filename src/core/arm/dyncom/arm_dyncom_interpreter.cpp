@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2012 Michael Kang, 2014 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -954,11 +958,9 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 #define GDB_BP_CHECK                                                                               \
     cpu->Cpsr &= ~(1 << 5);                                                                        \
     cpu->Cpsr |= cpu->TFlag << 5;                                                                  \
-    if (GDBStub::IsServerEnabled()) {                                                              \
-        if (GDBStub::IsMemoryBreak()) {                                                            \
-            goto END;                                                                              \
-        } else if (breakpoint_data.type != GDBStub::BreakpointType::None &&                        \
-                   PC == breakpoint_data.address) {                                                \
+    if (GDBStub::IsServerEnabled()) [[unlikely]] {                                                 \
+        if (breakpoint_data.type != GDBStub::BreakpointType::None &&                               \
+            PC == breakpoint_data.address) {                                                       \
             cpu->RecordBreak(breakpoint_data);                                                     \
             goto END;                                                                              \
         }                                                                                          \

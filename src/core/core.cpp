@@ -88,6 +88,12 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         if (thread && running_core) {
             running_core->SaveContext(thread->context);
         }
+        // The break flag is only set if GDB is connected,
+        // we can do clearing here safely. If it is ever
+        // used outside, move the clearing outside the if.
+        for (auto& cpu_core : cpu_cores) {
+            cpu_core->ClearBreakFlag();
+        }
         GDBStub::HandlePacket(*this);
     }
 
@@ -249,6 +255,8 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
+                // In the rare case the break flag is set (due to exception thrown)
+                // there is probably no need to adjust the timer accordingly.
                 if (tight_loop) {
                     cpu_core->Run();
                 } else {

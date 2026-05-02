@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
@@ -36,10 +40,13 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
 #include "core/hle/kernel/process.h"
+#include "core/loader/loader.h"
 #include "core/memory.h"
 
+#pragma optimize("", off)
+
 // Uncomment to log all GDB traffic
-// #define PRINT_GDB_TRAFFIC
+#define PRINT_GDB_TRAFFIC
 
 namespace GDBStub {
 namespace {
@@ -62,6 +69,10 @@ constexpr u32 SIGTERM = 15;
 constexpr u32 MSG_WAITALL = 8;
 #endif
 
+#ifndef SIGSEGV
+constexpr u32 SIGSEGV = 11;
+#endif
+
 constexpr u32 SP_REGISTER = 13;
 constexpr u32 LR_REGISTER = 14;
 constexpr u32 PC_REGISTER = 15;
@@ -76,6 +87,8 @@ constexpr char target_xml[] =
     R"(l<?xml version="1.0"?>
 <!DOCTYPE target SYSTEM "gdb-target.dtd">
 <target version="1.0">
+  <architecture>arm</architecture>
+  <osabi>3DS</osabi>
   <feature name="org.gnu.gdb.arm.core">
     <reg name="r0" bitsize="32"/>
     <reg name="r1" bitsize="32"/>
@@ -129,19 +142,25 @@ u8 command_buffer[GDB_BUFFER_SIZE];
 u32 command_length;
 
 u32 latest_signal = 0;
-bool memory_break = false;
 
 static Kernel::Thread* current_thread = nullptr;
+static Kernel::Process* current_process = nullptr;
 
 // Binding to a port within the reserved ports range (0-1023) requires root permissions,
 // so default to a port outside of that range.
 u16 gdbstub_port = 24689;
 
-bool send_trap = false;
+constexpr bool supports_extended_mode = true;
+bool is_extended_mode = false;
 
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
 std::atomic<bool> server_enabled(false);
+int accept_socket = -1;
+int continue_thread = -1;
+
+static Kernel::Thread* break_thread = nullptr;
+static int break_signal = 0;
 
 #ifdef _WIN32
 WSADATA InitData;
@@ -161,16 +180,17 @@ BreakpointMap breakpoints_write;
 } // Anonymous namespace
 
 static Kernel::Thread* FindThreadById(int id) {
-    u32 num_cores = Core::GetNumCores();
-    for (u32 i = 0; i < num_cores; ++i) {
-        const auto& threads =
-            Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
-        for (auto& thread : threads) {
-            if (thread->GetThreadId() == static_cast<u32>(id)) {
-                return thread.get();
-            }
+    if (!current_process) {
+        return nullptr;
+    }
+
+    auto thread_list = current_process->GetThreadList();
+    for (auto& thread : thread_list) {
+        if (thread->GetThreadId() == static_cast<u32>(id)) {
+            return thread.get();
         }
     }
+
     return nullptr;
 }
 
@@ -364,12 +384,40 @@ static u64 GdbHexToLong(const u8* src) {
     return output;
 }
 
+static int GetErrno() {
+#ifdef _WIN32
+    return WSAGetLastError();
+#else
+    return errno;
+#endif
+}
+
+static bool SetNonBlock(int socket, bool nonblock) {
+#ifdef _WIN32
+    unsigned long nonblocking = nonblock ? 1 : 0;
+    int ret = ioctlsocket(socket, FIONBIO, &nonblocking);
+    if (ret < 0) {
+        LOG_ERROR(Debug_GDBStub, "Failed to set non-blocking gdb socket");
+        return false;
+    }
+#else
+    int flags = nonblock ? O_NONBLOCK : 0;
+
+    const int ret = ::fcntl(socket, F_SETFL, flags);
+    if (ret < 0) {
+        LOG_ERROR(Debug_GDBStub, "Failed to set non-blocking gdb socket");
+        return false;
+    }
+#endif
+    return true;
+}
+
 /// Read a byte from the gdb client.
 static u8 ReadByte() {
     u8 c;
     std::size_t received_size = recv(gdbserver_socket, reinterpret_cast<char*>(&c), 1, MSG_WAITALL);
     if (received_size != 1) {
-        LOG_ERROR(Debug_GDBStub, "recv failed : {}", received_size);
+        LOG_ERROR(Debug_GDBStub, "recv failed : {}", GetErrno());
         Shutdown();
     }
 
@@ -417,13 +465,15 @@ static void RemoveBreakpoint(BreakpointType type, VAddr addr) {
               bp->second.len, bp->second.addr, type);
 
     if (type == BreakpointType::Execute) {
-        Core::System::GetInstance().Memory().WriteBlock(
-            *Core::System::GetInstance().Kernel().GetCurrentProcess(), bp->second.addr,
-            bp->second.inst.data(), bp->second.inst.size());
+        Core::System::GetInstance().Memory().WriteBlock(*current_process, bp->second.addr,
+                                                        bp->second.inst.data(), bp->second.len);
         u32 num_cores = Core::GetNumCores();
         for (u32 i = 0; i < num_cores; ++i) {
             Core::GetCore(i).ClearInstructionCache();
         }
+    } else {
+        Core::System::GetInstance().Memory().UnregisterWatchpoint(*current_process, bp->second.addr,
+                                                                  bp->second.len);
     }
     p.erase(addr);
 }
@@ -444,38 +494,58 @@ BreakpointAddress GetNextBreakpointFromAddress(VAddr addr, BreakpointType type) 
     return breakpoint;
 }
 
-bool CheckBreakpoint(VAddr addr, BreakpointType type) {
+bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
     if (!IsConnected()) {
         return false;
     }
 
     const BreakpointMap& p = GetBreakpointMap(type);
-    const auto bp = p.find(addr);
 
-    if (bp == p.end()) {
-        return false;
-    }
+    // Access range: [addr, access_end)
+    const VAddr access_end = addr + access_len;
 
-    u32 len = bp->second.len;
+    for (const auto& [base_addr, bp] : p) {
+        if (!bp.active) {
+            continue;
+        }
 
-    // IDA Pro defaults to 4-byte breakpoints for all non-hardware breakpoints
-    // no matter if it's a 4-byte or 2-byte instruction. When you execute a
-    // Thumb instruction with a 4-byte breakpoint set, it will set a breakpoint on
-    // two instructions instead of the single instruction you placed the breakpoint
-    // on. So, as a way to make sure that execution breakpoints are only breaking
-    // on the instruction that was specified, set the length of an execution
-    // breakpoint to 1. This should be fine since the CPU should never begin executing
-    // an instruction anywhere except the beginning of the instruction.
-    if (type == BreakpointType::Execute) {
-        len = 1;
-    }
+        u32 bp_len = bp.len;
 
-    if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
-        LOG_DEBUG(Debug_GDBStub,
-                  "Found breakpoint type {} @ {:08x}, range: {:08x}"
-                  " - {:08x} ({:x} bytes)",
-                  type, addr, bp->second.addr, bp->second.addr + len, len);
-        return true;
+        // IDA Pro defaults to 4-byte breakpoints for all non-hardware breakpoints
+        // no matter if it's a 4-byte or 2-byte instruction. When you execute a
+        // Thumb instruction with a 4-byte breakpoint set, it will set a breakpoint on
+        // two instructions instead of the single instruction you placed the breakpoint
+        // on. So, as a way to make sure that execution breakpoints are only breaking
+        // on the instruction that was specified, set the length of an execution
+        // breakpoint to 1. This should be fine since the CPU should never begin executing
+        // an instruction anywhere except the beginning of the instruction.
+        if (type == BreakpointType::Execute) {
+            bp_len = 1;
+        }
+
+        // Breakpoint/watchpoint range: [bp.addr, bp_end)
+        const VAddr bp_end = bp.addr + bp_len;
+
+        bool hit = false;
+
+        if (type == BreakpointType::Execute) {
+            // Execute breakpoints should only trigger on exact PC match.
+            hit = (addr == bp.addr);
+        } else {
+            // Range overlap test:
+            // [addr, access_end) overlaps [bp.addr, bp_end)
+            hit = (addr < bp_end) && (bp.addr < access_end);
+        }
+
+        if (hit) {
+            LOG_DEBUG(Debug_GDBStub,
+                      "Found breakpoint type {}, "
+                      "access range: {:08x} - {:08x}, "
+                      "breakpoint range: {:08x} - {:08x}",
+                      type, addr, addr, access_end, bp.addr, bp_end);
+
+            return true;
+        }
     }
 
     return false;
@@ -503,11 +573,7 @@ void SendReply(const char* reply) {
     command_length = static_cast<u32>(strlen(reply));
 
 #ifdef PRINT_GDB_TRAFFIC
-    if (command_length > 0) {
-        LOG_INFO(Debug_GDBStub, "Req: {} {}", *reply, reply + 1);
-    } else {
-        LOG_INFO(Debug_GDBStub, "Req:");
-    }
+    LOG_INFO(Debug_GDBStub, "Res: {}", reply);
 #endif
 
     if (command_length + 4 > sizeof(command_buffer)) {
@@ -545,60 +611,103 @@ static void HandleQuery() {
 
     if (strcmp(query, "TStatus") == 0) {
         SendReply("T0");
+    } else if (strncmp(query, "Attached", strlen("Attached")) == 0) {
+        SendReply("1");
     } else if (strncmp(query, "Supported", strlen("Supported")) == 0) {
         // PacketSize needs to be large enough for target xml
-        SendReply("PacketSize=2000;qXfer:features:read+;qXfer:threads:read+");
+        SendReply("PacketSize=2000;qXfer:features:read+;qXfer:osdata:read+;qXfer:threads:read+;"
+                  "vContSupported+");
     } else if (strncmp(query, "Xfer:features:read:target.xml:",
                        strlen("Xfer:features:read:target.xml:")) == 0) {
         SendReply(target_xml);
     } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
-        std::string val = "m";
-        u32 num_cores = Core::GetNumCores();
-        for (u32 i = 0; i < num_cores; ++i) {
-            const auto& threads =
-                Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
-            for (const auto& thread : threads) {
-                val += fmt::format("{:x},", thread->GetThreadId());
-            }
+        if (!current_process) {
+            SendReply("E01");
+            return;
         }
+
+        auto thread_list = current_process->GetThreadList();
+        std::string val = "m";
+        for (const auto& thread : thread_list) {
+            val += fmt::format("{:x},", thread->GetThreadId());
+        }
+
         val.pop_back();
         SendReply(val.c_str());
     } else if (strncmp(query, "sThreadInfo", strlen("sThreadInfo")) == 0) {
         SendReply("l");
+    } else if (strncmp(query, "Xfer:osdata:read:processes", strlen("Xfer:osdata:read:processes")) ==
+               0) {
+        std::string buffer;
+        buffer += "l<osdata type=\"processes\">";
+        auto process_list = Core::System::GetInstance().Kernel().GetProcessList();
+        for (const auto& p : process_list) {
+            buffer += fmt::format("<item>"
+                                  "<column name=\"pid\">{}</column>"
+                                  "<column name=\"command\">{}</column>"
+                                  "</item>",
+                                  p->process_id, p->codeset->name);
+        }
+        buffer += "</osdata>";
+        SendReply(buffer.c_str());
     } else if (strncmp(query, "Xfer:threads:read", strlen("Xfer:threads:read")) == 0) {
+        if (!current_process) {
+            SendReply("E01");
+            return;
+        }
+
         std::string buffer;
         buffer += "l<?xml version=\"1.0\"?>";
         buffer += "<threads>";
-        u32 num_cores = Core::GetNumCores();
-        for (u32 i = 0; i < num_cores; ++i) {
-            const auto& threads =
-                Core::System::GetInstance().Kernel().GetThreadManager(i).GetThreadList();
-            for (const auto& thread : threads) {
-                buffer += fmt::format(R"*(<thread id="{:x}" name="Thread {:x}"></thread>)*",
-                                      thread->GetThreadId(), thread->GetThreadId());
-            }
+        auto thread_list = current_process->GetThreadList();
+        for (const auto& thread : thread_list) {
+            buffer += fmt::format(R"*(<thread id="{:x}" name="Thread {:x}"></thread>)*",
+                                  thread->GetThreadId(), thread->GetThreadId());
         }
         buffer += "</threads>";
+
         SendReply(buffer.c_str());
     } else {
         SendReply("");
     }
 }
+static bool SetThread(int thread_id) {
+    if (!current_process) {
+        // The process has not been selected yet
+        return false;
+    }
 
+    if (thread_id >= 1) {
+        current_thread = FindThreadById(thread_id);
+    }
+    if (!current_thread) {
+        auto thread_list = current_process->GetThreadList();
+        if (thread_list.size() > 0) {
+            // Select the lowest thread ID, which is the main thread
+            std::sort(thread_list.begin(), thread_list.end(),
+                      [](const std::shared_ptr<Kernel::Thread>& a,
+                         const std::shared_ptr<Kernel::Thread>& b) {
+                          return a->thread_id < b->thread_id;
+                      });
+            current_thread = thread_list[0].get();
+        }
+    }
+    return current_thread != nullptr;
+}
 /// Handle set thread command from gdb client.
 static void HandleSetThread() {
     int thread_id = -1;
     if (command_buffer[2] != '-') {
         thread_id = static_cast<int>(HexToInt(command_buffer + 2, command_length - 2));
     }
-    if (thread_id >= 1) {
-        current_thread = FindThreadById(thread_id);
+
+    if (command_buffer[1] == 'c') {
+        continue_thread = thread_id;
+        SendReply("OK");
+        return;
     }
-    if (!current_thread) {
-        thread_id = 1;
-        current_thread = FindThreadById(thread_id);
-    }
-    if (current_thread) {
+
+    if (SetThread(thread_id)) {
         SendReply("OK");
         return;
     }
@@ -607,6 +716,11 @@ static void HandleSetThread() {
 
 /// Handle thread alive command from gdb client.
 static void HandleThreadAlive() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
     int thread_id = static_cast<int>(HexToInt(command_buffer + 1, command_length - 1));
     if (thread_id == 0) {
         thread_id = 1;
@@ -616,6 +730,15 @@ static void HandleThreadAlive() {
         return;
     }
     SendReply("E01");
+}
+
+static void HandleExtendedMode() {
+    if (supports_extended_mode) {
+        is_extended_mode = true;
+        SendReply("OK");
+    } else {
+        SendReply("");
+    }
 }
 
 /**
@@ -636,11 +759,16 @@ static void SendSignal(Kernel::Thread* thread, u32 signal, bool full = true) {
 
     std::string buffer;
     if (full) {
-
+        Core::ARM_Interface::ThreadContext ctx{};
+        if (thread) {
+            ctx = thread->context;
+        } else {
+            Core::GetRunningCore().SaveContext(ctx);
+        }
         buffer = fmt::format("T{:02x}{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", latest_signal,
-                             PC_REGISTER, htonl(Core::GetRunningCore().GetPC()), SP_REGISTER,
-                             htonl(Core::GetRunningCore().GetReg(SP_REGISTER)), LR_REGISTER,
-                             htonl(Core::GetRunningCore().GetReg(LR_REGISTER)));
+                             PC_REGISTER, htonl(ctx.cpu_registers[PC_REGISTER]), SP_REGISTER,
+                             htonl(ctx.cpu_registers[SP_REGISTER]), LR_REGISTER,
+                             htonl(ctx.cpu_registers[LR_REGISTER]));
     } else {
         buffer = fmt::format("T{:02x}", latest_signal);
     }
@@ -651,6 +779,53 @@ static void SendSignal(Kernel::Thread* thread, u32 signal, bool full = true) {
 
     LOG_DEBUG(Debug_GDBStub, "Response: {}", buffer);
     SendReply(buffer.c_str());
+}
+
+static void HandleGetStopReason() {
+    if (is_extended_mode) {
+        // In extended mode, tell the debugger that there is no selected process yet.
+        // That way the debugger can ask for the process list and attack to the right PID.
+        if (!current_process) {
+            // The process has not been selected yet.
+            SendReply("W00");
+        } else {
+            SendSignal(current_thread, latest_signal);
+        }
+    } else {
+        // In non extended mode, select the process corresponding to the "main"
+        // launched application.
+        u64 program_id = 0;
+        Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+        auto process_list = Core::System::GetInstance().Kernel().GetProcessList();
+        for (const auto& process : process_list) {
+            if (process->codeset->program_id == program_id) {
+                current_process = process.get();
+                current_process->SetDebugBreak(true);
+                if (SetThread(0)) {
+                    SendSignal(current_thread, 0);
+                } else {
+                    // Should never happen
+                    SendReply("W00");
+                }
+                return;
+            }
+        }
+
+        // No process, should never happen
+        SendReply("W00");
+    }
+}
+
+static void BreakImpl(int signal) {
+    if (signal == SIGSEGV) {
+        LOG_WARNING(Debug_GDBStub, "Segmentation fault signals may not be fully accurate");
+    }
+
+    current_process->SetDebugBreak(true);
+
+    latest_signal = signal;
+
+    SendSignal(current_thread, signal);
 }
 
 /// Read command from gdb client.
@@ -664,7 +839,7 @@ static void ReadCommand() {
         return;
     } else if (c == 0x03) {
         LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
-        SendSignal(current_thread, SIGTRAP);
+        BreakImpl(SIGTRAP);
         return;
     } else if (c != GDB_STUB_START) {
         LOG_DEBUG(Debug_GDBStub, "gdb: read invalid byte {:02x}\n", c);
@@ -726,6 +901,11 @@ static bool IsDataAvailable() {
 
 /// Send requested register to gdb client.
 static void ReadRegister() {
+    if (!current_process || !current_thread) {
+        SendReply("E01");
+        return;
+    }
+
     static u8 reply[64];
     std::memset(reply, 0, sizeof(reply));
 
@@ -752,6 +932,11 @@ static void ReadRegister() {
 
 /// Send all registers to the gdb client.
 static void ReadRegisters() {
+    if (!current_process || !current_thread) {
+        SendReply("E01");
+        return;
+    }
+
     static u8 buffer[GDB_BUFFER_SIZE - 4];
     std::memset(buffer, 0, sizeof(buffer));
 
@@ -791,6 +976,11 @@ static void UpdateCPUThreadContext() {
 
 /// Modify data of register specified by gdb client.
 static void WriteRegister() {
+    if (!current_process || !current_thread) {
+        SendReply("E01");
+        return;
+    }
+
     const u8* buffer_ptr = command_buffer + 3;
 
     u32 id = HexCharToValue(command_buffer[1]);
@@ -819,6 +1009,11 @@ static void WriteRegister() {
 
 /// Modify all registers with data received from the client.
 static void WriteRegisters() {
+    if (!current_process || !current_thread) {
+        SendReply("E01");
+        return;
+    }
+
     const u8* buffer_ptr = command_buffer + 1;
 
     if (command_buffer[0] != 'G')
@@ -849,6 +1044,11 @@ static void WriteRegisters() {
 
 /// Read location in memory specified by gdb client.
 static void ReadMemory() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
     static u8 reply[GDB_BUFFER_SIZE - 4];
 
     auto start_offset = command_buffer + 1;
@@ -866,13 +1066,12 @@ static void ReadMemory() {
     }
 
     auto& memory = Core::System::GetInstance().Memory();
-    if (!memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                      addr)) {
-        return SendReply("E00");
+    if (!memory.IsValidVirtualAddress(*current_process, addr)) {
+        return SendReply("E14");
     }
 
     std::vector<u8> data(len);
-    memory.ReadBlock(addr, data.data(), len);
+    memory.ReadBlock(*current_process, addr, data.data(), len);
 
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
@@ -885,6 +1084,11 @@ static void ReadMemory() {
 
 /// Modify location in memory with data received from the gdb client.
 static void WriteMemory() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
     auto start_offset = command_buffer + 1;
     auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     VAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
@@ -894,36 +1098,67 @@ static void WriteMemory() {
     u32 len = HexToInt(start_offset, static_cast<u32>(len_pos - start_offset));
 
     auto& memory = Core::System::GetInstance().Memory();
-    if (!memory.IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                      addr)) {
+    if (!memory.IsValidVirtualAddress(*current_process, addr)) {
         return SendReply("E00");
     }
 
     std::vector<u8> data(len);
 
     GdbHexToMem(data.data(), len_pos + 1, len);
-    memory.WriteBlock(addr, data.data(), len);
+    memory.WriteBlock(*current_process, addr, data.data(), len);
     ClearAllInstructionCache();
     SendReply("OK");
 }
 
-void Break(bool is_memory_break) {
-    send_trap = true;
-
-    memory_break = is_memory_break;
-}
-
-bool IsMemoryBreak() {
-    if (!IsConnected()) {
-        return false;
+void Break(int signal) {
+    if (!IsConnected() || !current_process ||
+        Core::System::GetInstance().Kernel().GetCurrentProcess().get() != current_process) {
+        LOG_ERROR(Debug_GDBStub, "Got signal for un-attached process, ignoring...");
+        return;
     }
 
-    return memory_break;
+    if (break_thread) {
+        LOG_ERROR(Debug_GDBStub,
+                  "Got multiple break signals in quick succession, latest may be lost");
+        return;
+    }
+
+    break_thread =
+        Core::System::GetInstance().Kernel().GetCurrentThreadManager().GetCurrentThread();
+    if (break_thread) {
+        break_signal = signal;
+    }
+
+    // Try to break CPU asap
+    Core::GetRunningCore().SetBreakFlag();
+    Core::GetRunningCore().ClearInstructionCache();
+    Core::GetRunningCore().PrepareReschedule();
 }
 
 /// Tell the CPU to continue executing.
 static void Continue() {
-    memory_break = false;
+    if (!current_process) {
+        return;
+    }
+
+    u32 thread_id = -1;
+    if (continue_thread == 0) {
+        thread_id = current_process->GetThreadList()[0]->thread_id;
+    } else {
+        thread_id = continue_thread;
+    }
+
+    // There is no documentation anywhere if continue should
+    // reset the continue thread value. Luma3DS implementation
+    // does this, and looks like IDA Pro expects it that way too.
+    continue_thread = -1;
+
+    std::vector<u32> continue_list{};
+    if (thread_id != -1) {
+        continue_list.push_back(thread_id);
+    }
+
+    current_process->SetDebugBreak(false, continue_list);
     ClearAllInstructionCache();
 }
 
@@ -937,20 +1172,26 @@ static void Continue() {
 static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
     BreakpointMap& p = GetBreakpointMap(type);
 
+    if (type == BreakpointType::Execute && len != 2 && len != 4) {
+        return false;
+    }
+
     Breakpoint breakpoint;
     breakpoint.active = true;
     breakpoint.addr = addr;
     breakpoint.len = len;
-    Core::System::GetInstance().Memory().ReadBlock(
-        *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, breakpoint.inst.data(),
-        breakpoint.inst.size());
+    Core::System::GetInstance().Memory().ReadBlock(*current_process, addr, breakpoint.inst.data(),
+                                                   len);
 
     static constexpr std::array<u8, 4> btrap{0x70, 0x00, 0x20, 0xe1};
+    static constexpr std::array<u8, 2> btrap_thumb{0x00, 0xBE};
+
     if (type == BreakpointType::Execute) {
         Core::System::GetInstance().Memory().WriteBlock(
-            *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, btrap.data(),
-            btrap.size());
+            *current_process, addr, (len == 2) ? btrap_thumb.data() : btrap.data(), len);
         ClearAllInstructionCache();
+    } else {
+        Core::System::GetInstance().Memory().RegisterWatchpoint(*current_process, addr, len);
     }
     p.insert({addr, breakpoint});
 
@@ -962,6 +1203,11 @@ static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
 
 /// Handle add breakpoint command from gdb client.
 static void AddBreakpoint() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
     BreakpointType type;
 
     u8 type_id = HexCharToValue(command_buffer[1]);
@@ -1011,6 +1257,11 @@ static void AddBreakpoint() {
 
 /// Handle remove breakpoint command from gdb client.
 static void RemoveBreakpoint() {
+    if (!current_process) {
+        SendReply("E01");
+        return;
+    }
+
     BreakpointType type;
 
     u8 type_id = HexCharToValue(command_buffer[1]);
@@ -1048,11 +1299,122 @@ static void RemoveBreakpoint() {
     SendReply("OK");
 }
 
+void HandleVCommand() {
+    std::string_view cmd_view((const char*)command_buffer, command_length);
+
+    if (cmd_view.size() <= 1) {
+        SendReply("E01");
+        return;
+    }
+    size_t delimiter_pos = cmd_view.find(';');
+    std::string_view command =
+        cmd_view.substr(1, delimiter_pos == cmd_view.npos ? cmd_view.npos : delimiter_pos);
+    if (command == "Attach;") {
+        if (!is_extended_mode) {
+            SendReply("E01");
+            return;
+        }
+
+        std::string_view arg = cmd_view.substr(delimiter_pos + 1);
+        u32 pid = HexToInt(reinterpret_cast<const u8*>(arg.data()), arg.size());
+        auto process = Core::System::GetInstance().Kernel().GetProcessById(pid);
+        if (!process) {
+            SendReply("E02");
+        } else {
+            current_process = process.get();
+            current_process->SetDebugBreak(true);
+            if (SetThread(0)) {
+                SendSignal(current_thread, 0);
+            } else {
+                // Should never happen
+                SendReply("W00");
+            }
+        }
+        return;
+    } else if (command == "Cont?") {
+        SendReply("vCont;c;C");
+    } else if (command == "Cont;") {
+        if (!current_process) {
+            SendReply("E01");
+            return;
+        }
+
+        std::string_view arg = cmd_view.substr(delimiter_pos + 1);
+        auto actions = Common::SplitString(arg, ';');
+
+        if (actions.empty()) {
+            SendReply("E01");
+            return;
+        }
+        for (auto& action : actions) {
+            auto threads = Common::SplitString(action, ':');
+            if (threads.empty()) {
+                SendReply("E01");
+                return;
+            }
+            char action_type = threads[0][0];
+            if (action_type != 'c') {
+                SendReply("E01");
+                return;
+            }
+            std::vector<u32> thread_ids;
+            for (size_t i = 1; i < threads.size(); i++) {
+                thread_ids.push_back(
+                    HexToInt(reinterpret_cast<const u8*>(threads[i].c_str()), threads[i].size()));
+            }
+
+            current_process->SetDebugBreak(false, thread_ids);
+        }
+    } else {
+        SendReply("");
+    }
+}
+
 void HandlePacket(Core::System& system) {
+
     if (!IsConnected()) {
         if (defer_start) {
             ToggleServer(true);
+            defer_start = false;
         }
+
+        // Handle accept new GDB connection
+        if (accept_socket != -1) {
+            sockaddr_in saddr_client;
+            sockaddr* client_addr = reinterpret_cast<sockaddr*>(&saddr_client);
+            socklen_t client_addrlen = sizeof(saddr_client);
+            gdbserver_socket =
+                static_cast<int>(accept(accept_socket, client_addr, &client_addrlen));
+            if (gdbserver_socket < 0) {
+#ifdef _WIN32
+                if (GetErrno() == WSAEWOULDBLOCK) {
+                    // Nothing connected yet
+                    return;
+                }
+#else
+                if (GetErrno() == EAGAIN || GetErrno() == EWOULDBLOCK) {
+                    // Nothing connected yet
+                    return;
+                }
+#endif
+                LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
+            } else {
+                LOG_INFO(Debug_GDBStub, "Client connected.\n");
+                SetNonBlock(gdbserver_socket, false);
+            }
+
+            shutdown(accept_socket, SHUT_RDWR);
+            accept_socket = -1;
+        }
+        return;
+    }
+
+    if (break_thread) {
+        current_thread = break_thread;
+        break_thread = nullptr;
+        int signal = break_signal;
+        break_signal = 0;
+        BreakImpl(signal);
         return;
     }
 
@@ -1072,7 +1434,7 @@ void HandlePacket(Core::System& system) {
 
 #ifdef PRINT_GDB_TRAFFIC
     std::string cmd_str(command_buffer + 1, command_buffer + command_length);
-    LOG_INFO(Debug_GDBStub, "Res: {:c} {}", command_buffer[0], cmd_str);
+    LOG_INFO(Debug_GDBStub, "Req: {:c} {}", command_buffer[0], cmd_str);
 #endif
 
     LOG_DEBUG(Debug_GDBStub, "Packet: {0:d} ('{0:c}')", command_buffer[0]);
@@ -1085,16 +1447,28 @@ void HandlePacket(Core::System& system) {
         HandleSetThread();
         break;
     case '?':
-        SendSignal(current_thread, latest_signal);
+        HandleGetStopReason();
+        break;
+    case '!':
+        HandleExtendedMode();
+        break;
+    case 'D':
+        SendReply("OK");
+        ToggleServer(false);
+        // Continue execution
+        continue_thread = -1;
+        Continue();
         break;
     case 'k':
         LOG_INFO(Debug_GDBStub, "killed by gdb");
         ToggleServer(false);
-        // Continue execution so we don't hang forever after shutting down the server
+        // Continue execution and stop emulation
+        continue_thread = -1;
         Continue();
+        system.RequestShutdown();
         return;
     case 'F':
-        HandleHioReply(system, command_buffer, command_length);
+        HandleHioReply(system, current_process, command_buffer, command_length);
         break;
     case 'g':
         ReadRegisters();
@@ -1115,7 +1489,7 @@ void HandlePacket(Core::System& system) {
         WriteMemory();
         break;
     case 's':
-        // Single step, return ENOTSUP
+        // Single step not supported, return ENOTSUP
         SendReply("E5F");
         return;
     case 'C':
@@ -1130,6 +1504,9 @@ void HandlePacket(Core::System& system) {
         break;
     case 'T':
         HandleThreadAlive();
+        break;
+    case 'v':
+        HandleVCommand();
         break;
     default:
         SendReply("");
@@ -1146,12 +1523,12 @@ void ToggleServer(bool status) {
         server_enabled = status;
 
         // Start server
-        if (!IsConnected() && Core::System::GetInstance().IsPoweredOn()) {
+        if (!IsInitialized() && Core::System::GetInstance().IsPoweredOn()) {
             Init();
         }
     } else {
         // Stop server
-        if (IsConnected()) {
+        if (IsInitialized()) {
             Shutdown();
         }
 
@@ -1184,47 +1561,32 @@ static void Init(u16 port) {
     WSAStartup(MAKEWORD(2, 2), &InitData);
 #endif
 
-    int tmpsock = static_cast<int>(socket(PF_INET, SOCK_STREAM, 0));
-    if (tmpsock == -1) {
+    accept_socket = static_cast<int>(socket(PF_INET, SOCK_STREAM, 0));
+    if (accept_socket == -1) {
         LOG_ERROR(Debug_GDBStub, "Failed to create gdb socket");
     }
 
     // Set socket to SO_REUSEADDR so it can always bind on the same port
     int reuse_enabled = 1;
-    if (setsockopt(tmpsock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse_enabled,
+    if (setsockopt(accept_socket, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse_enabled,
                    sizeof(reuse_enabled)) < 0) {
         LOG_ERROR(Debug_GDBStub, "Failed to set gdb socket option");
     }
 
     const sockaddr* server_addr = reinterpret_cast<const sockaddr*>(&saddr_server);
     socklen_t server_addrlen = sizeof(saddr_server);
-    if (bind(tmpsock, server_addr, server_addrlen) < 0) {
+    if (bind(accept_socket, server_addr, server_addrlen) < 0) {
         LOG_ERROR(Debug_GDBStub, "Failed to bind gdb socket");
     }
 
-    if (listen(tmpsock, 1) < 0) {
+    if (listen(accept_socket, 1) < 0) {
         LOG_ERROR(Debug_GDBStub, "Failed to listen to gdb socket");
     }
 
+    SetNonBlock(accept_socket, true);
+
     // Wait for gdb to connect
     LOG_INFO(Debug_GDBStub, "Waiting for gdb to connect...\n");
-    sockaddr_in saddr_client;
-    sockaddr* client_addr = reinterpret_cast<sockaddr*>(&saddr_client);
-    socklen_t client_addrlen = sizeof(saddr_client);
-    gdbserver_socket = static_cast<int>(accept(tmpsock, client_addr, &client_addrlen));
-    if (gdbserver_socket < 0) {
-        // In the case that we couldn't start the server for whatever reason, just start CPU
-        // execution like normal.
-        LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
-    } else {
-        LOG_INFO(Debug_GDBStub, "Client connected.\n");
-        saddr_client.sin_addr.s_addr = ntohl(saddr_client.sin_addr.s_addr);
-    }
-
-    // Clean up temporary socket if it's still alive at this point.
-    if (tmpsock != -1) {
-        shutdown(tmpsock, SHUT_RDWR);
-    }
 }
 
 void Init() {
@@ -1236,11 +1598,17 @@ void Shutdown() {
         return;
     }
     defer_start = false;
+    is_extended_mode = false;
 
     LOG_INFO(Debug_GDBStub, "Stopping GDB ...");
     if (gdbserver_socket != -1) {
         shutdown(gdbserver_socket, SHUT_RDWR);
         gdbserver_socket = -1;
+    }
+
+    if (accept_socket != -1) {
+        shutdown(accept_socket, SHUT_RDWR);
+        accept_socket = -1;
     }
 
 #ifdef _WIN32
@@ -1254,19 +1622,11 @@ bool IsServerEnabled() {
     return server_enabled;
 }
 
-bool IsConnected() {
-    return IsServerEnabled() && gdbserver_socket != -1;
+bool IsInitialized() {
+    return IsServerEnabled() && (accept_socket != -1 || gdbserver_socket != -1);
 }
 
-void SendTrap(Kernel::Thread* thread, int trap) {
-    if (!send_trap) {
-        return;
-    }
-
-    current_thread = thread;
-
-    SendSignal(thread, trap);
-
-    send_trap = false;
+bool IsConnected() {
+    return IsServerEnabled() && gdbserver_socket != -1;
 }
 }; // namespace GDBStub
