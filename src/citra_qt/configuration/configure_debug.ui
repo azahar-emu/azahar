@@ -299,6 +299,16 @@
           </property>
         </widget>
       </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="break_on_unmapped_memory_access">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pauses emulation and shows an error message if an unmapped memory access is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Break on unmapped memory access</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

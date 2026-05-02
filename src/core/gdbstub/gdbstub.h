@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
@@ -60,18 +64,18 @@ void Shutdown();
 /// Checks if the gdbstub server is enabled.
 bool IsServerEnabled();
 
+/// Returns true if the GDB server is initialized
+bool IsInitialized();
+
 /// Returns true if there is an active socket connection.
 bool IsConnected();
 
 /**
  * Signal to the gdbstub server that it should halt CPU execution.
  *
- * @param is_memory_break If true, the break resulted from a memory breakpoint.
+ * @param signal Signal that produced the break (SIGTRAP by default)
  */
-void Break(bool is_memory_break = false);
-
-/// Determine if there was a memory breakpoint.
-bool IsMemoryBreak();
+void Break(int signal);
 
 /// Read and handle packet from gdb client.
 void HandlePacket(Core::System& system);
@@ -88,17 +92,10 @@ BreakpointAddress GetNextBreakpointFromAddress(VAddr addr, GDBStub::BreakpointTy
  * Check if a breakpoint of the specified type exists at the given address.
  *
  * @param addr Address of breakpoint.
+ * @param access_len Access size in bytes.
  * @param type Type of breakpoint.
  */
-bool CheckBreakpoint(VAddr addr, GDBStub::BreakpointType type);
-
-/**
- * Send trap signal from thread back to the gdbstub server.
- *
- * @param thread Sending thread.
- * @param trap Trap no.
- */
-void SendTrap(Kernel::Thread* thread, int trap);
+bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type);
 
 /**
  * Send reply to gdb client.

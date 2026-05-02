@@ -1171,7 +1171,7 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     }
 
     if (len == 0) {
-        GDBStub::SetHioRequest(system, address);
+        GDBStub::SetHioRequest(system, kernel.GetCurrentProcess().get(), address);
         return;
     }
 

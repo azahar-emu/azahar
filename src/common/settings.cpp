@@ -166,6 +166,8 @@ void LogSettings() {
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
     log_setting("Debugging_ToggleUniqueDataConsoleType",
                 values.toggle_unique_data_console_type.GetValue());
+    log_setting("Debugging_BreakOnUnmappedMemoryAccess",
+                values.break_on_unmapped_memory_access.GetValue());
 }
 
 bool IsConfiguringGlobal() {

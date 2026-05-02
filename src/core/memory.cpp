@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <csignal>
 #include <cstring>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/binary_object.hpp>
@@ -16,6 +17,7 @@
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/global.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/plgldr/plgldr.h"
@@ -27,6 +29,14 @@ SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::FCRAM
 SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::VRAM>)
 SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::DSP>)
 SERIALIZE_EXPORT_IMPL(Memory::MemorySystem::BackingMemImpl<Memory::Region::N3DS>)
+
+#ifndef SIGTRAP
+constexpr u32 SIGTRAP = 5;
+#endif
+
+#ifndef SIGSEGV
+constexpr u32 SIGSEGV = 11;
+#endif
 
 namespace Memory {
 
@@ -187,7 +197,17 @@ public:
                 std::memcpy(dest_buffer, src_ptr, copy_amount);
                 break;
             }
-            case PageType::RasterizerCachedMemory: {
+            case PageType::MemoryWatchpoint: {
+                auto it = page_table.watchpoint_pages_map.find(page_index);
+                ASSERT_MSG(it != page_table.watchpoint_pages_map.end(),
+                           "Missing memory for watchpoint page");
+
+                const u8* src_ptr = it->second.memory.GetPtr() + page_offset;
+                std::memcpy(dest_buffer, src_ptr, copy_amount);
+                break;
+            }
+            case PageType::RasterizerCachedMemory:
+            case PageType::RasterizerCachedMemoryWatchpoint: {
                 if constexpr (!UNSAFE) {
                     RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                                  FlushMode::Flush);
@@ -235,7 +255,17 @@ public:
                 std::memcpy(dest_ptr, src_buffer, copy_amount);
                 break;
             }
-            case PageType::RasterizerCachedMemory: {
+            case PageType::MemoryWatchpoint: {
+                auto it = page_table.watchpoint_pages_map.find(page_index);
+                ASSERT_MSG(it != page_table.watchpoint_pages_map.end(),
+                           "Missing memory for watchpoint page");
+
+                u8* dest_ptr = it->second.memory.GetPtr() + page_offset;
+                std::memcpy(dest_ptr, src_buffer, copy_amount);
+                break;
+            }
+            case PageType::RasterizerCachedMemory:
+            case PageType::RasterizerCachedMemoryWatchpoint: {
                 if constexpr (!UNSAFE) {
                     RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                                  FlushMode::Invalidate);
@@ -392,6 +422,90 @@ PAddr& Memory::MemorySystem::Plugin3GXFramebufferAddress() {
     return impl->plugin_fb_address;
 }
 
+#pragma optimize("", off)
+
+void MemorySystem::RegisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size) {
+    auto& page_table = *process.vm_manager.page_table;
+
+    VAddr current = addr;
+    VAddr end = addr + size;
+
+    while (current < end) {
+        const VAddr page_base = (current & ~CITRA_PAGE_MASK);
+        const VAddr page_index = page_base >> CITRA_PAGE_BITS;
+
+        auto it = page_table.watchpoint_pages_map.find(page_index);
+        if (it != page_table.watchpoint_pages_map.end()) {
+            // Nothing to do, only increment count.
+            it->second.watchpoint_count++;
+        } else {
+            MemoryRef mem;
+            PageType& type = page_table.attributes[page_index];
+
+            switch (type) {
+            case PageType::Memory:
+                mem = page_table.pointers.Ref(page_index);
+                type = PageType::MemoryWatchpoint;
+                page_table.pointers[page_index] = nullptr;
+                break;
+            case PageType::RasterizerCachedMemory:
+                mem = GetPointerForRasterizerCache(page_base);
+                type = PageType::RasterizerCachedMemoryWatchpoint;
+                break;
+            default:
+                LOG_ERROR(HW_Memory, "Cannot get pointer to register watchpoint for page 0x{:08X}",
+                          page_base);
+                continue;
+            }
+
+            page_table.watchpoint_pages_map.insert(
+                {page_index,
+                 PageTable::WatchpointPageInfo{.watchpoint_count = 1, .memory = std::move(mem)}});
+        }
+
+        current = page_base + CITRA_PAGE_SIZE;
+    }
+}
+
+void MemorySystem::UnregisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size) {
+    auto& page_table = *process.vm_manager.page_table;
+
+    VAddr current = addr;
+    VAddr end = addr + size;
+
+    while (current < end) {
+        const VAddr page_base = (current & ~CITRA_PAGE_MASK);
+        const VAddr page_index = page_base >> CITRA_PAGE_BITS;
+
+        auto it = page_table.watchpoint_pages_map.find(page_index);
+        if (it != page_table.watchpoint_pages_map.end()) {
+            if (--it->second.watchpoint_count == 0) {
+
+                PageType& type = page_table.attributes[page_index];
+
+                switch (type) {
+                case PageType::MemoryWatchpoint:
+                    type = PageType::Memory;
+                    page_table.pointers[page_index] = it->second.memory;
+                    break;
+                case PageType::RasterizerCachedMemoryWatchpoint:
+                    type = PageType::RasterizerCachedMemory;
+                    break;
+                default:
+                    LOG_ERROR(HW_Memory, "Invalid watchpoint page type for page 0x{:08X}: {}",
+                              page_base, static_cast<u8>(type));
+                }
+
+                page_table.watchpoint_pages_map.erase(page_index);
+            }
+        } else {
+            LOG_ERROR(HW_Memory, "No watchpoint found on page 0x{:08X}", page_base);
+        }
+
+        current = page_base + CITRA_PAGE_SIZE;
+    }
+}
+
 void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, MemoryRef memory,
                             PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory.GetPtr(),
@@ -450,6 +564,23 @@ void MemorySystem::UnregisterPageTable(std::shared_ptr<PageTable> page_table) {
 }
 
 template <typename T>
+T MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
+    const std::string mode = (read ? "Read" : "Write");
+    const std::string value_str = read ? std::string("") : fmt::format(" 0x{:08X}", value);
+    const std::string message = fmt::format("unmapped {}{}{} @ 0x{:08X} at PC 0x{:08X}", mode,
+                                            sizeof(T) * 8, value_str, vaddr, impl->GetPC());
+    if (GDBStub::IsConnected()) {
+        GDBStub::Break(SIGSEGV);
+    } else if (Settings::values.break_on_unmapped_memory_access) {
+        impl->system.SetStatus(Core::System::ResultStatus::ErrorMemoryExceptionRaised,
+                               message.c_str());
+    }
+
+    LOG_ERROR(HW_Memory, "{}", message);
+    return {};
+}
+
+template <typename T>
 T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr) {
     const u8* page_pointer = page_table->pointers[vaddr >> CITRA_PAGE_BITS];
     if (page_pointer) {
@@ -476,18 +607,43 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
 
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
-    case PageType::Unmapped:
-        LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X} at PC 0x{:08X}", sizeof(T) * 8, vaddr,
-                  impl->GetPC());
-        return 0;
+    case PageType::Unmapped: {
+        return UnmappedAccess<T>(vaddr, 0, true);
+    }
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
         break;
-    case PageType::RasterizerCachedMemory: {
+    case PageType::MemoryWatchpoint: {
+        auto it = page_table->watchpoint_pages_map.find(vaddr >> CITRA_PAGE_BITS);
+        ASSERT_MSG(it != page_table->watchpoint_pages_map.end(),
+                   "Missing memory for watchpoint page");
+
+        T value;
+        std::memcpy(&value, it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), sizeof(T));
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
+        return value;
+    }
+    [[likely]] case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
 
         T value;
         std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
+        return value;
+    }
+    case PageType::RasterizerCachedMemoryWatchpoint: {
+        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
+
+        T value;
+        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
         return value;
     }
     default:
@@ -527,15 +683,37 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
-        LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
-                  sizeof(data) * 8, (u32)data, vaddr, impl->GetPC());
+        (void)UnmappedAccess<T>(vaddr, data, false);
         return;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
         break;
-    case PageType::RasterizerCachedMemory: {
+    case PageType::MemoryWatchpoint: {
+        auto it = page_table->watchpoint_pages_map.find(vaddr >> CITRA_PAGE_BITS);
+        ASSERT_MSG(it != page_table->watchpoint_pages_map.end(),
+                   "Missing memory for watchpoint page");
+
+        std::memcpy(it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), &data, sizeof(T));
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
+        break;
+    }
+    [[likely]] case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
         std::memcpy(GetPointerForRasterizerCache(vaddr), &data, sizeof(T));
+        break;
+    }
+    case PageType::RasterizerCachedMemoryWatchpoint: {
+        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
+        std::memcpy(GetPointerForRasterizerCache(vaddr), &data, sizeof(T));
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
         break;
     }
     default:
@@ -556,16 +734,42 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
     PageType type = impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
-        LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X} at PC 0x{:08X}",
-                  sizeof(data) * 8, static_cast<u32>(data), vaddr, impl->GetPC());
+        (void)UnmappedAccess<T>(vaddr, data, false);
         return true;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
         return true;
-    case PageType::RasterizerCachedMemory: {
+    case PageType::MemoryWatchpoint: {
+        auto it = impl->current_page_table->watchpoint_pages_map.find(vaddr >> CITRA_PAGE_BITS);
+        ASSERT_MSG(it != impl->current_page_table->watchpoint_pages_map.end(),
+                   "Missing memory for watchpoint page");
+
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK));
+
+        bool ret = Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
+        return ret;
+    }
+    [[likely]] case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
         const auto volatile_pointer =
             reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
+        return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
+    }
+    case PageType::RasterizerCachedMemoryWatchpoint: {
+        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
+        const auto volatile_pointer =
+            reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
+
+        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
+            GDBStub::Break(SIGTRAP);
+        }
+
         return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
     }
     default:
@@ -582,7 +786,7 @@ bool MemorySystem::IsValidVirtualAddress(const Kernel::Process& process, const V
         return true;
     }
 
-    if (page_table.attributes[vaddr >> CITRA_PAGE_BITS] == PageType::RasterizerCachedMemory) {
+    if (page_table.attributes[vaddr >> CITRA_PAGE_BITS] != PageType::Unmapped) {
         return true;
     }
 
@@ -600,7 +804,9 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
     }
 
     if (impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS] ==
-        PageType::RasterizerCachedMemory) {
+            PageType::RasterizerCachedMemory ||
+        impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS] ==
+            PageType::RasterizerCachedMemoryWatchpoint) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
@@ -615,7 +821,9 @@ const u8* MemorySystem::GetPointer(const VAddr vaddr) const {
     }
 
     if (impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS] ==
-        PageType::RasterizerCachedMemory) {
+            PageType::RasterizerCachedMemory ||
+        impl->current_page_table->attributes[vaddr >> CITRA_PAGE_BITS] ==
+            PageType::RasterizerCachedMemoryWatchpoint) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
@@ -755,7 +963,10 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
                         // address space, for example, a system module need not have a VRAM mapping.
                         break;
                     case PageType::Memory:
-                        page_type = PageType::RasterizerCachedMemory;
+                    case PageType::MemoryWatchpoint:
+                        page_type = (page_type == PageType::Memory)
+                                        ? PageType::RasterizerCachedMemory
+                                        : PageType::RasterizerCachedMemoryWatchpoint;
                         page_table->pointers[vaddr >> CITRA_PAGE_BITS] = nullptr;
                         break;
                     default:
@@ -768,10 +979,16 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
                         // It is not necessary for a process to have this region mapped into its
                         // address space, for example, a system module need not have a VRAM mapping.
                         break;
-                    case PageType::RasterizerCachedMemory: {
-                        page_type = PageType::Memory;
-                        page_table->pointers[vaddr >> CITRA_PAGE_BITS] =
-                            GetPointerForRasterizerCache(vaddr & ~CITRA_PAGE_MASK);
+                    case PageType::RasterizerCachedMemory:
+                    case PageType::RasterizerCachedMemoryWatchpoint: {
+                        page_type = (page_type == PageType::RasterizerCachedMemory)
+                                        ? PageType::Memory
+                                        : PageType::MemoryWatchpoint;
+
+                        if (page_type == PageType::Memory) {
+                            page_table->pointers[vaddr >> CITRA_PAGE_BITS] =
+                                GetPointerForRasterizerCache(vaddr & ~CITRA_PAGE_MASK);
+                        }
                         break;
                     }
                     default:
@@ -911,7 +1128,17 @@ void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_ad
             std::memset(dest_ptr, 0, copy_amount);
             break;
         }
-        case PageType::RasterizerCachedMemory: {
+        case PageType::MemoryWatchpoint: {
+            auto it = page_table.watchpoint_pages_map.find(page_index);
+            ASSERT_MSG(it != page_table.watchpoint_pages_map.end(),
+                       "Missing memory for watchpoint page");
+
+            u8* dest_ptr = it->second.memory.GetPtr() + page_offset;
+            std::memset(dest_ptr, 0, copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedMemory:
+        case PageType::RasterizerCachedMemoryWatchpoint: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Invalidate);
             std::memset(GetPointerForRasterizerCache(current_vaddr), 0, copy_amount);
@@ -960,7 +1187,17 @@ void MemorySystem::CopyBlock(const Kernel::Process& dest_process,
             WriteBlock(dest_process, dest_addr, src_ptr, copy_amount);
             break;
         }
-        case PageType::RasterizerCachedMemory: {
+        case PageType::MemoryWatchpoint: {
+            auto it = page_table.watchpoint_pages_map.find(page_index);
+            ASSERT_MSG(it != page_table.watchpoint_pages_map.end(),
+                       "Missing memory for watchpoint page");
+
+            const u8* src_ptr = it->second.memory.GetPtr() + page_offset;
+            WriteBlock(dest_process, dest_addr, src_ptr, copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedMemory:
+        case PageType::RasterizerCachedMemoryWatchpoint: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
             WriteBlock(dest_process, dest_addr, GetPointerForRasterizerCache(current_vaddr),
