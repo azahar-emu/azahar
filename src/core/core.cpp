@@ -84,10 +84,6 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     }
 
     if (GDBStub::IsServerEnabled()) {
-        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
-        if (thread && running_core) {
-            running_core->SaveContext(thread->context);
-        }
         // The break flag is only set if GDB is connected,
         // we can do clearing here safely. If it is ever
         // used outside, move the clearing outside the if.

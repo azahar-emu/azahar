@@ -51,6 +51,10 @@ public:
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
     void PrepareReschedule() override;
 
+    bool HasSingleInstructionBreakAccuracy() override {
+        return true;
+    }
+
 protected:
     std::shared_ptr<Memory::PageTable> GetPageTable() const override;
 
