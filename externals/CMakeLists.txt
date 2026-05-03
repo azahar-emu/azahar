@@ -57,7 +57,7 @@ if (ENABLE_TESTS)
     else()
         set(CATCH_INSTALL_DOCS OFF CACHE BOOL "")
         set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "")
-        add_subdirectory(catch2)
+        add_subdirectory(catch2 EXCLUDE_FROM_ALL)
     endif()
     target_link_libraries(catch2 INTERFACE Catch2::Catch2WithMain)
     include(Catch)
@@ -79,7 +79,7 @@ else()
     set(CRYPTOPP_BUILD_TESTING OFF CACHE BOOL "")
     set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
     set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp" CACHE STRING "")
-    add_subdirectory(cryptopp-cmake)
+    add_subdirectory(cryptopp-cmake EXCLUDE_FROM_ALL)
 endif()
 
 # dds-ktx
@@ -142,7 +142,7 @@ endif()
 
 # getopt
 if (MSVC)
-    add_subdirectory(getopt)
+    add_subdirectory(getopt EXCLUDE_FROM_ALL)
 endif()
 
 # inih
@@ -151,7 +151,7 @@ if(USE_SYSTEM_INIH)
     add_library(inih INTERFACE)
     target_link_libraries(inih INTERFACE inih::inih inih::inir)
 else()
-    add_subdirectory(inih)
+    add_subdirectory(inih EXCLUDE_FROM_ALL)
 endif()
 
 # MicroProfile
@@ -174,7 +174,7 @@ if (NOT MSVC)
 endif()
 
 # Open Source Archives
-add_subdirectory(open_source_archives)
+add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 
 # faad2
 add_subdirectory(faad2 EXCLUDE_FROM_ALL)
@@ -213,12 +213,12 @@ add_subdirectory(teakra EXCLUDE_FROM_ALL)
 
 # SDL2
 if (ENABLE_SDL2 AND NOT USE_SYSTEM_SDL2)
-    add_subdirectory(sdl2)
+    add_subdirectory(sdl2 EXCLUDE_FROM_ALL)
 endif()
 
 # libusb
 if (ENABLE_LIBUSB AND NOT USE_SYSTEM_LIBUSB)
-    add_subdirectory(libusb)
+    add_subdirectory(libusb EXCLUDE_FROM_ALL)
     set(LIBUSB_INCLUDE_DIR "" PARENT_SCOPE)
     set(LIBUSB_LIBRARIES usb PARENT_SCOPE)
 endif()
@@ -262,7 +262,7 @@ if(USE_SYSTEM_ENET)
     add_library(enet INTERFACE)
     target_link_libraries(enet INTERFACE libenet::libenet)
 else()
-    add_subdirectory(enet)
+    add_subdirectory(enet EXCLUDE_FROM_ALL)
     target_include_directories(enet INTERFACE ./enet/include)
 endif()
 
@@ -370,7 +370,7 @@ target_compile_options(httplib INTERFACE -DCPPHTTPLIB_OPENSSL_SUPPORT)
 target_link_libraries(httplib INTERFACE ${OPENSSL_LIBRARIES})
 
 if (UNIX AND NOT APPLE)
-    add_subdirectory(gamemode)
+    add_subdirectory(gamemode EXCLUDE_FROM_ALL)
 endif()
 
 # cpp-jwt
@@ -393,13 +393,13 @@ if(USE_SYSTEM_LODEPNG)
     find_package(lodepng REQUIRED)
     target_link_libraries(lodepng INTERFACE lodepng::lodepng)
 else()
-    add_subdirectory(lodepng)
+    add_subdirectory(lodepng EXCLUDE_FROM_ALL)
 endif()
 
 # (xperia64): Only use libyuv on Android b/c of build issues on Windows and mandatory JPEG
 if(ANDROID)
     # libyuv
-    add_subdirectory(libyuv)
+    add_subdirectory(libyuv EXCLUDE_FROM_ALL)
     target_include_directories(yuv INTERFACE ./libyuv/include)
 endif()
 
@@ -428,7 +428,7 @@ endif()
 # OpenGL dependencies
 if (ENABLE_OPENGL)
     # Glad
-    add_subdirectory(glad)
+    add_subdirectory(glad EXCLUDE_FROM_ALL)
 endif()
 
 # Vulkan dependencies
@@ -468,7 +468,7 @@ if (ENABLE_VULKAN)
         set(ENABLE_CTEST OFF CACHE BOOL "")
         set(ENABLE_HLSL OFF CACHE BOOL "")
         set(BUILD_EXTERNAL OFF CACHE BOOL "")
-        add_subdirectory(glslang)
+        add_subdirectory(glslang EXCLUDE_FROM_ALL)
     endif()
 
     # sirit
@@ -516,7 +516,7 @@ if (ENABLE_VULKAN)
 
     # adrenotools
     if (ANDROID AND "arm64" IN_LIST ARCHITECTURE)
-        add_subdirectory(libadrenotools)
+        add_subdirectory(libadrenotools EXCLUDE_FROM_ALL)
     endif()
 endif()
 
