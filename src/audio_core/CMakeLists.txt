@@ -1,4 +1,4 @@
-add_library(audio_core STATIC
+add_library(audio_core STATIC EXCLUDE_FROM_ALL
     audio_types.h
     codec.cpp
     codec.h
