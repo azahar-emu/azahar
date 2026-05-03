@@ -29,6 +29,8 @@ add_library(citra_qt STATIC EXCLUDE_FROM_ALL
     camera/qt_multimedia_camera.h
     citra_qt.cpp
     citra_qt.h
+    dev_ipc_server.cpp
+    dev_ipc_server.h
     configuration/config.cpp
     configuration/config.h
     configuration/configure.ui
@@ -277,7 +279,11 @@ endif()
 create_target_directory_groups(citra_qt)
 
 target_link_libraries(citra_qt PRIVATE audio_core citra_common citra_core input_common network video_core)
-target_link_libraries(citra_qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent)
+target_link_libraries(citra_qt PRIVATE Boost::boost nihstro-headers Qt6::Widgets Qt6::Multimedia Qt6::Concurrent Qt6::Network)
+
+if (AZAHAR_IPC_SOCKET_NAME)
+    target_compile_definitions(citra_qt PRIVATE AZAHAR_IPC_SOCKET_NAME="${AZAHAR_IPC_SOCKET_NAME}")
+endif()
 target_link_libraries(citra_qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
 if (MINGW)
