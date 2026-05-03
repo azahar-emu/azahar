@@ -186,6 +186,13 @@ public:
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
 
+    /**
+     * Whether the backend allows to break with single instruction accuracy
+     * when Run() is used. If false is returned, the user should expect
+     * innaccuracies with memory watchpoints access exceptions.
+     */
+    virtual bool HasSingleInstructionBreakAccuracy() = 0;
+
     Core::Timing::Timer& GetTimer() {
         return *timer;
     }

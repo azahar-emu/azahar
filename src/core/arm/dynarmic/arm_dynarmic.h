@@ -56,6 +56,10 @@ public:
     void ClearExclusiveState() override;
     void SetPageTable(const std::shared_ptr<Memory::PageTable>& page_table) override;
 
+    bool HasSingleInstructionBreakAccuracy() override {
+        return false;
+    }
+
 protected:
     std::shared_ptr<Memory::PageTable> GetPageTable() const override;
 
