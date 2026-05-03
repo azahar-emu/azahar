@@ -855,10 +855,11 @@ void GMainWindow::InitializeHotkeys() {
 
     // QAction Hotkeys
     const auto link_action_shortcut = [&](QAction* action, const QString& action_name,
-                                          const bool primary_only = false) {
+                                          const bool primary_only = false,
+                                          const bool auto_repeat = false) {
         static const QString main_window = QStringLiteral("Main Window");
         action->setShortcut(hotkey_registry.GetKeySequence(main_window, action_name));
-        action->setAutoRepeat(false);
+        action->setAutoRepeat(auto_repeat);
         this->addAction(action);
         if (!primary_only)
             secondary_window->addAction(action);
@@ -875,6 +876,9 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Show_Status_Bar, QStringLiteral("Toggle Status Bar"));
     link_action_shortcut(ui->action_Fullscreen, fullscreen, true);
     link_action_shortcut(ui->action_Capture_Screenshot, QStringLiteral("Capture Screenshot"));
+    link_action_shortcut(ui->action_Debug_Pause, QStringLiteral("Debug Pause"));
+    link_action_shortcut(ui->action_Debug_Resume, QStringLiteral("Debug Resume"));
+    link_action_shortcut(ui->action_Debug_Step, QStringLiteral("Debug Step"), false, true);
     link_action_shortcut(ui->action_Screen_Layout_Swap_Screens, QStringLiteral("Swap Screens"));
     link_action_shortcut(ui->action_Screen_Layout_Upright_Screens,
                          QStringLiteral("Rotate Screens Upright"));
@@ -1188,6 +1192,23 @@ void GMainWindow::ConnectMenuEvents() {
     });
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
+
+    // Tools debug
+    connect_menu(ui->action_Debug_Pause, [this] {
+        if (emu_thread) {
+            emu_thread->SetRunning(false);
+        }
+    });
+    connect_menu(ui->action_Debug_Resume, [this] {
+        if (emu_thread) {
+            emu_thread->SetRunning(true);
+        }
+    });
+    connect_menu(ui->action_Debug_Step, [this] {
+        if (emu_thread) {
+            emu_thread->ExecStep();
+        }
+    });
 
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);

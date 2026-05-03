@@ -206,6 +206,16 @@
     <addaction name="action_Advance_Frame"/>
     <addaction name="menu_Movie"/>
     <addaction name="separator"/>
+    <widget class="QMenu" name="menu_Debug">
+     <property name="title">
+      <string>Debug</string>
+     </property>
+     <addaction name="action_Debug_Pause"/>
+     <addaction name="action_Debug_Resume"/>
+     <addaction name="action_Debug_Step"/>
+    </widget>
+     <addaction name="menu_Debug"/>
+    <addaction name="separator"/>
     <addaction name="action_Capture_Screenshot"/>
     <addaction name="action_Dump_Video"/>
     <addaction name="separator"/>
@@ -451,6 +461,30 @@
    </property>
    <property name="text">
     <string>Capture Screenshot</string>
+   </property>
+  </action>
+  <action name="action_Debug_Pause">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Pause</string>
+   </property>
+  </action>
+  <action name="action_Debug_Resume">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Resume</string>
+   </property>
+  </action>
+  <action name="action_Debug_Step">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Debug Step</string>
    </property>
   </action>
   <action name="action_Dump_Video">

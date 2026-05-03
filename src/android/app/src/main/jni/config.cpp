@@ -317,6 +317,7 @@ void Config::ReadValues() {
     ReadSetting("Debugging", Settings::values.instant_debug_log);
     ReadSetting("Debugging", Settings::values.enable_rpc_server);
     ReadSetting("Debugging", Settings::values.toggle_unique_data_console_type);
+    ReadSetting("Debugging", Settings::values.break_on_unmapped_memory_access);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle =
