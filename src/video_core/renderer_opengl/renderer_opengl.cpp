@@ -41,11 +41,10 @@
 #include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_post_frag.h"
 #include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_post_vert.h"
 #include "video_core/host_shaders/antialiasing/smaa_hlsl.h"
+#include "video_core/host_shaders/antialiasing/AreaTex.h"
+#include "video_core/host_shaders/antialiasing/SearchTex.h"
 
 
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "video_core/texture/stb_image.h"
 namespace OpenGL {
 
 MICROPROFILE_DEFINE(OpenGL_RenderFrame, "OpenGL", "Render Frame", MP_RGB(128, 128, 64));
@@ -589,7 +588,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
     textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
     bool isDownsampling = false;
-    int antialiasingMode = 2; //0 is none, 1 is FXAA, 2 is SMAA
+    int antialiasingMode = 0; //0 is none, 1 is FXAA, 2 is SMAA
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
             isDownsampling = true;
@@ -874,23 +873,11 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
 
         }
     } else if (antialiasingMode == 2){
-        //Load AreaTex and SearchTex Pngs to OGLTexture Objects 
-        stbi_set_flip_vertically_on_load(true);
+        //Load AreaTex and SearchTex  to OGLTexture Objects 
         OGLTexture areatex;
         areatex.Create();
-        int areatex_width, areatex_height, areatex_channels;
-        unsigned char* areatex_buffer;
-        const char* areatex_path = "src/video_core/host_shaders/antialiasing/AreaTex.png";
-
         OGLTexture searchtex;
         searchtex.Create();
-        int searchtex_width, searchtex_height, searchtex_channels;
-        unsigned char* searchtex_buffer;
-        const char* searchtex_path = "src/video_core/host_shaders/antialiasing/SearchTex.png";
-
-        areatex_buffer = stbi_load(areatex_path, &areatex_width, &areatex_height, &areatex_channels, 4);
-        searchtex_buffer = stbi_load(searchtex_path, &searchtex_width, &searchtex_height, &searchtex_channels, 4);
-        
         GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
         
         glBindTexture(GL_TEXTURE_2D, areatex.handle);
@@ -898,19 +885,39 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, areatex_width, areatex_height, 0, GL_RGBA16F, GL_UNSIGNED_BYTE, areatex_buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes);
       
         glBindTexture(GL_TEXTURE_2D, searchtex.handle);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, searchtex_width, searchtex_height, 0, GL_RGBA16F, GL_UNSIGNED_BYTE, searchtex_buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes);
 
         glBindTexture(GL_TEXTURE_2D, old_tex);
         
-        //Actually Start SMAA Pipeline
+        // // Draw Areatex/Search Tex to screen [For Debugging only]
+        // state.draw.read_framebuffer = originalReadFramebuffer;
+        // state.draw.draw_framebuffer = originalDrawFramebuffer;
+        // state.Apply();
+        // state.viewport.x = originalViewport[0];
+        // state.viewport.y = originalViewport[1];
+        // state.viewport.width = originalViewport[2];
+        // state.viewport.height = originalViewport[3];
+        // state.Apply();
+        // state.draw.shader_program = SimplePresent_shader.handle;
+        // state.Apply();
+        // AttachUniforms();
+        // state.texture_units[0].texture_2d = searchtex.handle;
+        // state.texture_units[0].sampler = samplers[1].handle;
+        // glUniform1i(uniform_color_texture, 0);
+        // glUniform1i(uniform_convert_colors, 0);
+        // state.Apply();
+        // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+        // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+        //Actually Start SMAA Pipeline
+        // /*
         //Pass 1
         OGLFramebuffer textureFBO;
         textureFBO.Create();
@@ -935,8 +942,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glUniform1i(uniform_convert_colors, 1);
         state.Apply();
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
+  
         if (isDownsampling){
             //Pass 2
             state.viewport.x = 0;
@@ -1151,7 +1158,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
-        
+        // */
 
     } else {
         OGLFramebuffer postFBO;
