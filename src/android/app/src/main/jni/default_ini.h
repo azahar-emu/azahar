@@ -35,7 +35,8 @@ constexpr std::array android_config_omitted_keys = {
     Keys::audio_encoder,
     Keys::audio_encoder_options,
     Keys::audio_bitrate,
-    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Keys::last_artic_base_addr,            // On Android, this value is stored as a "preference"
+    Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
 };
 
 // clang-format off
