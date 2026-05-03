@@ -77,6 +77,16 @@ bool IsConnected();
  */
 void Break(int signal);
 
+/**
+ * Signal to the GDB stub that the specified process ID is exiting
+ */
+void OnProcessExit(u32 process_id);
+
+/**
+ * Signal to the GDB stub that the specified thread ID is exiting
+ */
+void OnThreadExit(u32 thread_id);
+
 /// Read and handle packet from gdb client.
 void HandlePacket(Core::System& system);
 

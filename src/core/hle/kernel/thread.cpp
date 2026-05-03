@@ -134,6 +134,8 @@ void Thread::Stop() {
         process->tls_slots[tls_page].reset(tls_slot);
         process->resource_limit->Release(ResourceLimitType::Thread, 1);
     }
+
+    GDBStub::OnThreadExit(thread_id);
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
