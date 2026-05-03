@@ -80,6 +80,7 @@ private:
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
                             bool right_eye, const Pica::ColorFill& color_fill);
+    // Attach Uniforms to the current shader
     void AttachUniforms();
 
 private:
@@ -91,7 +92,7 @@ private:
     // OpenGL object IDs
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
-    OGLProgram shader;
+    OGLProgram Present_shader;
     OGLProgram SimplePresent_shader;
     OGLProgram FXAA_shader;
     OGLProgram SMAA_PASS_0_shader;
@@ -102,11 +103,12 @@ private:
 
     // Display information for top and bottom screens respectively
     std::array<ScreenInfo, 3> screen_infos;
-
+    std::array<GLfloat, 3 * 2> ortho_matrix;
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;
     GLuint uniform_color_texture_r;
+    GLuint uniform_reverse_interlaced;
 
     // Shader Uniform for converting colors. 0 is no conversion, 1 is sRGB -> linear, 2 is Linear -> sRGB
     GLuint uniform_convert_colors;

@@ -423,8 +423,10 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
             }
         }
     }
-    shader.Create(HostShaders::OPENGL_PRESENT_VERT, shader_data);
-    state.draw.shader_program = shader.handle;
+    Present_shader.Create(HostShaders::OPENGL_PRESENT_VERT, shader_data);
+    state.draw.shader_program = Present_shader.handle;
+    AttachUniforms();
+
 
     // Setup FXAA, SMAA and Simple Present Shaders
     std::string FXAA_shader_data = fragment_shader_precision_OES;
@@ -449,19 +451,13 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     
 
     //
-
     state.Apply();
-    uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
-    uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
     if (render_3d == Settings::StereoRenderOption::Anaglyph ||
         render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
     }
     if (render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        GLuint uniform_reverse_interlaced =
-            glGetUniformLocation(shader.handle, "reverse_interlaced");
         if (render_3d == Settings::StereoRenderOption::ReverseInterlaced)
             glUniform1i(uniform_reverse_interlaced, 1);
         else
@@ -538,6 +534,10 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
 }
 
 void RendererOpenGL::AttachUniforms(){
+    uniform_modelview_matrix = glGetUniformLocation(state.draw.shader_program, "modelview_matrix");
+    uniform_color_texture = glGetUniformLocation(state.draw.shader_program, "color_texture");
+    uniform_color_texture_r = glGetUniformLocation(state.draw.shader_program, "color_texture_r");
+    uniform_reverse_interlaced = glGetUniformLocation(state.draw.shader_program, "reverse_interlaced");
     uniform_i_resolution = glGetUniformLocation(state.draw.shader_program, "i_resolution");
     uniform_o_resolution = glGetUniformLocation(state.draw.shader_program, "o_resolution");
     uniform_convert_colors = glGetUniformLocation(state.draw.shader_program, "convert_colors");
@@ -559,7 +559,6 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     float textureWidth, textureHeight;
     textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
     textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
-
     bool isDownsampling = false;
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
@@ -591,6 +590,16 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
 
     // Rotate for Output Orientation,
     // MAKE SURE TO USE ORTHOGRAPHIC MATRIX
+    
+    //Test 
+    std::array<ScreenRectVertex, 4> rotate_output_vertices;
+    rotate_output_vertices = {{
+            ScreenRectVertex(screenLeft, screenTop, 1.f, 0.f),                               //Left, Top
+            ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),                 //Right, Top
+            ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),                //Left, Bottom
+            ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 1.f),  //Right, Bottom
+    }};
+
     std::array<ScreenRectVertex, 4> output_vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
@@ -633,12 +642,11 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     }
 
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
-    glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
-    glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
-    glUniform1i(uniform_convert_colors, 1);
-    state.texture_units[0].texture_2d = screen_info.display_texture;
-    state.texture_units[0].sampler = sampler;
-    state.Apply();
+    // glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+    // glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+    // glUniform1i(uniform_convert_colors, 1);
+    // state.texture_units[0].texture_2d = screen_info.display_texture;
+    // state.texture_units[0].sampler = sampler;
 
 
     /*
@@ -683,39 +691,154 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
 
     GLuint originalReadFramebuffer = state.draw.read_framebuffer;
     GLuint originalDrawFramebuffer = state.draw.draw_framebuffer;
-
-
-    // Create and bind Framebuffer
+    int originalViewport[4] = {state.viewport.x, state.viewport.y, state.viewport.width, state.viewport.height};
+    // -------------------------------------------------------------
+    /*
+    Implement Gamma Corrected Bilinear:
+        Rotate Texture and Convert to Linear
+        Bilinear downscale to Screen width/height  and convert to srgb
+    */
+    // Create and bind Framebuffer, Create Framebuffer Texture, Bind the texture to the Framebuffer
     OGLFramebuffer postFBO;
     postFBO.Create();
     state.draw.read_framebuffer = postFBO.handle;
     state.draw.draw_framebuffer = postFBO.handle;
     state.Apply();
-
-    // Create Framebuffer Texture and bind to Framebuffer
+    state.viewport.x = 0;
+    state.viewport.y = 0;
+    state.viewport.width = textureWidth;
+    state.viewport.height = textureHeight;
+    state.Apply();
     OGLTexture postFBOTexture;
     postFBOTexture.Create();
     postFBOTexture.Allocate(GL_TEXTURE_2D, 1, GL_RGBA8, textureWidth,  textureHeight);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postFBOTexture.handle, 0);  
 
-    // Use the simple present shader handle
+    // Use the simple present shader handle to draw to the texture
     state.draw.shader_program = SimplePresent_shader.handle;
-    AttachUniforms();
-    
     state.Apply();
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), output_vertices.data());
+    AttachUniforms();
+    state.texture_units[0].texture_2d = screen_info.display_texture;
+    state.texture_units[0].sampler = samplers[1].handle;
+    glUniform1i(uniform_color_texture, 0);
+    glUniform1i(uniform_convert_colors, 1);
+    state.Apply();
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     // Draw to screen
     state.draw.read_framebuffer = originalReadFramebuffer;
     state.draw.draw_framebuffer = originalDrawFramebuffer;
     state.Apply();
+    // state.viewport.x = originalViewport[0];
+    // state.viewport.y = originalViewport[1];
+    // state.viewport.width = originalViewport[2];
+    // state.viewport.height = originalViewport[3];
+    // state.Apply();
+    state.draw.shader_program = Present_shader.handle;
+    state.Apply();
+    AttachUniforms();
+    state.texture_units[0].texture_2d = postFBOTexture.handle;
+    state.texture_units[0].sampler = samplers[1].handle;
+    glUniform1i(uniform_color_texture, 0);
+    glUniform1i(uniform_convert_colors, 2);
+    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+    state.Apply();
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    // -------------------------------------------------------------
+    // // Draw to screen (No Intermediate) [For Debugging]
+    // state.draw.read_framebuffer = originalReadFramebuffer;
+    // state.draw.draw_framebuffer = originalDrawFramebuffer;
+    // state.Apply();
+    // state.draw.shader_program = Present_shader.handle;
+    // state.Apply();
+    // AttachUniforms();
+    // state.texture_units[0].texture_2d = screen_info.display_texture;
+    // state.texture_units[0].sampler = samplers[1].handle;
+    // glUniform1i(uniform_color_texture, 0);
+    // glUniform1i(uniform_convert_colors, 2);
+    // glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+    // state.Apply();
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_output_vertices), rotate_output_vertices.data());
+    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+    // // Draw to screen (No Intermediate Simple) [For Debugging]
+    // state.draw.read_framebuffer = originalReadFramebuffer;
+    // state.draw.draw_framebuffer = originalDrawFramebuffer;
+    // state.Apply();
+    // state.viewport.x = 0;
+    // state.viewport.y = 0;
+    // state.viewport.width = textureWidth;
+    // state.viewport.height = textureHeight;
+    // state.Apply();
+    // state.draw.shader_program = SimplePresent_shader.handle;
+    // state.Apply();
+    // AttachUniforms();
+    // state.texture_units[0].texture_2d = screen_info.display_texture;
+    // state.texture_units[0].sampler = samplers[1].handle;
+    // glUniform1i(uniform_color_texture, 0);
+    // glUniform1i(uniform_convert_colors, 2);
+    // state.Apply();
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    // -------------------------------------------------------------
+    // // Two Step draw to screen [For Debugging]
+    // /*
+    // Implement Gamma Corrected Bilinear:
+    //     Rotate Texture and Convert to Linear
+    //     Bilinear downscale to Screen width/height  and convert to srgb
+    // */
+    // // Create and bind Framebuffer, Create Framebuffer Texture, Bind the texture to the Framebuffer
+    // OGLFramebuffer postFBO;
+    // postFBO.Create();
+    // state.draw.read_framebuffer = postFBO.handle;
+    // state.draw.draw_framebuffer = postFBO.handle;
+    // state.Apply();
+    // state.viewport.x = 0;
+    // state.viewport.y = 0;
+    // state.viewport.width = static_cast<int>(textureWidth);
+    // state.viewport.height = static_cast<int>(textureHeight);
+    // state.Apply();
+    // OGLTexture postFBOTexture;
+    // postFBOTexture.Create();
+    // postFBOTexture.Allocate(GL_TEXTURE_2D, 1, GL_RGBA8, textureWidth,  textureHeight);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postFBOTexture.handle, 0);  
 
+    // // Use the simple present shader handle to draw to the texture
+    // state.draw.shader_program = SimplePresent_shader.handle;
+    // state.Apply();
+    // AttachUniforms();
+    // state.texture_units[0].texture_2d = screen_info.display_texture;
+    // state.texture_units[0].sampler = samplers[1].handle;
+    // glUniform1i(uniform_color_texture, 0);
+    // glUniform1i(uniform_convert_colors, 1);
+    // state.Apply();
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    // // Draw to screen
+    // state.draw.read_framebuffer = originalReadFramebuffer;
+    // state.draw.draw_framebuffer = originalDrawFramebuffer;
+    // state.Apply();
+    // state.viewport.x = originalViewport[0];
+    // state.viewport.y = originalViewport[1];
+    // state.viewport.width = originalViewport[2];
+    // state.viewport.height = originalViewport[3];
+    // state.Apply();
+    // state.draw.shader_program = SimplePresent_shader.handle;
+    // state.Apply();
+    // AttachUniforms();
+    // state.texture_units[0].texture_2d = postFBOTexture.handle;
+    // state.texture_units[0].sampler = samplers[1].handle;
+    // glUniform1i(uniform_color_texture, 0);
+    // glUniform1i(uniform_convert_colors, 2);
+    // state.Apply();
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+    // glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    
     //Reset
-    postFBO.Release();
+    // postFBO.Release();
     state.texture_units[0].texture_2d = 0;
     state.texture_units[0].sampler = 0;
     state.Apply();
@@ -808,7 +931,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
 
     if (settings.shader_update_requested.exchange(false)) {
         // Update fragment shader before drawing
-        shader.Release();
+        Present_shader.Release();
         // Link shaders and get variable locations
         ReloadShader(layout.render_3d_mode);
     }
@@ -822,9 +945,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     }
 
     // Set projection matrix
-    std::array<GLfloat, 3 * 2> ortho_matrix =
-        MakeOrthographicMatrix((float)layout.width, (float)layout.height, flipped);
-    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+    ortho_matrix = MakeOrthographicMatrix((float)layout.width, (float)layout.height, flipped);
 
     // Bind texture in Texture Unit 0
     glUniform1i(uniform_color_texture, 0);
