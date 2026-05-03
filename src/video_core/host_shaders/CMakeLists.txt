@@ -15,12 +15,19 @@ set(SHADER_FILES
     texture_filtering/y_gradient.frag
     antialiasing/opengl_fxaa.frag
     antialiasing/opengl_fxaa.vert
-    antialiasing/opengl_smaa_pass0.frag
-    antialiasing/opengl_smaa_pass0.vert
-    antialiasing/opengl_smaa_pass1.frag
-    antialiasing/opengl_smaa_pass1.vert
-    antialiasing/opengl_smaa_pass2.frag
-    antialiasing/opengl_smaa_pass2.vert
+    antialiasing/opengl_smaa_pass0_pre.frag
+    antialiasing/opengl_smaa_pass0_pre.vert
+    antialiasing/opengl_smaa_pass0_post.frag
+    antialiasing/opengl_smaa_pass0_post.vert
+    antialiasing/opengl_smaa_pass1_pre.frag
+    antialiasing/opengl_smaa_pass1_pre.vert
+    antialiasing/opengl_smaa_pass1_post.frag
+    antialiasing/opengl_smaa_pass1_post.vert
+    antialiasing/opengl_smaa_pass2_pre.frag
+    antialiasing/opengl_smaa_pass2_pre.vert
+    antialiasing/opengl_smaa_pass2_post.frag
+    antialiasing/opengl_smaa_pass2_post.vert
+    antialiasing/SMAA.hlsl
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert

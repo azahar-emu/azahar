@@ -15,14 +15,3 @@ uniform sampler2D SMAA_Input;
 
 #define SMAA_INCLUDE_VS 0
 //#include "SMAA.hlsl"
-
-
-
-
-
-
-
-
-void main() {
-    color = SMAANeighborhoodBlendingPS(frag_tex_coord, offset, SMAA_Input, color_texture);
-}

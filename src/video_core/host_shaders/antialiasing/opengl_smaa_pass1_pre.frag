@@ -19,10 +19,3 @@ uniform sampler2D searchTex;
 
 #define SMAA_INCLUDE_VS 0
 //#include "SMAA.hlsl"
-
-
-
-void main() {
-    vec4 subsampleIndices = vec4(0.0);
-    color = SMAABlendingWeightCalculationPS(frag_tex_coord, pixcoord, offset, color_texture, areaTex, searchTex, subsampleIndices);
-}
