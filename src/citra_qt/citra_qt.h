@@ -95,6 +95,21 @@ enum class MediaType : u32;
 
 int LaunchQtFrontend(int argc, char* argv[]);
 
+class GApplicationEventFilter : public QObject {
+    Q_OBJECT
+
+public:
+    std::set<QKeySequence> sequences_to_catch{};
+
+signals:
+    void FileOpen(const QFileOpenEvent* event);
+    void SequencePressCaught(QKeySequence seq);
+    void SequenceReleaseCaught(QKeySequence seq);
+
+protected:
+    bool eventFilter(QObject* object, QEvent* event) override;
+};
+
 class GMainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -118,7 +133,8 @@ public:
     void AcceptDropEvent(QDropEvent* event);
 
     void OnFileOpen(const QFileOpenEvent* event);
-
+    void OnSequencePressed(QKeySequence seq);
+    void OnSequenceReleased(QKeySequence seq);
     void UninstallTitles(
         const std::vector<std::tuple<Service::FS::MediaType, u64, QString>>& titles);
 
@@ -341,7 +357,7 @@ private:
     std::unique_ptr<Ui::MainWindow> ui;
     Core::System& system;
     Core::Movie& movie;
-
+    GApplicationEventFilter* filter = new GApplicationEventFilter();
     GRenderWindow* render_window;
     GRenderWindow* secondary_window;
 
@@ -466,16 +482,6 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void showEvent(QShowEvent* event) override;
-};
-
-class GApplicationEventFilter : public QObject {
-    Q_OBJECT
-
-signals:
-    void FileOpen(const QFileOpenEvent* event);
-
-protected:
-    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 Q_DECLARE_METATYPE(std::size_t);
