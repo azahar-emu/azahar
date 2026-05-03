@@ -405,6 +405,18 @@ public:
         info_led_color_changed = func;
     }
 
+    void SetDebugNextProcessFlag() {
+        debug_next_process = true;
+    }
+
+    bool GetDebugNextProcessFlag() {
+        return debug_next_process;
+    }
+
+    void ClearDebugNextProcessFlag() {
+        debug_next_process = false;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -513,6 +525,8 @@ private:
 
     Common::Vec3<u8> info_led_color;
     std::function<void()> info_led_color_changed;
+
+    bool debug_next_process;
 
     friend class boost::serialization::access;
     template <typename Archive>

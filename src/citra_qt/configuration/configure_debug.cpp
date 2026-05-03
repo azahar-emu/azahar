@@ -4,6 +4,7 @@
 
 #include <QDesktopServices>
 #include <QMessageBox>
+#include <QTimer>
 #include <QUrl>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_debug.h"
@@ -12,6 +13,7 @@
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/settings.h"
+#include "core/core.h"
 #include "ui_configure_debug.h"
 #ifdef ENABLE_VULKAN
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -32,6 +34,17 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureDebug>()), is_powered_on{is_powered_on_} {
     ui->setupUi(this);
     SetConfiguration();
+
+    connect(ui->toggle_gdbstub, &QCheckBox::clicked,
+            [this](bool checked) { ui->debug_next_process->setEnabled(checked); });
+
+    connect(ui->debug_next_process, &QCheckBox::clicked, [](bool checked) {
+        if (checked) {
+            Core::System::GetInstance().SetDebugNextProcessFlag();
+        } else {
+            Core::System::GetInstance().ClearDebugNextProcessFlag();
+        }
+    });
 
     connect(ui->open_log_button, &QPushButton::clicked, []() {
         QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
@@ -94,6 +107,9 @@ ConfigureDebug::~ConfigureDebug() = default;
 
 void ConfigureDebug::SetConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub.GetValue());
+    if (!ui->toggle_gdbstub->isChecked()) {
+        ui->debug_next_process->setEnabled(false);
+    }
     ui->gdbport_spinbox->setEnabled(Settings::values.use_gdbstub.GetValue());
     ui->gdbport_spinbox->setValue(Settings::values.gdbstub_port.GetValue());
     ui->toggle_console->setEnabled(!is_powered_on);
@@ -135,6 +151,10 @@ void ConfigureDebug::SetConfiguration() {
     ui->clock_display_label->setText(
         QStringLiteral("%1%").arg(Settings::values.cpu_clock_percentage.GetValue()));
     ui->instant_debug_log->setChecked(Settings::values.instant_debug_log.GetValue());
+
+    if (Core::System::GetInstance().GetDebugNextProcessFlag()) {
+        ui->debug_next_process->setChecked(true);
+    }
 }
 
 void ConfigureDebug::ApplyConfiguration() {

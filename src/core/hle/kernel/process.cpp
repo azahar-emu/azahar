@@ -16,6 +16,7 @@
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
 #include "core/core.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -260,9 +261,21 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     vm_manager.LogLayout(Common::Log::Level::Debug);
     Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
+
+    // Pause process at start if flag enabled and we are not a sysmodule
+    if (Core::System::GetInstance().GetDebugNextProcessFlag() &&
+        resource_limit->GetCategory() != Kernel::ResourceLimitCategory::Other) {
+        if (GDBStub::IsServerEnabled()) {
+            LOG_INFO(Loader, "Pausing process {} at start", process_id);
+            SetDebugBreak(true);
+        }
+        Core::System::GetInstance().ClearDebugNextProcessFlag();
+    }
 }
 
 void Process::Exit() {
+    GDBStub::OnProcessExit(process_id);
+
     auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
     if (plgldr) {
         plgldr->OnProcessExit(*this, kernel);

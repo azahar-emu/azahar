@@ -60,6 +60,13 @@
           </item>
          </layout>
         </item>
+        <item>
+          <widget class="QCheckBox" name="debug_next_process">
+            <property name="text">
+              <string>Pause next non-sysmodule process at start</string>
+            </property>
+          </widget>
+        </item>
        </layout>
       </widget>
      </item>

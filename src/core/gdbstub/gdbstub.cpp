@@ -77,6 +77,7 @@ constexpr u32 SIGSEGV = 11;
 using SOCKET = UINT_PTR;
 #else
 using SOCKET = int;
+#define closesocket(x) close(x)
 #endif // _WIN32
 
 #define INVALID_SOCKET ((SOCKET)(~0))
@@ -161,6 +162,9 @@ u16 gdbstub_port = 24689;
 constexpr bool supports_extended_mode = true;
 bool is_extended_mode = false;
 
+bool is_running = false;
+bool current_process_finished = false;
+
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
 std::atomic<bool> server_enabled(false);
@@ -201,6 +205,9 @@ static void ResetState() {
     current_process = nullptr;
 
     is_extended_mode = false;
+
+    is_running = false;
+    current_process_finished = false;
 
     accept_socket = INVALID_SOCKET;
     continue_thread = -1;
@@ -452,11 +459,12 @@ static bool SetNonBlock(SOCKET socket, bool nonblock) {
 
 /// Read a byte from the gdb client.
 static u8 ReadByte() {
-    u8 c;
+    u8 c{};
     std::size_t received_size = recv(gdbserver_socket, reinterpret_cast<char*>(&c), 1, MSG_WAITALL);
     if (received_size != 1) {
         LOG_ERROR(Debug_GDBStub, "recv failed : {}", GetErrno());
-        Shutdown();
+        ToggleServer(false);
+        ToggleServer(true);
     }
 
     return c;
@@ -656,7 +664,9 @@ void SendReply(const char* reply) {
             static_cast<s32>(send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0));
         if (sent_size < 0) {
             LOG_ERROR(Debug_GDBStub, "gdb: send failed");
-            return Shutdown();
+            ToggleServer(false);
+            ToggleServer(true);
+            return;
         }
 
         left -= sent_size;
@@ -806,8 +816,13 @@ static void HandleExtendedMode() {
  *
  * @param signal Signal to be sent to client.
  */
-static void SendTStopReply(Kernel::Thread* thread, u32 signal, bool full = true) {
+static void SendStopReply(Kernel::Thread* thread, u32 signal, bool full = true) {
     if (gdbserver_socket == INVALID_SOCKET) {
+        return;
+    }
+
+    if (current_process_finished) {
+        SendReply("W00");
         return;
     }
 
@@ -849,7 +864,7 @@ static void HandleGetStopReason() {
             // The process has not been selected yet.
             SendReply("W00");
         } else {
-            SendTStopReply(current_thread, latest_signal);
+            SendStopReply(current_thread, latest_signal);
         }
     } else {
         // In non extended mode, select the process corresponding to the "main"
@@ -861,8 +876,9 @@ static void HandleGetStopReason() {
             if (process->codeset->program_id == program_id) {
                 current_process = process.get();
                 current_process->SetDebugBreak(true);
+                is_running = false;
                 if (SetThread(0)) {
-                    SendTStopReply(current_thread, 0);
+                    SendStopReply(current_thread, 0);
                 } else {
                     // Should never happen
                     SendReply("W00");
@@ -883,10 +899,11 @@ static void BreakImpl(int signal) {
     }
 
     current_process->SetDebugBreak(true);
+    is_running = false;
 
     latest_signal = signal;
 
-    SendTStopReply(current_thread, signal);
+    SendStopReply(current_thread, signal);
 }
 
 /// Read command from gdb client.
@@ -1116,7 +1133,7 @@ static void WriteRegisters() {
 /// Read location in memory specified by gdb client.
 static void ReadMemory() {
     if (!current_process) {
-        SendReply("E01");
+        SendReply("");
         return;
     }
 
@@ -1133,12 +1150,12 @@ static void ReadMemory() {
     LOG_DEBUG(Debug_GDBStub, "ReadMemory addr: {:08x} len: {:08x}", addr, len);
 
     if (len * 2 > sizeof(reply)) {
-        SendReply("E01");
+        SendReply("");
     }
 
     auto& memory = Core::System::GetInstance().Memory();
     if (!memory.IsValidVirtualAddress(*current_process, addr)) {
-        return SendReply("E14");
+        return SendReply("");
     }
 
     std::vector<u8> data(len);
@@ -1170,7 +1187,7 @@ static void WriteMemory() {
 
     auto& memory = Core::System::GetInstance().Memory();
     if (!memory.IsValidVirtualAddress(*current_process, addr)) {
-        return SendReply("E00");
+        return SendReply("E0E");
     }
 
     std::vector<u8> data(len);
@@ -1230,6 +1247,8 @@ static void Continue() {
     }
 
     current_process->SetDebugBreak(false, continue_list);
+    is_running = true;
+
     ClearAllInstructionCache();
 }
 
@@ -1394,8 +1413,9 @@ void HandleVCommand() {
         } else {
             current_process = process.get();
             current_process->SetDebugBreak(true);
+            is_running = false;
             if (SetThread(0)) {
-                SendTStopReply(current_thread, 0);
+                SendStopReply(current_thread, 0);
             } else {
                 // Should never happen
                 SendReply("W00");
@@ -1435,10 +1455,32 @@ void HandleVCommand() {
             }
 
             current_process->SetDebugBreak(false, thread_ids);
+            is_running = true;
         }
     } else {
         SendReply("");
     }
+}
+
+void OnProcessExit(u32 process_id) {
+    if (!GDBStub::IsConnected || !current_process || current_process->process_id != process_id) {
+        return;
+    }
+
+    current_process_finished = true;
+    if (is_running) {
+        SendStopReply(nullptr, 0);
+    }
+    current_process = nullptr;
+    current_thread = nullptr;
+}
+
+void OnThreadExit(u32 thread_id) {
+    if (!GDBStub::IsConnected || !current_thread || current_thread->thread_id != thread_id) {
+        return;
+    }
+
+    current_thread = nullptr;
 }
 
 void HandlePacket(Core::System& system) {
@@ -1475,6 +1517,7 @@ void HandlePacket(Core::System& system) {
             }
 
             shutdown(accept_socket, SHUT_RDWR);
+            closesocket(accept_socket);
             accept_socket = INVALID_SOCKET;
         }
         return;
@@ -1676,11 +1719,13 @@ void Shutdown() {
     LOG_INFO(Debug_GDBStub, "Stopping GDB ...");
     if (gdbserver_socket != INVALID_SOCKET) {
         shutdown(gdbserver_socket, SHUT_RDWR);
+        closesocket(gdbserver_socket);
         gdbserver_socket = INVALID_SOCKET;
     }
 
     if (accept_socket != INVALID_SOCKET) {
         shutdown(accept_socket, SHUT_RDWR);
+        closesocket(accept_socket);
         accept_socket = INVALID_SOCKET;
     }
 
