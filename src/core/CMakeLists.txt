@@ -1,4 +1,4 @@
-add_library(citra_core STATIC
+add_library(citra_core STATIC EXCLUDE_FROM_ALL
     3ds.h
     arm/arm_interface.h
     arm/dyncom/arm_dyncom.cpp

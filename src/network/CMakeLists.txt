@@ -1,4 +1,4 @@
-add_library(network STATIC
+add_library(network STATIC EXCLUDE_FROM_ALL
     announce_multiplayer_session.cpp
     announce_multiplayer_session.h
     artic_base/artic_base_client.cpp
