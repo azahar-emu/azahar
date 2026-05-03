@@ -67,9 +67,9 @@ import org.citra.citra_emu.databinding.FragmentEmulationBinding
 import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
+import org.citra.citra_emu.display.SecondaryDisplayLayout
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -78,7 +78,6 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationMenuSettings
-import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -93,7 +92,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private lateinit var emulationState: EmulationState
     private var perfStatsUpdater: Runnable? = null
 
-    private lateinit var emulationActivity: EmulationActivity
+    private val emulationActivity: EmulationActivity
+        get() = (requireActivity() as EmulationActivity)
 
     private var _binding: FragmentEmulationBinding? = null
     private val binding get() = _binding!!
@@ -107,8 +107,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     private val settingsViewModel: SettingsViewModel by viewModels()
     private val settings get() = settingsViewModel.settings
 
-    private val onPause = Runnable{ togglePause() }
-    private val onShutdown = Runnable{ emulationState.stop() }
+    private val onPause = Runnable { togglePause() }
+    private val onShutdown = Runnable { emulationState.stop() }
 
     // Only used if a game is passed through intent on google play variant
     private var gameFd: Int? = null
@@ -116,8 +116,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is EmulationActivity) {
-            emulationActivity = context
-            NativeLibrary.setEmulationActivity(context)
+             NativeLibrary.setEmulationActivity(context)
         } else {
             throw IllegalStateException("EmulationFragment must have EmulationActivity parent")
         }
@@ -183,8 +182,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         // So this fragment doesn't restart on configuration changes; i.e. rotation.
         retainInstance = true
         emulationState = EmulationState(game.path)
-        emulationActivity = requireActivity() as EmulationActivity
-        screenAdjustmentUtil = ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
+        screenAdjustmentUtil =
+            ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, settings)
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
     }
@@ -195,6 +194,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEmulationBinding.inflate(inflater)
+        binding.inGameMenu.menu.findItem(R.id.menu_secondary_screen_layout).isVisible =
+            emulationActivity.secondaryDisplayManager.availableDisplays.isNotEmpty()
         binding.inGameMenu.menu.findItem(R.id.menu_landscape_screen_layout).isVisible =
             CitraApplication.appContext.resources.configuration.orientation !=
                     Configuration.ORIENTATION_PORTRAIT
@@ -333,6 +334,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
                 R.id.menu_portrait_screen_layout -> {
                     showPortraitScreenLayoutMenu()
+                    true
+                }
+
+                R.id.menu_secondary_screen_layout -> {
+                    showSecondaryScreenLayoutMenu()
                     true
                 }
 
@@ -624,17 +630,21 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 add(text).setEnabled(enableClick).setOnMenuItemClickListener {
-                    if(isSaving) {
+                    if (isSaving) {
                         NativeLibrary.saveState(slot)
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             getString(R.string.saving),
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
                         NativeLibrary.loadState(slot)
                         binding.drawerLayout.close()
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             getString(R.string.loading),
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     true
                 }
@@ -643,9 +653,9 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         savestates?.forEach {
             var enableClick = true
-            val text = if(it.slot == NativeLibrary.QUICKSAVE_SLOT) {
+            val text = if (it.slot == NativeLibrary.QUICKSAVE_SLOT) {
                 getString(R.string.emulation_occupied_quicksave_slot, it.time)
-            } else{
+            } else {
                 getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
             }
             popupMenu.menu.getItem(it.slot).setTitle(text).setEnabled(enableClick)
@@ -727,8 +737,12 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    BooleanSetting.PERF_OVERLAY_ENABLE.boolean = !BooleanSetting.PERF_OVERLAY_ENABLE.boolean
-                    settings.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, SettingsFile.FILE_NAME_CONFIG)
+                    BooleanSetting.PERF_OVERLAY_ENABLE.boolean =
+                        !BooleanSetting.PERF_OVERLAY_ENABLE.boolean
+                    settings.saveSetting(
+                        BooleanSetting.PERF_OVERLAY_ENABLE,
+                        SettingsFile.FILE_NAME_CONFIG
+                    )
                     updateShowPerformanceOverlay()
                     true
                 }
@@ -999,10 +1013,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         val layoutOptionMenuItem = when (IntSetting.PORTRAIT_SCREEN_LAYOUT.int) {
             PortraitScreenLayout.TOP_FULL_WIDTH.int ->
                 R.id.menu_portrait_layout_top_full
+
             PortraitScreenLayout.ORIGINAL.int ->
                 R.id.menu_portrait_layout_original
+
             PortraitScreenLayout.CUSTOM_PORTRAIT_LAYOUT.int ->
                 R.id.menu_portrait_layout_custom
+
             else ->
                 R.id.menu_portrait_layout_top_full
 
@@ -1036,6 +1053,145 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             }
         }
 
+        popupMenu.show()
+    }
+
+    private fun showSecondaryScreenLayoutMenu() {
+        val popupMenu = PopupMenu(
+            requireContext(),
+            binding.inGameMenu.findViewById(R.id.menu_secondary_screen_layout)
+        )
+        popupMenu.menuInflater.inflate(R.menu.menu_secondary_screen_layout, popupMenu.menu)
+
+        var selectedLayout = IntSetting.SECONDARY_DISPLAY_LAYOUT.int
+        val chooserMenu = popupMenu.menu.findItem(R.id.menu_secondary_choose)
+        val enableSecondaryCheckbox = popupMenu.menu.findItem(R.id.menu_enable_secondary_layout)
+        chooserMenu?.subMenu?.removeGroup(R.id.menu_secondary_management_display_group)
+        val displays =
+            emulationActivity.secondaryDisplayManager.availableDisplays
+
+        if (selectedLayout == SecondaryDisplayLayout.NONE.int || !BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean) {
+            BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean = false
+            enableSecondaryCheckbox.isChecked = false
+            chooserMenu.isVisible = false
+            popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, false)
+
+        } else {
+            popupMenu.menu.setGroupEnabled(R.id.menu_secondary_layout_group, true)
+            chooserMenu.isVisible = (displays.size > 1)
+        }
+        val layoutOptionMenuItem = when (selectedLayout) {
+            SecondaryDisplayLayout.NONE.int ->
+                R.id.menu_secondary_layout_reverse_primary
+
+            SecondaryDisplayLayout.REVERSE_PRIMARY.int ->
+                R.id.menu_secondary_layout_reverse_primary
+
+            SecondaryDisplayLayout.TOP_SCREEN.int ->
+                R.id.menu_secondary_layout_top
+
+            SecondaryDisplayLayout.BOTTOM_SCREEN.int ->
+                R.id.menu_secondary_layout_bottom
+
+            SecondaryDisplayLayout.HYBRID.int ->
+                R.id.menu_secondary_layout_hybrid
+
+            SecondaryDisplayLayout.LARGE_SCREEN.int ->
+                R.id.menu_secondary_layout_largescreen
+
+            SecondaryDisplayLayout.ORIGINAL.int ->
+                R.id.menu_secondary_layout_original
+
+            else ->
+                R.id.menu_secondary_layout_side_by_side
+        }
+        popupMenu.menu.findItem(layoutOptionMenuItem).isChecked = true
+        // Add the available secondary displays to the display chooser list
+        // Use the display ID as the menu ID - since generated menu IDs are all > 1,000,000 this
+        // *should* result in unique ids
+        if (displays.size > 1 && selectedLayout != SecondaryDisplayLayout.NONE.int) {
+            val current = emulationActivity.secondaryDisplayManager.currentDisplayId
+            chooserMenu.isVisible = true
+            displays.forEachIndexed { index, display ->
+                chooserMenu?.subMenu?.add(
+                    R.id.menu_secondary_management_display_group,
+                    display.displayId,
+                    index,
+                    "Display ${display.displayId} - ${display.name}"
+                )?.apply {
+                    isChecked = (display.displayId == current)
+                }
+            }
+            chooserMenu.subMenu?.setGroupCheckable(
+                R.id.menu_secondary_management_display_group,
+                true,
+                true
+            )
+        }
+
+        popupMenu.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.menu_enable_secondary_layout -> {
+                    if (!it.isChecked) {
+                        screenAdjustmentUtil.enableSecondaryDisplay(selectedLayout)
+                    } else {
+                        screenAdjustmentUtil.disableSecondaryDisplay()
+                    }
+                    emulationActivity.secondaryDisplayManager.updateDisplay()
+                    showSecondaryScreenLayoutMenu() // reopen menu to get new behaviors
+                    true
+                }
+
+                R.id.menu_secondary_layout_reverse_primary -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.REVERSE_PRIMARY.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_top -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.TOP_SCREEN.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_bottom -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.BOTTOM_SCREEN.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_side_by_side -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.SIDE_BY_SIDE.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_hybrid -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.HYBRID.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_original -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.ORIGINAL.int)
+                    true
+                }
+
+                R.id.menu_secondary_layout_largescreen -> {
+                    screenAdjustmentUtil.changeSecondaryOrientation(SecondaryDisplayLayout.LARGE_SCREEN.int)
+                    true
+                }
+
+                R.id.menu_secondary_choose -> {
+                    true
+                }
+
+                else -> {
+                    // display ID selection
+                    // If we are clicking on a menu item that isn't one of the options above, it must
+                    // be one of the dynamically generated menu items added to the secondary display
+                    // choice list.
+                    emulationActivity.secondaryDisplayManager.preferredDisplayId = it.itemId
+                    emulationActivity.secondaryDisplayManager.updateDisplay()
+                    true
+                }
+            }
+        }
         popupMenu.show()
     }
 
@@ -1095,7 +1251,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             slider.valueFrom = 0f
             slider.value = preferences.getInt(target, 50).toFloat()
             textValue.setText((slider.value + 50).toInt().toString())
-            textValue.addTextChangedListener( object : TextWatcher {
+            textValue.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     val value = s.toString().toIntOrNull()
                     if (value == null || value < 50 || value > 150) {
@@ -1105,6 +1261,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         slider.value = value.toFloat() - 50
                     }
                 }
+
                 override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             })
@@ -1145,7 +1302,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             slider.value = preferences.getInt("controlOpacity", 50).toFloat()
             textValue.setText(slider.value.toInt().toString())
 
-            textValue.addTextChangedListener( object : TextWatcher {
+            textValue.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     val value = s.toString().toIntOrNull()
                     if (value == null || value < slider.valueFrom || value > slider.valueTo) {
@@ -1155,6 +1312,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                         slider.value = value.toFloat()
                     }
                 }
+
                 override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
                 override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
             })
@@ -1163,11 +1321,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             slider.addOnChangeListener { _: Slider, value: Float, _: Boolean ->
 
                 if (textValue.text.toString() != slider.value.toInt().toString()) {
-                        textValue.setText(slider.value.toInt().toString())
-                        textValue.setSelection(textValue.length())
-                        setControlOpacity(slider.value.toInt())
-                    }
+                    textValue.setText(slider.value.toInt().toString())
+                    textValue.setSelection(textValue.length())
+                    setControlOpacity(slider.value.toInt())
                 }
+            }
 
             textInput.suffixText = "%"
         }
@@ -1352,7 +1510,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
     }
 
     private fun updateStatsPosition(position: Int) {
-        val params = binding.performanceOverlayShowText.layoutParams as CoordinatorLayout.LayoutParams
+        val params =
+            binding.performanceOverlayShowText.layoutParams as CoordinatorLayout.LayoutParams
         val padding = (20 * resources.displayMetrics.density).toInt() // 20dp
         params.setMargins(padding, 0, padding, 0)
 
@@ -1387,7 +1546,8 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     private fun getBatteryTemperature(): Float {
         try {
-            val batteryIntent = requireContext().registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            val batteryIntent =
+                requireContext().registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             // Temperature in tenths of a degree Celsius
             val temperature = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
             // Convert to degrees Celsius

@@ -57,7 +57,16 @@ enum class PortraitLayoutOption : u32 {
     PortraitOriginal
 };
 
-enum class SecondaryDisplayLayout : u32 { None, TopScreenOnly, BottomScreenOnly, SideBySide };
+enum class SecondaryDisplayLayout : u32 {
+    None,
+    TopScreenOnly,
+    BottomScreenOnly,
+    SideBySide,
+    ReversePrimaryScreen,
+    Original,
+    Hybrid,
+    LargeScreen
+};
 /** Defines where the small screen will appear relative to the large screen
  * when in Large Screen mode
  */
@@ -547,7 +556,7 @@ struct Values {
     SwitchableSetting<bool> swap_screen{false, Keys::swap_screen};
     SwitchableSetting<bool> upright_screen{false, Keys::upright_screen};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{
-        SecondaryDisplayLayout::None, Keys::secondary_display_layout};
+            SecondaryDisplayLayout::ReversePrimaryScreen, Keys::secondary_display_layout};
     SwitchableSetting<std::vector<LayoutOption>> layouts_to_cycle{
         {LayoutOption::Default, LayoutOption::SingleScreen, LayoutOption::LargeScreen,
          LayoutOption::SideScreen,
