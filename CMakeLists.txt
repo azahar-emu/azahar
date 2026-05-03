@@ -109,7 +109,10 @@ foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
 endforeach()
 
 option(ENABLE_SDL2 "Enable using SDL2" ON)
+option(USE_SYSTEM_FAAD "Use the system faad2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_SPIRV_TOOLS "Use the system SPIRV-Tools lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_XXHASH "Use the system xxHash lib (instead of the bundled one)" OFF)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
@@ -546,6 +549,20 @@ if (USE_SYSTEM_SOUNDTOUCH)
     add_library(SoundTouch INTERFACE)
     target_link_libraries(SoundTouch INTERFACE "${SOUNDTOUCH_LIBRARIES}")
     target_include_directories(SoundTouch INTERFACE "${SOUNDTOUCH_INCLUDE_DIRS}")
+endif()
+
+if (USE_SYSTEM_XXHASH)
+    find_package(PkgConfig)
+    if(PkgConfig_FOUND)
+	pkg_check_modules(libxxhash_PKGCONFIG IMPORTED_TARGET xxhash)
+    endif()
+endif()
+
+if (USE_SYSTEM_FAAD)
+    find_package(PkgConfig)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(libfaad_PKGCONFIG IMPORTED_TARGET faad)
+    endif()
 endif()
 
 add_subdirectory(src)
