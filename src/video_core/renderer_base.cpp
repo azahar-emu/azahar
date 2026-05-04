@@ -29,6 +29,17 @@ u32 RendererBase::GetResolutionScaleFactor() {
                              : render_window.GetFramebufferLayout().GetScalingRatio();
 }
 
+u8 RendererBase::GetSampleCount() const {
+    const auto graphics_api = Settings::values.graphics_api.GetValue();
+
+    // Enabled for vulkan only for now
+    if (graphics_api != Settings::GraphicsAPI::Vulkan) {
+        return 1;
+    }
+
+    return static_cast<u8>(1u << Settings::values.sample_count.GetValue());
+}
+
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     const auto update_layout = [is_portrait_mode](Frontend::EmuWindow& window) {
         const Layout::FramebufferLayout& layout = window.GetFramebufferLayout();
