@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include "gl_resource_manager.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/gl_driver.h"
@@ -57,6 +58,8 @@ public:
 private:
     void InitOpenGLObjects();
     void ReloadShader(Settings::StereoRenderOption render_3d);
+    void AllocateSMAATextures();
+    void AllocatePPTextures();
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
@@ -102,6 +105,19 @@ private:
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 
+    // OpenGL objects for post processing
+    OGLFramebuffer textureFBO;
+    std::array<OGLTexture, 5> intermediateTextureTop;
+    std::array<OGLTexture, 5> intermediateTextureBottom;
+    OGLTexture antialiasFBOTextureTop;
+    OGLTexture antialiasFBOTextureBottom;
+
+    OGLTexture* currAntialiasFBOTexture;
+    std::array<OGLTexture, 5>* currIntermediateTexture;
+    
+    OGLTexture areatex;
+    OGLTexture searchtex;
+
     // Display information for top and bottom screens respectively
     std::array<ScreenInfo, 3> screen_infos;
     std::array<GLfloat, 3 * 2> ortho_matrix;
@@ -124,6 +140,16 @@ private:
     GLuint attrib_tex_coord;
 
     FrameDumperOpenGL frame_dumper;
+
+    // Variables tracking texture changes
+    float prevTopTextureWidth;
+    float prevTopTextureHeight;
+    float prevBottomTextureWidth;
+    float prevBottomTextureHeight;
+    float currTopTextureWidth;
+    float currTopTextureHeight;
+    float currBottomTextureWidth;
+    float currBottomTextureHeight;
 };
 
 } // namespace OpenGL
