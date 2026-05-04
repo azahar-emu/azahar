@@ -36,7 +36,7 @@ if (ENABLE_LIBRETRO)
 endif()
 
 add_test(NAME tests COMMAND tests)
-if(NOT ANDROID)
+if(NOT ANDROID AND (CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME))
     catch_discover_tests(tests)
 endif()
 

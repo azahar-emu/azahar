@@ -327,12 +327,8 @@ endif()
 # OpenSSL
 if (USE_SYSTEM_OPENSSL)
     find_package(OpenSSL 1.1)
-    if (OPENSSL_FOUND)
-        set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
-    endif()
-endif()
-
-if (NOT OPENSSL_FOUND)
+    set(OPENSSL_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+else()
     # LibreSSL
     set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
     set(OPENSSLDIR "/etc/ssl/")
