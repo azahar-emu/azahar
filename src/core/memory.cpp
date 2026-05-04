@@ -424,8 +424,6 @@ PAddr& Memory::MemorySystem::Plugin3GXFramebufferAddress() {
     return impl->plugin_fb_address;
 }
 
-#pragma optimize("", off)
-
 void MemorySystem::RegisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size) {
     auto& page_table = *process.vm_manager.page_table;
 
