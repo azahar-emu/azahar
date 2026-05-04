@@ -26,7 +26,9 @@
 #include "core/dumping/backend.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/frontend/image_interface.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/global.h"
 #include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
@@ -83,6 +85,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         return ResultStatus::ErrorNotInitialized;
     }
 
+#ifdef ENABLE_GDBSTUB
     if (GDBStub::IsServerEnabled()) {
         // The break flag is only set if GDB is connected,
         // we can do clearing here safely. If it is ever
@@ -92,6 +95,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         }
         GDBStub::HandlePacket(*this);
     }
+#endif
 
     Signal signal{Signal::None};
     u32 param{};
@@ -561,7 +565,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     app_loader->ReadProgramId(loading_title_id);
     HW::AES::InitKeys();
     Service::Init(*this, loading_title_id, lle_modules, !app_loader->DoingInitialSetup());
+#ifdef ENABLE_GDBSTUB
     GDBStub::DeferStart();
+#endif
 
     if (!registered_image_interface) {
         registered_image_interface = std::make_shared<Frontend::ImageInterface>();
@@ -685,7 +691,9 @@ void System::Shutdown(bool is_deserializing) {
     gpu.reset();
     if (!is_deserializing) {
         lle_modules.clear();
+#ifdef ENABLE_GDBSTUB
         GDBStub::Shutdown();
+#endif
         perf_stats.reset();
         app_loader.reset();
     }
@@ -748,8 +756,10 @@ void System::Reset() {
 }
 
 void System::ApplySettings() {
+#ifdef ENABLE_GDBSTUB
     GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
     GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+#endif
 
     if (gpu) {
 #ifndef ANDROID

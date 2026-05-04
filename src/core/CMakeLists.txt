@@ -126,10 +126,6 @@ add_library(citra_core STATIC
     frontend/image_interface.cpp
     frontend/image_interface.h
     frontend/input.h
-    gdbstub/gdbstub.cpp
-    gdbstub/gdbstub.h
-    gdbstub/hio.cpp
-    gdbstub/hio.h
     hle/applets/applet.cpp
     hle/applets/applet.h
     hle/applets/erreula.cpp
@@ -526,6 +522,16 @@ if (ENABLE_SCRIPTING)
         rpc/server.h
         rpc/udp_server.cpp
         rpc/udp_server.h
+    )
+endif()
+
+if (ENABLE_GDBSTUB)
+    target_compile_definitions(citra_core PUBLIC -DENABLE_GDBSTUB)
+    target_sources(citra_core PRIVATE
+        gdbstub/gdbstub.cpp
+        gdbstub/gdbstub.h
+        gdbstub/hio.cpp
+        gdbstub/hio.h
     )
 endif()
 

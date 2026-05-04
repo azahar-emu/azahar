@@ -9,6 +9,10 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
 
+#ifndef ENABLE_GDBSTUB
+#error "File was compiled with GDB stub support disabled"
+#endif
+
 #ifndef SIGTRAP
 constexpr u32 SIGTRAP = 5;
 #endif

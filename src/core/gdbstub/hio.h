@@ -6,6 +6,10 @@
 
 #include "common/common_types.h"
 
+#ifndef ENABLE_GDBSTUB
+#error "File was included with GDB stub support disabled"
+#endif
+
 namespace Core {
 class System;
 }

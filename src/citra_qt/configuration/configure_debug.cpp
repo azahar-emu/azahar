@@ -100,6 +100,10 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     ui->clock_speed_label->setVisible(Settings::IsConfiguringGlobal());
     ui->clock_speed_combo->setVisible(!Settings::IsConfiguringGlobal());
 
+#ifndef ENABLE_GDBSTUB
+    ui->gdb_groupbox->setVisible(false);
+#endif
+
     SetupPerGameUI();
 }
 
@@ -198,7 +202,7 @@ void ConfigureDebug::SetupPerGameUI() {
         ConfigurationShared::SetHighlight(ui->clock_speed_widget, index == 1);
     });
 
-    ui->groupBox->setVisible(false);
+    ui->gdb_groupbox->setVisible(false);
     ui->groupBox_2->setVisible(false);
     ui->enable_rpc_server->setVisible(false);
     ui->toggle_unique_data_console_type->setVisible(false);

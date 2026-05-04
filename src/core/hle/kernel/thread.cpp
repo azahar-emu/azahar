@@ -17,6 +17,9 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
@@ -135,7 +138,9 @@ void Thread::Stop() {
         process->resource_limit->Release(ResourceLimitType::Thread, 1);
     }
 
+#ifdef ENABLE_GDBSTUB
     GDBStub::OnThreadExit(thread_id);
+#endif
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {

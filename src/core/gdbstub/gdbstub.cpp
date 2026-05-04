@@ -43,10 +43,12 @@
 #include "core/loader/loader.h"
 #include "core/memory.h"
 
-#pragma optimize("", off)
+#ifndef ENABLE_GDBSTUB
+#error "File was compiled with GDB stub support disabled"
+#endif
 
 // Uncomment to log all GDB traffic
-#define PRINT_GDB_TRAFFIC
+// #define PRINT_GDB_TRAFFIC
 
 namespace GDBStub {
 namespace {
@@ -1700,9 +1702,6 @@ static void Init(u16 port) {
     }
 
     SetNonBlock(accept_socket, true);
-
-    // Wait for gdb to connect
-    LOG_INFO(Debug_GDBStub, "Waiting for gdb to connect...\n");
 }
 
 void Init() {

@@ -14,6 +14,10 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/thread.h"
 
+#ifndef ENABLE_GDBSTUB
+#error "File was included with GDB stub support disabled"
+#endif
+
 namespace Core {
 class System;
 }

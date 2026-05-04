@@ -14,7 +14,9 @@
 #include "core/arm/dynarmic/arm_tick_counts.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
@@ -106,11 +108,13 @@ public:
         case Dynarmic::A32::Exception::NoExecuteFault:
             break;
         case Dynarmic::A32::Exception::Breakpoint:
+#ifdef ENABLE_GDBSTUB
             if (GDBStub::IsConnected()) {
                 parent.SetPC(pc);
                 parent.ServeBreak(SIGTRAP);
                 return;
             }
+#endif
             break;
         case Dynarmic::A32::Exception::SendEvent:
         case Dynarmic::A32::Exception::SendEventLocal:
@@ -124,9 +128,12 @@ public:
         }
 
         parent.SetPC(pc);
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::IsConnected()) {
             parent.ServeBreak(SIGILL);
-        } else {
+        } else
+#endif
+        {
             std::string error;
             for (int i = 0; i < 16; i++) {
                 error += fmt::format("r{:02d} = {:08X}\n", i, parent.GetReg(i));
@@ -328,8 +335,10 @@ void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_t
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
-void ARM_Dynarmic::ServeBreak(int signal) {
+void ARM_Dynarmic::ServeBreak([[maybe_unused]] int signal) {
+#ifdef ENABLE_GDBSTUB
     GDBStub::Break(signal);
+#endif
 }
 
 std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {
