@@ -514,6 +514,9 @@ add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY
     -DBOOST_REGEX_NO_LIB
 )
 if (USE_SYSTEM_BOOST)
+    if(POLICY CMP0167)
+        cmake_policy(SET CMP0167 NEW) #boost config policy
+    endif()
     find_package(Boost 1.70.0 COMPONENTS container locale serialization iostreams REQUIRED)
 endif()
 
