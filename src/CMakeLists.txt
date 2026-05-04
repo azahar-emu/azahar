@@ -203,6 +203,7 @@ if (ENABLE_QT)
 endif()
 
 if (ENABLE_QT) # Or any other hypothetical future frontends
+    add_subdirectory(citra_cli)
     add_subdirectory(citra_meta)
 endif()
 
