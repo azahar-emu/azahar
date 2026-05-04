@@ -6,6 +6,7 @@
 #include <memory>
 #include <ranges>
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
 #include <INIReader.h>
 #include <boost/hana/string.hpp>
@@ -335,11 +336,15 @@ void Config::Reload() {
     for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
-        // FIXME: This code looks so ass when formatted by clang-format -OS
-        if (std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
-                std::end(DefaultINI::android_config_omitted_keys) &&
-            std::string(DefaultINI::android_config_default_file_content)
-                    .find(key_declaration_string) == std::string::npos) {
+        const auto key_view = std::string_view(*key);
+        // Check if key is in omitted list using string comparison (not pointer comparison)
+        const auto is_omitted =
+            std::ranges::find_if(DefaultINI::android_config_omitted_keys,
+                                 [key_view](const char* omitted_key) {
+                                     return std::string_view(omitted_key) == key_view;
+                                 }) != std::end(DefaultINI::android_config_omitted_keys);
+        if (!is_omitted && std::string(DefaultINI::android_config_default_file_content)
+                                   .find(key_declaration_string) == std::string::npos) {
             ASSERT_MSG(false,
                        "Validation of default content config failed: Missing or malformed key "
                        "declaration {}",

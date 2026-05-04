@@ -8,7 +8,10 @@ import android.app.Presentation
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import android.view.MotionEvent
 import android.view.SurfaceHolder
@@ -21,6 +24,14 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
+    // Track DP displays separately for profile matching (e.g., XREAL via USB-C)
+    @Volatile private var lastDPDisplayName: String? = null
+    // Handler for debouncing display profile changes
+    private val handler = Handler(Looper.getMainLooper())
+    private var pendingProfileChange: Runnable? = null
+    private companion object {
+        const val PROFILE_CHANGE_DEBOUNCE_MS = 300L
+    }
 
     init {
         vd = displayManager.createVirtualDisplay(
@@ -32,10 +43,22 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
             DisplayManager.VIRTUAL_DISPLAY_FLAG_PRESENTATION
         )
         displayManager.registerDisplayListener(this, null)
+
+        // Initialize the display profile manager
+        DisplayProfileManager.initialize()
+
+        // Check for already connected DP display at init
+        val currentDPDisplay = getDPDisplayForProfileMatching()
+        if (currentDPDisplay != null) {
+            lastDPDisplayName = null  // Force the "connected" path
+            handleDisplayProfileChange(currentDPDisplay)
+        }
     }
 
     fun updateSurface() {
-        NativeLibrary.secondarySurfaceChanged(pres!!.getSurfaceHolder().surface)
+        pres?.let {
+            NativeLibrary.secondarySurfaceChanged(it.getSurfaceHolder().surface)
+        }
     }
 
     fun destroySurface() {
@@ -44,22 +67,57 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
 
     private fun getExternalDisplay(context: Context): Display? {
         val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val currentDisplayId = context.display.displayId
+        val currentDisplayId = context.display?.displayId ?: Display.DEFAULT_DISPLAY
         val displays = dm.displays
-        val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
+        val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+
         val extDisplays = displays.filter {
             val isPresentable = presDisplays.any { pd -> pd.displayId == it.displayId }
-            val isNotDefaultOrPresentable = it.displayId != Display.DEFAULT_DISPLAY || isPresentable
-            isNotDefaultOrPresentable &&
-                    it.displayId != currentDisplayId &&
-                    it.name != "HiddenDisplay" &&
-                    it.state != Display.STATE_OFF &&
-                    it.isValid
+            val isExternal = it.displayId != Display.DEFAULT_DISPLAY && it.displayId != currentDisplayId
+            val isUsable = it.name != "HiddenDisplay" && it.state != Display.STATE_OFF
+            // EXCLUDE DP/USB-C displays - those are for mirroring the main screen, not for SecondaryDisplay
+            val isDPDisplay = it.name.contains("DP", true)
+
+            (isPresentable || isExternal) && isUsable && !isDPDisplay
         }
-        // if there is a display called Built-In Display or Built-In Screen, prioritize the OTHER screen
-        val selected = extDisplays.firstOrNull { ! it.name.contains("Built",true) }
+
+        // Select first non-Built-in display for SecondaryDisplay
+        return extDisplays.firstOrNull { !it.name.contains("Built", true) }
             ?: extDisplays.firstOrNull()
-        return selected
+    }
+
+    /**
+     * Get the product name of a display for profile matching.
+     * Uses deviceProductInfo.name (e.g., "XREAL One") when available (API 31+),
+     * falls back to display.name (e.g., "DP Screen") on older APIs.
+     */
+    private fun getDisplayProductName(display: Display): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val productInfo = display.deviceProductInfo
+            val productName = productInfo?.name
+            if (!productName.isNullOrBlank()) {
+                return productName
+            }
+        }
+        return display.name
+    }
+
+    /**
+     * Get the DP/USB-C display for profile matching (separate from SecondaryDisplay selection).
+     * Returns the product name of any connected DP display for automatic profile application.
+     */
+    private fun getDPDisplayForProfileMatching(): String? {
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val displays = dm.displays
+
+        for (display in displays) {
+            if (display.name.contains("DP", true) &&
+                display.state != Display.STATE_OFF &&
+                display.name != "HiddenDisplay") {
+                return getDisplayProductName(display)
+            }
+        }
+        return null
     }
 
     fun updateDisplay() {
@@ -68,8 +126,13 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
             return
         }
 
+        // Check for DP display for profile matching (tracked separately from SecondaryDisplay)
+        val dpDisplayName = getDPDisplayForProfileMatching()
+        handleDisplayProfileChange(dpDisplayName)
+
         // decide if we are going to the external display or the internal one
         var display = getExternalDisplay(context)
+
         if (display == null ||
             IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
             display = vd.display
@@ -93,6 +156,54 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
         } catch (_: WindowManager.InvalidDisplayException) {
             pres = null
         }
+    }
+
+    /**
+     * Handle display profile changes when DP display connects/disconnects.
+     * Only tracks DP displays (like XREAL via USB-C), not regular external displays.
+     * Uses debouncing to avoid race conditions from rapid connect/disconnect events.
+     */
+    private fun handleDisplayProfileChange(currentDPDisplayName: String?) {
+        val previousDPDisplayName = lastDPDisplayName
+
+        // Skip if no change
+        if (previousDPDisplayName == currentDPDisplayName) return
+
+        // Cancel any pending profile change
+        pendingProfileChange?.let { handler.removeCallbacks(it) }
+
+        // Debounce the profile change to avoid race conditions
+        pendingProfileChange = Runnable {
+            val latestDPDisplayName = getDPDisplayForProfileMatching()
+            val storedPreviousName = lastDPDisplayName
+            lastDPDisplayName = latestDPDisplayName
+
+            when {
+                // DP display connected (was null, now has a name)
+                storedPreviousName == null && latestDPDisplayName != null -> {
+                    DisplayProfileManager.onDisplayConnected(latestDPDisplayName)
+                }
+                // DP display disconnected (had a name, now null)
+                storedPreviousName != null && latestDPDisplayName == null -> {
+                    DisplayProfileManager.onDisplayDisconnected()
+                }
+                // DP display changed to a different one
+                storedPreviousName != null && latestDPDisplayName != null &&
+                        storedPreviousName != latestDPDisplayName -> {
+                    DisplayProfileManager.onDisplayDisconnected()
+                    DisplayProfileManager.onDisplayConnected(latestDPDisplayName)
+                }
+            }
+            pendingProfileChange = null
+        }
+        handler.postDelayed(pendingProfileChange!!, PROFILE_CHANGE_DEBOUNCE_MS)
+    }
+
+    /**
+     * Get the name of the currently connected DP display (if any) for profile matching.
+     */
+    fun getConnectedDisplayName(): String? {
+        return getDPDisplayForProfileMatching()
     }
 
     fun releasePresentation() {
