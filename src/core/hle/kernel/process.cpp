@@ -16,6 +16,9 @@
 #include "common/logging/log.h"
 #include "common/serialization/boost_vector.hpp"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -260,9 +263,25 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     vm_manager.LogLayout(Common::Log::Level::Debug);
     Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
+
+    // Pause process at start if flag enabled and we are not a sysmodule
+    if (Core::System::GetInstance().GetDebugNextProcessFlag() &&
+        resource_limit->GetCategory() != Kernel::ResourceLimitCategory::Other) {
+#ifdef ENABLE_GDBSTUB
+        if (GDBStub::IsServerEnabled()) {
+            LOG_INFO(Loader, "Pausing process {} at start", process_id);
+            SetDebugBreak(true);
+        }
+#endif
+        Core::System::GetInstance().ClearDebugNextProcessFlag();
+    }
 }
 
 void Process::Exit() {
+#ifdef ENABLE_GDBSTUB
+    GDBStub::OnProcessExit(process_id);
+#endif
+
     auto plgldr = Service::PLGLDR::GetService(Core::System::GetInstance());
     if (plgldr) {
         plgldr->OnProcessExit(*this, kernel);
@@ -590,6 +609,42 @@ Result Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                                        MemoryState::Private, perms));
 
     return ResultSuccess;
+}
+
+std::vector<std::shared_ptr<Kernel::Thread>> Kernel::Process::GetThreadList() {
+    std::vector<std::shared_ptr<Kernel::Thread>> ret;
+    for (u32 core = 0; core < Core::GetNumCores(); core++) {
+        auto thread_list = kernel.GetThreadManager(core).GetThreadList();
+        for (auto& thread : thread_list) {
+            if (thread->owner_process.lock().get() == this) {
+                ret.push_back(thread);
+            }
+        }
+    }
+    return ret;
+}
+
+void Kernel::Process::SetDebugBreak(bool debug_break, std::vector<u32> thread_ids) {
+    auto thread_list = GetThreadList();
+    bool needs_reschedule = false;
+    for (auto& t : thread_list) {
+
+        if (!thread_ids.empty()) {
+            u32 thread_id = t->thread_id;
+            if (std::find(thread_ids.begin(), thread_ids.end(), thread_id) == thread_ids.end()) {
+                continue;
+            }
+        }
+
+        needs_reschedule |= t->SetDebugBreak(debug_break);
+    }
+
+    if (needs_reschedule) {
+        for (u32 i = 0; i < Core::GetNumCores(); i++) {
+            Core::GetCore(i).PrepareReschedule();
+            kernel.GetThreadManager(i).Reschedule();
+        }
+    }
 }
 
 void Process::FreeAllMemory() {

@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -225,6 +225,10 @@ public:
     Result Map(VAddr target, VAddr source, u32 size, VMAPermission perms, bool privileged = false);
     Result Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                  bool privileged = false);
+
+    std::vector<std::shared_ptr<Kernel::Thread>> GetThreadList();
+
+    void SetDebugBreak(bool debug_break, std::vector<u32> thread_ids = {});
 
 private:
     void FreeAllMemory();

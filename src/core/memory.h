@@ -5,11 +5,13 @@
 #pragma once
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
+#include "common/swap.h"
 
 namespace Kernel {
 class Process;
@@ -34,7 +36,7 @@ constexpr u32 CITRA_PAGE_MASK = CITRA_PAGE_SIZE - 1;
 constexpr int CITRA_PAGE_BITS = 12;
 constexpr std::size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - CITRA_PAGE_BITS);
 
-enum class PageType {
+enum class PageType : u8 {
     /// Page is unmapped and should cause an access error.
     Unmapped,
     /// Page is mapped to regular memory. This is the only type you can get pointers to.
@@ -42,6 +44,12 @@ enum class PageType {
     /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
     /// invalidation
     RasterizerCachedMemory,
+    /// Page is mapped to regular memory. Furthermore a debug watchpoint is set to an address within
+    /// the page.
+    MemoryWatchpoint,
+    /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
+    /// invalidation. Furthermore a debug watchpoint is set to an address within the page.
+    RasterizerCachedMemoryWatchpoint,
 };
 
 /**
@@ -82,6 +90,10 @@ struct PageTable {
             return Entry(*this, static_cast<VAddr>(idx));
         }
 
+        const MemoryRef& Ref(std::size_t idx) {
+            return refs[idx];
+        }
+
     private:
         std::array<u8*, PAGE_TABLE_NUM_ENTRIES> raw;
         std::array<MemoryRef, PAGE_TABLE_NUM_ENTRIES> refs;
@@ -100,6 +112,22 @@ struct PageTable {
         return pointers.raw;
     }
 
+    struct WatchpointPageInfo {
+        u32 watchpoint_count{};
+        MemoryRef memory;
+
+        template <class Archive>
+        void serialize(Archive& ar, const unsigned int) {
+            ar & watchpoint_count;
+            ar & memory;
+        }
+    };
+
+    // Map holding pages that are marked to contain watchpoints. We don't need
+    // any fancy performance tricks here, as watchpoints are only used rarely
+    // while debugging and performance is not a priority in such cases.
+    std::unordered_map<VAddr, WatchpointPageInfo> watchpoint_pages_map{};
+
     void Clear();
 
 private:
@@ -107,6 +135,7 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar & pointers.refs;
         ar & attributes;
+        ar & watchpoint_pages_map;
         for (std::size_t i = 0; i < PAGE_TABLE_NUM_ENTRIES; i++) {
             pointers.raw[i] = pointers.refs[i].GetPtr();
         }
@@ -359,6 +388,29 @@ public:
      * @returns the read 64-bit value.
      */
     u64 Read64(const Kernel::Process& process, VAddr addr);
+
+    /**
+     * Reads a 32-bit unsigned value from the current process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(VAddr addr);
+
+    /**
+     * Reads a 32-bit unsigned value from the process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(const Kernel::Process& process, VAddr addr);
 
     /**
      * Writes an 8-bit unsigned integer to the given virtual address in
@@ -649,7 +701,14 @@ public:
     /// Returns a reference to the framebuffer address of the currently loaded 3GX plugin.
     PAddr& Plugin3GXFramebufferAddress();
 
+    void RegisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size);
+
+    void UnregisterWatchpoint(const Kernel::Process& process, VAddr addr, u32 size);
+
 private:
+    template <typename T>
+    void UnmappedAccess(const VAddr vaddr, const T value, bool read);
+
     template <typename T>
     T Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr);
 

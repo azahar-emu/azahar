@@ -57,12 +57,15 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 38> QtConfig::default_hotkeys {{
+const std::array<UISettings::Shortcut, 41> QtConfig::default_hotkeys {{
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F4"),Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F5"),Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F6"),Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     Qt::WindowShortcut}},
      {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), Qt::ApplicationShortcut}},
      {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      Qt::ApplicationShortcut}},
@@ -510,6 +513,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
     ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
+    ReadBasicSetting(Settings::values.break_on_unmapped_memory_access);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -1094,6 +1098,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
+    WriteBasicSetting(Settings::values.break_on_unmapped_memory_access);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {

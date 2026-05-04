@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 /*  armdefs.h -- ARMulator common definitions:  ARM6 Instruction Emulator.
     Copyright (C) 1994 Advanced RISC Machines Ltd.
 
@@ -21,7 +25,9 @@
 #include <unordered_map>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 
 namespace Core {
 class System;
@@ -199,10 +205,12 @@ public:
         return TFlag ? 2 : 4;
     }
 
+#ifdef ENABLE_GDBSTUB
     void RecordBreak(GDBStub::BreakpointAddress bkpt) {
         last_bkpt = bkpt;
         last_bkpt_hit = true;
     }
+#endif
 
     void ServeBreak();
 
@@ -267,6 +275,8 @@ private:
     u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
     bool exclusive_state;
 
+#ifdef ENABLE_GDBSTUB
     GDBStub::BreakpointAddress last_bkpt{};
     bool last_bkpt_hit = false;
+#endif
 };

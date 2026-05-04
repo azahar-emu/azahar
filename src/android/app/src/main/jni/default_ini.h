@@ -35,7 +35,10 @@ constexpr std::array android_config_omitted_keys = {
     Keys::audio_encoder,
     Keys::audio_encoder_options,
     Keys::audio_bitrate,
-    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Keys::last_artic_base_addr,            // On Android, this value is stored as a "preference"
+    Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
+    Keys::use_gdbstub,                     // GDB functionality disabled by deafult on Android
+    Keys::gdbstub_port,
 };
 
 // clang-format off
@@ -526,10 +529,6 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Whether to enable additional debugging information during emulation
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(renderer_debug) BOOST_HANA_STRING(R"(
-
-# Port for listening to GDB connections.
-)") DECLARE_KEY(use_gdbstub) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(gdbstub_port) BOOST_HANA_STRING(R"(
 
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.

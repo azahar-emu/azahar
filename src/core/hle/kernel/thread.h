@@ -365,6 +365,15 @@ public:
         return status == ThreadStatus::WaitSynchAll;
     }
 
+    bool CanSchedule() {
+        // TODO(PabloMK7): This may not be the proper way
+        // threads are marked as non-schedulable when they
+        // are in debug break. Figure out and fix.
+        return can_schedule && !debug_break;
+    }
+
+    bool SetDebugBreak(bool debug_break);
+
     Core::ARM_Interface::ThreadContext context{};
 
     u32 thread_id;
@@ -410,6 +419,7 @@ public:
 
 private:
     ThreadManager& thread_manager;
+    bool debug_break{};
 
     friend class boost::serialization::access;
     template <class Archive>

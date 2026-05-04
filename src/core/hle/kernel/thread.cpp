@@ -17,6 +17,9 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
@@ -77,6 +80,7 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
         }
     }
     ar & wakeup_callback;
+    ar & debug_break;
 }
 SERIALIZE_IMPL(Thread)
 
@@ -133,6 +137,10 @@ void Thread::Stop() {
         process->tls_slots[tls_page].reset(tls_slot);
         process->resource_limit->Release(ResourceLimitType::Thread, 1);
     }
+
+#ifdef ENABLE_GDBSTUB
+    GDBStub::OnThreadExit(thread_id);
+#endif
 }
 
 void ThreadManager::SwitchContext(Thread* new_thread) {
@@ -191,7 +199,7 @@ Thread* ThreadManager::PopNextReadyThread() {
         u32 next_priority{};
         next = nullptr;
 
-        if (thread && thread->status == ThreadStatus::Running) {
+        if (thread && thread->status == ThreadStatus::Running && thread->CanSchedule()) {
             do {
                 // We have to do better than the current thread.
                 // This call returns null when that's not possible.
@@ -201,18 +209,18 @@ Thread* ThreadManager::PopNextReadyThread() {
                     // Otherwise just keep going with the current thread
                     next = thread;
                     break;
-                } else if (!next->can_schedule) {
+                } else if (!next->CanSchedule()) {
                     skipped.push_back({next_priority, next});
                 }
 
-            } while (!next->can_schedule);
+            } while (!next->CanSchedule());
         } else {
             do {
                 std::tie(next_priority, next) = ready_queue.pop_first();
-                if (next && !next->can_schedule) {
+                if (next && !next->CanSchedule()) {
                     skipped.push_back({next_priority, next});
                 }
-            } while (next && !next->can_schedule);
+            } while (next && !next->CanSchedule());
         }
 
         for (auto it = skipped.rbegin(); it != skipped.rend(); it++) {
@@ -535,6 +543,14 @@ VAddr Thread::GetCommandBufferAddress() const {
     // Offset from the start of TLS at which the IPC command buffer begins.
     constexpr u32 command_header_offset = 0x80;
     return GetTLSAddress() + command_header_offset;
+}
+
+bool Thread::SetDebugBreak(bool _debug_break) {
+    if (debug_break == _debug_break) {
+        return false;
+    }
+    debug_break = _debug_break;
+    return true;
 }
 
 CpuLimiter::~CpuLimiter() {}

@@ -391,7 +391,6 @@
     <string name="learn_more">Learn More</string>
     <string name="close">Close</string>
     <string name="reset_to_default">Reset to Default</string>
-    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartridges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
     <string name="option_default">Default</string>
     <string name="none">None</string>
     <string name="auto">Auto</string>
@@ -435,9 +434,11 @@
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Your ROM is Encrypted</string>
+    <string name="loader_error_encrypted_desc"><![CDATA[Azahar does not support encrypted ROMS. Read our <a href="https://azahar-emu.org/blog/game-loading-changes/">blog post</a> for more information.]]></string>
     <string name="loader_error_invalid_format">Invalid ROM format</string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
     <string name="no_game_present">No bootable game present!</string>
+    <string name="loader_error_generic">An error occurred while loading ROM: %d</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>

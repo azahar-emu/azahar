@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,8 +6,16 @@
 
 #include "common/common_types.h"
 
+#ifndef ENABLE_GDBSTUB
+#error "File was included with GDB stub support disabled"
+#endif
+
 namespace Core {
 class System;
+}
+
+namespace Kernel {
+class Process;
 }
 
 namespace GDBStub {
@@ -51,7 +59,7 @@ static_assert(sizeof(PackedGdbHioRequest) == 152,
  *
  *  @param address The memory address of the \ref PackedGdbHioRequest.
  */
-void SetHioRequest(Core::System& system, const VAddr address);
+void SetHioRequest(Core::System& system, Kernel::Process* process, const VAddr address);
 
 /**
  * If there is a pending HIO request, send it to the client.
@@ -63,6 +71,7 @@ bool HandlePendingHioRequestPacket();
 /**
  * Process an HIO reply from the client.
  */
-void HandleHioReply(Core::System& system, const u8* const command_buffer, const u32 command_length);
+void HandleHioReply(Core::System& system, Kernel::Process* process, const u8* const command_buffer,
+                    const u32 command_length);
 
 } // namespace GDBStub

@@ -103,8 +103,10 @@ public:
         ErrorSavestate,            ///< Error saving or loading
         ErrorArticDisconnected,    ///< Error when artic base disconnects
         ErrorN3DSApplication,      ///< Error launching New 3DS application in Old 3DS mode
-        ShutdownRequested,         ///< Emulated program requested a system shutdown
-        ErrorUnknown               ///< Any other error
+        ErrorCoreExceptionRaised,  ///< The CPU emulation raised an exception
+        ErrorMemoryExceptionRaised, ///< Unmmaped memory was accessed
+        ShutdownRequested,          ///< Emulated program requested a system shutdown
+        ErrorUnknown                ///< Any other error
     };
 
     explicit System();
@@ -403,6 +405,18 @@ public:
         info_led_color_changed = func;
     }
 
+    void SetDebugNextProcessFlag() {
+        debug_next_process = true;
+    }
+
+    bool GetDebugNextProcessFlag() {
+        return debug_next_process;
+    }
+
+    void ClearDebugNextProcessFlag() {
+        debug_next_process = false;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -511,6 +525,8 @@ private:
 
     Common::Vec3<u8> info_led_color;
     std::function<void()> info_led_color_changed;
+
+    bool debug_next_process;
 
     friend class boost::serialization::access;
     template <typename Archive>

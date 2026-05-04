@@ -17,7 +17,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="gdb_groupbox">
        <property name="title">
         <string>GDB</string>
        </property>
@@ -59,6 +59,13 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+          <widget class="QCheckBox" name="debug_next_process">
+            <property name="text">
+              <string>Pause next non-sysmodule process at start</string>
+            </property>
+          </widget>
         </item>
        </layout>
       </widget>
@@ -298,6 +305,16 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server on port 45987. This allows remotely reading/writing guest memory, do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
         </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="break_on_unmapped_memory_access">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pauses emulation and shows an error message if an unmapped memory access is detected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Break on unmapped memory access</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

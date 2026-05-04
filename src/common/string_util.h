@@ -36,6 +36,7 @@ namespace Common {
 
 [[nodiscard]] bool EndsWith(const std::string& value, const std::string& ending);
 
+[[nodiscard]] std::vector<std::string> SplitString(std::string_view str, const char delim);
 [[nodiscard]] std::vector<std::string> SplitString(const std::string& str, const char delim);
 
 // "C:/Windows/winhelp.exe" to "C:/Windows/", "winhelp", ".exe"

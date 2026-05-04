@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2013 Dolphin Emulator Project
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
@@ -9,6 +13,10 @@
 #include <span>
 #include "common/common_types.h"
 #include "core/hle/kernel/thread.h"
+
+#ifndef ENABLE_GDBSTUB
+#error "File was included with GDB stub support disabled"
+#endif
 
 namespace Core {
 class System;
@@ -60,18 +68,28 @@ void Shutdown();
 /// Checks if the gdbstub server is enabled.
 bool IsServerEnabled();
 
+/// Returns true if the GDB server is initialized
+bool IsInitialized();
+
 /// Returns true if there is an active socket connection.
 bool IsConnected();
 
 /**
  * Signal to the gdbstub server that it should halt CPU execution.
  *
- * @param is_memory_break If true, the break resulted from a memory breakpoint.
+ * @param signal Signal that produced the break (SIGTRAP by default)
  */
-void Break(bool is_memory_break = false);
+void Break(int signal);
 
-/// Determine if there was a memory breakpoint.
-bool IsMemoryBreak();
+/**
+ * Signal to the GDB stub that the specified process ID is exiting
+ */
+void OnProcessExit(u32 process_id);
+
+/**
+ * Signal to the GDB stub that the specified thread ID is exiting
+ */
+void OnThreadExit(u32 thread_id);
 
 /// Read and handle packet from gdb client.
 void HandlePacket(Core::System& system);
@@ -88,37 +106,10 @@ BreakpointAddress GetNextBreakpointFromAddress(VAddr addr, GDBStub::BreakpointTy
  * Check if a breakpoint of the specified type exists at the given address.
  *
  * @param addr Address of breakpoint.
+ * @param access_len Access size in bytes.
  * @param type Type of breakpoint.
  */
-bool CheckBreakpoint(VAddr addr, GDBStub::BreakpointType type);
-
-// If set to true, the CPU will halt at the beginning of the next CPU loop.
-bool GetCpuHaltFlag();
-
-/**
- * If set to true, the CPU will halt at the beginning of the next CPU loop.
- *
- * @param halt whether to halt on the next loop
- */
-void SetCpuHaltFlag(bool halt);
-
-// If set to true and the CPU is halted, the CPU will step one instruction.
-bool GetCpuStepFlag();
-
-/**
- * When set to true, the CPU will step one instruction when the CPU is halted next.
- *
- * @param is_step
- */
-void SetCpuStepFlag(bool is_step);
-
-/**
- * Send trap signal from thread back to the gdbstub server.
- *
- * @param thread Sending thread.
- * @param trap Trap no.
- */
-void SendTrap(Kernel::Thread* thread, int trap);
+bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type);
 
 /**
  * Send reply to gdb client.
