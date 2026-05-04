@@ -4,7 +4,6 @@
 
 #include <QDesktopServices>
 #include <QMessageBox>
-#include <QTimer>
 #include <QUrl>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_debug.h"
