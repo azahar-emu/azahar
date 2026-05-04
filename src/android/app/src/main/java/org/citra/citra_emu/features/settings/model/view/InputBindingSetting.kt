@@ -137,6 +137,7 @@ class InputBindingSetting(
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKlOAD -> Hotkey.QUICKLOAD.button
                 Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                Settings.HOTKEY_BUTTON_COMBO -> Hotkey.COMBO_KEY.button
                 else -> -1
             }
 

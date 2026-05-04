@@ -115,6 +115,7 @@ class Settings {
         const val SECTION_STORAGE = "Storage"
         const val SECTION_MISC = "Miscellaneous"
 
+
         const val KEY_BUTTON_A = "button_a"
         const val KEY_BUTTON_B = "button_b"
         const val KEY_BUTTON_X = "button_x"
@@ -130,6 +131,7 @@ class Settings {
         const val KEY_BUTTON_R = "button_r"
         const val KEY_BUTTON_ZL = "button_zl"
         const val KEY_BUTTON_ZR = "button_zr"
+        const val KEY_BUTTON_COMBO = "button_combo"
         const val KEY_CIRCLEPAD_AXIS_VERTICAL = "circlepad_axis_vertical"
         const val KEY_CIRCLEPAD_AXIS_HORIZONTAL = "circlepad_axis_horizontal"
         const val KEY_CSTICK_AXIS_VERTICAL = "cstick_axis_vertical"
@@ -144,6 +146,7 @@ class Settings {
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
         const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
+        const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -211,7 +214,8 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKlOAD,
-            HOTKEY_TURBO_LIMIT
+            HOTKEY_TURBO_LIMIT,
+            HOTKEY_BUTTON_COMBO
         )
         val hotkeyTitles = listOf(
             R.string.controller_hotkey_enable_button,
@@ -221,7 +225,8 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
-            R.string.turbo_limit_hotkey
+            R.string.turbo_limit_hotkey,
+            R.string.button_combo
         )
 
         // TODO: Move these in with the other setting keys in GenerateSettingKeys.cmake
