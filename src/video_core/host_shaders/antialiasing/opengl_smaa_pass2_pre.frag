@@ -4,6 +4,7 @@
 // Neighborhood Blending Shader (Third Pass)
 
 uniform vec4 i_resolution;
+uniform int convert_colors;
 #define SMAA_RT_METRICS vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y)
 #define SMAA_GLSL_4
 

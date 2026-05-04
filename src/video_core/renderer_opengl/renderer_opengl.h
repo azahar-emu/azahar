@@ -98,6 +98,7 @@ private:
     OGLProgram SMAA_PASS_0_shader;
     OGLProgram SMAA_PASS_1_shader;
     OGLProgram SMAA_PASS_2_shader;
+    OGLProgram AREA_SAMPLING_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 
