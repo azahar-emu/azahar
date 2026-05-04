@@ -256,18 +256,15 @@ jobs:
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
-      - name: Update Android SDK CMake version
-        if: ${{ env.SHOULD_RUN == 'true' }}
-        run: |
-          yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Install tools
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y apksigner ccache
-          echo "Checking ninja version..."
-          /usr/local/bin/ninja --version
-          ln -sf /usr/local/bin/ninja /usr/local/lib/android/sdk/cmake/3.30.3/bin/ninja
+          sudo apt-get install ccache apksigner -y
+      - name: Update Android SDK CMake version
+        if: ${{ env.SHOULD_RUN == 'true' }}
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Build
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh
