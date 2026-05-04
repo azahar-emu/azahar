@@ -5,11 +5,13 @@
 #pragma once
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include "common/common_types.h"
 #include "common/memory_ref.h"
+#include "common/swap.h"
 
 namespace Kernel {
 class Process;
@@ -388,6 +390,29 @@ public:
     u64 Read64(const Kernel::Process& process, VAddr addr);
 
     /**
+     * Reads a 32-bit unsigned value from the current process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(VAddr addr);
+
+    /**
+     * Reads a 32-bit unsigned value from the process' address space
+     * at the given virtual address. If the address is invalid std::nullopt
+     * is returned instead.
+     *
+     * @param process The process to read from.
+     * @param addr The virtual address to read the 32-bit value from.
+     *
+     * @returns the read 32-bit unsigned value or std::nullopt.
+     */
+    std::optional<u32> Read32OrNullopt(const Kernel::Process& process, VAddr addr);
+
+    /**
      * Writes an 8-bit unsigned integer to the given virtual address in
      * the current process' address space.
      *
@@ -682,7 +707,7 @@ public:
 
 private:
     template <typename T>
-    T UnmappedAccess(const VAddr vaddr, const T value, bool read);
+    void UnmappedAccess(const VAddr vaddr, const T value, bool read);
 
     template <typename T>
     T Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr);

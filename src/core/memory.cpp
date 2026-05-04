@@ -13,6 +13,7 @@
 #include "common/atomic_ops.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/optional_helper.h"
 #include "common/settings.h"
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
@@ -564,7 +565,7 @@ void MemorySystem::UnregisterPageTable(std::shared_ptr<PageTable> page_table) {
 }
 
 template <typename T>
-T MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
+void MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
     const std::string mode = (read ? "Read" : "Write");
     const std::string value_str = read ? std::string("") : fmt::format(" 0x{:08X}", value);
     const std::string message = fmt::format("unmapped {}{}{} @ 0x{:08X} at PC 0x{:08X}", mode,
@@ -580,16 +581,20 @@ T MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
     }
 
     LOG_ERROR(HW_Memory, "{}", message);
-    return {};
 }
 
 template <typename T>
 T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr vaddr) {
+    constexpr bool is_optional = is_optional_type<T>;
+    using ReadType = optional_inner_or_type<T>;
+
+    constexpr size_t read_size = sizeof(ReadType);
+
     const u8* page_pointer = page_table->pointers[vaddr >> CITRA_PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
-        T value;
-        std::memcpy(&value, &page_pointer[vaddr & CITRA_PAGE_MASK], sizeof(T));
+        ReadType value;
+        std::memcpy(&value, &page_pointer[vaddr & CITRA_PAGE_MASK], read_size);
         return value;
     }
 
@@ -598,20 +603,27 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
     if (vaddr & (1 << 31)) {
         PAddr paddr = (vaddr & ~(1 << 31));
         if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) { // Check FCRAM region
-            T value;
-            std::memcpy(&value, GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), sizeof(T));
+            ReadType value;
+            std::memcpy(&value, GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), read_size);
             return value;
         } else if ((paddr & 0xF0000000) == 0x10000000 &&
                    paddr >= Memory::IO_AREA_PADDR) { // Check MMIO region
-            return impl->system.GPU().ReadReg(static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR +
-                                              0x1EC00000);
+            return static_cast<ReadType>(impl->system.GPU().ReadReg(
+                static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR + 0x1EC00000));
         }
     }
 
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped: {
-        return UnmappedAccess<T>(vaddr, 0, true);
+
+        UnmappedAccess<ReadType>(vaddr, 0, true);
+
+        if constexpr (is_optional) {
+            return std::nullopt;
+        } else {
+            return T{};
+        }
     }
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -621,11 +633,11 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         ASSERT_MSG(it != page_table->watchpoint_pages_map.end(),
                    "Missing memory for watchpoint page");
 
-        T value;
-        std::memcpy(&value, it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), sizeof(T));
+        ReadType value;
+        std::memcpy(&value, it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), read_size);
 
 #ifdef ENABLE_GDBSTUB
-        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
+        if (GDBStub::CheckBreakpoint(vaddr, read_size, GDBStub::BreakpointType::Read)) {
             GDBStub::Break(SIGTRAP);
         }
 #endif
@@ -633,20 +645,20 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         return value;
     }
     [[likely]] case PageType::RasterizerCachedMemory: {
-        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
+        RasterizerFlushVirtualRegion(vaddr, read_size, FlushMode::Flush);
 
-        T value;
-        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
+        ReadType value;
+        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), read_size);
         return value;
     }
     case PageType::RasterizerCachedMemoryWatchpoint: {
-        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
+        RasterizerFlushVirtualRegion(vaddr, read_size, FlushMode::Flush);
 
-        T value;
-        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
+        ReadType value;
+        std::memcpy(&value, GetPointerForRasterizerCache(vaddr), read_size);
 
 #ifdef ENABLE_GDBSTUB
-        if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
+        if (GDBStub::CheckBreakpoint(vaddr, read_size, GDBStub::BreakpointType::Read)) {
             GDBStub::Break(SIGTRAP);
         }
 #endif
@@ -657,7 +669,11 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         UNREACHABLE();
     }
 
-    return T{};
+    if constexpr (is_optional) {
+        return std::nullopt;
+    } else {
+        return T{};
+    }
 }
 
 template <typename T>
@@ -1045,6 +1061,14 @@ u64 MemorySystem::Read64(const VAddr addr) {
 
 u64 MemorySystem::Read64(const Kernel::Process& process, VAddr addr) {
     return Read<u64_le>(process.vm_manager.page_table, addr);
+}
+
+std::optional<u32> MemorySystem::Read32OrNullopt(VAddr addr) {
+    return Read<std::optional<u32_le>>(impl->current_page_table, addr);
+}
+
+std::optional<u32> MemorySystem::Read32OrNullopt(const Kernel::Process& process, VAddr addr) {
+    return Read<std::optional<u32_le>>(process.vm_manager.page_table, addr);
 }
 
 void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_addr,

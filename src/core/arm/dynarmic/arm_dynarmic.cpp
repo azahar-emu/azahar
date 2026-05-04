@@ -37,18 +37,7 @@ public:
     ~DynarmicUserCallbacks() = default;
 
     std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) override {
-        constexpr VAddr low_page_limit = 0x1000;
-
-        // This check prevents a common cascading error that results from the
-        // memory system allowing unmapped memory accesses (in some situations,
-        // a vtable is read from an invalid address and execution jumps to the
-        // zero page). On real hw, it's not normally possible to map the zero page.
-        if (vaddr < low_page_limit) [[unlikely]] {
-            LOG_CRITICAL(Debug, "Tried to read code from low address 0x{:08x}", vaddr);
-            return {};
-        }
-
-        return MemoryRead32(vaddr);
+        return memory.Read32OrNullopt(vaddr);
     }
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
@@ -127,6 +116,23 @@ public:
             return;
         }
 
+        static constexpr auto ExceptionToString = [](Dynarmic::A32::Exception e) -> std::string {
+            switch (e) {
+            case Dynarmic::A32::Exception::UndefinedInstruction:
+                return "UndefinedInstruction";
+            case Dynarmic::A32::Exception::UnpredictableInstruction:
+                return "UnpredictableInstruction";
+            case Dynarmic::A32::Exception::DecodeError:
+                return "DecodeError";
+            case Dynarmic::A32::Exception::NoExecuteFault:
+                return "NoExecuteFault";
+            case Dynarmic::A32::Exception::Breakpoint:
+                return "Breakpoint";
+            default:
+                return fmt::format("Unknown({})", e);
+            }
+        };
+
         parent.SetPC(pc);
 #ifdef ENABLE_GDBSTUB
         if (GDBStub::IsConnected()) {
@@ -138,7 +144,8 @@ public:
             for (int i = 0; i < 16; i++) {
                 error += fmt::format("r{:02d} = {:08X}\n", i, parent.GetReg(i));
             }
-            error += fmt::format("ExceptionRaised(exception = {}, pc = {:08X})", exception, pc);
+            error += fmt::format("ExceptionRaised(exception = {}, pc = {:08X})",
+                                 ExceptionToString(exception), pc);
             parent.system.SetStatus(Core::System::ResultStatus::ErrorCoreExceptionRaised,
                                     error.c_str());
         }
