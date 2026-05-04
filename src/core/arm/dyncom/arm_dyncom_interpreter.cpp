@@ -23,7 +23,9 @@
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
@@ -922,9 +924,11 @@ MICROPROFILE_DEFINE(DynCom_Execute, "DynCom", "Execute", MP_RGB(255, 0, 0));
 unsigned InterpreterMainLoop(ARMul_State* cpu) {
     MICROPROFILE_SCOPE(DynCom_Execute);
 
+#ifdef ENABLE_GDBSTUB
     /// Nearest upcoming GDB code execution breakpoint, relative to the last dispatch's address.
     GDBStub::BreakpointAddress breakpoint_data;
     breakpoint_data.type = GDBStub::BreakpointType::None;
+#endif
 
 #undef RM
 #undef RS
@@ -952,7 +956,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 #define INC_PC(l) ptr += sizeof(arm_inst) + l
 #define INC_PC_STUB ptr += sizeof(arm_inst)
 
-#ifdef ANDROID
+#ifndef ENABLE_GDBSTUB
 #define GDB_BP_CHECK
 #else
 #define GDB_BP_CHECK                                                                               \
@@ -1653,7 +1657,7 @@ DISPATCH: {
             goto END;
     }
 
-#ifndef ANDROID
+#ifdef ENABLE_GDBSTUB
     // Find breakpoint if one exists within the block
     if (GDBStub::IsConnected()) {
         breakpoint_data =

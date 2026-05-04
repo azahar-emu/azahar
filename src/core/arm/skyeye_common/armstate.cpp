@@ -9,6 +9,9 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/memory.h"
 
 #ifndef SIGTRAP
@@ -580,6 +583,7 @@ void ARMul_State::WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u
 }
 
 void ARMul_State::ServeBreak() {
+#ifdef ENABLE_GDBSTUB
     if (!GDBStub::IsServerEnabled()) {
         return;
     }
@@ -592,4 +596,5 @@ void ARMul_State::ServeBreak() {
         last_bkpt_hit = false;
         GDBStub::Break(SIGTRAP);
     }
+#endif
 }

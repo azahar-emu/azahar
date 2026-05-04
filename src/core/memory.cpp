@@ -17,7 +17,9 @@
 #include "common/swap.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/global.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/plgldr/plgldr.h"
@@ -569,9 +571,12 @@ T MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
     const std::string value_str = read ? std::string("") : fmt::format(" 0x{:08X}", value);
     const std::string message = fmt::format("unmapped {}{}{} @ 0x{:08X} at PC 0x{:08X}", mode,
                                             sizeof(T) * 8, value_str, vaddr, impl->GetPC());
+#ifdef ENABLE_GDBSTUB
     if (GDBStub::IsConnected()) {
         GDBStub::Break(SIGSEGV);
-    } else if (Settings::values.break_on_unmapped_memory_access) {
+    } else
+#endif
+        if (Settings::values.break_on_unmapped_memory_access) {
         impl->system.SetStatus(Core::System::ResultStatus::ErrorMemoryExceptionRaised,
                                message.c_str());
     }
@@ -621,9 +626,11 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         T value;
         std::memcpy(&value, it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), sizeof(T));
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         return value;
     }
@@ -640,9 +647,11 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         T value;
         std::memcpy(&value, GetPointerForRasterizerCache(vaddr), sizeof(T));
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Read)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         return value;
     }
@@ -695,9 +704,11 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
 
         std::memcpy(it->second.memory.GetPtr() + (vaddr & CITRA_PAGE_MASK), &data, sizeof(T));
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         break;
     }
@@ -710,9 +721,11 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
         std::memcpy(GetPointerForRasterizerCache(vaddr), &data, sizeof(T));
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         break;
     }
@@ -749,9 +762,11 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
 
         bool ret = Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         return ret;
     }
@@ -766,9 +781,11 @@ bool MemorySystem::WriteExclusive(const VAddr vaddr, const T data, const T expec
         const auto volatile_pointer =
             reinterpret_cast<volatile T*>(GetPointerForRasterizerCache(vaddr).GetPtr());
 
+#ifdef ENABLE_GDBSTUB
         if (GDBStub::CheckBreakpoint(vaddr, sizeof(T), GDBStub::BreakpointType::Write)) {
             GDBStub::Break(SIGTRAP);
         }
+#endif
 
         return Common::AtomicCompareAndSwap(volatile_pointer, data, expected);
     }
