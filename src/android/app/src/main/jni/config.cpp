@@ -300,6 +300,10 @@ void Config::ReadValues() {
     ReadSetting("Miscellaneous", Settings::values.log_filter);
     ReadSetting("Miscellaneous", Settings::values.log_regex_filter);
 
+    // App settings / Theme Settings
+    ReadSetting("Theme", Settings::values.update_check_channel);
+    ReadSetting("Theme", Settings::values.check_for_update_on_start);
+
     // Apply the log_filter setting as the logger has already been initialized
     // and doesn't pick up the filter on its own.
     Common::Log::Filter filter;

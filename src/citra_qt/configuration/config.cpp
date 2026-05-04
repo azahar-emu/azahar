@@ -577,9 +577,9 @@ void QtConfig::ReadMiscellaneousValues() {
 #ifdef __unix__
     ReadBasicSetting(Settings::values.enable_gamemode);
 #endif
-#ifdef ENABLE_QT_UPDATE_CHECKER
-    ReadBasicSetting(UISettings::values.check_for_update_on_start);
-    ReadBasicSetting(UISettings::values.update_check_channel);
+#ifdef ENABLE_UPDATE_CHECKER
+    ReadBasicSetting(Settings::values.check_for_update_on_start);
+    ReadBasicSetting(Settings::values.update_check_channel);
 #endif
 
     qt_config->endGroup();
@@ -1160,9 +1160,9 @@ void QtConfig::SaveMiscellaneousValues() {
 #ifdef __unix__
     WriteBasicSetting(Settings::values.enable_gamemode);
 #endif
-#ifdef ENABLE_QT_UPDATE_CHECKER
-    WriteBasicSetting(UISettings::values.check_for_update_on_start);
-    WriteBasicSetting(UISettings::values.update_check_channel);
+#ifdef ENABLE_UPDATE_CHECKER
+    WriteBasicSetting(Settings::values.check_for_update_on_start);
+    WriteBasicSetting(Settings::values.update_check_channel);
 #endif
     qt_config->endGroup();
 }

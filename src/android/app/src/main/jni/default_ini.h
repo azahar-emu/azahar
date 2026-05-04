@@ -519,6 +519,14 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(android_hide_images) BOOST_HANA_STRING(R"(
 
+
+[Theme]
+# Update check channel for Android. 0: Stable (Default), 1: Pre-release
+)") DECLARE_KEY(update_check_channel) BOOST_HANA_STRING(R"(
+
+# Whether to check for updates on startup. 0: No, 1 (default): Yes
+)") DECLARE_KEY(check_for_update_on_start) BOOST_HANA_STRING(R"(
+
 [Debugging]
 # Record frame time data, can be found in the log directory. Boolean value
 )") DECLARE_KEY(record_frame_times) BOOST_HANA_STRING(R"(

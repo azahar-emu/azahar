@@ -34,7 +34,7 @@
     <string name="about_description">Build version, credits, and more</string>
     <string name="games_dir_selected">Application directory selected</string>
     <string name="select_citra_user_folder_home_description">Changes the files that Azahar uses to load applications</string>
-    <string name="theme_and_color_description">Modify the look of the app</string>
+    <string name="app_settings_description">Modify the look and behavior of the app</string>
     <string name="install_cia_title">Install CIA</string>
 
     <!-- GPU driver installation -->
@@ -431,6 +431,7 @@
     <string name="preferences_audio">Audio</string>
     <string name="preferences_debug">Debug</string>
     <string name="preferences_theme">Theme and Color</string>
+    <string name="preferences_app_settings">App Settings</string>
     <string name="preferences_layout">Layout</string>
 
     <!-- ROM loading errors -->
@@ -951,5 +952,14 @@
     <string name="decompress_not_compressed">File is not compressed.</string>
     <string name="decompress_failed">Decompression failed.</string>
     <string name="compress_decompress_installed_app">Already installed applications cannot be compressed or decompressed.</string>
+
+        <!-- Updater -->
+    <string name="app_settings">App Settings</string>
+    <string name="check_for_updates_on_start">Check For Updates</string>
+    <string name="check_for_updates_on_start_description">Checks for updates once on app start.</string>
+    <string name="update_check_channel">Update Channel</string>
+    <string name="update_available_description">A new version is available: %1$s\n\nWould you like to download it?</string>
+    <string name="update_available">Update found!</string>
+    <string name="dont_show_again">Don\'t Show Again</string>
 
 </resources>

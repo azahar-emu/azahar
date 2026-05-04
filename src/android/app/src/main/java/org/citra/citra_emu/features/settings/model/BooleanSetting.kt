@@ -56,7 +56,8 @@ enum class BooleanSetting(
     COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),
     ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_MISC, false),
     APPLY_REGION_FREE_PATCH(SettingKeys.apply_region_free_patch(), Settings.SECTION_SYSTEM, true),
-    USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false);
+    USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, true),
+    CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), Settings.SECTION_THEME, true);
 
     override var boolean: Boolean = defaultValue
 

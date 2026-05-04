@@ -177,3 +177,9 @@ if (SSE42_COMPILE_OPTION)
 endif()
 
 target_link_libraries(citra_common PUBLIC xxHash::xxhash)
+
+if (ENABLE_UPDATE_CHECKER)
+    target_link_libraries(citra_common PRIVATE httplib json-headers)
+    target_sources(citra_common PRIVATE update_checker.cpp)
+    target_compile_definitions(citra_common PUBLIC ENABLE_UPDATE_CHECKER)
+endif()
