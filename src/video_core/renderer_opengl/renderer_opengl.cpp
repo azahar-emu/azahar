@@ -673,9 +673,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     GLuint originalDrawFramebuffer = state.draw.draw_framebuffer;
     int originalViewport[4] = {state.viewport.x, state.viewport.y, state.viewport.width, state.viewport.height};
     OGLTexture antialiasFBOTexture;
-
     // -------------------------------------------------------------
-    if (antialiasingMode != 0){
         if (antialiasingMode == 1){
             //Pass 1
             OGLFramebuffer textureFBO;
@@ -858,6 +856,34 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             state.Apply();
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        } else {
+            OGLFramebuffer postFBO;
+            postFBO.Create();
+            state.draw.read_framebuffer = postFBO.handle;
+            state.draw.draw_framebuffer = postFBO.handle;
+            state.Apply();
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            antialiasFBOTexture.Create();
+            antialiasFBOTexture.Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, textureWidth,  textureHeight);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, antialiasFBOTexture.handle, 0);  
+            state.draw.shader_program = SimplePresent_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = screen_info.display_texture;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            if (scalingMode == 2){
+                glUniform1i(uniform_convert_colors, 1);
+            } else {
+                glUniform1i(uniform_convert_colors, 0);
+            }
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
         if (scalingMode == 2){
             if (isDownsampling){
@@ -905,27 +931,6 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             }
-        } else if (scalingMode == 1) {
-            //Output
-            state.draw.read_framebuffer = originalReadFramebuffer;
-            state.draw.draw_framebuffer = originalDrawFramebuffer;
-            state.Apply();
-            state.viewport.x = originalViewport[0];
-            state.viewport.y = originalViewport[1];
-            state.viewport.width = originalViewport[2];
-            state.viewport.height = originalViewport[3];
-            state.Apply();
-            state.draw.shader_program = Present_shader.handle;
-            state.Apply();
-            AttachUniforms();
-            state.texture_units[0].texture_2d = antialiasFBOTexture.handle;
-            state.texture_units[0].sampler = samplers[1].handle;
-            glUniform1i(uniform_color_texture, 0);
-            glUniform1i(uniform_convert_colors, 0);
-            glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
-            state.Apply();
-            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         } else {
             //Output
             state.draw.read_framebuffer = originalReadFramebuffer;
@@ -940,7 +945,11 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             state.Apply();
             AttachUniforms();
             state.texture_units[0].texture_2d = antialiasFBOTexture.handle;
+            if (scalingMode == 1){
+            state.texture_units[0].sampler = samplers[1].handle;
+            } else {
             state.texture_units[0].sampler = samplers[0].handle;
+            }
             glUniform1i(uniform_color_texture, 0);
             glUniform1i(uniform_convert_colors, 0);
             glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
@@ -948,55 +957,6 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
-    } else {
-        OGLFramebuffer postFBO;
-        postFBO.Create();
-        state.draw.read_framebuffer = postFBO.handle;
-        state.draw.draw_framebuffer = postFBO.handle;
-        state.Apply();
-        state.viewport.x = 0;
-        state.viewport.y = 0;
-        state.viewport.width = textureWidth;
-        state.viewport.height = textureHeight;
-        state.Apply();
-        OGLTexture postFBOTexture;
-        postFBOTexture.Create();
-        postFBOTexture.Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, textureWidth,  textureHeight);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postFBOTexture.handle, 0);  
-
-        // Use the simple present shader handle to draw to the texture
-        state.draw.shader_program = SimplePresent_shader.handle;
-        state.Apply();
-        AttachUniforms();
-        state.texture_units[0].texture_2d = screen_info.display_texture;
-        state.texture_units[0].sampler = samplers[1].handle;
-        glUniform1i(uniform_color_texture, 0);
-        glUniform1i(uniform_convert_colors, 1);
-        state.Apply();
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-        // Draw to screen
-        state.draw.read_framebuffer = originalReadFramebuffer;
-        state.draw.draw_framebuffer = originalDrawFramebuffer;
-        state.Apply();
-        state.viewport.x = originalViewport[0];
-        state.viewport.y = originalViewport[1];
-        state.viewport.width = originalViewport[2];
-        state.viewport.height = originalViewport[3];
-        state.Apply();
-        state.draw.shader_program = Present_shader.handle;
-        state.Apply();
-        AttachUniforms();
-        state.texture_units[0].texture_2d = postFBOTexture.handle;
-        state.texture_units[0].sampler = samplers[1].handle;
-        glUniform1i(uniform_color_texture, 0);
-        glUniform1i(uniform_convert_colors, 2);
-        glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
-        state.Apply();
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    }
 
 
  
