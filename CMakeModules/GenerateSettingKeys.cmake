@@ -40,6 +40,7 @@ foreach(KEY IN ITEMS
     "use_disk_shader_cache"
     "shaders_accurate_mul"
     "use_vsync"
+    "use_skip_duplicate_frames"
     "use_display_refresh_rate_detection"
     "use_shader_jit"
     "resolution_factor"
