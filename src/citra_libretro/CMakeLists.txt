@@ -96,6 +96,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR
     CMAKE_SYSTEM_NAME STREQUAL "iOS" OR
     CMAKE_SYSTEM_NAME STREQUAL "tvOS")
   target_link_libraries(azahar_libretro PRIVATE "-Wl,-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/libretro.osx.def")
-else()
+elseif (NOT WIN32)
+  # -Bsymbolic is an ELF-only flag controlling how a shared object resolves
+  # its own symbols. PE/COFF has no equivalent; GNU ld silently ignored it
+  # on Windows MinGW, but lld (clangarm64's default linker) rejects it.
   target_link_libraries(azahar_libretro PRIVATE "-Wl,-Bsymbolic")
 endif()
