@@ -973,6 +973,27 @@ void GMainWindow::InitializeHotkeys() {
     const auto fullscreen_hotkey = hotkey_registry.GetKeySequence(main_window, fullscreen);
     add_secondary_window_hotkey(action_secondary_fullscreen, fullscreen_hotkey,
                                 SLOT(ToggleSecondaryFullscreen()));
+
+    // add Toggle(Hold) to the event filter to be caught manually and processed in the two below
+    // methods
+    filter->sequences_to_catch.emplace(
+        hotkey_registry.GetKeySequence(main_window, QStringLiteral("Turbo Mode (Hold)")));
+}
+
+void GMainWindow::OnSequencePressed(QKeySequence seq) {
+    auto turbo_sequence = hotkey_registry.GetKeySequence(QStringLiteral("Main Window"),
+                                                         QStringLiteral("Turbo Mode (Hold)"));
+    if (seq == turbo_sequence) {
+        SetTurboEnabled(true);
+    }
+}
+
+void GMainWindow::OnSequenceReleased(QKeySequence seq) {
+    auto turbo_sequence = hotkey_registry.GetKeySequence(QStringLiteral("Main Window"),
+                                                         QStringLiteral("Turbo Mode (Hold)"));
+    if (seq == turbo_sequence) {
+        SetTurboEnabled(false);
+    }
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -1046,19 +1067,49 @@ void GMainWindow::OnAppFocusStateChanged(Qt::ApplicationState state) {
     }
 }
 
+// helper method to check if a keyevent matches a key sequence.
+bool matchesKeyEvent(const QKeyEvent* event, const QKeySequence& seq) {
+    if (seq.isEmpty())
+        return false;
+
+    int seqKey = seq[0];
+    int eventKey = (event->key() | event->modifiers());
+    return eventKey == seqKey;
+}
+
 bool GApplicationEventFilter::eventFilter(QObject* object, QEvent* event) {
     if (event->type() == QEvent::FileOpen) {
         emit FileOpen(static_cast<QFileOpenEvent*>(event));
         return true;
     }
+    if (event->type() == QEvent::ShortcutOverride || event->type() == QEvent::KeyPress) {
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        for (auto seq : sequences_to_catch) {
+            if (matchesKeyEvent(key, seq)) {
+                emit SequencePressCaught(seq);
+                return true;
+            }
+        }
+    } else if (event->type() == QEvent::KeyRelease) {
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        for (auto seq : sequences_to_catch) {
+            if (matchesKeyEvent(key, seq)) {
+                emit SequenceReleaseCaught(seq);
+                return true;
+            }
+        }
+    }
     return false;
 }
 
 void GMainWindow::ConnectAppEvents() {
-    const auto filter = new GApplicationEventFilter();
     QGuiApplication::instance()->installEventFilter(filter);
 
     connect(filter, &GApplicationEventFilter::FileOpen, this, &GMainWindow::OnFileOpen);
+    connect(filter, &GApplicationEventFilter::SequencePressCaught, this,
+            &GMainWindow::OnSequencePressed);
+    connect(filter, &GApplicationEventFilter::SequenceReleaseCaught, this,
+            &GMainWindow::OnSequenceReleased);
 }
 
 void GMainWindow::ConnectWidgetEvents() {
