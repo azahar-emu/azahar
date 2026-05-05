@@ -29,7 +29,7 @@ set(SHADER_FILES
     antialiasing/opengl_smaa_pass2_post.vert
     scaling/opengl_area_sampling.frag
     scaling/opengl_area_sampling.vert
-    antialiasing/SMAA.hlsl
+    antialiasing/smaa.hlsl
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert

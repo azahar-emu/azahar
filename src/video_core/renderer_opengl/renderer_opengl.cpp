@@ -723,8 +723,6 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         break;
     }
 
-    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
-
     GLuint originalReadFramebuffer = state.draw.read_framebuffer;
     GLuint originalDrawFramebuffer = state.draw.draw_framebuffer;
     if (antialiasingMode == 1){
