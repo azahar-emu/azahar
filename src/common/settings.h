@@ -112,6 +112,12 @@ enum class TextureFilter : u32 {
     MMPX = 5,
 };
 
+enum class AntiAliasingFilter : u32 {
+    None = 0,
+    FXAA = 1,
+    SMAA = 2,
+};
+
 enum class TextureSampling : u32 {
     GameControlled = 0,
     NearestNeighbor = 1,
@@ -538,6 +544,7 @@ struct Values {
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, Keys::texture_filter};
+    SwitchableSetting<AntiAliasingFilter> antialiasing_filter{AntiAliasingFilter::None, Keys::antialiasing_filter};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         Keys::texture_sampling};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,

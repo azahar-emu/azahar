@@ -112,11 +112,11 @@
       </item>
       <item>
        <widget class="QCheckBox" name="use_integer_scaling">
-        <property name="text">
-         <string>Use Integer Scaling</string>
-        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use Integer Scaling&lt;/p&gt;&lt;p&gt;Enforces that the larger screen in all layouts is an integer scale of the 240px height of the original 3DS screen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Use Integer Scaling</string>
         </property>
        </widget>
       </item>
@@ -125,6 +125,50 @@
         <property name="text">
          <string>Enable Linear Filtering</string>
         </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget_antialiasing_filter" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="antialiasing_filter_label">
+           <property name="text">
+            <string>Anti-Aliasing</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="antialiasing_filter_combobox">
+           <item>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>FXAA</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SMAA</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -329,11 +373,11 @@
       </item>
       <item>
        <widget class="QCheckBox" name="disable_right_eye_render">
-        <property name="text">
-         <string>Disable Right Eye Rendering</string>
-        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Disable Right Eye Rendering</string>
         </property>
        </widget>
       </item>
@@ -399,7 +443,7 @@
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -416,6 +460,7 @@
   <tabstop>toggle_linear_filter</tabstop>
   <tabstop>shader_combobox</tabstop>
   <tabstop>texture_filter_combobox</tabstop>
+  <tabstop>antialiasing_filter_combobox</tabstop>
   <tabstop>render_3d_combobox</tabstop>
   <tabstop>factor_3d</tabstop>
   <tabstop>mono_rendering_eye</tabstop>

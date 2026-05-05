@@ -444,7 +444,7 @@ void RendererOpenGL::InitOpenGLObjects() {
 
         screen_info.display_texture = screen_info.texture.resource.handle;
     }
-  
+    AllocatePPTextures();
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
@@ -653,7 +653,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     } else {
         scalingMode = 0;
     }
-    int antialiasingMode = 2; //0 is none, 1 is FXAA, 2 is SMAA
+    int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
             isDownsampling = true;
