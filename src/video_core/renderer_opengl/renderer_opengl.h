@@ -150,6 +150,7 @@ private:
     float currTopTextureHeight;
     float currBottomTextureWidth;
     float currBottomTextureHeight;
+    std::array<int, 4> originalViewport;
 };
 
 } // namespace OpenGL
