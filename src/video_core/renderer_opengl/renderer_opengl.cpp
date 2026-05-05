@@ -10,7 +10,6 @@
 #include "core/frontend/framebuffer_layout.h"
 #include "core/memory.h"
 #include "gl_state.h"
-#include "video_core/host_shaders/antialiasing/SMAA_hlsl.h"
 #include "video_core/pica/pica_core.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
