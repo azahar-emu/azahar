@@ -735,6 +735,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currIntermediateTexture)[0].handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SimplePresent_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -753,6 +754,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currAntialiasFBOTexture).handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = FXAA_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -776,6 +778,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currIntermediateTexture)[0].handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SimplePresent_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -794,6 +797,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currIntermediateTexture)[1].handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SMAA_PASS_0_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -812,6 +816,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currIntermediateTexture)[2].handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SMAA_PASS_1_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -838,6 +843,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currAntialiasFBOTexture).handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SMAA_PASS_2_shader.handle;
         state.Apply();
         AttachUniforms();
@@ -863,6 +869,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.viewport.height = textureHeight;
         state.Apply();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currAntialiasFBOTexture).handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
         state.draw.shader_program = SimplePresent_shader.handle;
         state.Apply();
         AttachUniforms();
