@@ -440,7 +440,23 @@
     <string name="loader_error_invalid_format">Invalid ROM format</string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
     <string name="no_game_present">No bootable game present!</string>
-    <string name="loader_error_generic">An error occurred while loading ROM: %d</string>
+    <string name="loader_error_generic">An error occurred while loading ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Success</string>
+    <string name="core_error_not_initialized">Not initialized</string>
+    <string name="core_error_get_loader">Loader for file not found, incompatible file type</string>
+    <string name="core_error_system_mode">Failed to parse file</string>
+    <string name="core_error_loader">Generic loader error</string>
+    <string name="core_error_loader_encrypted">Encrypted file</string>
+    <string name="core_error_loader_invalid_format">Corrupted file</string>
+    <string name="core_error_loader_gba_title">File is GBA title</string>
+    <string name="core_error_system_files">Missing system files</string>
+    <string name="core_error_savestate">Savestate failed</string>
+    <string name="core_error_artic_disconnected">Artic Base disconnected</string>
+    <string name="core_error_n3ds_application">File is New 3DS application</string>
+    <string name="core_error_core_exception_raised">Core exception raised</string>
+    <string name="core_error_memory_exception_raised">Memory exception raised</string>
+    <string name="core_error_shutdown_requested">Shutdown requested</string>
+    <string name="core_error_unknown">Unknown error</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>

@@ -19,6 +19,7 @@ import android.view.Surface
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.Keep
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
@@ -482,7 +483,8 @@ object NativeLibrary {
                         else if (result == CoreError.ErrorLoader_ErrorEncrypted.value)
                             getString(R.string.loader_error_encrypted_desc)
                         else
-                            getString(R.string.loader_error_generic, result),
+                            getString(R.string.loader_error_generic,
+                                getString(CoreError.fromInt(result).stringRes), result),
                     Html.FROM_HTML_MODE_LEGACY
                     )
                 )
@@ -850,23 +852,29 @@ object NativeLibrary {
             FileUtil.deleteDocument(path)
         }
 
-    enum class CoreError(val value: Int) {
-        Success(0),
-        ErrorNotInitialized(1),
-        ErrorGetLoader(2),
-        ErrorSystemMode(3),
-        ErrorLoader(4),
-        ErrorLoader_ErrorEncrypted(5),
-        ErrorLoader_ErrorInvalidFormat(6),
-        ErrorLoader_ErrorGBATitle(7),
-        ErrorSystemFiles(8),
-        ErrorSavestate(9),
-        ErrorArticDisconnected(10),
-        ErrorN3DSApplication(11),
-        ErrorCoreExceptionRaised(12),
-        ErrorMemoryExceptionRaised(13),
-        ShutdownRequested(14),
-        ErrorUnknown(15)
+    enum class CoreError(val value: Int, @StringRes val stringRes: Int) {
+        Success(0, R.string.core_error_success),
+        ErrorNotInitialized(1, R.string.core_error_not_initialized),
+        ErrorGetLoader(2, R.string.core_error_get_loader),
+        ErrorSystemMode(3, R.string.core_error_system_mode),
+        ErrorLoader(4, R.string.core_error_loader),
+        ErrorLoader_ErrorEncrypted(5, R.string.core_error_loader_encrypted),
+        ErrorLoader_ErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
+        ErrorLoader_ErrorGBATitle(7, R.string.core_error_loader_gba_title),
+        ErrorSystemFiles(8, R.string.core_error_system_files),
+        ErrorSavestate(9, R.string.core_error_savestate),
+        ErrorArticDisconnected(10, R.string.core_error_artic_disconnected),
+        ErrorN3DSApplication(11, R.string.core_error_n3ds_application),
+        ErrorCoreExceptionRaised(12, R.string.core_error_core_exception_raised),
+        ErrorMemoryExceptionRaised(13, R.string.core_error_memory_exception_raised),
+        ShutdownRequested(14, R.string.core_error_shutdown_requested),
+        ErrorUnknown(15, R.string.core_error_unknown);
+
+        companion object {
+            fun fromInt(value: Int): CoreError {
+                return entries.find { it.value == value } ?: ErrorUnknown
+            }
+        }
     }
 
     enum class InstallStatus {
