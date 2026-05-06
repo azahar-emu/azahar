@@ -28,6 +28,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
 endif()
 
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
+    string(TOLOWER ${LIBTYPE} LIBTYPE_LOWER)
+    set(CMAKE_AR x86_64-w64-mingw32.${LIBTYPE_LOWER}-gcc-ar)
+endif()
+
 if (BSD STREQUAL "OpenBSD")
     add_link_options(-z wxneeded)
 endif()

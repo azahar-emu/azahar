@@ -48,7 +48,7 @@ if (APPLE)
     endif()
 endif()
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND WIN32 AND MINGW)
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
     # TODO: Do this for all executables, not just citra_meta
     # TODO: Don't hardcode MXE directory to root?
     set(dllwalker_command "${CMAKE_SOURCE_DIR}/externals/dllwalker/dllwalker.rb"
