@@ -13,23 +13,23 @@ set(SHADER_FILES
     texture_filtering/mmpx.frag
     texture_filtering/x_gradient.frag
     texture_filtering/y_gradient.frag
-    antialiasing/opengl_fxaa.frag
-    antialiasing/opengl_fxaa.vert
-    antialiasing/opengl_smaa_pass0_pre.frag
-    antialiasing/opengl_smaa_pass0_pre.vert
-    antialiasing/opengl_smaa_pass0_post.frag
-    antialiasing/opengl_smaa_pass0_post.vert
-    antialiasing/opengl_smaa_pass1_pre.frag
-    antialiasing/opengl_smaa_pass1_pre.vert
-    antialiasing/opengl_smaa_pass1_post.frag
-    antialiasing/opengl_smaa_pass1_post.vert
-    antialiasing/opengl_smaa_pass2_pre.frag
-    antialiasing/opengl_smaa_pass2_pre.vert
-    antialiasing/opengl_smaa_pass2_post.frag
-    antialiasing/opengl_smaa_pass2_post.vert
+    antialiasing/OpenGL/opengl_fxaa.frag
+    antialiasing/OpenGL/opengl_fxaa.vert
+    antialiasing/OpenGL/opengl_smaa_pass0_pre.frag
+    antialiasing/OpenGL/opengl_smaa_pass0_pre.vert
+    antialiasing/OpenGL/opengl_smaa_pass0_post.frag
+    antialiasing/OpenGL/opengl_smaa_pass0_post.vert
+    antialiasing/OpenGL/opengl_smaa_pass1_pre.frag
+    antialiasing/OpenGL/opengl_smaa_pass1_pre.vert
+    antialiasing/OpenGL/opengl_smaa_pass1_post.frag
+    antialiasing/OpenGL/opengl_smaa_pass1_post.vert
+    antialiasing/OpenGL/opengl_smaa_pass2_pre.frag
+    antialiasing/OpenGL/opengl_smaa_pass2_pre.vert
+    antialiasing/OpenGL/opengl_smaa_pass2_post.frag
+    antialiasing/OpenGL/opengl_smaa_pass2_post.vert
+    antialiasing/OpenGL/opengl_smaa.hlsl
     scaling/opengl_area_sampling.frag
     scaling/opengl_area_sampling.vert
-    antialiasing/smaa.hlsl
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert

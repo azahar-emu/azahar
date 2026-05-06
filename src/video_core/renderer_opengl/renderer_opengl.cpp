@@ -25,21 +25,21 @@
 #include "video_core/host_shaders/opengl_simple_present_frag.h"
 #include "video_core/host_shaders/opengl_simple_present_vert.h"
 
-#include "video_core/host_shaders/antialiasing/opengl_fxaa_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_fxaa_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass0_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass0_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass0_post_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass0_post_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass1_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass1_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass1_post_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass1_post_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_post_frag.h"
-#include "video_core/host_shaders/antialiasing/opengl_smaa_pass2_post_vert.h"
-#include "video_core/host_shaders/antialiasing/smaa_hlsl.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_fxaa_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_fxaa_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_pre_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_pre_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_post_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_post_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_pre_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_pre_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_post_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_post_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_pre_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_pre_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_post_frag.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_post_vert.h"
+#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_hlsl.h"
 #include "video_core/host_shaders/antialiasing/AreaTex.h"
 #include "video_core/host_shaders/antialiasing/SearchTex.h"
 #include "video_core/host_shaders/scaling/opengl_area_sampling_frag.h"
@@ -501,31 +501,31 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
 
     std::string SMAA_PASS_0_shader_frag_data = fragment_shader_precision_OES;
     SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_PRE_FRAG;
-    SMAA_PASS_0_shader_frag_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_POST_FRAG;
     std::string SMAA_PASS_0_shader_vert_data;
     SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_PRE_VERT;
-    SMAA_PASS_0_shader_vert_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_POST_VERT;
     SMAA_PASS_0_shader.Create(SMAA_PASS_0_shader_vert_data, SMAA_PASS_0_shader_frag_data);
 
     std::string SMAA_PASS_1_shader_frag_data = fragment_shader_precision_OES;
     SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_PRE_FRAG;
-    SMAA_PASS_1_shader_frag_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_POST_FRAG;
     std::string SMAA_PASS_1_shader_vert_data;
     SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_PRE_VERT;
-    SMAA_PASS_1_shader_vert_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_POST_VERT;
     SMAA_PASS_1_shader.Create(SMAA_PASS_1_shader_vert_data, SMAA_PASS_1_shader_frag_data);
 
     std::string SMAA_PASS_2_shader_frag_data = fragment_shader_precision_OES;
     SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_PRE_FRAG;
-    SMAA_PASS_2_shader_frag_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_POST_FRAG;
     std::string SMAA_PASS_2_shader_vert_data;
     SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_PRE_VERT;
-    SMAA_PASS_2_shader_vert_data += HostShaders::SMAA_HLSL;
+    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
     SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_POST_VERT;
     SMAA_PASS_2_shader.Create(SMAA_PASS_2_shader_vert_data, SMAA_PASS_2_shader_frag_data);
     
