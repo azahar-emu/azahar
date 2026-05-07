@@ -145,6 +145,20 @@ private:
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
     std::array<vk::Sampler, 2> present_samplers;
     vk::ShaderModule present_vertex_shader;
+    vk::ShaderModule simplepresent_vertex_shader;
+    vk::ShaderModule simplepresent_frag_shader;
+    vk::ShaderModule area_sampling_vertex_shader;
+    vk::ShaderModule area_sampling_frag_shader;
+    vk::ShaderModule fxaa_vertex_shader;
+    vk::ShaderModule fxaa_frag_shader;
+    vk::ShaderModule smaa_pass_0_vertex_shader;
+    vk::ShaderModule smaa_pass_0_frag_shader;
+    vk::ShaderModule smaa_pass_1_vertex_shader;
+    vk::ShaderModule smaa_pass_1_frag_shader;
+    vk::ShaderModule smaa_pass_2_vertex_shader;
+    vk::ShaderModule smaa_pass_2_frag_shader;
+
+
     u32 current_pipeline = 0;
 
     std::array<ScreenInfo, 3> screen_infos{};
