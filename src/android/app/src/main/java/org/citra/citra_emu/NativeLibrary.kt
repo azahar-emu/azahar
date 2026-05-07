@@ -465,26 +465,51 @@ object NativeLibrary {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             emulationActivity = requireActivity() as EmulationActivity
 
-            val result = requireArguments().getInt(RESULT_CODE)
-            var captionString = getString(R.string.loader_error_invalid_format)
-            if (result == CoreError.ErrorLoader_ErrorEncrypted.value) {
-                captionString = getString(R.string.loader_error_encrypted)
-            }
-            if (result == CoreError.ErrorArticDisconnected.value) {
-                captionString = getString(R.string.artic_base)
+            var coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
+            val title: String
+            val message: String
+            when (coreError) {
+                CoreError.ErrorGetLoader, CoreError.ErrorLoader_ErrorInvalidFormat, CoreError.ErrorSystemMode -> {
+                    title = getString(R.string.loader_error_invalid_format)
+                    message = getString(R.string.loader_error_invalid_format_description)
+                }
+
+                CoreError.ErrorLoader_ErrorEncrypted -> {
+                    title = getString(R.string.loader_error_encrypted)
+                    message = getString(R.string.loader_error_encrypted_description)
+                }
+
+                CoreError.ErrorArticDisconnected -> {
+                    title = getString(R.string.artic_base)
+                    message = getString(R.string.artic_server_comm_error)
+                }
+
+                CoreError.ErrorN3DSApplication -> {
+                    title = getString(R.string.loader_error_invalid_system_mode)
+                    message = getString(R.string.loader_error_invalid_system_mode_description)
+                }
+
+                CoreError.ErrorLoader_ErrorPatches -> {
+                    title = getString(R.string.loader_error_applying_patches)
+                    message = getString(R.string.loader_error_applying_patches_description)
+                }
+
+                CoreError.ErrorLoader_ErrorPatchesInvalidTitle -> {
+                    title = getString(R.string.loader_error_applying_patches)
+                    message = getString(R.string.loader_error_patch_wrong_application)
+                }
+
+                else -> {
+                    title = getString(R.string.loader_error_generic_title)
+                    message = getString(R.string.loader_error_generic,
+                        getString(coreError.stringRes), coreError.value)
+                }
             }
 
             val alert = MaterialAlertDialogBuilder(requireContext())
-                .setTitle(captionString)
+                .setTitle(title)
                 .setMessage(
-                    Html.fromHtml(
-                        if (result == CoreError.ErrorArticDisconnected.value)
-                            getString(R.string.artic_server_comm_error)
-                        else if (result == CoreError.ErrorLoader_ErrorEncrypted.value)
-                            getString(R.string.loader_error_encrypted_desc)
-                        else
-                            getString(R.string.loader_error_generic,
-                                getString(CoreError.fromInt(result).stringRes), result),
+                    Html.fromHtml(message,
                     Html.FROM_HTML_MODE_LEGACY
                     )
                 )
@@ -861,14 +886,16 @@ object NativeLibrary {
         ErrorLoader_ErrorEncrypted(5, R.string.core_error_loader_encrypted),
         ErrorLoader_ErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
         ErrorLoader_ErrorGBATitle(7, R.string.core_error_loader_gba_title),
-        ErrorSystemFiles(8, R.string.core_error_system_files),
-        ErrorSavestate(9, R.string.core_error_savestate),
-        ErrorArticDisconnected(10, R.string.core_error_artic_disconnected),
-        ErrorN3DSApplication(11, R.string.core_error_n3ds_application),
-        ErrorCoreExceptionRaised(12, R.string.core_error_core_exception_raised),
-        ErrorMemoryExceptionRaised(13, R.string.core_error_memory_exception_raised),
-        ShutdownRequested(14, R.string.core_error_shutdown_requested),
-        ErrorUnknown(15, R.string.core_error_unknown);
+        ErrorLoader_ErrorPatches(8, R.string.core_error_loader_error_patches),
+        ErrorLoader_ErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
+        ErrorSystemFiles(10, R.string.core_error_system_files),
+        ErrorSavestate(11, R.string.core_error_savestate),
+        ErrorArticDisconnected(12, R.string.core_error_artic_disconnected),
+        ErrorN3DSApplication(13, R.string.core_error_n3ds_application),
+        ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
+        ErrorMemoryExceptionRaised(15, R.string.core_error_memory_exception_raised),
+        ShutdownRequested(16, R.string.core_error_shutdown_requested),
+        ErrorUnknown(17, R.string.core_error_unknown);
 
         companion object {
             fun fromInt(value: Int): CoreError {

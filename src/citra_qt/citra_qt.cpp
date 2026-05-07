@@ -1366,61 +1366,39 @@ bool GMainWindow::LoadROM(const QString& filename) {
         system.Load(*render_window, filename.toStdString(), secondary_window)};
 
     if (result != Core::System::ResultStatus::Success) {
+        QString invalid_format = tr("Invalid application format");
+        QString invalid_format_description =
+            tr("The application file format not supported.<br>Please make sure you are using one "
+               "of the compatible file formats:<ul><li>Cartridge images: "
+               "<b>.cci/.zcci/.3ds</b></li><li>Installable archives: "
+               "<b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
+               "containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>");
+
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
             LOG_CRITICAL(Frontend, "Failed to obtain loader for {}", filename.toStdString());
-            QMessageBox::critical(
-                this, tr("Invalid App Format"),
-                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorSystemMode:
-            LOG_CRITICAL(Frontend, "Failed to load App!");
-            QMessageBox::critical(
-                this, tr("App Corrupted"),
-                tr("Your app is corrupted. <br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            LOG_CRITICAL(Frontend, "Failed to load application!");
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
-            QMessageBox::critical(this, tr("App Encrypted"),
-                                  tr("Your app is encrypted. <br/>"
+            QMessageBox::critical(this, tr("Encrypted application"),
+                                  tr("Encrypted applications are not supported.<br/>"
                                      "<a "
                                      "href='https://azahar-emu.org/blog/game-loading-changes/'>"
                                      "Please check our blog for more info.</a>"));
             break;
         }
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
-            QMessageBox::critical(
-                this, tr("Invalid App Format"),
-                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
-            QMessageBox::critical(this, tr("Unsupported App"),
+            QMessageBox::critical(this, tr("Unsupported application"),
                                   tr("GBA Virtual Console is not supported by Azahar."));
             break;
 
@@ -1437,10 +1415,27 @@ bool GMainWindow::LoadROM(const QString& filename) {
                                   tr("New 3DS exclusive applications cannot be loaded without "
                                      "enabling the New 3DS mode."));
             break;
+        case Core::System::ResultStatus::ErrorLoader:
+            QMessageBox::critical(this, tr("Generic load error"),
+                                  tr("An generic load error occurred while loading the "
+                                     "application.<br/>Please check the log for more details."));
+            break;
+        case Core::System::ResultStatus::ErrorLoader_ErrorPatches:
+            QMessageBox::critical(this, tr("Error applying patches"),
+                                  tr("A generic error occurred while applying a patch to the "
+                                     "application.<br/>Please check the log for more details."));
+            break;
+        case Core::System::ResultStatus::ErrorLoader_ErrorPatchesInvalidTitle:
+            QMessageBox::critical(
+                this, tr("Error applying patches"),
+                tr("Failed to apply a patch because it is designed for a different "
+                   "application.<br/>Please make sure you are using the patches for "
+                   "the right application, region and version."));
+            break;
         default:
             QMessageBox::critical(
-                this, tr("Error while loading App!"),
-                tr("An unknown error occurred. Please see the log for more details."));
+                this, tr("Error while loading application"),
+                tr("An unknown error occurred.<br/>Please see the log for more details."));
             break;
         }
         return false;
@@ -1499,7 +1494,8 @@ void GMainWindow::BootGame(const QString& filename) {
     auto loader = Loader::GetLoader(path);
 
     u64 title_id{0};
-    Loader::ResultStatus res = loader->ReadProgramId(title_id);
+    Loader::ResultStatus res =
+        loader ? loader->ReadProgramId(title_id) : Loader::ResultStatus::Error;
 
     if (Loader::ResultStatus::Success == res) {
         // Load per game settings
@@ -1512,7 +1508,7 @@ void GMainWindow::BootGame(const QString& filename) {
 
     // Artic Server cannot accept a client multiple times, so multiple loaders are not
     // possible. Instead register the app loader early and do not create it again on system load.
-    if (!loader->SupportsMultipleInstancesForSameFile()) {
+    if (loader && !loader->SupportsMultipleInstancesForSameFile()) {
         system.RegisterAppLoaderEarly(loader);
     }
 

@@ -518,7 +518,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const {
     struct PatchLocation {
         std::string path;
-        bool (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
+        Loader::ResultStatus (*patch_fn)(const std::vector<u8>& patch, std::vector<u8>& code);
     };
 
     const auto mods_path =
@@ -555,11 +555,12 @@ Loader::ResultStatus NCCHContainer::ApplyCodePatch(std::vector<u8>& code) const 
 
         std::vector<u8> patch(patch_file.GetSize());
         if (patch_file.ReadBytes(patch.data(), patch.size()) != patch.size())
-            return Loader::ResultStatus::Error;
+            return Loader::ResultStatus::ErrorPatches;
 
         LOG_INFO(Service_FS, "File {} patching code.bin", info.path);
-        if (!info.patch_fn(patch, code))
-            return Loader::ResultStatus::Error;
+        auto patch_result = info.patch_fn(patch, code);
+        if (patch_result != Loader::ResultStatus::Success)
+            return patch_result;
 
         return Loader::ResultStatus::Success;
     }

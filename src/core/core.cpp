@@ -434,6 +434,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader_ErrorInvalidFormat;
         case Loader::ResultStatus::ErrorGbaTitle:
             return ResultStatus::ErrorLoader_ErrorGbaTitle;
+        case Loader::ResultStatus::ErrorPatches:
+            return ResultStatus::ErrorLoader_ErrorPatches;
+        case Loader::ResultStatus::ErrorPatchesInvalidTitle:
+            return ResultStatus::ErrorLoader_ErrorPatchesInvalidTitle;
         case Loader::ResultStatus::ErrorArtic:
             return ResultStatus::ErrorArticDisconnected;
         default:

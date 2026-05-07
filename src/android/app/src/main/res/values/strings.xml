@@ -435,11 +435,19 @@
     <string name="preferences_layout">Layout</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Error loading application</string>
+    <string name="loader_error_invalid_format">Invalid application format</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[The application file format not supported.<br>Please make sure you are using one of the compatible file formats:<ul><li>Cartridge images: <b>.cci/.zcci/.3ds</b></li><li>Installable archives: <b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Invalid system mode</string>
+    <string name="loader_error_invalid_system_mode_description">New 3DS exclusive applications cannot be loaded without enabling the New 3DS mode.</string>
+    <string name="loader_error_applying_patches">Error applying patches</string>
+    <string name="loader_error_applying_patches_description">A generic error occurred while applying a patch to the application. Please check the log for more details.</string>
+    <string name="loader_error_patch_wrong_application">Failed to apply a patch because it is designed for a different application. Please make sure you are using the patches for the right application, region and version.</string>
     <string name="loader_error_encrypted">Your ROM is Encrypted</string>
-    <string name="loader_error_encrypted_desc"><![CDATA[Azahar does not support encrypted ROMS. Read our <a href="https://azahar-emu.org/blog/game-loading-changes/">blog post</a> for more information.]]></string>
-    <string name="loader_error_invalid_format">Invalid ROM format</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar does not support encrypted applications. Read our <a href="https://azahar-emu.org/blog/game-loading-changes/">blog post</a> for more information.]]></string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
     <string name="no_game_present">No bootable game present!</string>
+
     <string name="loader_error_generic">An error occurred while loading ROM: \"%s (%d)\"</string>
     <string name="core_error_success">Success</string>
     <string name="core_error_not_initialized">Not initialized</string>
@@ -449,6 +457,8 @@
     <string name="core_error_loader_encrypted">Encrypted file</string>
     <string name="core_error_loader_invalid_format">Corrupted file</string>
     <string name="core_error_loader_gba_title">File is GBA title</string>
+    <string name="core_error_loader_error_patches">Error applying patches</string>
+    <string name="core_error_loader_patches_invalid_title">Patches are for a different application</string>
     <string name="core_error_system_files">Missing system files</string>
     <string name="core_error_savestate">Savestate failed</string>
     <string name="core_error_artic_disconnected">Artic Base disconnected</string>
