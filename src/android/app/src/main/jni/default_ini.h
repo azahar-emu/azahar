@@ -278,6 +278,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Do not compress, 1: Compress
 )") DECLARE_KEY(compress_cia_installs) BOOST_HANA_STRING(R"(
 
+# Whether to enable async filesystem operations
+# 0: Disabled, 1 (default): Enabled
+)") DECLARE_KEY(async_fs_operations) BOOST_HANA_STRING(R"(
+
 # Position of the performance overlay
 # 0: Top Left
 # 1: Center Top

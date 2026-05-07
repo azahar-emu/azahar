@@ -232,6 +232,7 @@ void Config::ReadValues() {
 
     // Storage
     ReadSetting("Storage", Settings::values.compress_cia_installs);
+    ReadSetting("Storage", Settings::values.async_fs_operations);
 
     // Utility
     ReadSetting("Utility", Settings::values.dump_textures);

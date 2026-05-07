@@ -233,6 +233,8 @@
     <string name="storage">Storage</string>
     <string name="compress_cia_installs">Compress installed CIA content</string>
     <string name="compress_cia_installs_description">Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</string>
+    <string name="async_fs_operations">Asynchronous filesystem operations</string>
+    <string name="async_fs_operations_description">Makes emulated filesystem accesses asynchronous. Greatly reduces filesystem related stutter, but may slightly increase load times.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>

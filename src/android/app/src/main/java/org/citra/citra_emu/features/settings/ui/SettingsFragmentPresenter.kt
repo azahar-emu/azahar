@@ -599,6 +599,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.COMPRESS_INSTALLED_CIA_CONTENT.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.ASYNC_FS_OPERATIONS,
+                    R.string.async_fs_operations,
+                    R.string.async_fs_operations_description,
+                    BooleanSetting.ASYNC_FS_OPERATIONS.key,
+                    BooleanSetting.ASYNC_FS_OPERATIONS.defaultValue
+                )
+            )
         }
     }
 

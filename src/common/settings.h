@@ -484,6 +484,7 @@ struct Values {
     Setting<bool> use_virtual_sd{true, Keys::use_virtual_sd};
     Setting<bool> use_custom_storage{false, Keys::use_custom_storage};
     Setting<bool> compress_cia_installs{false, Keys::compress_cia_installs};
+    Setting<bool> async_fs_operations{true, Keys::async_fs_operations};
 
     // System
     SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, Keys::region_value};

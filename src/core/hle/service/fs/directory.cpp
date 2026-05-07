@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -42,27 +42,54 @@ Directory::~Directory() {}
 
 void Directory::Read(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
-    u32 count = rp.Pop<u32>();
-    auto& buffer = rp.PopMappedBuffer();
-    std::vector<FileSys::Entry> entries(count);
-    LOG_TRACE(Service_FS, "Read {}: count={}", GetName(), count);
-    // Number of entries actually read
-    u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
-    buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
-    rb.Push(ResultSuccess);
-    rb.Push(read);
-    rb.PushMappedBuffer(buffer);
+    struct AsyncData {
+        // Input
+        u32 count;
+
+        // Output
+        Result ret{0};
+        u32 read;
+        Kernel::MappedBuffer* buffer;
+    };
+
+    auto async_data = std::make_shared<AsyncData>();
+    async_data->count = rp.Pop<u32>();
+    async_data->buffer = &rp.PopMappedBuffer();
+
+    ctx.RunAsync(
+        [this, async_data](Kernel::HLERequestContext& ctx) {
+            std::vector<FileSys::Entry> entries(async_data->count);
+            LOG_TRACE(Service_FS, "Read {}: count={}", GetName(), count);
+            // Number of entries actually read
+            async_data->read = backend->Read(static_cast<u32>(entries.size()), entries.data());
+            async_data->buffer->Write(entries.data(), 0, async_data->read * sizeof(FileSys::Entry));
+            return 0;
+        },
+        [async_data](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 2, 2);
+
+            rb.Push(ResultSuccess);
+            rb.Push(async_data->read);
+            rb.PushMappedBuffer(*async_data->buffer);
+        },
+        Settings::values.async_fs_operations.GetValue());
 }
 
 void Directory::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     LOG_TRACE(Service_FS, "Close {}", GetName());
-    backend->Close();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess);
+    ctx.RunAsync(
+        [this](Kernel::HLERequestContext& ctx) {
+            backend->Close();
+            return 0;
+        },
+        [](Kernel::HLERequestContext& ctx) {
+            IPC::RequestBuilder rb(ctx, 1, 0);
+            rb.Push(ResultSuccess);
+        },
+        Settings::values.async_fs_operations.GetValue());
 }
 
 } // namespace Service::FS

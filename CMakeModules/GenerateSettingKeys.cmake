@@ -17,6 +17,7 @@ foreach(KEY IN ITEMS
     "use_virtual_sd"
     "use_custom_storage"
     "compress_cia_installs"
+    "async_fs_operations"
     "region_value"
     "init_clock"
     "init_time"
