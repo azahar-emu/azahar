@@ -299,6 +299,16 @@
           </property>
         </widget>
       </item>
+      <item row="5" column="0">
+        <widget class="QCheckBox" name="enable_dev_ipc_server">
+          <property name="text">
+            <string>Enable developer IPC server</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables a local IPC server for hot-reload and remote control via azahar-ctl. Takes effect immediately.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
+      </item>
      </layout>
     </widget>
    </item>

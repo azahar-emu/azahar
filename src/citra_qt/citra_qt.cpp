@@ -48,6 +48,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/configuration/configure_per_game.h"
+#include "citra_qt/dev_ipc_server.h"
 #include "citra_qt/debugger/console.h"
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
@@ -450,6 +451,14 @@ GMainWindow::GMainWindow(Core::System& system_)
     ConnectAppEvents();
     ConnectMenuEvents();
     ConnectWidgetEvents();
+
+    dev_ipc_server_ = new DevIpcServer(this, this);
+    connect(dev_ipc_server_, &DevIpcServer::HotReloadRequested, this,
+            &GMainWindow::OnHotReloadRequested);
+    connect(dev_ipc_server_, &DevIpcServer::ShutdownRequested, this, &GMainWindow::ShutdownGame);
+    if (UISettings::values.enable_dev_ipc_server.GetValue()) {
+        dev_ipc_server_->Start();
+    }
 
     LOG_INFO(Frontend, "Azahar Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
@@ -2375,6 +2384,12 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 }
 
 void GMainWindow::OnMenuInstallCIA() {
+    if (hot_reload_pending_) {
+        QMessageBox::warning(this, tr("Install CIA"),
+                             tr("Cannot install CIA while a hot-reload is in progress."));
+        return;
+    }
+
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
         tr("3DS Installation File (*.cia *.zcia)") + QStringLiteral(";;") + tr("All Files (*.*)"));
@@ -2432,6 +2447,13 @@ void GMainWindow::OnUpdateProgress(std::size_t written, std::size_t total) {
 }
 
 void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath) {
+    if (hot_reload_pending_) {
+        if (status != Service::AM::InstallStatus::Success) {
+            hot_reload_install_status_ = status;
+        }
+        return;
+    }
+
     QString filename = QFileInfo(filepath).fileName();
     switch (status) {
     case Service::AM::InstallStatus::Success:
@@ -2492,7 +2514,157 @@ void GMainWindow::OnCIAInstallFinished() {
     progress_bar->setValue(0);
     game_list->SetDirectoryWatcherEnabled(true);
     ui->action_Install_CIA->setEnabled(true);
+
+    if (hot_reload_pending_) {
+        hot_reload_pending_ = false;
+
+        if (hot_reload_install_status_ != Service::AM::InstallStatus::Success) {
+            const QString err = QStringLiteral("CIA install failed (status=%1)")
+                                    .arg(static_cast<u32>(hot_reload_install_status_));
+            LOG_ERROR(Frontend, "Hot-reload: {}", err.toStdString());
+            dev_ipc_server_->OnHotReloadComplete(false, err);
+            hot_reload_cia_path_.clear();
+            hot_reload_install_status_ = Service::AM::InstallStatus::Success;
+            game_list->PopulateAsync(UISettings::values.game_dirs);
+            return;
+        }
+
+        auto result = Service::AM::GetCIAInfos(hot_reload_cia_path_.toStdString());
+        if (result.Succeeded()) {
+            const auto& info = result.Unwrap().first;
+            u64 title_id = info.tid;
+            auto media_type = Service::AM::GetTitleMediaType(title_id);
+            std::string app_path = Service::AM::GetTitleContentPath(media_type, title_id);
+
+            if (FileUtil::Exists(app_path)) {
+                LOG_INFO(Frontend, "Hot-reload: Booting {}", app_path);
+                BootGame(QString::fromStdString(app_path));
+                dev_ipc_server_->OnHotReloadComplete(true, QString{});
+            } else {
+                const QString err =
+                    QStringLiteral("Installed .app not found at: ") +
+                    QString::fromStdString(app_path);
+                LOG_ERROR(Frontend, "Hot-reload: {}", err.toStdString());
+                dev_ipc_server_->OnHotReloadComplete(false, err);
+            }
+        } else {
+            dev_ipc_server_->OnHotReloadComplete(false,
+                                                  QStringLiteral("Failed to read CIA title info"));
+        }
+
+        hot_reload_cia_path_.clear();
+        hot_reload_install_status_ = Service::AM::InstallStatus::Success;
+        game_list->PopulateAsync(UISettings::values.game_dirs);
+        return;
+    }
+
     game_list->PopulateAsync(UISettings::values.game_dirs);
+}
+
+void GMainWindow::OnHotReloadRequested(const QString& file_path, bool purge,
+                                        bool wipe_saves) {
+    LOG_INFO(Frontend, "Hot-reload requested: {} (purge={}, wipe={})", file_path.toStdString(),
+             purge, wipe_saves);
+
+    const QString ext = QFileInfo(file_path).suffix().toLower();
+    const bool is_cia = (ext == QStringLiteral("cia"));
+    const bool is_direct_boot = (ext == QStringLiteral("3dsx") || ext == QStringLiteral("elf") ||
+                                 ext == QStringLiteral("3ds") || ext == QStringLiteral("cxi") ||
+                                 ext == QStringLiteral("app"));
+
+    if (!is_cia && !is_direct_boot) {
+        LOG_ERROR(Frontend, "Hot-reload: unsupported file type: {}", ext.toStdString());
+        dev_ipc_server_->OnHotReloadComplete(
+            false, QStringLiteral("Unsupported file type: .") + ext);
+        return;
+    }
+
+    if (emulation_running) {
+        auto video_dumper = system.GetVideoDumper();
+        if (video_dumper && video_dumper->IsDumping()) {
+            OnStopVideoDumping();
+        }
+        ShutdownGame();
+    }
+
+    if (is_direct_boot) {
+        LOG_INFO(Frontend, "Hot-reload: Direct-booting {}", file_path.toStdString());
+        BootGame(file_path);
+        dev_ipc_server_->OnHotReloadComplete(true, QString{});
+        return;
+    }
+
+    if (purge) {
+        // Uninstall all SDMC game titles (00040000)
+        const std::string sdmc_games_path =
+            Service::AM::GetMediaTitlePath(Service::FS::MediaType::SDMC) + "00040000/";
+
+        if (FileUtil::Exists(sdmc_games_path)) {
+            FileUtil::FSTEntry parent;
+            FileUtil::ScanDirectoryTree(sdmc_games_path, parent, 0);
+
+            for (const auto& entry : parent.children) {
+                if (!entry.isDirectory) {
+                    continue;
+                }
+
+                u32 tid_low = std::strtoul(entry.virtualName.c_str(), nullptr, 16);
+                u64 title_id = (static_cast<u64>(0x00040000) << 32) | tid_low;
+
+                Service::AM::UninstallProgram(Service::FS::MediaType::SDMC, title_id);
+
+                if (wipe_saves) {
+                    std::string data_path =
+                        Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, title_id) +
+                        "data/";
+                    if (FileUtil::Exists(data_path)) {
+                        FileUtil::DeleteDirRecursively(data_path);
+                    }
+                }
+            }
+        }
+
+        // Uninstall update titles (0004000e)
+        const std::string sdmc_updates_path =
+            Service::AM::GetMediaTitlePath(Service::FS::MediaType::SDMC) + "0004000e/";
+
+        if (FileUtil::Exists(sdmc_updates_path)) {
+            FileUtil::FSTEntry parent;
+            FileUtil::ScanDirectoryTree(sdmc_updates_path, parent, 0);
+
+            for (const auto& entry : parent.children) {
+                if (!entry.isDirectory) {
+                    continue;
+                }
+
+                u32 tid_low = std::strtoul(entry.virtualName.c_str(), nullptr, 16);
+                u64 title_id = (static_cast<u64>(0x0004000e) << 32) | tid_low;
+
+                Service::AM::UninstallProgram(Service::FS::MediaType::SDMC, title_id);
+            }
+        }
+    } else {
+        auto cia_info = Service::AM::GetCIAInfos(file_path.toStdString());
+        if (cia_info.Succeeded()) {
+            u64 title_id = cia_info.Unwrap().first.tid;
+            auto media_type = Service::AM::GetTitleMediaType(title_id);
+            Service::AM::UninstallProgram(media_type, title_id);
+
+            if (wipe_saves) {
+                std::string data_path =
+                    Service::AM::GetTitlePath(media_type, title_id) + "data/";
+                if (FileUtil::Exists(data_path)) {
+                    FileUtil::DeleteDirRecursively(data_path);
+                }
+            }
+        }
+    }
+
+    hot_reload_pending_ = true;
+    hot_reload_cia_path_ = file_path;
+    hot_reload_install_status_ = Service::AM::InstallStatus::Success;
+
+    InstallCIA(QStringList{file_path});
 }
 
 void GMainWindow::UninstallTitles(
@@ -2930,6 +3102,7 @@ void GMainWindow::OnConfigure() {
 #ifdef __unix__
     const bool old_gamemode = Settings::values.enable_gamemode.GetValue();
 #endif
+    const bool old_ipc_server = UISettings::values.enable_dev_ipc_server.GetValue();
     auto result = configureDialog.exec();
     game_list->SetDirectoryWatcherEnabled(true);
     if (result == QDialog::Accepted) {
@@ -2949,6 +3122,13 @@ void GMainWindow::OnConfigure() {
             SetGamemodeEnabled(Settings::values.enable_gamemode.GetValue());
         }
 #endif
+        if (UISettings::values.enable_dev_ipc_server.GetValue() != old_ipc_server) {
+            if (UISettings::values.enable_dev_ipc_server.GetValue()) {
+                dev_ipc_server_->Start();
+            } else {
+                dev_ipc_server_->Stop();
+            }
+        }
         if (!multiplayer_state->IsHostingPublicRoom())
             multiplayer_state->UpdateCredentials();
         emit UpdateThemedIcons();

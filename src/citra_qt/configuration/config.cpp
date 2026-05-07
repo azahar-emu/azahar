@@ -830,6 +830,7 @@ void QtConfig::ReadUIValues() {
         ReadBasicSetting(UISettings::values.enable_discord_presence);
 #endif
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
+        ReadBasicSetting(UISettings::values.enable_dev_ipc_server);
 
         ReadUILayoutValues();
         ReadUIGameListValues();
@@ -1360,6 +1361,7 @@ void QtConfig::SaveUIValues() {
         WriteBasicSetting(UISettings::values.enable_discord_presence);
 #endif
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
+        WriteBasicSetting(UISettings::values.enable_dev_ipc_server);
 
         SaveUILayoutValues();
         SaveUIGameListValues();

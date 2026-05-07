@@ -102,6 +102,8 @@ struct Values {
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
 #endif
 
+    Settings::Setting<bool> enable_dev_ipc_server{false, "enable_dev_ipc_server"};
+
     // Game List
     Settings::Setting<GameListIconSize> game_list_icon_size{GameListIconSize::LargeIcon,
                                                             "iconSize"};
