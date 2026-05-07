@@ -1,9 +1,23 @@
-//? #version 450
+#version 450 core
+#extension GL_ARB_separate_shader_objects : enable
+
 // SPDX-License-Identifier: Unlicense
 //-----------------------------------------------------------------------------
 // Neighborhood Blending Shader (Third Pass)
+layout (push_constant, std140) uniform DrawInfo {
+    mat4 modelview_matrix;
+    vec4 i_resolution;
+    vec4 o_resolution;
+    int screen_id_l;
+    int screen_id_r;
+    int layer;
+    int reverse_interlaced;
+    int convert_colors;
+    int areatex;
+    int searchtex;
+    int smaa_input;
+};
 
-uniform vec4 i_resolution;
 #define SMAA_RT_METRICS vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y)
 #define SMAA_GLSL_4
 

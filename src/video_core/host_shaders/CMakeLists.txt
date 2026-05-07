@@ -28,8 +28,25 @@ set(SHADER_FILES
     antialiasing/OpenGL/opengl_smaa_pass2_post.frag
     antialiasing/OpenGL/opengl_smaa_pass2_post.vert
     antialiasing/OpenGL/opengl_smaa.hlsl
+    antialiasing/Vulkan/vulkan_fxaa.frag
+    antialiasing/Vulkan/vulkan_fxaa.vert
+    antialiasing/Vulkan/vulkan_smaa_pass0_pre.frag
+    antialiasing/Vulkan/vulkan_smaa_pass0_pre.vert
+    antialiasing/Vulkan/vulkan_smaa_pass0_post.frag
+    antialiasing/Vulkan/vulkan_smaa_pass0_post.vert
+    antialiasing/Vulkan/vulkan_smaa_pass1_pre.frag
+    antialiasing/Vulkan/vulkan_smaa_pass1_pre.vert
+    antialiasing/Vulkan/vulkan_smaa_pass1_post.frag
+    antialiasing/Vulkan/vulkan_smaa_pass1_post.vert
+    antialiasing/Vulkan/vulkan_smaa_pass2_pre.frag
+    antialiasing/Vulkan/vulkan_smaa_pass2_pre.vert
+    antialiasing/Vulkan/vulkan_smaa_pass2_post.frag
+    antialiasing/Vulkan/vulkan_smaa_pass2_post.vert
+    antialiasing/Vulkan/vulkan_smaa.hlsl
     scaling/opengl_area_sampling.frag
     scaling/opengl_area_sampling.vert
+    scaling/vulkan_area_sampling.frag
+    scaling/vulkan_area_sampling.vert
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert
@@ -43,6 +60,8 @@ set(SHADER_FILES
     vulkan_present_anaglyph.frag
     vulkan_present_interlaced.frag
     vulkan_blit_depth_stencil.frag
+    vulkan_simple_present.frag
+    vulkan_simple_present.vert
     vulkan_cursor.frag
     vulkan_cursor.vert
 )
