@@ -2,7 +2,7 @@
 set(CURRENT_MODULE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # Determines parameters based on the host and target for downloading the right Qt binaries.
-function(determine_qt_parameters target host_out type_out arch_out arch_path_out host_type_out host_arch_out host_arch_path_out)
+function(determine_qt_parameters target host_out type_out arch_out arch_path_out tools_host_out host_type_out host_arch_out host_arch_path_out)
     if (target MATCHES "tools_.*")
         set(tool ON)
     else()
@@ -21,6 +21,10 @@ function(determine_qt_parameters target host_out type_out arch_out arch_path_out
             elseif (MSVC)
                 if ("arm64" IN_LIST ARCHITECTURE)
                     set(arch_path "msvc2022_arm64")
+                    # aqt serves Windows ARM64 Qt packages under a separate
+                    # host namespace; using "windows" here makes aqt parse the
+                    # x86_64 package XML and fail to find the arm64 archives.
+                    set(host "windows_arm64")
                 elseif ("x86_64" IN_LIST ARCHITECTURE)
                     set(arch_path "msvc2022_64")
                 else()
@@ -39,6 +43,9 @@ function(determine_qt_parameters target host_out type_out arch_out arch_path_out
                     set(host_arch_path "msvc2022_64")
                 endif()
                 set(host_arch "win64_${host_arch_path}")
+                # The x86_64 desktop Qt used for host tools lives under the
+                # regular "windows" aqt host, even when the target is arm64.
+                set(tools_host "windows")
             else()
                 message(FATAL_ERROR "Unsupported bundled Qt toolchain. Enable USE_SYSTEM_QT and provide your own.")
             endif()
@@ -69,6 +76,11 @@ function(determine_qt_parameters target host_out type_out arch_out arch_path_out
     set(${type_out} "${type}" PARENT_SCOPE)
     set(${arch_out} "${arch}" PARENT_SCOPE)
     set(${arch_path_out} "${arch_path}" PARENT_SCOPE)
+    if (DEFINED tools_host)
+        set(${tools_host_out} "${tools_host}" PARENT_SCOPE)
+    else()
+        set(${tools_host_out} "${host}" PARENT_SCOPE)
+    endif()
     if (DEFINED host_type)
         set(${host_type_out} "${host_type}" PARENT_SCOPE)
     else()
@@ -100,8 +112,17 @@ function(download_qt_configuration prefix_out target host type arch arch_path ba
         set(install_args ${install_args} install-tool --outputdir ${base_path} ${host} desktop ${target})
     else()
         set(prefix "${base_path}/${target}/${arch_path}")
-        set(install_args ${install_args} install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch}
-                -m qtmultimedia --archives qttranslations qttools qtsvg qtbase)
+        # aqt's arm64 Qt package layout differs from x86_64 — the per-module archive
+        # names (qtbase/qtsvg/…) don't exist in its XML, so passing --archives trips
+        # the parser. Install the default archive set for arm64 and let --autodesktop
+        # pull in the matching x86_64 desktop Qt that the arm64 target depends on.
+        if ("${arch_path}" STREQUAL "msvc2022_arm64")
+            set(install_args ${install_args} install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch}
+                    --autodesktop -m qtmultimedia)
+        else()
+            set(install_args ${install_args} install-qt --outputdir ${base_path} ${host} ${type} ${target} ${arch}
+                    -m qtmultimedia --archives qttranslations qttools qtsvg qtbase)
+        endif()
     endif()
 
     if (NOT EXISTS "${prefix}")
@@ -150,14 +171,14 @@ endfunction()
 # Params:
 #   target: Qt dependency to install. Specify a version number to download Qt, or "tools_(name)" for a specific build tool.
 function(download_qt target)
-    determine_qt_parameters("${target}" host type arch arch_path host_type host_arch host_arch_path)
+    determine_qt_parameters("${target}" host type arch arch_path tools_host host_type host_arch host_arch_path)
 
     get_external_prefix(qt base_path)
     file(MAKE_DIRECTORY "${base_path}")
 
     download_qt_configuration(prefix "${target}" "${host}" "${type}" "${arch}" "${arch_path}" "${base_path}")
     if (DEFINED host_arch_path AND NOT "${host_arch_path}" STREQUAL "${arch_path}")
-        download_qt_configuration(host_prefix "${target}" "${host}" "${host_type}" "${host_arch}" "${host_arch_path}" "${base_path}")
+        download_qt_configuration(host_prefix "${target}" "${tools_host}" "${host_type}" "${host_arch}" "${host_arch_path}" "${base_path}")
     else()
         set(host_prefix "${prefix}")
     endif()

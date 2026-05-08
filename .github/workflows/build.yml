@@ -143,11 +143,35 @@ jobs:
           path: artifacts/
 
   windows:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target: ["msvc", "msys2"]
+        include:
+          - target: msvc
+            arch: x64
+            runner: windows-latest
+            msvc_arch: x64
+            msys2_system: clang64
+            vulkan_sdk_url: https://sdk.lunarg.com/sdk/download/1.4.341.1/windows/vulkansdk-windows-X64-1.4.341.1.exe
+          - target: msys2
+            arch: x64
+            runner: windows-latest
+            msvc_arch: x64
+            msys2_system: clang64
+            vulkan_sdk_url: https://sdk.lunarg.com/sdk/download/1.4.341.1/windows/vulkansdk-windows-X64-1.4.341.1.exe
+          - target: msvc
+            arch: arm64
+            runner: windows-11-arm
+            msvc_arch: amd64_arm64
+            msys2_system: clangarm64
+            vulkan_sdk_url: https://sdk.lunarg.com/sdk/download/1.4.341.1/warm/vulkansdk-windows-ARM64-1.4.341.1.exe
+          - target: msys2
+            arch: arm64
+            runner: windows-11-arm
+            msvc_arch: amd64_arm64
+            msys2_system: clangarm64
+            vulkan_sdk_url: https://sdk.lunarg.com/sdk/download/1.4.341.1/warm/vulkansdk-windows-ARM64-1.4.341.1.exe
     defaults:
       run:
         shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
@@ -156,7 +180,8 @@ jobs:
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
       OS: windows
-      TARGET: ${{ matrix.target }}
+      TARGET: ${{ matrix.target }}-${{ matrix.arch }}
+      ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -165,25 +190,27 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.target }}-
+            ${{ runner.os }}-${{ matrix.target }}-${{ matrix.arch }}-
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
         uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch }}
       - name: Install extra tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: choco install ccache ninja ptime wget
       - name: Install vulkan-sdk (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: |
-          wget https://sdk.lunarg.com/sdk/download/1.4.304.1/windows/VulkanSDK-1.4.304.1-Installer.exe -O D:/a/_temp/vulkan.exe
-          D:/a/_temp/vulkan.exe --accept-licenses --default-answer --confirm-command install
+          wget ${{ matrix.vulkan_sdk_url }} -O "${{ runner.temp }}/vulkan.exe"
+          "${{ runner.temp }}/vulkan.exe" --accept-licenses --default-answer --confirm-command install
       - name: Set up MSYS2
         if: ${{ matrix.target == 'msys2' }}
         uses: msys2/setup-msys2@v2
         with:
-          msystem: clang64
+          msystem: ${{ matrix.msys2_system }}
           update: true
           install: git make p7zip
           pacboy: >-
@@ -197,8 +224,8 @@ jobs:
       - name: Install NSIS
         if: ${{ github.ref_type == 'tag' }}
         run: |
-          wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
-          ptime D:/a/_temp/nsis-setup.exe /S
+          wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O "${{ runner.temp }}/nsis-setup.exe"
+          ptime "${{ runner.temp }}/nsis-setup.exe" /S
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
@@ -208,7 +235,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: |
           cd src\installer
-          "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
+          "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }}-${{ matrix.arch }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
           mkdir ..\..\artifacts 2> NUL
           move /y *.exe ..\..\artifacts\
         shell: cmd

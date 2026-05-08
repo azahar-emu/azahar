@@ -2,6 +2,14 @@
 if (BUNDLE_TARGET_EXECUTE)
     # --- Bundling method logic ---
 
+    # Opt into CMP0207's NEW behavior so file(GET_RUNTIME_DEPENDENCIES)
+    # normalizes paths before regex matching. The exclude pattern below
+    # ('.*system32.*') already matches either slash style, so this is
+    # purely about silencing the dev-mode warning.
+    if (POLICY CMP0207)
+        cmake_policy(SET CMP0207 NEW)
+    endif()
+
     function(symlink_safe_copy from to)
         if (WIN32)
             # Use cmake copy for maximum compatibility.

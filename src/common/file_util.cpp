@@ -38,6 +38,12 @@
 #include <tchar.h>
 #include "common/string_util.h"
 
+// Pull <sys/stat.h> in here, before any fstat-redirection macros come into
+// scope. MinGW's <sys/stat.h> declares fstat as a real function (not a
+// macro); if our `#define fstat _fstat64` were active during its parsing,
+// the declaration would be rewritten to a conflicting `_fstat64` overload.
+#include <sys/stat.h>
+
 #ifdef _MSC_VER
 // 64 bit offsets for MSVC
 #define fseeko _fseeki64
@@ -47,6 +53,7 @@ typedef struct _stat64 file_stat_t;
 #define fstat _fstat64
 #elif defined(HAVE_LIBRETRO)
 typedef struct _stat64 file_stat_t;
+#define fstat _fstat64
 #else
 typedef struct stat file_stat_t;
 #endif
