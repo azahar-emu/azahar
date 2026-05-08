@@ -340,6 +340,8 @@
     <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
     <string name="realtime_audio">Enable Realtime Audio</string>
     <string name="realtime_audio_description">Scales audio playback speed to account for drops in emulation framerate. This means that audio will play at full speed even while the game framerate is low. May cause audio desync issues.</string>
+    <string name="simulate_headphones_plugged">Simulate Headphones Plugged In</string>
+    <string name="simulate_headphones_plugged_description">Simulates whether headphones are plugged in to the emulated 3DS system.</string>
     <string name="audio_input_type">Audio Input Device</string>
     <string name="sound_output_mode">Sound Output Mode</string>
 

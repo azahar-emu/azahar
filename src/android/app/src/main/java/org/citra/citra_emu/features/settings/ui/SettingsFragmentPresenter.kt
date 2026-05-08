@@ -1714,6 +1714,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED,
+                    R.string.simulate_headphones_plugged,
+                    R.string.simulate_headphones_plugged_description,
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED.key,
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED.defaultValue
+                )
+            )
+            add(
                 SingleChoiceSetting(
                     IntSetting.AUDIO_INPUT_TYPE,
                     R.string.audio_input_type,

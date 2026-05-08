@@ -415,6 +415,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(enable_realtime_audio) BOOST_HANA_STRING(R"(
 
+# Simulates whether headphones are plugged in to the emulated 3DS system
+# 0 (default): No, 1: Yes
+)") DECLARE_KEY(simulate_headphones_plugged) BOOST_HANA_STRING(R"(
+
 # Output volume.
 # 1.0 (default): 100%, 0.0; mute
 )") DECLARE_KEY(volume) BOOST_HANA_STRING(R"(

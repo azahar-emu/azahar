@@ -94,6 +94,7 @@ object SettingKeys {
     external fun audio_emulation(): String
     external fun enable_audio_stretching(): String
     external fun enable_realtime_audio(): String
+    external fun simulate_headphones_plugged(): String
     external fun volume(): String
     external fun output_type(): String
     external fun output_device(): String

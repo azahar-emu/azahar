@@ -109,6 +109,7 @@ foreach(KEY IN ITEMS
     "output_device"
     "input_type"
     "input_device"
+    "simulate_headphones_plugged"
     "delay_start_for_lle_modules"
     "use_gdbstub"
     "gdbstub_port"
