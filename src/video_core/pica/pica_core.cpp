@@ -98,7 +98,7 @@ void PicaCore::SetInterruptHandler(Service::GSP::InterruptHandler& signal_interr
 
 void PicaCore::ProcessCmdList(PAddr list, u32 size, bool ignore_list) {
     if (ignore_list) {
-        signal_interrupt(Service::GSP::InterruptId::P3D);
+        signal_interrupt(Service::GSP::InterruptId::P3D, delay_generator.CalculateAndResetDelay());
         return;
     }
     // Initialize command list tracking.
@@ -148,6 +148,8 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         return;
     }
 
+    delay_generator.AddCommands(1);
+
     // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
     constexpr std::array<u32, 16> ExpandBitsToBytes = {
         0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff, 0x00ff0000, 0x00ff00ff,
@@ -174,7 +176,8 @@ void PicaCore::WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requeste
         // TODO(PabloMK7): This logic is not fully accurate, but close enough:
         // https://problemkaputt.de/gbatek-3ds-gpu-internal-registers-finalize-interrupt-registers.htm
         if (any_byte_match(regs.internal.reg_array[id], regs.internal.irq_compare)) [[likely]] {
-            signal_interrupt(Service::GSP::InterruptId::P3D);
+            signal_interrupt(Service::GSP::InterruptId::P3D,
+                             delay_generator.CalculateAndResetDelay());
             if (regs.internal.irq_autostop) [[likely]] {
                 stop_requested = true;
             }
@@ -550,6 +553,10 @@ void PicaCore::DrawArrays(bool is_indexed) {
         }
         return accelerate_draw;
     }();
+
+    // Add vertices to the delay generator.
+    delay_generator.AddVertices(regs.internal.pipeline.num_vertices,
+                                regs.internal.pipeline.triangle_topology);
 
     // Attempt to use hardware vertex shaders if possible.
     if (accelerate_draw && rasterizer->AccelerateDrawBatch(is_indexed)) {

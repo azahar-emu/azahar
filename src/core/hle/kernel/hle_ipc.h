@@ -17,6 +17,7 @@
 #include "common/serialization/boost_small_vector.hpp"
 #include "common/settings.h"
 #include "common/swap.h"
+#include "common/thread_worker.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_session.h"
@@ -320,6 +321,55 @@ public:
                 auto parallel_wakeup = std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
                     kernel, result_function, std::move(std::future<void>()));
                 this->SleepClientThread("RunAsync", std::chrono::nanoseconds(sleep_for),
+                                        parallel_wakeup);
+            } else {
+                result_function(*this);
+            }
+        }
+    }
+
+    /**
+     * Same as RunAsync, but runs the async operation on a specific thread worker provided by the
+     * caller.
+     * @param worker The thread worker where the operation will be run.
+     * @param async_section Callable that takes Kernel::HLERequestContext& as argument
+     * and returns the amount of nanoseconds to wait before calling result_function.
+     * This callable is ran asynchronously.
+     * @param result_function Callable that takes Kernel::HLERequestContext& as argument
+     * and doesn't return anything. This callable is ran from the emulator thread
+     * and can be used to set the IPC result.
+     * @param really_async If set to false, it will call both async_section and result_function
+     * from the emulator thread.
+     */
+    template <typename AsyncFunctor, typename ResultFunctor>
+    void RunOnThreadWorker(Common::ThreadWorker& worker, AsyncFunctor async_section,
+                           ResultFunctor result_function, bool really_async = true) {
+
+        if (!Settings::values.deterministic_async_operations && really_async) {
+            kernel.ReportAsyncState(true);
+
+            // We use packaged_task so we can retrieve a std::future to pass to AsyncWakeUpCallback
+            auto task = std::make_shared<std::packaged_task<void()>>([this, async_section] {
+                s64 sleep_for = async_section(*this);
+                this->thread->WakeAfterDelay(sleep_for, true);
+            });
+
+            auto future = task->get_future();
+
+            worker.QueueWork([task]() { (*task)(); });
+
+            this->SleepClientThread("RunOnThread", std::chrono::nanoseconds(-1),
+                                    std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
+                                        kernel, result_function, std::move(future)));
+
+        } else {
+            // Synchronous fallback (same logic as original)
+            s64 sleep_for = async_section(*this);
+            if (sleep_for > 0) {
+                kernel.ReportAsyncState(true);
+                auto parallel_wakeup = std::make_shared<AsyncWakeUpCallback<ResultFunctor>>(
+                    kernel, result_function, std::move(std::future<void>()));
+                this->SleepClientThread("RunOnThread", std::chrono::nanoseconds(sleep_for),
                                         parallel_wakeup);
             } else {
                 result_function(*this);

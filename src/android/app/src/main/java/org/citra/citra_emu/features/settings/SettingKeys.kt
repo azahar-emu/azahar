@@ -18,6 +18,7 @@ object SettingKeys {
     external fun enable_required_online_lle_modules(): String
     external fun use_virtual_sd(): String
     external fun compress_cia_installs(): String
+    external fun async_fs_operations(): String
     external fun region_value(): String
     external fun init_clock(): String
     external fun init_time(): String
@@ -45,6 +46,7 @@ object SettingKeys {
     external fun texture_filter(): String
     external fun texture_sampling(): String
     external fun delay_game_render_thread_us(): String
+    external fun simulate_3ds_gpu_timings(): String
     external fun layout_option(): String
     external fun swap_screen(): String
     external fun upright_screen(): String
@@ -92,6 +94,7 @@ object SettingKeys {
     external fun audio_emulation(): String
     external fun enable_audio_stretching(): String
     external fun enable_realtime_audio(): String
+    external fun simulate_headphones_plugged(): String
     external fun volume(): String
     external fun output_type(): String
     external fun output_device(): String

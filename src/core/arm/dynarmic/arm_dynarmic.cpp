@@ -1,7 +1,8 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <csignal>
 #include <cstring>
 #include <dynarmic/interface/A32/a32.h>
 #include <dynarmic/interface/optimization_flags.h>
@@ -13,9 +14,19 @@
 #include "core/arm/dynarmic/arm_tick_counts.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
+
+#ifndef SIGILL
+constexpr u32 SIGILL = 4;
+#endif
+
+#ifndef SIGTRAP
+constexpr u32 SIGTRAP = 5;
+#endif
 
 namespace Core {
 
@@ -24,6 +35,10 @@ public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
         : parent(parent), svc_context(parent.system), memory(parent.memory) {}
     ~DynarmicUserCallbacks() = default;
+
+    std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) override {
+        return memory.Read32OrNullopt(vaddr);
+    }
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
         return memory.Read8(vaddr);
@@ -82,12 +97,13 @@ public:
         case Dynarmic::A32::Exception::NoExecuteFault:
             break;
         case Dynarmic::A32::Exception::Breakpoint:
+#ifdef ENABLE_GDBSTUB
             if (GDBStub::IsConnected()) {
-                parent.jit->HaltExecution();
                 parent.SetPC(pc);
-                parent.ServeBreak();
+                parent.ServeBreak(SIGTRAP);
                 return;
             }
+#endif
             break;
         case Dynarmic::A32::Exception::SendEvent:
         case Dynarmic::A32::Exception::SendEventLocal:
@@ -99,11 +115,40 @@ public:
         case Dynarmic::A32::Exception::PreloadInstruction:
             return;
         }
-        for (int i = 0; i < 16; i++) {
-            LOG_CRITICAL(Debug, "r{:02d} = {:08X}", i, parent.GetReg(i));
+
+        static constexpr auto ExceptionToString = [](Dynarmic::A32::Exception e) -> std::string {
+            switch (e) {
+            case Dynarmic::A32::Exception::UndefinedInstruction:
+                return "UndefinedInstruction";
+            case Dynarmic::A32::Exception::UnpredictableInstruction:
+                return "UnpredictableInstruction";
+            case Dynarmic::A32::Exception::DecodeError:
+                return "DecodeError";
+            case Dynarmic::A32::Exception::NoExecuteFault:
+                return "NoExecuteFault";
+            case Dynarmic::A32::Exception::Breakpoint:
+                return "Breakpoint";
+            default:
+                return fmt::format("Unknown({})", e);
+            }
+        };
+
+        parent.SetPC(pc);
+#ifdef ENABLE_GDBSTUB
+        if (GDBStub::IsConnected()) {
+            parent.ServeBreak(SIGILL);
+        } else
+#endif
+        {
+            std::string error;
+            for (int i = 0; i < 16; i++) {
+                error += fmt::format("r{:02d} = {:08X}\n", i, parent.GetReg(i));
+            }
+            error += fmt::format("ExceptionRaised(exception = {}, pc = {:08X})",
+                                 ExceptionToString(exception), pc);
+            parent.system.SetStatus(Core::System::ResultStatus::ErrorCoreExceptionRaised,
+                                    error.c_str());
         }
-        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})", exception,
-                   pc, MemoryReadCode(pc).value());
     }
 
     void AddTicks(std::uint64_t ticks) override {
@@ -138,16 +183,19 @@ MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 void ARM_Dynarmic::Run() {
     ASSERT(memory.GetCurrentPageTable() == current_page_table);
     MICROPROFILE_SCOPE(ARM_Jit);
+    if (break_flag) [[unlikely]] {
+        return;
+    }
 
     jit->Run();
 }
 
 void ARM_Dynarmic::Step() {
-    jit->Step();
-
-    if (GDBStub::IsConnected()) {
-        ServeBreak();
+    if (break_flag) [[unlikely]] {
+        return;
     }
+
+    jit->Step();
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
@@ -294,11 +342,10 @@ void ARM_Dynarmic::SetPageTable(const std::shared_ptr<Memory::PageTable>& page_t
     jits.emplace(current_page_table, std::move(new_jit));
 }
 
-void ARM_Dynarmic::ServeBreak() {
-    Kernel::Thread* thread = system.Kernel().GetCurrentThreadManager().GetCurrentThread();
-    SaveContext(thread->context);
-    GDBStub::Break();
-    GDBStub::SendTrap(thread, 5);
+void ARM_Dynarmic::ServeBreak([[maybe_unused]] int signal) {
+#ifdef ENABLE_GDBSTUB
+    GDBStub::Break(signal);
+#endif
 }
 
 std::unique_ptr<Dynarmic::A32::Jit> ARM_Dynarmic::MakeJit() {

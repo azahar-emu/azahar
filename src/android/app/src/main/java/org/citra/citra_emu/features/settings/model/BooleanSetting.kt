@@ -44,6 +44,7 @@ enum class BooleanSetting(
     PRELOAD_TEXTURES(SettingKeys.preload_textures(), Settings.SECTION_UTILITY, false),
     ENABLE_AUDIO_STRETCHING(SettingKeys.enable_audio_stretching(), Settings.SECTION_AUDIO, true),
     ENABLE_REALTIME_AUDIO(SettingKeys.enable_realtime_audio(), Settings.SECTION_AUDIO, false),
+    SIMULATE_HEADPHONES_PLUGGED(SettingKeys.simulate_headphones_plugged(), Settings.SECTION_AUDIO, false),
     CPU_JIT(SettingKeys.use_cpu_jit(), Settings.SECTION_CORE, true),
     HW_SHADER(SettingKeys.use_hw_shader(), Settings.SECTION_RENDERER, true),
     SHADER_JIT(SettingKeys.use_shader_jit(), Settings.SECTION_RENDERER, true),
@@ -54,9 +55,11 @@ enum class BooleanSetting(
     USE_ARTIC_BASE_CONTROLLER(SettingKeys.use_artic_base_controller(), Settings.SECTION_CONTROLS, false),
     UPRIGHT_SCREEN(SettingKeys.upright_screen(), Settings.SECTION_LAYOUT, false),
     COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),
+    ASYNC_FS_OPERATIONS(SettingKeys.async_fs_operations(), Settings.SECTION_STORAGE, true),
     ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_MISC, false),
     APPLY_REGION_FREE_PATCH(SettingKeys.apply_region_free_patch(), Settings.SECTION_SYSTEM, true),
-    USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false);
+    USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false),
+    SIMULATE_3DS_GPU_TIMINGS(SettingKeys.simulate_3ds_gpu_timings(), Settings.SECTION_RENDERER, true);
 
     override var boolean: Boolean = defaultValue
 
@@ -91,6 +94,7 @@ enum class BooleanSetting(
             SHADERS_ACCURATE_MUL,
             USE_ARTIC_BASE_CONTROLLER,
             COMPRESS_INSTALLED_CIA_CONTENT,
+            ASYNC_FS_OPERATIONS,
             ANDROID_HIDE_IMAGES,
             PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
             APPLY_REGION_FREE_PATCH

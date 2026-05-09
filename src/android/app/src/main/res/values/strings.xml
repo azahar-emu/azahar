@@ -238,6 +238,8 @@
     <string name="storage">Storage</string>
     <string name="compress_cia_installs">Compress installed CIA content</string>
     <string name="compress_cia_installs_description">Compresses the content of CIA files when installed to the emulated SD card. Only affects CIA content which is installed while the setting is enabled.</string>
+    <string name="async_fs_operations">Asynchronous filesystem operations</string>
+    <string name="async_fs_operations_description">Makes emulated filesystem accesses asynchronous. Greatly reduces filesystem related stutter, but may slightly increase load times.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Inner Camera</string>
@@ -269,6 +271,8 @@
     <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
     <string name="delay_render_thread">Delay Game Render Thread</string>
     <string name="delay_render_thread_description">Delay the game render thread when it submits data to the GPU. Helps with performance issues in the (very few) applications with dynamic framerates.</string>
+    <string name="simulate_3ds_gpu_timings">Simulate 3DS GPU Timings</string>
+    <string name="simulate_3ds_gpu_timings_description">Delays GPU completion events based on measurements taken from real hardware, so that games have more realistic GPU time measurements. Helps stabilize dynamic FPS games. Disabling this feature may improve performance in some rare cases at the cost of stability.</string>
     <string name="advanced">Advanced</string>
     <string name="texture_sampling_name">Texture Sampling</string>
     <string name="texture_sampling_description">Overrides the sampling filter used by games. This can be useful in certain cases with poorly behaved games when upscaling. If unsure, set this to Game Controlled.</string>
@@ -341,6 +345,8 @@
     <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
     <string name="realtime_audio">Enable Realtime Audio</string>
     <string name="realtime_audio_description">Scales audio playback speed to account for drops in emulation framerate. This means that audio will play at full speed even while the game framerate is low. May cause audio desync issues.</string>
+    <string name="simulate_headphones_plugged">Simulate Headphones Plugged In</string>
+    <string name="simulate_headphones_plugged_description">Simulates whether headphones are plugged in to the emulated 3DS system.</string>
     <string name="audio_input_type">Audio Input Device</string>
     <string name="sound_output_mode">Sound Output Mode</string>
 
@@ -396,7 +402,6 @@
     <string name="learn_more">Learn More</string>
     <string name="close">Close</string>
     <string name="reset_to_default">Reset to Default</string>
-    <string name="redump_games"><![CDATA[Please follow the guides to redump your <a href="https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/">game cartridges</a> or <a href="https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/">installed titles</a>.]]></string>
     <string name="option_default">Default</string>
     <string name="none">None</string>
     <string name="auto">Auto</string>
@@ -439,10 +444,38 @@
     <string name="preferences_layout">Layout</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Error loading application</string>
+    <string name="loader_error_invalid_format">Invalid application format</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[The application file format not supported.<br>Please make sure you are using one of the compatible file formats:<ul><li>Cartridge images: <b>.cci/.zcci/.3ds</b></li><li>Installable archives: <b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Invalid system mode</string>
+    <string name="loader_error_invalid_system_mode_description">New 3DS exclusive applications cannot be loaded without enabling the New 3DS mode.</string>
+    <string name="loader_error_applying_patches">Error applying patches</string>
+    <string name="loader_error_applying_patches_description">A generic error occurred while applying a patch to the application. Please check the log for more details.</string>
+    <string name="loader_error_patch_wrong_application">Failed to apply a patch because it is designed for a different application. Please make sure you are using the patches for the right application, region and version.</string>
     <string name="loader_error_encrypted">Your ROM is Encrypted</string>
-    <string name="loader_error_invalid_format">Invalid ROM format</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar does not support encrypted applications. Read our <a href="https://azahar-emu.org/blog/game-loading-changes/">blog post</a> for more information.]]></string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
     <string name="no_game_present">No bootable game present!</string>
+
+    <string name="loader_error_generic">An error occurred while loading ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Success</string>
+    <string name="core_error_not_initialized">Not initialized</string>
+    <string name="core_error_get_loader">Loader for file not found, incompatible file type</string>
+    <string name="core_error_system_mode">Failed to parse file</string>
+    <string name="core_error_loader">Generic loader error</string>
+    <string name="core_error_loader_encrypted">Encrypted file</string>
+    <string name="core_error_loader_invalid_format">Corrupted file</string>
+    <string name="core_error_loader_gba_title">File is GBA title</string>
+    <string name="core_error_loader_error_patches">Error applying patches</string>
+    <string name="core_error_loader_patches_invalid_title">Patches are for a different application</string>
+    <string name="core_error_system_files">Missing system files</string>
+    <string name="core_error_savestate">Savestate failed</string>
+    <string name="core_error_artic_disconnected">Artic Base disconnected</string>
+    <string name="core_error_n3ds_application">File is New 3DS application</string>
+    <string name="core_error_core_exception_raised">Core exception raised</string>
+    <string name="core_error_memory_exception_raised">Memory exception raised</string>
+    <string name="core_error_shutdown_requested">Shutdown requested</string>
+    <string name="core_error_unknown">Unknown error</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Press Back to access the menu.</string>

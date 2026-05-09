@@ -14,7 +14,9 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/hio.h"
+#endif
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
@@ -1171,7 +1173,9 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     }
 
     if (len == 0) {
-        GDBStub::SetHioRequest(system, address);
+#ifdef ENABLE_GDBSTUB
+        GDBStub::SetHioRequest(system, kernel.GetCurrentProcess().get(), address);
+#endif
         return;
     }
 
@@ -2051,12 +2055,16 @@ Result SVC::GetProcessList(s32* process_count, VAddr out_process_array,
 }
 
 Result SVC::InvalidateInstructionCacheRange(u32 addr, u32 size) {
-    system.GetRunningCore().InvalidateCacheRange(addr, size);
+    for (size_t i = 0; i < system.GetNumCores(); i++) {
+        system.GetCore(i).InvalidateCacheRange(addr, size);
+    }
     return ResultSuccess;
 }
 
 Result SVC::InvalidateEntireInstructionCache() {
-    system.GetRunningCore().ClearInstructionCache();
+    for (size_t i = 0; i < system.GetNumCores(); i++) {
+        system.GetCore(i).ClearInstructionCache();
+    }
     return ResultSuccess;
 }
 

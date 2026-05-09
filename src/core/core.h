@@ -99,12 +99,16 @@ public:
                                         /// invalid format
         ErrorLoader_ErrorGbaTitle, ///< Error loading the specified application as it is GBA Virtual
                                    ///< Console
-        ErrorSystemFiles,          ///< Error in finding system files
-        ErrorSavestate,            ///< Error saving or loading
-        ErrorArticDisconnected,    ///< Error when artic base disconnects
-        ErrorN3DSApplication,      ///< Error launching New 3DS application in Old 3DS mode
-        ShutdownRequested,         ///< Emulated program requested a system shutdown
-        ErrorUnknown               ///< Any other error
+        ErrorLoader_ErrorPatches,  ///< Generic error while loading patches for an application
+        ErrorLoader_ErrorPatchesInvalidTitle, ///< A patch was loaded for the incorrect application
+        ErrorSystemFiles,                     ///< Error in finding system files
+        ErrorSavestate,                       ///< Error saving or loading
+        ErrorArticDisconnected,               ///< Error when artic base disconnects
+        ErrorN3DSApplication,       ///< Error launching New 3DS application in Old 3DS mode
+        ErrorCoreExceptionRaised,   ///< The CPU emulation raised an exception
+        ErrorMemoryExceptionRaised, ///< Unmmaped memory was accessed
+        ShutdownRequested,          ///< Emulated program requested a system shutdown
+        ErrorUnknown                ///< Any other error
     };
 
     explicit System();
@@ -403,6 +407,18 @@ public:
         info_led_color_changed = func;
     }
 
+    void SetDebugNextProcessFlag() {
+        debug_next_process = true;
+    }
+
+    bool GetDebugNextProcessFlag() {
+        return debug_next_process;
+    }
+
+    void ClearDebugNextProcessFlag() {
+        debug_next_process = false;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -511,6 +527,8 @@ private:
 
     Common::Vec3<u8> info_led_color;
     std::function<void()> info_led_color_changed;
+
+    bool debug_next_process;
 
     friend class boost::serialization::access;
     template <typename Archive>

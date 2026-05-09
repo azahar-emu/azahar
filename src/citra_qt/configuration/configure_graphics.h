@@ -44,6 +44,7 @@ private:
     ConfigurationShared::CheckState async_presentation;
     ConfigurationShared::CheckState spirv_shader_gen;
     ConfigurationShared::CheckState disable_spirv_optimizer;
+    ConfigurationShared::CheckState simulate_3ds_gpu_timings;
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
 };

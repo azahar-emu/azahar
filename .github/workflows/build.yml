@@ -143,11 +143,21 @@ jobs:
           path: artifacts/
 
   windows:
-    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        target: ["msvc", "msys2"]
+        include:
+        - target: msvc
+          os: windows-latest
+        - target: msys2
+          os: windows-latest
+        - target: mxe
+          os: ubuntu-latest
+          container:
+            image: opensauce04/azahar-build-environment:latest
+            options: -u 1001
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     defaults:
       run:
         shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
@@ -195,23 +205,35 @@ jobs:
         with:
           args: install ptime wget
       - name: Install NSIS
-        if: ${{ github.ref_type == 'tag' }}
+        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
           wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
           ptime D:/a/_temp/nsis-setup.exe /S
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
-      - name: Build
+      - name: Build (Native)
+        if: ${{ matrix.target != 'mxe' }}
         run: ./.ci/windows.sh
-      - name: Generate installer
-        if: ${{ github.ref_type == 'tag' }}
+      - name: Build (MXE)
+        if: ${{ matrix.target == 'mxe' }}
+        run: ./.ci/mxe.sh
+      - name: Generate installer (Native)
+        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
           mkdir ..\..\artifacts 2> NUL
           move /y *.exe ..\..\artifacts\
         shell: cmd
+      - name: Generate installer (MXE)
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'mxe' }}
+        run: |
+          export PATH="/mxe/usr/bin:${PATH}" # TODO: Why do we have to do this if it's in the image?
+          cd src/installer
+          x86_64-w64-mingw32.shared-makensis -DPRODUCT_VARIANT=${{ matrix.target }} -DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
+          mkdir -p ../../artifacts
+          mv ./*.exe ../../artifacts/
       - name: Pack
         run: ./.ci/pack.sh
       - name: Upload
@@ -256,18 +278,15 @@ jobs:
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
-      - name: Update Android SDK CMake version
-        if: ${{ env.SHOULD_RUN == 'true' }}
-        run: |
-          yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Install tools
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y apksigner ccache
-          echo "Checking ninja version..."
-          /usr/local/bin/ninja --version
-          ln -sf /usr/local/bin/ninja /usr/local/lib/android/sdk/cmake/3.30.3/bin/ninja
+          sudo apt-get install ccache apksigner -y
+      - name: Update Android SDK CMake version
+        if: ${{ env.SHOULD_RUN == 'true' }}
+        run: |
+          echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "cmake;3.30.3"
       - name: Build
         if: ${{ env.SHOULD_RUN == 'true' }}
         run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/android.sh

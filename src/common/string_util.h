@@ -36,6 +36,7 @@ namespace Common {
 
 [[nodiscard]] bool EndsWith(const std::string& value, const std::string& ending);
 
+[[nodiscard]] std::vector<std::string> SplitString(std::string_view str, const char delim);
 [[nodiscard]] std::vector<std::string> SplitString(const std::string& str, const char delim);
 
 // "C:/Windows/winhelp.exe" to "C:/Windows/", "winhelp", ".exe"
@@ -49,6 +50,10 @@ void BuildCompleteFilename(std::string& _CompleteFilename, const std::string& _P
 
 [[nodiscard]] std::string UTF16ToUTF8(std::u16string_view input);
 [[nodiscard]] std::u16string UTF8ToUTF16(std::string_view input);
+// Returns UTF-8 normalized to NFC on platforms that need explicit Unicode normalization.
+#if defined(__APPLE__)
+[[nodiscard]] std::string NormalizeNFDToNFC(std::string_view input);
+#endif
 
 #ifdef _WIN32
 [[nodiscard]] std::string UTF16ToUTF8(const std::wstring& input);
