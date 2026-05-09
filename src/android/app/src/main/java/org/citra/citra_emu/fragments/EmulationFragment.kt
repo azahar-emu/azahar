@@ -1062,6 +1062,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
             // Buttons that are disabled by default
             var defaultValue = true
             when (i) {
+                // TODO: Remove these magic numbers
                 6, 7, 12, 13, 14, 15, 16 -> defaultValue = false
             }
             enabledButtons[i] = preferences.getBoolean("buttonToggle$i", defaultValue)

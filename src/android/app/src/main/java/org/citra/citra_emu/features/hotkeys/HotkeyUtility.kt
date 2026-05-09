@@ -110,7 +110,7 @@ class HotkeyUtility(
     }
 
     fun handleHotkeyRelease(bindedButton: Int): Boolean {
-        Log.debug("Handling hotkey button release: " + bindedButton)
+        // Log.debug("Handling hotkey button release: " + bindedButton)
         if (bindedButton == Hotkey.COMBO_KEY.button) {
             ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
         }
