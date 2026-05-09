@@ -6,6 +6,13 @@
 uniform vec4 i_resolution;
 #define SMAA_RT_METRICS vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y)
 #define SMAA_GLSL_4
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
+#define SMAA_FLIP_Y 1
 #define SMAA_PRESET_ULTRA
 #define SMAA_EDT 1.0
 

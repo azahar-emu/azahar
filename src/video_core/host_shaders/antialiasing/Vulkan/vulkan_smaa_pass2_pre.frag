@@ -20,6 +20,7 @@ layout (push_constant, std140) uniform DrawInfo {
 
 #define SMAA_RT_METRICS vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y)
 #define SMAA_GLSL_4
+#define SMAA_FLIP_Y 0
 
 layout(location = 0) in vec2 frag_tex_coord;
 layout(location = 1) in vec4 offset;
