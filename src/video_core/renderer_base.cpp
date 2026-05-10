@@ -37,7 +37,7 @@ u8 RendererBase::GetSampleCount() const {
         return 1;
     }
 
-    return static_cast<u8>(1u << Settings::values.sample_count.GetValue());
+    return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
 }
 
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
