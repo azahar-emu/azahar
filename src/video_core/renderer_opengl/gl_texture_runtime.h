@@ -130,7 +130,7 @@ public:
                   const VideoCore::StagingData& staging);
 
     /// Attaches a handle of surface to the specified framebuffer target
-    void Attach(GLenum target, u32 level, u32 layer, bool scaled = true);
+    void Attach(GLenum target, u32 level, u32 layer, u32 handle = 1);
 
     /// Scales up the surface to match the new resolution scale and sample-count.
     void ScaleUp(u32 new_scale, u8 new_sample_count);
@@ -149,7 +149,7 @@ private:
 private:
     const Driver* driver;
     TextureRuntime* runtime;
-    std::array<OGLTexture, 3> textures;
+    std::array<OGLTexture, 4> textures;
     OGLTexture copy_texture;
     FormatTuple tuple;
 };
@@ -170,6 +170,10 @@ public:
         return res_scale;
     }
 
+    [[nodiscard]] u32 Samples() const noexcept {
+        return sample_count;
+    }
+
     [[nodiscard]] GLuint Handle() const noexcept {
         return framebuffer.handle;
     }
@@ -184,7 +188,8 @@ public:
 
 private:
     u32 res_scale{1};
-    std::array<GLuint, 2> attachments{};
+    u32 sample_count{1};
+    std::array<GLuint, 4> attachments{};
     OGLFramebuffer framebuffer;
 };
 

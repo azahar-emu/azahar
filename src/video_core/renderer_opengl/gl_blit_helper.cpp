@@ -67,6 +67,7 @@ BlitHelper::BlitHelper(const Driver& driver_)
       d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG, "D24S8_TO_RGBA8_FRAG")},
       rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG, "RGBA4_TO_RGB5A1_FRAG")} {
     vao.Create();
+    read_fbo.Create();
     draw_fbo.Create();
     state.draw.vertex_array = vao.handle;
     for (u32 i = 0; i < 3; i++) {
@@ -154,6 +155,22 @@ bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
     Draw(rgba4_to_rgb5a1, dest.Handle(), draw_fbo.handle, 0, dst_rect);
 
     return true;
+}
+
+void BlitHelper::ResolveTexture(Surface& surface) {
+
+    state.draw.read_framebuffer = read_fbo.handle;
+    state.draw.draw_framebuffer = draw_fbo.handle;
+    state.Apply();
+
+    surface.Attach(GL_READ_FRAMEBUFFER, 0, 0, 3);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, 0, 0, 1);
+    const GLbitfield buffer_mask = surface.type == SurfaceType::Depth ? GL_DEPTH_BUFFER_BIT
+                                   : surface.type == SurfaceType::DepthStencil
+                                       ? (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
+                                       : GL_COLOR_BUFFER_BIT;
+    glBlitFramebuffer(0, 0, surface.GetScaledWidth(), surface.GetScaledHeight(), 0, 0,
+                      surface.GetScaledWidth(), surface.GetScaledHeight(), buffer_mask, GL_NEAREST);
 }
 
 bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
