@@ -19,10 +19,9 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     SetConfiguration();
 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
-    const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
-    ui->resolution_factor_combobox->setEnabled(res_scale_enabled);
-    const bool msaa_enabled = graphics_api == Settings::GraphicsAPI::Vulkan;
-    ui->antialiasing_combobox->setEnabled(msaa_enabled);
+    const bool hardware_graphics = graphics_api != Settings::GraphicsAPI::Software;
+    ui->resolution_factor_combobox->setEnabled(hardware_graphics);
+    ui->antialiasing_combobox->setEnabled(hardware_graphics);
 
     connect(ui->render_3d_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
