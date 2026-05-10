@@ -114,6 +114,26 @@ enum class AudioEmulation : u32 {
     LLEMultithreaded = 2,
 };
 
+enum class AntiAliasingMethod : u32 {
+    None = 0,
+    MSAAx2 = 1,
+    MSAAx4 = 2,
+    MSAAx8 = 3,
+};
+
+static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_method) {
+    switch (antialiasing_method) {
+    case AntiAliasingMethod::MSAAx2:
+        return 2;
+    case AntiAliasingMethod::MSAAx4:
+        return 4;
+    case AntiAliasingMethod::MSAAx8:
+        return 8;
+    default:
+        return 1;
+    }
+}
+
 enum class TextureFilter : u32 {
     NoFilter = 0,
     Anime4K = 1,
@@ -549,7 +569,7 @@ struct Values {
         true, Keys::use_display_refresh_rate_detection};
     Setting<bool> use_shader_jit{true, Keys::use_shader_jit};
     SwitchableSetting<u32, true> resolution_factor{1, 0, 10, Keys::resolution_factor};
-    SwitchableSetting<u16, true> sample_count{0, 0, 3, "sample_count"};
+    SwitchableSetting<AntiAliasingMethod> antialiasing{AntiAliasingMethod::None, "antialiasing"};
     SwitchableSetting<bool> use_integer_scaling{false, Keys::use_integer_scaling};
     SwitchableSetting<double, true> frame_limit{100, 0, 1000, Keys::frame_limit};
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
