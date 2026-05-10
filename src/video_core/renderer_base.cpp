@@ -30,13 +30,6 @@ u32 RendererBase::GetResolutionScaleFactor() {
 }
 
 u8 RendererBase::GetSampleCount() const {
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
-
-    // Enabled for vulkan only for now
-    if (graphics_api != Settings::GraphicsAPI::Vulkan) {
-        return 1;
-    }
-
     return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
 }
 
