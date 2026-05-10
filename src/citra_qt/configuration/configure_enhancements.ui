@@ -111,7 +111,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QWidget" name="widget_sample_count" native="true">
+       <widget class="QWidget" name="widget_antialiasing" native="true">
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="leftMargin">
           <number>0</number>
@@ -126,32 +126,32 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="sample_count_label">
+          <widget class="QLabel" name="antialiasing_label">
            <property name="text">
-            <string>Sample count</string>
+            <string>Anti-Aliasing</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="sample_count_combobox">
+          <widget class="QComboBox" name="antialiasing_combobox">
            <item>
             <property name="text">
-             <string>Native (x1)</string>
+             <string>None</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>x2</string>
+             <string>MSAAx2</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>x4</string>
+             <string>MSAAx4</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>x8</string>
+             <string>MSAAx8</string>
             </property>
            </item>
           </widget>

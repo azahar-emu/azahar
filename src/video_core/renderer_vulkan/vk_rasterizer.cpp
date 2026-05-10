@@ -778,7 +778,8 @@ bool RasterizerVulkan::AccelerateDisplay(const Pica::FramebufferConfig& config,
     src_params.stride = pixel_stride;
     src_params.is_tiled = false;
     src_params.pixel_format = VideoCore::PixelFormatFromGPUPixelFormat(config.color_format);
-    src_params.sample_count = (1u << Settings::values.sample_count.GetValue());
+    src_params.sample_count =
+        Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
     src_params.UpdateParams();
 
     const auto [src_surface_id, src_rect] =
