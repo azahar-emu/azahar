@@ -43,7 +43,7 @@ private:
     void SetParams(OGLProgram& program, const VideoCore::Extent& src_extent,
                    Common::Rectangle<u32> src_rect);
     void Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 dst_level,
-              Common::Rectangle<u32> dst_rect);
+              Common::Rectangle<u32> dst_rect, bool multisample = false);
 
 private:
     const Driver& driver;
@@ -62,7 +62,9 @@ private:
     OGLProgram gradient_y_program;
     OGLProgram refine_program;
     OGLProgram d24s8_to_rgba8;
+    OGLProgram d24s8_to_rgba8_ms;
     OGLProgram rgba4_to_rgb5a1;
+    OGLProgram rgba4_to_rgb5a1_ms;
 
     OGLTexture temp_tex;
     VideoCore::Extent temp_extent{};
