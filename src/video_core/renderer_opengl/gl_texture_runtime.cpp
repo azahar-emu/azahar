@@ -630,7 +630,7 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
 
     const bool res_scale_modified = res_scale != new_scale;
     if (res_scale_modified && new_scale > 1) {
-
+        res_scale = new_scale;
         textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, 1,
                                  tuple, DebugName(true));
         for (u32 level = 0; level < levels; level++) {
@@ -645,7 +645,7 @@ void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
     }
 
     if ((res_scale_modified || sample_count != new_sample_count) && new_sample_count > 1) {
-        // Todo(wunk): OpenGL MSAA
+        sample_count = new_sample_count;
         textures[3] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels,
                                  sample_count, tuple, DebugName(true));
     }
