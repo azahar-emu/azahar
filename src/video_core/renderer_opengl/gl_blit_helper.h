@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -31,6 +31,8 @@ public:
 
     bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
+    void ResolveTexture(Surface& surface);
+
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
     void FilterBicubic(Surface& surface, const VideoCore::TextureBlit& blit);
@@ -47,6 +49,7 @@ private:
     const Driver& driver;
     OGLVertexArray vao;
     OpenGLState state;
+    OGLFramebuffer read_fbo;
     OGLFramebuffer draw_fbo;
     OGLSampler linear_sampler;
     OGLSampler nearest_sampler;

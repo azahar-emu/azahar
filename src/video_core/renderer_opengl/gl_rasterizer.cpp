@@ -164,6 +164,10 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
 
     glEnable(GL_BLEND);
+
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_SAMPLE_SHADING);
+    glMinSampleShading(1.0f);
 }
 
 RasterizerOpenGL::~RasterizerOpenGL() = default;
