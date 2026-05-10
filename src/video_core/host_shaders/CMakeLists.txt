@@ -4,7 +4,9 @@
 
 set(SHADER_FILES
     format_reinterpreter/d24s8_to_rgba8.frag
+    format_reinterpreter/d24s8_to_rgba8_ms.frag
     format_reinterpreter/rgba4_to_rgb5a1.frag
+    format_reinterpreter/rgba4_to_rgb5a1_ms.frag
     format_reinterpreter/vulkan_d24s8_to_rgba8.comp
     format_reinterpreter/vulkan_d24s8_to_rgba8_ms.comp
     texture_filtering/bicubic.frag

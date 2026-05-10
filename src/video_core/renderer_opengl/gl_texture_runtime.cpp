@@ -101,7 +101,7 @@ static constexpr std::array<FormatTuple, 8> CUSTOM_TUPLES = {{
         ASSERT(target == GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture.handle);
         glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, tuple.internal_format, width,
-                                  height, false);
+                                  height, true);
     } else {
         glBindTexture(target, texture.handle);
         glTexStorage2D(target, levels, tuple.internal_format, width, height);
