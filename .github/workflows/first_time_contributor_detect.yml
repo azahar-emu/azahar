@@ -20,7 +20,7 @@ jobs:
       (github.event.pull_request.author_association != 'OWNER')
     steps:
       - name: Detect PR if author is first-time contributor
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
