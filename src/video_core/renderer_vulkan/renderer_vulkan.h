@@ -72,7 +72,7 @@ static_assert(sizeof(PresentUniformData) == 128,
 
 class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
-
+    static constexpr std::size_t POST_PIPELINES = 6;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
@@ -100,6 +100,7 @@ private:
     void RenderScreenshotWithStagingCopy();
     bool TryRenderScreenshotWithHostMemory();
     void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout);
+    void PrepareTextureDraw(Frame* frame, const Layout::FramebufferLayout& layout);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);
 
@@ -142,7 +143,10 @@ private:
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
+    std::array<vk::Pipeline, POST_PIPELINES> post_pipelines;
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
+    std::array<vk::ShaderModule, POST_PIPELINES> post_vert_shaders;
+    std::array<vk::ShaderModule, POST_PIPELINES> post_frag_shaders;
     std::array<vk::Sampler, 2> present_samplers;
     vk::ShaderModule present_vertex_shader;
     vk::ShaderModule simplepresent_vertex_shader;

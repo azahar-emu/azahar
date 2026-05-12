@@ -171,6 +171,12 @@ RendererVulkan::~RendererVulkan() {
         device.destroyShaderModule(present_shaders[i]);
     }
 
+    for (u32 i = 0; i < POST_PIPELINES; i++) {
+        device.destroyPipeline(post_pipelines[i]);
+        device.destroyShaderModule(post_vert_shaders[i]);
+        device.destroyShaderModule(post_frag_shaders[i]);
+    }
+
     for (auto& sampler : present_samplers) {
         device.destroySampler(sampler);
     }
@@ -330,21 +336,21 @@ void RendererVulkan::CompileShaders() {
         Compile(HostShaders::VULKAN_CURSOR_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // Simple Present Shader
-    simplepresent_vertex_shader =
+    post_vert_shaders[0] =
         Compile(HostShaders::VULKAN_SIMPLE_PRESENT_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    simplepresent_frag_shader =
+    post_frag_shaders[0] =
         Compile(HostShaders::VULKAN_SIMPLE_PRESENT_FRAG, vk::ShaderStageFlagBits::eFragment, device, preamble);
 
     // Area Sampling Shader
-    area_sampling_vertex_shader =
+    post_vert_shaders[1] =
         Compile(HostShaders::VULKAN_AREA_SAMPLING_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    area_sampling_frag_shader =
+    post_frag_shaders[1] =
         Compile(HostShaders::VULKAN_AREA_SAMPLING_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // FXAA Shader
-    fxaa_vertex_shader =
+    post_vert_shaders[2] =
         Compile(HostShaders::VULKAN_FXAA_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    fxaa_frag_shader =
+    post_frag_shaders[2] =
         Compile(HostShaders::VULKAN_FXAA_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 0 Shader
@@ -354,9 +360,9 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_0_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS0_PRE_FRAG);
     smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS0_POST_FRAG);
-    smaa_pass_0_vertex_shader =
+    post_vert_shaders[3] =
         Compile(smaa_pass_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    smaa_pass_0_frag_shader =
+    post_frag_shaders[3] =
         Compile(smaa_pass_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 1 Shader
@@ -366,9 +372,9 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_1_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS1_PRE_FRAG);
     smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS1_POST_FRAG);
-    smaa_pass_1_vertex_shader =
+    post_vert_shaders[4] =
         Compile(smaa_pass_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    smaa_pass_1_frag_shader =
+    post_frag_shaders[4] =
         Compile(smaa_pass_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 2 Shader
@@ -378,11 +384,12 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_2_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS2_PRE_FRAG);
     smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS2_POST_FRAG);
-    smaa_pass_2_vertex_shader =
+    post_vert_shaders[5] =
         Compile(smaa_pass_2_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    smaa_pass_2_frag_shader =
+    post_frag_shaders[5] =
         Compile(smaa_pass_2_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
+    
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
         const vk::Filter filter_mode = i == 0 ? vk::Filter::eLinear : vk::Filter::eNearest;
@@ -551,6 +558,42 @@ void RendererVulkan::BuildPipelines() {
             instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
         ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build present pipelines");
         present_pipelines[i] = pipeline;
+    }
+
+    // Build Post Proccessing Pipelines
+    for (u32 i = 0; i < POST_PIPELINES; i++) {
+        const std::array shader_stages = {
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eVertex,
+                .module = post_vert_shaders[i],
+                .pName = "main",
+            },
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eFragment,
+                .module = post_frag_shaders[i],
+                .pName = "main",
+            },
+        };
+
+        const vk::GraphicsPipelineCreateInfo pipeline_info = {
+            .stageCount = static_cast<u32>(shader_stages.size()),
+            .pStages = shader_stages.data(),
+            .pVertexInputState = &vertex_input_info,
+            .pInputAssemblyState = &input_assembly,
+            .pViewportState = &viewport_info,
+            .pRasterizationState = &raster_state,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depth_info,
+            .pColorBlendState = &color_blending,
+            .pDynamicState = &dynamic_info,
+            .layout = *present_pipeline_layout,
+            .renderPass = main_present_window.Renderpass(),
+        };
+
+        const auto [result, pipeline] =
+            instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
+        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build present pipelines");
+        post_pipelines[i] = pipeline;
     }
 
     // Build cursor pipeline (simple position-only, inverted color blending)
@@ -807,64 +850,103 @@ void RendererVulkan::ReloadPipeline(Settings::StereoRenderOption render_3d) {
     }
 }
 
-void RendererVulkan::DrawSingleScreen(u32 screen_id, float x, float y, float w, float h,
+void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float screenTop, float screenWidth, float screenHeight,
                                       Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
 
-    std::array<ScreenRectVertex, 4> vertices;
+    const u32 scale_factor = GetResolutionScaleFactor();
+    float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
+    float textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
+
+   // Texture Width and Height when correctly rotated to landscape
+    bool isDownsampling = false;
+    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is High Quality Scaling (Upsampling via Gamma Corrected Bilinear, Downsampling is Gamma Corrected Area Sampling)
+    if (Settings::values.filter_mode.GetValue()){
+        scalingMode = 2;
+    } else {
+        scalingMode = 0;
+    }
+    int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
+    if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
+        if (textureWidth > screenWidth){
+            isDownsampling = true;
+        }
+    } else {
+        if (textureWidth > screenHeight){
+            isDownsampling = true;
+        }
+    }
+    // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° internally)
+    std::array<ScreenRectVertex, 4> rotate_vertices;
+    rotate_vertices = {{
+            ScreenRectVertex(-1.f, 1.f, texcoords.bottom, texcoords.left),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, texcoords.bottom, texcoords.right),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, texcoords.top, texcoords.left),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, texcoords.top, texcoords.right),   //Right, Bottom
+    }};
+
+    // Vertices for 1:1 Texture Mapping.
+    std::array<ScreenRectVertex, 4> pass_through_vertices;
+    pass_through_vertices = {{
+            ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
+    }};
+
+    // Vertices for Azahar's Output Layout
+    std::array<ScreenRectVertex, 4> output_vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),  //Right, Bottom
         }};
         break;
     case Layout::DisplayOrientation::Portrait:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 1.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 0.f),  //Right, Bottom
         }};
-        std::swap(h, w);
+        std::swap(screenHeight, screenWidth);
         break;
     case Layout::DisplayOrientation::LandscapeFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
         }};
         break;
     case Layout::DisplayOrientation::PortraitFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
         }};
-        std::swap(h, w);
+        std::swap(screenHeight, screenWidth);
         break;
     default:
-        LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
+        LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
-
-    const u64 size = sizeof(ScreenRectVertex) * vertices.size();
+    const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, vertices.data(), size);
+    std::memcpy(data, output_vertices.data(), size);
     vertex_buffer.Commit(size);
 
-    const u32 scale_factor = GetResolutionScaleFactor();
     draw_info.i_resolution =
         Common::MakeVec(static_cast<f32>(screen_info.texture.width * scale_factor),
                         static_cast<f32>(screen_info.texture.height * scale_factor),
                         1.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
                         1.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
+    draw_info.o_resolution = Common::MakeVec(screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
     draw_info.screen_id_l = screen_id;
 
     scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
