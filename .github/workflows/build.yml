@@ -235,7 +235,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
-        uses: ilammy/msvc-dev-cmd@138b1c783b65ec697d8342918306b7b2db4e88f1
+        uses: Eden-CI/msvc-dev-cmd@1bd71f95d6f3d1b2b3395b335cc63bcdc90cf223
       - name: Install extra tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: choco install ccache ninja ptime wget
