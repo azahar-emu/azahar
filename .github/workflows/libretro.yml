@@ -11,6 +11,11 @@ on:
 env:
   CORE_ARGS: -DENABLE_LIBRETRO=ON
 
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
 jobs:
   android:
     runs-on: ubuntu-22.04
@@ -48,11 +53,29 @@ jobs:
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-android.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-android.spdx.json
+
   linux:
     runs-on: ubuntu-22.04
     env:
@@ -76,11 +99,29 @@ jobs:
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-linux.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-linux.spdx.json
+
   windows:
     runs-on: ubuntu-latest
     env:
@@ -108,11 +149,28 @@ jobs:
                   x86_64-w64-mingw32.static-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*"
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-windows.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-windows.spdx.json
   macos:
     runs-on: macos-26
     strategy:
@@ -137,11 +195,29 @@ jobs:
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-macos-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-macos-${{ matrix.target }}.spdx.json
+
   ios:
     runs-on: macos-26
     env:
@@ -161,11 +237,29 @@ jobs:
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-ios.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-ios.spdx.json
+
   tvos:
     runs-on: macos-26
     env:
@@ -185,8 +279,25 @@ jobs:
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-tvos.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-tvos.spdx.json
