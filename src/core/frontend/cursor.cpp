@@ -192,7 +192,7 @@ void Cursor::circle(int direction){
   }
   offsetArray = rotateVector(offsetArray);
 
-  for (int i = 0; i < offsetArray.size(); i++){
+  for (std::size_t i = 0; i < offsetArray.size(); i++){
       macroPositions.push_back({rawCursorPos[0]+offsetArray[i][0], rawCursorPos[1]+offsetArray[i][1]});
   }
   macroFrames = macroPositions.size();
@@ -219,7 +219,7 @@ void Cursor::rub(){
   offsetArray.push_back({(-0.5f*radius),  0});
   offsetArray = rotateVector(offsetArray);
 
-  for (int i = 0; i < offsetArray.size(); i++){
+  for (std::size_t i = 0; i < offsetArray.size(); i++){
       macroPositions.push_back({rawCursorPos[0]+offsetArray[i][0], rawCursorPos[1]+offsetArray[i][1]});
   }
   macroFrames = macroPositions.size();

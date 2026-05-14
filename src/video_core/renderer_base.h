@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/rasterizer_interface.h"
-#include "core\frontend\cursor.h"
+#include "core/frontend/cursor.h"
 class Cursor;
 
 namespace Frontend {
