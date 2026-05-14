@@ -14,4 +14,7 @@ echo "Tag name is: $TAG_NAME"
 
 docker build -f docker/azahar-room/Dockerfile -t azahar-room:$TAG_NAME .
 mkdir -p build
-docker save azahar-room:$TAG_NAME > build/azahar-room-$TAG_NAME.dockerimage
+FILENAME="azahar-room-$TAG_NAME.dockerimage"
+docker save azahar-room:$TAG_NAME > build/$FILENAME
+
+echo "DOCKER_IMAGE_PATH=artifacts/$FILENAME" >> $GITHUB_ENV
