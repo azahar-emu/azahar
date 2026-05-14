@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "common/logging/log.h"
 #include "common/logging/types.h"
-#include "core\hle\service\hid\hid.h"
+#include "core/hle/service/hid/hid.h"
 
 
 void Cursor::update(){
