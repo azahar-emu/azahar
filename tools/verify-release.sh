@@ -16,8 +16,10 @@ set -euo pipefail
 #   - Downloads all release assets
 #   - Verifies asset is published in the release
 #   - Verifies SPDX attestations for every asset
+#   - Extracts SPDX SBOMs
 #
 # Notes:
+#   - Requires installation of the GitHub CLI (gh) and jq tools.
 #   - Draft release support requires authentication with permission
 #     to view the draft release.
 #   - gh release verify-asset currently does NOT support draft releases.
@@ -29,6 +31,11 @@ fi
 
 command -v gh >/dev/null 2>&1 || {
     echo "ERROR: GitHub CLI (gh) is not installed or not in PATH"
+    exit 1
+}
+
+command -v jq >/dev/null 2>&1 || {
+    echo "ERROR: jq is not installed or not in PATH"
     exit 1
 }
 
@@ -45,10 +52,13 @@ IS_DRAFT=$(
 )
 
 WORKDIR="verify/release-${TAG}"
+SBOMSUBDIR="sbom"
 
 rm -rf "$WORKDIR"
 mkdir -p "$WORKDIR"
 cd "$WORKDIR"
+mkdir -p "$SBOMSUBDIR"
+
 
 echo
 echo "==> Downloading release assets"
@@ -59,7 +69,11 @@ gh release download "$TAG" \
 echo
 echo "==> Fetching asset list"
 
-mapfile -t ASSETS < <(
+ASSETS=()
+
+while IFS= read -r asset; do
+    ASSETS+=("$asset")
+done < <(
     gh release view "$TAG" \
         --repo "$REPO" \
         --json assets \
@@ -90,8 +104,8 @@ for asset in "${ASSETS[@]}"; do
     echo "Asset: $asset"
     echo "========================================"
 
-    echo "1/2 release verify-asset"
-    
+    echo "1/3 Release asset verification"
+
     if [[ "$IS_DRAFT" != "true" ]]; then
         gh release verify-asset "$TAG" "$asset" \
             --repo "$REPO"
@@ -101,22 +115,80 @@ for asset in "${ASSETS[@]}"; do
         echo
     fi
 
-    echo "2/2 attestation verify (SPDX)"
-    
+    echo "2/3 Attestation verification"
+
     if [[ "$asset" == *.sha256sum ]]; then
         echo "SKIPPED (sha256sum does not need verification)"
+        echo "SKIPPED (no SPDX SBOM extraction)"
     else
         gh attestation verify "$asset" \
             --repo "$REPO" \
             --predicate-type https://spdx.dev/Document
+
+        echo
+        echo "3/3 SBOM extraction"
+
+        BASE_NAME="$(basename "$asset")"
+        SBOM_FILE="${SBOMSUBDIR}/${BASE_NAME}.spdx.json"
+
+        # gh attestation download does not currently support
+        # specifying the output file, nor it allows piping the
+        # output. For that reason, we need to find the .jsonl
+        # in the current directory.
+
+        # Exclude any existing .jsonl files from find
+        # (failsafe, should not happen)
+        BEFORE_JSONL="$(find . -maxdepth 1 -name '*.jsonl' -print)"
+
+        gh attestation download "$asset" \
+            --repo "$REPO" \
+            >/dev/null
+
+        ATTESTATION_FILE=""
+
+        while IFS= read -r file; do
+            FOUND=false
+
+            while IFS= read -r oldfile; do
+                if [[ "$file" == "$oldfile" ]]; then
+                    FOUND=true
+                    break
+                fi
+            done <<< "$BEFORE_JSONL"
+
+            # Only consider new jsonl files
+            if [[ "$FOUND" == "false" ]]; then
+                ATTESTATION_FILE="$file"
+                break
+            fi
+        done < <(find . -maxdepth 1 -name '*.jsonl' -print)
+
+        if [[ -z "$ATTESTATION_FILE" ]]; then
+            echo "ERROR: Could not locate downloaded attestation jsonl"
+            exit 1
+        fi
+
+        # Extract and decode the SBOM from the jsonl
+        jq -r '
+            .dsseEnvelope.payload
+        ' "$ATTESTATION_FILE" |
+        while IFS= read -r payload; do
+            echo "$payload" | base64 -d
+        done |
+        jq '.predicate' \
+            > "$SBOM_FILE"
+
+        rm -f "$ATTESTATION_FILE"
+
+        echo "Saved SBOM: $SBOM_FILE"
     fi
 
+    echo
     echo "OK: $asset"
 done
-
-rm -rf "$WORKDIR"
 
 echo
 echo "========================================"
 echo "All assets verified successfully"
+echo "SBOMs saved in: $WORKDIR/$SBOMSUBDIR"
 echo "========================================"
