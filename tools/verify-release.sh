@@ -44,7 +44,7 @@ IS_DRAFT=$(
         --jq '.isDraft'
 )
 
-WORKDIR="release-${TAG}"
+WORKDIR="verify/release-${TAG}"
 
 rm -rf "$WORKDIR"
 mkdir -p "$WORKDIR"
