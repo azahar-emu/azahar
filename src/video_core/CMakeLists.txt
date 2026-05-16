@@ -1,6 +1,6 @@
 add_subdirectory(host_shaders)
 
-add_library(video_core STATIC
+add_library(video_core STATIC EXCLUDE_FROM_ALL
     custom_textures/custom_format.cpp
     custom_textures/custom_format.h
     custom_textures/custom_tex_manager.cpp

@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -11,7 +11,7 @@ namespace Service::PM {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    std::make_shared<PM_APP>()->InstallAsService(service_manager);
+    std::make_shared<PM_APP>(system)->InstallAsService(service_manager);
     std::make_shared<PM_DBG>()->InstallAsService(service_manager);
 }
 

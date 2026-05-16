@@ -1130,4 +1130,44 @@ jboolean Java_org_citra_citra_1emu_NativeLibrary_nativeFileExists(JNIEnv* env, j
     return FileUtil::Exists(path);
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_deleteOpenGLShaderCache(JNIEnv* env, jobject obj,
+                                                                     jlong title_id) {
+    for (const std::string_view cache_type : {"separable", "conventional"}) {
+        const std::string path =
+            fmt::format("{}opengl/precompiled/{}/{:016X}.bin",
+                        FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir), cache_type, title_id);
+        LOG_INFO(Frontend, "Deleting shader file: {}", path);
+        FileUtil::Delete(path);
+    }
+    const std::string path =
+        fmt::format("{}opengl/transferable/{:016X}.bin",
+                    FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir), title_id);
+    LOG_INFO(Frontend, "Deleting shader file: {}", path);
+    FileUtil::Delete(path);
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_deleteVulkanShaderCache(JNIEnv* env, jobject obj,
+                                                                     jlong title_id) {
+    for (const std::string_view cache_type : {"vs", "fs", "gs", "pl"}) {
+        const std::string path =
+            fmt::format("{}vulkan/transferable/{:016X}_{}.vkch",
+                        FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir), title_id, cache_type);
+        LOG_INFO(Frontend, "Deleting shader file: {}", path);
+        FileUtil::Delete(path);
+    }
+
+    FileUtil::ForeachDirectoryEntry(
+        nullptr,
+        fmt::format("{}vulkan/pipeline", FileUtil::GetUserPath(FileUtil::UserPath::ShaderDir)),
+        [title_id]([[maybe_unused]] u64* num_entries_out, const std::string& directory,
+                   const std::string& virtual_name) {
+            if (virtual_name.starts_with(fmt::format("{:016X}", title_id))) {
+                std::string path = directory + DIR_SEP + virtual_name;
+                LOG_INFO(Frontend, "Deleting shader file: {}", path);
+                FileUtil::Delete(path);
+            }
+            return true;
+        });
+}
+
 } // extern "C"

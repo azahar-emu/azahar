@@ -57,12 +57,15 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 38> QtConfig::default_hotkeys {{
+const std::array<UISettings::Shortcut, 41> QtConfig::default_hotkeys {{
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
      {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F4"),Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F5"),Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F6"),Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     Qt::WindowShortcut}},
      {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), Qt::ApplicationShortcut}},
      {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      Qt::ApplicationShortcut}},
@@ -287,6 +290,7 @@ void QtConfig::ReadAudioValues() {
     ReadGlobalSetting(Settings::values.audio_emulation);
     ReadGlobalSetting(Settings::values.enable_audio_stretching);
     ReadGlobalSetting(Settings::values.enable_realtime_audio);
+    ReadGlobalSetting(Settings::values.simulate_headphones_plugged);
     ReadGlobalSetting(Settings::values.volume);
 
     if (global) {
@@ -483,6 +487,7 @@ void QtConfig::ReadDataStorageValues() {
     ReadBasicSetting(Settings::values.use_virtual_sd);
     ReadBasicSetting(Settings::values.use_custom_storage);
     ReadBasicSetting(Settings::values.compress_cia_installs);
+    ReadBasicSetting(Settings::values.async_fs_operations);
 
     const std::string nand_dir =
         ReadSetting(Settings::QKeys::nand_directory, QStringLiteral("")).toString().toStdString();
@@ -510,6 +515,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
     ReadBasicSetting(Settings::values.toggle_unique_data_console_type);
+    ReadBasicSetting(Settings::values.break_on_unmapped_memory_access);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Service::service_module_map) {
@@ -721,6 +727,8 @@ void QtConfig::ReadRendererValues() {
 
     ReadGlobalSetting(Settings::values.delay_game_render_thread_us);
     ReadGlobalSetting(Settings::values.disable_right_eye_render);
+
+    ReadGlobalSetting(Settings::values.simulate_3ds_gpu_timings);
 
     if (global) {
         ReadBasicSetting(Settings::values.use_shader_jit);
@@ -937,6 +945,7 @@ void QtConfig::SaveAudioValues() {
     WriteGlobalSetting(Settings::values.audio_emulation);
     WriteGlobalSetting(Settings::values.enable_audio_stretching);
     WriteGlobalSetting(Settings::values.enable_realtime_audio);
+    WriteGlobalSetting(Settings::values.simulate_headphones_plugged);
     WriteGlobalSetting(Settings::values.volume);
 
     if (global) {
@@ -1073,6 +1082,7 @@ void QtConfig::SaveDataStorageValues() {
     WriteBasicSetting(Settings::values.use_virtual_sd);
     WriteBasicSetting(Settings::values.use_custom_storage);
     WriteBasicSetting(Settings::values.compress_cia_installs);
+    WriteBasicSetting(Settings::values.async_fs_operations);
     WriteSetting(Settings::QKeys::nand_directory,
                  QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)),
                  QStringLiteral(""));
@@ -1094,6 +1104,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
+    WriteBasicSetting(Settings::values.break_on_unmapped_memory_access);
 
     qt_config->beginGroup(QStringLiteral("LLE"));
     for (const auto& service_module : Settings::values.lle_modules) {
@@ -1265,6 +1276,8 @@ void QtConfig::SaveRendererValues() {
 
     WriteGlobalSetting(Settings::values.delay_game_render_thread_us);
     WriteGlobalSetting(Settings::values.disable_right_eye_render);
+
+    WriteGlobalSetting(Settings::values.simulate_3ds_gpu_timings);
 
     if (global) {
         WriteSetting(Settings::QKeys::use_shader_jit, Settings::values.use_shader_jit.GetValue(),

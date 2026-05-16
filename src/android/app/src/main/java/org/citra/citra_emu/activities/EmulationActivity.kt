@@ -8,9 +8,9 @@ import android.Manifest.permission
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.os.BundleCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -43,6 +44,7 @@ import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.Game
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -79,7 +81,9 @@ class EmulationActivity : AppCompatActivity() {
             return navHostFragment.getChildFragmentManager().fragments.last() as EmulationFragment
         }
 
+    private var isRotationBlocked: Boolean = true
     private var isEmulationRunning: Boolean = false
+    private var isEmulationReady: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -88,12 +92,20 @@ class EmulationActivity : AppCompatActivity() {
 
         ThemeUtil.setTheme(this)
         settingsViewModel.settings.loadSettings()
+
+        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
+
+        // Block orientation until emulation is ready to prevent unneccesary
+        // surface recreation until the renderer is ready.
+        isRotationBlocked = true
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+
         super.onCreate(savedInstanceState)
+
         secondaryDisplay = SecondaryDisplay(this)
         secondaryDisplay.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
-        screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
         setContentView(binding.root)
 
@@ -118,8 +130,6 @@ class EmulationActivity : AppCompatActivity() {
         isEmulationRunning = true
         instance = this
 
-        applyOrientationSettings() // Check for orientation settings at startup
-
         val game = try {
             intent.extras?.let { extras ->
                 BundleCompat.getParcelable(extras, "game", Game::class.java)
@@ -135,13 +145,46 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStart(game.titleId)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+        NativeLibrary.stopEmulation()
+        NativeLibrary.playTimeManagerStop()
+
+        isEmulationReady = false
+        isRotationBlocked = true
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+        emulationViewModel.setEmulationStarted(false)
+
+        val game = intent.extras?.let { extras ->
+            BundleCompat.getParcelable(extras, "game", Game::class.java)
+        }
+        if (game != null) {
+            NativeLibrary.playTimeManagerStart(game.titleId)
+        }
+
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment_container) as NavHostFragment
+        navHostFragment.navController.setGraph(R.navigation.emulation_navigation, intent.extras)
+    }
+
     // On some devices, the system bars will not disappear on first boot or after some
     // rotations. Here we set full screen immersive repeatedly in onResume and in
     // onWindowFocusChanged to prevent the unwanted status bar state.
     override fun onResume() {
-        super.onResume()
         enableFullscreenImmersive()
-        applyOrientationSettings() // Check for orientation settings changes on runtime
+        if (isEmulationReady) {
+            // If emulation is ready then unblock rotation
+            isRotationBlocked = false
+            applyOrientationSettings()
+            emulationViewModel.setEmulationStarted(true)
+        } else {
+            if (!isRotationBlocked) {
+                applyOrientationSettings()
+            }
+        }
+        super.onResume()
     }
 
     override fun onStop() {
@@ -150,8 +193,8 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
         enableFullscreenImmersive()
+        super.onWindowFocusChanged(hasFocus)
     }
 
     public override fun onRestart() {
@@ -163,11 +206,15 @@ class EmulationActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("isEmulationRunning", isEmulationRunning)
+        outState.putBoolean("isEmulationReady", isEmulationReady)
+        outState.putBoolean("isRotationBlocked", isRotationBlocked)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         isEmulationRunning = savedInstanceState.getBoolean("isEmulationRunning", false)
+        isEmulationReady = savedInstanceState.getBoolean("isEmulationReady", false)
+        isRotationBlocked = savedInstanceState.getBoolean("isRotationBlocked", isRotationBlocked)
     }
 
     override fun onDestroy() {
@@ -221,6 +268,11 @@ class EmulationActivity : AppCompatActivity() {
 
     fun onEmulationStarted() {
         emulationViewModel.setEmulationStarted(true)
+        isEmulationReady = true
+        if (isRotationBlocked) {
+            isRotationBlocked = false
+            applyOrientationSettings()
+        }
         Toast.makeText(
             applicationContext,
             getString(R.string.emulation_menu_help),
@@ -294,6 +346,7 @@ class EmulationActivity : AppCompatActivity() {
     private fun onAmiiboSelected(selectedFile: String) {
         val success = NativeLibrary.loadAmiibo(selectedFile)
         if (!success) {
+            Log.error("[EmulationActivity] Failed to load Amiibo file: $selectedFile")
             MessageDialogFragment.newInstance(
                 R.string.amiibo_load_error,
                 R.string.amiibo_load_error_message
@@ -516,13 +569,19 @@ class EmulationActivity : AppCompatActivity() {
         return true
     }
 
-    val openFileLauncher =
+    val openAmiiboFileLauncher =
         registerForActivityResult(OpenFileResultContract()) { result: Intent? ->
             if (result == null) return@registerForActivityResult
             val selectedFiles = FileBrowserHelper.getSelectedFiles(
                 result, applicationContext, listOf<String>("bin")
             ) ?: return@registerForActivityResult
-            onAmiiboSelected(selectedFiles[0])
+            if (BuildUtil.isGooglePlayBuild) {
+                onAmiiboSelected(selectedFiles[0])
+            } else {
+                val fileUri = selectedFiles[0].toUri()
+                val nativePath = "!" + NativeLibrary.getNativePath(fileUri)
+                onAmiiboSelected(nativePath)
+            }
         }
 
     val openImageLauncher =

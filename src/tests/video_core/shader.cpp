@@ -481,6 +481,39 @@ SHADER_TEST_CASE("RSQ", "[video_core][shader]") {
     REQUIRE(shader.Run({0.0625f}).x == Catch::Approx(4.0f).margin(0.004f));
 }
 
+SHADER_TEST_CASE("SETEMIT", "[video_core][shader]") {
+    Pica::GeometryEmitter geometry_emitter;
+
+    for (u8 winding = 0; winding <= 1; ++winding) {
+        for (u8 prim_emit = 0; prim_emit <= 1; ++prim_emit) {
+            for (u8 vertex_id = 0; vertex_id <= 3; ++vertex_id) {
+                auto shader_setup = CompileShaderSetup({
+                    {OpCode::Id::NOP}, // setemit
+                    {OpCode::Id::END},
+                });
+
+                // nihstro does not support the SETEMIT instructions, so the instruction-binary must
+                // be manually
+                // inserted here:
+                nihstro::Instruction SETEMIT = {};
+                SETEMIT.opcode = nihstro::OpCode(nihstro::OpCode::Id::SETEMIT);
+                SETEMIT.setemit.winding.Assign(winding);
+                SETEMIT.setemit.prim_emit.Assign(prim_emit);
+                SETEMIT.setemit.vertex_id.Assign(vertex_id);
+                shader_setup->UpdateProgramCode(0, SETEMIT.hex);
+
+                auto shader = TestType(std::move(shader_setup));
+                Pica::ShaderUnit shader_unit(&geometry_emitter);
+                shader.Run(shader_unit, 1.0f);
+
+                REQUIRE(geometry_emitter.emit_state.winding == winding);
+                REQUIRE(geometry_emitter.emit_state.prim_emit == prim_emit);
+                REQUIRE(geometry_emitter.emit_state.vertex_id == vertex_id);
+            }
+        }
+    }
+}
+
 SHADER_TEST_CASE("Uniform Read", "[video_core][shader]") {
     const auto sh_input = SourceRegister::MakeInput(0);
     const auto sh_c0 = SourceRegister::MakeFloat(0);

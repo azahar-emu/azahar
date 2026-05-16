@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -138,6 +138,12 @@ public:
          *      2: u8 output: 0 = Old3DS, 1 = New3DS.
          */
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
+
+        void SetInfoLEDPattern(Kernel::HLERequestContext& ctx);
+
+        void SetInfoLEDPatternHeader(Kernel::HLERequestContext& ctx);
+
+        void GetInfoLEDStatus(Kernel::HLERequestContext& ctx);
 
         /**
          * PTM::GetSystemTime service function

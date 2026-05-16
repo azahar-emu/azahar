@@ -3,20 +3,21 @@
 # Determine the full revision name.
 GITDATE="`git show -s --date=short --format='%ad' | sed 's/-//g'`"
 GITREV="`git show -s --format='%h'`"
-REV_NAME="azahar-$OS-$TARGET-$GITDATE-$GITREV"
-
-# Determine the name of the release being built.
-if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-    RELEASE_NAME=azahar-$GITHUB_REF_NAME
-    REV_NAME="azahar-$OS-$TARGET-$GITHUB_REF_NAME"
-else
-    RELEASE_NAME=azahar-head
-fi
 
 # Archive and upload the artifacts.
 mkdir -p artifacts
 
 function pack_artifacts() {
+    REV_NAME="azahar-$OS-$TARGET-$GITDATE-$GITREV"
+
+    # Determine the name of the release being built.
+    if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+        RELEASE_NAME=azahar-$GITHUB_REF_NAME
+        REV_NAME="azahar-$OS-$TARGET-$GITHUB_REF_NAME"
+    else
+        RELEASE_NAME=azahar-head
+    fi
+
     ARTIFACTS_PATH="$1"
 
     # Set up root directory for archive.
@@ -35,10 +36,10 @@ function pack_artifacts() {
     fi
 
     # Create .zip/.tar.gz
-    if [ "$OS" = "windows" ]; then
+    if [ "$OS" = "windows" ] && [ "$TARGET" != "mxe" ]; then
         ARCHIVE_FULL_NAME="$ARCHIVE_NAME.zip"
         powershell Compress-Archive "$REV_NAME" "$ARCHIVE_FULL_NAME"
-    elif [ "$OS" = "android" ] || [ "$OS" = "macos" ]; then
+    elif [ "$OS" = "android" ] || [ "$OS" = "macos" ] || [ "$TARGET" = "mxe" ]; then
         ARCHIVE_FULL_NAME="$ARCHIVE_NAME.zip"
         zip -r "$ARCHIVE_FULL_NAME" "$REV_NAME"
     else
@@ -56,11 +57,23 @@ if [ -n "$UNPACKED" ]; then
         FILENAME=$(basename "$ARTIFACT")
         EXTENSION="${FILENAME##*.}"
 
+        # TODO: Deduplicate
+        REV_NAME="azahar-$OS-$TARGET-$GITDATE-$GITREV"
+
+        # Determine the name of the release being built.
+        if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            RELEASE_NAME=azahar-$GITHUB_REF_NAME
+            REV_NAME="azahar-$OS-$TARGET-$GITHUB_REF_NAME"
+        else
+            RELEASE_NAME=azahar-head
+        fi
+
         mv "$ARTIFACT" "artifacts/$REV_NAME.$EXTENSION"
     done
 elif [ -n "$PACK_INDIVIDUALLY" ]; then
     # Pack and upload the artifacts one-by-one.
     for ARTIFACT in build/bundle/*; do
+        TARGET=$(basename "$ARTIFACT")
         pack_artifacts "$ARTIFACT"
     done
 else

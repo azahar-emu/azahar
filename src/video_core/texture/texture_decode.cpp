@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -219,6 +219,8 @@ TextureInfo TextureInfo::FromPicaRegister(const TexturingRegs::TextureConfig& co
     info.height = config.height;
     info.format = format;
     info.SetDefaultStride();
+    info.is_shadow_source = config.type == TexturingRegs::TextureConfig::TextureType::Shadow2D ||
+                            config.type == TexturingRegs::TextureConfig::TextureType::ShadowCube;
     return info;
 }
 

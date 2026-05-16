@@ -25,7 +25,7 @@ struct CoreSettings {
 
     bool enable_touch_touchscreen;
 
-    bool render_touchscreen;
+    bool enable_touch_pointer_timeout;
 
     std::string swap_screen_mode;
 

@@ -202,6 +202,14 @@ void KernelSystem::RestoreMemoryState(u64 title_id) {
     }
 }
 
+void KernelSystem::SetCore1ScheduleMode(Core1ScheduleMode mode) {
+    GetThreadManager(1).SetScheduleMode(mode);
+}
+
+void KernelSystem::UpdateCore1AppCpuLimit() {
+    GetThreadManager(1).UpdateAppCpuLimit();
+}
+
 template <class Archive>
 void KernelSystem::serialize(Archive& ar, const unsigned int) {
     ar & memory_regions;
@@ -245,5 +253,11 @@ void New3dsHwCapabilities::serialize(Archive& ar, const unsigned int) {
     ar & memory_mode;
 }
 SERIALIZE_IMPL(New3dsHwCapabilities)
+
+template <class Archive>
+void Core1CpuTime::serialize(Archive& ar, const unsigned int) {
+    ar & raw;
+}
+SERIALIZE_IMPL(Core1CpuTime)
 
 } // namespace Kernel

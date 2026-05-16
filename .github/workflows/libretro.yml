@@ -11,6 +11,11 @@ on:
 env:
   CORE_ARGS: -DENABLE_LIBRETRO=ON
 
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
 jobs:
   android:
     runs-on: ubuntu-22.04
@@ -32,6 +37,10 @@ jobs:
               echo "GIT_TAG_NAME=$GITHUB_REF_NAME" >> $GITHUB_ENV
           fi
           echo $GIT_TAG_NAME
+      - name: Install tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y llvm
       - name: Update Android SDK CMake version
         run: |
           echo "y" | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "ndk;$ANDROID_NDK_VERSION"
@@ -41,13 +50,32 @@ jobs:
           export NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/$ANDROID_NDK_VERSION
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake $CORE_ARGS -DANDROID_PLATFORM=android-$API_LEVEL -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_static -DANDROID_ABI=$ANDROID_ABI . -B $BUILD_DIR
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+          llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-android.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-android.spdx.json
+
   linux:
     runs-on: ubuntu-22.04
     env:
@@ -60,17 +88,40 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y llvm
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+          llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-linux.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-linux.spdx.json
+
   windows:
     runs-on: ubuntu-latest
     env:
@@ -79,7 +130,7 @@ jobs:
       BUILD_DIR: build/windows-x86_64
       EXTRA_CORE_ARGS: -DENABLE_LTO=OFF -G Ninja
       CMAKE: x86_64-w64-mingw32.static-cmake
-      IMAGE: git.libretro.com:5050/libretro-infrastructure/libretro-build-mxe-win-cross-cores:mingw12
+      IMAGE: reallibretroretroarch/libretro-build-mxe-win-cross-cores:mingw12
       EXTRA_PATH: bin/Release
     steps:
       - uses: actions/checkout@v4
@@ -94,14 +145,32 @@ jobs:
               $IMAGE \
               bash -lc "\
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
-                  ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)"
+                  ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc) && \
+                  x86_64-w64-mingw32.static-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*"
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-windows.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-windows.spdx.json
   macos:
     runs-on: macos-26
     strategy:
@@ -123,13 +192,32 @@ jobs:
         run: |
           cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-macos-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-macos-${{ matrix.target }}.spdx.json
+
   ios:
     runs-on: macos-26
     env:
@@ -146,13 +234,32 @@ jobs:
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-ios.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-ios.spdx.json
+
   tvos:
     runs-on: macos-26
     env:
@@ -169,10 +276,28 @@ jobs:
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
           cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: libretro-tvos.spdx.json
+          upload-artifact: false
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
-          path: ./*.zip
+          path: |
+            ./*.zip
+            ./*.spdx.json
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ./*.zip
+          sbom-path: libretro-tvos.spdx.json

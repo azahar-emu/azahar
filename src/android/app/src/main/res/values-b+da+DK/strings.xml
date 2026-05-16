@@ -355,7 +355,6 @@
     <string name="learn_more">Lær mere</string>
     <string name="close">Luk</string>
     <string name="reset_to_default">Nulstil til standard</string>
-    <string name="redump_games"><![CDATA[Følg venligst vejledningerne for at dumpe dine <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">spilkassetter</a> eller <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">installerede titler</a>.]]></string>
     <string name="option_default">Standard</string>
     <string name="none">Ingen</string>
     <string name="auto">Auto</string>

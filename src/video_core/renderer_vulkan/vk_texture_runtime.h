@@ -155,7 +155,7 @@ public:
     void GenerateMipmaps(Surface& surface);
 
     /// Returns true if the provided pixel format needs convertion
-    bool NeedsConversion(VideoCore::PixelFormat format) const;
+    bool NeedsConversion(const Surface& surface) const;
 
 private:
     /// Clears a partial texture rect using a clear rectangle
@@ -175,7 +175,8 @@ class Surface : public VideoCore::SurfaceBase {
     friend class TextureRuntime;
 
 public:
-    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params);
+    explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceParams& params,
+                     const VideoCore::SurfaceFlagBits& initial_flag_bits = {});
     explicit Surface(TextureRuntime& runtime, const VideoCore::SurfaceBase& surface,
                      const VideoCore::Material* materal);
 

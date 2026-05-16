@@ -720,15 +720,16 @@ void TextureRuntime::GenerateMipmaps(Surface& surface) {
     }
 }
 
-bool TextureRuntime::NeedsConversion(VideoCore::PixelFormat format) const {
-    const FormatTraits traits = instance.GetTraits(format);
+bool TextureRuntime::NeedsConversion(const Surface& surface) const {
+    const FormatTraits& traits = surface.traits;
     return traits.needs_conversion &&
            // DepthStencil formats are handled elsewhere due to de-interleaving.
            traits.aspect != (vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil);
 }
 
-Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params)
-    : SurfaceBase{params}, runtime{runtime_}, instance{runtime_.GetInstance()},
+Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& params,
+                 const VideoCore::SurfaceFlagBits& initial_flag_bits)
+    : SurfaceBase{params, initial_flag_bits}, runtime{runtime_}, instance{runtime_.GetInstance()},
       scheduler{runtime_.GetScheduler()}, traits{instance.GetTraits(pixel_format)},
       handles{Handle(instance), Handle(instance), Handle(instance), Handle(instance)} {
 
@@ -736,7 +737,17 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         return;
     }
 
-    const bool is_mutable = pixel_format == VideoCore::PixelFormat::RGBA8;
+    bool is_mutable = traits.native == vk::Format::eR8G8B8A8Unorm;
+
+    if (True(flags & VideoCore::SurfaceFlagBits::ShadowSource) &&
+        traits.native != vk::Format::eR8G8B8A8Unorm) {
+        // If the surface is a shadow source, it needs conversion
+        // to be forced as it always has to be RGBA8
+        traits = instance.GetTraits(VideoCore::PixelFormat::RGBA8);
+        traits.needs_conversion = true;
+        is_mutable = true;
+    }
+
     const vk::Format format = traits.native;
 
     ASSERT_MSG(format != vk::Format::eUndefined && levels >= 1,
@@ -1278,7 +1289,7 @@ vk::ImageView Surface::ImageView(ViewType view_type, Type type) noexcept {
     auto aspect = traits.aspect;
 
     if (view_type == ViewType::Storage) {
-        ASSERT(pixel_format == PixelFormat::RGBA8);
+        ASSERT(traits.native == vk::Format::eR8G8B8A8Unorm);
         is_storage = true;
     }
     if (view_type == ViewType::Depth || view_type == ViewType::Stencil) {

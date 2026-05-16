@@ -599,6 +599,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     BooleanSetting.COMPRESS_INSTALLED_CIA_CONTENT.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.ASYNC_FS_OPERATIONS,
+                    R.string.async_fs_operations,
+                    R.string.async_fs_operations_description,
+                    BooleanSetting.ASYNC_FS_OPERATIONS.key,
+                    BooleanSetting.ASYNC_FS_OPERATIONS.defaultValue
+                )
+            )
         }
     }
 
@@ -1275,7 +1284,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_RED.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1298,7 +1307,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_GREEN.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1321,7 +1330,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 override val section = null
                 override val isRuntimeEditable = false
                 override val valueAsString = int.toString()
-                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue
+                override val defaultValue = FloatSetting.BACKGROUND_BLUE.defaultValue.toInt()
             }
             add(
                 SliderSetting(
@@ -1705,6 +1714,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SwitchSetting(
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED,
+                    R.string.simulate_headphones_plugged,
+                    R.string.simulate_headphones_plugged_description,
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED.key,
+                    BooleanSetting.SIMULATE_HEADPHONES_PLUGGED.defaultValue
+                )
+            )
+            add(
                 SingleChoiceSetting(
                     IntSetting.AUDIO_INPUT_TYPE,
                     R.string.audio_input_type,
@@ -1788,6 +1806,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.vsync_description,
                     BooleanSetting.VSYNC.key,
                     BooleanSetting.VSYNC.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS,
+                    R.string.simulate_3ds_gpu_timings,
+                    R.string.simulate_3ds_gpu_timings_description,
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS.key,
+                    BooleanSetting.SIMULATE_3DS_GPU_TIMINGS.defaultValue
                 )
             )
             add(

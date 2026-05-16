@@ -306,7 +306,6 @@
     <string name="learn_more">Daha Fazla Öğren </string>
     <string name="close">Kapat</string>
     <string name="reset_to_default">Varsayılanlara Sıfırla</string>
-    <string name="redump_games"><![CDATA[Lütfen <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">oyun kartuşlarınızı</a> veya <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">yüklü başlıklarınızı</a>yeniden yüklemek için kılavuzları izleyin.]]></string>
     <string name="option_default">Varsayılan</string>
     <string name="auto">Otomatik</string>
     <string name="off">Kapalı</string>

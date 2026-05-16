@@ -72,10 +72,14 @@ object GameHelper {
         val filePath = uri.toString()
         var nativePath: String? = null
         var gameInfo: GameInfo?
-        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
+        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) || filePath.startsWith("!")) {
             gameInfo = GameInfo(filePath)
         } else {
-            nativePath = "!" + NativeLibrary.getNativePath(uri);
+            nativePath = if (uri.scheme == "fd") {
+                uri.toString()
+            } else {
+                "!" + NativeLibrary.getNativePath(uri)
+            };
             gameInfo = GameInfo(nativePath)
         }
 
@@ -90,7 +94,8 @@ object GameHelper {
             valid,
             (gameInfo?.getTitle() ?: FileUtil.getFilename(uri)).replace("[\\t\\n\\r]+".toRegex(), " "),
             filePath.replace("\n", " "),
-            if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath)) {
+            // TODO: This next line can be deduplicated but I don't want to right now -OS
+            if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) || filePath.startsWith("!")) {
                 filePath
             } else {
                 nativePath!!

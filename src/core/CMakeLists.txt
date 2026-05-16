@@ -1,4 +1,4 @@
-add_library(citra_core STATIC
+add_library(citra_core STATIC EXCLUDE_FROM_ALL
     3ds.h
     arm/arm_interface.h
     arm/dyncom/arm_dyncom.cpp
@@ -126,10 +126,6 @@ add_library(citra_core STATIC
     frontend/image_interface.cpp
     frontend/image_interface.h
     frontend/input.h
-    gdbstub/gdbstub.cpp
-    gdbstub/gdbstub.h
-    gdbstub/hio.cpp
-    gdbstub/hio.h
     hle/applets/applet.cpp
     hle/applets/applet.h
     hle/applets/erreula.cpp
@@ -350,6 +346,8 @@ add_library(citra_core STATIC
     hle/service/ldr_ro/ldr_ro.h
     hle/service/mcu/mcu_hwc.cpp
     hle/service/mcu/mcu_hwc.h
+    hle/service/mcu/mcu_rtc.cpp
+    hle/service/mcu/mcu_rtc.h
     hle/service/mcu/mcu.cpp
     hle/service/mcu/mcu.h
     hle/service/mic/mic_u.cpp
@@ -462,7 +460,6 @@ add_library(citra_core STATIC
     hw/aes/key.h
     hw/ecc.cpp
     hw/ecc.h
-    hw/default_keys.h
     hw/rsa/rsa.cpp
     hw/rsa/rsa.h
     hw/unique_data.cpp
@@ -500,6 +497,10 @@ add_library(citra_core STATIC
     tracer/recorder.h
 )
 
+if (ENABLE_BUILTIN_KEYBLOB)
+    target_sources(citra_core PRIVATE hw/default_keys.h)
+endif()
+
 create_target_directory_groups(citra_core)
 
 target_link_libraries(citra_core PUBLIC citra_common PRIVATE audio_core network video_core)
@@ -521,6 +522,16 @@ if (ENABLE_SCRIPTING)
         rpc/server.h
         rpc/udp_server.cpp
         rpc/udp_server.h
+    )
+endif()
+
+if (ENABLE_GDBSTUB)
+    target_compile_definitions(citra_core PUBLIC -DENABLE_GDBSTUB)
+    target_sources(citra_core PRIVATE
+        gdbstub/gdbstub.cpp
+        gdbstub/gdbstub.h
+        gdbstub/hio.cpp
+        gdbstub/hio.h
     )
 endif()
 

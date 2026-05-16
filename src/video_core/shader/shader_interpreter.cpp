@@ -671,9 +671,9 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
             case OpCode::Id::SETEMIT: {
                 auto* emitter = state.emitter_ptr;
                 ASSERT_MSG(emitter, "Execute SETEMIT on VS");
-                emitter->vertex_id = instr.setemit.vertex_id;
-                emitter->prim_emit = instr.setemit.prim_emit != 0;
-                emitter->winding = instr.setemit.winding != 0;
+                emitter->emit_state.vertex_id = instr.setemit.vertex_id;
+                emitter->emit_state.prim_emit = instr.setemit.prim_emit != 0;
+                emitter->emit_state.winding = instr.setemit.winding != 0;
                 break;
             }
 

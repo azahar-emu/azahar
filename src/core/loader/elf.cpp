@@ -357,13 +357,12 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
 namespace Loader {
 
 FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile* file) {
-    u32 magic;
-    file->Seek(0, SEEK_SET);
-    if (1 != file->ReadArray<u32>(&magic, 1))
-        return FileType::Error;
+    u32 magic{};
 
-    if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
-        return FileType::ELF;
+    if (file->Seek(0, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
+        if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
+            return FileType::ELF;
+    }
 
     return FileType::Error;
 }
@@ -393,6 +392,8 @@ ResultStatus AppLoader_ELF::Load(std::shared_ptr<Kernel::Process>& process) {
     // Attach the default resource limit (APPLICATION) to the process
     process->resource_limit =
         system.Kernel().ResourceLimit().GetForCategory(Kernel::ResourceLimitCategory::Application);
+
+    process->resource_limit->ApplyAppMaxCPUSetting(process, 1, 89);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 

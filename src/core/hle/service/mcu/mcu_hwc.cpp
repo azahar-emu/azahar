@@ -1,15 +1,18 @@
-// Copyright 2024 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/archives.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/service/mcu/mcu_hwc.h"
+#include "core/hle/service/mcu/mcu_rtc.h"
 
+SERVICE_CONSTRUCT_IMPL(Service::MCU::HWC)
 SERIALIZE_EXPORT_IMPL(Service::MCU::HWC)
 
 namespace Service::MCU {
 
-HWC::HWC() : ServiceFramework("mcu::HWC", 1) {
+HWC::HWC(Core::System& _system) : ServiceFramework("mcu::HWC", 1), system(_system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x0001, nullptr, "ReadRegister"},
@@ -21,7 +24,7 @@ HWC::HWC() : ServiceFramework("mcu::HWC", 1) {
         {0x0007, nullptr, "SetWifiLEDState"},
         {0x0008, nullptr, "SetCameraLEDPattern"},
         {0x0009, nullptr, "Set3DLEDState"},
-        {0x000A, nullptr, "SetInfoLEDPattern"},
+        {0x000A, &HWC::SetInfoLEDPattern, "SetInfoLEDPattern"},
         {0x000B, nullptr, "GetSoundVolume"},
         {0x000C, nullptr, "SetTopScreenFlicker"},
         {0x000D, nullptr, "SetBottomScreenFlicker"},
@@ -31,6 +34,21 @@ HWC::HWC() : ServiceFramework("mcu::HWC", 1) {
         // clang-format on
     };
     RegisterHandlers(functions);
+}
+
+void HWC::SetInfoLEDPattern(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto pat = rp.PopRaw<MCU::InfoLedPattern>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto mcu_rtc = MCU::RTC::GetService(system);
+    if (mcu_rtc) {
+        mcu_rtc->UpdateInfoLEDPattern(pat);
+        rb.Push(ResultSuccess);
+    } else {
+        rb.Push(ResultUnknown);
+    }
 }
 
 } // namespace Service::MCU

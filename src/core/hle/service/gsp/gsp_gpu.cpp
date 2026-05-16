@@ -12,6 +12,7 @@
 #include "common/hacks/hack_manager.h"
 #include "common/settings.h"
 #include "core/core.h"
+#include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/shared_page.h"
@@ -295,6 +296,23 @@ void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_GSP, "(STUBBED) called mode=0x{:08X}", mode);
 }
 
+void GSP_GPU::SetPerfLogMode(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    bool enabled = rp.Pop<u32>() != 0;
+
+    perf_recorder.SetEnabled(enabled);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess);
+}
+
+void GSP_GPU::GetPerfLog(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(15, 0);
+    rb.PushRaw(perf_recorder.GetResults());
+}
+
 void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 flags = rp.Pop<u32>();
@@ -337,7 +355,124 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_GSP, "called");
 }
 
-void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) {
+// Uncomment the following line to display the average delay calculated for every frame.
+// #define SHOW_AVERAGE_TIME_PER_FRAME
+
+void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id, u64 wait_delay_ns) {
+
+    // Every gsp request takes a constant amount of time to be
+    // processed and control returned to the application. This
+    // time is estimated below.
+    static constexpr u64 sync_delay_nanoseconds = 300 * 1000;
+
+    // For a reason not yet understood, Super Mario 3D Land hangs on a white screen after the title
+    // screen when any of the save slots have the completion star icons. This is in some way related
+    // to the timings of texture copy commands, and gets fixed if we increase the amount of time
+    // those take. This issue may be resolved as timings become more accurate in the future.
+    static constexpr u64 sync_delay_nanoseconds_delayed_texcopy = 1000 * 1000;
+
+#ifdef SHOW_AVERAGE_TIME_PER_FRAME
+    auto track_average = [&](bool is_vsync) {
+        using clock = std::chrono::steady_clock;
+
+        static uint64_t total_ns = 0;
+        static uint64_t sample_count = 0;
+        static auto last_print = clock::now();
+
+        if (!is_vsync) {
+            total_ns += wait_delay_ns;
+            ++sample_count;
+        }
+
+        auto now = clock::now();
+
+        if (now - last_print >= std::chrono::milliseconds(250)) {
+            double average_ns =
+                (sample_count > 0)
+                    ? (static_cast<double>(total_ns) / static_cast<double>(sample_count))
+                    : 0;
+
+            LOG_INFO(Service_GSP, "Average delay milliseconds per frame: {}",
+                     average_ns / 1000000.f);
+
+            total_ns = 0;
+            sample_count = 0;
+            last_print = now;
+        }
+    };
+#endif
+
+    // Signal VBlank interrupt immediately, this interrupt is signaled from
+    // an scheduler event so it already has the proper timing.
+    if (interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1) {
+
+#ifdef SHOW_AVERAGE_TIME_PER_FRAME
+        track_average(true);
+#endif
+
+        if (perf_recorder.IsEnabled()) {
+            constexpr u64 nanoseconds_per_frame = static_cast<u64>(
+                ((static_cast<double>(VideoCore::FRAME_TICKS) / BASE_CLOCK_RATE_ARM11) * 1e9));
+
+            perf_recorder.UpdateTime(interrupt_id, nanoseconds_per_frame);
+        }
+
+        ProcessPendingInterruptImpl(interrupt_id, thread_id);
+        return;
+    }
+
+    if (perf_recorder.IsEnabled()) {
+        perf_recorder.UpdateTime(interrupt_id, wait_delay_ns);
+    }
+
+    if (Settings::values.simulate_3ds_gpu_timings.GetValue()) {
+
+        if (delay_texture_copy_completion) {
+            wait_delay_ns += (interrupt_id == InterruptId::PPF)
+                                 ? sync_delay_nanoseconds_delayed_texcopy
+                                 : sync_delay_nanoseconds;
+        } else {
+            wait_delay_ns += sync_delay_nanoseconds;
+        }
+    } else {
+        if (delay_texture_copy_completion && interrupt_id == InterruptId::PPF) {
+            wait_delay_ns += sync_delay_nanoseconds_delayed_texcopy;
+        } else {
+            wait_delay_ns = 0;
+        }
+    }
+
+#ifdef SHOW_AVERAGE_TIME_PER_FRAME
+    track_average(false);
+#endif
+
+    if (wait_delay_ns) {
+        size_t pending_interrupt_id =
+            pending_interrupts.Push(std::make_pair(interrupt_id, thread_id));
+        if (pending_interrupt_id == std::numeric_limits<size_t>::max()) {
+            LOG_ERROR(Service_GSP, "Pending interrupts queue is full");
+            ProcessPendingInterruptImpl(interrupt_id, thread_id);
+        } else {
+            system.Kernel().timing.ScheduleEvent(nsToCycles(wait_delay_ns),
+                                                 SignalInterruptEventType,
+                                                 static_cast<uintptr_t>(pending_interrupt_id));
+        }
+    } else {
+        ProcessPendingInterruptImpl(interrupt_id, thread_id);
+    }
+}
+
+void Service::GSP::GSP_GPU::ProcessPendingInterrupt(size_t pending_interrupt_id) {
+    auto pending_interrupt = pending_interrupts.Pop(pending_interrupt_id);
+    if (!pending_interrupt.has_value()) {
+        return;
+    }
+    const auto& [interrupt_id, thread_id] = *pending_interrupt;
+
+    ProcessPendingInterruptImpl(interrupt_id, thread_id);
+}
+
+void Service::GSP::GSP_GPU::ProcessPendingInterruptImpl(InterruptId interrupt_id, u32 thread_id) {
     SessionData* session_data = FindRegisteredThreadData(thread_id);
     if (!session_data) {
         return;
@@ -349,32 +484,55 @@ void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) 
         return;
     }
 
+    const bool is_pdc = interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1;
     auto* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
-    u8 next = interrupt_relay_queue->index;
-    next += interrupt_relay_queue->number_interrupts;
-    next = next % 0x34; // 0x34 is the number of interrupt slots
 
-    interrupt_relay_queue->number_interrupts += 1;
+    auto queue_interrupt = [&]() {
+        if (interrupt_relay_queue->number_interrupts >= InterruptRelayQueue::max_slots) {
+            interrupt_relay_queue->error_code = InterruptRelayQueue::queue_full_error;
+        } else {
+            u8 next = interrupt_relay_queue->index;
+            next += interrupt_relay_queue->number_interrupts;
+            next %= InterruptRelayQueue::max_slots;
 
-    interrupt_relay_queue->slot[next] = interrupt_id;
-    interrupt_relay_queue->error_code = 0x0; // No error
+            interrupt_relay_queue->number_interrupts += 1;
 
-    // Update framebuffer information if requested
-    const s32 screen_id = (interrupt_id == InterruptId::PDC0)   ? 0
-                          : (interrupt_id == InterruptId::PDC1) ? 1
-                                                                : -1;
-    if (screen_id != -1) {
+            interrupt_relay_queue->slot[next] = interrupt_id;
+
+            interrupt_event->Signal();
+        }
+    };
+
+    if (is_pdc) {
+        if (!interrupt_relay_queue->ignore_pdc.Value()) {
+
+            if (interrupt_relay_queue->number_interrupts >=
+                InterruptRelayQueue::stop_queuing_pdc_threeshold) {
+                if (interrupt_id == InterruptId::PDC0) {
+                    interrupt_relay_queue->missed_PDC0++;
+                } else {
+                    interrupt_relay_queue->missed_PDC1++;
+                }
+            } else {
+                queue_interrupt();
+            }
+        }
+
+        // Update framebuffer information if requested
+        const s32 screen_id = (interrupt_id == InterruptId::PDC0) ? 0 : 1;
+
         auto* info = GetFrameBufferInfo(thread_id, screen_id);
         if (info->is_dirty) {
             system.GPU().SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
             info->is_dirty.Assign(false);
         }
-    }
 
-    interrupt_event->Signal();
+    } else {
+        queue_interrupt();
+    }
 }
 
-void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
+void GSP_GPU::SignalInterrupt(InterruptId interrupt_id, u64 wait_delay_ns) {
     if (nullptr == shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
@@ -385,7 +543,7 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
     // right), but the PDC0/1 interrupts are signaled for every registered thread.
     if (interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1) {
         for (u32 thread_id = 0; thread_id < MaxGSPThreads; ++thread_id) {
-            SignalInterruptForThread(interrupt_id, thread_id);
+            SignalInterruptForThread(interrupt_id, thread_id, wait_delay_ns);
         }
         return;
     }
@@ -395,7 +553,7 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
         return;
     }
 
-    SignalInterruptForThread(interrupt_id, active_thread_id);
+    SignalInterruptForThread(interrupt_id, active_thread_id, wait_delay_ns);
 }
 
 void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
@@ -692,6 +850,11 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
             Common::Hacks::HackType::REQUIRES_SHADER_FIXUP, process->codeset->program_id,
             Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
 
+    delay_texture_copy_completion =
+        Common::Hacks::hack_manager.GetHackAllowMode(
+            Common::Hacks::HackType::DELAY_TEXTURE_COPY_COMPLETION, process->codeset->program_id,
+            Common::Hacks::HackAllowMode::DISALLOW) != Common::Hacks::HackAllowMode::DISALLOW;
+
     auto& gpu = system.GPU();
     gpu.ApplyPerProgramSettings(process->codeset->program_id);
     gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
@@ -818,6 +981,9 @@ void GSP_GPU::serialize(Archive& ar, const unsigned int) {
     ar & first_initialization;
     ar & used_thread_ids;
     ar & saved_vram;
+    ar & delay_texture_copy_completion;
+    ar & pending_interrupts;
+    ar & perf_recorder;
 }
 SERIALIZE_IMPL(GSP_GPU)
 
@@ -840,8 +1006,8 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
         {0x000E, nullptr, "SetTextureCopy"},
         {0x000F, nullptr, "SetMemoryFill"},
         {0x0010, &GSP_GPU::SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
-        {0x0011, nullptr, "SetPerfLogMode"},
-        {0x0012, nullptr, "GetPerfLog"},
+        {0x0011, &GSP_GPU::SetPerfLogMode, "SetPerfLogMode"},
+        {0x0012, &GSP_GPU::GetPerfLog, "GetPerfLog"},
         {0x0013, &GSP_GPU::RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
         {0x0014, &GSP_GPU::UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
         {0x0015, &GSP_GPU::TryAcquireRight, "TryAcquireRight"},
@@ -865,6 +1031,11 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 4), system
                                             MemoryPermission::ReadWrite, 0,
                                             Kernel::MemoryRegion::BASE, "GSP:SharedMemory")
                         .Unwrap();
+
+    SignalInterruptEventType = system.Kernel().timing.RegisterEvent(
+        "GSPPendingInterrupt", [this](uintptr_t arg, s64 cycle_late) {
+            ProcessPendingInterrupt(static_cast<size_t>(arg));
+        });
 
     first_initialization = true;
 };

@@ -7,7 +7,7 @@ on:
 jobs:
   transifex:
     runs-on: ubuntu-latest
-    container: opensauce04/azahar-build-environment:transifex
+    container: opensauce04/azahar-build-environment:latest
     if: ${{ github.repository == 'azahar-emu/azahar' }}
     steps:
       - uses: actions/checkout@v4

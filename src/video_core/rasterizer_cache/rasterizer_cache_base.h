@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -56,6 +56,7 @@ DECLARE_ENUM_FLAG_OPERATORS(MatchFlags);
 
 class CustomTexManager;
 class RendererBase;
+enum class SurfaceFlagBits : u32;
 
 template <class T>
 class RasterizerCache {
@@ -104,12 +105,13 @@ public:
 
     /// Load a texture from 3DS memory to OpenGL and cache it (if not already cached)
     SurfaceId GetSurface(const SurfaceParams& params, ScaleMatch match_res_scale,
-                         bool load_if_create);
+                         bool load_if_create, const SurfaceFlagBits& create_initial_flags = {});
 
     /// Attempt to find a subrect (resolution scaled) of a surface, otherwise loads a texture from
     /// 3DS memory to OpenGL and caches it (if not already cached)
     SurfaceRect_Tuple GetSurfaceSubRect(const SurfaceParams& params, ScaleMatch match_res_scale,
-                                        bool load_if_create);
+                                        bool load_if_create,
+                                        const SurfaceFlagBits& create_initial_flags = {});
 
     /// Get a surface based on the texture configuration
     Surface& GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
@@ -194,7 +196,7 @@ private:
                                     const SurfaceInterval& interval);
 
     /// Create a new surface
-    SurfaceId CreateSurface(const SurfaceParams& params);
+    SurfaceId CreateSurface(const SurfaceParams& params, const SurfaceFlagBits& initial_flags = {});
 
     /// Register surface into the cache
     void RegisterSurface(SurfaceId surface);

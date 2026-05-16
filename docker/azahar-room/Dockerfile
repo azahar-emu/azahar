@@ -9,6 +9,7 @@ COPY . /var/azahar-src
 RUN mkdir builddir && cd builddir && \
     cmake /var/azahar-src -G Ninja \
                           -DENABLE_QT=OFF \
+                          -DENABLE_GDBSTUB=OFF \
                           -DENABLE_TESTS=OFF \
                           -DENABLE_ROOM=ON \
                           -DENABLE_ROOM_STANDALONE=ON \

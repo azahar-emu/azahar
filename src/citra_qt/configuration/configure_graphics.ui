@@ -372,7 +372,7 @@
                   <number>0</number>
                 </property>
                 <property name="maximum">
-                  <number>16000</number>
+                  <number>65000</number>
                 </property>
                 <property name="singleStep">
                   <number>100</number>
@@ -403,6 +403,16 @@
             </item>
           </layout>
         </widget>
+      </item>
+     <item>
+       <widget class="QCheckBox" name="simulate_3ds_gpu_timings">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Delays GPU completion events based on measurements taken from real hardware, so that games have more realistic GPU time measurements. Helps stabilize dynamic FPS games. Disabling this feature may improve performance in some rare cases at the cost of stability.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Simulate 3DS GPU timings</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

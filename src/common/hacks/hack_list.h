@@ -16,6 +16,7 @@ enum class HackType : int {
     REGION_FROM_SECURE,
     REQUIRES_SHADER_FIXUP,
     SPOOF_FRIEND_CODE_SEED,
+    DELAY_TEXTURE_COPY_COMPLETION,
 };
 
 class UserHackData {};

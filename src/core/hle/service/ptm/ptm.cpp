@@ -12,6 +12,7 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/kernel/shared_page.h"
+#include "core/hle/service/mcu/mcu_rtc.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/ptm/ptm_gets.h"
 #include "core/hle/service/ptm/ptm_play.h"
@@ -131,6 +132,51 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     Service::PTM::CheckNew3DS(rb);
+}
+
+void Module::Interface::SetInfoLEDPattern(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto pat = rp.PopRaw<MCU::InfoLedPattern>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto mcu_rtc = MCU::RTC::GetService(ptm->system);
+    if (mcu_rtc) {
+        mcu_rtc->UpdateInfoLEDPattern(pat);
+        rb.Push(ResultSuccess);
+    } else {
+        rb.Push(ResultUnknown);
+    }
+}
+
+void Module::Interface::SetInfoLEDPatternHeader(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    auto head = rp.PopRaw<MCU::InfoLedPattern::Header>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    auto mcu_rtc = MCU::RTC::GetService(ptm->system);
+    if (mcu_rtc) {
+        mcu_rtc->UpdateInfoLEDHeader(head);
+        rb.Push(ResultSuccess);
+    } else {
+        rb.Push(ResultUnknown);
+    }
+}
+
+void Module::Interface::GetInfoLEDStatus(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    auto mcu_rtc = MCU::RTC::GetService(ptm->system);
+    if (mcu_rtc) {
+        rb.Push(ResultSuccess);
+        rb.Push(static_cast<u8>(mcu_rtc->GetInfoLEDStatusFinished()));
+    } else {
+        rb.Push(ResultUnknown);
+        rb.Push(u8{});
+    }
 }
 
 void Module::Interface::GetSystemTime(Kernel::HLERequestContext& ctx) {

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_disclaimer">Este software ejecutará aplicaciones para la consola portátil Nintendo 3DS. No se incluyen juegos.\n\nAntes de comenzar con la emulación, seleccione una carpeta para almacenar los datos de usuario de Azahar en.\n\nQué es ésto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Datos de usuario de Azahar Android y almacenamiento</a></string>
+    <string name="app_notification_channel_description">Notificaciones del emulador 3DS Azahar</string>
+    <string name="app_notification_running">Azahar está ejecutándose</string>
+    <string name="app_game_install_description">A continuación, deberás seleccionar una Carpeta de Aplicaciones. Azahar mostrará todas las ROM de 3DS de la carpeta seleccionada en la aplicación.\n\nLas ROM CIA, actualizaciones y los DLC deben instalarse por separado haciendo clic en el icono de la carpeta y seleccionando Instalar CIA.</string>
+
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">Configuración</string>
+    <string name="home_options">Opciones</string>
+    <string name="home_search">Buscar</string>
+    <string name="home_games">Aplicaciones</string>
+    <string name="settings_description">Configurar opciones del emulador</string>
+    <string name="install_game_content">Instalar archivo CIA</string>
+    <string name="install_game_content_description">Instalar aplicaciones, actualizaciones o DLC</string>
+    <string name="share_log">Compartir Registro</string>
+    <string name="share_log_description">Compartir el archivo de registro de Azahar para depurar problemas</string>
+    <string name="gpu_driver_manager">Administrador de drivers de GPU</string>
+    <string name="install_gpu_driver">Instalar drivers de GPU</string>
+    <string name="install_gpu_driver_description">Instala drivers alternativos para intentar mejorar el rendimiento o la precisión</string>
+    <string name="driver_already_installed">Driver ya instalado</string>
+    <string name="custom_driver_not_supported">Drivers personalizados no compatibles</string>
+    <string name="custom_driver_not_supported_description">La carga de drivers personalizados no es compatible en este dispositivo.\n¡Comprueba esta opción otra vez en el futuro para ver si ya está disponible!</string>
+    <string name="share_log_not_found">No se encontró ningún archivo de registro</string>
+    <string name="select_games_folder">Selecciona el directorio de aplicaciones</string>
+    <string name="select_games_folder_description">Permite que Azahar llene la lista de aplicaciones</string>
+    <string name="about">Acerca de</string>
+    <string name="citra_description">Un emulador de 3DS de código abierto</string>
+    <string name="about_description">Versión de compilación, créditos y más</string>
+    <string name="games_dir_selected">Directorio de aplicaciones seleccionado</string>
+    <string name="select_citra_user_folder_home_description">Cambia los archivos que Azahar usa para cargar aplicaciones</string>
+    <string name="theme_and_color_description">Cambia la apariencia de la app</string>
+    <string name="install_cia_title">Instalar CIA</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">Seleccionar driver de GPU</string>
+    <string name="select_gpu_driver_title">¿Quieres reemplazar tu driver actual de GPU?</string>
+    <string name="select_gpu_driver_install">Instalar</string>
+    <string name="select_gpu_driver_default">Por defecto</string>
+    <string name="select_gpu_driver_install_success">Instalado %s</string>
+    <string name="select_gpu_driver_use_default">Usando el driver por defecto de la GPU</string>
+    <string name="select_gpu_driver_error">¡El driver seleccionado no es válido, se usará el driver por defecto del sistema!</string>
+    <string name="system_gpu_driver">Driver de la GPU del sistema</string>
+    <string name="installing_driver">Instalando el driver...</string>
+
+    <!-- About screen strings -->
+    <string name="copied_to_clipboard">Copiado al portapapeles</string>
+    <string name="contributors">Colaboradores</string>
+    <string name="contributors_description">Colaboradores que hicieron posible Azahar</string>
+    <string name="licenses_description">Proyectos utilizados por Azahar para Android</string>
+    <string name="build">Compilación</string>
+    <string name="licenses">Licencias</string>
+    <!-- Setup strings -->
+    <string name="welcome">¡Te damos la bienvenida!</string>
+    <string name="welcome_description">Aprende a configurar &lt;b>Azahar&lt;/b> y disfruta de la emulación.</string>
+    <string name="get_started">Comenzar</string>
+    <string name="step_complete">¡Completado!</string>
+    <string name="games">Aplicaciones</string>
+    <string name="games_description">Selecciona la carpeta de &lt;b>Aplicaciones&lt;/b> con el botón de abajo.</string>
+    <string name="done">Terminado</string>
+    <string name="done_description">¡Ya estás listo!\n¡Disfruta del emulador!</string>
+    <string name="text_continue">Continuar</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="notifications_description">Concede el permiso de notificaciones con el botón de abajo.</string>
+    <string name="give_permission">Conceder permiso</string>
+    <string name="notification_warning">¿Omitir el permiso de notificaciones?</string>
+    <string name="notification_warning_description">Azahar no podrá notificarte sobre información importante.</string>
+    <string name="filesystem_permission_warning">Faltan permisos</string>
+    <string name="filesystem_permission_warning_description">Azahar necesita permiso para administrar archivos en este dispositivo para poder almacenar y administrar los datos de usuario.\n\nPor favor, concede el permiso antes de continuar.</string>
+    <string name="camera_permission">Cámara</string>
+    <string name="camera_permission_description">Concede el permiso de cámara para emular la cámara de la 3DS.</string>
+    <string name="microphone_permission">Micrófono</string>
+    <string name="microphone_permission_description">Concede el permiso de micrófono para emular el micrófono de la 3DS.</string>
+    <string name="filesystem_permission">Sistema de archivos</string>
+    <string name="filesystem_permission_description">Concede el permiso de sistema de archivos para permitir que Azahar almacene archivos.</string>
+    <string name="permission_denied">Permiso denegado</string>
+    <string name="add_games_warning">¿Omitir la selección de la carpeta de aplicaciones?</string>
+    <string name="add_games_warning_description">No se mostrará nada en la lista de aplicaciones si no se selecciona una carpeta.</string>
+    <string name="permissions">Permisos</string>
+    <string name="select_emulator_data_folders">Carpetas de datos</string>
+    <string name="select_emulator_data_folders_description"><![CDATA[Seleccionar carpetas de datos<br/>(Carpeta de usuario es necesaria)]]></string>
+    <string name="permissions_description">Concede permisos opcionales para usar funciones específicas del emulador</string>
+    <string name="warning_help">Ayuda</string>
+    <string name="warning_skip">Omitir</string>
+    <string name="warning_cancel">Cancelar</string>
+    <string name="select_citra_user_folder">Selecciona la carpeta de usuario</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Selecciona tu directorio de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">datos de usuario</a> con el botón de abajo.]]></string>
+    <string name="select_which_user_directory_to_use">Parece que tienes directorios de usuario configurados tanto para Lime3DS como para Azahar. Probablemente se deba a que actualizaste a Azahar y, cuando se te pidió, elegiste un directorio de usuario diferente al que usabas para Lime3DS.\n\nEsto puede haberte hecho pensar que perdiste partidas guardadas u otras configuraciones; te pedimos disculpas si eso ocurrió.\n\n¿Prefieres volver a usar tu directorio de usuario original de Lime3DS, restaurando la configuración y las partidas guardadas de Lime3DS, o conservar tu directorio de usuario actual de Azahar?\n\nNinguno de los directorios se eliminará, independientemente de tu elección, y puedes cambiar libremente entre ellos usando la opción \"Selecciona la carpeta de usuario\".</string>
+    <string name="keep_current_azahar_directory">Mantener el directorio actual de Azahar</string>
+    <string name="use_prior_lime3ds_directory">Usar el directorio de Lime3DS anterior</string>
+    <string name="select">Seleccionar</string>
+    <string name="cannot_skip">No puedes omitir configurar la carpeta de usuario</string>
+    <string name="cannot_skip_directory_description">Este paso es necesario para permitir que Azahar funcione. Por favor, selecciona un directorio y luego puedes continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdido los permisos de escritura en tu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directorio de datos de usuario</a>, donde se guardan las partidas guardadas y otra información. Esto puede ocurrir después de actualizar Android o algunas aplicaciones. Vuelve a seleccionar el directorio para recuperar los permisos y poder continuar.</string>
+    <string name="invalid_selection">Selección no válida</string>
+    <string name="invalid_user_directory">La selección del directorio de usuario no es válida.\nVuelve a seleccionar el directorio de usuario, asegurándote de navegar hasta él desde la raíz del almacenamiento del dispositivo.</string>
+    <string name="filesystem_permission_lost">Azahar ha perdido el permiso para administrar archivos en este dispositivo. Esto puede ocurrir después de actualizar Android o algunas aplicaciones. Vuelve a conceder este permiso en la siguiente pantalla para seguir usando la aplicación.</string>
+    <string name="set_up_theme_settings">Configuración del tema</string>
+    <string name="setup_theme_settings_description">Configura tus preferencias de tema de Azahar.</string>
+    <string name="setup_set_theme">Establecer tema</string>
+
+    <!-- Search Strings -->
+    <string name="search_and_filter_games">Buscar y filtrar aplicaciones</string>
+    <string name="home_search_games">Buscar aplicaciones</string>
+    <string name="search_recently_played">Jugado recientemente</string>
+    <string name="search_recently_added">Añadido recientemente</string>
+    <string name="search_installed">Instalados</string>
+
+    <!-- Input related strings -->
+    <string name="controller_auto_map">Asignar control automáticamente</string>
+    <string name="controller_auto_map_description">Aplica la asignación de control estándar para todos los botones y ejes</string>
+    <string name="auto_map_prompt">¡Presiona este botón en tu control!</string>
+    <string name="auto_map_image_description">Botones frontales de 3DS en rombo con el botón A resaltado</string>
+    <string name="controller_clear_all">Eliminar todas las asignaciones</string>
+    <string name="controller_clear_all_confirm">Esto eliminará todas los asignaciones del control actual.</string>
+    <string name="controller_circlepad">Circle Pad</string>
+    <string name="controller_c">Palanca C</string>
+    <string name="controller_hotkeys">Teclas de atajo</string>
+    <string name="controller_hotkeys_description">Si la tecla \"Habilitar teclas de acceso rápido\" está asignada, se debe presionar esa tecla además de la tecla de acceso rápido asignada</string>
+    <string name="controller_hotkey_enable_button">Habilitar teclas de acceso rápido</string>
+    <string name="controller_triggers">Gatillos</string>
+    <string name="controller_trigger">Gatillo</string>
+    <string name="controller_dpad">Cruceta</string>
+    <string name="controller_dpad_axis">Cruceta (eje)</string>
+    <string name="controller_dpad_axis_description">Es posible que algunos controles no puedan asignar la Cruceta como un eje. Si ese es el caso, utilice la sección Cruceta (botones).</string>
+    <string name="controller_dpad_button">Cruceta (botón)</string>
+    <string name="controller_dpad_button_description">Solamente asigne la Cruceta a éstos si tiene problemas con las asignaciones de botones de la Cruceta (eje).</string>
+    <string name="controller_axis_vertical">Eje vertical</string>
+    <string name="controller_axis_horizontal">Eje horizontal</string>
+    <string name="direction_up">Arriba</string>
+    <string name="direction_down">Abajo</string>
+    <string name="direction_left">Izquierda</string>
+    <string name="direction_right">Derecha</string>
+    <string name="input_dialog_title">Asigna %1$s %2$s</string>
+    <string name="input_dialog_description">Presiona un botón o mueve una palanca</string>
+    <string name="input_binding">Asignación de botones</string>
+    <string name="input_binding_description">Pulsa un botón o mueve una palanca para asignarlo a %1$s.</string>
+    <string name="input_binding_description_vertical_axis">Presiona ARRIBA en tu joystick.</string>
+    <string name="input_binding_description_horizontal_axis">Presiona DERECHA en tu joystick.</string>
+    <string name="button_home">HOME</string>
+    <string name="button_swap">Intercambiar pantallas</string>
+    <string name="button_turbo">Turbo</string>
+    <string name="input_message_analog_only">¡Este control debe asignarse a una palanca analógica o a un eje de la Cruceta!</string>
+    <string name="input_message_button_only">¡Este dispositivo debe asignarse a un botón del control!</string>
+    <string name="turbo_limit_hotkey">Velocidad turbo</string>
+    <string name="turbo_enabled_toast">Velocidad turbo activada</string>
+    <string name="turbo_disabled_toast">Velocidad turbo desactivada</string>
+
+    <!-- System files strings -->
+    <string name="setup_system_files">Archivos del sistema</string>
+    <string name="setup_system_files_description">Realizar operaciones de archivos del sistema, como instalar archivos del sistema o iniciar el Menú Home</string>
+    <string name="setup_tool_connect">Conectar con la herramienta de configuración Artic</string>
+    <string name="setup_system_files_preamble"><![CDATA[Azahar necesita archivos de una consola real para poder utilizar algunas de sus funciones. Puedes obtener los archivos con la <a href=https://github.com/azahar-emu/ArticSetupTool>herramienta de configuración Artic</a>.<br>Notas:<ul><li><b>Esta operación instalará archivos únicos de la consola en Azahar, ¡no compartas las carpetas de usuario ni nand después de realizar el proceso de configuración!</b></li><li>Tras la configuración, Azahar se vinculará a la consola que ha ejecutado la herramienta de configuración. Puedes desvincular la consola más tarde desde la pestaña \"Archivos de sistema\" del menú de opciones del emulador.</li><li>No te conectes en línea con Azahar y la consola 3DS al mismo tiempo después de configurar los archivos del sistema, ya que esto podría causar problemas.</li><li>Se necesita la configuración de Old 3DS para que la New 3DS funcione (se recomienda configurar ambos modos).</li><li>Ambos modos de configuración funcionarán independientemente del modelo de la consola donde se ejecute la herramienta.</li></ul>]]></string>
+    <string name="setup_system_files_detect">Obteniendo el estado actual de los archivos del sistema, por favor espere...</string>
+    <string name="delete_system_files">Desvincular datos únicos de la consola</string>
+    <string name="delete_system_files_description"><![CDATA[Esta acción desvinculará tu consola real de Azahar, con las siguientes consecuencias:<br><ul><li>OTP, SecureInfo y LocalFriendCodeSeed serán eliminados de Azahar.</li><li>Tu lista de amigos se restablecerá y se cerrará la sesión de tu cuenta NNID/PNID.</li><li>Los archivos del sistema y los títulos de la eShop obtenidos a través de Azahar obtenidos a través de Azahar se volverán inaccesibles hasta que la misma consola se vincule nuevamente usando la herramienta de configuración (los datos guardados no se perderán).</li></ul><br>¿Continuar?]]></string>
+    <string name="setup_system_files_o3ds">Configuración de Old 3DS</string>
+    <string name="setup_system_files_n3ds">Configuración de New 3DS</string>
+    <string name="setup_system_files_possible">La configuración es posible.</string>
+    <string name="setup_system_files_o3ds_needed">La configuración Old 3DS es necesaria primero.</string>
+    <string name="setup_system_files_completed">Configuración completa.</string>
+    <string name="setup_system_files_enter_address">Ingresa la dirección de la herramienta de configuración Artic</string>
+    <string name="setup_system_files_preparing">Preparando configuración, por favor espere...</string>
+    <string name="boot_home_menu">Cargar el Menú HOME</string>
+    <string name="show_home_apps">Mostrar las aplicaciones del menú HOME en la lista de aplicaciones</string>
+    <string name="run_system_setup">Ejecutar la configuración de la consola cuando se ejecute el Menú HOME</string>
+    <string name="home_menu">Menú HOME</string>
+
+    <!-- Generic buttons (Shared with lots of stuff) -->
+    <string name="generic_buttons">Botones</string>
+    <string name="button">Botón</string>
+
+    <!-- System settings strings -->
+    <string name="emulation_settings">Opciones de emulación</string>
+    <string name="username">Nombre de usuario</string>
+    <string name="new_3ds">Modo New 3DS</string>
+    <string name="lle_applets">Usar Applets LLE (si están instaladas)</string>
+    <string name="apply_region_free_patch">Aplicar parche de región libre a las aplicaciones instaladas</string>
+    <string name="apply_region_free_patch_desc">Parchea la región de las aplicaciones instaladas para que estén libres de región, de modo que siempre aparezcan en el menú home.</string>
+    <string name="enable_required_online_lle_modules">Habilitar los módulos LLE necesarios para las funciones en línea (si están instalados)</string>
+    <string name="enable_required_online_lle_modules_desc">Habilita los módulos LLE necesarios para el modo multijugador en línea, acceso a la eShop, etc.</string>
+    <string name="clock">Reloj</string>
+    <string name="init_clock">Reloj</string>
+    <string name="init_clock_description">Configura el reloj emulado de la 3DS para que tenga la misma fecha y hora de tu dispositivo o para simular una distinta.</string>
+    <string name="device_clock">Reloj del sistema</string>
+    <string name="simulated_clock">Reloj simulado</string>
+    <string name="simulated_clock_description">Si el reloj está en \"Reloj simulado\", esto cambia la fecha y hora de inicio.</string>
+    <string name="profile_settings">Opciones de perfil</string>
+    <string name="emulated_region">Región</string>
+    <string name="emulated_language">Idioma</string>
+    <string name="birthday">Cumpleaños</string>
+    <string name="birthday_month">Mes</string>
+    <string name="birthday_day">Día</string>
+    <string name="country">País</string>
+    <string name="play_coins">Monedas de juego</string>
+    <string name="steps_per_hour">Pasos por hora del podómetro</string>
+    <string name="steps_per_hour_description">Número de pasos por hora reportados por el podómetro. Rango de 0 a 65.535.</string>
+    <string name="console_id">ID de la Consola</string>
+    <string name="regenerate_console_id">Regenerar ID de la consola</string>
+    <string name="regenerate_console_id_description">Esto reemplazará tu ID de consola de 3DS virtual por una nueva. Tu ID virtual actual será irrecuperable. Esto puede tener efectos inesperados en algunas aplicaciones. Si usas un archivo de configuración obsoleto esto podría fallar. ¿Quieres continuar?</string>
+    <string name="mac_address">Dirección MAC</string>
+    <string name="regenerate_mac_address">Regenerar dirección MAC</string>
+    <string name="regenerate_mac_address_description">Esto reemplazará tu dirección MAC actual por una nueva. No se recomienda hacerlo si obtuviste la dirección MAC de tu consola real con la herramienta de configuración. ¿Quieres continuar?</string>
+    <string name="plugin_loader">Cargador de complementos 3GX</string>
+    <string name="plugin_loader_description">Carga los complementos 3GX de la SD emulada si están disponibles.</string>
+    <string name="allow_plugin_loader">Permite que las aplicaciones cambien el estado del cargador de complementos.</string>
+    <string name="allow_plugin_loader_description">Permite que las apps de homebrew activen el cargador de complementos incluso cuando está desactivado.</string>
+    <string name="region_mismatch">Advertencia de región no válida</string>
+    <string name="region_mismatch_emulated">La configuración del país no es válida para la región emulada seleccionada.</string>
+    <string name="region_mismatch_console">La configuración del país no es válida para la consola vinculada actual.</string>
+    <string name="storage">Almacenamiento</string>
+    <string name="compress_cia_installs">Comprimir contenido CIA instalado</string>
+    <string name="compress_cia_installs_description">Comprime el contenido de archivos CIA cuando son instalados a la SD emulada. Solo afecta contenido CIA instalado con esta opción activada.</string>
+
+    <!-- Camera settings strings -->
+    <string name="inner_camera">Cámara interior</string>
+    <string name="outer_left_camera">Cámara izquierda externa</string>
+    <string name="outer_right_camera">Cámara derecha externa</string>
+    <string name="image_source">Fuente de la imagen de la cámara</string>
+    <string name="image_source_description">Configura la fuente de imagen de la cámara virtual. Puedes usar un archivo de imagen o una cámara si es compatible.</string>
+    <string name="camera_device">Cámara</string>
+    <string name="camera_device_description">Si la \"Fuente de imagen\" está en \"Cámara del dispositivo\", se usará la cámara del propio dispositivo.</string>
+    <string name="camera_facing_front">Frontal</string>
+    <string name="camera_facing_back">Trasera</string>
+    <string name="camera_facing_external">Externa</string>
+    <string name="image_flip">Rotación</string>
+
+    <!-- Graphics settings strings -->
+    <string name="renderer">Motor gráfico</string>
+    <string name="graphics_api">API gráfica</string>
+    <string name="spirv_shader_gen">Activar generación de shaders SPIR-V</string>
+    <string name="spirv_shader_gen_description">Usa SPIR-V en vez de GLSL para emitir el shader de fragmentos usado para emular PICA.</string>
+    <string name="disable_spirv_optimizer">Desactivar el optimizador de SPIR-V</string>
+    <string name="disable_spirv_optimizer_description">Desactiva el paso de optimización SPIR-V reduciendo considerablemente los tirones y afectando muy poco el rendimiento.</string>
+    <string name="async_shaders">Activar compilación asíncrona de shaders</string>
+    <string name="async_shaders_description">Compila los shaders en segundo plano para reducir los tirones durante la partida. Habrá fallos gráficos temporales cuando esté activado.</string>
+    <string name="linear_filtering">Filtrado lineal</string>
+    <string name="linear_filtering_description">Activa el filtrado linear, que hace que los gráficos del juego se vean más suaves.</string>
+    <string name="use_integer_scaling">Escalado de enteros</string>
+    <string name="use_integer_scaling_description">Escala las pantallas usando un multiplicador entero basado en la resolución original de 3DS. En diseños con dos tamaños de pantalla diferentes, la más grande usará el escalado de enteros.</string>
+    <string name="texture_filter_name">Filtrado de texturas</string>
+    <string name="texture_filter_description">Mejora los gráficos visuales de las aplicaciones aplicando un filtro a las texturas. Los filtros compatibles son Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale y MMPX.</string>
+    <string name="delay_render_thread">Atrasar hilo del motor gráfico del juego</string>
+    <string name="delay_render_thread_description">Retrasa el hilo del motor gráfico del juego cuando envía datos a la GPU. Ayuda con los problemas de rendimiento en las (muy pocas) aplicaciones con tasas de fotogramas dinámicas.</string>
+    <string name="advanced">Avanzado</string>
+    <string name="texture_sampling_name">Muestreo de texturas</string>
+    <string name="texture_sampling_description">Sobrescribe el filtro de muestreo original del juego. Puede ser útil en ciertos casos con juegos con problemas gráficos al aumentar la resolución. Si no estás seguro, déjalo en Controlado por juego.</string>
+    <string name="shaders_accurate_mul">Multiplicación precisa</string>
+    <string name="shaders_accurate_mul_description">Usa una multiplicación más precisa en los shaders por hardware, lo cual puede solucionar ciertos errores gráficos. Al activarse, el rendimiento disminuirá.</string>
+    <string name="asynchronous_gpu">Activar emulación asíncrona de la GPU</string>
+    <string name="asynchronous_gpu_description">Usa un hilo separado para emular la GPU de manera asíncrona. Al activarse, el rendimiento mejorará.</string>
+    <string name="frame_limit_enable">Límite de velocidad</string>
+    <string name="frame_limit_enable_description">Si se activa, la velocidad de emulación se limitará a un porcentaje determinado de velocidad normal. Si se desactiva, la velocidad no tendrá límite y el atajo para la velocidad velocidad turbo no funcionará.</string>
+    <string name="frame_limit_slider">Limitar porcentaje de velocidad</string>
+    <string name="frame_limit_slider_description">Especifica el valor al que se limita la velocidad de emulación. Con el valor por defecto del 100%, la emulación se limitará a la velocidad normal. Los valores altos o bajos aumentarán o reducirán el límite de velocidad.</string>
+    <string name="android_hide_images">Ocultar las imágenes de 3DS de la galería de Android</string>
+    <string name="android_hide_images_description">Evita que Android indexe las imágenes de la cámara, capturas de pantalla y texturas personalizadas de la 3DS y las muestre en la galería. Es posible que tengas que reiniciar el dispositivo después de cambiar esta configuración para que surta efecto.</string>
+    <string name="turbo_limit">Límite de velocidad turbo</string>
+    <string name="turbo_limit_description">Límite de velocidad de emulación que se aplica al activar el turbo.</string>
+    <string name="expand_to_cutout_area">Expandir al área de recorte</string>
+    <string name="expand_to_cutout_area_description">Amplía la pantalla para incluir el recorte de la cámara (o notch).</string>
+    <string name="internal_resolution">Resolución interna</string>
+    <string name="internal_resolution_description">Especifica la resolución de renderizado. Una alta resolución mejorará considerablemente la calidad visual, pero tendrá un gran impacto en el rendimiento y puede causar fallos en ciertas aplicaciones.</string>
+    <string name="internal_resolution_setting_auto">Auto (Tamaño pantalla)</string>
+    <string name="internal_resolution_setting_1x">Nativa (400x240)</string>
+    <string name="internal_resolution_setting_2x">2x Nativa (800x480)</string>
+    <string name="internal_resolution_setting_3x">3x Nativa (1200x720)</string>
+    <string name="internal_resolution_setting_4x">4x Nativa (1600x960)</string>
+    <string name="internal_resolution_setting_5x">5x Nativa (2000x1200)</string>
+    <string name="internal_resolution_setting_6x">6x Nativa (2400x1440)</string>
+    <string name="internal_resolution_setting_7x">7x Nativa (2800x1680)</string>
+    <string name="internal_resolution_setting_8x">8x Nativa (3200x1920)</string>
+    <string name="internal_resolution_setting_9x">9x Nativa (3600x2160)</string>
+    <string name="internal_resolution_setting_10x">10x Nativa (4000x2400)</string>
+    <string name="performance_warning">¡Desactivar esta opción reducirá notablemente el rendimiento de la emulación! Para obtener la mejor experiencia, se recomienda dejarla activada.</string>
+    <string name="debug_warning">Aviso: Modificar estos ajustes reducirá la velocidad de emulación.</string>
+    <string name="stereoscopy">Estereoscopia</string>
+    <string name="render3d">Modo 3D estereoscópico</string>
+    <string name="render3d_description">Elige el modo 3D estereoscópico para el renderizado 3D. Los modos de lado a lado son los más comunes en la actualidad. Los modos anaglifo y entrelazado se aplicarán siempre a todas las pantallas conectadas.</string>
+    <string name="factor3d">Profundidad</string>
+    <string name="factor3d_description">Especifica el valor del regulador 3D. Debería ajustarse por encima del 0% cuando el 3D estereoscópico esté activado.\nNota: Los valores de profundidad superiores al 100% no son posibles en el hardware real y pueden causar problemas gráficos.</string>
+    <string name="disable_right_eye_render">Desactivar el renderizado de ojo derecho</string>
+    <string name="disable_right_eye_render_description">Mejora mucho el rendimiento en algunas aplicaciones, pero puede causar parpadeo en otras.</string>
+    <string name="swap_eyes_3d">Intercambiar ojos</string>
+    <string name="swap_eyes_3d_description">Intercambia qué ojo se muestra en cada lado. Combinado con el modo lado a lado, ¡permite ver en 3D cruzando los ojos!</string>
+    <string name="render_3d_which_display">Renderizado 3D estereoscópico</string>
+    <string name="render_3d_which_display_description">Si se enciende el 3D estereoscópico, y en que pantallas. Las opciones para una sola pantalla solo son relevantes si hay varias pantallas conectadas.</string>
+    <string name="render_3d_which_display_both">Activado (todas las pantallas)</string>
+    <string name="render_3d_which_display_primary">Encendido (Solo Pantalla Principal)</string>
+    <string name="render_3d_which_display_secondary">Encendido (Solo Pantalla Secundaria)</string>
+    <string name="cardboard_vr">Cardboard VR</string>
+    <string name="cardboard_screen_size">Tamaño de la pantalla para Cardboard</string>
+    <string name="cardboard_screen_size_description">Escala la pantalla a un porcentaje de su tamaño original.</string>
+    <string name="cardboard_x_shift">Desplazamiento horizontal</string>
+    <string name="cardboard_x_shift_description">Especifica el porcentaje de espacio vacío para desplazar las pantallas horizontalmente. Los valores positivos acercan los dos ojos al medio, mientras que los negativos los alejan.</string>
+    <string name="cardboard_y_shift">Desplazamiento vertical</string>
+    <string name="cardboard_y_shift_description">Especifica el porcentaje de espacio vacío para desplazar las pantallas verticalmente. Los valores positivos mueven los dos ojos hacia abajo, mientras que los negativos los mueve hacia arriba.</string>
+    <string name="use_shader_jit">Shader JIT</string>
+    <string name="use_disk_shader_cache">Caché de shader en disco</string>
+    <string name="use_disk_shader_cache_description">Reduce los tirones al guardar y cargar shaders generados en el disco. No se puede usar sin activar la opción shader por hardware.</string>
+    <string name="utility">Utilidades</string>
+    <string name="dump_textures">Volcar texturas</string>
+    <string name="dump_textures_description">Las texturas se vuelcan en dump/textures/[Title ID]/.</string>
+    <string name="custom_textures">Texturas personalizadas</string>
+    <string name="custom_textures_description">Las texturas se cargan desde load/textures/[Title ID]/.</string>
+    <string name="preload_textures">Precargar texturas personalizadas</string>
+    <string name="preload_textures_description">Carga todas las texturas personalizadas en la memoria. Esta función puede usar mucha memoria.</string>
+    <string name="async_custom_loading">Carga asíncrona de texturas personalizadas</string>
+    <string name="async_custom_loading_description">Carga las texturas personalizadas de manera asíncrona con hilos de fondo para reducir los tirones de carga.</string>
+
+    <!-- Audio settings strings -->
+    <string name="audio_volume">Volumen</string>
+    <string name="audio_stretch">Estiramiento de audio</string>
+    <string name="audio_stretch_description">Estira el audio para reducir los tirones. Al activarse, la latencia del audio se incrementará y reducirá un poco el rendimiento.</string>
+    <string name="realtime_audio">Activar audio en tiempo real</string>
+    <string name="realtime_audio_description">Escala la velocidad de reproducción de audio para compensar por perdidas en la velocidad de fotogramas durante la emulación. Esto significa que el audio se reproducirá a velocidad completa incluso cuando la velocidad de fotogramas del juego sea baja. Puede causar problemas de desincronización de audio.</string>
+    <string name="audio_input_type">Dispositivo de entrada de audio</string>
+    <string name="sound_output_mode">Modo de salida del audio</string>
+
+    <!-- Debug settings strings -->
+    <string name="cpu_jit">CPU JIT</string>
+    <string name="cpu_jit_description">Usa el compilador Just-in-Time (JIT) para emular la CPU. Cuando este encendido, el rendimiento de los juegos mejorará significativamente. </string>
+    <string name="hw_shaders">Activar shader por hardware</string>
+    <string name="hw_shaders_description">Usa el hardware para emular los shaders de la 3DS. Al activarse, el rendimiento mejorará notablemente.</string>
+    <string name="cpu_clock_speed">Velocidad de reloj de la CPU</string>
+    <string name="vsync">Activar V-Sync</string>
+    <string name="vsync_description">Sincroniza la velocidad de fotogramas con la tasa de actualización de tu dispositivo. Puede causar latencia de entrada adicional, pero puede reducir el rasgado de imagen en algunos casos.</string>
+    <string name="renderer_debug">Renderizador de depuración</string>
+    <string name="toggle_unique_data_console_type">Alternar tipo de consola.</string>
+    <string name="emulation_toggle_controls">Alternar Controles</string>
+    <string name="emulation_switch_secondary_layout_description">El diseño usado por una pantalla secundaria conectada, alámbrica o inalámbrica (Chromecast, Miracast)</string>
+    </resources>

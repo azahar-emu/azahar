@@ -29,6 +29,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hle/service/pm/pm_app.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
@@ -47,7 +48,6 @@ void Module::serialize(Archive& ar, const unsigned int file_version) {
     ar & shared_font_mem;
     ar & shared_font_loaded;
     ar & shared_font_relocated;
-    ar & cpu_percent;
     ar & screen_capture_post_permission;
     ar & applet_manager;
     ar & wireless_reboot_info;
@@ -731,29 +731,39 @@ void Module::APTInterface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     const auto must_be_one = rp.Pop<u32>();
     const auto value = rp.Pop<u32>();
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, must_be_one={}, value={}", must_be_one, value);
     if (must_be_one != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", must_be_one);
     }
 
-    apt->cpu_percent = value;
-
+    auto pm_app = Service::PM::GetServiceAPP(apt->system);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(ResultSuccess); // No error
+    if (pm_app) {
+        rb.Push(pm_app->UpdateResourceLimit(Kernel::ResourceLimitType::CpuTime, value));
+    } else {
+        LOG_ERROR(Service_APT, "Failed to get PM:APP module");
+        rb.Push(ResultUnknown);
+    }
 }
 
 void Module::APTInterface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const auto must_be_one = rp.Pop<u32>();
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, must_be_one={}", must_be_one);
     if (must_be_one != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", must_be_one);
     }
 
+    auto pm_app = Service::PM::GetServiceAPP(apt->system);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(ResultSuccess); // No error
-    rb.Push(apt->cpu_percent);
+    if (pm_app) {
+        auto res = pm_app->GetResourceLimit(Kernel::ResourceLimitType::CpuTime);
+        rb.Push(res.Code());
+        rb.Push(res.ValueOr(u32{}));
+    } else {
+        LOG_ERROR(Service_APT, "Failed to get PM:APP module");
+        rb.Push(ResultUnknown);
+        rb.Push(u32{});
+    }
 }
 
 void Module::APTInterface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {

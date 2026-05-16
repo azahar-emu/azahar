@@ -670,12 +670,16 @@ void ConfigureSystem::RefreshSecureDataStatus() {
             return tr("Status: Loaded (Invalid Signature)");
         case HW::UniqueData::SecureDataLoadStatus::RegionChanged:
             return tr("Status: Loaded (Region Changed)");
+        case HW::UniqueData::SecureDataLoadStatus::CannotValidateSignature:
+            return tr("Status: Loaded (Cannot Validate Signature)");
         case HW::UniqueData::SecureDataLoadStatus::NotFound:
             return tr("Status: Not Found");
         case HW::UniqueData::SecureDataLoadStatus::Invalid:
             return tr("Status: Invalid");
         case HW::UniqueData::SecureDataLoadStatus::IOError:
             return tr("Status: IO Error");
+        case HW::UniqueData::SecureDataLoadStatus::NoCryptoKeys:
+            return tr("Status: Missing Crypto Keys");
         default:
             return QString();
         }

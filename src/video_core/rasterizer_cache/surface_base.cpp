@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,7 +9,8 @@
 
 namespace VideoCore {
 
-SurfaceBase::SurfaceBase(const SurfaceParams& params) : SurfaceParams{params} {}
+SurfaceBase::SurfaceBase(const SurfaceParams& params, const SurfaceFlagBits& initial_flag_bits)
+    : SurfaceParams{params}, flags(initial_flag_bits) {}
 
 SurfaceBase::~SurfaceBase() = default;
 

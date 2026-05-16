@@ -87,7 +87,8 @@ static constexpr const char* enable_mouse_touchscreen =
     citra_setting(BaseKeys::enable_mouse_touchscreen);
 static constexpr const char* enable_touch_touchscreen =
     citra_setting(BaseKeys::enable_touch_touchscreen);
-static constexpr const char* render_touchscreen = citra_setting(BaseKeys::render_touchscreen);
+static constexpr const char* enable_touch_pointer_timeout =
+    citra_setting(BaseKeys::enable_touch_pointer_timeout);
 static constexpr const char* enable_motion = citra_setting(BaseKeys::enable_motion);
 static constexpr const char* motion_sensitivity = citra_setting(BaseKeys::motion_sensitivity);
 } // namespace input
@@ -609,10 +610,10 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
         config::enabled
     },
     {
-        config::input::render_touchscreen,
-        "Show Touch Interactions",
-        "Show Touch",
-        "Visually indicate touchscreen interactions on screen.",
+        config::input::enable_touch_pointer_timeout,
+        "Touch Pointer Timeout",
+        "Touch Pointer Timeout",
+        "Whether or not the touchscreen pointer should disappear during inactivity.",
         nullptr,
         config::category::input,
         {
@@ -620,7 +621,7 @@ static constexpr retro_core_option_v2_definition option_definitions[] = {
             { config::disabled, "Disabled" },
             { nullptr, nullptr }
         },
-        config::disabled
+        config::enabled
     },
     {
         config::input::enable_motion,
@@ -1025,9 +1026,10 @@ static void ParseInputOptions(void) {
         LibRetro::FetchVariable(config::input::enable_touch_touchscreen, config::enabled) ==
         config::enabled;
 
-    LibRetro::settings.render_touchscreen =
-        LibRetro::FetchVariable(config::input::render_touchscreen, config::disabled) ==
+    LibRetro::settings.enable_touch_pointer_timeout =
+        LibRetro::FetchVariable(config::input::enable_touch_pointer_timeout, config::enabled) ==
         config::enabled;
+
     LibRetro::settings.enable_motion =
         LibRetro::FetchVariable(config::input::enable_motion, config::enabled) == config::enabled;
     auto motion_sens = LibRetro::FetchVariable(config::input::motion_sensitivity, "1.0");

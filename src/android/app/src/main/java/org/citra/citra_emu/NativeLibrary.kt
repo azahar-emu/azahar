@@ -19,6 +19,7 @@ import android.view.Surface
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.Keep
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.fragment.app.DialogFragment
@@ -258,6 +259,9 @@ object NativeLibrary {
 
     external fun nativeFileExists(path: String): Boolean
 
+    external fun deleteOpenGLShaderCache(titleId: Long)
+    external fun deleteVulkanShaderCache(titleId: Long)
+
     private var coreErrorAlertResult = false
     private val coreErrorAlertLock = Object()
 
@@ -311,6 +315,12 @@ object NativeLibrary {
             CoreError.ErrorN3DSApplication -> {
                 title = emulationActivity.getString(R.string.invalid_system_mode)
                 message = emulationActivity.getString(R.string.invalid_system_mode_message)
+                canContinue = false
+            }
+
+            CoreError.ErrorCoreExceptionRaised -> {
+                title = emulationActivity.getString(R.string.fatal_error)
+                message = emulationActivity.getString(R.string.fatal_error_message)
                 canContinue = false
             }
 
@@ -436,7 +446,7 @@ object NativeLibrary {
             return
         }
 
-        if (resultCode == EmulationErrorDialogFragment.ShutdownRequested) {
+        if (resultCode == CoreError.ShutdownRequested.value) {
             emulationActivity.finish()
             return
         }
@@ -455,23 +465,51 @@ object NativeLibrary {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             emulationActivity = requireActivity() as EmulationActivity
 
-            var captionId = R.string.loader_error_invalid_format
-            val result = requireArguments().getInt(RESULT_CODE)
-            if (result == ErrorLoader_ErrorEncrypted) {
-                captionId = R.string.loader_error_encrypted
-            }
-            if (result == ErrorArticDisconnected) {
-                captionId = R.string.artic_base
+            var coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
+            val title: String
+            val message: String
+            when (coreError) {
+                CoreError.ErrorGetLoader, CoreError.ErrorLoader_ErrorInvalidFormat, CoreError.ErrorSystemMode -> {
+                    title = getString(R.string.loader_error_invalid_format)
+                    message = getString(R.string.loader_error_invalid_format_description)
+                }
+
+                CoreError.ErrorLoader_ErrorEncrypted -> {
+                    title = getString(R.string.loader_error_encrypted)
+                    message = getString(R.string.loader_error_encrypted_description)
+                }
+
+                CoreError.ErrorArticDisconnected -> {
+                    title = getString(R.string.artic_base)
+                    message = getString(R.string.artic_server_comm_error)
+                }
+
+                CoreError.ErrorN3DSApplication -> {
+                    title = getString(R.string.loader_error_invalid_system_mode)
+                    message = getString(R.string.loader_error_invalid_system_mode_description)
+                }
+
+                CoreError.ErrorLoader_ErrorPatches -> {
+                    title = getString(R.string.loader_error_applying_patches)
+                    message = getString(R.string.loader_error_applying_patches_description)
+                }
+
+                CoreError.ErrorLoader_ErrorPatchesInvalidTitle -> {
+                    title = getString(R.string.loader_error_applying_patches)
+                    message = getString(R.string.loader_error_patch_wrong_application)
+                }
+
+                else -> {
+                    title = getString(R.string.loader_error_generic_title)
+                    message = getString(R.string.loader_error_generic,
+                        getString(coreError.stringRes), coreError.value)
+                }
             }
 
             val alert = MaterialAlertDialogBuilder(requireContext())
-                .setTitle(captionId)
+                .setTitle(title)
                 .setMessage(
-                    Html.fromHtml(
-                        if (result == ErrorArticDisconnected)
-                            CitraApplication.appContext.resources.getString(R.string.artic_server_comm_error)
-                        else
-                            CitraApplication.appContext.resources.getString(R.string.redump_games),
+                    Html.fromHtml(message,
                     Html.FROM_HTML_MODE_LEGACY
                     )
                 )
@@ -492,20 +530,6 @@ object NativeLibrary {
             const val TAG = "EmulationErrorDialogFragment"
 
             const val RESULT_CODE = "resultcode"
-
-            const val Success = 0
-            const val ErrorNotInitialized = 1
-            const val ErrorGetLoader = 2
-            const val ErrorSystemMode = 3
-            const val ErrorLoader = 4
-            const val ErrorLoader_ErrorEncrypted = 5
-            const val ErrorLoader_ErrorInvalidFormat = 6
-            const val ErrorLoader_ErrorGBATitle = 7
-            const val ErrorSystemFiles = 8
-            const val ErrorSavestate = 9
-            const val ErrorArticDisconnected = 10
-            const val ShutdownRequested = 11
-            const val ErrorUnknown = 12
 
             fun newInstance(resultCode: Int): EmulationErrorDialogFragment {
                 val args = Bundle()
@@ -729,6 +753,10 @@ object NativeLibrary {
             return uriString
         }
 
+        if (uri.scheme == "file") {
+            return uri.path!!
+        }
+
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
 
@@ -849,12 +877,31 @@ object NativeLibrary {
             FileUtil.deleteDocument(path)
         }
 
-    enum class CoreError {
-        ErrorSystemFiles,
-        ErrorSavestate,
-        ErrorArticDisconnected,
-        ErrorN3DSApplication,
-        ErrorUnknown
+    enum class CoreError(val value: Int, @StringRes val stringRes: Int) {
+        Success(0, R.string.core_error_success),
+        ErrorNotInitialized(1, R.string.core_error_not_initialized),
+        ErrorGetLoader(2, R.string.core_error_get_loader),
+        ErrorSystemMode(3, R.string.core_error_system_mode),
+        ErrorLoader(4, R.string.core_error_loader),
+        ErrorLoader_ErrorEncrypted(5, R.string.core_error_loader_encrypted),
+        ErrorLoader_ErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
+        ErrorLoader_ErrorGBATitle(7, R.string.core_error_loader_gba_title),
+        ErrorLoader_ErrorPatches(8, R.string.core_error_loader_error_patches),
+        ErrorLoader_ErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
+        ErrorSystemFiles(10, R.string.core_error_system_files),
+        ErrorSavestate(11, R.string.core_error_savestate),
+        ErrorArticDisconnected(12, R.string.core_error_artic_disconnected),
+        ErrorN3DSApplication(13, R.string.core_error_n3ds_application),
+        ErrorCoreExceptionRaised(14, R.string.core_error_core_exception_raised),
+        ErrorMemoryExceptionRaised(15, R.string.core_error_memory_exception_raised),
+        ShutdownRequested(16, R.string.core_error_shutdown_requested),
+        ErrorUnknown(17, R.string.core_error_unknown);
+
+        companion object {
+            fun fromInt(value: Int): CoreError {
+                return entries.find { it.value == value } ?: ErrorUnknown
+            }
+        }
     }
 
     enum class InstallStatus {

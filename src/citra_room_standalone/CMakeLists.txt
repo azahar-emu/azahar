@@ -4,6 +4,11 @@ add_executable(citra_room_standalone
 
 set_target_properties(citra_room_standalone PROPERTIES OUTPUT_NAME "azahar-room")
 
+if (BSD STREQUAL "NetBSD")
+    include(DisablePaxMprotect)
+    disable_pax_mprotect(citra_room_standalone)
+endif()
+
 target_link_libraries(citra_room_standalone PRIVATE citra_room)
 
 if(UNIX AND NOT APPLE)

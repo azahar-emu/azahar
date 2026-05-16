@@ -1,12 +1,21 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <csignal>
 #include <fmt/ranges.h>
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/gdbstub/hio.h"
+
+#ifndef ENABLE_GDBSTUB
+#error "File was compiled with GDB stub support disabled"
+#endif
+
+#ifndef SIGTRAP
+constexpr u32 SIGTRAP = 5;
+#endif
 
 namespace GDBStub {
 
@@ -22,9 +31,6 @@ enum class Status {
 };
 
 static std::atomic<Status> request_status{Status::NoRequest};
-
-static std::atomic<bool> was_halted = false;
-static std::atomic<bool> was_stepping = false;
 
 } // namespace
 
@@ -54,7 +60,7 @@ static void SendErrorReply(int error_code, int retval = -1) {
     SendReply(packet.data());
 }
 
-void SetHioRequest(Core::System& system, const VAddr addr) {
+void SetHioRequest(Core::System& system, Kernel::Process* process, const VAddr addr) {
     if (!IsServerEnabled()) {
         LOG_WARNING(Debug_GDBStub, "HIO requested but GDB stub is not running");
         return;
@@ -70,14 +76,13 @@ void SetHioRequest(Core::System& system, const VAddr addr) {
     }
 
     auto& memory = system.Memory();
-    const auto process = system.Kernel().GetCurrentProcess();
 
     if (!memory.IsValidVirtualAddress(*process, addr)) {
         LOG_WARNING(Debug_GDBStub, "Invalid address for HIO request");
         return;
     }
 
-    memory.ReadBlock(addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+    memory.ReadBlock(*process, addr, &current_hio_request, sizeof(PackedGdbHioRequest));
 
     if (current_hio_request.magic != std::array{'G', 'D', 'B', '\0'}) {
         std::string_view bad_magic{
@@ -97,18 +102,13 @@ void SetHioRequest(Core::System& system, const VAddr addr) {
     current_hio_request_addr = addr;
     request_status = Status::NotSent;
 
-    was_halted = GetCpuHaltFlag();
-    was_stepping = GetCpuStepFlag();
-
     // Now halt, so that no further instructions are executed until the request
     // is processed by the client. We will continue after the reply comes back
-    Break();
-    SetCpuHaltFlag(true);
-    SetCpuStepFlag(false);
+    Break(SIGTRAP);
     system.GetRunningCore().ClearInstructionCache();
 }
 
-void HandleHioReply(Core::System& system, const u8* const command_buffer,
+void HandleHioReply(Core::System& system, Kernel::Process* process, const u8* const command_buffer,
                     const u32 command_length) {
     if (!IsWaitingForHioReply()) {
         LOG_WARNING(Debug_GDBStub, "Got HIO reply but never sent a request");
@@ -177,7 +177,6 @@ void HandleHioReply(Core::System& system, const u8* const command_buffer,
               current_hio_request.retval, current_hio_request.gdb_errno,
               current_hio_request.ctrl_c);
 
-    const auto process = system.Kernel().GetCurrentProcess();
     auto& memory = system.Memory();
 
     // should have been checked when we first initialized the request,
@@ -188,15 +187,14 @@ void HandleHioReply(Core::System& system, const u8* const command_buffer,
         return;
     }
 
-    memory.WriteBlock(current_hio_request_addr, &current_hio_request, sizeof(PackedGdbHioRequest));
+    memory.WriteBlock(*process, current_hio_request_addr, &current_hio_request,
+                      sizeof(PackedGdbHioRequest));
 
     current_hio_request = {};
     current_hio_request_addr = 0;
     request_status = Status::NoRequest;
 
     // Restore state from before the request came in
-    SetCpuStepFlag(was_stepping);
-    SetCpuHaltFlag(was_halted);
     system.GetRunningCore().ClearInstructionCache();
 }
 
