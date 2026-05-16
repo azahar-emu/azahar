@@ -100,7 +100,7 @@ ConfigureMotionTouch::ConfigureMotionTouch(QWidget* parent)
     ui->udp_learn_more->setOpenExternalLinks(true);
     ui->udp_learn_more->setText(
         tr("<a "
-           "href='https://cemuhook.sshnuke.net/padudpserver.html'><span "
+           "href='https://wiki.cemu.info/wiki/Cemuhook'><span "
            "style=\"text-decoration: underline; color:#039be5;\">Learn More</span></a>"));
 
     timeout_timer->setSingleShot(true);
