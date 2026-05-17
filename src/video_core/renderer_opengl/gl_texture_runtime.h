@@ -78,6 +78,11 @@ public:
     /// Generates mipmaps for all the available levels of the texture
     void GenerateMipmaps(Surface& surface);
 
+    /// Resolve a surface's MSAA texture into the surface's appropriate non-MSAA texture
+    void ResolveTexture(Surface& surface) {
+        blit_helper.ResolveTexture(surface);
+    }
+
 private:
     /// Returns the OpenGL driver class
     const Driver& GetDriver() const {
