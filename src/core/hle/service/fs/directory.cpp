@@ -60,7 +60,7 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
     ctx.RunAsync(
         [this, async_data](Kernel::HLERequestContext& ctx) {
             std::vector<FileSys::Entry> entries(async_data->count);
-            LOG_TRACE(Service_FS, "Read {}: count={}", GetName(), count);
+            LOG_TRACE(Service_FS, "Read {}: count={}", GetName(), async_data->count);
             // Number of entries actually read
             async_data->read = backend->Read(static_cast<u32>(entries.size()), entries.data());
             async_data->buffer->Write(entries.data(), 0, async_data->read * sizeof(FileSys::Entry));
