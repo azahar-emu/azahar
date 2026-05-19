@@ -219,7 +219,7 @@ AppletManager::AppletSlot AppletManager::GetAppletSlotFromId(AppletId id) {
 
     if (id == AppletId::AnyLibraryApplet || id == AppletId::AnySysLibraryApplet) {
         auto slot_data = GetAppletSlot(AppletSlot::LibraryApplet);
-        if (slot_data->applet_id == AppletId::None)
+        if (slot_data->applet_id == AppletId::None || slot_data->applet_id == AppletId::Application)
             return AppletSlot::Error;
 
         auto applet_pos = slot_data->attributes.applet_pos.Value();
@@ -299,7 +299,8 @@ u64 AppletManager::GetAppletSlotTitleId(AppletSlot slot) {
         return slot_data->title_id;
     }
 
-    if (slot_data->applet_id == AppletId::None) {
+    if (slot_data->applet_id == AppletId::None ||
+        slot_data->applet_id == AppletId::Application) {
         return 0;
     }
 
