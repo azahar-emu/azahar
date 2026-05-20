@@ -716,7 +716,7 @@ Sampler::Sampler(TextureRuntime&, VideoCore::SamplerParams params) {
 Sampler::~Sampler() = default;
 
 DebugScope::DebugScope(TextureRuntime& runtime, Common::Vec4f, std::string_view label)
-    : local_scope_depth{global_scope_depth++} {
+    : local_scope_depth{Settings::values.renderer_debug ? global_scope_depth++ : 0} {
     if (!Settings::values.renderer_debug) {
         return;
     }
