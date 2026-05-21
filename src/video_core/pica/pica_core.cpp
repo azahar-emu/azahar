@@ -58,6 +58,7 @@ void PicaCore::InitializeRegs() {
     // Values initialized by GSP
     regs.internal.irq_autostop = 1;
     regs.internal.irq_mask = 0xFFFFFFF0;
+    regs.internal.irq_compare = 0x12345678;
 
     auto& framebuffer_top = regs.framebuffer_config[0];
     auto& framebuffer_sub = regs.framebuffer_config[1];
