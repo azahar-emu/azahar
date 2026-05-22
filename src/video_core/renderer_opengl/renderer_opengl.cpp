@@ -786,7 +786,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     } else if (antialiasingMode == 2){  
-        //Pass 1
+        // Landscape Gamma Space Texture
         state.draw.read_framebuffer = textureFBO.handle;
         state.draw.draw_framebuffer = textureFBO.handle;
         state.Apply();
@@ -803,12 +803,31 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         state.texture_units[0].texture_2d = screen_info.display_texture;
         state.texture_units[0].sampler = samplers[1].handle;
         glUniform1i(uniform_color_texture, 0);
-        glUniform1i(uniform_convert_colors, 1);
+        glUniform1i(uniform_convert_colors, 0);
         state.Apply();
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
 
-        //Pass 2
+        // Landscape Linear Space Texture
+        state.viewport.x = 0;
+        state.viewport.y = 0;
+        state.viewport.width = textureWidth;
+        state.viewport.height = textureHeight;
+        state.Apply();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, (*currIntermediateTexture)[3].handle, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        state.draw.shader_program = SimplePresent_shader.handle;
+        state.Apply();
+        AttachUniforms();
+        state.texture_units[0].texture_2d = (*currIntermediateTexture)[0].handle;
+        state.texture_units[0].sampler = samplers[1].handle;
+        glUniform1i(uniform_color_texture, 0);
+        glUniform1i(uniform_convert_colors, 1);
+        state.Apply();
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        // Edge Detection
         state.viewport.x = 0;
         state.viewport.y = 0;
         state.viewport.width = textureWidth;
@@ -827,7 +846,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        //Pass 3
+        // Blending Weight Calculation
         state.viewport.x = 0;
         state.viewport.y = 0;
         state.viewport.width = textureWidth;
@@ -854,7 +873,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        //Pass 4
+        // Neighborhood Blending
         state.viewport.x = 0;
         state.viewport.y = 0;
         state.viewport.width = textureWidth;
@@ -867,7 +886,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         AttachUniforms();
         state.texture_units[0].texture_2d = (*currIntermediateTexture)[2].handle;
         state.texture_units[0].sampler = samplers[1].handle;
-        state.texture_units[1].texture_2d = (*currIntermediateTexture)[0].handle;
+        state.texture_units[1].texture_2d = (*currIntermediateTexture)[3].handle;
         state.texture_units[1].sampler = samplers[1].handle;
         GLuint uniform_smaa_input = glGetUniformLocation(state.draw.shader_program, "SMAA_Input");
         glUniform1i(uniform_color_texture, 0);
