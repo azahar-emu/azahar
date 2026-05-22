@@ -16,6 +16,7 @@ layout (push_constant, std140) uniform DrawInfo {
     int screen_id_r;
     int layer;
     int reverse_interlaced;
+    int convert_colors;
 };
 
 layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];

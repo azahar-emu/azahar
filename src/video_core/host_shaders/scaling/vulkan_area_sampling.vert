@@ -17,7 +17,8 @@ layout (push_constant, std140) uniform DrawInfo {
 };
 void main()
 {
-   gl_Position = vec4(mat2(modelview_matrix) * vert_position + modelview_matrix[2], 0.0, 1.0);
+   vec4 position = vec4(vert_position, 0.0, 1.0) * modelview_matrix;
+   gl_Position = vec4(position.x, position.y, 0.0, 1.0);
    frag_tex_coord = vert_tex_coord;
 }
 
