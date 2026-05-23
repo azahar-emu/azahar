@@ -2191,7 +2191,11 @@ Result SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32
                     kernel.GetCurrentThreadManager().GetCurrentThread()->thread_id) {
                     continue;
                 }
-                thread.get()->can_schedule = !varg2;
+                if (varg2) {
+                    thread->SetUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                } else {
+                    thread->ClearUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                }
             }
         }
         return ResultSuccess;

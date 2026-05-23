@@ -213,6 +213,9 @@
      <addaction name="action_Debug_Pause"/>
      <addaction name="action_Debug_Resume"/>
      <addaction name="action_Debug_Step"/>
+     <addaction name="separator"/>
+     <addaction name="action_Debug_Unschedule_All"/>
+     <addaction name="action_Debug_Schedule_All"/>
     </widget>
      <addaction name="menu_Debug"/>
     <addaction name="separator"/>
@@ -487,6 +490,22 @@
     <string>Debug Step</string>
    </property>
   </action>
+   <action name="action_Debug_Unschedule_All">
+     <property name="enabled">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Debug Unschedule All</string>
+     </property>
+   </action>
+   <action name="action_Debug_Schedule_All">
+     <property name="enabled">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Debug Schedule All</string>
+     </property>
+   </action>
   <action name="action_Dump_Video">
    <property name="checkable">
     <bool>true</bool>
