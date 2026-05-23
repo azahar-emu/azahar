@@ -270,7 +270,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 #ifdef ENABLE_GDBSTUB
         if (GDBStub::IsServerEnabled()) {
             LOG_INFO(Loader, "Pausing process {} at start", process_id);
-            SetDebugBreak(true);
+            SetUnscheduleMode(Kernel::UnscheduleMode::GDB);
         }
 #endif
         Core::System::GetInstance().ClearDebugNextProcessFlag();
@@ -624,7 +624,8 @@ std::vector<std::shared_ptr<Kernel::Thread>> Kernel::Process::GetThreadList() {
     return ret;
 }
 
-void Kernel::Process::SetDebugBreak(bool debug_break, std::vector<u32> thread_ids) {
+void Kernel::Process::ChangeUnscheduleMode(UnscheduleMode mode, std::vector<u32> thread_ids,
+                                           bool set) {
     auto thread_list = GetThreadList();
     bool needs_reschedule = false;
     for (auto& t : thread_list) {
@@ -636,7 +637,7 @@ void Kernel::Process::SetDebugBreak(bool debug_break, std::vector<u32> thread_id
             }
         }
 
-        needs_reschedule |= t->SetDebugBreak(debug_break);
+        needs_reschedule |= (set ? t->SetUnscheduleMode(mode) : t->ClearUnscheduleMode(mode));
     }
 
     if (needs_reschedule) {

@@ -80,7 +80,7 @@ void Thread::serialize(Archive& ar, const unsigned int file_version) {
         }
     }
     ar & wakeup_callback;
-    ar & debug_break;
+    ar & unschedule_mode;
 }
 SERIALIZE_IMPL(Thread)
 
@@ -545,12 +545,20 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + command_header_offset;
 }
 
-bool Thread::SetDebugBreak(bool _debug_break) {
-    if (debug_break == _debug_break) {
-        return false;
-    }
-    debug_break = _debug_break;
-    return true;
+bool Thread::SetUnscheduleMode(UnscheduleMode mode) {
+    UnscheduleMode old = unschedule_mode;
+
+    unschedule_mode |= mode;
+
+    return unschedule_mode != old;
+}
+
+bool Thread::ClearUnscheduleMode(UnscheduleMode mode) {
+    UnscheduleMode old = unschedule_mode;
+
+    unschedule_mode &= ~mode;
+
+    return unschedule_mode != old;
 }
 
 CpuLimiter::~CpuLimiter() {}

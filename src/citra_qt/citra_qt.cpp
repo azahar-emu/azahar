@@ -879,6 +879,8 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Debug_Pause, QStringLiteral("Debug Pause"));
     link_action_shortcut(ui->action_Debug_Resume, QStringLiteral("Debug Resume"));
     link_action_shortcut(ui->action_Debug_Step, QStringLiteral("Debug Step"), false, true);
+    link_action_shortcut(ui->action_Debug_Unschedule_All, QStringLiteral("Debug Unschedule All"));
+    link_action_shortcut(ui->action_Debug_Schedule_All, QStringLiteral("Debug Schedule All"));
     link_action_shortcut(ui->action_Screen_Layout_Swap_Screens, QStringLiteral("Swap Screens"));
     link_action_shortcut(ui->action_Screen_Layout_Upright_Screens,
                          QStringLiteral("Rotate Screens Upright"));
@@ -1209,6 +1211,10 @@ void GMainWindow::ConnectMenuEvents() {
             emu_thread->ExecStep();
         }
     });
+    connect_menu(ui->action_Debug_Unschedule_All,
+                 [this] { system.DebugUnscheduleAllThreadsFromFrontend(true); });
+    connect_menu(ui->action_Debug_Schedule_All,
+                 [this] { system.DebugUnscheduleAllThreadsFromFrontend(false); });
 
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
