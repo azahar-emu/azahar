@@ -17,7 +17,7 @@ jobs:
     if: ${{ !github.head_ref }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Pack
@@ -31,7 +31,7 @@ jobs:
           output-file: artifacts/source.spdx.json
           upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: source
           path: artifacts/
@@ -61,13 +61,13 @@ jobs:
       SHOULD_RUN: ${{ (matrix.target != 'appimage-wayland' || github.ref_type == 'tag') }}
       CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ env.SHOULD_RUN == 'true' }}
         with:
           submodules: recursive
       - name: Set up cache
         if: ${{ env.SHOULD_RUN == 'true' && env.CACHE_ENABLED == 'true' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
@@ -95,7 +95,7 @@ jobs:
           upload-artifact: false
       - name: Upload
         if: ${{ contains(matrix.target, 'appimage') && env.SHOULD_RUN == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ github.job }}-${{ matrix.target }}
           path: artifacts/
@@ -123,11 +123,11 @@ jobs:
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
@@ -145,12 +145,12 @@ jobs:
       CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: macos
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ github.sha }}
@@ -183,7 +183,7 @@ jobs:
           output-file: artifacts/macos.spdx.json
           upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}
           path: artifacts/
@@ -222,12 +222,12 @@ jobs:
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
         if: ${{ env.CACHE_ENABLED == 'true' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -235,7 +235,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: azahar-emu/msvc-dev-cmd@v1
       - name: Install extra tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: choco install ccache ninja ptime wget
@@ -256,7 +256,7 @@ jobs:
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
       - name: Install extra tools (MSYS2)
         if: ${{ matrix.target == 'msys2' }}
-        uses: crazy-max/ghaction-chocolatey@v3
+        uses: crazy-max/ghaction-chocolatey@v4
         with:
           args: install ptime wget
       - name: Install NSIS
@@ -300,7 +300,7 @@ jobs:
           output-file: artifacts/windows-${{ matrix.target }}.spdx.json
           upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
@@ -328,13 +328,13 @@ jobs:
       TARGET: ${{ matrix.target }}
       SHOULD_RUN: ${{ (matrix.target == 'vanilla' || github.ref_type == 'tag') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ env.SHOULD_RUN == 'true' }}
         with:
           submodules: recursive
       - name: Set up cache
         if: ${{ env.SHOULD_RUN == 'true' && env.CACHE_ENABLED == 'true' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -382,7 +382,7 @@ jobs:
           upload-artifact: false
       - name: Upload
         if: ${{ env.SHOULD_RUN == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
@@ -400,7 +400,7 @@ jobs:
     container:
       image: docker:dind
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install tools
@@ -422,7 +422,7 @@ jobs:
           output-file: artifacts/docker-room.spdx.json
           upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker
           path: artifacts/
