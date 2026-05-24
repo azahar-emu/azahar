@@ -396,15 +396,24 @@ jobs:
           sbom-path: src/android/app/artifacts/android-${{ matrix.target }}.spdx.json
 
   docker:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - target: x86_64
+          os: ubuntu-24.04
+        - target: arm64
+          os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
     container:
-      image: docker:dind
+      # Can't use docker:dind for ARM64 because it's Alpine-based, see https://github.com/actions/upload-artifact/issues/739
+      image: earthbuild/dind:ubuntu-24.04-docker-28.5.2-1
+    env:
+      TARGET: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v6
         with:
           submodules: recursive
-      - name: Install tools
-        run: apk add bash
       - name: Fix git ownership
         run: git config --global --add safe.directory .
       - name: Build Docker image
@@ -424,7 +433,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v7
         with:
-          name: docker
+          name: docker-${{ env.TARGET }}
           path: artifacts/
       - name: Attest artifacts
         if: ${{ github.ref_type == 'tag' }}
