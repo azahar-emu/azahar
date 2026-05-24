@@ -152,6 +152,7 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
       present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
     CompileShaders();
     BuildLayouts();
+    CreateTextureRenderPass();
     BuildPipelines();
     if (secondary_window) {
         secondary_present_window_ptr = std::make_unique<PresentWindow>(
@@ -171,10 +172,22 @@ RendererVulkan::~RendererVulkan() {
         device.destroyShaderModule(present_shaders[i]);
     }
 
-    for (u32 i = 0; i < POST_PIPELINES; i++) {
-        device.destroyPipeline(post_pipelines[i]);
-        device.destroyShaderModule(post_vert_shaders[i]);
-        device.destroyShaderModule(post_frag_shaders[i]);
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        device.destroyPipeline(post_pipelines_screen[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
+        device.destroyPipeline(post_pipelines_texture[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        device.destroyShaderModule(post_vert_shaders_screen[i]);
+        device.destroyShaderModule(post_frag_shaders_screen[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
+        device.destroyShaderModule(post_vert_shaders_texture[i]);
+        device.destroyShaderModule(post_frag_shaders_texture[i]);
     }
 
     for (auto& sampler : present_samplers) {
@@ -215,8 +228,140 @@ void RendererVulkan::PrepareRendertarget() {
     }
 }
 
+void RendererVulkan::CreateTextureRenderPass(){
+    const vk::AttachmentReference color_ref = {
+        .attachment = 0,
+        .layout = vk::ImageLayout::eGeneral,
+    };
+
+    const vk::SubpassDescription subpass = {
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
+        .colorAttachmentCount = 1u,
+        .pColorAttachments = &color_ref,
+        .pResolveAttachments = 0,
+        .pDepthStencilAttachment = nullptr,
+    };
+
+    const vk::AttachmentDescription color_attachment = {
+        .format = vk::Format::eR16G16B16A16Sfloat,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eTransferSrcOptimal,
+    };
+
+    const vk::RenderPassCreateInfo renderpass_info = {
+        .attachmentCount = 1,
+        .pAttachments = &color_attachment,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 0,
+        .pDependencies = nullptr,
+    };
+    textureRenderpass = instance.GetDevice().createRenderPass(renderpass_info);
+}
+
+void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat){
+    vk::Device device = instance.GetDevice();
+    if (texture.image_view) {
+        device.destroyImageView(texture.image_view);
+    }
+    if (texture.image) {
+        vmaDestroyImage(instance.GetAllocator(), texture.image, texture.allocation);
+    }
+
+    texture.width = width;
+    texture.height = height;
+
+    const vk::Format format = colorFormat;
+    const vk::ImageCreateInfo image_info = {
+        .imageType = vk::ImageType::e2D,
+        .format = format,
+        .extent = {texture.width, texture.height, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .usage = vk::ImageUsageFlagBits::eSampled,
+    };
+
+    const VmaAllocationCreateInfo alloc_info = {
+        .flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .requiredFlags = 0,
+        .preferredFlags = 0,
+        .pool = VK_NULL_HANDLE,
+        .pUserData = nullptr,
+    };
+
+    VkImage unsafe_image{};
+    VkImageCreateInfo unsafe_image_info = static_cast<VkImageCreateInfo>(image_info);
+
+    VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
+                                     &unsafe_image, &texture.allocation, nullptr);
+    if (result != VK_SUCCESS) [[unlikely]] {
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
+        UNREACHABLE();
+    }
+    texture.image = vk::Image{unsafe_image};
+
+    const vk::ImageViewCreateInfo view_info = {
+        .image = texture.image,
+        .viewType = vk::ImageViewType::e2D,
+        .format = format,
+        .subresourceRange{
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    texture.image_view = device.createImageView(view_info);
+}
+
+
+
+
+void RendererVulkan::AllocatePPTextures(){
+    for (int i = 0; i < intermediateTextures[0].size(); i++){
+        AllocateTexture(intermediateTextures[0][i], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    }
+    for (int i = 0; i < intermediateTextures[1].size(); i++){
+        AllocateTexture(intermediateTextures[1][i], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    }
+    AllocateTexture(antialiasTextures[0], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[1], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+};
+
+void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
+    const vk::FramebufferCreateInfo framebuffer_info = {
+        .renderPass = textureRenderpass,
+        .attachmentCount = 1,
+        .pAttachments = &texture.image_view,
+        .width = texture.width,
+        .height = texture.height,
+        .layers = 1,
+    };
+    framebuffer = instance.GetDevice().createFramebuffer(framebuffer_info);
+}
+
+void RendererVulkan::CreatePPTextureFramebuffers(){
+    for (int i = 0; i < intermediateTextures.size(); i++){
+        for (int j = 0; j < intermediateTextures[0].size(); j++){
+            CreateTextureFramebuffer(intermediateTextures[i][j], intermediateTextureFBOs[i][j]);
+        }
+    }
+    for (int i = 0; i < antialiasTextures.size(); i++){
+        CreateTextureFramebuffer(antialiasTextures[i], antialiasTextureFBOs[i]);
+    }
+};
+
 void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout) {
-    const auto sampler = present_samplers[!Settings::values.filter_mode.GetValue()];
+    const auto sampler = present_samplers[Settings::values.filter_mode.GetValue()];
     const auto present_set = present_heap.Commit();
     for (u32 index = 0; index < screen_infos.size(); index++) {
         update_queue.AddImageSampler(present_set, 0, index, screen_infos[index].image_view,
@@ -257,7 +402,6 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
-
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, present_pipelines[index]);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
@@ -336,21 +480,21 @@ void RendererVulkan::CompileShaders() {
         Compile(HostShaders::VULKAN_CURSOR_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // Simple Present Shader
-    post_vert_shaders[0] =
+    post_vert_shaders_texture[0] =
         Compile(HostShaders::VULKAN_SIMPLE_PRESENT_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[0] =
+    post_frag_shaders_texture[0] =
         Compile(HostShaders::VULKAN_SIMPLE_PRESENT_FRAG, vk::ShaderStageFlagBits::eFragment, device, preamble);
 
     // Area Sampling Shader
-    post_vert_shaders[1] =
+    post_vert_shaders_screen[0] =
         Compile(HostShaders::VULKAN_AREA_SAMPLING_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[1] =
+    post_frag_shaders_screen[0] =
         Compile(HostShaders::VULKAN_AREA_SAMPLING_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // FXAA Shader
-    post_vert_shaders[2] =
+    post_vert_shaders_texture[1] =
         Compile(HostShaders::VULKAN_FXAA_VERT, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[2] =
+    post_frag_shaders_texture[1] =
         Compile(HostShaders::VULKAN_FXAA_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 0 Shader
@@ -360,9 +504,9 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_0_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS0_PRE_FRAG);
     smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS0_POST_FRAG);
-    post_vert_shaders[3] =
+    post_vert_shaders_texture[2] =
         Compile(smaa_pass_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[3] =
+    post_frag_shaders_texture[2] =
         Compile(smaa_pass_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 1 Shader
@@ -372,9 +516,9 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_1_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS1_PRE_FRAG);
     smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS1_POST_FRAG);
-    post_vert_shaders[4] =
+    post_vert_shaders_texture[3] =
         Compile(smaa_pass_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[4] =
+    post_frag_shaders_texture[3] =
         Compile(smaa_pass_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 2 Shader
@@ -384,15 +528,15 @@ void RendererVulkan::CompileShaders() {
     std::string smaa_pass_2_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS2_PRE_FRAG);
     smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
     smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS2_POST_FRAG);
-    post_vert_shaders[5] =
+    post_vert_shaders_texture[4] =
         Compile(smaa_pass_2_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
-    post_frag_shaders[5] =
+    post_frag_shaders_texture[4] =
         Compile(smaa_pass_2_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
-        const vk::Filter filter_mode = i == 0 ? vk::Filter::eLinear : vk::Filter::eNearest;
+        const vk::Filter filter_mode = i == 0 ? vk::Filter::eNearest : vk::Filter::eLinear;
         const vk::SamplerCreateInfo sampler_info = {
             .magFilter = filter_mode,
             .minFilter = filter_mode,
@@ -560,17 +704,53 @@ void RendererVulkan::BuildPipelines() {
         present_pipelines[i] = pipeline;
     }
 
-    // Build Post Proccessing Pipelines
-    for (u32 i = 0; i < POST_PIPELINES; i++) {
+    // Build Post Processing Pipelines for RGBA16F textures
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
         const std::array shader_stages = {
             vk::PipelineShaderStageCreateInfo{
                 .stage = vk::ShaderStageFlagBits::eVertex,
-                .module = post_vert_shaders[i],
+                .module = post_vert_shaders_texture[i],
                 .pName = "main",
             },
             vk::PipelineShaderStageCreateInfo{
                 .stage = vk::ShaderStageFlagBits::eFragment,
-                .module = post_frag_shaders[i],
+                .module = post_frag_shaders_texture[i],
+                .pName = "main",
+            },
+        };
+
+        const vk::GraphicsPipelineCreateInfo pipeline_info = {
+            .stageCount = static_cast<u32>(shader_stages.size()),
+            .pStages = shader_stages.data(),
+            .pVertexInputState = &vertex_input_info,
+            .pInputAssemblyState = &input_assembly,
+            .pViewportState = &viewport_info,
+            .pRasterizationState = &raster_state,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depth_info,
+            .pColorBlendState = &color_blending,
+            .pDynamicState = &dynamic_info,
+            .layout = *present_pipeline_layout,
+            .renderPass = textureRenderpass,
+        };
+
+        const auto [result, pipeline] =
+            instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
+        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build post processing pipelines");
+        post_pipelines_texture[i] = pipeline;
+    }
+
+    // Build Post Processing Pipelines for presenting
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        const std::array shader_stages = {
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eVertex,
+                .module = post_vert_shaders_screen[i],
+                .pName = "main",
+            },
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eFragment,
+                .module = post_frag_shaders_screen[i],
                 .pName = "main",
             },
         };
@@ -592,8 +772,8 @@ void RendererVulkan::BuildPipelines() {
 
         const auto [result, pipeline] =
             instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
-        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build present pipelines");
-        post_pipelines[i] = pipeline;
+        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build post processing pipelines");
+        post_pipelines_screen[i] = pipeline;
     }
 
     // Build cursor pipeline (simple position-only, inverted color blending)

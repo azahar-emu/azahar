@@ -72,7 +72,9 @@ static_assert(sizeof(PresentUniformData) == 128,
 
 class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
-    static constexpr std::size_t POST_PIPELINES = 6;
+    static constexpr std::size_t POST_PIPELINES_SCREEN = 1;
+    static constexpr std::size_t POST_PIPELINES_TEXTURE = 5;
+    static constexpr std::size_t POST_SHADERS = 6;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
@@ -100,7 +102,7 @@ private:
     void RenderScreenshotWithStagingCopy();
     bool TryRenderScreenshotWithHostMemory();
     void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout);
-    void PrepareTextureDraw(Frame* frame, const Layout::FramebufferLayout& layout);
+    void PrepareTextureDraw(TextureInfo& textureInfo, vk::Pipeline& pipeline, int filterMode, std::vector<vk::ImageView> imageViews);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);
 
@@ -123,6 +125,17 @@ private:
                             bool right_eye);
     void FillScreen(Common::Vec3<u8> color, const TextureInfo& texture);
 
+    void AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat);
+    void CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer);
+
+    // Create Renderpass used for Textures
+    void CreateTextureRenderPass();
+    // Allocate Post Processing Textures
+    void AllocatePPTextures();
+    // Create Framebuffers that are attached to the Post Processing Textures
+    void CreatePPTextureFramebuffers();
+    void AllocateSMAATextures();
+
 private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
@@ -143,10 +156,18 @@ private:
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
-    std::array<vk::Pipeline, POST_PIPELINES> post_pipelines;
+    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2
+    std::array<vk::Pipeline, POST_PIPELINES_TEXTURE> post_pipelines_texture;
+    // Post Processing Pipelines for presenting to screen. Contains: Area
+    std::array<vk::Pipeline, POST_PIPELINES_SCREEN> post_pipelines_screen;
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
-    std::array<vk::ShaderModule, POST_PIPELINES> post_vert_shaders;
-    std::array<vk::ShaderModule, POST_PIPELINES> post_frag_shaders;
+    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2
+    std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_vert_shaders_texture;
+    std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_frag_shaders_texture;
+    // Post Processing Shaders for presenting to screen. Contains: Area
+    std::array<vk::ShaderModule, POST_PIPELINES_SCREEN> post_vert_shaders_screen;
+    std::array<vk::ShaderModule, POST_PIPELINES_SCREEN> post_frag_shaders_screen;
+    // Linear and Nearest Sampler Respectively
     std::array<vk::Sampler, 2> present_samplers;
     vk::ShaderModule present_vertex_shader;
     vk::ShaderModule simplepresent_vertex_shader;
@@ -162,13 +183,25 @@ private:
     vk::ShaderModule smaa_pass_2_vertex_shader;
     vk::ShaderModule smaa_pass_2_frag_shader;
 
+    // Renderpass for RGBA16F Textures
+    vk::RenderPass textureRenderpass;
 
+    // Array of textures. 0 is top screen, 1 is bottom screen.
+    std::array<std::array<TextureInfo, 5>, 2> intermediateTextures;
+    std::array<TextureInfo, 2> antialiasTextures;
+
+    // Array of framebuffer objects. 0 is top screen, 1 is bottom screen.
+    std::array<std::array<vk::Framebuffer, 5>, 2> intermediateTextureFBOs;
+    std::array<vk::Framebuffer, 2 > antialiasTextureFBOs;
+    int currTopTextureWidth;
+    int currTopTextureHeight;
+    int currBottomTextureWidth;
+    int currBottomTextureHeight;
     u32 current_pipeline = 0;
 
     std::array<ScreenInfo, 3> screen_infos{};
     PresentUniformData draw_info{};
     vk::ClearColorValue clear_color{};
-
     vk::ShaderModule cursor_vertex_shader{};
     vk::ShaderModule cursor_fragment_shader{};
     vk::Pipeline cursor_pipeline{};
