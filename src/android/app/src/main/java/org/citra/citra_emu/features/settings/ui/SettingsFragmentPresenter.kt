@@ -799,6 +799,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     onLongClick = { settingsAdapter.onLongClickAutoMap() }
                 )
             )
+
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
@@ -839,6 +840,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
             }
+
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(
@@ -863,8 +865,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
         }
     }
-
-
 
     private fun getInputObject(key: String): AbstractStringSetting {
         return object : AbstractStringSetting {

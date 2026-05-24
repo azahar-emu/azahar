@@ -4,7 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model
 
-import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.R
 
 enum class IntListSetting(
     override val key: String,
@@ -14,17 +15,9 @@ enum class IntListSetting(
 ) : AbstractListSetting<Int> {
 
     LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false),
-    COMBO_KEYS("combo_keys", Settings.SECTION_CONTROLS, listOf
-        (NativeLibrary.ButtonType.BUTTON_A,
-        NativeLibrary.ButtonType.BUTTON_B,
-        NativeLibrary.ButtonType.BUTTON_X,
-        NativeLibrary.ButtonType.BUTTON_Y,
-        NativeLibrary.ButtonType.TRIGGER_L,
-        NativeLibrary.ButtonType.TRIGGER_R,
-        NativeLibrary.ButtonType.BUTTON_ZL,
-        NativeLibrary.ButtonType.BUTTON_ZR,
-        NativeLibrary.ButtonType.BUTTON_START,
-        NativeLibrary.ButtonType.BUTTON_SELECT), canBeEmpty = true);
+    COMBO_KEYS("combo_keys", Settings.SECTION_CONTROLS,
+        CitraApplication.appContext.resources.getIntArray(R.array.comboOptionValues).toCollection(ArrayList()),
+        canBeEmpty = true);
 
     private var backingList: List<Int> = defaultValue
     private var lastValidList : List<Int> = defaultValue

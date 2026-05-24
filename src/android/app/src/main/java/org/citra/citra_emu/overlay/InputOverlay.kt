@@ -159,7 +159,6 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     NativeLibrary.onTouchEvent(0f, 0f, false)
                     break // Up and down actions shouldn't loop
                 }
-
             }
 
             var anyOverlayStateChanged = false

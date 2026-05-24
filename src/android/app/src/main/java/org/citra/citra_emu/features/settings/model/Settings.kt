@@ -115,7 +115,6 @@ class Settings {
         const val SECTION_STORAGE = "Storage"
         const val SECTION_MISC = "Miscellaneous"
 
-
         const val KEY_BUTTON_A = "button_a"
         const val KEY_BUTTON_B = "button_b"
         const val KEY_BUTTON_X = "button_x"

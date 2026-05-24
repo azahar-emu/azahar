@@ -199,7 +199,6 @@ class SettingsAdapter(
                     SettingsItem.TYPE_SINGLE_CHOICE -> {
                         (oldItem as SingleChoiceSetting).isEnabled == (newItem as SingleChoiceSetting).isEnabled
                     }
-                    
                     SettingsItem.TYPE_MULTI_CHOICE -> {
                         (oldItem as MultiChoiceSetting).isEnabled == (newItem as MultiChoiceSetting).isEnabled
                     }
@@ -721,7 +720,6 @@ class SettingsAdapter(
         }
     }
 
-
     private fun getSelectionForSingleChoiceValue(item: SingleChoiceSetting): Int {
         val value = item.selectedValue
         val valuesId = item.valuesId
@@ -754,5 +752,4 @@ class SettingsAdapter(
         }
         return BooleanArray(1){false};
     }
-
 }
