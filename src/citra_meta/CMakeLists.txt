@@ -68,7 +68,7 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
     )
 endif()
 
-target_link_libraries(citra_meta PRIVATE citra_common fmt)
+target_link_libraries(citra_meta PRIVATE citra_cli citra_common fmt)
 
 if (ENABLE_QT)
     target_link_libraries(citra_meta PRIVATE citra_qt)

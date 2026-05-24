@@ -212,6 +212,8 @@
     <string name="storage">Archiviazione</string>
     <string name="compress_cia_installs">Comprimi i contenuti CIA installati</string>
     <string name="compress_cia_installs_description">Comprime il contenuto dei file CIA quando installati sulla scheda SD emulata. Riguarda solo i contenuti CIA installati mentre l\'impostazione è abilitata.</string>
+    <string name="async_fs_operations">Operazioni filesystem asincrone</string>
+    <string name="async_fs_operations_description">Rende asincroni gli accessi al filesystem emulato. Riduce drasticamente i micro-scatti legati alla lettura dei file, ma potrebbe aumentare leggermente i tempi di caricamento.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Fotocamera Interna</string>
@@ -243,6 +245,8 @@
     <string name="texture_filter_description">Migliora la grafica delle applicazioni applicando un filtro alle texture. I filtri supportati sono Anime4k Ultrafast, Bicubic, ScaleForce, xBRZ freescale e MMPX.</string>
     <string name="delay_render_thread">Ritarda il thread di rendering del gioco</string>
     <string name="delay_render_thread_description">Ritarda il thread di rendering del gioco quando invia dati alla GPU. Aiuta con i problemi di prestazioni nelle (poche) applicazioni con frame rate dinamici.</string>
+    <string name="simulate_3ds_gpu_timings">Simula timing della GPU 3DS</string>
+    <string name="simulate_3ds_gpu_timings_description">Ritarda gli eventi di completamento della GPU in base alle misurazioni effettuate su hardware reale, garantendo ai giochi una gestione dei tempi della GPU più realistica. Aiuta a stabilizzare i titoli con FPS dinamici. In rari casi, disattivare questa funzione può migliorare le prestazioni a discapito della stabilità.</string>
     <string name="advanced">Avanzato</string>
     <string name="texture_sampling_name">Campionamento texture</string>
     <string name="texture_sampling_description">Sovrascrive il filtro di campionamento utilizzato dai giochi. Questo può essere utile in alcuni casi con giochi che gestiscono male l\'upscaling. Se hai dubbi, imposta questa opzione su \"Gestito dal gioco\".</string>
@@ -315,6 +319,8 @@
     <string name="audio_stretch_description">Allunga l\'audio per ridurre gli scatti. Quando è abilitato, aumenta la latenza dell\'audio e riduce lievemente le prestazioni.</string>
     <string name="realtime_audio">Abilita audio in tempo reale</string>
     <string name="realtime_audio_description">Regola la velocità della riproduzione dell\'audio per compensare i cali nel framerate dell\'emulazione. Questo significa che l\'audio verrà riprodotto a velocità normale anche mentre il framerate del gioco è basso. Può causare problemi di desincronizzazione dell\'audio.</string>
+    <string name="simulate_headphones_plugged">Simula cuffie collegate</string>
+    <string name="simulate_headphones_plugged_description">Simula se le cuffie sono collegate al sistema 3DS emulato.</string>
     <string name="audio_input_type">Dispositivo di input dell\'audio</string>
     <string name="sound_output_mode">Modalità di output del suono</string>
 
@@ -370,7 +376,6 @@
     <string name="learn_more">Scopri di più</string>
     <string name="close">Chiudi</string>
     <string name="reset_to_default">Reimposta</string>
-    <string name="redump_games"><![CDATA[Per favore segui le guide per dumpare nuovamente le tue <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuccie di gioco</a> o <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">titoli installati</a>.]]></string>
     <string name="option_default">Standard</string>
     <string name="none">Nessuno</string>
     <string name="auto">Auto</string>
@@ -413,10 +418,38 @@
     <string name="preferences_layout">Layout</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Errore nel caricamento dell\'applicazione</string>
+    <string name="loader_error_invalid_format">Formato applicazione non valido</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Formato del file dell\'applicazione non supportato.<br>Assicurati di utilizzare uno dei formati compatibili:<ul><li>Immagini schedine: <b>.cci/.zcci/.3ds</b></li><li>Archivi installabili: <b>.cia/.zcia</b></li><li>Titoli Homebrew: <b>.3dsx/.z3dsx</b></li><li>Container NCCH: <b>.cxi/.zcxi/.app</b></li><li>File ELF: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Modalità di sistema non valida</string>
+    <string name="loader_error_invalid_system_mode_description">Le applicazioni esclusive per New 3DS non possono essere caricate senza aver abilitato la modalità New 3DS.</string>
+    <string name="loader_error_applying_patches">Errore nell\'applicazione della patch</string>
+    <string name="loader_error_applying_patches_description">Si è verificato un errore generico durante l\'applicazione di una patch all\'applicazione. Consulta il file di log per ulteriori dettagli.</string>
+    <string name="loader_error_patch_wrong_application">Impossibile applicare la patch perché è progettata per un\'altra applicazione. Assicurati di utilizzare le patch corrette per l\'applicazione, la regione e la versione corrispondenti.</string>
     <string name="loader_error_encrypted">La tua ROM è criptata</string>
-    <string name="loader_error_invalid_format">Formato ROM non valido</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar non supporta le applicazioni criptate. Leggi il <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">post sul nostro blog</a> per ulteriori informazioni.]]></string>
     <string name="loader_error_file_not_found">Il file ROM non esiste</string>
     <string name="no_game_present">Nessun gioco avviabile è presente!</string>
+
+    <string name="loader_error_generic">Si è verificato un errore durante il caricamento della ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Successo</string>
+    <string name="core_error_not_initialized">Non inizializzato</string>
+    <string name="core_error_get_loader">Loader per il file non trovato, tipo di file non compatibile</string>
+    <string name="core_error_system_mode">Analisi del file fallita</string>
+    <string name="core_error_loader">Errore generico del loader</string>
+    <string name="core_error_loader_encrypted">File criptato</string>
+    <string name="core_error_loader_invalid_format">File corrotto</string>
+    <string name="core_error_loader_gba_title">Il file è un titolo GBA</string>
+    <string name="core_error_loader_error_patches">Errore nell\'applicazione della patch</string>
+    <string name="core_error_loader_patches_invalid_title">Le patch sono per un\'altra applicazione</string>
+    <string name="core_error_system_files">File di sistema mancanti</string>
+    <string name="core_error_savestate">Savestate fallito</string>
+    <string name="core_error_artic_disconnected">Artic Base disconnesso</string>
+    <string name="core_error_n3ds_application">Il file è un\'applicazione New 3DS</string>
+    <string name="core_error_core_exception_raised">Rilevata eccezione del core</string>
+    <string name="core_error_memory_exception_raised">Rilevata eccezione della memoria</string>
+    <string name="core_error_shutdown_requested">Spegnimento richiesto</string>
+    <string name="core_error_unknown">Errore sconosciuto</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Premi Indietro per accedere al menù</string>
@@ -524,7 +557,7 @@
     <string name="copy_file_name">Copia file: %s</string>
     <string name="copy_complete">Copia completata</string>
     <string name="savestates">Stati salvati</string>
-    <string name="savestate_warning_message">Attenzione: Gli stati salvati NON sostituiscono i salvataggi in-game, e non sono pensati per essere affidabili.\n\nUsali a tuo rischio e pericolo.</string>
+    <string name="savestate_warning_message">Attenzione: i Savestate salvati NON sostituiscono i salvataggi in-game, e non sono pensati per essere affidabili.\n\nUsali a tuo rischio e pericolo.</string>
 
     <!-- Software Keyboard -->
     <string name="software_keyboard">Tastiera Software</string>

@@ -833,6 +833,19 @@ bool System::IsInitialSetup() {
     return app_loader && app_loader->DoingInitialSetup();
 }
 
+void System::DebugUnscheduleAllThreadsFromFrontend(bool unschedule) {
+    if (!is_powered_on)
+        return;
+
+    for (auto proc : kernel->GetProcessList()) {
+        if (unschedule) {
+            proc->SetUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        } else {
+            proc->ClearUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        }
+    }
+}
+
 template <class Archive>
 void System::serialize(Archive& ar, const unsigned int file_version) {
 

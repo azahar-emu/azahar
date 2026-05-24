@@ -14,7 +14,7 @@
     <string name="settings_description">Definir as configurações do emulador</string>
     <string name="install_game_content">Instalar arquivo CIA</string>
     <string name="install_game_content_description">Instalar aplicativos, atualizações ou DLC</string>
-    <string name="share_log">Compartilhar Registro</string>
+    <string name="share_log">Compartilhar Log</string>
     <string name="share_log_description">Compartilhe o arquivo de log do Azahar para depurar problemas</string>
     <string name="gpu_driver_manager">Gerenciador de Driver da GPU</string>
     <string name="install_gpu_driver">Instalar driver da GPU</string>
@@ -86,7 +86,7 @@
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Selecione a Pasta do Usuário</string>
     <string name="select_citra_user_folder_description"><![CDATA[Selecione o seu diretório de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dados de usuário</a>com o botão abaixo.]]></string>
-    <string name="select_which_user_directory_to_use">Parece que você tem diretórios de usuários configurados para ambos o Lime3DS e o Azahar. Isso ocorreu devido a você ter atualizado para o Azahar, e quando solicitado, escolha um diretório de usuário diferente daquele que foi usado pelo Lime3DS.\n\nIsso pode ter resultado em você pensar que tenha perdidos dados salvos ou outras configurações - pedimos desculpas caso isso tenha acontecido.\n\nGostaria de voltar a usar sua pasta de usuário original do Lime3DS, restaurar configurações e salvar os jogos do Lime3DS, ou manter o diretório de usuário do Azahar atual?\n\nNenhum dos diretórios serão excluídos, independente de sua escolha, sinta-se livre para trocar entre elas usando a opção Selecionar Pasta de Usuário.</string>
+    <string name="select_which_user_directory_to_use">Parece que você possui pastas de usuário configuradas tanto para o Lime3DS quanto para o Azahar. Isso provavelmente ocorreu porque você atualizou para o Azahar e, quando solicitado, escolheu uma pasta de usuário diferente da que era usada pelo Lime3DS.\n\nIsso pode ter feito você pensar que perdeu seus saves ou outras configurações — pedimos desculpas se isso aconteceu.\n\nVocê gostaria de voltar a usar sua pasta de usuário original do Lime3DS, restaurando as configurações e jogos salvos do Lime3DS, ou manter sua pasta de usuário atual do Azahar?\n\nNenhuma das pastas será excluída, independentemente da sua escolha, e você pode alternar livremente entre elas usando a opção Selecionar Pasta do Usuário.</string>
     <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
     <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
@@ -141,7 +141,7 @@
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
     <string name="button_turbo">Turbo</string>
-    <string name="input_message_analog_only">Este controle tem de ser mapeado a um eixo analógico do gamepad ou um eixo de D-pad!</string>
+    <string name="input_message_analog_only">Este controle deve ser mapeado para um analógico ou eixo do D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
     <string name="turbo_limit_hotkey">Velocidade Turbo</string>
     <string name="turbo_enabled_toast">Velocidade Turbo Ativada</string>
@@ -212,6 +212,8 @@
     <string name="storage">Armazenamento</string>
     <string name="compress_cia_installs">Comprimir conteúdo CIA instalado</string>
     <string name="compress_cia_installs_description">Comprime o conteúdo dos arquivos CIA ao serem instalados no cartão SD emulado. Afeta apenas o conteúdo CIA instalado enquanto a opção estiver ativada.</string>
+    <string name="async_fs_operations">Operações assíncronas do sistema de arquivos</string>
+    <string name="async_fs_operations_description">Torna assíncronos os acessos ao sistema de arquivos emulado. Reduz consideravelmente os engasgos relacionados ao sistema de arquivos, mas pode aumentar um pouco os tempos de carregamento.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Câmera frontal</string>
@@ -243,6 +245,8 @@
     <string name="texture_filter_description">Aprimora o visual dos aplicativos ao aplicar filtros às texturas. Os filtros compatíveis são: Anime4K Ultrafast, Bicúbico, ScaleForce, xBRZ Freescale e MMPX.</string>
     <string name="delay_render_thread">Atrasar Thread de Renderização do Aplicativo</string>
     <string name="delay_render_thread_description">Atrasar thread de renderização do aplicativo quando for enviado dados para a GPU. Ajuda com problemas de desempenho em (muito poucos) aplicativos com taxa de quadros dinâmica.</string>
+    <string name="simulate_3ds_gpu_timings">Simular temporizações da GPU do 3DS</string>
+    <string name="simulate_3ds_gpu_timings_description">Atrasa os eventos de conclusão da GPU com base em medições feitas no hardware original, para que os jogos tenham medições de tempo de GPU mais realistas. Ajuda a estabilizar jogos com FPS dinâmico. Desativar este recurso pode melhorar o desempenho em alguns casos raros, à custa da estabilidade.</string>
     <string name="advanced">Avançado</string>
     <string name="texture_sampling_name">Amostragem de Texturas</string>
     <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
@@ -315,6 +319,8 @@
     <string name="audio_stretch_description">Estica o áudio para reduzir engasgos. Quando ativado, aumenta a latência do áudio e reduz levemente o desempenho.</string>
     <string name="realtime_audio">Ativar Áudio em Tempo Real</string>
     <string name="realtime_audio_description">Dimensiona a velocidade de reprodução de áudio para compensar quedas na taxa de quadros da emulação. Isso significa que o áudio será reproduzido em velocidade máxima mesmo quando a taxa de quadros do jogo estiver baixa. Pode causar problemas de dessincronização de áudio.</string>
+    <string name="simulate_headphones_plugged">Simular fones de ouvido conectados</string>
+    <string name="simulate_headphones_plugged_description">Simula se os fones de ouvido estão conectados ao sistema emulado do 3DS.</string>
     <string name="audio_input_type">Dispositivo de entrada de áudio</string>
     <string name="sound_output_mode">Modo de Saída de Som</string>
 
@@ -370,7 +376,6 @@
     <string name="learn_more">Saber mais</string>
     <string name="close">Fechar</string>
     <string name="reset_to_default">Redefinir para o Padrão</string>
-    <string name="redump_games"><![CDATA[Por favor, siga os guias para extrair novamente seus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartuchos de jogo</a> ou <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títulos instalados</a>.]]></string>
     <string name="option_default">Padrão</string>
     <string name="none">Nenhum</string>
     <string name="auto">Automático</string>
@@ -413,10 +418,38 @@
     <string name="preferences_layout">Disposição</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Erro ao carregar o aplicativo</string>
+    <string name="loader_error_invalid_format">Formato de aplicativo inválido</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Formato de arquivo do aplicativo não suportado.<br>Certifique-se de estar usando um dos formatos de arquivo compatíveis: <ul><li>Imagens de cartucho: <b>.cci/.zcci/.3ds</b></li><li>Arquivos instaláveis: <b>.cia/.zcia</b></li><li> Títulos homebrew: <b>.3dsx/.z3dsx</b></li><li>Contêineres NCCH: <b>.cxi/.zcxi/.app</b></li><li>Arquivos ELF: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Modo de sistema inválido</string>
+    <string name="loader_error_invalid_system_mode_description">Aplicativos exclusivos do New 3DS não podem ser carregados sem ativar o modo New 3DS.</string>
+    <string name="loader_error_applying_patches">Erro ao aplicar patches</string>
+    <string name="loader_error_applying_patches_description">Ocorreu um erro genérico ao aplicar um patch ao aplicativo. Verifique o log para mais detalhes.</string>
+    <string name="loader_error_patch_wrong_application">Falha ao aplicar um patch porque ele foi projetado para um aplicativo diferente. Certifique-se de estar usando os patches para o aplicativo, região e versão corretos.</string>
     <string name="loader_error_encrypted">Sua ROM está Criptografada</string>
-    <string name="loader_error_invalid_format">Formato inválido de ROM</string>
+    <string name="loader_error_encrypted_description"><![CDATA[O Azahar não suporta aplicativos criptografados. Leia nosso <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">post no blog</a> para mais informações.]]></string>
     <string name="loader_error_file_not_found">O arquivo ROM não existe</string>
     <string name="no_game_present">Nenhum jogo inicializável presente!</string>
+
+    <string name="loader_error_generic">Ocorreu um erro ao carregar a ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Sucesso</string>
+    <string name="core_error_not_initialized">Não inicializado</string>
+    <string name="core_error_get_loader">Carregador do arquivo não encontrado, tipo de arquivo incompatível</string>
+    <string name="core_error_system_mode">Falha ao analisar o arquivo</string>
+    <string name="core_error_loader">Erro genérico do carregador</string>
+    <string name="core_error_loader_encrypted">Arquivo criptografado</string>
+    <string name="core_error_loader_invalid_format">Arquivo corrompido</string>
+    <string name="core_error_loader_gba_title">O arquivo é um título de GBA</string>
+    <string name="core_error_loader_error_patches">Erro ao aplicar patches</string>
+    <string name="core_error_loader_patches_invalid_title">Os patches são para um aplicativo diferente</string>
+    <string name="core_error_system_files">Arquivos de sistema ausentes</string>
+    <string name="core_error_savestate">Falha no savestate</string>
+    <string name="core_error_artic_disconnected">Artic Base desconectado</string>
+    <string name="core_error_n3ds_application">O arquivo é um aplicativo do New 3DS</string>
+    <string name="core_error_core_exception_raised">Exceção de núcleo disparada</string>
+    <string name="core_error_memory_exception_raised">Exceção de memória disparada</string>
+    <string name="core_error_shutdown_requested">Desligamento solicitado</string>
+    <string name="core_error_unknown">Erro desconhecido</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pressione Voltar para acessar o menu.</string>

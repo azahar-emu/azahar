@@ -322,4 +322,7 @@ protected:
  */
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
 
+std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
+    const std::string& filepath, bool compress);
+
 } // namespace Loader

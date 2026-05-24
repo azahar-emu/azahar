@@ -21,6 +21,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
@@ -28,7 +29,6 @@
 namespace Kernel {
 
 class Mutex;
-class Process;
 
 enum ThreadPriority : u32 {
     ThreadPrioHighest = 0,      ///< Highest thread priority
@@ -366,19 +366,16 @@ public:
     }
 
     bool CanSchedule() {
-        // TODO(PabloMK7): This may not be the proper way
-        // threads are marked as non-schedulable when they
-        // are in debug break. Figure out and fix.
-        return can_schedule && !debug_break;
+        return static_cast<u32>(unschedule_mode) == 0;
     }
 
-    bool SetDebugBreak(bool debug_break);
+    bool SetUnscheduleMode(UnscheduleMode mode);
+    bool ClearUnscheduleMode(UnscheduleMode mode);
 
     Core::ARM_Interface::ThreadContext context{};
 
     u32 thread_id;
 
-    bool can_schedule{true};
     ThreadStatus status;
     VAddr entry_point;
     VAddr stack_top;
@@ -419,7 +416,10 @@ public:
 
 private:
     ThreadManager& thread_manager;
-    bool debug_break{};
+
+    // Does not represent how real HW works, instead it mimics behaviour
+    // taking into account how our scheduler works.
+    UnscheduleMode unschedule_mode{};
 
     friend class boost::serialization::access;
     template <class Archive>

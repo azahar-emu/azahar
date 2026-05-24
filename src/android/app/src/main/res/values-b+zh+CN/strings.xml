@@ -190,7 +190,6 @@
     <string name="storage">存储</string>
     <string name="compress_cia_installs">压缩已安装的 CIA 内容</string>
     <string name="compress_cia_installs_description">安装到模拟 SD 卡时，压缩 CIA 文件的内容。仅影响启用此设置时安装的 CIA 内容。</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">内置摄像头</string>
     <string name="outer_left_camera">外置左摄像头</string>
@@ -375,9 +374,7 @@
     <string name="preferences_theme">主题和色彩</string>
     <string name="preferences_layout">布局</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">您的 ROM 是加密的</string>
-    <string name="loader_error_invalid_format">无效的 ROM 格式</string>
     <string name="loader_error_file_not_found">ROM 文件不存在</string>
     <string name="no_game_present">目前没有可启动的游戏！</string>
 
