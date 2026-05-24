@@ -4,7 +4,8 @@
 # --- Builder ----------------
 FROM opensauce04/azahar-build-environment:latest AS builder
 
-COPY . /var/azahar-src
+RUN mkdir /var/azahar-src/
+COPY ./ /var/azahar-src/
 
 RUN mkdir ./builddir/
 WORKDIR ./builddir/
