@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <thread>
+#include <unordered_map>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QIcon>
@@ -4097,7 +4098,7 @@ void GMainWindow::LoadTranslation() {
                 UISettings::values.language = lang_en;
                 return;
             }
-            loaded = translator.load(lang, languages_dir);
+            loaded = citraTranslator.load(lang, languages_dir);
             if (loaded) {
                 UISettings::values.language = lang;
                 break;
@@ -4110,16 +4111,22 @@ void GMainWindow::LoadTranslation() {
         return;
     }
 
+    const QString qtbase_prefix = QStringLiteral("qtbase_");
     if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
+        qtTranslator.load(qtbase_prefix + QLocale::system().name(), {}, {},
+                          QStringLiteral(":/languages/"));
+        loaded = citraTranslator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, languages_dir);
+        qtTranslator.load(qtbase_prefix + UISettings::values.language,
+                          QStringLiteral(":/languages/"));
+        loaded = citraTranslator.load(UISettings::values.language, QStringLiteral(":/languages/"));
     }
 
     if (loaded) {
-        qApp->installTranslator(&translator);
+        qApp->installTranslator(&qtTranslator);
+        qApp->installTranslator(&citraTranslator);
     } else {
         UISettings::values.language = lang_en;
     }
@@ -4127,7 +4134,8 @@ void GMainWindow::LoadTranslation() {
 
 void GMainWindow::OnLanguageChanged(const QString& locale) {
     if (UISettings::values.language != QStringLiteral("en")) {
-        qApp->removeTranslator(&translator);
+        qApp->removeTranslator(&qtTranslator);
+        qApp->removeTranslator(&citraTranslator);
     }
 
     UISettings::values.language = locale;
