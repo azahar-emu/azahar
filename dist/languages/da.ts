@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="vi_VN">
+<TS version="2.1" language="da">
 <context>
     <name>ARMRegisters</name>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="14"/>
         <source>ARM Registers</source>
-        <translation>Các thanh ghi ARM</translation>
+        <translation>ARM-registre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="25"/>
         <source>Register</source>
-        <translation>Thanh ghi</translation>
+        <translation>Registre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="30"/>
         <source>Value</source>
-        <translation>Giá trị</translation>
+        <translation>Værdi</translation>
     </message>
 </context>
 <context>
@@ -24,17 +24,17 @@
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="14"/>
         <source>About Azahar</source>
-        <translation type="unfinished"></translation>
+        <translation>Om Azahar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/default/256x256/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/default/256x256/azahar.png&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="60"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Azahar&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Azahar&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="73"/>
@@ -50,17 +50,23 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Azahar is a free and open source 3DS emulator licensed under GPLv2.0 or any later version.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;This software should not be used to play games you have not legally obtained.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Azahar er en fri og open source 3DS emulator licenseret under GPLv2.0 eller enhver senere version.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Denne software bør ikke bruges til at spille spil, du ikke har fået lovligt.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="118"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azahar-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Website&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Source Code&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar/blob/master/license.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;License&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://azahar-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Hjemmeside&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Kildekode&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Bidragydere&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/azahar-emu/azahar/blob/master/license.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Licens&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="134"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; is a trademark of Nintendo. Azahar is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; er et varemærke tilhørende Nintendo. Azahar er ikke tilknyttet Nintendo på nogen måde.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -68,47 +74,47 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="121"/>
         <source>Pica command loaded</source>
-        <translation>Đã khởi động lệnh Pica</translation>
+        <translation>Pica-kommando indlæst</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="123"/>
         <source>Pica command processed</source>
-        <translation>Đã xử lý lệnh Pica</translation>
+        <translation>Pica-kommando behandlet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="125"/>
         <source>Incoming primitive batch</source>
-        <translation>Đã nhận được dữ liệu nguyên thủy mới</translation>
+        <translation>Kommende primitivt parti</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="127"/>
         <source>Finished primitive batch</source>
-        <translation>Dữ liệu nguyên thủy đã được xử lý</translation>
+        <translation>Færdiggjort primitivt parti</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="129"/>
         <source>Vertex shader invocation</source>
-        <translation>Gọi lệnh Vertex Shader</translation>
+        <translation>Aktivering af vertex-shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="131"/>
         <source>Incoming display transfer</source>
-        <translation>Đang chuyển giao hiển thị</translation>
+        <translation>Kommende displayoverførsel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="133"/>
         <source>GSP command processed</source>
-        <translation>Đã xử lý lệnh GSP</translation>
+        <translation>GSP-kommando behandlet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="135"/>
         <source>Buffers swapped</source>
-        <translation>Đã chuyển đổi bộ đệm</translation>
+        <translation>Buffers byttet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="139"/>
         <source>Unknown debug context event</source>
-        <translation type="unfinished"></translation>
+        <translation>Ukendt handling for fejlfindingskontekst</translation>
     </message>
 </context>
 <context>
@@ -116,27 +122,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="23"/>
         <source>Communicating with the server...</source>
-        <translation>Đang kết nối với máy chủ...</translation>
+        <translation>Kommunikerer med serveren...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="24"/>
         <source>Cancel</source>
-        <translation>Hủy bỏ</translation>
+        <translation>Annuller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="42"/>
         <source>Touch the top left corner &lt;br&gt;of your touchpad.</source>
-        <translation>Chạm vào góc trên trái &lt;br&gt;bảng cảm biến.</translation>
+        <translation>Tryk på det øverste venstre hjørne&lt;br&gt;af din touchpad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="45"/>
         <source>Now touch the bottom right corner &lt;br&gt;of your touchpad.</source>
-        <translation>Giờ chạm vào góc dưới phải &lt;br&gt;bảng cảm biến.</translation>
+        <translation>Og tryk nu på det nederste højre hjørne&lt;br&gt;af din touchpad.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="48"/>
         <source>Configuration completed!</source>
-        <translation>Thiết lập hoàn tất!</translation>
+        <translation>Konfiguration fuldført!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="56"/>
@@ -149,97 +155,97 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="14"/>
         <source>Room Window</source>
-        <translation>Phòng</translation>
+        <translation>Rumvindue</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="40"/>
         <source>Send Chat Message</source>
-        <translation>Gửi tin nhắn</translation>
+        <translation>Send chatbesked</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="47"/>
         <source>Send Message</source>
-        <translation>Gửi tin</translation>
+        <translation>Send besked</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="166"/>
         <source>Members</source>
-        <translation>Thành viên</translation>
+        <translation>Medlemmer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="298"/>
         <source>%1 has joined</source>
-        <translation>%1 đã tham gia</translation>
+        <translation>%1 er kommet ind</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="301"/>
         <source>%1 has left</source>
-        <translation>%1 đã rời khỏi</translation>
+        <translation>%1 har forladt rummet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="304"/>
         <source>%1 has been kicked</source>
-        <translation>%1 đã bị đuổi</translation>
+        <translation>%1 er blevet smidt ud</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="307"/>
         <source>%1 has been banned</source>
-        <translation>%1 đã bị cấm</translation>
+        <translation>%1 er blevet udelukket</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="310"/>
         <source>%1 has been unbanned</source>
-        <translation>%1 đã được bỏ lệnh cấm.</translation>
+        <translation>%1 er ikke længere udelukket</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="428"/>
         <source>View Profile</source>
-        <translation>Xem hồ sơ</translation>
+        <translation>Vis profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="441"/>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="451"/>
         <source>Block Player</source>
-        <translation>Chặn người chơi</translation>
+        <translation>Bloker spiller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="452"/>
         <source>When you block a player, you will no longer receive chat messages from them.&lt;br&gt;&lt;br&gt;Are you sure you would like to block %1?</source>
-        <translation>Khi bạn chặn người chơi khác, bạn sẽ không thể nhận được các tin nhắn từ họ.&lt;br&gt;&lt;br&gt;Bạn có chắc muốn chặn người chơi %1?</translation>
+        <translation>Når du blokerer en spiller, vil du ikke længere modtage chatbeskeder fra dem.&lt;br&gt;&lt;br&gt;Er du sikker på, at du vil blokere %1?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="465"/>
         <source>Kick</source>
-        <translation>Đuổi</translation>
+        <translation>Udsmid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="466"/>
         <source>Ban</source>
-        <translation>Chặn</translation>
+        <translation>Udeluk</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="473"/>
         <source>Kick Player</source>
-        <translation>Đuổi người chơi</translation>
+        <translation>Udsmid spiller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="474"/>
         <source>Are you sure you would like to &lt;b&gt;kick&lt;/b&gt; %1?</source>
-        <translation>Bạn có chắc muốn &lt;b&gt;đuổi&lt;/b&gt; %1?</translation>
+        <translation>Er du sikker på, at du vil&lt;b&gt;udsmide&lt;/b&gt;%1?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="482"/>
         <source>Ban Player</source>
-        <translation>Chặn người chơi</translation>
+        <translation>Udeluk spiller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="483"/>
         <source>Are you sure you would like to &lt;b&gt;kick and ban&lt;/b&gt; %1?
 
 This would ban both their forum username and their IP address.</source>
-        <translation>Bạn có chắc muốn &lt;b&gt;đuổi và cấm&lt;/b&gt; %1?
+        <translation>Er du sikker på, at du vil&lt;b&gt;udsmide og udelukke&lt;/b&gt;%1?
 
-Điều này sẽ chặn cả tài khoản diễn đàn và địa chỉ IP của họ.</translation>
+Dette vil udelukke både deres forum-brugernavn og IP-adresse.</translation>
     </message>
 </context>
 <context>
@@ -247,22 +253,22 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="14"/>
         <source>Room Window</source>
-        <translation>Cửa sổ Phòng kết nối</translation>
+        <translation>Rumvindue</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="27"/>
         <source>Room Description</source>
-        <translation>Mô tả phòng</translation>
+        <translation>Rumbeskrivelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="47"/>
         <source>Moderation...</source>
-        <translation>Quản trị...</translation>
+        <translation>Moderation...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="57"/>
         <source>Leave Room</source>
-        <translation>Rời phòng</translation>
+        <translation>Forlad rum</translation>
     </message>
 </context>
 <context>
@@ -270,17 +276,17 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="75"/>
         <source>Connected</source>
-        <translation>Đã kết nối</translation>
+        <translation>Forbundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="84"/>
         <source>Disconnected</source>
-        <translation>Đã ngắt kết ngối</translation>
+        <translation>Afbrudt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="97"/>
         <source>%1 (%2/%3 members) - connected</source>
-        <translation>%1 (%2/%3 thành viên) - đã kết nối</translation>
+        <translation>%1 (%2/%3 medlemmer) - forbundet</translation>
     </message>
 </context>
 <context>
@@ -288,52 +294,52 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="17"/>
         <source>Output</source>
-        <translation type="unfinished"></translation>
+        <translation>Output</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="38"/>
         <source>Emulation</source>
-        <translation type="unfinished">Giả lập</translation>
+        <translation>Emulering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="46"/>
         <source>HLE (fast)</source>
-        <translation>HLE (nhanh)</translation>
+        <translation>HLE (hurtig)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="51"/>
         <source>LLE (accurate)</source>
-        <translation>LLE (chính xác)</translation>
+        <translation>LLE (akkurat)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="56"/>
         <source>LLE multi-core</source>
-        <translation>LLE đa nhân</translation>
+        <translation>LLE multi-kerne</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="69"/>
         <source>Output Type</source>
-        <translation type="unfinished"></translation>
+        <translation>Output type</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="79"/>
         <source>Output Device</source>
-        <translation type="unfinished"></translation>
+        <translation>Output enhed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="107"/>
         <source>Use global volume</source>
-        <translation type="unfinished"></translation>
+        <translation>Brug global volumen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="112"/>
         <source>Set volume:</source>
-        <translation type="unfinished"></translation>
+        <translation>Indstil lydstyrke:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="120"/>
         <source>Volume:</source>
-        <translation>Âm lượng:</translation>
+        <translation>Lydstyrke:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="165"/>
@@ -348,7 +354,7 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="181"/>
         <source>Enable audio stretching</source>
-        <translation>Bật chế độ giãn âm</translation>
+        <translation>Aktiver lydstrækning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="188"/>
@@ -358,7 +364,7 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="191"/>
         <source>Enable realtime audio</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktiver lyd i realtid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="198"/>
@@ -373,23 +379,23 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="211"/>
         <source>Microphone</source>
-        <translation>Microphone</translation>
+        <translation>Mikrofon</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="217"/>
         <source>Input Type</source>
-        <translation>Loại đầu vào</translation>
+        <translation>Inputtype</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="227"/>
         <source>Input Device</source>
-        <translation>Thiết bị đầu vào</translation>
+        <translation>Inputenhed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.cpp" line="24"/>
         <location filename="../../src/citra_qt/configuration/configure_audio.cpp" line="36"/>
         <source>Auto</source>
-        <translation type="unfinished"></translation>
+        <translation>Auto</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.cpp" line="158"/>
@@ -403,81 +409,81 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="14"/>
         <source>Form</source>
-        <translation>Định dạng&lt;br&gt;</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="20"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="196"/>
         <source>Camera</source>
-        <translation>Máy ảnh</translation>
+        <translation>Kamera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="28"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="38"/>
         <source>Select the camera to configure</source>
-        <translation>Chọn máy ảnh để cấu hình</translation>
+        <translation>Vælg kameraet, der skal konfigureres</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="31"/>
         <source>Camera to Configure</source>
-        <translation type="unfinished"></translation>
+        <translation>Konfigurer kamera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="42"/>
         <source>Front</source>
-        <translation>Trước</translation>
+        <translation>Forside</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="47"/>
         <source>Rear</source>
-        <translation>Sau</translation>
+        <translation>Bagside</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="59"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="69"/>
         <source>Select the camera mode (single or double)</source>
-        <translation>Chọn chế độ Máy ảnh (đơn hoặc đôi)</translation>
+        <translation>Vælg kameratilstand (enkelt eller dobbelt)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="62"/>
         <source>Camera mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Kameratilstand</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="73"/>
         <source>Single (2D)</source>
-        <translation>Đơn (2D)</translation>
+        <translation>Enkelt (2D)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="78"/>
         <source>Double (3D)</source>
-        <translation>Đôi (3D)</translation>
+        <translation>Dobbelt (3D)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="90"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="100"/>
         <source>Select the position of camera to configure</source>
-        <translation>Chọn vị trí máy ảnh để cấu hình</translation>
+        <translation>Vælg positionen af kameraet, der skal konfigureres</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="93"/>
         <source>Camera position</source>
-        <translation type="unfinished"></translation>
+        <translation>Kameraposition</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="104"/>
         <source>Left</source>
-        <translation>Trái</translation>
+        <translation>Venstre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="109"/>
         <source>Right</source>
-        <translation>Phải</translation>
+        <translation>Højre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="122"/>
         <source>Configuration</source>
-        <translation>Thiết lập</translation>
+        <translation>Konfiguration</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="130"/>
@@ -493,17 +499,17 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="144"/>
         <source>Blank (blank)</source>
-        <translation>Trống (Không có gì)</translation>
+        <translation>Blank (blank)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="149"/>
         <source>Still Image (image)</source>
-        <translation>Tệp tin (Hình ảnh)</translation>
+        <translation>Stilbillede (image)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="154"/>
         <source>System Camera (qt)</source>
-        <translation>Máy ảnh (Webcam)</translation>
+        <translation>Systemets kamera (qt)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="169"/>
@@ -513,13 +519,13 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="179"/>
         <source>...</source>
-        <translation>...</translation>
+        <translation>…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="190"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="215"/>
         <source>Select the system camera to use</source>
-        <translation>Chọn đầu ra camera để sử dụng</translation>
+        <translation>Vælg kamera fra systemet, der skal bruges</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="219"/>
@@ -530,7 +536,7 @@ This would ban both their forum username and their IP address.</source>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="231"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="259"/>
         <source>Select the image flip to apply</source>
-        <translation>Chọn chiều lật ảnh để áp dụng</translation>
+        <translation>Vælg hvordan billedet skal vendes</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="237"/>
@@ -540,62 +546,62 @@ This would ban both their forum username and their IP address.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="263"/>
         <source>None</source>
-        <translation>Không</translation>
+        <translation>Ingen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="268"/>
         <source>Horizontal</source>
-        <translation>Lật theo chiều ngang</translation>
+        <translation>Vandret</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="273"/>
         <source>Vertical</source>
-        <translation>Lật theo chiều dọc</translation>
+        <translation>Lodret</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="278"/>
         <source>Reverse</source>
-        <translation>Đảo vị trí</translation>
+        <translation>Omvendt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="288"/>
         <source>Select an image file every time before the camera is loaded</source>
-        <translation>Chọn tệp tin mỗi khi có yêu cầu kết nối máy ảnh</translation>
+        <translation>Vælg en billedfil hver gang kameraet indlæses</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="291"/>
         <source>Prompt before load</source>
-        <translation>Hỏi trước khi giả lập máy ảnh</translation>
+        <translation>Spørg før brug</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="301"/>
         <source>Preview</source>
-        <translation>Xem trước</translation>
+        <translation>Forhåndsvisning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="313"/>
         <source>Resolution: 512*384</source>
-        <translation>Độ phân giải: 512*384</translation>
+        <translation>Opløsning: 512*384</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="323"/>
         <source>Click to preview</source>
-        <translation>Nhấp chọn để xem trước</translation>
+        <translation>Klik for forhåndsvisning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="197"/>
         <source>Resolution: %1*%2</source>
-        <translation type="unfinished"></translation>
+        <translation>Opløsning: %1*%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="289"/>
         <source>Supported image files (%1)</source>
-        <translation>Các tệp ảnh được hỗ trợ (%1)</translation>
+        <translation>Understøttede billedfiler (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="290"/>
         <source>Open File</source>
-        <translation>Mở tệp tin</translation>
+        <translation>Åbn fil</translation>
     </message>
 </context>
 <context>
@@ -604,86 +610,87 @@ This would ban both their forum username and their IP address.</source>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="23"/>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="73"/>
         <source>Cheats</source>
-        <translation type="unfinished"></translation>
+        <translation>Snyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="44"/>
         <source>Add Cheat</source>
-        <translation type="unfinished"></translation>
+        <translation>Tilføj snyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="57"/>
         <source>Available Cheats:</source>
-        <translation type="unfinished"></translation>
+        <translation>Tilgængelige snydekoder:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="91"/>
         <source>Name</source>
-        <translation type="unfinished">Tên</translation>
+        <translation>Navn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="96"/>
         <source>Type</source>
-        <translation type="unfinished">Loại</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="126"/>
         <source>Save</source>
-        <translation type="unfinished">Lưu</translation>
+        <translation>Gem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="136"/>
         <source>Delete</source>
-        <translation type="unfinished">Xoá</translation>
+        <translation>Slet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="149"/>
         <source>Name:</source>
-        <translation type="unfinished"></translation>
+        <translation>Navn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="161"/>
         <source>Notes:</source>
-        <translation type="unfinished"></translation>
+        <translation>Noter:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.ui" line="171"/>
         <source>Code:</source>
-        <translation type="unfinished"></translation>
+        <translation>Kode:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="73"/>
         <source>Would you like to save the current cheat?</source>
-        <translation type="unfinished"></translation>
+        <translation>Vil du gemme den aktuelle snydekode?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="85"/>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="89"/>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="101"/>
         <source>Save Cheat</source>
-        <translation type="unfinished"></translation>
+        <translation>Gem snydekode</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="85"/>
         <source>Please enter a cheat name.</source>
-        <translation type="unfinished"></translation>
+        <translation>Indtast venligst et snydenavn.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="89"/>
         <source>Please enter the cheat code.</source>
-        <translation type="unfinished"></translation>
+        <translation>Indtast venligst snydekoden.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="102"/>
         <source>Cheat code line %1 is not valid.
 Would you like to ignore the error and continue?</source>
-        <translation type="unfinished"></translation>
+        <translation>Snydekodelinje %1 er ikke gyldig.
+Vil du ignorere fejlen og fortsætte?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="229"/>
         <location filename="../../src/citra_qt/configuration/configure_cheats.cpp" line="232"/>
         <source>[new cheat]</source>
-        <translation type="unfinished"></translation>
+        <translation>[ny snydekode]</translation>
     </message>
 </context>
 <context>
@@ -691,7 +698,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="14"/>
         <source>Form</source>
-        <translation>Định dạng</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="22"/>
@@ -701,12 +708,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="30"/>
         <source>Enable GDB Stub</source>
-        <translation>Bật GDB Stub</translation>
+        <translation>Aktiver GDB-stub</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="50"/>
         <source>Port:</source>
-        <translation>Cổng:</translation>
+        <translation>Port:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="66"/>
@@ -716,17 +723,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="78"/>
         <source>Logging</source>
-        <translation>Nhật ký</translation>
+        <translation>Logning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="86"/>
         <source>Global Log Filter</source>
-        <translation>Bộ lọc nhật ký</translation>
+        <translation>Globalt logfilter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="100"/>
         <source>Regex Log Filter</source>
-        <translation type="unfinished"></translation>
+        <translation> Regex-logfilter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="114"/>
@@ -736,82 +743,82 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="121"/>
         <source>Open Log Location</source>
-        <translation>Mở vị trí nhật ký</translation>
+        <translation>Åbn log-mappen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="130"/>
         <source>Flush log output on every message</source>
-        <translation type="unfinished"></translation>
+        <translation>Tøm loggen for alle beskeder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="133"/>
         <source>&lt;html&gt;&lt;body&gt;Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.&lt;br&gt;Enabling this feature will decrease performance, only use it for debugging purposes.&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;/body&gt;Skriver øjeblikkeligt fejlretningsloggen til fil. Brug dette, hvis Azahar går ned, og loggen afbrydes.&lt;br&gt;Aktivering af denne funktion vil reducere ydeevnen, brug den kun til fejlretningsformål.&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="143"/>
         <source>CPU</source>
-        <translation type="unfinished"></translation>
+        <translation>CPU</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="168"/>
         <source>Use global clock speed</source>
-        <translation type="unfinished"></translation>
+        <translation>Brug global clock hastighed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="173"/>
         <source>Set clock speed:</source>
-        <translation type="unfinished"></translation>
+        <translation>Indstil clock hastighed:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="181"/>
         <source>CPU Clock Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>CPU clock hastighed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="188"/>
         <source>&lt;html&gt;&lt;body&gt;Changes the emulated CPU clock frequency.&lt;br&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br&gt;Overclocking may reduce application lag but also might cause freezes&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;body&gt;Ændrer den emulerede CPU-clockfrekvens.&lt;br&gt;Underclocking kan øge ydeevnen, men kan få applikationen til at fryse.&lt;br&gt;Overclocking kan reducere programforsinkelse, men kan også forårsage fryser&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="229"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking kan øge ydeevnen, men kan få applikationen til at fryse.&lt;br/&gt;Overclocking kan reducere forsinkelser i applikationer, men kan også forårsage frysninger&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="239"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the use of the ARM JIT compiler for emulating the 3DS CPUs. Don&apos;t disable unless for debugging purposes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Aktiverer brugen af ​​ARM JIT-kompileren til at emulere 3DS CPU&apos;erne. Deaktiver ikke, medmindre det er til fejlretningsformål&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="242"/>
         <source>Enable CPU JIT</source>
-        <translation>Bật CPU JIT</translation>
+        <translation>Aktiver CPU-JIT</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="249"/>
         <source>Enable debug renderer</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktiver fejlfindingsrenderer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="256"/>
         <source>Dump command buffers</source>
-        <translation type="unfinished"></translation>
+        <translation>Dump kommandobuffere</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="266"/>
         <source>Miscellaneous</source>
-        <translation type="unfinished"></translation>
+        <translation>Diverse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="272"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introduces a delay to the first ever launched app thread if LLE modules are enabled, to allow them to initialize.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Introducerer en forsinkelse til den først startet app-tråd, hvis LLE-moduler er aktiveret, for at give dem tid til at initialisere.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="275"/>
         <source>Delay app start for LLE module initialization</source>
-        <translation type="unfinished"></translation>
+        <translation>Forsinket appstart for LLE-modulinitialisering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="282"/>
@@ -826,12 +833,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="292"/>
         <source>Force deterministic async operations</source>
-        <translation type="unfinished"></translation>
+        <translation>Tving deterministiske asynkrone operationer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="295"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Forces all async operations to run on the main thread, making them deterministic. Do not enable if you don&apos;t know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Tvinger alle asynkrone operationer til at køre på hovedtråden, hvilket gør dem deterministiske. Aktiver ikke, hvis du ikke ved, hvad du laver.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="302"/>
@@ -856,22 +863,22 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="60"/>
         <source>Validation layer not available</source>
-        <translation type="unfinished"></translation>
+        <translation>Valideringslaget er ikke tilgængeligt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="61"/>
         <source>Unable to enable debug renderer because the layer &lt;strong&gt;VK_LAYER_KHRONOS_validation&lt;/strong&gt; is missing. Please install the Vulkan SDK or the appropriate package of your distribution</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke aktivere fejlfindingsrenderer, fordi laget &lt;strong&gt;VK_LAYER_KHRONOS_validation&lt;/strong&gt; mangler. Installer venligst Vulkan SDK eller den relevante pakke fra din distribution</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="75"/>
         <source>Command buffer dumping not available</source>
-        <translation type="unfinished"></translation>
+        <translation>Dumping af kommandobuffer ikke tilgængelig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="76"/>
         <source>Unable to enable command buffer dumping because the layer &lt;strong&gt;VK_LAYER_LUNARG_api_dump&lt;/strong&gt; is missing. Please install the Vulkan SDK or the appropriate package of your distribution</source>
-        <translation type="unfinished"></translation>
+        <translation>Kan ikke aktivere dumping af kommandobuffer, fordi laget &lt;strong&gt;VK_LAYER_LUNARG_api_dump&lt;/strong&gt; mangler. Installer venligst Vulkan SDK eller den relevante pakke fra din distribution</translation>
     </message>
 </context>
 <context>
@@ -879,98 +886,98 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="6"/>
         <source>Azahar Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Azahar konfiguration</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="48"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="126"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="177"/>
         <source>General</source>
-        <translation>Chung</translation>
+        <translation>Generelt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="49"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="127"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="178"/>
         <source>System</source>
-        <translation>Hệ thống</translation>
+        <translation>System</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="50"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="179"/>
         <source>Input</source>
-        <translation>Phím</translation>
+        <translation>Input</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="51"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="180"/>
         <source>Hotkeys</source>
-        <translation>Phím tắt</translation>
+        <translation>Genvejstaster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="52"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="128"/>
         <source>Graphics</source>
-        <translation>Đồ họa</translation>
+        <translation>Grafik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="53"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="181"/>
         <source>Enhancements</source>
-        <translation type="unfinished"></translation>
+        <translation>Udvidelser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="54"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="182"/>
         <source>Layout</source>
-        <translation type="unfinished"></translation>
+        <translation>Layout</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="55"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="129"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="184"/>
         <source>Audio</source>
-        <translation>Âm thanh</translation>
+        <translation>Lyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="56"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="185"/>
         <source>Camera</source>
-        <translation>Máy ảnh</translation>
+        <translation>Kamera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="57"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="186"/>
         <source>Debug</source>
-        <translation>Gỡ lỗi</translation>
+        <translation>Fejlfinding</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="58"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="187"/>
         <source>Storage</source>
-        <translation type="unfinished"></translation>
+        <translation>Lager</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="59"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="188"/>
         <source>Web</source>
-        <translation>Trang web</translation>
+        <translation>Web</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="60"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="189"/>
         <source>UI</source>
-        <translation>Giao diện người dùng</translation>
+        <translation>Grænseflade</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="130"/>
         <source>Controls</source>
-        <translation>Điều khiển</translation>
+        <translation>Input</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="183"/>
         <source>Advanced</source>
-        <translation>Nâng cao</translation>
+        <translation>Avanceret</translation>
     </message>
 </context>
 <context>
@@ -978,72 +985,72 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="20"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="26"/>
         <source>Renderer</source>
-        <translation type="unfinished">Bộ diễn dịch đồ họa</translation>
+        <translation>Renderer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="47"/>
         <source>Internal Resolution</source>
-        <translation type="unfinished"></translation>
+        <translation>Intern opløsning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="55"/>
         <source>Auto (Window Size)</source>
-        <translation type="unfinished"></translation>
+        <translation>Auto (vinduesstørrelse)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="60"/>
         <source>Native (400x240)</source>
-        <translation type="unfinished"></translation>
+        <translation>Indbygget (400x240)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="65"/>
         <source>2x Native (800x480)</source>
-        <translation type="unfinished"></translation>
+        <translation>2x indbygget (800 x 480)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="70"/>
         <source>3x Native (1200x720)</source>
-        <translation type="unfinished"></translation>
+        <translation>3x indbygget (1200 x 720)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="75"/>
         <source>4x Native (1600x960)</source>
-        <translation type="unfinished"></translation>
+        <translation>4x indbygget (1600 x 960)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="80"/>
         <source>5x Native (2000x1200)</source>
-        <translation type="unfinished"></translation>
+        <translation>5x indbygget (2000x1200)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="85"/>
         <source>6x Native (2400x1440)</source>
-        <translation type="unfinished"></translation>
+        <translation>6x indbygget (2400x1440)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="90"/>
         <source>7x Native (2800x1680)</source>
-        <translation type="unfinished"></translation>
+        <translation>7x indbygget (2800x1680)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="95"/>
         <source>8x Native (3200x1920)</source>
-        <translation type="unfinished"></translation>
+        <translation>8x indbygget (3200 x 1920)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="100"/>
         <source>9x Native (3600x2160)</source>
-        <translation type="unfinished"></translation>
+        <translation>9x indbygget (3600x2160)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="105"/>
         <source>10x Native (4000x2400)</source>
-        <translation type="unfinished"></translation>
+        <translation>10x indbygget (4000x2400)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="116"/>
@@ -1063,62 +1070,62 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="148"/>
         <source>Post-Processing Shader</source>
-        <translation type="unfinished"></translation>
+        <translation>Efterbehandling Shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="176"/>
         <source>Texture Filter</source>
-        <translation type="unfinished"></translation>
+        <translation>Teksturfilter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="184"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Ingen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="189"/>
         <source>Anime4K</source>
-        <translation type="unfinished"></translation>
+        <translation>Anime4K</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="194"/>
         <source>Bicubic</source>
-        <translation type="unfinished"></translation>
+        <translation>Bikubisk</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="199"/>
         <source>ScaleForce</source>
-        <translation type="unfinished"></translation>
+        <translation>ScaleForce</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="204"/>
         <source>xBRZ</source>
-        <translation type="unfinished"></translation>
+        <translation>xBRZ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="209"/>
         <source>MMPX</source>
-        <translation type="unfinished"></translation>
+        <translation>MMPX</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="223"/>
         <source>Stereoscopy</source>
-        <translation type="unfinished"></translation>
+        <translation>Stereoskopi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="231"/>
         <source>Stereoscopic 3D Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Stereoskopisk 3D-tilstand</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="239"/>
         <source>Off</source>
-        <translation type="unfinished"></translation>
+        <translation>Slukket</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="244"/>
         <source>Side by Side</source>
-        <translation type="unfinished">Nằm kề nhau</translation>
+        <translation>Side om Side</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="249"/>
@@ -1128,47 +1135,47 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="254"/>
         <source>Anaglyph</source>
-        <translation type="unfinished"></translation>
+        <translation>Anaglyf</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="259"/>
         <source>Interlaced</source>
-        <translation type="unfinished"></translation>
+        <translation>Interlaced</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="264"/>
         <source>Reverse Interlaced</source>
-        <translation type="unfinished"></translation>
+        <translation>Omvendt interlaced</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="276"/>
         <source>Depth</source>
-        <translation type="unfinished"></translation>
+        <translation>Dybde</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="283"/>
         <source>%</source>
-        <translation type="unfinished"></translation>
+        <translation>%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="301"/>
         <source>Note: Depth values over 100% are not possible on real hardware and may cause graphical issues</source>
-        <translation type="unfinished"></translation>
+        <translation>Bemærk: Dybdeværdier over 100 % er ikke muligt på rigtig hardware og kan forårsage grafiske problemer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="310"/>
         <source>Eye to Render in Monoscopic Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Øje til gengivelse i monoskopisk tilstand</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="318"/>
         <source>Left Eye (default)</source>
-        <translation type="unfinished"></translation>
+        <translation>Venstre øje (standard)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="323"/>
         <source>Right Eye</source>
-        <translation type="unfinished"></translation>
+        <translation>Højre øje</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="333"/>
@@ -1178,7 +1185,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="336"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Disable Right Eye Rendering&lt;/p&gt;&lt;p&gt;Disables rendering the right eye image when not using stereoscopic mode. Greatly improves performance in some applications, but can cause flickering in others.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Deaktiver højre øje-gengivelse&lt;/p&gt;&lt;p&gt;Deaktiverer gengivelse af højre øje billede, når der ikke bruges stereoskopisk tilstand. Forbedrer ydeevnen betydeligt i nogle applikationer, men kan forårsage flimren i andre.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="343"/>
@@ -1188,12 +1195,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="353"/>
         <source>Utility</source>
-        <translation type="unfinished"></translation>
+        <translation>Værktøj</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="359"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace textures with PNG files.&lt;/p&gt;&lt;p&gt;Textures are loaded from load/textures/[Title ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Erstat teksturer med PNG-filer.&lt;/p&gt;&lt;p&gt;Teksturer indlæses fra load/textures/[Titel ID]/.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="362"/>
@@ -1236,7 +1243,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="14"/>
         <source>Form</source>
-        <translation>Định dạng</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="22"/>
@@ -1266,17 +1273,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="59"/>
         <source>General</source>
-        <translation>Chung</translation>
+        <translation>Generelt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="65"/>
         <source>Confirm exit while emulation is running</source>
-        <translation>Xác nhận thoát khi đang chạy giả lập</translation>
+        <translation>Bekræft afslutning når emulatoren kører</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="72"/>
         <source>Pause emulation when in background</source>
-        <translation>Tạm ngưng giả lập khi chạy dưới nền</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="79"/>
@@ -1296,7 +1303,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="103"/>
         <source>Emulation</source>
-        <translation>Giả lập</translation>
+        <translation>Emulering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="125"/>
@@ -1341,12 +1348,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="310"/>
         <source>...</source>
-        <translation type="unfinished">...</translation>
+        <translation type="unfinished">…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="323"/>
         <source>Reset All Settings</source>
-        <translation>Đặt lại tất cả cài đặt</translation>
+        <translation>Nulstil alle indstillinger</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="39"/>
@@ -1378,17 +1385,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="20"/>
         <source>Form</source>
-        <translation>Định dạng</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="23"/>
         <source>Graphics</source>
-        <translation type="unfinished">Đồ họa</translation>
+        <translation type="unfinished">Grafik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="29"/>
         <source>API Settings</source>
-        <translation>Cài đặt API</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="50"/>
@@ -1438,7 +1445,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="155"/>
         <source>Renderer</source>
-        <translation>Bộ diễn dịch đồ họa</translation>
+        <translation>Optegning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="176"/>
@@ -1463,7 +1470,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="217"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the JIT engine instead of the interpreter for software shader emulation. &lt;/p&gt;&lt;p&gt;Enable this for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dùng động cơ JIT thay vì dùng trình giả lập đổ bóng. &lt;/p&gt;&lt;p&gt;Bật chức năng này sẽ cải thiện hiệu suất đáng kể.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Brug JIT-motoren i stedet for fortolkeren til emulering af shaders i software.&lt;/p&gt;&lt;p&gt;Aktiver dette for bedre ydeevne.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="220"/>
@@ -1493,7 +1500,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="250"/>
         <source>Advanced</source>
-        <translation>Nâng cao</translation>
+        <translation type="unfinished">Avanceret</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="271"/>
@@ -1538,7 +1545,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="316"/>
         <source>Enable VSync</source>
-        <translation>Bật VSync</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="323"/>
@@ -1586,32 +1593,32 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="14"/>
         <source>Hotkey Settings</source>
-        <translation>Thiết lập phím tắt</translation>
+        <translation>Indstillinger for genvejstaster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="22"/>
         <source>Double-click on a binding to change it.</source>
-        <translation>Nhấp đôi chuột vị trí ràng buộc để thay đổi</translation>
+        <translation>Dobbeltklik på en genvej for at ændre den.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="42"/>
         <source>Clear All</source>
-        <translation type="unfinished">Xoá hết</translation>
+        <translation type="unfinished">Ryd alt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.ui" line="49"/>
         <source>Restore Defaults</source>
-        <translation type="unfinished">Khôi phục mặc định</translation>
+        <translation type="unfinished">Gendan standarder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="24"/>
         <source>Action</source>
-        <translation>Hành động</translation>
+        <translation>Handling</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="24"/>
         <source>Hotkey</source>
-        <translation>Phím tắt</translation>
+        <translation>Genvej</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="105"/>
@@ -1630,7 +1637,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="135"/>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="238"/>
         <source>Conflicting Key Sequence</source>
-        <translation>Tập phím bị mâu thuẫn</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="127"/>
@@ -1650,12 +1657,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="219"/>
         <source>Restore Default</source>
-        <translation type="unfinished">Khôi phục mặc định</translation>
+        <translation type="unfinished">Gendan standarder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="220"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ryd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys.cpp" line="239"/>
@@ -1668,32 +1675,32 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="14"/>
         <source>ConfigureInput</source>
-        <translation>ConfigureInput</translation>
+        <translation>KonfigurerInput</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="22"/>
         <source>Profile</source>
-        <translation>Hồ sơ</translation>
+        <translation>Profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="45"/>
         <source>New</source>
-        <translation>Mới</translation>
+        <translation>Ny</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="52"/>
         <source>Delete</source>
-        <translation>Xoá</translation>
+        <translation>Slet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="59"/>
         <source>Rename</source>
-        <translation>Đổi tên</translation>
+        <translation>Omdøb</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="77"/>
         <source>Shoulder Buttons</source>
-        <translation>Phím LR</translation>
+        <translation>Skulderknapper</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="91"/>
@@ -1718,7 +1725,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="164"/>
         <source>Face Buttons</source>
-        <translation>Các phím thao tác chính</translation>
+        <translation>Hovedknapper</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="178"/>
@@ -1743,40 +1750,40 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="251"/>
         <source>Directional Pad</source>
-        <translation>Phím điều hướng</translation>
+        <translation>D-pad:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="265"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="557"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="760"/>
         <source>Up:</source>
-        <translation>Lên:</translation>
+        <translation>Op:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="283"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="539"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="724"/>
         <source>Down:</source>
-        <translation>Xuống:</translation>
+        <translation>Ned:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="301"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="521"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="778"/>
         <source>Left:</source>
-        <translation>Trái:</translation>
+        <translation>Venstre:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="319"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="610"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="742"/>
         <source>Right:</source>
-        <translation>Phải:</translation>
+        <translation>Højre:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="338"/>
         <source>Misc.</source>
-        <translation>Khác.</translation>
+        <translation>Diverse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="352"/>
@@ -1801,7 +1808,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="424"/>
         <source>Circle Mod:</source>
-        <translation>Circle Mod:</translation>
+        <translation>Cirkel-ændring:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="442"/>
@@ -1811,12 +1818,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="460"/>
         <source>Debug:</source>
-        <translation>Gỡ lỗi:</translation>
+        <translation>Fejlfinding:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="479"/>
         <source>Circle Pad</source>
-        <translation>Phím điều hướng tay cầm</translation>
+        <translation>Circle Pad</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="500"/>
@@ -1835,7 +1842,7 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="913"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="528"/>
         <source>Set Analog Stick</source>
-        <translation>Thiết lập Cần Analog</translation>
+        <translation>Indstil analogstik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="628"/>
@@ -1864,12 +1871,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="710"/>
         <source>C-Stick</source>
-        <translation>C-Stick</translation>
+        <translation>C-stik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="963"/>
         <source>Motion / Touch...</source>
-        <translation>Chuyển động / Cảm ứng...</translation>
+        <translation>Bevægelse/touch</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="991"/>
@@ -1879,12 +1886,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1019"/>
         <source>Clear All</source>
-        <translation>Xoá hết</translation>
+        <translation>Ryd alt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1047"/>
         <source>Restore Defaults</source>
-        <translation>Khôi phục mặc định</translation>
+        <translation>Gendan standarder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="1056"/>
@@ -1896,32 +1903,32 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="280"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="353"/>
         <source>Clear</source>
-        <translation>Xoá</translation>
+        <translation>Ryd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="242"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="282"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="358"/>
         <source>[not set]</source>
-        <translation>[chưa đặt]</translation>
+        <translation>[ikke sat]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="246"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="286"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="363"/>
         <source>Restore Default</source>
-        <translation>Khôi phục mặc định</translation>
+        <translation>Gendan standarder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="302"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="586"/>
         <source>Information</source>
-        <translation>Thông tin</translation>
+        <translation>Information</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="303"/>
         <source>After pressing OK, first move your joystick horizontally, and then vertically.</source>
-        <translation>Sau khi nhấn OK, di chuyển cần điều khiển theo chiều ngang, sau đó theo chiều dọc.</translation>
+        <translation>Efter du trykker OK, skal du først flytte stikket vandret, og derefter lodret.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="323"/>
@@ -1938,7 +1945,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="579"/>
         <source>Warning</source>
-        <translation type="unfinished">Cảnh báo</translation>
+        <translation type="unfinished">Advarsel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="580"/>
@@ -1948,62 +1955,62 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="587"/>
         <source>After pressing OK, press any button on your joystick</source>
-        <translation>Sau khi nhấn OK, nhấn nút bất kỳ trên cần điều khiển của bạn</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="611"/>
         <source>[press key]</source>
-        <translation>[nhấn phím]</translation>
+        <translation>[tryk på tast]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="658"/>
         <source>Error!</source>
-        <translation>Lỗi!</translation>
+        <translation>Fejl!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="659"/>
         <source>You&apos;re using a key that&apos;s already bound.</source>
-        <translation>Bạn đang sử dụng một phím đã được thiết lập.</translation>
+        <translation>Du har valgt en tast, der allerede er i brug.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="681"/>
         <source>New Profile</source>
-        <translation>Hồ sơ mới</translation>
+        <translation>Ny profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="681"/>
         <source>Enter the name for the new profile.</source>
-        <translation>Nhập tên cho hồ sơ mới</translation>
+        <translation>Indtast et navn til den nye profil.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="705"/>
         <source>Delete Profile</source>
-        <translation>Xoá hồ sơ</translation>
+        <translation>Slet profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="705"/>
         <source>Delete profile %1?</source>
-        <translation>Xoá hồ sơ %1?</translation>
+        <translation>Slet profilen %1?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="720"/>
         <source>Rename Profile</source>
-        <translation>Đổi tên hồ sơ</translation>
+        <translation>Omdøb profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="720"/>
         <source>New name:</source>
-        <translation>Tên mới:</translation>
+        <translation>Nyt navn:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="742"/>
         <source>Duplicate profile name</source>
-        <translation>Tên hồ sơ bị trùng</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="743"/>
         <source>Profile name already exists. Please choose a different name.</source>
-        <translation>Hồ sơ người dùng này đã được sử dụng. Vui lòng chọn tên khác.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2011,7 +2018,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="20"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="65"/>
@@ -2021,27 +2028,27 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="86"/>
         <source>Screen Layout</source>
-        <translation type="unfinished">Bố trí màn hình</translation>
+        <translation type="unfinished">Skærmlayout</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="94"/>
         <source>Default</source>
-        <translation type="unfinished">Mặc định</translation>
+        <translation type="unfinished">Standard</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="99"/>
         <source>Single Screen</source>
-        <translation type="unfinished">Đơn màn hình</translation>
+        <translation type="unfinished">Enkelt skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="104"/>
         <source>Large Screen</source>
-        <translation type="unfinished">Màn hình lớn</translation>
+        <translation type="unfinished">Stor skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="109"/>
         <source>Side by Side</source>
-        <translation type="unfinished">Nằm kề nhau</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout.ui" line="114"/>
@@ -2245,22 +2252,22 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="98"/>
         <source>Default</source>
-        <translation type="unfinished">Mặc định</translation>
+        <translation type="unfinished">Standard</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="108"/>
         <source>Single Screen</source>
-        <translation type="unfinished">Đơn màn hình</translation>
+        <translation type="unfinished">Enkelt skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="118"/>
         <source>Large Screen</source>
-        <translation type="unfinished">Màn hình lớn</translation>
+        <translation type="unfinished">Stor skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="128"/>
         <source>Side by Side</source>
-        <translation type="unfinished">Nằm kề nhau</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="138"/>
@@ -2275,7 +2282,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="158"/>
         <source>Custom</source>
-        <translation type="unfinished">Tự chọn</translation>
+        <translation type="unfinished">Tilpasset</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.cpp" line="79"/>
@@ -2293,22 +2300,22 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="14"/>
         <source>Configure Motion / Touch</source>
-        <translation>Cấu hình Chuyển động / Chạm</translation>
+        <translation>Konfigurer bevægelse/touch</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="20"/>
         <source>Motion</source>
-        <translation>Chuyển động</translation>
+        <translation>Bevægelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="28"/>
         <source>Motion Provider:</source>
-        <translation>Nguồn chuyển động</translation>
+        <translation>Bevægelsesudbyder:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="42"/>
         <source>Sensitivity:</source>
-        <translation>Độ nhạy:</translation>
+        <translation>Sensitivitet:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="75"/>
@@ -2324,27 +2331,27 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="290"/>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="330"/>
         <source>Configure</source>
-        <translation>Cấu hình</translation>
+        <translation>Konfigurer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="94"/>
         <source>Touch</source>
-        <translation>Chạm</translation>
+        <translation>Touch</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="102"/>
         <source>Touch Provider:</source>
-        <translation>Nguồn cảm ứng:</translation>
+        <translation>Touchudbyder:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="116"/>
         <source>Calibration:</source>
-        <translation>Hiệu chuẩn:</translation>
+        <translation>Kalibrering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="123"/>
         <source>(100, 50) - (1800, 850)</source>
-        <translation type="unfinished"></translation>
+        <translation>(100, 50) - (1800, 850)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="156"/>
@@ -2364,63 +2371,63 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="205"/>
         <source>CemuhookUDP Config</source>
-        <translation>Thiết lập Cemuhook UDP</translation>
+        <translation>Konfiguration af CemuhookUDP</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="211"/>
         <source>You may use any Cemuhook compatible UDP input source to provide motion and touch input.</source>
-        <translation>Bạn có thể dùng bất cứ bản Cemuhook nào tương thích với đầu vào UDP để cung cấp đầu vào chuyển động và cảm ứng.</translation>
+        <translation>Du kan bruge enhver Cemuhook-kompatibel UDP-inputkilde til at levere bevægelses- og touchinput.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="226"/>
         <source>Server:</source>
-        <translation>Máy chủ:</translation>
+        <translation>Server:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="247"/>
         <source>Port:</source>
-        <translation>Cổng:</translation>
+        <translation>Port:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="268"/>
         <source>Pad:</source>
-        <translation>Tay cầm:</translation>
+        <translation>Controller:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="276"/>
         <source>Pad 1</source>
-        <translation>Tay cầm 1</translation>
+        <translation>Controller 1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="281"/>
         <source>Pad 2</source>
-        <translation>Tay cầm 2</translation>
+        <translation>Controller 2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="286"/>
         <source>Pad 3</source>
-        <translation>Tay cầm 3</translation>
+        <translation>Controller 3</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="291"/>
         <source>Pad 4</source>
-        <translation>Tay cầm 4</translation>
+        <translation>Controller 4</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="303"/>
         <source>Learn More</source>
-        <translation>Tìm hiểu thêm</translation>
+        <translation>Lær mere</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.ui" line="316"/>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="353"/>
         <source>Test</source>
-        <translation>Kiểm tra</translation>
+        <translation>Test</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="79"/>
         <source>Mouse (Right Click)</source>
-        <translation>Chuột (Nhấp phải)</translation>
+        <translation>Mus (højreklik)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="80"/>
@@ -2436,7 +2443,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="85"/>
         <source>Emulator Window</source>
-        <translation>Cửa sổ giả lập</translation>
+        <translation>Emuleringsvindue</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="102"/>
@@ -2447,12 +2454,12 @@ Would you like to ignore the error and continue?</source>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="210"/>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="241"/>
         <source>Information</source>
-        <translation type="unfinished">Thông tin</translation>
+        <translation type="unfinished">Information</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="211"/>
         <source>After pressing OK, press a button on the controller whose motion you want to track.</source>
-        <translation>Sau khi nhấn OK, hãy nhấn một nút trên tay cầm mà bạn muốn theo dõi chuyển động của nó.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="214"/>
@@ -2472,32 +2479,32 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="296"/>
         <source>Testing</source>
-        <translation>Đang kiểm tra</translation>
+        <translation>Tester</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="313"/>
         <source>Configuring</source>
-        <translation>Thiết lập</translation>
+        <translation>Konfigurerer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="344"/>
         <source>Test Successful</source>
-        <translation>Kiểm tra thành công</translation>
+        <translation>Testen var succesfuld</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="345"/>
         <source>Successfully received data from the server.</source>
-        <translation>Đã nhận dữ liệu từ máy chủ thành công.</translation>
+        <translation>Data blev succesfuldt modtaget fra serveren.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="347"/>
         <source>Test Failed</source>
-        <translation>Kiểm thử thất bại</translation>
+        <translation>Testen fejlede</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="348"/>
         <source>Could not receive valid data from the server.&lt;br&gt;Please verify that the server is set up correctly and the address and port are correct.</source>
-        <translation>Không thể nhận dữ liệu nào từ máy chủ.&lt;br&gt;Vui lòng kiểm tra máy chủ đã được thiết đặt đúng, kiểm tra địa chỉ và cổng kết nối là chính xác.</translation>
+        <translation>Kunne ikke modtage gyldig data fra serveren.&lt;br&gt;Kontroller venligst om server er sat op korrekt og at adressen og porten er rigtig.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="375"/>
@@ -2507,7 +2514,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="376"/>
         <source>UDP Test or calibration configuration is in progress.&lt;br&gt;Please wait for them to finish.</source>
-        <translation>Kiểm tra UDP hoặc quá trình đang hiệu chuẩn.&lt;br&gt;Vui lòng đợi quá trình này hoàn tất.</translation>
+        <translation>UDP-test eller konfiguration af kalibrering er i gang.&lt;br&gt;Vent venligst til de er fuldført.</translation>
     </message>
 </context>
 <context>
@@ -2525,7 +2532,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="77"/>
         <source>Size</source>
-        <translation type="unfinished">Kích thước</translation>
+        <translation type="unfinished">Størrelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="100"/>
@@ -2535,7 +2542,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="107"/>
         <source>Name</source>
-        <translation type="unfinished">Tên</translation>
+        <translation type="unfinished">Navn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="124"/>
@@ -2545,7 +2552,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="131"/>
         <source>Title ID</source>
-        <translation type="unfinished">ID tiêu đề</translation>
+        <translation type="unfinished">Titel-id</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="183"/>
@@ -2560,42 +2567,42 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="54"/>
         <source>General</source>
-        <translation type="unfinished">Chung</translation>
+        <translation type="unfinished">Generelt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="55"/>
         <source>System</source>
-        <translation>Hệ thống</translation>
+        <translation type="unfinished">System</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="56"/>
         <source>Enhancements</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Udvidelser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="57"/>
         <source>Layout</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Layout</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="58"/>
         <source>Graphics</source>
-        <translation type="unfinished">Đồ họa</translation>
+        <translation type="unfinished">Grafik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="59"/>
         <source>Audio</source>
-        <translation type="unfinished">Âm thanh</translation>
+        <translation type="unfinished">Lyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="60"/>
         <source>Debug</source>
-        <translation type="unfinished">Gỡ lỗi</translation>
+        <translation type="unfinished">Fejlfinding</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="61"/>
         <source>Cheats</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Snyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.cpp" line="64"/>
@@ -2618,12 +2625,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="22"/>
         <source>Storage</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Lager</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_storage.ui" line="30"/>
@@ -2709,7 +2716,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="64"/>
         <source>System Settings</source>
-        <translation>Cài đặt hệ thống</translation>
+        <translation>Systemindstillinger</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="70"/>
@@ -2735,7 +2742,7 @@ online features (if installed)</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="95"/>
         <source>Region</source>
-        <translation type="unfinished">Khu vực</translation>
+        <translation type="unfinished">Region</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="103"/>
@@ -2756,187 +2763,187 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="170"/>
         <source>Username</source>
-        <translation>Tên người dùng</translation>
+        <translation>Brugernavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="177"/>
         <source>Birthday</source>
-        <translation>Sinh nhật</translation>
+        <translation>Fødselsdag</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="187"/>
         <source>January</source>
-        <translation>Tháng 1</translation>
+        <translation>Januar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="192"/>
         <source>February</source>
-        <translation>Tháng 2</translation>
+        <translation>Februar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="197"/>
         <source>March</source>
-        <translation>Tháng 3</translation>
+        <translation>Marts</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="202"/>
         <source>April</source>
-        <translation>Tháng 4</translation>
+        <translation>April</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="207"/>
         <source>May</source>
-        <translation>Tháng 5</translation>
+        <translation>Maj</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="212"/>
         <source>June</source>
-        <translation>Tháng 6</translation>
+        <translation>Juni</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="217"/>
         <source>July</source>
-        <translation>Tháng 7</translation>
+        <translation>Juli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="222"/>
         <source>August</source>
-        <translation>Tháng 8</translation>
+        <translation>August</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="227"/>
         <source>September</source>
-        <translation>Tháng 9</translation>
+        <translation>September</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="232"/>
         <source>October</source>
-        <translation>Tháng 10</translation>
+        <translation>Oktober</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="237"/>
         <source>November</source>
-        <translation>Tháng 11</translation>
+        <translation>November</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="242"/>
         <source>December</source>
-        <translation>Tháng 12</translation>
+        <translation>December</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="255"/>
         <source>Language</source>
-        <translation>Ngôn ngữ</translation>
+        <translation>Sprog</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="262"/>
         <source>Note: this can be overridden when region setting is auto-select</source>
-        <translation>Lưu ý: tùy chọn này có thể bị thay thế khi thiết lập vùng đặt ở chế độ tự động</translation>
+        <translation>Bemærk: Dette kan bliver overstyret når regionsindstillingen er sat til automatisk at vælge</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="266"/>
         <source>Japanese (日本語)</source>
-        <translation>Tiếng Nhật (日本語)</translation>
+        <translation>Japansk (日本語)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="271"/>
         <source>English</source>
-        <translation>Tiếng Anh (English)</translation>
+        <translation>Engelsk</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="276"/>
         <source>French (français)</source>
-        <translation>Tiếng Pháp (Français)</translation>
+        <translation>Fransk (français)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="281"/>
         <source>German (Deutsch)</source>
-        <translation>Tiếng Đức (Deutsch)</translation>
+        <translation>Tysk (Deutsch)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="286"/>
         <source>Italian (italiano)</source>
-        <translation>Tiếng Ý (Italiano)</translation>
+        <translation>Italiensk (italiano)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="291"/>
         <source>Spanish (español)</source>
-        <translation>Tiếng Tây Ban Nha (Español)</translation>
+        <translation>Spansk (español)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="296"/>
         <source>Simplified Chinese (简体中文)</source>
-        <translation>Tiếng Hoa (Giản Thể)</translation>
+        <translation>Forenklet kinesisk (简体中文)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="301"/>
         <source>Korean (한국어)</source>
-        <translation>Tiếng Hàn (한국어)</translation>
+        <translation>Koreansk (한국어)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="306"/>
         <source>Dutch (Nederlands)</source>
-        <translation>Tiếng Hà Lan (Dutch)</translation>
+        <translation>Hollandsk (Nederlands)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="311"/>
         <source>Portuguese (português)</source>
-        <translation>Tiếng Bồ Đào Nha (Português)</translation>
+        <translation>Portugisisk (português)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="316"/>
         <source>Russian (Русский)</source>
-        <translation>Tiếng Nga (Pу́сский язы́к)</translation>
+        <translation>Russisk (Русский)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="321"/>
         <source>Traditional Chinese (正體中文)</source>
-        <translation>Tiếng Hoa (Phồn Thể)</translation>
+        <translation>Traditionel kinesisk (正體中文)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="329"/>
         <source>Sound output mode</source>
-        <translation>Chế độ đầu ra âm thanh</translation>
+        <translation>Tilstand til lydoutput</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="337"/>
         <source>Mono</source>
-        <translation>Đơn âm</translation>
+        <translation>Mono</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="342"/>
         <source>Stereo</source>
-        <translation>Đa âm</translation>
+        <translation>Stereo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="347"/>
         <source>Surround</source>
-        <translation>Âm thanh vòm</translation>
+        <translation>Surround</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="355"/>
         <source>Country</source>
-        <translation>Quốc gia</translation>
+        <translation>Land</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="372"/>
         <source>Clock</source>
-        <translation>Đồng hồ</translation>
+        <translation>Tid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="380"/>
         <source>System Clock</source>
-        <translation>Đồng hồ hệ thống</translation>
+        <translation>Systemtid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="385"/>
         <source>Fixed Time</source>
-        <translation>Giờ cố định</translation>
+        <translation>Fast tid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="393"/>
         <source>Startup time</source>
-        <translation>Giờ bắt đầu</translation>
+        <translation>Opstartstid</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="400"/>
@@ -3001,13 +3008,13 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="517"/>
         <source>Console ID:</source>
-        <translation>ID Máy:</translation>
+        <translation>Konsol-id:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="533"/>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="556"/>
         <source>Regenerate</source>
-        <translation>Tạo mới</translation>
+        <translation>Generer nyt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="540"/>
@@ -3080,667 +3087,667 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="41"/>
         <source>Japan</source>
-        <translation>Nhật Bản</translation>
+        <translation>Japan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="48"/>
         <source>Anguilla</source>
-        <translation>Anguilla</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="49"/>
         <source>Antigua and Barbuda</source>
-        <translation>Antigua và Barbuda</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="50"/>
         <source>Argentina</source>
-        <translation>Argentina</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="51"/>
         <source>Aruba</source>
-        <translation>Aruba</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="52"/>
         <source>Bahamas</source>
-        <translation>Bahamas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="53"/>
         <source>Barbados</source>
-        <translation>Barbados</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="54"/>
         <source>Belize</source>
-        <translation>Belize</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="55"/>
         <source>Bolivia</source>
-        <translation>Bolivia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="56"/>
         <source>Brazil</source>
-        <translation>Brazil</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="57"/>
         <source>British Virgin Islands</source>
-        <translation>Quần đảo Virgin thuộc Anh</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="58"/>
         <source>Canada</source>
-        <translation>Canada</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="59"/>
         <source>Cayman Islands</source>
-        <translation>Quần đảo Cayman</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="60"/>
         <source>Chile</source>
-        <translation>Chile</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="61"/>
         <source>Colombia</source>
-        <translation>Colombia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="62"/>
         <source>Costa Rica</source>
-        <translation>Costa Rica</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="63"/>
         <source>Dominica</source>
-        <translation>Dominica</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="64"/>
         <source>Dominican Republic</source>
-        <translation>Cộng hòa Dominica</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="65"/>
         <source>Ecuador</source>
-        <translation>Ecuador</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="66"/>
         <source>El Salvador</source>
-        <translation>El Salvador</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="67"/>
         <source>French Guiana</source>
-        <translation>Guyan thuộc Pháp</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="68"/>
         <source>Grenada</source>
-        <translation>Grenada</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="69"/>
         <source>Guadeloupe</source>
-        <translation>Guadeloupe</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="70"/>
         <source>Guatemala</source>
-        <translation>Guatemala</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="71"/>
         <source>Guyana</source>
-        <translation>Guyana</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="72"/>
         <source>Haiti</source>
-        <translation>Haiti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="73"/>
         <source>Honduras</source>
-        <translation>Honduras</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="74"/>
         <source>Jamaica</source>
-        <translation>Jamaica</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="75"/>
         <source>Martinique</source>
-        <translation>Martinique</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="76"/>
         <source>Mexico</source>
-        <translation>Mexico</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="77"/>
         <source>Montserrat</source>
-        <translation>Montserrat</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="78"/>
         <source>Netherlands Antilles</source>
-        <translation>Antille thuộc Hà Lan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="79"/>
         <source>Nicaragua</source>
-        <translation>Nicaragua</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="80"/>
         <source>Panama</source>
-        <translation>Panama</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="81"/>
         <source>Paraguay</source>
-        <translation>Paraguay</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="82"/>
         <source>Peru</source>
-        <translation>Peru</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="83"/>
         <source>Saint Kitts and Nevis</source>
-        <translation>Saint Kitts và Nevis</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="84"/>
         <source>Saint Lucia</source>
-        <translation>Saint Lucia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="85"/>
         <source>Saint Vincent and the Grenadines</source>
-        <translation>Saint Vincent và Grenadines</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="86"/>
         <source>Suriname</source>
-        <translation>Suriname</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="87"/>
         <source>Trinidad and Tobago</source>
-        <translation>Trinidad và Tobago</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="88"/>
         <source>Turks and Caicos Islands</source>
-        <translation>Quần đảo Turks và Caicos</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="89"/>
         <source>United States</source>
-        <translation>Hoa Kỳ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="90"/>
         <source>Uruguay</source>
-        <translation>Uruguay</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="91"/>
         <source>US Virgin Islands</source>
-        <translation>Quần đảo Virgin thuộc Mỹ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="92"/>
         <source>Venezuela</source>
-        <translation>Venezuela</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="104"/>
         <source>Albania</source>
-        <translation>Albania</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="105"/>
         <source>Australia</source>
-        <translation>Úc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="106"/>
         <source>Austria</source>
-        <translation>Áo</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="107"/>
         <source>Belgium</source>
-        <translation>Bỉ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="108"/>
         <source>Bosnia and Herzegovina</source>
-        <translation>Bosnia và Herzegovina</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="109"/>
         <source>Botswana</source>
-        <translation>Botswana</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="110"/>
         <source>Bulgaria</source>
-        <translation>Bulgaria</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="111"/>
         <source>Croatia</source>
-        <translation>Croatia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="112"/>
         <source>Cyprus</source>
-        <translation>Đảo Síp</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="113"/>
         <source>Czech Republic</source>
-        <translation>Cộng hòa Séc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="114"/>
         <source>Denmark</source>
-        <translation>Đan Mạch</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="115"/>
         <source>Estonia</source>
-        <translation>Estonia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="116"/>
         <source>Finland</source>
-        <translation>Phần Lan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="117"/>
         <source>France</source>
-        <translation>Pháp</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="118"/>
         <source>Germany</source>
-        <translation>Đức</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="119"/>
         <source>Greece</source>
-        <translation>Hy Lạp</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="120"/>
         <source>Hungary</source>
-        <translation>Hungary</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="121"/>
         <source>Iceland</source>
-        <translation>Iceland</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="122"/>
         <source>Ireland</source>
-        <translation>Ireland</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="123"/>
         <source>Italy</source>
-        <translation>Ý</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="124"/>
         <source>Latvia</source>
-        <translation>Latvia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="125"/>
         <source>Lesotho</source>
-        <translation>Lesotho</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="126"/>
         <source>Liechtenstein</source>
-        <translation>Liechtenstein</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="127"/>
         <source>Lithuania</source>
-        <translation>Litva</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="128"/>
         <source>Luxembourg</source>
-        <translation>Luxembourg</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="129"/>
         <source>Macedonia</source>
-        <translation>Macedonia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="130"/>
         <source>Malta</source>
-        <translation>Malta</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="131"/>
         <source>Montenegro</source>
-        <translation>Montenegro</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="132"/>
         <source>Mozambique</source>
-        <translation>Mozambique</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="133"/>
         <source>Namibia</source>
-        <translation>Namibia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="134"/>
         <source>Netherlands</source>
-        <translation>Hà Lan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="135"/>
         <source>New Zealand</source>
-        <translation>New Zealand</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="136"/>
         <source>Norway</source>
-        <translation>Na Uy</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="137"/>
         <source>Poland</source>
-        <translation>Ba Lan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="138"/>
         <source>Portugal</source>
-        <translation>Bồ Đào Nha</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="139"/>
         <source>Romania</source>
-        <translation>Romania</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="140"/>
         <source>Russia</source>
-        <translation>Nga</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="141"/>
         <source>Serbia</source>
-        <translation>Serbia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="142"/>
         <source>Slovakia</source>
-        <translation>Slovakia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="143"/>
         <source>Slovenia</source>
-        <translation>Slovenia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="144"/>
         <source>South Africa</source>
-        <translation>Nam Phi</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="145"/>
         <source>Spain</source>
-        <translation>Tây Ban Nha</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="146"/>
         <source>Swaziland</source>
-        <translation>Swaziland</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="147"/>
         <source>Sweden</source>
-        <translation>Thụy Điển</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="148"/>
         <source>Switzerland</source>
-        <translation>Thụy Sĩ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="149"/>
         <source>Turkey</source>
-        <translation>Thổ Nhĩ Kỳ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="150"/>
         <source>United Kingdom</source>
-        <translation>Vương quốc Anh</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="151"/>
         <source>Zambia</source>
-        <translation>Zambia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="152"/>
         <source>Zimbabwe</source>
-        <translation>Zimbabwe</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="153"/>
         <source>Azerbaijan</source>
-        <translation>Azerbaijan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="154"/>
         <source>Mauritania</source>
-        <translation>Mauritania</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="155"/>
         <source>Mali</source>
-        <translation>Mali</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="156"/>
         <source>Niger</source>
-        <translation>Niger</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="157"/>
         <source>Chad</source>
-        <translation>Chad</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="158"/>
         <source>Sudan</source>
-        <translation>Sudan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="159"/>
         <source>Eritrea</source>
-        <translation>Eritrea</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="160"/>
         <source>Djibouti</source>
-        <translation>Djibouti</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="161"/>
         <source>Somalia</source>
-        <translation>Somalia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="162"/>
         <source>Andorra</source>
-        <translation>Andorra</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="163"/>
         <source>Gibraltar</source>
-        <translation>Gibraltar</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="164"/>
         <source>Guernsey</source>
-        <translation>Guernsey</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="165"/>
         <source>Isle of Man</source>
-        <translation>Đảo Man</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="166"/>
         <source>Jersey</source>
-        <translation>Jersey</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="167"/>
         <source>Monaco</source>
-        <translation>Monaco</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="168"/>
         <source>Taiwan</source>
-        <translation>Đài Loan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="176"/>
         <source>South Korea</source>
-        <translation>Hàn Quốc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="184"/>
         <source>Hong Kong</source>
-        <translation>Hồng Kông</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="185"/>
         <source>Macau</source>
-        <translation>Ma Cao</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="192"/>
         <source>Indonesia</source>
-        <translation>Indonesia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="193"/>
         <source>Singapore</source>
-        <translation>Singapore</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="194"/>
         <source>Thailand</source>
-        <translation>Thái Lan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="195"/>
         <source>Philippines</source>
-        <translation>Philippines</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="196"/>
         <source>Malaysia</source>
-        <translation>Malaysia</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="200"/>
         <source>China</source>
-        <translation>Trung Quốc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="208"/>
         <source>United Arab Emirates</source>
-        <translation>Các tiểu vương quốc Ả Rập thống nhất</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="209"/>
         <source>India</source>
-        <translation>Ấn Độ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="210"/>
         <source>Egypt</source>
-        <translation>Ai Cập</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="211"/>
         <source>Oman</source>
-        <translation>Oman</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="212"/>
         <source>Qatar</source>
-        <translation>Qatar</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="213"/>
         <source>Kuwait</source>
-        <translation>Kuwait</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="214"/>
         <source>Saudi Arabia</source>
-        <translation>Ả-rập Xê-út</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="215"/>
         <source>Syria</source>
-        <translation>Syria</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="216"/>
         <source>Bahrain</source>
-        <translation>Bahrain</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="217"/>
         <source>Jordan</source>
-        <translation>Jordan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="224"/>
         <source>San Marino</source>
-        <translation>San Marino</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="225"/>
         <source>Vatican City</source>
-        <translation>Vatican</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="226"/>
         <source>Bermuda</source>
-        <translation>Bermuda</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="255"/>
@@ -3786,7 +3793,7 @@ installed applications.</source>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="388"/>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="581"/>
         <source>Console ID: 0x%1</source>
-        <translation>Tên Máy: 0x%1</translation>
+        <translation>Konsol-id: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="390"/>
@@ -3804,7 +3811,7 @@ installed applications.</source>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="592"/>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="614"/>
         <source>Warning</source>
-        <translation>Cảnh báo</translation>
+        <translation>Advarsel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="588"/>
@@ -3872,7 +3879,7 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="14"/>
         <source>Configure Touchscreen Mappings</source>
-        <translation>Cấu hình ánh xạ màn hình cảm ứng</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="22"/>
@@ -3882,17 +3889,17 @@ installed applications.</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="48"/>
         <source>New</source>
-        <translation type="unfinished">Mới</translation>
+        <translation type="unfinished">Ny</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="61"/>
         <source>Delete</source>
-        <translation type="unfinished">Xoá</translation>
+        <translation type="unfinished">Slet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="74"/>
         <source>Rename</source>
-        <translation type="unfinished">Đổi tên</translation>
+        <translation type="unfinished">Omdøb</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.ui" line="92"/>
@@ -3925,37 +3932,37 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="199"/>
         <source>New Profile</source>
-        <translation type="unfinished">Hồ sơ mới</translation>
+        <translation type="unfinished">Ny profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="199"/>
         <source>Enter the name for the new profile.</source>
-        <translation type="unfinished">Nhập tên cho hồ sơ mới</translation>
+        <translation type="unfinished">Indtast et navn til den nye profil.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="210"/>
         <source>Delete Profile</source>
-        <translation type="unfinished">Xoá hồ sơ</translation>
+        <translation type="unfinished">Slet profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="210"/>
         <source>Delete profile %1?</source>
-        <translation type="unfinished">Xoá hồ sơ %1?</translation>
+        <translation type="unfinished">Slet profilen %1?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="223"/>
         <source>Rename Profile</source>
-        <translation type="unfinished">Đổi tên hồ sơ</translation>
+        <translation type="unfinished">Omdøb profil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="223"/>
         <source>New name:</source>
-        <translation type="unfinished">Tên mới:</translation>
+        <translation type="unfinished">Nyt navn:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="232"/>
         <source>[press key]</source>
-        <translation type="unfinished">[nhấn phím]</translation>
+        <translation type="unfinished">[tryk på tast]</translation>
     </message>
 </context>
 <context>
@@ -3963,17 +3970,17 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="6"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="20"/>
         <source>General</source>
-        <translation>Chung</translation>
+        <translation>Generelt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="28"/>
         <source>Note: Changing language will apply your configuration.</source>
-        <translation>Nhắc nhở: Thay đổi ngôn ngữ sẽ áp dụng các thiết lập hiện hành.</translation>
+        <translation>Bemærk: Ændring af sprog vil anvende din konfiguration.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="40"/>
@@ -3999,17 +4006,17 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="89"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="159"/>
         <source>None</source>
-        <translation>Không có</translation>
+        <translation>Ingen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="94"/>
         <source>Small (24x24)</source>
-        <translation>Nhỏ (24x24)</translation>
+        <translation>Små (24x24)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="99"/>
         <source>Large (48x48)</source>
-        <translation>Lớn (48x48)</translation>
+        <translation>Store (48x48)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="111"/>
@@ -4020,31 +4027,31 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="119"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="164"/>
         <source>File Name</source>
-        <translation>Tên tập tin</translation>
+        <translation>Filnavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="124"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="169"/>
         <source>Full Path</source>
-        <translation>Đường dẫn đầy đủ</translation>
+        <translation>Fuld sti</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="129"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="174"/>
         <source>Title Name (short)</source>
-        <translation>Tiêu đề (ngắn)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="134"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="179"/>
         <source>Title ID</source>
-        <translation>ID tiêu đề</translation>
+        <translation>Titel-id</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="139"/>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="184"/>
         <source>Title Name (long)</source>
-        <translation>Tiêu đề (dài)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.ui" line="151"/>
@@ -4079,7 +4086,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_ui.cpp" line="27"/>
         <source>English</source>
-        <translation>Tiếng Anh</translation>
+        <translation>Engelsk</translation>
     </message>
 </context>
 <context>
@@ -4087,12 +4094,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
         <source>Form</source>
-        <translation>Định dạng</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="20"/>
         <source>Discord Presence</source>
-        <translation type="unfinished"></translation>
+        <translation>Discord-presence</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="26"/>
@@ -4105,7 +4112,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>
         <source>Direct Connect</source>
-        <translation>Kết nối trực tiếp</translation>
+        <translation>Forbind direkte</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="47"/>
@@ -4120,12 +4127,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="64"/>
         <source>Port</source>
-        <translation>Cổng</translation>
+        <translation>Port</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="71"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Máy chủ này đang lắng nghe trên cổng&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Portnummer værten lytter på&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="77"/>
@@ -4135,17 +4142,17 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="97"/>
         <source>Nickname</source>
-        <translation>Nickname</translation>
+        <translation>Kaldenavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="111"/>
         <source>Password</source>
-        <translation>Mật khẩu</translation>
+        <translation>Adgangskode</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="153"/>
         <source>Connect</source>
-        <translation>Kết nối</translation>
+        <translation>Forbind</translation>
     </message>
 </context>
 <context>
@@ -4153,12 +4160,12 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="104"/>
         <source>Connecting</source>
-        <translation>Đang kết nối</translation>
+        <translation>Forbinder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="109"/>
         <source>Connect</source>
-        <translation>Kết nối</translation>
+        <translation>Forbind</translation>
     </message>
 </context>
 <context>
@@ -4166,17 +4173,17 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="14"/>
         <source>Dump Video</source>
-        <translation>Trích xuất video</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="20"/>
         <source>Output</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Output</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="26"/>
         <source>Format:</source>
-        <translation type="unfinished">Định dạng:</translation>
+        <translation type="unfinished">Format:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="36"/>
@@ -4191,7 +4198,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="106"/>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="173"/>
         <source>...</source>
-        <translation type="unfinished">...</translation>
+        <translation type="unfinished">…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="53"/>
@@ -4224,7 +4231,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="140"/>
         <source>Audio</source>
-        <translation type="unfinished">Âm thanh</translation>
+        <translation type="unfinished">Lyd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.cpp" line="25"/>
@@ -4277,7 +4284,7 @@ Please check your FFmpeg installation used for compilation.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="488"/>
         <source>Warning</source>
-        <translation type="unfinished">Cảnh báo</translation>
+        <translation type="unfinished">Advarsel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="489"/>
@@ -4298,7 +4305,7 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
         <location filename="../../src/citra_qt/citra_qt.cpp" line="603"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4274"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
-        <translation>Tốc độ giả lập hiện tại. Giá trị cao hoặc thấp hơn 100% thể hiện giả lập đang chạy nhanh hay chậm hơn một chiếc máy 3DS thực sự.</translation>
+        <translation>Nuværende emuleringshastighed. Værdier højere eller lavere end 100% indikerer at emuleringen kører hurtigere eller langsommere end en 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="606"/>
@@ -4310,7 +4317,7 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
         <location filename="../../src/citra_qt/citra_qt.cpp" line="610"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4279"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
-        <translation>Thời gian để giả lập một khung hình của máy 3DS, không gồm giới hạn khung hay v-sync Một giả lập tốt nhất sẽ tiệm cận 16.67 ms.</translation>
+        <translation>Tid det tog at emulere en 3DS-skærmbillede, hastighedsbegrænsning og v-sync er tille talt med. For emulering med fuld hastighed skal dette højest være 16,67ms.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="673"/>
@@ -4325,7 +4332,7 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="797"/>
         <source>Clear Recent Files</source>
-        <translation>Xóa danh sách tệp gần đây</translation>
+        <translation>Ryd seneste filer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1258"/>
@@ -4428,12 +4435,12 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1475"/>
         <source>CIA must be installed before usage</source>
-        <translation>CIA cần được cài đặt trước khi dùng</translation>
+        <translation>CIA skal installeres før brug</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1476"/>
         <source>Before using this CIA, you must install it. Do you want to install it now?</source>
-        <translation>Trước khi sử dụng CIA, bạn cần cài đặt nó. Bạn có muốn cài đặt nó ngay không?</translation>
+        <translation>Før du kan bruge denne CIA, skal den være installeret. Vil du installere den nu?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1783"/>
@@ -4474,13 +4481,13 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1916"/>
         <source>Error Opening %1 Folder</source>
-        <translation>Lỗi khi mở thư mục %1 </translation>
+        <translation>Fejl ved åbning af %1-mappen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1917"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2250"/>
         <source>Folder does not exist!</source>
-        <translation>Thư mục này không tồn tại!</translation>
+        <translation>Mappen findes ikke!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1927"/>
@@ -4533,13 +4540,13 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2197"/>
         <source>Dumping...</source>
-        <translation>Đang trích xuất...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2197"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2530"/>
         <source>Cancel</source>
-        <translation type="unfinished">Hủy bỏ</translation>
+        <translation type="unfinished">Annuller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2218"/>
@@ -4558,18 +4565,17 @@ It is recommended to instead run Azahar using the `open` command, e.g.:
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2219"/>
         <source>Could not dump base RomFS.
 Refer to the log for details.</source>
-        <translation>Không thể trích xuất base RomFS.
-Kiểm tra log để biết thêm chi tiết.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2250"/>
         <source>Error Opening %1</source>
-        <translation>Lỗi khi mở %1</translation>
+        <translation>Fejl ved åbning af %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2257"/>
         <source>Select Directory</source>
-        <translation>Chọn thư mục</translation>
+        <translation>Vælg mappe</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2281"/>
@@ -4585,12 +4591,12 @@ Kiểm tra log để biết thêm chi tiết.</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2292"/>
         <source>3DS Executable (%1);;All Files (*.*)</source>
         <comment>%1 is an identifier for the 3DS executable file extensions.</comment>
-        <translation type="unfinished"></translation>
+        <translation>3DS-program (%1);;Alle filer (*.*)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2296"/>
         <source>Load File</source>
-        <translation>Mở tệp tin</translation>
+        <translation>Indlæs fil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2308"/>
@@ -4664,7 +4670,7 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2402"/>
         <source>Load Files</source>
-        <translation>Mở các tệp tin</translation>
+        <translation>Indlæs filer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2403"/>
@@ -4676,7 +4682,7 @@ Reinstall the files anyway?</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3255"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3348"/>
         <source>All Files (*.*)</source>
-        <translation>Tất cả tệp tin (*.*)</translation>
+        <translation>Alle filer (*.*)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2415"/>
@@ -4691,37 +4697,37 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2461"/>
         <source>%1 has been installed successfully.</source>
-        <translation>%1 đã được cài đặt thành công.</translation>
+        <translation>%1 blev succesfuldt installeret.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2464"/>
         <source>Unable to open File</source>
-        <translation>Không thể mở tệp tin</translation>
+        <translation>Kunne ikke åbne filen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2465"/>
         <source>Could not open %1</source>
-        <translation>Không thể mở %1</translation>
+        <translation>Kunne ikke åbne %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2469"/>
         <source>Installation aborted</source>
-        <translation>Việc cài đặt đã bị hoãn</translation>
+        <translation>Installation afbrudt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2470"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
-        <translation>Việc cài đặt %1 đã bị hoãn. Vui lòng xem bản ghi nhật ký để biết thêm chi tiết.</translation>
+        <translation>Installationen af %1 blev afbrudt. Se logfilen for flere detaljer.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2474"/>
         <source>Invalid File</source>
-        <translation>Tệp tin không hợp lệ</translation>
+        <translation>Ugyldig fil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2474"/>
         <source>%1 is not a valid CIA</source>
-        <translation>%1 không phải là một tệp CIA hợp lệ</translation>
+        <translation>%1 er ikke en gyldig CIA</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2477"/>
@@ -4789,12 +4795,12 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2581"/>
         <source>File not found</source>
-        <translation>Không tìm thấy tệp</translation>
+        <translation>Filen blev ikke fundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2582"/>
         <source>File &quot;%1&quot; not found</source>
-        <translation>Không tìm thấy tệp tin &quot;%1&quot;</translation>
+        <translation>Filen &quot;%1&quot; blev ikke fundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2928"/>
@@ -4828,12 +4834,12 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3023"/>
         <source>Amiibo File (%1);; All Files (*.*)</source>
-        <translation>Tệp Amiibo (%1);; Tất cả tệp (*.*)</translation>
+        <translation>Amiibo-fil (%1);;Alle filer (*.*)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3024"/>
         <source>Load Amiibo</source>
-        <translation>Tải Amiibo</translation>
+        <translation>Indlæs Amiibo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3043"/>
@@ -4843,24 +4849,24 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3117"/>
         <source>Record Movie</source>
-        <translation>Quay phim</translation>
+        <translation>Optag film</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3117"/>
         <source>Movie recording cancelled.</source>
-        <translation>Ghi hình đã bị hủy.</translation>
+        <translation>Filmoptagelse afbrudt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3130"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3151"/>
         <source>Movie Saved</source>
-        <translation>Đã lưu phim.</translation>
+        <translation>Film gemt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3131"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3151"/>
         <source>The movie is successfully saved.</source>
-        <translation>Phim đã được lưu lại thành công.</translation>
+        <translation>Filmen er succesfuldt blevet gemt.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3168"/>
@@ -5029,12 +5035,12 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3634"/>
         <source>Speed: %1%</source>
-        <translation>Tốc độ: %1%</translation>
+        <translation>Hastighed: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3636"/>
         <source>Speed: %1% / %2%</source>
-        <translation>Tốc độ: %1% / %2%</translation>
+        <translation>Hastighed: %1%/%2%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3640"/>
@@ -5049,7 +5055,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3652"/>
         <source>Frame: %1 ms</source>
-        <translation>Khung: %1 ms</translation>
+        <translation>Billede: %1ms</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3740"/>
@@ -5070,17 +5076,17 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3831"/>
         <source>A system archive</source>
-        <translation>Một tập tin hệ thống</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3834"/>
         <source>System Archive Not Found</source>
-        <translation>Không tìm thấy tập tin hệ thống</translation>
+        <translation>Systemarkiver blev ikke fundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3835"/>
         <source>System Archive Missing</source>
-        <translation>Thiếu tập tin hệ thống</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3838"/>
@@ -5114,7 +5120,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3861"/>
         <source>Fatal Error</source>
-        <translation>Lỗi nghiêm trọng</translation>
+        <translation>Alvorlig fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3862"/>
@@ -5129,7 +5135,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3877"/>
         <source>Continue</source>
-        <translation>Tiếp tục</translation>
+        <translation>Fortsæt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3880"/>
@@ -5139,12 +5145,12 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3894"/>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="unfinished">OK</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3917"/>
         <source>Would you like to exit now?</source>
-        <translation>Bạn có muốn thoát ngay bây giờ không?</translation>
+        <translation>Vil du afslutte nu?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4014"/>
@@ -5154,12 +5160,12 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4151"/>
         <source>Playback Completed</source>
-        <translation>Phát lại hoàn tất</translation>
+        <translation>Afspilning færdig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4151"/>
         <source>Movie playback completed.</source>
-        <translation>Phát lại phim hoàn tất.</translation>
+        <translation>Afspilning af filmen er færdig.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="4161"/>
@@ -5188,22 +5194,22 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="97"/>
         <source>Command Name</source>
-        <translation>Tên câu lệnh</translation>
+        <translation>Kommandonavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="99"/>
         <source>Register</source>
-        <translation>Đăng ký</translation>
+        <translation>Register</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="101"/>
         <source>Mask</source>
-        <translation>Mask</translation>
+        <translation>Maske</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="103"/>
         <source>New Value</source>
-        <translation>Giá trị mới</translation>
+        <translation>Ny værdi</translation>
     </message>
 </context>
 <context>
@@ -5211,23 +5217,23 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="185"/>
         <source>Pica Command List</source>
-        <translation>Danh sách tập lệnh</translation>
+        <translation>Pica-kommandoliste</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="203"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="234"/>
         <source>Start Tracing</source>
-        <translation>Bắt đầu truy vết</translation>
+        <translation>Start tracing</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="204"/>
         <source>Copy All</source>
-        <translation>Chép toàn bộ</translation>
+        <translation>Kopier alle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="230"/>
         <source>Finish Tracing</source>
-        <translation>Kết thúc truy vết</translation>
+        <translation>Afslut tracing</translation>
     </message>
 </context>
 <context>
@@ -5235,7 +5241,7 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics.cpp" line="67"/>
         <source>Graphics Debugger</source>
-        <translation>Trình sửa lỗi đồ họa</translation>
+        <translation>Grafikfejlfinder</translation>
     </message>
 </context>
 <context>
@@ -5287,25 +5293,25 @@ Would you like to download it?</source>
         <location filename="../../src/citra_qt/game_list.cpp" line="573"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="1058"/>
         <source>Compatibility</source>
-        <translation>Tính tương thích</translation>
+        <translation>Kompatibilitet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="574"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="1059"/>
         <source>Region</source>
-        <translation>Khu vực</translation>
+        <translation>Region</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="575"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="1060"/>
         <source>File type</source>
-        <translation>Loại tệp tin</translation>
+        <translation>Filtype</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="576"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="1061"/>
         <source>Size</source>
-        <translation>Kích thước</translation>
+        <translation>Størrelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="577"/>
@@ -5376,7 +5382,7 @@ Would you like to download it?</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="668"/>
         <source>Dump RomFS</source>
-        <translation>Trích xuất RomFS</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="670"/>
@@ -5498,7 +5504,7 @@ This will delete the application if installed, as well as any installed updates 
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="927"/>
         <source>Scan Subfolders</source>
-        <translation>Quét thư mục con</translation>
+        <translation>Skan undermapper</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="928"/>
@@ -5518,17 +5524,17 @@ This will delete the application if installed, as well as any installed updates 
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="950"/>
         <source>Open Directory Location</source>
-        <translation>Mở thư mục</translation>
+        <translation>Åbn mappens placering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="993"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ryd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1057"/>
         <source>Name</source>
-        <translation>Tên</translation>
+        <translation>Navn</translation>
     </message>
 </context>
 <context>
@@ -5536,7 +5542,7 @@ This will delete the application if installed, as well as any installed updates 
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="270"/>
         <source>Perfect</source>
-        <translation>Hoàn mỹ</translation>
+        <translation>Perfekt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="270"/>
@@ -5547,7 +5553,7 @@ any workarounds needed.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="271"/>
         <source>Great</source>
-        <translation>Tuyệt vời</translation>
+        <translation>God</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="271"/>
@@ -5558,7 +5564,7 @@ workarounds.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="272"/>
         <source>Okay</source>
-        <translation>Ổn</translation>
+        <translation>Okay</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="272"/>
@@ -5569,7 +5575,7 @@ workarounds.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="273"/>
         <source>Bad</source>
-        <translation>Kém</translation>
+        <translation>Dårlig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="273"/>
@@ -5580,7 +5586,7 @@ even with workarounds.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="274"/>
         <source>Intro/Menu</source>
-        <translation>Intro/Menu</translation>
+        <translation>Intro/menu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="274"/>
@@ -5591,7 +5597,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="275"/>
         <source>Won&apos;t Boot</source>
-        <translation>Không mở được</translation>
+        <translation>Kører ikke</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="275"/>
@@ -5601,7 +5607,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="276"/>
         <source>Not Tested</source>
-        <translation>Chưa thử</translation>
+        <translation>Ikke testet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="276"/>
@@ -5622,27 +5628,27 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="103"/>
         <source>of</source>
-        <translation>của</translation>
+        <translation>af</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="106"/>
         <source>result</source>
-        <translation>kết quả</translation>
+        <translation>resultat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="108"/>
         <source>results</source>
-        <translation>kết quả</translation>
+        <translation>resultater</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1074"/>
         <source>Filter:</source>
-        <translation>Bộ lọc:</translation>
+        <translation>Filter:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="1075"/>
         <source>Enter pattern to filter</source>
-        <translation>Nhập mẫu ký tự để lọc</translation>
+        <translation>Indtast mønster til filtrering</translation>
     </message>
 </context>
 <context>
@@ -5650,7 +5656,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="99"/>
         <source>Japan</source>
-        <translation type="unfinished">Nhật Bản</translation>
+        <translation type="unfinished">Japan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="100"/>
@@ -5665,12 +5671,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="102"/>
         <source>Australia</source>
-        <translation type="unfinished">Úc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="103"/>
         <source>China</source>
-        <translation type="unfinished">Trung Quốc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="104"/>
@@ -5680,12 +5686,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="105"/>
         <source>Taiwan</source>
-        <translation type="unfinished">Đài Loan</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="110"/>
         <source>Invalid region</source>
-        <translation type="unfinished">Vùng không hợp lệ</translation>
+        <translation type="unfinished">Ugyldig region</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
@@ -5698,23 +5704,23 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="144"/>
         <source>Pica Breakpoints</source>
-        <translation>Điểm ngắt</translation>
+        <translation>Pica-breakpoints</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="148"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="210"/>
         <source>Emulation running</source>
-        <translation>Giả lập đang chạy</translation>
+        <translation>Emulering kører</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="149"/>
         <source>Resume</source>
-        <translation>Tiếp tục</translation>
+        <translation>Fortsæt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="200"/>
         <source>Emulation halted at breakpoint</source>
-        <translation>Giả lập bị tạm dừng tại điểm ngắt</translation>
+        <translation>Emuleringen stoppet ved breakpoint</translation>
     </message>
 </context>
 <context>
@@ -5722,77 +5728,77 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="55"/>
         <source>Pica Surface Viewer</source>
-        <translation>Trình xem mặt bằng Pica</translation>
+        <translation>Pica-overfladeviser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="60"/>
         <source>Color Buffer</source>
-        <translation>Bộ đệm màu</translation>
+        <translation>Farvebuffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="61"/>
         <source>Depth Buffer</source>
-        <translation>Depth Buffer</translation>
+        <translation>Dybtebuffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="62"/>
         <source>Stencil Buffer</source>
-        <translation>Stencil Buffer</translation>
+        <translation>Stencilbuffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="63"/>
         <source>Texture 0</source>
-        <translation>Texture 0</translation>
+        <translation>Tekstur 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="64"/>
         <source>Texture 1</source>
-        <translation>Texture 1</translation>
+        <translation>Tekstur 1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="65"/>
         <source>Texture 2</source>
-        <translation>Texture 2</translation>
+        <translation>Tekstur 2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="66"/>
         <source>Custom</source>
-        <translation>Tự chọn</translation>
+        <translation>Tilpasset</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="108"/>
         <source>Unknown</source>
-        <translation>Không rõ</translation>
+        <translation>Ukendt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="127"/>
         <source>Save</source>
-        <translation>Lưu</translation>
+        <translation>Gem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="151"/>
         <source>Source:</source>
-        <translation>Nguồn:</translation>
+        <translation>Kilde:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="157"/>
         <source>Physical Address:</source>
-        <translation>Địa chỉ vật lý:</translation>
+        <translation>Fysisk adresse:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="163"/>
         <source>Width:</source>
-        <translation>Độ rộng:</translation>
+        <translation>Bredde:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="169"/>
         <source>Height:</source>
-        <translation>Chiều cao:</translation>
+        <translation>Højde:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="175"/>
         <source>Format:</source>
-        <translation>Định dạng:</translation>
+        <translation>Format:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="187"/>
@@ -5807,22 +5813,22 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="287"/>
         <source>Pixel out of bounds</source>
-        <translation>Điểm ảnh nằm ngoài</translation>
+        <translation>Pixel udenfor grænserne</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="294"/>
         <source>(unable to access pixel data)</source>
-        <translation>(không thể truy cập dữ liệu điểm ảnh)</translation>
+        <translation>(kan ikke tilgå pixeldata)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="550"/>
         <source>(invalid surface address)</source>
-        <translation>(địa chỉ mặt hình không hợp lệ)</translation>
+        <translation>(ugyldig overfladeadresse)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="560"/>
         <source>(unknown surface format)</source>
-        <translation>(định dạng mặt hình không rõ)</translation>
+        <translation>(ukendt overfladeformat)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="653"/>
@@ -5832,12 +5838,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="654"/>
         <source>Binary data (*.bin)</source>
-        <translation>Dữ liệu nhị phân (*.bin)</translation>
+        <translation>Binært data (*.bin)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="658"/>
         <source>Save Surface</source>
-        <translation>Lưu mặt bằng</translation>
+        <translation>Gem overflade</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="673"/>
@@ -5845,23 +5851,23 @@ Screen.</source>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="687"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="695"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="673"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="687"/>
         <source>Failed to open file &apos;%1&apos;</source>
-        <translation>Mở tệp &apos;%1&apos; thất bại</translation>
+        <translation>Kunne ikke åbne filen &quot;%1&quot;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="679"/>
         <source>Failed to save surface data to file &apos;%1&apos;</source>
-        <translation>Thất bại khi lưu dữ liệu bề mặt vào tệp &apos;%1&apos;</translation>
+        <translation>Kunne ikke gemme overfladedate til filen &apos;%1&apos;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="696"/>
         <source>Failed to completely write surface data to file. The saved data will likely be corrupt.</source>
-        <translation>Không thể ghi dữ liệu bề mặt vào tệp tin. Dữ liệu đã lưu có thể sẽ bị hỏng.</translation>
+        <translation>Kunne ikke skrive hele overfladedataen til filen. Den gemte data vil sandsynligt være beskadiget.</translation>
     </message>
 </context>
 <context>
@@ -5869,42 +5875,42 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="25"/>
         <source>CiTrace Recorder</source>
-        <translation>CiTrace Recorder</translation>
+        <translation>CiTrace-optager</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="29"/>
         <source>Start Recording</source>
-        <translation>Bắt đầu ghi hình</translation>
+        <translation>Start optagelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="31"/>
         <source>Stop and Save</source>
-        <translation>Dừng và lưu</translation>
+        <translation>Stop og gem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="32"/>
         <source>Abort Recording</source>
-        <translation>Hoãn ghi hình</translation>
+        <translation>Annuller optagelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="117"/>
         <source>Save CiTrace</source>
-        <translation>Lưu CiTrace</translation>
+        <translation>Gem CTrace</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="117"/>
         <source>CiTrace File (*.ctf)</source>
-        <translation>CiTrace File (*.ctf)</translation>
+        <translation>CTrace-fil (*.ctf)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="166"/>
         <source>CiTracing still active</source>
-        <translation>CiTracing vẫn đang kích hoạt</translation>
+        <translation>CTracing kører stadig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="167"/>
         <source>A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded.</source>
-        <translation>Giám sát CiTrace vẫn đang được ghi. Bạn có muốn lưu lại? Nếu không, dữ liệu theo dõi sẽ bị hủy bỏ.</translation>
+        <translation>En CTrace er ved at blive optaget. Vil du gemme den? Hvis ikke, bliver alt optaget data kasseret.</translation>
     </message>
 </context>
 <context>
@@ -5917,7 +5923,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="48"/>
         <source>Raw</source>
-        <translation>Raw</translation>
+        <translation>Rå</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="50"/>
@@ -5930,12 +5936,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="346"/>
         <source>Save Shader Dump</source>
-        <translation>Lưu trích xuất shader</translation>
+        <translation>Gem shader-dump</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="348"/>
         <source>Shader Binary (*.shbin)</source>
-        <translation>Shader Binary (*.shbin)</translation>
+        <translation>Binær shaderfil (*.shbin)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="362"/>
@@ -5945,27 +5951,27 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="381"/>
         <source>(data only available at vertex shader invocation breakpoints)</source>
-        <translation>(dữ liệu chỉ bắt đầu từ các breakpoint của vertex shader)</translation>
+        <translation>(data kun tilgængelig ved breakpoints ved aktivering af vertex-shaders)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="392"/>
         <source>Dump</source>
-        <translation>Trích xuất</translation>
+        <translation>Dump</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="414"/>
         <source>Input Data</source>
-        <translation>Dữ liệu vào</translation>
+        <translation>Inputdata</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="428"/>
         <source>Attribute %1</source>
-        <translation>Attribute %1</translation>
+        <translation>Attribut: %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="455"/>
         <source>Cycle Index:</source>
-        <translation>Cycle Index:</translation>
+        <translation>Cycle-indeks:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="566"/>
@@ -6006,51 +6012,51 @@ Screen.</source>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="597"/>
         <source>Address Registers: %1, %2
 </source>
-        <translation>Địa chỉ đăng ký: %1, %2
+        <translation>Adresseregistre: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="601"/>
         <source>Compare Result: %1, %2
 </source>
-        <translation>So sánh kết quả: %1, %2
+        <translation>Sammenlign resultat: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="606"/>
         <source>Static Condition: %1
 </source>
-        <translation>Điều kiện cứng: %1
+        <translation>Statisk betingelse: %1
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="608"/>
         <source>Dynamic Conditions: %1, %2
 </source>
-        <translation>Điều kiện biến: %1, %2
+        <translation>Dynamisk betingelse: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="612"/>
         <source>Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4
 </source>
-        <translation>Các tham số lặp: %1 (số lần lặp), %2 (biến khởi tạo), %3 (độ tăng), %4
+        <translation>Loopparametre: %1 (gentager), %2 (initialisering), %3 (interval), %4
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="619"/>
         <source>Instruction offset: 0x%1</source>
-        <translation>Instruction offset: 0x%1</translation>
+        <translation>Instruktionsoffset: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="621"/>
         <source> -&gt; 0x%2</source>
-        <translation> -&gt; 0x%2</translation>
+        <translation>-&gt; 0x%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="623"/>
         <source> (last instruction)</source>
-        <translation>(chỉ thị cuối cùng)</translation>
+        <translation>(sidste instruktion)</translation>
     </message>
 </context>
 <context>
@@ -6058,12 +6064,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="14"/>
         <source>Create Room</source>
-        <translation>Tạo phòng</translation>
+        <translation>Opret rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="37"/>
         <source>Room Name</source>
-        <translation>Tên phòng</translation>
+        <translation>Rummets navn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="51"/>
@@ -6073,12 +6079,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="61"/>
         <source>Max Players</source>
-        <translation>Số người tối đa</translation>
+        <translation>Maks antal spillere</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="91"/>
         <source>Username</source>
-        <translation>Tên người dùng</translation>
+        <translation>Brugernavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
@@ -6088,37 +6094,37 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
         <source>Password</source>
-        <translation>Mật khẩu</translation>
+        <translation>Adgangskode</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="125"/>
         <source>Port</source>
-        <translation>Cổng</translation>
+        <translation>Port</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="139"/>
         <source>Room Description</source>
-        <translation>Mô tả phòng</translation>
+        <translation>Rumbeskrivelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="153"/>
         <source>Load Previous Ban List</source>
-        <translation>Tải danh sách chặn trước đó</translation>
+        <translation>Indlæs tidligere liste af udelukkelser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="184"/>
         <source>Public</source>
-        <translation>Công khai</translation>
+        <translation>Offentlig</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="189"/>
         <source>Unlisted</source>
-        <translation>Ẩn danh</translation>
+        <translation>Ikke listet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="197"/>
         <source>Host Room</source>
-        <translation>Tạo phòng</translation>
+        <translation>Start rum</translation>
     </message>
 </context>
 <context>
@@ -6126,7 +6132,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="164"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="165"/>
@@ -6145,42 +6151,42 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="21"/>
         <source>Enable Recording</source>
-        <translation>Mở ghi hình</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="30"/>
         <source>Filter:</source>
-        <translation>Bộ lọc:</translation>
+        <translation type="unfinished">Filter:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="37"/>
         <source>Leave empty to disable filtering</source>
-        <translation>Để trống để vô hiệu bộ lọc</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="50"/>
         <source>#</source>
-        <translation>#</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="55"/>
         <source>Status</source>
-        <translation>Trạng thái</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="60"/>
         <source>Service</source>
-        <translation>Dịch vụ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="65"/>
         <source>Function</source>
-        <translation>Chức năng</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.ui" line="82"/>
         <source>Clear</source>
-        <translation>Xóa trắng</translation>
+        <translation type="unfinished">Ryd</translation>
     </message>
 </context>
 <context>
@@ -6188,12 +6194,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="52"/>
         <source>Invalid</source>
-        <translation>Không hợp lệ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="54"/>
         <source>Sent</source>
-        <translation>Đã gửi</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="56"/>
@@ -6203,12 +6209,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="59"/>
         <source>Success</source>
-        <translation>Thành công</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="61"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation type="unfinished">Fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="63"/>
@@ -6218,17 +6224,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="80"/>
         <source>HLE</source>
-        <translation>HLE</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="80"/>
         <source>LLE</source>
-        <translation>LLE</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/recorder.cpp" line="151"/>
         <source>Unknown</source>
-        <translation>Không rõ</translation>
+        <translation type="unfinished">Ukendt</translation>
     </message>
 </context>
 <context>
@@ -6236,7 +6242,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/debugger/lle_service_modules.cpp" line="13"/>
         <source>Toggle LLE Service Modules</source>
-        <translation>Bật / Tắt các Module Dịch vụ LLE</translation>
+        <translation>Slå LLE-servicemoduler til/fra</translation>
     </message>
 </context>
 <context>
@@ -6259,7 +6265,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/loading_screen.cpp" line="66"/>
         <source>Loading...</source>
-        <translation>Đang tải...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/loading_screen.cpp" line="68"/>
@@ -6298,23 +6304,23 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="14"/>
         <source>Public Room Browser</source>
-        <translation>Tìm phòng</translation>
+        <translation>Gennemse offentlige rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="32"/>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="39"/>
         <source>Nickname</source>
-        <translation>Nickname</translation>
+        <translation>Kaldenavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="59"/>
         <source>Filters</source>
-        <translation>Bộ lọc</translation>
+        <translation>Filtre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="66"/>
         <source>Search</source>
-        <translation>Tìm</translation>
+        <translation>Søg</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="76"/>
@@ -6329,27 +6335,27 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="90"/>
         <source>Hide Full Rooms</source>
-        <translation>Ẩn các phòng đã đầy</translation>
+        <translation>Skjul fulde rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="110"/>
         <source>Refresh Lobby</source>
-        <translation>Làm mới</translation>
+        <translation>Genopfrisk lobby</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="111"/>
         <source>Password Required to Join</source>
-        <translation>Yêu cầu có mật khẩu để vào</translation>
+        <translation>Adgangskode krævet for deltagelse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="111"/>
         <source>Password:</source>
-        <translation>Mật khẩu phòng:</translation>
+        <translation>Adgangskode:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="200"/>
         <source>Room Name</source>
-        <translation>Tên phòng</translation>
+        <translation>Rumnavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="201"/>
@@ -6359,22 +6365,22 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="203"/>
         <source>Host</source>
-        <translation>Host</translation>
+        <translation>Vært</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="204"/>
         <source>Players</source>
-        <translation>Số người</translation>
+        <translation>Spillere</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="211"/>
         <source>Refreshing</source>
-        <translation>Đang tải</translation>
+        <translation>Genopfrisker</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="266"/>
         <source>Refresh List</source>
-        <translation>Làm mới</translation>
+        <translation>Genopfrisk liste</translation>
     </message>
 </context>
 <context>
@@ -6397,7 +6403,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="69"/>
         <source>Recent Files</source>
-        <translation>Tệp tin gần đây</translation>
+        <translation>Seneste filer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="74"/>
@@ -6407,7 +6413,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="96"/>
         <source>Emulation</source>
-        <translation type="unfinished">Giả lập</translation>
+        <translation type="unfinished">Emulering</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="100"/>
@@ -6427,12 +6433,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="130"/>
         <source>Debugging</source>
-        <translation>Đang sửa lỗi</translation>
+        <translation>Fejlfinding</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="137"/>
         <source>Screen Layout</source>
-        <translation>Bố trí màn hình</translation>
+        <translation>Skærmlayout</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="154"/>
@@ -6447,17 +6453,17 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="193"/>
         <source>Tools</source>
-        <translation>Công cụ</translation>
+        <translation>Værktøjer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="197"/>
         <source>Movie</source>
-        <translation>Phim</translation>
+        <translation>Film</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="211"/>
         <source>Debug</source>
-        <translation type="unfinished">Gỡ lỗi</translation>
+        <translation type="unfinished">Fejlfinding</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="230"/>
@@ -6467,12 +6473,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="248"/>
         <source>Load File...</source>
-        <translation>Mở tệp tin...</translation>
+        <translation>Indlæs fil…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="253"/>
         <source>Install CIA...</source>
-        <translation>Cài đặt CIA...</translation>
+        <translation>Installer CIA…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="258"/>
@@ -6487,37 +6493,37 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="268"/>
         <source>JPN</source>
-        <translation type="unfinished"></translation>
+        <translation>JPN</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="273"/>
         <source>USA</source>
-        <translation type="unfinished"></translation>
+        <translation>USA</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="278"/>
         <source>EUR</source>
-        <translation type="unfinished"></translation>
+        <translation>EUR</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="283"/>
         <source>AUS</source>
-        <translation type="unfinished"></translation>
+        <translation>AUS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="288"/>
         <source>CHN</source>
-        <translation type="unfinished"></translation>
+        <translation>CHN</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="293"/>
         <source>KOR</source>
-        <translation type="unfinished"></translation>
+        <translation>KOR</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="298"/>
         <source>TWN</source>
-        <translation type="unfinished"></translation>
+        <translation>TWN</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="303"/>
@@ -6527,37 +6533,37 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="311"/>
         <source>Pause</source>
-        <translation type="unfinished"></translation>
+        <translation>Pause</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="319"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Stop</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="327"/>
         <source>Save</source>
-        <translation type="unfinished">Lưu</translation>
+        <translation>Gem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="335"/>
         <source>Load</source>
-        <translation type="unfinished"></translation>
+        <translation>Indlæs</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="340"/>
         <source>FAQ</source>
-        <translation type="unfinished"></translation>
+        <translation>FAQ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="345"/>
         <source>About Azahar</source>
-        <translation type="unfinished"></translation>
+        <translation>Om Azahar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="356"/>
         <source>Single Window Mode</source>
-        <translation>Chế độ đơn cửa sổ</translation>
+        <translation>Tilstand med enkelt vindue</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="361"/>
@@ -6582,27 +6588,27 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="381"/>
         <source>Configure...</source>
-        <translation>Cấu hình...</translation>
+        <translation>Konfigurer…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="392"/>
         <source>Display Dock Widget Headers</source>
-        <translation>Hiển thị thanh Dock</translation>
+        <translation>Vis titler på dokbare widgets</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="400"/>
         <source>Show Filter Bar</source>
-        <translation>Hiển thị thanh tìm kiếm</translation>
+        <translation>Vis filterlinje</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="408"/>
         <source>Show Status Bar</source>
-        <translation>Hiển thị trạng thái</translation>
+        <translation>Vis statuslinje</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="413"/>
         <source>Create Pica Surface Viewer</source>
-        <translation>Tạo trình xem mặt bằng Pica</translation>
+        <translation>Opret Pica-overfladeviser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="418"/>
@@ -6632,12 +6638,12 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="458"/>
         <source>Advance Frame</source>
-        <translation type="unfinished"></translation>
+        <translation>Næste frame</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="466"/>
         <source>Capture Screenshot</source>
-        <translation>Chụp màn hình</translation>
+        <translation>Tag skærmbillede</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="474"/>
@@ -6667,7 +6673,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="514"/>
         <source>Dump Video</source>
-        <translation>Trích xuất video</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="519"/>
@@ -6687,27 +6693,27 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="540"/>
         <source>Create Room</source>
-        <translation>Tạo phòng</translation>
+        <translation>Opret rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="548"/>
         <source>Leave Room</source>
-        <translation>Rời phòng</translation>
+        <translation>Forlad rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="553"/>
         <source>Direct Connect to Room</source>
-        <translation>Kết nối trực tiếp đến phòng</translation>
+        <translation>Forbind direkte til rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="561"/>
         <source>Show Current Room</source>
-        <translation>Xem phòng hiện tại</translation>
+        <translation>Vis nuværende rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="569"/>
         <source>Fullscreen</source>
-        <translation>Toàn màn hình</translation>
+        <translation>Fuld skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="574"/>
@@ -6722,22 +6728,22 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="585"/>
         <source>Default</source>
-        <translation>Mặc định</translation>
+        <translation>Standard</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="593"/>
         <source>Single Screen</source>
-        <translation>Đơn màn hình</translation>
+        <translation>Enkelt skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="601"/>
         <source>Large Screen</source>
-        <translation>Màn hình lớn</translation>
+        <translation>Stor skærm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="609"/>
         <source>Side by Side</source>
-        <translation>Nằm kề nhau</translation>
+        <translation>Side om side</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="617"/>
@@ -6797,7 +6803,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="705"/>
         <source>Swap Screens</source>
-        <translation>Đổi vị trí màn hình</translation>
+        <translation>Byt om på skærme</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="713"/>
@@ -6807,22 +6813,22 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="718"/>
         <source>Report Compatibility</source>
-        <translation>Gửi báo cáo tính tương thích</translation>
+        <translation>Rapporter kompatibilitet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="726"/>
         <source>Restart</source>
-        <translation>Khởi động lại</translation>
+        <translation>Genstart </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="734"/>
         <source>Load...</source>
-        <translation>Tải...</translation>
+        <translation>Indlæs...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="742"/>
         <source>Remove</source>
-        <translation>Xóa</translation>
+        <translation>Fjern</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="747"/>
@@ -6848,48 +6854,48 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.ui" line="6"/>
         <source>Moderation</source>
-        <translation>Quản trị</translation>
+        <translation>Moderation</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.ui" line="20"/>
         <source>Ban List</source>
-        <translation>Danh sách chặn</translation>
+        <translation>Udelukkelsesliste</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.ui" line="41"/>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="74"/>
         <source>Refreshing</source>
-        <translation>Đang làm mới</translation>
+        <translation>Genindlæser</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.ui" line="51"/>
         <source>Unban</source>
-        <translation>Bỏ chặn</translation>
+        <translation>Fjern udelukning</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="41"/>
         <source>Subject</source>
-        <translation>Chủ đề</translation>
+        <translation>Emne</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="42"/>
         <source>Type</source>
-        <translation>Loại</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="84"/>
         <source>Forum Username</source>
-        <translation>Tài khoản diễn đàn</translation>
+        <translation>Forum-brugernavn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="89"/>
         <source>IP Address</source>
-        <translation>Địa chỉ IP</translation>
+        <translation>IP-adresse</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/moderation_dialog.cpp" line="96"/>
         <source>Refresh</source>
-        <translation>Làm mới</translation>
+        <translation>Genindlæs</translation>
     </message>
 </context>
 <context>
@@ -6908,7 +6914,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished">...</translation>
+        <translation type="unfinished">…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="48"/>
@@ -6990,7 +6996,7 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="14"/>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="49"/>
         <source>Record Movie</source>
-        <translation type="unfinished">Quay phim</translation>
+        <translation type="unfinished">Optag film</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="22"/>
@@ -7000,7 +7006,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="32"/>
         <source>...</source>
-        <translation type="unfinished">...</translation>
+        <translation type="unfinished">…</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.ui" line="39"/>
@@ -7034,43 +7040,43 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="46"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="87"/>
         <source>Current connection status</source>
-        <translation>Trạng thái kết nối hiện tại</translation>
+        <translation>Nuværende forbindelsesstatus</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="47"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="90"/>
         <source>Not Connected. Click here to find a room!</source>
-        <translation>Chưa kết nối. Nhấp vào đây để tìm phòng!</translation>
+        <translation>Ikke forbundet. Klik her for at finde et rum!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="94"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="116"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="256"/>
         <source>Connected</source>
-        <translation>Đã kết nối</translation>
+        <translation>Forbundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="96"/>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="121"/>
         <source>Not Connected</source>
-        <translation>Chưa kết nối</translation>
+        <translation>Ikke forbundet</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="177"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="178"/>
         <source>Failed to update the room information. Please check your Internet connection and try hosting the room again.
 Debug Message: </source>
-        <translation>Cập nhật thông tin phòng thất bại. Vui lòng kiểm tra kết nối mạng và thử khởi tạo lại.
-Debug Message: </translation>
+        <translation>Kunne ikke opdatere rummets information. Tjek din internetforbindelse og prøv at starte rummet igen.
+Fejlfindingsmeddelelse: </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="250"/>
         <source>New Messages Received</source>
-        <translation>Đã nhận được tin mới</translation>
+        <translation>Nye beskeder modtaget</translation>
     </message>
 </context>
 <context>
@@ -7078,22 +7084,22 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="70"/>
         <source>Leave Room</source>
-        <translation>Rời phòng</translation>
+        <translation>Forlad rum</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="71"/>
         <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Bạn đang chuẩn bị đóng phòng. Các kết nối đến phòng này cũng sẽ bị đóng theo.</translation>
+        <translation>Du er ved at lukke rummet. Alle netværksforbindelser vil blive afbrudt.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="76"/>
         <source>Disconnect</source>
-        <translation>Ngắt kết nối</translation>
+        <translation>Afbryd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="77"/>
         <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Bạn đang chuẩn bị rời phòng. Các kết nối liên quan sẽ bị đóng.</translation>
+        <translation>Du er ved at forlade rummet. Alle netværksforbindelser vil blive afbrudt.</translation>
     </message>
 </context>
 <context>
@@ -7204,7 +7210,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="65"/>
         <source>Error</source>
-        <translation type="unfinished">Lỗi</translation>
+        <translation type="unfinished">Fejl</translation>
     </message>
 </context>
 <context>
@@ -7270,12 +7276,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/dumping/options_dialog.ui" line="52"/>
         <source>Name</source>
-        <translation type="unfinished">Tên</translation>
+        <translation type="unfinished">Navn</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/options_dialog.ui" line="57"/>
         <source>Value</source>
-        <translation type="unfinished">Giá trị</translation>
+        <translation type="unfinished">Værdi</translation>
     </message>
 </context>
 <context>
@@ -7283,27 +7289,27 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="46"/>
         <source>Supported image files (%1)</source>
-        <translation>Các tệp ảnh được hỗ trợ (%1)</translation>
+        <translation>Understøttede billedformater (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="48"/>
         <source>Open File</source>
-        <translation>Mở tệp tin</translation>
+        <translation>Åbn fil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="66"/>
         <source>Error</source>
-        <translation>Lỗi</translation>
+        <translation>Fejl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="67"/>
         <source>Couldn&apos;t load the camera</source>
-        <translation>Không thể tải máy ảnh</translation>
+        <translation>Kunne ikke sætte kameraet op</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="68"/>
         <source>Couldn&apos;t load %1</source>
-        <translation>Không thể mở %1</translation>
+        <translation>Kunne ikke indlæse %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="50"/>
@@ -7328,13 +7334,13 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="124"/>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="36"/>
         <source>[not set]</source>
-        <translation>[chưa cài đặt]</translation>
+        <translation>[ikke sat]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="86"/>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="48"/>
         <source>Hat %1 %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Hat %1 %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="93"/>
@@ -7344,13 +7350,13 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="150"/>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="55"/>
         <source>Axis %1%2</source>
-        <translation type="unfinished"></translation>
+        <translation>Akse %1%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="99"/>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="61"/>
         <source>Button %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Knap %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="110"/>
@@ -7367,12 +7373,12 @@ They may have left the room.</source>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="154"/>
         <location filename="../../src/citra_qt/configuration/configure_touch_from_button.cpp" line="67"/>
         <source>[unknown]</source>
-        <translation>[không rõ]</translation>
+        <translation>[ukendt]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="138"/>
         <source>[unused]</source>
-        <translation>[chưa được dùng]</translation>
+        <translation>[ubrugt]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/option_set_dialog.cpp" line="49"/>
@@ -7408,17 +7414,17 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="308"/>
         <source>Invalid region</source>
-        <translation>Vùng không hợp lệ</translation>
+        <translation>Ugyldig region</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="413"/>
         <source>Installed Titles</source>
-        <translation>Các tiêu đề đã cài</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="417"/>
         <source>System Titles</source>
-        <translation>Các tiêu đề hệ thống</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="453"/>
@@ -7451,7 +7457,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="130"/>
         <source>Software Keyboard</source>
-        <translation>Bàn phím mềm</translation>
+        <translation>Softwaretastatur</translation>
     </message>
 </context>
 <context>
@@ -7459,27 +7465,27 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="88"/>
         <source>Text length is not correct (should be %1 characters)</source>
-        <translation>Độ dài đoạn văn bản không đúng (phải là %1 ký tự)</translation>
+        <translation>Længden på teksten er ikke korrekt (bør være %1 tegn)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="91"/>
         <source>Text is too long (should be no more than %1 characters)</source>
-        <translation>Văn bản quá dài (tối đa %1 ký tự)</translation>
+        <translation>Teksten er for lang (bør ikke være mere end %1 tegn)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="93"/>
         <source>Blank input is not allowed</source>
-        <translation>Không được phép nhập khoảng trắng</translation>
+        <translation>Blankt input er ikke tilladt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="94"/>
         <source>Empty input is not allowed</source>
-        <translation>Không được để trống</translation>
+        <translation>Tomt input er ikke tilladt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="96"/>
         <source>Validation error</source>
-        <translation>Lỗi xác nhận</translation>
+        <translation>Valideringsfejl</translation>
     </message>
 </context>
 <context>
@@ -7487,12 +7493,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="27"/>
         <source>Mii Selector</source>
-        <translation type="unfinished"></translation>
+        <translation>Mii-vælger</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/mii_selector.cpp" line="31"/>
         <source>Standard Mii</source>
-        <translation type="unfinished"></translation>
+        <translation>Standard-Mii</translation>
     </message>
 </context>
 <context>
@@ -7500,7 +7506,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="14"/>
         <source>View Record</source>
-        <translation>Xem bản ghi</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="22"/>
@@ -7528,27 +7534,27 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="73"/>
         <source>Server</source>
-        <translation>Máy chủ</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="126"/>
         <source>General</source>
-        <translation>Chung</translation>
+        <translation type="unfinished">Generelt</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="132"/>
         <source>Client Port:</source>
-        <translation>Cổng mạng:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="146"/>
         <source>Service:</source>
-        <translation>Dịch vụ:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="160"/>
         <source>Function:</source>
-        <translation>Chức năng:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="177"/>
@@ -7583,12 +7589,12 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.ui" line="243"/>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="unfinished">OK</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/ipc/record_dialog.cpp" line="13"/>
         <source>null</source>
-        <translation>null</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -7596,37 +7602,37 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="17"/>
         <source>Registers</source>
-        <translation>Đăng ký</translation>
+        <translation>Registre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="18"/>
         <source>VFP Registers</source>
-        <translation>VFP Registers</translation>
+        <translation>VFP-registre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="20"/>
         <source>VFP System Registers</source>
-        <translation>VFP System Registers</translation>
+        <translation>VFP-systemregistre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="180"/>
         <source>Vector Length</source>
-        <translation>Độ dài vector</translation>
+        <translation>Vektorlængde</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="181"/>
         <source>Vector Stride</source>
-        <translation>Bước đi vector</translation>
+        <translation>Vektor-stride</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="182"/>
         <source>Rounding Mode</source>
-        <translation>Rounding Mode</translation>
+        <translation>Afrundingstilstand</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="195"/>
         <source>Vector Iteration Count</source>
-        <translation>Số lần lặp vector</translation>
+        <translation>Vektorens antal iterationer</translation>
     </message>
 </context>
 <context>
@@ -7634,7 +7640,7 @@ They may have left the room.</source>
     <message>
         <location filename="../../src/citra_qt/util/sequence_dialog/sequence_dialog.cpp" line="11"/>
         <source>Enter a hotkey</source>
-        <translation>Nhập một phím tắt</translation>
+        <translation>Vælg en genvejstast</translation>
     </message>
 </context>
 <context>
@@ -7705,7 +7711,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="302"/>
         <source>reset type = %1</source>
-        <translation>reset type = %1</translation>
+        <translation>genstarttype = %1</translation>
     </message>
 </context>
 <context>
@@ -7713,12 +7719,12 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="315"/>
         <source>locked %1 times by thread:</source>
-        <translation>bị khóa %1 lần bởi luồng:</translation>
+        <translation>låst %1 gang(e) af tråd:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="318"/>
         <source>free</source>
-        <translation>giải phóng</translation>
+        <translation>fri</translation>
     </message>
 </context>
 <context>
@@ -7726,7 +7732,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="357"/>
         <source>holding mutexes</source>
-        <translation>giữ các mutex</translation>
+        <translation>holder mutexes</translation>
     </message>
 </context>
 <context>
@@ -7734,12 +7740,12 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="162"/>
         <source>waiting for all objects</source>
-        <translation>đang đợi các đối tượng</translation>
+        <translation>venter på alle objekter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="163"/>
         <source>waiting for one of the following objects</source>
-        <translation>đang đợi một trong các đối tượng sau</translation>
+        <translation>venter på et af følgende objekter</translation>
     </message>
 </context>
 <context>
@@ -7747,12 +7753,12 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="331"/>
         <source>available count = %1</source>
-        <translation>sẵn có = %1</translation>
+        <translation>tilgængeligt antal = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="332"/>
         <source>max count = %1</source>
-        <translation>tối đa = %1</translation>
+        <translation>maksimalt antal = %1</translation>
     </message>
 </context>
 <context>
@@ -7760,62 +7766,62 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="180"/>
         <source>running</source>
-        <translation>đang chạy</translation>
+        <translation>kører</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="183"/>
         <source>ready</source>
-        <translation>sẵn sàng</translation>
+        <translation>klar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="186"/>
         <source>waiting for address 0x%1</source>
-        <translation>đang đợi địa chỉ 0x%1</translation>
+        <translation>venter på adresse 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="189"/>
         <source>sleeping</source>
-        <translation>đang ngủ</translation>
+        <translation>sover</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="192"/>
         <source>waiting for IPC response</source>
-        <translation>đang đợi phản hồi IPC</translation>
+        <translation>venter på IPC-svar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="196"/>
         <source>waiting for objects</source>
-        <translation>đang đợi các đối tượng</translation>
+        <translation>venter på objekter</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="199"/>
         <source>waiting for HLE return</source>
-        <translation>đang đợi HLE return</translation>
+        <translation>venter på HLE-retur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="202"/>
         <source>dormant</source>
-        <translation>không hoạt động</translation>
+        <translation>hvilende</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="205"/>
         <source>dead</source>
-        <translation>đã chết</translation>
+        <translation>død</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="208"/>
         <source> PC = 0x%1 LR = 0x%2</source>
-        <translation> PC = 0x%1 LR = 0x%2</translation>
+        <translation>PC = 0x%1 LR = %0x%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="250"/>
         <source>default</source>
-        <translation>mặc định</translation>
+        <translation>standard</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="253"/>
         <source>all</source>
-        <translation>tất cả</translation>
+        <translation>alle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="256"/>
@@ -7830,7 +7836,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="262"/>
         <source>Unknown processor %1</source>
-        <translation>Không xác định vi xử lý %1</translation>
+        <translation>Ukendt processor %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="266"/>
@@ -7840,12 +7846,12 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="267"/>
         <source>processor = %1</source>
-        <translation>vi xử lý = %1</translation>
+        <translation>processor = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="268"/>
         <source>thread id = %1</source>
-        <translation>id luồng = %1</translation>
+        <translation>tråd-id = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="271"/>
@@ -7855,17 +7861,17 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="275"/>
         <source>priority = %1(current) / %2(normal)</source>
-        <translation>ưu tiên = %1(current) / %2(normal)</translation>
+        <translation>prioritet = %1(nuværende) / %2(normal)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="279"/>
         <source>last running ticks = %1</source>
-        <translation>tick chạy cuối cùng = %1</translation>
+        <translation>sidste kørende ticks = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="282"/>
         <source>not holding mutex</source>
-        <translation>không giữ mutex</translation>
+        <translation>holder ikke mutex</translation>
     </message>
 </context>
 <context>
@@ -7873,7 +7879,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="371"/>
         <source>waited by thread</source>
-        <translation>được đợi bởi luồng</translation>
+        <translation>afventet af tråd</translation>
     </message>
 </context>
 <context>
@@ -7881,17 +7887,17 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="344"/>
         <source>reset type = %1</source>
-        <translation>kiểu reset = %1</translation>
+        <translation>genstartstype = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="346"/>
         <source>initial delay = %1</source>
-        <translation>độ trễ ban đầu = %1</translation>
+        <translation>indledende forsinkelse = %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="348"/>
         <source>interval delay = %1</source>
-        <translation>độ trễ trong = %1</translation>
+        <translation>intervalforsinkelse = %1</translation>
     </message>
 </context>
 <context>
@@ -7899,27 +7905,27 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="108"/>
         <source>[%1]%2 %3</source>
-        <translation>[%1]%2 %3</translation>
+        <translation>[%1][%2 %3</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="136"/>
         <source>waited by no thread</source>
-        <translation>không có luồng nào chờ</translation>
+        <translation>ikke afventet af nogen tråd</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="146"/>
         <source>one shot</source>
-        <translation>one shot</translation>
+        <translation>en gang</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="148"/>
         <source>sticky</source>
-        <translation>sticky</translation>
+        <translation>fast</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="150"/>
         <source>pulse</source>
-        <translation>pulse</translation>
+        <translation>pulserende</translation>
     </message>
 </context>
 <context>
@@ -7927,7 +7933,7 @@ If you wish to clean up the files which were left in the old data location, you 
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="443"/>
         <source>Wait Tree</source>
-        <translation>Wait Tree</translation>
+        <translation>Afventningstræ</translation>
     </message>
 </context>
 </TS>
