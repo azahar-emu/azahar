@@ -10,18 +10,12 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     int convert_colors;
-    int areatex;
-    int searchtex;
-    int smaa_input;
 };
 
 layout(location = 0) in vec2 vert_position;
 layout(location = 1) in vec2 vert_tex_coord;
 layout(location = 0) out vec2 frag_tex_coord;
-layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
-/*
-screen_textures[0] = color_texture
-*/
+
 void main()
 {
    gl_Position = vec4(vert_position, 0.0, 1.0);

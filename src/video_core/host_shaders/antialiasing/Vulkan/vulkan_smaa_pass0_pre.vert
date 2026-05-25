@@ -13,9 +13,6 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     int convert_colors;
-    int areatex;
-    int searchtex;
-    int smaa_input;
 };
 
 #define SMAA_RT_METRICS vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y)

@@ -3,7 +3,7 @@ vec3 LinearTosRGB(vec3 c) {
 }
 
 void main() {
-    vec4 pixel = SMAANeighborhoodBlendingPS(frag_tex_coord, offset, screen_textures[1], screen_textures[0]);
+    vec4 pixel = SMAANeighborhoodBlendingPS(frag_tex_coord, offset, SMAA_Input, color_texture);
     if (convert_colors == 2){
         pixel = vec4(LinearTosRGB(pixel.rgb), pixel.a);
     }

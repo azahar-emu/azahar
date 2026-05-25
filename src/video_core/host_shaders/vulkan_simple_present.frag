@@ -19,22 +19,8 @@ layout (push_constant, std140) uniform DrawInfo {
     int convert_colors;
 };
 
-layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
+layout (set = 0, binding = 0) uniform sampler2D color_texture;
 
-vec4 GetScreen(int screen_id) {
-#ifdef ARRAY_DYNAMIC_INDEX
-    return texture(screen_textures[screen_id], frag_tex_coord);
-#else
-    switch (screen_id) {
-    case 0:
-        return texture(screen_textures[0], frag_tex_coord);
-    case 1:
-        return texture(screen_textures[1], frag_tex_coord);
-    case 2:
-        return texture(screen_textures[2], frag_tex_coord);
-    }
-#endif
-}
 
 vec3 sRGBToLinear(vec3 c) {
     return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
@@ -45,7 +31,7 @@ vec3 LinearTosRGB(vec3 c) {
 }
 
 void main() {
-    vec4 pixel = GetScreen(screen_id_l);
+    vec4 pixel = texture(color_texture, frag_tex_coord);
     if (convert_colors == 2){
         pixel = vec4(LinearTosRGB(pixel.rgb), pixel.a);
     } else if (convert_colors == 1){

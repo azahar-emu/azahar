@@ -53,7 +53,7 @@ FXAA_SUBPIX_CAP - Insures fine detail is not completely removed.
 
 layout(location = 0) in vec2 frag_tex_coord;
 layout(location = 0) out vec4 color;
-layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
+layout (set = 0, binding = 0) uniform sampler2D color_texture;
 
 layout (push_constant, std140) uniform DrawInfo {
     mat4 modelview_matrix;
@@ -64,14 +64,8 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     int convert_colors;
-    int areatex;
-    int searchtex;
-    int smaa_input;
 };
 
-/*
-screen_textures[0] = color_texture
-*/
 #ifndef FXAA_PRESET
     #define FXAA_PRESET 5
 #endif
@@ -263,7 +257,7 @@ vec3 sRGBToLinear(vec3 c) {
 
 void main()
 {
-    vec4 pixel = vec4(FxaaPixelShader(frag_tex_coord, screen_textures[0], vec2(i_resolution.z, i_resolution.w)), 1.0) * 1.0;
+    vec4 pixel = vec4(FxaaPixelShader(frag_tex_coord, color_texture, vec2(i_resolution.z, i_resolution.w)), 1.0) * 1.0;
     if (convert_colors == 1){
         pixel = vec4(sRGBToLinear(pixel.rgb), pixel.a);
     }

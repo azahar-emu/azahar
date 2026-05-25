@@ -2,10 +2,8 @@
 
 layout(location = 0) in vec2 frag_tex_coord;
 layout(location = 0) out vec4 color;
-layout (set = 0, binding = 0) uniform sampler2D screen_textures[3];
-/*
-screen_textures[0] = color_texture
-*/
+layout (set = 0, binding = 0) uniform sampler2D color_texture;
+
 layout (push_constant, std140) uniform DrawInfo {
     mat4 modelview_matrix;
     vec4 i_resolution;
@@ -15,9 +13,6 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     int convert_colors;
-    int areatex;
-    int searchtex;
-    int smaa_input;
 };
 
 /***** Area Sampling *****/
@@ -97,7 +92,7 @@ vec3 LinearTosRGB(vec3 c) {
 }
 
 void main() {
-    vec4 pixel = AreaSampling(screen_textures[0], frag_tex_coord);
+    vec4 pixel = AreaSampling(color_texture, frag_tex_coord);
     if (convert_colors == 2){
         pixel = vec4(LinearTosRGB(pixel.rgb), pixel.a);
     }

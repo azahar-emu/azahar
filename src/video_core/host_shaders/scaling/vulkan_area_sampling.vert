@@ -11,9 +11,6 @@ layout (push_constant, std140) uniform DrawInfo {
    int layer;
    int reverse_interlaced;
    int convert_colors;
-   int areatex;
-   int searchtex;
-   int smaa_input;
 };
 void main()
 {
