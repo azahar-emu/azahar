@@ -24,12 +24,17 @@ ConfigureUi::~ConfigureUi() = default;
 
 void ConfigureUi::InitializeLanguageComboBox() {
     ui->language_combobox->addItem(tr("<System>"), QString{});
-    ui->language_combobox->addItem(tr("English"), QStringLiteral("en"));
+    ui->language_combobox->addItem(QStringLiteral("English"), QStringLiteral("en"));
     QDirIterator it(QStringLiteral(":/languages"), QDirIterator::NoIteratorFlags);
     while (it.hasNext()) {
         QString locale = it.next();
         locale.truncate(locale.lastIndexOf(QLatin1Char{'.'}));
         locale.remove(0, locale.lastIndexOf(QLatin1Char{'/'}) + 1);
+        if (locale.startsWith(QStringLiteral("qtbase"))) {
+            // The Qt Base QM translation files are lumped in with ours,
+            // so don't show them in the language list!
+            continue;
+        }
         QString lang = QLocale::languageToString(QLocale(locale).language());
         const QString country = QLocale::territoryToString(QLocale(locale).territory());
         if (locale == QString::fromStdString("ca_ES_valencia")) {

@@ -439,7 +439,8 @@ private:
     QAction* action_secondary_swap_screen;
     QAction* action_secondary_rotate_screen;
 
-    QTranslator translator;
+    QTranslator qtTranslator;
+    QTranslator citraTranslator;
 
     // stores default icon theme search paths for the platform
     QStringList default_theme_paths;
