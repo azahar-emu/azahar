@@ -247,31 +247,40 @@ void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     state.draw.draw_framebuffer = draw_fbos[FboIndex(surface.type)].handle;
     state.Apply();
 
-    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    const auto ClearBuffer = [&surface, &state, &clear]() {
+        switch (surface.type) {
+        case SurfaceType::Color:
+        case SurfaceType::Texture:
+            state.color_mask.red_enabled = true;
+            state.color_mask.green_enabled = true;
+            state.color_mask.blue_enabled = true;
+            state.color_mask.alpha_enabled = true;
+            state.Apply();
+            glClearBufferfv(GL_COLOR, 0, clear.value.color.AsArray());
+            break;
+        case SurfaceType::Depth:
+            state.depth.write_mask = GL_TRUE;
+            state.Apply();
+            glClearBufferfv(GL_DEPTH, 0, &clear.value.depth);
+            break;
+        case SurfaceType::DepthStencil:
+            state.depth.write_mask = GL_TRUE;
+            state.stencil.write_mask = -1;
+            state.Apply();
+            glClearBufferfi(GL_DEPTH_STENCIL, 0, clear.value.depth, clear.value.stencil);
+            break;
+        default:
+            UNREACHABLE_MSG("Unknown surface type {}", surface.type);
+        }
+    };
 
-    switch (surface.type) {
-    case SurfaceType::Color:
-    case SurfaceType::Texture:
-        state.color_mask.red_enabled = true;
-        state.color_mask.green_enabled = true;
-        state.color_mask.blue_enabled = true;
-        state.color_mask.alpha_enabled = true;
-        state.Apply();
-        glClearBufferfv(GL_COLOR, 0, clear.value.color.AsArray());
-        break;
-    case SurfaceType::Depth:
-        state.depth.write_mask = GL_TRUE;
-        state.Apply();
-        glClearBufferfv(GL_DEPTH, 0, &clear.value.depth);
-        break;
-    case SurfaceType::DepthStencil:
-        state.depth.write_mask = GL_TRUE;
-        state.stencil.write_mask = -1;
-        state.Apply();
-        glClearBufferfi(GL_DEPTH_STENCIL, 0, clear.value.depth, clear.value.stencil);
-        break;
-    default:
-        UNREACHABLE_MSG("Unknown surface type {}", surface.type);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    ClearBuffer();
+
+    if (surface.GetSampleCount() > 1) {
+        // Clear MSAA too
+        surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0, 3);
+        ClearBuffer();
     }
 }
 
