@@ -112,7 +112,7 @@ static constexpr std::array<FormatTuple, 8> CUSTOM_TUPLES = {{
     glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     if (!debug_name.empty()) {
-        glObjectLabel(GL_TEXTURE, texture.handle, -1, debug_name.data());
+        glObjectLabel(GL_TEXTURE, texture.handle, debug_name.size(), debug_name.data());
     }
 
     return texture;
