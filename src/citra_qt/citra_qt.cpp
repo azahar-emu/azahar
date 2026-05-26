@@ -550,11 +550,6 @@ void GMainWindow::InitializeWidgets() {
     secondary_window->hide();
     secondary_window->setParent(nullptr);
 
-    action_secondary_fullscreen = new QAction(secondary_window);
-    action_secondary_toggle_screen = new QAction(secondary_window);
-    action_secondary_swap_screen = new QAction(secondary_window);
-    action_secondary_rotate_screen = new QAction(secondary_window);
-
     game_list = new GameList(*play_time_manager, this);
     ui->horizontalLayout->addWidget(game_list);
 
@@ -913,10 +908,15 @@ void GMainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Toggle Screen Layout"), &GMainWindow::ToggleScreenLayout);
     connect_shortcut(QStringLiteral("Exit Fullscreen"), [&] {
         if (emulation_running) {
-            ui->action_Fullscreen->setChecked(false);
-            ToggleFullscreen();
+            if (secondary_window->isActiveWindow()) {
+                secondary_window->showNormal();
+            } else {
+                ui->action_Fullscreen->setChecked(false);
+                ToggleFullscreen();
+            }
         }
     });
+
     connect_shortcut(QStringLiteral("Toggle Per-Application Speed"), [&] {
         if (!hotkey_registry
                  .GetKeySequence(QStringLiteral("Main Window"), QStringLiteral("Toggle Turbo Mode"))
@@ -967,16 +967,6 @@ void GMainWindow::InitializeHotkeys() {
             UpdateStatusBar();
         }
     });
-
-    // Secondary Window QAction Hotkeys
-    const auto add_secondary_window_hotkey = [this](QAction* action, QKeySequence hotkey,
-                                                    const char* slot) {
-        // This action will fire specifically when secondary_window is in focus
-        action->setShortcut(hotkey);
-        disconnect(action, SIGNAL(triggered()), this, slot);
-        connect(action, SIGNAL(triggered()), this, slot);
-        secondary_window->addAction(action);
-    };
 }
 
 void GMainWindow::SetDefaultUIGeometry() {
@@ -2666,10 +2656,16 @@ void GMainWindow::ToggleFullscreen() {
     if (!emulation_running) {
         return;
     }
-    if (ui->action_Fullscreen->isChecked()) {
-        ShowFullscreen();
+    if (secondary_window->isVisible() && secondary_window->isActiveWindow()) {
+        // undo the action and fullscreen secondary manually
+        ui->action_Fullscreen->toggle();
+        ToggleSecondaryFullscreen();
     } else {
-        HideFullscreen();
+        if (ui->action_Fullscreen->isChecked()) {
+            ShowFullscreen();
+        } else {
+            HideFullscreen();
+        }
     }
 }
 
@@ -2681,19 +2677,19 @@ void GMainWindow::ToggleSecondaryFullscreen() {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, false);
 #endif
+        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
         secondary_window->showNormal();
     } else {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(secondary_window, true);
 #endif
+        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
+        LOG_INFO(Frontend, "Attempting to fullscreen secondary window");
         secondary_window->showFullScreen();
     }
 }
 
 void GMainWindow::ShowFullscreen() {
-    QWidget* window_to_change =
-        ui->action_Single_Window_Mode->isChecked() ? static_cast<QWidget*>(this) : render_window;
-
     if (ui->action_Single_Window_Mode->isChecked()) {
         UISettings::values.geometry = saveGeometry();
         ui->menubar->hide();
@@ -2707,16 +2703,7 @@ void GMainWindow::ShowFullscreen() {
 #ifdef NEEDS_ROUND_CORNERS_FIX
         WindowCornerManager::instance().blockRoundedCorners(render_window, true);
 #endif
-    }
-
-    bool secondary_on_same = window_to_change->screen() == secondary_window->screen();
-    window_to_change->showFullScreen();
-
-    // try to fullscreen the second window if it is visible and on a different screen from main
-    if (secondary_window->isVisible() && !secondary_on_same) {
-        UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
-        LOG_INFO(Frontend, "Attempting to fullscreen secondary window");
-        secondary_window->showFullScreen();
+        render_window->showFullScreen();
     }
 }
 
@@ -2736,10 +2723,6 @@ void GMainWindow::HideFullscreen() {
         render_window->showNormal();
         render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
     }
-    if (secondary_window->isFullScreen()) {
-        secondary_window->restoreGeometry(UISettings::values.secondarywindow_geometry);
-        secondary_window->showNormal();
-    }
 }
 
 void GMainWindow::ToggleWindowMode() {
@@ -2758,7 +2741,6 @@ void GMainWindow::ToggleWindowMode() {
         // Render in a separate window...
         ui->horizontalLayout->removeWidget(render_window);
         render_window->setParent(nullptr);
-        render_window->setFocusPolicy(Qt::NoFocus);
         if (emulation_running) {
             render_window->setVisible(true);
             render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
@@ -2777,6 +2759,12 @@ void GMainWindow::UpdateSecondaryWindowVisibility() {
     } else {
         UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
         secondary_window->hide();
+    }
+    // make sure focus is on primary window whenever this changes
+    if (UISettings::values.single_window_mode.GetValue()) {
+        QApplication::setActiveWindow(this);
+    } else {
+        QApplication::setActiveWindow(render_window);
     }
 }
 
@@ -4218,6 +4206,8 @@ void GMainWindow::UpdateUISettings() {
     if (!ui->action_Fullscreen->isChecked()) {
         UISettings::values.geometry = saveGeometry();
         UISettings::values.renderwindow_geometry = render_window->saveGeometry();
+    }
+    if (!secondary_window->isFullScreen()) {
         UISettings::values.secondarywindow_geometry = secondary_window->saveGeometry();
     }
     UISettings::values.state = saveState();
