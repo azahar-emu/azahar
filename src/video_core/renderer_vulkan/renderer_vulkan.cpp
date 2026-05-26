@@ -80,8 +80,10 @@ constexpr std::array<f32, 4 * 4> MakeOrthographicMatrix(u32 width, u32 height) {
     // clang-format on
 }
 
-constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS = {{
-    {0, vk::DescriptorType::eCombinedImageSampler, 3, vk::ShaderStageFlagBits::eFragment},
+constexpr static std::array<vk::DescriptorSetLayoutBinding, 3> PRESENT_BINDINGS = {{
+    {0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
 }};
 
 namespace {
@@ -360,17 +362,79 @@ void RendererVulkan::CreatePPTextureFramebuffers(){
     }
 };
 
-void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout) {
+//Helper Functions
+void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode){
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < texturesToSample.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler);
+    }
+
+    renderpass_cache.EndRendering();
+    scheduler.Record([this, framebufferTexture, framebuffer, shaderPipeline, present_set](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(framebufferTexture.width),
+            .height = static_cast<float>(framebufferTexture.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {framebufferTexture.width, framebufferTexture.height},
+        };
+
+        const vk::ClearColorValue clear_color = {
+            .float32 =
+                std::array{
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                },
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = textureRenderpass,
+            .framebuffer = framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {framebufferTexture.width, framebufferTexture.height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
+
+
+void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids) {
     const auto sampler = present_samplers[Settings::values.filter_mode.GetValue()];
     const auto present_set = present_heap.Commit();
-    for (u32 index = 0; index < screen_infos.size(); index++) {
-        update_queue.AddImageSampler(present_set, 0, index, screen_infos[index].image_view,
+    for (u32 i = 0; i < screenids.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
                                      sampler);
     }
 
     renderpass_cache.EndRendering();
+    vk::RenderPass currentRenderPass;
+    if (clearingColorAttachment){
+        currentRenderPass = main_present_window.Renderpass();
+    } else {
+        currentRenderPass = main_present_window.LoadRenderpass();
+    }
     scheduler.Record([this, layout, frame, present_set,
-                      renderpass = main_present_window.Renderpass(),
+                      currentRenderPass,
                       index = current_pipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
@@ -392,7 +456,7 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
         const vk::ClearValue clear{.color = clear_color};
         const vk::PipelineLayout layout{*present_pipeline_layout};
         const vk::RenderPassBeginInfo renderpass_begin_info = {
-            .renderPass = renderpass,
+            .renderPass = currentRenderPass,
             .framebuffer = frame->framebuffer,
             .renderArea =
                 vk::Rect2D{
@@ -1034,6 +1098,26 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
                                       Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
+    std::vector<u32> screenids = {screen_id};
+    PrepareDraw(currentFrame, currentFramebufferLayout, screenids);
+
+    // Apply the initial default opacity value; Needed to avoid flickering
+    if (applyingOpacity){
+        if (drawingPrimaryScreen){
+            ApplySecondLayerOpacity(1.0f);
+        } else {
+            if (usingTopOpacity){
+                if (currentFramebufferLayout.top_opacity < 1) {
+                    ApplySecondLayerOpacity(currentFramebufferLayout.top_opacity);
+                }
+            } else {
+                if (currentFramebufferLayout.bottom_opacity < 1) {
+                    ApplySecondLayerOpacity(currentFramebufferLayout.bottom_opacity);
+                }
+            }
+        }
+    }
+
 
     const u32 scale_factor = GetResolutionScaleFactor();
     float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
@@ -1074,6 +1158,52 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
             ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
     }};
+    
+    // Legacy Vertices. Will be deleted when converted to multipass
+    std::array<ScreenRectVertex, 4> legacy_vertices;
+    float x = screenLeft;
+    float y = screenTop;
+    float w = screenWidth;
+    float h = screenHeight;
+    switch (orientation) {
+    case Layout::DisplayOrientation::Landscape:
+        legacy_vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        }};
+        break;
+    case Layout::DisplayOrientation::Portrait:
+        legacy_vertices = {{
+            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        }};
+        std::swap(h, w);
+        break;
+    case Layout::DisplayOrientation::LandscapeFlipped:
+        legacy_vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        }};
+        break;
+    case Layout::DisplayOrientation::PortraitFlipped:
+        legacy_vertices = {{
+            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
+            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
+            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
+            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        }};
+        std::swap(h, w);
+        break;
+    default:
+        LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
+        break;
+    }
 
     // Vertices for Azahar's Output Layout
     std::array<ScreenRectVertex, 4> output_vertices;
@@ -1116,9 +1246,10 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
-    const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
+
+    const u64 size = sizeof(ScreenRectVertex) * legacy_vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, output_vertices.data(), size);
+    std::memcpy(data, legacy_vertices.data(), size);
     vertex_buffer.Commit(size);
 
     draw_info.i_resolution =
@@ -1137,6 +1268,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
 
         cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
         cmdbuf.draw(4, 1, first_vertex, 0);
+        cmdbuf.endRenderPass();
     });
 }
 
@@ -1145,7 +1277,25 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
                                             Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info_l = screen_infos[screen_id_l];
     const auto& texcoords = screen_info_l.texcoords;
+    std::vector<u32> screenids = {screen_id_l, screen_id_r};
+    PrepareDraw(currentFrame, currentFramebufferLayout, screenids);
 
+    // Apply the initial default opacity value; Needed to avoid flickering
+    if (applyingOpacity){
+        if (drawingPrimaryScreen){
+            ApplySecondLayerOpacity(1.0f);
+        } else {
+            if (usingTopOpacity){
+                if (currentFramebufferLayout.top_opacity < 1) {
+                    ApplySecondLayerOpacity(currentFramebufferLayout.top_opacity);
+                }
+            } else {
+                if (currentFramebufferLayout.bottom_opacity < 1) {
+                    ApplySecondLayerOpacity(currentFramebufferLayout.bottom_opacity);
+                }
+            }
+        }
+    }
     std::array<ScreenRectVertex, 4> vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
@@ -1210,6 +1360,7 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
 
         cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
         cmdbuf.draw(4, 1, first_vertex, 0);
+        cmdbuf.endRenderPass();
     });
 }
 
@@ -1246,6 +1397,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left / 2, top_screen_top, top_screen_width / 2,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(rightside, static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
                          top_screen_top, top_screen_width / 2, top_screen_height, orientation);
         break;
@@ -1254,6 +1406,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(rightside, top_screen_left + layout.width / 2, top_screen_top,
                          top_screen_width, top_screen_height, orientation);
         break;
@@ -1262,6 +1415,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(
             rightside,
             static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
@@ -1347,33 +1501,34 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         ReloadPipeline(layout.render_3d_mode);
     }
 
-    PrepareDraw(frame, layout);
-
+    currentFrame = frame;
+    currentFramebufferLayout = layout;
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
     draw_info.modelview = MakeOrthographicMatrix(layout.width, layout.height);
-
     draw_info.layer = 0;
 
-    // Apply the initial default opacity value; Needed to avoid flickering
-    ApplySecondLayerOpacity(1.0f);
-
+    clearingColorAttachment = true;
+    applyingOpacity = true;
     if (!Settings::values.swap_screen.GetValue()) {
+        drawingPrimaryScreen = true;
         DrawTopScreen(layout, top_screen);
         draw_info.layer = 0;
-        if (layout.bottom_opacity < 1) {
-            ApplySecondLayerOpacity(layout.bottom_opacity);
-        }
+        drawingPrimaryScreen = false;
+        usingTopOpacity = false;
+        clearingColorAttachment = false;
         DrawBottomScreen(layout, bottom_screen);
     } else {
+        drawingPrimaryScreen = true;
         DrawBottomScreen(layout, bottom_screen);
         draw_info.layer = 0;
-        if (layout.top_opacity < 1) {
-            ApplySecondLayerOpacity(layout.top_opacity);
-        }
+        drawingPrimaryScreen = false;
+        usingTopOpacity = true;
+        clearingColorAttachment = false;
         DrawTopScreen(layout, top_screen);
     }
 
+    applyingOpacity = false;
     if (layout.additional_screen_enabled) {
         const auto& additional_screen = layout.additional_screen;
         if (!Settings::values.swap_screen.GetValue()) {
@@ -1383,9 +1538,8 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         }
     }
 
-    DrawCursor(layout);
-
-    scheduler.Record([](vk::CommandBuffer cmdbuf) { cmdbuf.endRenderPass(); });
+    // Needs to be fixed
+    // DrawCursor(layout);
 }
 
 void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {

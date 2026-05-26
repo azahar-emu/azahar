@@ -98,8 +98,8 @@ private:
     void RenderScreenshot();
     void RenderScreenshotWithStagingCopy();
     bool TryRenderScreenshotWithHostMemory();
-    void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout);
-    void PrepareTextureDraw(TextureInfo& textureInfo, vk::Pipeline& pipeline, int filterMode, std::vector<vk::ImageView> imageViews);
+    void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids);
+    void PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);
 
@@ -132,7 +132,6 @@ private:
     // Create Framebuffers that are attached to the Post Processing Textures
     void CreatePPTextureFramebuffers();
     void AllocateSMAATextures();
-
 private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
@@ -195,7 +194,12 @@ private:
     int currBottomTextureWidth;
     int currBottomTextureHeight;
     u32 current_pipeline = 0;
-
+    Frame* currentFrame;
+    Layout::FramebufferLayout currentFramebufferLayout;
+    bool clearingColorAttachment = true;
+    bool applyingOpacity = true;
+    bool drawingPrimaryScreen = false;
+    bool usingTopOpacity = false;
     std::array<ScreenInfo, 3> screen_infos{};
     PresentUniformData draw_info{};
     vk::ClearColorValue clear_color{};

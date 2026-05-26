@@ -104,7 +104,7 @@ PresentWindow::PresentWindow(Frontend::EmuWindow& emu_window_, const Instance& i
       surface{CreateSurface(instance.GetInstance(), emu_window)}, next_surface{surface},
       swapchain{instance, emu_window.GetFramebufferLayout().width,
                 emu_window.GetFramebufferLayout().height, surface, low_refresh_rate_},
-      graphics_queue{instance.GetGraphicsQueue()}, present_renderpass{CreateRenderpass()},
+      graphics_queue{instance.GetGraphicsQueue()}, present_renderpass{CreateRenderpass()}, present_load_renderpass{CreateLoadRenderpass()},
       vsync_enabled{Settings::values.use_vsync.GetValue()},
       blit_supported{
           CanBlitToSwapchain(instance.GetPhysicalDevice(), swapchain.GetSurfaceFormat().format)},
@@ -157,6 +157,7 @@ PresentWindow::~PresentWindow() {
     const vk::Device device = instance.GetDevice();
     device.destroyCommandPool(command_pool);
     device.destroyRenderPass(present_renderpass);
+    device.destroyRenderPass(present_load_renderpass);
     for (auto& frame : swap_chain) {
         device.destroyImageView(frame.image_view);
         device.destroyFramebuffer(frame.framebuffer);
@@ -524,4 +525,41 @@ vk::RenderPass PresentWindow::CreateRenderpass() {
     return instance.GetDevice().createRenderPass(renderpass_info);
 }
 
+vk::RenderPass PresentWindow::CreateLoadRenderpass() {
+    const vk::AttachmentReference color_ref = {
+        .attachment = 0,
+        .layout = vk::ImageLayout::eGeneral,
+    };
+
+    const vk::SubpassDescription subpass = {
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
+        .colorAttachmentCount = 1u,
+        .pColorAttachments = &color_ref,
+        .pResolveAttachments = 0,
+        .pDepthStencilAttachment = nullptr,
+    };
+
+    const vk::AttachmentDescription color_attachment = {
+        .format = swapchain.GetSurfaceFormat().format,
+        .loadOp = vk::AttachmentLoadOp::eLoad,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eTransferSrcOptimal,
+    };
+
+    const vk::RenderPassCreateInfo renderpass_info = {
+        .attachmentCount = 1,
+        .pAttachments = &color_attachment,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 0,
+        .pDependencies = nullptr,
+    };
+
+    return instance.GetDevice().createRenderPass(renderpass_info);
+}
 } // namespace Vulkan
