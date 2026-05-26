@@ -57,7 +57,9 @@
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/debugger/ipc/recorder.h"
 #include "citra_qt/debugger/lle_service_modules.h"
+#if MICROPROFILE_ENABLED
 #include "citra_qt/debugger/profiler.h"
+#endif
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
 #ifdef USE_DISCORD_PRESENCE
@@ -712,11 +714,6 @@ void GMainWindow::InitializeDebugWidgets() {
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();
     debug_menu->addAction(microProfileDialog->toggleViewAction());
-#else
-    auto micro_profile_stub = new QAction(tr("MicroProfile (unavailable)"), this);
-    micro_profile_stub->setEnabled(false);
-    micro_profile_stub->setChecked(false);
-    debug_menu->addAction(micro_profile_stub);
 #endif
 
     registersWidget = new RegistersWidget(system, this);
