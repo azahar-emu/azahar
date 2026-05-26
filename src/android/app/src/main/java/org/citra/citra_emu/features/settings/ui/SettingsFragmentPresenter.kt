@@ -14,7 +14,6 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -854,13 +853,13 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
             add(
                 MultiChoiceSetting(
-                    IntListSetting.COMBO_KEYS,
+                    IntListSetting.COMBO_BUTTONS,
                     R.string.combo_key_options,
                     R.string.combo_key_description,
                     R.array.comboOptions,
                     R.array.comboOptionValues,
-                    IntListSetting.COMBO_KEYS.key,
-                    IntListSetting.COMBO_KEYS.defaultValue
+                    IntListSetting.COMBO_BUTTONS.key,
+                    IntListSetting.COMBO_BUTTONS.defaultValue
                 )
             )
         }

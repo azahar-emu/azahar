@@ -177,7 +177,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
                         TurboHelper.toggleTurbo(true)
                     }
-                    else if (button.id == Hotkey.COMBO_KEY.button && button.status == NativeLibrary.ButtonState.PRESSED) {
+                    else if (button.id == Hotkey.COMBO_BUTTON.button && button.status == NativeLibrary.ButtonState.PRESSED) {
                         ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
                     }
 
@@ -580,7 +580,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     context,
                     R.drawable.button_combo,
                     R.drawable.button_combo_pressed,
-                    Hotkey.COMBO_KEY.button,
+                    Hotkey.COMBO_BUTTON.button,
                     orientation
                 )
             )
@@ -799,11 +799,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
             )
             .putFloat(
-                Hotkey.COMBO_KEY.button.toString() + "-X",
+                Hotkey.COMBO_BUTTON.button.toString() + "-X",
                 resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
             )
             .putFloat(
-                Hotkey.COMBO_KEY.button.toString() + "-Y",
+                Hotkey.COMBO_BUTTON.button.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
             )
             .apply()
@@ -958,11 +958,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .putFloat(
-                Hotkey.COMBO_KEY.button.toString() + portrait + "-X",
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-X",
                 resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_X).toFloat() / 1000 * maxX
             )
             .putFloat(
-                Hotkey.COMBO_KEY.button.toString() + portrait + "-Y",
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .apply()
