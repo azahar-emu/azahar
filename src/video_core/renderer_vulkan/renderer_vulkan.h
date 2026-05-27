@@ -48,6 +48,15 @@ struct TextureInfo {
     VmaAllocation allocation;
 };
 
+struct ScreenRectVertex {
+    ScreenRectVertex() = default;
+    ScreenRectVertex(float x, float y, float u, float v)
+        : position{Common::MakeVec(x, y)}, tex_coord{Common::MakeVec(u, v)} {}
+
+    Common::Vec2f position;
+    Common::Vec2f tex_coord;
+};
+
 struct ScreenInfo {
     TextureInfo texture;
     Common::Rectangle<f32> texcoords;
@@ -98,8 +107,14 @@ private:
     void RenderScreenshot();
     void RenderScreenshotWithStagingCopy();
     bool TryRenderScreenshotWithHostMemory();
-    void PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids, int filterMode);
+    // Sets up command buffer for sampling from a screen_info to the screen framebuffer
+    void PrepareDrawFromScreenInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode);
+    // Sets up command buffer for sampling from a texture to the screen framebuffer
+    void PrepareDrawFromTextureInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
+    // Sets up command buffer for sampling from a texture to an intermediate texture framebuffer
     void PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
+    void UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, unsigned char* data);
+    void Draw(unsigned int offset);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);
 
@@ -114,7 +129,7 @@ private:
     void DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y, float w,
                                 float h, Layout::DisplayOrientation orientation);
 
-    void ApplySecondLayerOpacity(float alpha);
+    void ApplySecondLayerOpacity();
 
     void DrawCursor(const Layout::FramebufferLayout& layout);
 

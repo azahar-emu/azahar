@@ -60,14 +60,6 @@ MICROPROFILE_DEFINE(Vulkan_RenderFrame, "Vulkan", "Render Frame", MP_RGB(128, 12
 
 namespace Vulkan {
 
-struct ScreenRectVertex {
-    ScreenRectVertex() = default;
-    ScreenRectVertex(float x, float y, float u, float v)
-        : position{Common::MakeVec(x, y)}, tex_coord{Common::MakeVec(u, v)} {}
-
-    Common::Vec2f position;
-    Common::Vec2f tex_coord;
-};
 
 constexpr u32 VERTEX_BUFFER_SIZE = sizeof(ScreenRectVertex) * 8192;
 
@@ -362,7 +354,6 @@ void RendererVulkan::CreatePPTextureFramebuffers(){
     }
 };
 
-//Helper Functions
 void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode){
     const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
@@ -418,7 +409,7 @@ void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Fram
 }
 
 
-void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids, int filterMode) {
+void RendererVulkan::PrepareDrawFromScreenInfo(Frame* frame, const Layout::FramebufferLayout& layout,  vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode) {
     const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
     for (u32 i = 0; i < screenids.size(); i++) {
@@ -435,7 +426,7 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
     }
     scheduler.Record([this, layout, frame, present_set,
                       currentRenderPass,
-                      index = current_pipeline](vk::CommandBuffer cmdbuf) {
+                      shaderPipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
             .y = 0.0f,
@@ -467,11 +458,63 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
             .pClearValues = &clear,
         };
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, present_pipelines[index]);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
     });
 }
 
+void RendererVulkan::PrepareDrawFromTextureInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode) {
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < texturesToSample.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler);
+    }
+
+    renderpass_cache.EndRendering();
+    vk::RenderPass currentRenderPass;
+    if (clearingColorAttachment){
+        currentRenderPass = main_present_window.Renderpass();
+    } else {
+        currentRenderPass = main_present_window.LoadRenderpass();
+    }
+    scheduler.Record([this, layout, frame, present_set,
+                      currentRenderPass,
+                      shaderPipeline](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(layout.width),
+            .height = static_cast<float>(layout.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {layout.width, layout.height},
+        };
+
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = currentRenderPass,
+            .framebuffer = frame->framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {frame->width, frame->height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
     Frame* frame = window.GetRenderFrame();
@@ -1098,27 +1141,6 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
                                       Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
-    std::vector<u32> screenids = {screen_id};
-    PrepareDraw(currentFrame, currentFramebufferLayout, screenids, 1);
-
-    // Apply the initial default opacity value; Needed to avoid flickering
-    if (applyingOpacity){
-        if (drawingPrimaryScreen){
-            ApplySecondLayerOpacity(1.0f);
-        } else {
-            if (usingTopOpacity){
-                if (currentFramebufferLayout.top_opacity < 1) {
-                    ApplySecondLayerOpacity(currentFramebufferLayout.top_opacity);
-                }
-            } else {
-                if (currentFramebufferLayout.bottom_opacity < 1) {
-                    ApplySecondLayerOpacity(currentFramebufferLayout.bottom_opacity);
-                }
-            }
-        }
-    }
-
-
     const u32 scale_factor = GetResolutionScaleFactor();
     float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
     float textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
@@ -1242,30 +1264,17 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
-
-    const u64 size = sizeof(ScreenRectVertex) * legacy_vertices.size();
+    const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, legacy_vertices.data(), size);
-    vertex_buffer.Commit(size);
 
-    draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info.texture.width * scale_factor),
-                        static_cast<f32>(screen_info.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
+    std::vector<u32> screenids = {screen_id};
+    PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
+    ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
+    UpdateVertexBuffer(legacy_vertices, data);
+    // Set Push Constants
+    draw_info.i_resolution = Common::MakeVec(static_cast<f32>(textureWidth), static_cast<f32>(textureHeight), 1.0f / static_cast<f32>(textureWidth), 1.0f / static_cast<f32>(textureHeight));
     draw_info.o_resolution = Common::MakeVec(screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
-    draw_info.screen_id_l = screen_id;
-
-    scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
-        const u32 first_vertex = static_cast<u32>(offset) / sizeof(ScreenRectVertex);
-        cmdbuf.pushConstants(*present_pipeline_layout,
-                             vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
-                             0, sizeof(info), &info);
-
-        cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
-        cmdbuf.draw(4, 1, first_vertex, 0);
-        cmdbuf.endRenderPass();
-    });
+    Draw(offset);
 }
 
 void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y,
@@ -1273,25 +1282,10 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
                                             Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info_l = screen_infos[screen_id_l];
     const auto& texcoords = screen_info_l.texcoords;
-    std::vector<u32> screenids = {screen_id_l, screen_id_r};
-    PrepareDraw(currentFrame, currentFramebufferLayout, screenids, 1);
+    const u32 scale_factor = GetResolutionScaleFactor();
+    float textureWidth = static_cast<float>(screen_info_l.texture.height * scale_factor);
+    float textureHeight = static_cast<float>(screen_info_l.texture.width * scale_factor);
 
-    // Apply the initial default opacity value; Needed to avoid flickering
-    if (applyingOpacity){
-        if (drawingPrimaryScreen){
-            ApplySecondLayerOpacity(1.0f);
-        } else {
-            if (usingTopOpacity){
-                if (currentFramebufferLayout.top_opacity < 1) {
-                    ApplySecondLayerOpacity(currentFramebufferLayout.top_opacity);
-                }
-            } else {
-                if (currentFramebufferLayout.bottom_opacity < 1) {
-                    ApplySecondLayerOpacity(currentFramebufferLayout.bottom_opacity);
-                }
-            }
-        }
-    }
     std::array<ScreenRectVertex, 4> vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
@@ -1332,27 +1326,32 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
         LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
-
     const u64 size = sizeof(ScreenRectVertex) * vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, vertices.data(), size);
-    vertex_buffer.Commit(size);
 
-    const u32 scale_factor = GetResolutionScaleFactor();
-    draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        static_cast<f32>(screen_info_l.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
+    std::vector<u32> screenids = {screen_id_l, screen_id_r};
+    PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
+    ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
+    UpdateVertexBuffer(vertices, data);
+    draw_info.i_resolution = Common::MakeVec(static_cast<f32>(textureWidth), static_cast<f32>(textureHeight), 1.0f / static_cast<f32>(textureWidth), 1.0f / static_cast<f32>(textureHeight));
+    draw_info.o_resolution = Common::MakeVec(w, h, 1.0f / w, 1.0f / h);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;
+    Draw(offset);
+}
 
-    scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
+void RendererVulkan::UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, unsigned char* data){
+    const u64 size = sizeof(ScreenRectVertex) * vertices.size();
+    std::memcpy(data, vertices.data(), size);
+    vertex_buffer.Commit(size);
+}
+
+void RendererVulkan::Draw(unsigned int offset){
+    scheduler.Record([this, offset](vk::CommandBuffer cmdbuf) {
         const u32 first_vertex = static_cast<u32>(offset) / sizeof(ScreenRectVertex);
         cmdbuf.pushConstants(*present_pipeline_layout,
                              vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
-                             0, sizeof(info), &info);
+                             0, sizeof(draw_info), &draw_info);
 
         cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
         cmdbuf.draw(4, 1, first_vertex, 0);
@@ -1360,11 +1359,31 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
     });
 }
 
-void RendererVulkan::ApplySecondLayerOpacity(float alpha) {
-    scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
-        const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
-        cmdbuf.setBlendConstants(blend_constants.data());
-    });
+void RendererVulkan::ApplySecondLayerOpacity() {
+    float alpha;
+    if (applyingOpacity){
+        if (drawingPrimaryScreen){
+            alpha = 1.0;
+        } else {
+            if (usingTopOpacity){
+                if (currentFramebufferLayout.top_opacity < 1) {
+                    alpha = currentFramebufferLayout.top_opacity;
+                } else {
+                    return;
+                }
+            } else {
+                if (currentFramebufferLayout.bottom_opacity < 1) {
+                    alpha = currentFramebufferLayout.bottom_opacity;
+                } else {
+                    return;
+                }
+            }
+        }
+        scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
+            const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
+            cmdbuf.setBlendConstants(blend_constants.data());
+        });
+    }
 }
 
 void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
