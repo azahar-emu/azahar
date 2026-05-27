@@ -31,7 +31,7 @@ public:
 
     bool ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest, const VideoCore::TextureCopy& copy);
 
-    void ResolveTexture(Surface& surface);
+    void ResolveTexture(Surface& surface, u32 level = 0, u32 layer = 0);
 
 private:
     void FilterAnime4K(Surface& surface, const VideoCore::TextureBlit& blit);
