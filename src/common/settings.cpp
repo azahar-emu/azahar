@@ -69,6 +69,23 @@ std::string_view GetAntialiasingFilterName(AntiAliasingFilter filter) {
         return "Invalid";
     }
 }
+
+std::string_view GetOutputScalingName(OutputScaling scaling) {
+    switch (scaling) {
+    case OutputScaling::Nearest:
+        return "Nearest";
+    case OutputScaling::Bilinear:
+        return "Bilinear";
+    case OutputScaling::Adaptive:
+        return "Adaptive";
+    case OutputScaling::FSR:
+        return "AMD FidelityFX Super Resolution 1";
+    case OutputScaling::SharpBilinear:
+        return "Sharp Bilinear";
+    default:
+        return "Invalid";
+    }
+}
 std::string_view GetTextureSamplingName(TextureSampling sampling) {
     switch (sampling) {
     case TextureSampling::GameControlled:
@@ -116,6 +133,7 @@ void LogSettings() {
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
     log_setting("Renderer_AntialiasingFilter", GetAntialiasingFilterName(values.antialiasing_filter.GetValue()));
+    log_setting("Renderer_OutputScaling", GetOutputScalingName(values.output_scaling.GetValue()));
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
     log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
@@ -227,6 +245,8 @@ void RestoreGlobalState(bool is_powered_on) {
     values.frame_limit.SetGlobal(true);
     values.texture_filter.SetGlobal(true);
     values.antialiasing_filter.SetGlobal(true);
+    values.output_scaling.SetGlobal(true);
+    values.fsr_sharpness.SetGlobal(true);
     values.texture_sampling.SetGlobal(true);
     values.delay_game_render_thread_us.SetGlobal(true);
     values.layout_option.SetGlobal(true);

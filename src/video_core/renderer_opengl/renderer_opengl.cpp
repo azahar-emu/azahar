@@ -664,12 +664,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
    
     // Texture Width and Height when correctly rotated to landscape
     bool isDownsampling = false;
-    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is High Quality Scaling (Upsampling via Gamma Corrected Bilinear, Downsampling is Gamma Corrected Area Sampling)
-    if (Settings::values.filter_mode.GetValue()){
-        scalingMode = 2;
-    } else {
-        scalingMode = 0;
-    }
+    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
+    scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
@@ -918,7 +914,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
-    if (scalingMode == 2){
+    if (scalingMode >= 2){
         if (isDownsampling){
             //Output
             state.draw.read_framebuffer = originalReadFramebuffer;
@@ -1047,7 +1043,8 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     }
 
     const u32 scale_factor = GetResolutionScaleFactor();
-    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
+    int scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
+    const GLuint sampler = samplers[scalingMode > 0 ? 1 : 0].handle;
     glUniform4f(uniform_i_resolution,
                 static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),

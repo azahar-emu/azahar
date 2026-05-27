@@ -418,8 +418,8 @@ void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Fram
 }
 
 
-void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids) {
-    const auto sampler = present_samplers[Settings::values.filter_mode.GetValue()];
+void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout, std::vector<u32> screenids, int filterMode) {
+    const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
     for (u32 i = 0; i < screenids.size(); i++) {
         update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
@@ -1099,7 +1099,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
     std::vector<u32> screenids = {screen_id};
-    PrepareDraw(currentFrame, currentFramebufferLayout, screenids);
+    PrepareDraw(currentFrame, currentFramebufferLayout, screenids, 1);
 
     // Apply the initial default opacity value; Needed to avoid flickering
     if (applyingOpacity){
@@ -1125,12 +1125,8 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
 
    // Texture Width and Height when correctly rotated to landscape
     bool isDownsampling = false;
-    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is High Quality Scaling (Upsampling via Gamma Corrected Bilinear, Downsampling is Gamma Corrected Area Sampling)
-    if (Settings::values.filter_mode.GetValue()){
-        scalingMode = 2;
-    } else {
-        scalingMode = 0;
-    }
+    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
+    scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
@@ -1278,7 +1274,7 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
     const ScreenInfo& screen_info_l = screen_infos[screen_id_l];
     const auto& texcoords = screen_info_l.texcoords;
     std::vector<u32> screenids = {screen_id_l, screen_id_r};
-    PrepareDraw(currentFrame, currentFramebufferLayout, screenids);
+    PrepareDraw(currentFrame, currentFramebufferLayout, screenids, 1);
 
     // Apply the initial default opacity value; Needed to avoid flickering
     if (applyingOpacity){

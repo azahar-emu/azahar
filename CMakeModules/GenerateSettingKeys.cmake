@@ -47,6 +47,8 @@ foreach(KEY IN ITEMS
     "turbo_limit"
     "texture_filter"
     "antialiasing_filter"
+    "output_scaling"
+    "fsr_sharpness"
     "texture_sampling"
     "delay_game_render_thread_us"
     "layout_option"
