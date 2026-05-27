@@ -339,14 +339,13 @@ void Config::Reload() {
     for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
-        // FIXME: This code looks so ass when formatted by clang-format -OS
-        if (std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
-                std::end(DefaultINI::android_config_omitted_keys) &&
-            std::string(DefaultINI::android_config_default_file_content)
-                    .find(key_declaration_string) == std::string::npos) {
+        if ((std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
+             std::end(DefaultINI::android_config_omitted_keys)) &&
+            (std::string(DefaultINI::android_config_default_file_content)
+                 .find(key_declaration_string) == std::string::npos)) {
             ASSERT_MSG(false,
-                       "Validation of default content config failed: Missing or malformed key "
-                       "declaration {}",
+                       "Validation of default config content (jni/default_ini.h) failed: Missing "
+                       "declaration for key '{}'",
                        *key);
         }
     }
