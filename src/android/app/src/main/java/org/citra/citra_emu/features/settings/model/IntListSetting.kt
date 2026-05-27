@@ -16,7 +16,7 @@ enum class IntListSetting(
 ) : AbstractListSetting<Int> {
 
     LAYOUTS_TO_CYCLE(SettingKeys.layouts_to_cycle(), Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false),
-    COMBO_BUTTONS("combo_buttons", Settings.SECTION_CONTROLS,
+    COMBO_BUTTONS(SettingKeys.combo_buttons(), Settings.SECTION_CONTROLS,
         CitraApplication.appContext.resources.getIntArray(R.array.comboOptionValues).toCollection(ArrayList()),
         canBeEmpty = true);
   
