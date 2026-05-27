@@ -162,7 +162,7 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
 
     if (multisample) {
         // Resolve the destination image if needed
-        ResolveTexture(dest);
+        ResolveTexture(dest, copy.dst_level, copy.dst_layer);
     }
 
     return true;
@@ -188,13 +188,13 @@ bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
 
     if (multisample) {
         // Resolve the destination image if needed
-        ResolveTexture(dest);
+        ResolveTexture(dest, copy.dst_level, copy.dst_layer);
     }
 
     return true;
 }
 
-void BlitHelper::ResolveTexture(Surface& surface) {
+void BlitHelper::ResolveTexture(Surface& surface, u32 level, u32 layer) {
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
@@ -205,8 +205,8 @@ void BlitHelper::ResolveTexture(Surface& surface) {
     state.texture_units[2].texture_2d = 0;
     state.Apply();
 
-    surface.Attach(GL_READ_FRAMEBUFFER, 0, 0, 3);
-    surface.Attach(GL_DRAW_FRAMEBUFFER, 0, 0, 1);
+    surface.Attach(GL_READ_FRAMEBUFFER, level, layer, 3);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, level, layer, 1);
     const GLbitfield buffer_mask = surface.type == SurfaceType::Depth ? GL_DEPTH_BUFFER_BIT
                                    : surface.type == SurfaceType::DepthStencil
                                        ? (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
