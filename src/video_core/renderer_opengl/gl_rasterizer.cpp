@@ -664,14 +664,14 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     if (framebuffer->color_id != VideoCore::SurfaceId{}) {
         Surface& color_surface = res_cache.GetSurface(framebuffer->color_id);
         if (color_surface.GetSampleCount() > 1) {
-            runtime.ResolveTexture(color_surface);
+            runtime.ResolveTexture(color_surface, framebuffer->color_level);
         }
     }
 
     if (framebuffer->depth_id != VideoCore::SurfaceId{}) {
         Surface& depth_surface = res_cache.GetSurface(framebuffer->depth_id);
         if (depth_surface.GetSampleCount() > 1) {
-            runtime.ResolveTexture(depth_surface);
+            runtime.ResolveTexture(depth_surface, framebuffer->depth_level);
         }
     }
 
