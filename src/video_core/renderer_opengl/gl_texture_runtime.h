@@ -79,8 +79,8 @@ public:
     void GenerateMipmaps(Surface& surface);
 
     /// Resolve a surface's MSAA texture into the surface's appropriate non-MSAA texture
-    void ResolveTexture(Surface& surface) {
-        blit_helper.ResolveTexture(surface);
+    void ResolveTexture(Surface& surface, u32 level = 0, u32 layer = 0) {
+        blit_helper.ResolveTexture(surface, level, layer);
     }
 
 private:

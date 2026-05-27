@@ -306,10 +306,10 @@ bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
     // Must resolve images first
     // Todo(wunk): Add a "dirty" flag for msaa resolves to avoid redundant image resolves
     if (source.sample_count > 1) {
-        blit_helper.ResolveTexture(source);
+        blit_helper.ResolveTexture(source, blit.src_level, blit.src_layer);
     }
     if (dest.sample_count > 1) {
-        blit_helper.ResolveTexture(dest);
+        blit_helper.ResolveTexture(dest, blit.dst_level, blit.dst_layer);
     }
 
     OpenGLState state = OpenGLState::GetCurState();
