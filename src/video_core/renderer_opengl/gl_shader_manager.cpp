@@ -353,7 +353,9 @@ ShaderProgramManager::ShaderProgramManager(Frontend::EmuWindow& emu_window_, con
       strict_context_required{emu_window.StrictContextRequired()},
       impl{std::make_unique<Impl>(driver_, title_id, separable)} {}
 
-ShaderProgramManager::~ShaderProgramManager() = default;
+ShaderProgramManager::~ShaderProgramManager() {
+    impl->disk_cache.InvalidateAll();
+}
 
 bool ShaderProgramManager::UseProgrammableVertexShader(const Pica::RegsInternal& regs,
                                                        Pica::ShaderSetup& setup,
