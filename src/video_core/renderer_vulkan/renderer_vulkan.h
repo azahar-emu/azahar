@@ -113,6 +113,10 @@ private:
     void PrepareDrawFromTextureInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
     // Sets up command buffer for sampling from a texture to an intermediate texture framebuffer
     void PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
+    // Sets up command buffer for sampling from a screen_info to an intermediate texture framebuffer
+    void PrepareTextureDrawFromScreenInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode);
+
+    
     void UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, unsigned char* data);
     void Draw(unsigned int offset);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
@@ -204,10 +208,14 @@ private:
     // Array of framebuffer objects. 0 is top screen, 1 is bottom screen.
     std::array<std::array<vk::Framebuffer, 5>, 2> intermediateTextureFBOs;
     std::array<vk::Framebuffer, 2 > antialiasTextureFBOs;
-    int currTopTextureWidth;
-    int currTopTextureHeight;
-    int currBottomTextureWidth;
-    int currBottomTextureHeight;
+    float currTopTextureWidth;
+    float currTopTextureHeight;
+    float currBottomTextureWidth;
+    float currBottomTextureHeight;
+    float prevTopTextureWidth;
+    float prevTopTextureHeight;
+    float prevBottomTextureWidth;
+    float prevBottomTextureHeight;
     u32 current_pipeline = 0;
     Frame* currentFrame;
     Layout::FramebufferLayout currentFramebufferLayout;

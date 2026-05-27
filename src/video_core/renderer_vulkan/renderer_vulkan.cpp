@@ -147,6 +147,8 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     CompileShaders();
     BuildLayouts();
     CreateTextureRenderPass();
+    AllocatePPTextures();
+    CreatePPTextureFramebuffers();
     BuildPipelines();
     if (secondary_window) {
         secondary_present_window_ptr = std::make_unique<PresentWindow>(
@@ -193,6 +195,18 @@ RendererVulkan::~RendererVulkan() {
         vmaDestroyImage(instance.GetAllocator(), info.texture.image, info.texture.allocation);
     }
 
+    for (int j = 0; j < intermediateTextures.size(); j++) {
+        for (int i = 0; i < intermediateTextures[0].size(); i++){
+            device.destroyFramebuffer(intermediateTextureFBOs[j][i]);
+            device.destroyImageView(intermediateTextures[j][i].image_view);
+            vmaDestroyImage(instance.GetAllocator(), intermediateTextures[j][i].image, intermediateTextures[j][i].allocation);
+
+        }
+        device.destroyFramebuffer(antialiasTextureFBOs[j]);
+        device.destroyImageView(antialiasTextures[j].image_view);
+        vmaDestroyImage(instance.GetAllocator(), antialiasTextures[j].image, antialiasTextures[j].allocation);
+    }
+    device.destroyRenderPass(textureRenderpass);
     device.destroyPipeline(cursor_pipeline);
     device.destroyShaderModule(cursor_vertex_shader);
     device.destroyShaderModule(cursor_fragment_shader);
@@ -225,7 +239,7 @@ void RendererVulkan::PrepareRendertarget() {
 void RendererVulkan::CreateTextureRenderPass(){
     const vk::AttachmentReference color_ref = {
         .attachment = 0,
-        .layout = vk::ImageLayout::eGeneral,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
     };
 
     const vk::SubpassDescription subpass = {
@@ -240,12 +254,22 @@ void RendererVulkan::CreateTextureRenderPass(){
 
     const vk::AttachmentDescription color_attachment = {
         .format = vk::Format::eR16G16B16A16Sfloat,
+        .samples = vk::SampleCountFlagBits::e1,
         .loadOp = vk::AttachmentLoadOp::eClear,
         .storeOp = vk::AttachmentStoreOp::eStore,
         .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
         .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
         .initialLayout = vk::ImageLayout::eUndefined,
-        .finalLayout = vk::ImageLayout::eTransferSrcOptimal,
+        .finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+    };
+
+    vk::SubpassDependency dependency = {
+        .srcSubpass    = VK_SUBPASS_EXTERNAL,
+        .dstSubpass    = 0,
+        .srcStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        .dstStageMask  = vk::PipelineStageFlagBits::eFragmentShader,
+        .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
     };
 
     const vk::RenderPassCreateInfo renderpass_info = {
@@ -253,8 +277,8 @@ void RendererVulkan::CreateTextureRenderPass(){
         .pAttachments = &color_attachment,
         .subpassCount = 1,
         .pSubpasses = &subpass,
-        .dependencyCount = 0,
-        .pDependencies = nullptr,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
     };
     textureRenderpass = instance.GetDevice().createRenderPass(renderpass_info);
 }
@@ -279,7 +303,7 @@ void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height
         .mipLevels = 1,
         .arrayLayers = 1,
         .samples = vk::SampleCountFlagBits::e1,
-        .usage = vk::ImageUsageFlagBits::eSampled,
+        .usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
     };
 
     const VmaAllocationCreateInfo alloc_info = {
@@ -297,8 +321,10 @@ void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height
     VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
                                      &unsafe_image, &texture.allocation, nullptr);
     if (result != VK_SUCCESS) [[unlikely]] {
-        LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating regular texture ({}x{}) with error {}", texture.width, texture.height, result);
         UNREACHABLE();
+    } else {
+        LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
     }
     texture.image = vk::Image{unsafe_image};
 
@@ -321,14 +347,25 @@ void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height
 
 
 void RendererVulkan::AllocatePPTextures(){
+    int TopWidth = 400;
+    int TopHeight = 240;
+    int BottomWidth = 320;
+    int BottomHeight = 240;
+
+    if (currTopTextureWidth != 0 && currBottomTextureWidth != 0 && currTopTextureHeight != 0 && currBottomTextureHeight != 0){
+        TopWidth = currTopTextureWidth;
+        TopHeight = currTopTextureHeight;
+        BottomWidth = currBottomTextureWidth;
+        BottomHeight = currBottomTextureHeight;
+    }
     for (int i = 0; i < intermediateTextures[0].size(); i++){
-        AllocateTexture(intermediateTextures[0][i], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+        AllocateTexture(intermediateTextures[0][i], TopWidth, TopHeight, vk::Format::eR16G16B16A16Sfloat);
     }
     for (int i = 0; i < intermediateTextures[1].size(); i++){
-        AllocateTexture(intermediateTextures[1][i], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+        AllocateTexture(intermediateTextures[1][i], BottomWidth, BottomHeight, vk::Format::eR16G16B16A16Sfloat);
     }
-    AllocateTexture(antialiasTextures[0], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
-    AllocateTexture(antialiasTextures[1], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[0], TopWidth, TopHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[1], BottomWidth, BottomHeight, vk::Format::eR16G16B16A16Sfloat);
 };
 
 void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
@@ -358,7 +395,7 @@ void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Fram
     const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
     for (u32 i = 0; i < texturesToSample.size(); i++) {
-        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler);
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
     renderpass_cache.EndRendering();
@@ -402,19 +439,77 @@ void RendererVulkan::PrepareTextureDraw(TextureInfo framebufferTexture, vk::Fram
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
     });
 }
 
+void RendererVulkan::PrepareTextureDrawFromScreenInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode){
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < screenids.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
+                                     sampler, vk::ImageLayout::eGeneral);
+    }
+
+    renderpass_cache.EndRendering();
+    scheduler.Record([this, framebufferTexture, framebuffer, shaderPipeline, present_set](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(framebufferTexture.width),
+            .height = static_cast<float>(framebufferTexture.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {framebufferTexture.width, framebufferTexture.height},
+        };
+
+        const vk::ClearColorValue clear_color = {
+            .float32 =
+                std::array{
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                },
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = textureRenderpass,
+            .framebuffer = framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {framebufferTexture.width, framebufferTexture.height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
 
 void RendererVulkan::PrepareDrawFromScreenInfo(Frame* frame, const Layout::FramebufferLayout& layout,  vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode) {
     const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
     for (u32 i = 0; i < screenids.size(); i++) {
         update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
-                                     sampler);
+                                     sampler, vk::ImageLayout::eGeneral);
     }
 
     renderpass_cache.EndRendering();
@@ -457,6 +552,8 @@ void RendererVulkan::PrepareDrawFromScreenInfo(Frame* frame, const Layout::Frame
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
@@ -467,7 +564,7 @@ void RendererVulkan::PrepareDrawFromTextureInfo(Frame* frame, const Layout::Fram
     const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
     for (u32 i = 0; i < texturesToSample.size(); i++) {
-        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler);
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
     renderpass_cache.EndRendering();
@@ -510,6 +607,8 @@ void RendererVulkan::PrepareDrawFromTextureInfo(Frame* frame, const Layout::Fram
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
         cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
@@ -1042,7 +1141,7 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
     VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
                                      &unsafe_image, &texture.allocation, nullptr);
     if (result != VK_SUCCESS) [[unlikely]] {
-        LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating framebuffer texture with error {}", result);
         UNREACHABLE();
     }
     texture.image = vk::Image{unsafe_image};
@@ -1090,7 +1189,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
         const vk::ImageMemoryBarrier pre_barrier = {
             .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eTransferRead,
             .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
-            .oldLayout = vk::ImageLayout::eGeneral,
+            .oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             .newLayout = vk::ImageLayout::eTransferDstOptimal,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -1102,7 +1201,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
             .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
             .dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eTransferRead,
             .oldLayout = vk::ImageLayout::eTransferDstOptimal,
-            .newLayout = vk::ImageLayout::eGeneral,
+            .newLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = image,
@@ -1142,10 +1241,15 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
     const u32 scale_factor = GetResolutionScaleFactor();
+    // Texture Width and Height when correctly rotated to landscape
     float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
     float textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
-
-   // Texture Width and Height when correctly rotated to landscape
+    int currentScreen;
+    if (textureWidth == currTopTextureWidth && textureHeight == currTopTextureHeight){
+        currentScreen = 0;
+    } else {
+        currentScreen = 1;
+    }
     bool isDownsampling = false;
     int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
     scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
@@ -1267,6 +1371,24 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
 
+
+    // std::vector<u32> screen_ids;
+    // // Attempted Multipass
+    // screen_ids.assign({screen_id});
+    // PrepareTextureDrawFromScreenInfo(intermediateTextures[currentScreen][0], intermediateTextureFBOs[currentScreen][0], post_pipelines_texture[0], screen_ids, 1);
+    // UpdateVertexBuffer(rotate_vertices, data);
+    // draw_info.convert_colors = 1;
+    // Draw(offset);
+    
+    // std::vector<TextureInfo> texturesToSample;
+    // texturesToSample.assign({intermediateTextures[currentScreen][0]});
+    // PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+    // ApplySecondLayerOpacity();
+    // UpdateVertexBuffer(output_vertices, data);
+    // draw_info.convert_colors = 2;
+    // Draw(offset);
+
+    // // Legacy Singlepass
     std::vector<u32> screenids = {screen_id};
     PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
     ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
@@ -1328,7 +1450,6 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
     }
     const u64 size = sizeof(ScreenRectVertex) * vertices.size();
     auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-
     std::vector<u32> screenids = {screen_id_l, screen_id_r};
     PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
     ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
@@ -1515,6 +1636,21 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     if (settings.shader_update_requested.exchange(false)) {
         ReloadPipeline(layout.render_3d_mode);
     }
+
+    // Track Texture Changes
+    currTopTextureWidth = static_cast<float>(screen_infos[0].texture.height * GetResolutionScaleFactor());
+    currTopTextureHeight = static_cast<float>(screen_infos[0].texture.width * GetResolutionScaleFactor());
+    currBottomTextureWidth = static_cast<float>(screen_infos[2].texture.height * GetResolutionScaleFactor());
+    currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
+    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
+        AllocatePPTextures();
+        CreatePPTextureFramebuffers();
+        LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
+    }
+    prevTopTextureWidth = currTopTextureWidth;
+    prevTopTextureHeight = currTopTextureHeight;
+    prevBottomTextureWidth = currBottomTextureWidth;
+    prevBottomTextureHeight = currBottomTextureHeight;
 
     currentFrame = frame;
     currentFramebufferLayout = layout;

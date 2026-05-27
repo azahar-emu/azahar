@@ -513,13 +513,22 @@ vk::RenderPass PresentWindow::CreateRenderpass() {
         .finalLayout = vk::ImageLayout::eTransferSrcOptimal,
     };
 
+    const vk::SubpassDependency dependency = {
+        .srcSubpass    = VK_SUBPASS_EXTERNAL,
+        .dstSubpass    = 0,
+        .srcStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        .dstStageMask  = vk::PipelineStageFlagBits::eFragmentShader,
+        .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+    };
+
     const vk::RenderPassCreateInfo renderpass_info = {
         .attachmentCount = 1,
         .pAttachments = &color_attachment,
         .subpassCount = 1,
         .pSubpasses = &subpass,
-        .dependencyCount = 0,
-        .pDependencies = nullptr,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
     };
 
     return instance.GetDevice().createRenderPass(renderpass_info);
@@ -543,12 +552,22 @@ vk::RenderPass PresentWindow::CreateLoadRenderpass() {
 
     const vk::AttachmentDescription color_attachment = {
         .format = swapchain.GetSurfaceFormat().format,
+        .samples = vk::SampleCountFlagBits::e1,
         .loadOp = vk::AttachmentLoadOp::eLoad,
         .storeOp = vk::AttachmentStoreOp::eStore,
         .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
         .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
-        .initialLayout = vk::ImageLayout::eUndefined,
+        .initialLayout = vk::ImageLayout::eTransferSrcOptimal,
         .finalLayout = vk::ImageLayout::eTransferSrcOptimal,
+    };
+
+    const vk::SubpassDependency dependency = {
+        .srcSubpass    = VK_SUBPASS_EXTERNAL,
+        .dstSubpass    = 0,
+        .srcStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        .dstStageMask  = vk::PipelineStageFlagBits::eFragmentShader,
+        .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
     };
 
     const vk::RenderPassCreateInfo renderpass_info = {
@@ -556,8 +575,8 @@ vk::RenderPass PresentWindow::CreateLoadRenderpass() {
         .pAttachments = &color_attachment,
         .subpassCount = 1,
         .pSubpasses = &subpass,
-        .dependencyCount = 0,
-        .pDependencies = nullptr,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
     };
 
     return instance.GetDevice().createRenderPass(renderpass_info);
