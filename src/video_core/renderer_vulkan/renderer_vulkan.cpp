@@ -1266,137 +1266,129 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° internally)
     std::array<ScreenRectVertex, 4> rotate_vertices;
     rotate_vertices = {{
-            ScreenRectVertex(-1.f, 1.f, texcoords.bottom, texcoords.left),   //Left, Top
-            ScreenRectVertex(1.f, 1.f, texcoords.bottom, texcoords.right),    //Right, Top
-            ScreenRectVertex(-1.f, -1.f, texcoords.top, texcoords.left),  //Left, Bottom
-            ScreenRectVertex(1.f, -1.f, texcoords.top, texcoords.right),   //Right, Bottom
+            ScreenRectVertex(-1.f, 1.f, texcoords.top, texcoords.left),    //Left, Top
+            ScreenRectVertex(1.f, 1.f, texcoords.top, texcoords.right),     //Right, Top
+            ScreenRectVertex(-1.f, -1.f, texcoords.bottom, texcoords.left), //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, texcoords.bottom, texcoords.right), //Right, Bottom
     }};
 
-    // Vertices for 1:1 Texture Mapping.
     std::array<ScreenRectVertex, 4> pass_through_vertices;
     pass_through_vertices = {{
-            ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
-            ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
-            ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
-            ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
+            ScreenRectVertex(-1.f, 1.f, 0.f, 0.f),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, 1.f, 0.f),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, 0.f, 1.f),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, 1.f, 1.f),   //Right, Bottom
     }};
-    
-    // Legacy Vertices. Will be deleted when converted to multipass
-    std::array<ScreenRectVertex, 4> legacy_vertices;
-    float x = screenLeft;
-    float y = screenTop;
-    float w = screenWidth;
-    float h = screenHeight;
-    switch (orientation) {
-    case Layout::DisplayOrientation::Landscape:
-        legacy_vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
-        }};
-        break;
-    case Layout::DisplayOrientation::Portrait:
-        legacy_vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
-        }};
-        std::swap(h, w);
-        break;
-    case Layout::DisplayOrientation::LandscapeFlipped:
-        legacy_vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
-        }};
-        break;
-    case Layout::DisplayOrientation::PortraitFlipped:
-        legacy_vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
-        }};
-        std::swap(h, w);
-        break;
-    default:
-        LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
-        break;
-    }
 
     // Vertices for Azahar's Output Layout
     std::array<ScreenRectVertex, 4> output_vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
         output_vertices = {{
-                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),                               //Left, Top
-                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),                 //Right, Top
-                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),                //Left, Bottom
-                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),  //Right, Bottom
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),
         }};
         break;
     case Layout::DisplayOrientation::Portrait:
         output_vertices = {{
-                ScreenRectVertex(screenLeft, screenTop, 1.f, 1.f),                               //Left, Top
-                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
-                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
-                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 0.f),  //Right, Bottom
+                ScreenRectVertex(screenLeft, screenTop, 1.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 1.f),
         }};
         std::swap(screenHeight, screenWidth);
         break;
     case Layout::DisplayOrientation::LandscapeFlipped:
         output_vertices = {{
-                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
-                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
-                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
-                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),
         }};
         break;
     case Layout::DisplayOrientation::PortraitFlipped:
         output_vertices = {{
-                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
-                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 1.f),                 //Right, Top
-                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 0.f),                //Left, Bottom
-                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 0.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),
         }};
         std::swap(screenHeight, screenWidth);
         break;
-    default:
-        LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
-        break;
     }
     const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
-    auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
 
+    int passes = 5;
+    std::vector<VertexBufferPointer> vertexBufferPointers(passes);
+    for (auto& vbp : vertexBufferPointers){
+        std::tie(vbp.data, vbp.offset, vbp.invalidate) = vertex_buffer.Map(size, 16);
+        vertex_buffer.Commit(size);
+    }
+    std::vector<PresentUniformData> drawInfos(passes);
+    for (auto& info : drawInfos){
+        info = draw_info;
+    }
 
-    // std::vector<u32> screen_ids;
-    // // Attempted Multipass
-    // screen_ids.assign({screen_id});
-    // PrepareTextureDrawFromScreenInfo(intermediateTextures[currentScreen][0], intermediateTextureFBOs[currentScreen][0], post_pipelines_texture[0], screen_ids, 1);
-    // UpdateVertexBuffer(rotate_vertices, data);
-    // draw_info.convert_colors = 1;
-    // Draw(offset);
+    // Attempted Multipass
+    std::vector<u32> screen_ids = {screen_id};
+    PrepareTextureDrawFromScreenInfo(intermediateTextures[currentScreen][0], intermediateTextureFBOs[currentScreen][0], post_pipelines_texture[0], screen_ids, 1);
+    UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[0]);
+    drawInfos[0].convert_colors = 1;
+    Draw(vertexBufferPointers[0], drawInfos[0]);
     
-    // std::vector<TextureInfo> texturesToSample;
-    // texturesToSample.assign({intermediateTextures[currentScreen][0]});
-    // PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
-    // ApplySecondLayerOpacity();
-    // UpdateVertexBuffer(output_vertices, data);
-    // draw_info.convert_colors = 2;
-    // Draw(offset);
+    std::vector<TextureInfo> texturesToSample = {intermediateTextures[currentScreen][0]};
+    PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+    ApplySecondLayerOpacity();
+    UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
+    drawInfos[1].convert_colors = 2;
+    Draw(vertexBufferPointers[1], drawInfos[1]);
+}
 
-    // // Legacy Singlepass
-    std::vector<u32> screenids = {screen_id};
-    PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
-    ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
-    UpdateVertexBuffer(legacy_vertices, data);
-    // Set Push Constants
-    draw_info.i_resolution = Common::MakeVec(static_cast<f32>(textureWidth), static_cast<f32>(textureHeight), 1.0f / static_cast<f32>(textureWidth), 1.0f / static_cast<f32>(textureHeight));
-    draw_info.o_resolution = Common::MakeVec(screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
-    Draw(offset);
+
+void RendererVulkan::UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, VertexBufferPointer vbp){
+    const u64 size = sizeof(ScreenRectVertex) * vertices.size();
+    std::memcpy(vbp.data, vertices.data(), size);
+}
+
+void RendererVulkan::Draw(VertexBufferPointer vbp, PresentUniformData pushconstant){
+    scheduler.Record([this, vbp, pushconstant](vk::CommandBuffer cmdbuf) {
+        const u32 first_vertex = static_cast<u32>(vbp.offset) / sizeof(ScreenRectVertex);
+        cmdbuf.pushConstants(*present_pipeline_layout,
+                             vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
+                             0, sizeof(pushconstant), &pushconstant);
+        cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
+        cmdbuf.draw(4, 1, first_vertex, 0);
+        cmdbuf.endRenderPass();
+    });
+}
+
+void RendererVulkan::ApplySecondLayerOpacity() {
+    float alpha;
+    if (applyingOpacity){
+        if (drawingPrimaryScreen){
+            alpha = 1.0;
+        } else {
+            if (usingTopOpacity){
+                if (currentFramebufferLayout.top_opacity < 1) {
+                    alpha = currentFramebufferLayout.top_opacity;
+                } else {
+                    return;
+                }
+            } else {
+                if (currentFramebufferLayout.bottom_opacity < 1) {
+                    alpha = currentFramebufferLayout.bottom_opacity;
+                } else {
+                    return;
+                }
+            }
+        }
+        scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
+            const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
+            cmdbuf.setBlendConstants(blend_constants.data());
+        });
+    }
 }
 
 void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y,
@@ -1449,62 +1441,22 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
         break;
     }
     const u64 size = sizeof(ScreenRectVertex) * vertices.size();
-    auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
+    int passes = 1;
+    std::vector<VertexBufferPointer> vertexBufferPointers(passes);
+    for (auto& vbp : vertexBufferPointers){
+        std::tie(vbp.data, vbp.offset, vbp.invalidate) = vertex_buffer.Map(size, 16);
+        vertex_buffer.Commit(size);
+    }
+
     std::vector<u32> screenids = {screen_id_l, screen_id_r};
     PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
     ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
-    UpdateVertexBuffer(vertices, data);
+    UpdateVertexBuffer(vertices, vertexBufferPointers[0]);
     draw_info.i_resolution = Common::MakeVec(static_cast<f32>(textureWidth), static_cast<f32>(textureHeight), 1.0f / static_cast<f32>(textureWidth), 1.0f / static_cast<f32>(textureHeight));
     draw_info.o_resolution = Common::MakeVec(w, h, 1.0f / w, 1.0f / h);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;
-    Draw(offset);
-}
-
-void RendererVulkan::UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, unsigned char* data){
-    const u64 size = sizeof(ScreenRectVertex) * vertices.size();
-    std::memcpy(data, vertices.data(), size);
-    vertex_buffer.Commit(size);
-}
-
-void RendererVulkan::Draw(unsigned int offset){
-    scheduler.Record([this, offset](vk::CommandBuffer cmdbuf) {
-        const u32 first_vertex = static_cast<u32>(offset) / sizeof(ScreenRectVertex);
-        cmdbuf.pushConstants(*present_pipeline_layout,
-                             vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
-                             0, sizeof(draw_info), &draw_info);
-
-        cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
-        cmdbuf.draw(4, 1, first_vertex, 0);
-        cmdbuf.endRenderPass();
-    });
-}
-
-void RendererVulkan::ApplySecondLayerOpacity() {
-    float alpha;
-    if (applyingOpacity){
-        if (drawingPrimaryScreen){
-            alpha = 1.0;
-        } else {
-            if (usingTopOpacity){
-                if (currentFramebufferLayout.top_opacity < 1) {
-                    alpha = currentFramebufferLayout.top_opacity;
-                } else {
-                    return;
-                }
-            } else {
-                if (currentFramebufferLayout.bottom_opacity < 1) {
-                    alpha = currentFramebufferLayout.bottom_opacity;
-                } else {
-                    return;
-                }
-            }
-        }
-        scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
-            const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
-            cmdbuf.setBlendConstants(blend_constants.data());
-        });
-    }
+    Draw(vertexBufferPointers[0], draw_info);
 }
 
 void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,

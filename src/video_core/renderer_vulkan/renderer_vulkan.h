@@ -57,6 +57,12 @@ struct ScreenRectVertex {
     Common::Vec2f tex_coord;
 };
 
+struct VertexBufferPointer {
+    unsigned char* data;
+    unsigned int offset;
+    bool invalidate;
+};
+
 struct ScreenInfo {
     TextureInfo texture;
     Common::Rectangle<f32> texcoords;
@@ -117,8 +123,8 @@ private:
     void PrepareTextureDrawFromScreenInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode);
 
     
-    void UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, unsigned char* data);
-    void Draw(unsigned int offset);
+    void UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, VertexBufferPointer vbp);
+    void Draw(VertexBufferPointer vbp, PresentUniformData pushconstant);
     void RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                         bool flipped);
 
