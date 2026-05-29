@@ -1,5 +1,5 @@
 void main() {
-    FsrRcasCon(con0, params.FSR_SHARPENING);
+    FsrRcasCon(con0, FSR_SHARPENING);
 
     AU2 gxy = AU2(frag_tex_coord.xy * o_resolution.xy); // Integer pixel position in output.
     AF3 Gamma2Color = AF3(0, 0, 0);

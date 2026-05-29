@@ -150,6 +150,7 @@ void ConfigureEnhancements::ApplyConfiguration() {
         Settings::values.pp_shader_name =
             ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     }
+    Settings::values.fsr_sharpness = ui->fsr_sharpness_slider->sliderPosition();
     Settings::values.disable_right_eye_render = ui->disable_right_eye_render->isChecked();
 
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_integer_scaling,

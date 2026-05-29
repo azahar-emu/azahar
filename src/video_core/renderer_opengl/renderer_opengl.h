@@ -112,13 +112,14 @@ private:
     // OpenGL objects for post processing
     OGLFramebuffer textureFBO;
     //Textures for Top and Bottom Screen Respectively
-    std::array<std::array<OGLTexture, 5>, 2> intermediateTextures;
+    std::array<std::array<OGLTexture, 7>, 2> intermediateTextures;
     std::array<OGLTexture, 2> antialiasFBOTexture;
 
     //Intermediate Textures at output size. These are for Top Screen, Bottom Screen and Additional Screen Respectively
     std::array<std::array<OGLTexture, 3>, 3> intermediateOutputSizeTextures;
-    std::array<Common::Rectangle<u32>, 3> prevScreenRects;
-    std::array<Common::Rectangle<u32>, 3> currScreenRects;
+    std::array<Common::Rectangle<u32>, 3> prevOutputScreenRects;
+    std::array<Common::Rectangle<u32>, 3> currOutputScreenRects;
+    int currOutputScreen;
     OGLTexture areatex;
     OGLTexture searchtex;
 
@@ -133,6 +134,8 @@ private:
 
     // Shader Uniform for converting colors. 0 is no conversion, 1 is sRGB -> linear, 2 is Linear -> sRGB
     GLuint uniform_convert_colors;
+    
+    GLuint uniform_fsr_sharpening;
 
     // Shader uniform for Dolphin compatibility
     GLuint uniform_i_resolution;

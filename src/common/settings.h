@@ -554,7 +554,7 @@ struct Values {
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, Keys::texture_filter};
     SwitchableSetting<AntiAliasingFilter> antialiasing_filter{AntiAliasingFilter::None, Keys::antialiasing_filter};
     SwitchableSetting<OutputScaling> output_scaling{OutputScaling::Adaptive, Keys::output_scaling};
-    SwitchableSetting<int, true> fsr_sharpness{80, 0, 100, Keys::fsr_sharpness};
+    SwitchableSetting<int, true> fsr_sharpness{50, 0, 100, Keys::fsr_sharpness};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         Keys::texture_sampling};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
