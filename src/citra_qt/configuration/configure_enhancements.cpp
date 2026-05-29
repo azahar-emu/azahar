@@ -44,9 +44,9 @@ ConfigureEnhancements::~ConfigureEnhancements() = default;
 
 void ConfigureEnhancements::SetConfiguration() {
 
-    const s32 volume =
-        static_cast<s32>(Settings::values.fsr_sharpness.GetValue() * 100);
-    ui->fsr_sharpness_slider->setValue(volume);
+    const s32 sharpness =
+        static_cast<s32>(Settings::values.fsr_sharpness.GetValue());
+    ui->fsr_sharpness_slider->setValue(sharpness);
     SetFSRSharpnessIndicatorText(ui->fsr_sharpness_slider->sliderPosition());
 
     if (!Settings::IsConfiguringGlobal()) {

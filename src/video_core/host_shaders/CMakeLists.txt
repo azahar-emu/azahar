@@ -47,6 +47,17 @@ set(SHADER_FILES
     scaling/opengl_area_sampling.vert
     scaling/vulkan_area_sampling.frag
     scaling/vulkan_area_sampling.vert
+    scaling/FSR/OpenGL/opengl_fsr_pass0.vert
+    scaling/FSR/OpenGL/opengl_fsr_pass0_part1.frag
+    scaling/FSR/OpenGL/opengl_fsr_pass0_part2.frag
+    scaling/FSR/OpenGL/opengl_fsr_pass1.vert
+    scaling/FSR/OpenGL/opengl_fsr_pass1_part1.frag
+    scaling/FSR/OpenGL/opengl_fsr_pass1_part2.frag
+    scaling/FSR/OpenGL/opengl_fsr_pass1_part3.frag
+    scaling/FSR/ffx_a.h
+    scaling/FSR/ffx_fsr1.h
+    scaling/SharpBilinear/OpenGL/opengl_sharpbilinear.vert
+    scaling/SharpBilinear/OpenGL/opengl_sharpbilinear.frag
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert

@@ -60,6 +60,7 @@ private:
     void ReloadShader(Settings::StereoRenderOption render_3d);
     void AllocateSMAATextures();
     void AllocatePPTextures();
+    void AllocateOutputSizeTextures();
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
@@ -102,19 +103,22 @@ private:
     OGLProgram SMAA_PASS_1_shader;
     OGLProgram SMAA_PASS_2_shader;
     OGLProgram AREA_SAMPLING_shader;
+    OGLProgram FSR_PASS_0_shader;
+    OGLProgram FSR_PASS_1_shader;
+    OGLProgram SharpBilinear_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 
     // OpenGL objects for post processing
     OGLFramebuffer textureFBO;
-    std::array<OGLTexture, 5> intermediateTextureTop;
-    std::array<OGLTexture, 5> intermediateTextureBottom;
-    OGLTexture antialiasFBOTextureTop;
-    OGLTexture antialiasFBOTextureBottom;
+    //Textures for Top and Bottom Screen Respectively
+    std::array<std::array<OGLTexture, 5>, 2> intermediateTextures;
+    std::array<OGLTexture, 2> antialiasFBOTexture;
 
-    OGLTexture* currAntialiasFBOTexture;
-    std::array<OGLTexture, 5>* currIntermediateTexture;
-    
+    //Intermediate Textures at output size. These are for Top Screen, Bottom Screen and Additional Screen Respectively
+    std::array<std::array<OGLTexture, 3>, 3> intermediateOutputSizeTextures;
+    std::array<Common::Rectangle<u32>, 3> prevScreenRects;
+    std::array<Common::Rectangle<u32>, 3> currScreenRects;
     OGLTexture areatex;
     OGLTexture searchtex;
 
