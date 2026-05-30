@@ -375,7 +375,7 @@ void RendererVulkan::AllocateStagedTexture(StagedTextureInfo& texture, int width
         .mipLevels = 1,
         .arrayLayers = 1,
         .samples = vk::SampleCountFlagBits::e1,
-        .usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
+        .usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst,
     };
 
     const VmaAllocationCreateInfo alloc_info = {
@@ -455,7 +455,7 @@ void RendererVulkan::SetStagedTextureTexInfo(StagedTextureInfo& texture){
 void RendererVulkan::CreateImageStagingBuffer(StagedTextureInfo& texture){
     const vk::BufferCreateInfo staging_buffer_info = {
         .size =  texture.size,
-        .usage = vk::BufferUsageFlagBits::eTransferDst,
+        .usage = vk::BufferUsageFlagBits::eTransferSrc,
     };
 
     const VmaAllocationCreateInfo alloc_create_info = {
@@ -1535,6 +1535,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             isDownsampling = true;
         }
     }
+    // LOG_INFO(Render_Vulkan, "Scaling Mode: {}, Anti Aliasing Mode: {}", scalingMode, antialiasingMode);
     // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° internally)
     std::array<ScreenRectVertex, 4> rotate_vertices;
     rotate_vertices = {{
@@ -1546,10 +1547,10 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
 
     std::array<ScreenRectVertex, 4> pass_through_vertices;
     pass_through_vertices = {{
-            ScreenRectVertex(-1.f, 1.f, 0.f, 0.f),   //Left, Top
-            ScreenRectVertex(1.f, 1.f, 1.f, 0.f),    //Right, Top
-            ScreenRectVertex(-1.f, -1.f, 0.f, 1.f),  //Left, Bottom
-            ScreenRectVertex(1.f, -1.f, 1.f, 1.f),   //Right, Bottom
+        ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
+        ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+        ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+        ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
     }};
 
     // Vertices for Azahar's Output Layout
@@ -1610,12 +1611,12 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
 
 
 
-    int currentPass;
+    currentPass = 0;
     if (antialiasingMode == 1){
         screen_ids.assign({screen_id});
         PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
         UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
-        drawInfos[currentPass].convert_colors = 1;
+        drawInfos[currentPass].convert_colors = 0;
         Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
         currentPass++;
 
@@ -1675,8 +1676,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         }
         Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
         currentPass++;
-    } 
-    else {
+    } else {
         screen_ids.assign({screen_id});
         PrepareTextureDrawFromScreenInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[0], screen_ids, 1);
         UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
@@ -1701,7 +1701,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
         } else {
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 1);
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
             UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].convert_colors = 2;
             Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
@@ -1711,7 +1711,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         if (isDownsampling){
             // EASU (1x)
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][4], intermediateTextureFBOs[currScreen][4], post_pipelines_texture[4], texturesToSample, 0);
+            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][4], intermediateTextureFBOs[currScreen][4], post_pipelines_texture[5], texturesToSample, 0);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
             drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
@@ -1719,8 +1719,8 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
 
             // RCAS
-            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][0]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[5], texturesToSample, 1);
+            texturesToSample.assign({intermediateTextures[currScreen][4]});
+            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][5], intermediateTextureFBOs[currScreen][5], post_pipelines_texture[6], texturesToSample, 1);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
             drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
@@ -1728,7 +1728,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
 
             // Area Sampling
-            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][1]});
+            texturesToSample.assign({intermediateTextures[currScreen][5]});
             PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
             UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].convert_colors = 0;
@@ -1739,7 +1739,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         } else {
             // EASU (to output resolution)
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][0], intermediateOutputSizeTextureFBOs[currScreen][0], post_pipelines_texture[4], texturesToSample, 0);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][0], intermediateOutputSizeTextureFBOs[currScreen][0], post_pipelines_texture[5], texturesToSample, 0);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
             drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
@@ -1748,7 +1748,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
 
             // RCAS
             texturesToSample.assign({intermediateOutputSizeTextures[currScreen][0]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[5], texturesToSample, 1);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[6], texturesToSample, 1);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
             drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
@@ -1817,6 +1817,7 @@ void RendererVulkan::Draw(VertexBufferPointer vbp, PresentUniformData pushconsta
         cmdbuf.draw(4, 1, first_vertex, 0);
         cmdbuf.endRenderPass();
     });
+    // LOG_INFO(Render_Vulkan, "Current Pass: {}", currentPass);
 }
 
 void RendererVulkan::ApplySecondLayerOpacity() {

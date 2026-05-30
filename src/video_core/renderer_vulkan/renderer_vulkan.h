@@ -251,6 +251,7 @@ private:
     float prevTopTextureHeight;
     float prevBottomTextureWidth;
     float prevBottomTextureHeight;
+    int currentPass = 0;
     u32 current_pipeline = 0;
     Frame* currentFrame;
     Layout::FramebufferLayout currentFramebufferLayout;
