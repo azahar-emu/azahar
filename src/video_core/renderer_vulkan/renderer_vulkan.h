@@ -48,6 +48,20 @@ struct TextureInfo {
     VmaAllocation allocation;
 };
 
+struct StagedTextureInfo {
+    u32 width;
+    u32 height;
+    u32 channels;
+    u32 size;
+    Pica::PixelFormat format;
+    vk::Buffer buffer;
+    VmaAllocation bufferAllocation;
+    vk::Image image;
+    vk::ImageView image_view;
+    VmaAllocation imageAllocation;
+    void* bufferDataPtr;
+};
+
 struct ScreenRectVertex {
     ScreenRectVertex() = default;
     ScreenRectVertex(float x, float y, float u, float v)
@@ -86,7 +100,7 @@ class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
     static constexpr std::size_t POST_PIPELINES_SCREEN = 1;
     static constexpr std::size_t POST_PIPELINES_TEXTURE = 5;
-    static constexpr std::size_t POST_SHADERS = 6;
+    static constexpr std::size_t POST_SHADERS = 8;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
@@ -118,7 +132,7 @@ private:
     // Sets up command buffer for sampling from a texture to the screen framebuffer
     void PrepareDrawFromTextureInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
     // Sets up command buffer for sampling from a texture to an intermediate texture framebuffer
-    void PrepareTextureDraw(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
+    void PrepareTextureDrawFromTextureInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode);
     // Sets up command buffer for sampling from a screen_info to an intermediate texture framebuffer
     void PrepareTextureDrawFromScreenInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode);
 
@@ -148,15 +162,21 @@ private:
     void FillScreen(Common::Vec3<u8> color, const TextureInfo& texture);
 
     void AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat);
+    void AllocateStagedTexture(StagedTextureInfo& texture, int width, int height, vk::Format colorFormat);
     void CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer);
 
     // Create Renderpass used for Textures
     void CreateTextureRenderPass();
     // Allocate Post Processing Textures
+    void AllocateSMAATextures();
+    void UploadImageDataToBuffer(StagedTextureInfo& texture, unsigned char* imageData);
+    void CreateImageStagingBuffer(StagedTextureInfo& texture);
+    void UploadBufferToImage(StagedTextureInfo& texture);
     void AllocatePPTextures();
+    void AllocateOutputSizeTextures();
     // Create Framebuffers that are attached to the Post Processing Textures
     void CreatePPTextureFramebuffers();
-    void AllocateSMAATextures();
+    void CreateOutputSizeTextureFramebuffers();
 private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
@@ -190,6 +210,8 @@ private:
     std::array<vk::ShaderModule, POST_PIPELINES_SCREEN> post_frag_shaders_screen;
     // Linear and Nearest Sampler Respectively
     std::array<vk::Sampler, 2> present_samplers;
+    StagedTextureInfo areaTexInfo;
+    StagedTextureInfo searchTexInfo;
     vk::ShaderModule present_vertex_shader;
     vk::ShaderModule simplepresent_vertex_shader;
     vk::ShaderModule simplepresent_frag_shader;
@@ -208,12 +230,17 @@ private:
     vk::RenderPass textureRenderpass;
 
     // Array of textures. 0 is top screen, 1 is bottom screen.
-    std::array<std::array<TextureInfo, 5>, 2> intermediateTextures;
+    std::array<std::array<TextureInfo, 7>, 2> intermediateTextures;
     std::array<TextureInfo, 2> antialiasTextures;
 
     // Array of framebuffer objects. 0 is top screen, 1 is bottom screen.
-    std::array<std::array<vk::Framebuffer, 5>, 2> intermediateTextureFBOs;
+    std::array<std::array<vk::Framebuffer, 7>, 2> intermediateTextureFBOs;
     std::array<vk::Framebuffer, 2 > antialiasTextureFBOs;
+    std::array<std::array<TextureInfo, 3>, 3> intermediateOutputSizeTextures;
+    std::array<std::array<vk::Framebuffer, 3>, 3> intermediateOutputSizeTextureFBOs;
+    std::array<Common::Rectangle<u32>, 3> prevOutputScreenRects;
+    std::array<Common::Rectangle<u32>, 3> currOutputScreenRects;
+    int currOutputScreen;
     float currTopTextureWidth;
     float currTopTextureHeight;
     float currBottomTextureWidth;
