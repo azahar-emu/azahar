@@ -1085,7 +1085,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.viewport.width = screenWidth;
                 state.viewport.height = screenHeight;
                 state.Apply();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][1].handle, 0);  
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][0].handle, 0);  
                 glClear(GL_COLOR_BUFFER_BIT);
                 state.draw.shader_program = FSR_PASS_0_shader.handle;
                 state.Apply();
@@ -1104,12 +1104,12 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.viewport.width = screenWidth;
                 state.viewport.height = screenHeight;
                 state.Apply();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][2].handle, 0);  
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][1].handle, 0);  
                 glClear(GL_COLOR_BUFFER_BIT);
                 state.draw.shader_program = FSR_PASS_1_shader.handle;
                 state.Apply();
                 AttachUniforms();
-                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][1].handle;
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][0].handle;
                 state.texture_units[0].sampler = samplers[1].handle;
                 glUniform1f(uniform_fsr_sharpening, fsr_sharpening);
                 glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
@@ -1129,7 +1129,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.draw.shader_program = Present_shader.handle;
                 state.Apply();
                 AttachUniforms();
-                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][2].handle;
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][1].handle;
                 state.texture_units[0].sampler = samplers[1].handle;
                 glUniform1i(uniform_color_texture, 0);
                 glUniform1i(uniform_convert_colors, 0);

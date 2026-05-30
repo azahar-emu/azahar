@@ -432,11 +432,24 @@ void RendererVulkan::AllocateSMAATextures(){
     CreateImageStagingBuffer(areaTexInfo);
     UploadImageDataToBuffer(areaTexInfo, (unsigned char*) areaTexBytes);
     UploadBufferToImage(areaTexInfo);
+    SetStagedTextureTexInfo(areaTexInfo);
 
     AllocateStagedTexture(searchTexInfo, searchTexInfo.width, searchTexInfo.height, vk::Format::eR8Unorm);
     CreateImageStagingBuffer(searchTexInfo);
     UploadImageDataToBuffer(searchTexInfo, (unsigned char*) searchTexBytes);
     UploadBufferToImage(searchTexInfo);
+    SetStagedTextureTexInfo(searchTexInfo);
+
+}
+
+void RendererVulkan::SetStagedTextureTexInfo(StagedTextureInfo& texture){
+    texture.texInfo = {
+        .width = texture.width,
+        .height = texture.height,
+        .image = texture.image,
+        .image_view = texture.image_view,
+        .allocation = texture.imageAllocation,
+    };
 }
 
 void RendererVulkan::CreateImageStagingBuffer(StagedTextureInfo& texture){
@@ -1579,7 +1592,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     }
     const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
 
-    int maxPasses = 5;
+    int maxPasses = 10;
     std::vector<VertexBufferPointer> vertexBufferPointers(maxPasses);
     for (auto& vbp : vertexBufferPointers){
         std::tie(vbp.data, vbp.offset, vbp.invalidate) = vertex_buffer.Map(size, 16);
@@ -1594,75 +1607,198 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     std::vector<u32> screen_ids;
     std::vector<TextureInfo> texturesToSample;
 
-    // Multipass
-    screen_ids.assign({screen_id});
-    PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
-    UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[0]);
-    drawInfos[0].convert_colors = 1;
-    Draw(vertexBufferPointers[0], drawInfos[0]);
 
 
-    // int currentPass;
-    // if (antialiasingMode == 1){
-    //     screen_ids.assign({screen_id});
-    //     PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
-    //     UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
-    //     drawInfos[currentPass].convert_colors = 1;
-    //     Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
-    //     currentPass++;
 
-    //     texturesToSample.assign({intermediateTextures[currScreen][0]});
-    //     PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[1], texturesToSample, 1);
-    //     UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
-    //     if (scalingMode == 3){
-    //         drawInfos[currentPass].convert_colors = 0;
-    //     } else {
-    //         drawInfos[currentPass].convert_colors = 1;
-    //     }
-    //     drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
-    //     Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
-    //     currentPass++;
-    // }
-    // // else if (antialiasingMode == 2) {
+    int currentPass;
+    if (antialiasingMode == 1){
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 1;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
 
-    // // } 
-    // else {
-    //     screen_ids.assign({screen_id});
-    //     PrepareTextureDrawFromScreenInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[0], screen_ids, 1);
-    //     UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
-    //     if (scalingMode == 3){
-    //         drawInfos[currentPass].convert_colors = 0;
-    //     } else {
-    //         drawInfos[currentPass].convert_colors = 1;
-    //     }
-    //     Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
-    //     currentPass++;
-    // }
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[1], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 0;
+        } else {
+            drawInfos[currentPass].convert_colors = 1;
+        }
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } else if (antialiasingMode == 2) {
+        // Landscape Gamma Space Texture
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 0;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
 
-    // if (scalingMode == 2){
-    //     if (isDownsampling){
+        // Landscape Linear Space Texture
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][3], intermediateTextureFBOs[currScreen][3], post_pipelines_texture[0], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 1;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
 
-    //     } else {
+         // Edge Detection
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][1], intermediateTextureFBOs[currScreen][1], post_pipelines_texture[2], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
 
-    //     }
-    // } else if (scalingMode == 3) {
-    //     if (isDownsampling){
+        // Blending Weight Calculation
+        texturesToSample.assign({intermediateTextures[currScreen][1], areaTexInfo.texInfo, searchTexInfo.texInfo});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][2], intermediateTextureFBOs[currScreen][2], post_pipelines_texture[3], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
 
-    //     } else {
+        // Neighborhood Blending
+        texturesToSample.assign({intermediateTextures[currScreen][2], intermediateTextures[currScreen][3]});
+        PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[4], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 2;
+        } else {
+            drawInfos[currentPass].convert_colors = 0;
+        }
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } 
+    else {
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 0;
+        } else {
+            drawInfos[currentPass].convert_colors = 1;
+        }
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    }
 
-    //     }    
-    // } else if (scalingMode == 4) {
+    if (scalingMode == 2){
+        if (isDownsampling){
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 2;
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        } else {
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 1);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 2;
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        }
+    } else if (scalingMode == 3) {
+        if (isDownsampling){
+            // EASU (1x)
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][4], intermediateTextureFBOs[currScreen][4], post_pipelines_texture[4], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
 
-    // } else {
+            // RCAS
+            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][0]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[5], texturesToSample, 1);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
+            drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
 
-    // }
+            // Area Sampling
+            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][1]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 0;
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        } else {
+            // EASU (to output resolution)
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][0], intermediateOutputSizeTextureFBOs[currScreen][0], post_pipelines_texture[4], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
 
-    texturesToSample.assign({intermediateTextures[currScreen][0]});
-    PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
-    ApplySecondLayerOpacity();
-    UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
-    drawInfos[1].convert_colors = 2;
-    Draw(vertexBufferPointers[1], drawInfos[1]);
+            // RCAS
+            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][0]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[5], texturesToSample, 1);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+            
+            // Normal Present
+            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][1]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 0;
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        }    
+    } else if (scalingMode == 4) {
+        texturesToSample.assign({antialiasTextures[currScreen]});
+        PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[1], texturesToSample, 1);
+        UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 2;
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } else {
+        texturesToSample.assign({antialiasTextures[currScreen]});
+        if (scalingMode == 1){
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+        } else {
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 0);
+        }
+        UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 2;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    }
+
+
+    // // Multipass
+    // screen_ids.assign({screen_id});
+    // PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+    // UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[0]);
+    // drawInfos[0].convert_colors = 1;
+    // Draw(vertexBufferPointers[0], drawInfos[0]);
+
+    // texturesToSample.assign({intermediateTextures[currScreen][0]});
+    // PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+    // ApplySecondLayerOpacity();
+    // UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
+    // drawInfos[1].convert_colors = 2;
+    // Draw(vertexBufferPointers[1], drawInfos[1]);
 }
 
 

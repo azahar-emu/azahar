@@ -60,6 +60,7 @@ struct StagedTextureInfo {
     vk::ImageView image_view;
     VmaAllocation imageAllocation;
     void* bufferDataPtr;
+    TextureInfo texInfo;
 };
 
 struct ScreenRectVertex {
@@ -177,6 +178,7 @@ private:
     // Create Framebuffers that are attached to the Post Processing Textures
     void CreatePPTextureFramebuffers();
     void CreateOutputSizeTextureFramebuffers();
+    void SetStagedTextureTexInfo(StagedTextureInfo& texture);
 private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;
@@ -197,15 +199,15 @@ private:
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
-    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2
+    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1
     std::array<vk::Pipeline, POST_PIPELINES_TEXTURE> post_pipelines_texture;
-    // Post Processing Pipelines for presenting to screen. Contains: Area
+    // Post Processing Pipelines for presenting to screen. Contains: Area Sampling and Sharp Bilinear
     std::array<vk::Pipeline, POST_PIPELINES_SCREEN> post_pipelines_screen;
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
-    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2
+    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_vert_shaders_texture;
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_frag_shaders_texture;
-    // Post Processing Shaders for presenting to screen. Contains: Area
+    // Post Processing Shaders for presenting to screen. Contains: Area Sampling and Sharp Bilinear
     std::array<vk::ShaderModule, POST_PIPELINES_SCREEN> post_vert_shaders_screen;
     std::array<vk::ShaderModule, POST_PIPELINES_SCREEN> post_frag_shaders_screen;
     // Linear and Nearest Sampler Respectively
