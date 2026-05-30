@@ -159,8 +159,6 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     BuildLayouts();
     CreateTextureRenderPass();
     AllocateSMAATextures();
-    AllocatePPTextures();
-    CreatePPTextureFramebuffers();
     BuildPipelines();
     if (secondary_window) {
         secondary_present_window_ptr = std::make_unique<PresentWindow>(
@@ -296,6 +294,10 @@ void RendererVulkan::CreateTextureRenderPass(){
 }
 
 void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat){
+    if (width == 0 || height == 0){
+        textureReallocationNeeded = true;
+        return;
+    }
     vk::Device device = instance.GetDevice();
     if (texture.image_view) {
         device.destroyImageView(texture.image_view);
@@ -569,33 +571,20 @@ void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
 }
 
 void RendererVulkan::AllocatePPTextures(){
-    int TopWidth = 400;
-    int TopHeight = 240;
-    int BottomWidth = 320;
-    int BottomHeight = 240;
-
-    if (currTopTextureWidth != 0 && currBottomTextureWidth != 0 && currTopTextureHeight != 0 && currBottomTextureHeight != 0){
-        TopWidth = currTopTextureWidth;
-        TopHeight = currTopTextureHeight;
-        BottomWidth = currBottomTextureWidth;
-        BottomHeight = currBottomTextureHeight;
-    }
     for (int i = 0; i < intermediateTextures[0].size(); i++){
-        AllocateTexture(intermediateTextures[0][i], TopWidth, TopHeight, vk::Format::eR16G16B16A16Sfloat);
+        AllocateTexture(intermediateTextures[0][i], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
     }
     for (int i = 0; i < intermediateTextures[1].size(); i++){
-        AllocateTexture(intermediateTextures[1][i], BottomWidth, BottomHeight, vk::Format::eR16G16B16A16Sfloat);
+        AllocateTexture(intermediateTextures[1][i], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
     }
-    AllocateTexture(antialiasTextures[0], TopWidth, TopHeight, vk::Format::eR16G16B16A16Sfloat);
-    AllocateTexture(antialiasTextures[1], BottomWidth, BottomHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[0], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[1], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
 };
 
 void RendererVulkan::AllocateOutputSizeTextures(){
     for (int i = 0; i < intermediateOutputSizeTextures.size(); i++){
-        if (currOutputScreenRects[i].GetHeight() != 0 && currOutputScreenRects[i].GetWidth() != 0){
-            for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
-                AllocateTexture(intermediateOutputSizeTextures[i][j], currOutputScreenRects[i].GetWidth(),  currOutputScreenRects[i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
-            }
+        for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
+            AllocateTexture(intermediateOutputSizeTextures[i][j], currOutputScreenRects[i].GetWidth(),  currOutputScreenRects[i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
         }
     }
     LOG_INFO(Render_Vulkan, "Reallocated OutputSize Textures");
@@ -613,6 +602,9 @@ void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
 
 
 void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
+    if (texture.width == 0 || texture.height == 0){
+        return;
+    }
     const vk::FramebufferCreateInfo framebuffer_info = {
         .renderPass = textureRenderpass,
         .attachmentCount = 1,
@@ -2050,9 +2042,10 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     currTopTextureHeight = static_cast<float>(screen_infos[0].texture.width * GetResolutionScaleFactor());
     currBottomTextureWidth = static_cast<float>(screen_infos[2].texture.height * GetResolutionScaleFactor());
     currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
-    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
+    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight || textureReallocationNeeded){
         AllocatePPTextures();
         CreatePPTextureFramebuffers();
+        textureReallocationNeeded = false;
         LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
     }
     prevTopTextureWidth = currTopTextureWidth;

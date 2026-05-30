@@ -259,6 +259,7 @@ private:
     bool applyingOpacity = true;
     bool drawingPrimaryScreen = false;
     bool usingTopOpacity = false;
+    bool textureReallocationNeeded = false;
     std::array<ScreenInfo, 3> screen_infos{};
     PresentUniformData draw_info{};
     vk::ClearColorValue clear_color{};
