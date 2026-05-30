@@ -92,15 +92,15 @@ struct PresentUniformData {
     int layer = 0;
     int reverse_interlaced = 0;
     int convert_colors;
+    float FSR_SHARPENING;
 };
-static_assert(sizeof(PresentUniformData) == 116,
+static_assert(sizeof(PresentUniformData) == 120,
               "PresentUniformData does not structure in shader!");
 
 class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
-    static constexpr std::size_t POST_PIPELINES_SCREEN = 1;
-    static constexpr std::size_t POST_PIPELINES_TEXTURE = 5;
-    static constexpr std::size_t POST_SHADERS = 8;
+    static constexpr std::size_t POST_PIPELINES_SCREEN = 2;
+    static constexpr std::size_t POST_PIPELINES_TEXTURE = 7;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);

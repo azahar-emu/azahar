@@ -45,6 +45,17 @@
 #include "video_core/host_shaders/antialiasing/SearchTex.h"
 #include "video_core/host_shaders/scaling/vulkan_area_sampling_frag.h"
 #include "video_core/host_shaders/scaling/vulkan_area_sampling_vert.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_vert.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_part1_frag.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_part2_frag.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_vert.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part1_frag.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part2_frag.h"
+#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part3_frag.h"
+#include "video_core/host_shaders/scaling/FSR/ffx_a_h.h"
+#include "video_core/host_shaders/scaling/FSR/ffx_fsr1_h.h"
+#include "video_core/host_shaders/scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear_vert.h"
+#include "video_core/host_shaders/scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear_frag.h"
 
 #include <vk_mem_alloc.h>
 
@@ -959,6 +970,33 @@ void RendererVulkan::CompileShaders() {
     post_frag_shaders_texture[4] =
         Compile(smaa_pass_2_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
+    std::string FSR_PASS_0_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS0_PART1_FRAG);
+    FSR_PASS_0_shader_frag_data += std::string(HostShaders::FFX_A_H);
+    FSR_PASS_0_shader_frag_data += std::string(HostShaders::FFX_FSR1_H);
+    FSR_PASS_0_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS0_PART2_FRAG);
+    std::string FSR_PASS_0_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS0_VERT);
+    post_vert_shaders_texture[5] =
+        Compile(FSR_PASS_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[5] =
+        Compile(FSR_PASS_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    std::string FSR_PASS_1_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS1_PART1_FRAG);
+    FSR_PASS_1_shader_frag_data += std::string(HostShaders::FFX_A_H);
+    FSR_PASS_1_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS1_PART2_FRAG);
+    FSR_PASS_1_shader_frag_data += std::string(HostShaders::FFX_FSR1_H);
+    FSR_PASS_1_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS1_PART3_FRAG);
+    std::string FSR_PASS_1_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS1_VERT);
+    post_vert_shaders_texture[6] =
+        Compile(FSR_PASS_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[6] =
+        Compile(FSR_PASS_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    std::string SharpBilinear_shader_frag_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_FRAG);
+    std::string SharpBilinear_shader_vert_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_VERT);
+    post_vert_shaders_screen[1] =
+        Compile(SharpBilinear_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_screen[1] =
+        Compile(SharpBilinear_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
     
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {

@@ -58,6 +58,15 @@ set(SHADER_FILES
     scaling/FSR/ffx_fsr1.h
     scaling/SharpBilinear/OpenGL/opengl_sharpbilinear.vert
     scaling/SharpBilinear/OpenGL/opengl_sharpbilinear.frag
+    scaling/FSR/Vulkan/vulkan_fsr_pass0.vert
+    scaling/FSR/Vulkan/vulkan_fsr_pass0_part1.frag
+    scaling/FSR/Vulkan/vulkan_fsr_pass0_part2.frag
+    scaling/FSR/Vulkan/vulkan_fsr_pass1.vert
+    scaling/FSR/Vulkan/vulkan_fsr_pass1_part1.frag
+    scaling/FSR/Vulkan/vulkan_fsr_pass1_part2.frag
+    scaling/FSR/Vulkan/vulkan_fsr_pass1_part3.frag
+    scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear.vert
+    scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear.frag
     full_screen_triangle.vert
     opengl_present.frag
     opengl_present.vert
