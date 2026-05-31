@@ -124,21 +124,6 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 RendererOpenGL::~RendererOpenGL() = default;
 
 void RendererOpenGL::SwapBuffers() {
-#ifdef ANDROID
-    // On Android, if secondary_window is defined at all,
-    // it means we have a second display
-    if (secondary_window) {
-        usingSecondaryLayout = true;
-    } else {
-        usingSecondaryLayout = false;
-    }
-#else
-    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
-        usingSecondaryLayout = true;
-    } else {
-        usingSecondaryLayout = false;
-    }
-#endif
     system.perf_stats->StartSwap();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();

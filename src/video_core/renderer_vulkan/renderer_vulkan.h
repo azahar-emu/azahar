@@ -238,10 +238,10 @@ private:
     // Array of framebuffer objects. 0 is top screen, 1 is bottom screen.
     std::array<std::array<vk::Framebuffer, 7>, 2> intermediateTextureFBOs;
     std::array<vk::Framebuffer, 2 > antialiasTextureFBOs;
-    std::array<std::array<TextureInfo, 3>, 3> intermediateOutputSizeTextures;
-    std::array<std::array<vk::Framebuffer, 3>, 3> intermediateOutputSizeTextureFBOs;
-    std::array<Common::Rectangle<u32>, 3> prevOutputScreenRects;
-    std::array<Common::Rectangle<u32>, 3> currOutputScreenRects;
+    std::array<std::array<std::array<TextureInfo, 3>, 3>, 2> intermediateOutputSizeTextures;
+    std::array<std::array<std::array<vk::Framebuffer, 3>, 3>, 2> intermediateOutputSizeTextureFBOs;
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;
     int currOutputScreen;
     float currTopTextureWidth;
     float currTopTextureHeight;
@@ -259,7 +259,6 @@ private:
     bool applyingOpacity = true;
     bool drawingPrimaryScreen = false;
     bool usingTopOpacity = false;
-    bool textureReallocationNeeded = false;
     std::array<ScreenInfo, 3> screen_infos{};
     PresentUniformData draw_info{};
     vk::ClearColorValue clear_color{};
@@ -267,6 +266,9 @@ private:
     vk::ShaderModule cursor_fragment_shader{};
     vk::Pipeline cursor_pipeline{};
     vk::UniquePipelineLayout cursor_pipeline_layout{};
+
+    // Secondary Layout Fix
+    bool isSecondaryWindow;
 };
 
 } // namespace Vulkan

@@ -294,10 +294,8 @@ void RendererVulkan::CreateTextureRenderPass(){
 }
 
 void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat){
-    if (width == 0 || height == 0){
-        textureReallocationNeeded = true;
-        return;
-    }
+    width = std::max(width, 10);
+    height = std::max(height, 10);
     vk::Device device = instance.GetDevice();
     if (texture.image_view) {
         device.destroyImageView(texture.image_view);
@@ -338,7 +336,7 @@ void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height
         LOG_CRITICAL(Render_Vulkan, "Failed allocating regular texture ({}x{}) with error {}", texture.width, texture.height, result);
         UNREACHABLE();
     } else {
-        LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
+        // LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
     }
     texture.image = vk::Image{unsafe_image};
 
@@ -398,7 +396,7 @@ void RendererVulkan::AllocateStagedTexture(StagedTextureInfo& texture, int width
         LOG_CRITICAL(Render_Vulkan, "Failed allocating regular texture ({}x{}) with error {}", texture.width, texture.height, result);
         UNREACHABLE();
     } else {
-        LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
+        // LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
     }
     texture.image = vk::Image{unsafe_image};
 
@@ -579,22 +577,23 @@ void RendererVulkan::AllocatePPTextures(){
     }
     AllocateTexture(antialiasTextures[0], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
     AllocateTexture(antialiasTextures[1], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    LOG_INFO(Render_Vulkan, "Reallocated Post Processing Textures");
 };
 
 void RendererVulkan::AllocateOutputSizeTextures(){
-    for (int i = 0; i < intermediateOutputSizeTextures.size(); i++){
-        for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
-            AllocateTexture(intermediateOutputSizeTextures[i][j], currOutputScreenRects[i].GetWidth(),  currOutputScreenRects[i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+            AllocateTexture(intermediateOutputSizeTextures[isSecondaryWindow][i][j], currOutputScreenRects[isSecondaryWindow][i].GetWidth(),  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
         }
     }
-    LOG_INFO(Render_Vulkan, "Reallocated OutputSize Textures");
+    LOG_INFO(Render_Vulkan, "Reallocated Output Size Textures");
 };
 
 void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
-    for (int i = 0; i < intermediateOutputSizeTextures.size(); i++){
-        if (currOutputScreenRects[i].GetHeight() != 0 && currOutputScreenRects[i].GetWidth() != 0){
-            for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
-                CreateTextureFramebuffer(intermediateOutputSizeTextures[i][j], intermediateOutputSizeTextureFBOs[i][j]);
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currOutputScreenRects[isSecondaryWindow][i].GetWidth() != 0){
+            for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+                CreateTextureFramebuffer(intermediateOutputSizeTextures[isSecondaryWindow][i][j], intermediateOutputSizeTextureFBOs[isSecondaryWindow][i][j]);
             }
         }
     }
@@ -1640,7 +1639,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
         currentPass++;
 
-         // Edge Detection
+        // Edge Detection
         texturesToSample.assign({intermediateTextures[currScreen][0]});
         PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][1], intermediateTextureFBOs[currScreen][1], post_pipelines_texture[2], texturesToSample, 1);
         UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
@@ -1731,7 +1730,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         } else {
             // EASU (to output resolution)
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][0], intermediateOutputSizeTextureFBOs[currScreen][0], post_pipelines_texture[5], texturesToSample, 0);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currScreen][0], post_pipelines_texture[5], texturesToSample, 0);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
             drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
@@ -1739,8 +1738,8 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
 
             // RCAS
-            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][0]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[currScreen][1], intermediateOutputSizeTextureFBOs[currScreen][1], post_pipelines_texture[6], texturesToSample, 1);
+            texturesToSample.assign({intermediateOutputSizeTextures[isSecondaryWindow][currScreen][0]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currScreen][1], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currScreen][1], post_pipelines_texture[6], texturesToSample, 1);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
             drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
@@ -1748,7 +1747,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
             
             // Normal Present
-            texturesToSample.assign({intermediateOutputSizeTextures[currScreen][1]});
+            texturesToSample.assign({intermediateOutputSizeTextures[isSecondaryWindow][currScreen][1]});
             PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
             UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].convert_colors = 0;
@@ -1791,6 +1790,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     // UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
     // drawInfos[1].convert_colors = 2;
     // Draw(vertexBufferPointers[1], drawInfos[1]);
+
 }
 
 
@@ -2042,11 +2042,10 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     currTopTextureHeight = static_cast<float>(screen_infos[0].texture.width * GetResolutionScaleFactor());
     currBottomTextureWidth = static_cast<float>(screen_infos[2].texture.height * GetResolutionScaleFactor());
     currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
-    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight || textureReallocationNeeded){
+    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
         AllocatePPTextures();
         CreatePPTextureFramebuffers();
-        textureReallocationNeeded = false;
-        LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
+        // LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
     }
     prevTopTextureWidth = currTopTextureWidth;
     prevTopTextureHeight = currTopTextureHeight;
@@ -2054,13 +2053,13 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     prevBottomTextureHeight = currBottomTextureHeight;
 
     //Track Layout Changes
-    currOutputScreenRects[0] = layout.top_screen;
-    currOutputScreenRects[1] = layout.bottom_screen;
-    currOutputScreenRects[2] = layout.additional_screen;
+    currOutputScreenRects[isSecondaryWindow][0] = layout.top_screen;
+    currOutputScreenRects[isSecondaryWindow][1] = layout.bottom_screen;
+    currOutputScreenRects[isSecondaryWindow][2] = layout.additional_screen;
 
-    if (currOutputScreenRects[0] != prevOutputScreenRects[0] || currOutputScreenRects[1] != prevOutputScreenRects[1]){
+    if (currOutputScreenRects[isSecondaryWindow][0] != prevOutputScreenRects[isSecondaryWindow][0] || currOutputScreenRects[isSecondaryWindow][1] != prevOutputScreenRects[isSecondaryWindow][1]){
         if (layout.additional_screen_enabled){
-            if (currOutputScreenRects[2] != prevOutputScreenRects[2]){
+            if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
                 AllocateOutputSizeTextures();
                 CreateOutputSizeTextureFramebuffers();
             }
@@ -2070,9 +2069,9 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         }
     }
     
-    prevOutputScreenRects[0] = currOutputScreenRects[0];
-    prevOutputScreenRects[1] = currOutputScreenRects[1];
-    prevOutputScreenRects[2] = currOutputScreenRects[2];
+    prevOutputScreenRects[isSecondaryWindow][0] = currOutputScreenRects[isSecondaryWindow][0];
+    prevOutputScreenRects[isSecondaryWindow][1] = currOutputScreenRects[isSecondaryWindow][1];
+    prevOutputScreenRects[isSecondaryWindow][2] = currOutputScreenRects[isSecondaryWindow][2];
 
     currentFrame = frame;
     currentFramebufferLayout = layout;
@@ -2180,6 +2179,7 @@ void RendererVulkan::SwapBuffers() {
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
+    isSecondaryWindow = false;
     RenderToWindow(main_present_window, layout, false);
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
@@ -2189,6 +2189,7 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
@@ -2201,6 +2202,7 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }

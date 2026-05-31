@@ -160,7 +160,6 @@ private:
     std::array<int, 4> originalViewport;
 
     // Secondary Layout Fix
-    bool usingSecondaryLayout;
     bool isSecondaryWindow;
 
 };
