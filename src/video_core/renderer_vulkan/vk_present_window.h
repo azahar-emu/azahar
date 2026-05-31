@@ -63,6 +63,10 @@ public:
         return swapchain.GetImageCount();
     }
 
+    vk::Format GetSurfaceFormat() const noexcept {
+        return swapchain.GetSurfaceFormat().format;
+    }
+
 private:
     void PresentThread(std::stop_token token);
 
