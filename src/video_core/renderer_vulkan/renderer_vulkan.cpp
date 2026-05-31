@@ -1268,6 +1268,15 @@ void RendererVulkan::RenderScreenshotWithStagingCopy() {
     // Copy backing image data to the QImage screenshot buffer
     std::memcpy(settings.screenshot_bits, alloc_info.pMappedData, staging_buffer_info.size);
 
+    // QImage::Format_RGB32 expects BGRA byte order. If the swapchain format is RGBA,
+    // swap R and B channels so the screenshot colors are correct.
+    if (main_present_window.GetSurfaceFormat() == vk::Format::eR8G8B8A8Unorm) {
+        u8* pixels = static_cast<u8*>(settings.screenshot_bits);
+        for (u32 i = 0; i < width * height; i++) {
+            std::swap(pixels[i * 4 + 0], pixels[i * 4 + 2]);
+        }
+    }
+
     // Destroy allocated resources
     vmaDestroyBuffer(instance.GetAllocator(), staging_buffer, allocation);
     vmaDestroyImage(instance.GetAllocator(), frame.image, frame.allocation);
@@ -1422,6 +1431,15 @@ bool RendererVulkan::TryRenderScreenshotWithHostMemory() {
 
     // Ensure the copy is fully completed before saving the screenshot
     scheduler.Finish();
+
+    // QImage::Format_RGB32 expects BGRA byte order. If the swapchain format is RGBA,
+    // swap R and B channels so the screenshot colors are correct.
+    if (main_present_window.GetSurfaceFormat() == vk::Format::eR8G8B8A8Unorm) {
+        u8* pixels = static_cast<u8*>(settings.screenshot_bits);
+        for (u32 i = 0; i < width * height; i++) {
+            std::swap(pixels[i * 4 + 0], pixels[i * 4 + 2]);
+        }
+    }
 
     // Image data has been copied directly to host memory
     device.destroyFramebuffer(frame.framebuffer);
