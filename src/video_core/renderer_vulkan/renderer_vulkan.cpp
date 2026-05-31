@@ -2057,10 +2057,19 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     currOutputScreenRects[0] = layout.top_screen;
     currOutputScreenRects[1] = layout.bottom_screen;
     currOutputScreenRects[2] = layout.additional_screen;
-    if (currOutputScreenRects[0] != prevOutputScreenRects[0] || currOutputScreenRects[1] != prevOutputScreenRects[1] || currOutputScreenRects[2] != prevOutputScreenRects[2]){
-        AllocateOutputSizeTextures();
-        CreateOutputSizeTextureFramebuffers();
+
+    if (currOutputScreenRects[0] != prevOutputScreenRects[0] || currOutputScreenRects[1] != prevOutputScreenRects[1]){
+        if (layout.additional_screen_enabled){
+            if (currOutputScreenRects[2] != prevOutputScreenRects[2]){
+                AllocateOutputSizeTextures();
+                CreateOutputSizeTextureFramebuffers();
+            }
+        } else {
+            AllocateOutputSizeTextures();
+            CreateOutputSizeTextureFramebuffers();
+        }
     }
+    
     prevOutputScreenRects[0] = currOutputScreenRects[0];
     prevOutputScreenRects[1] = currOutputScreenRects[1];
     prevOutputScreenRects[2] = currOutputScreenRects[2];

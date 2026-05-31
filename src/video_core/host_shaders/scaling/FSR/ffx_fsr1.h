@@ -199,7 +199,7 @@ AF1 outputSizeInPixelsY){
  con2[3]=AU1_AF1(AF1_( 2.0)*ARcpF1(inputSizeInPixelsY));
  con3[0]=AU1_AF1(AF1_( 0.0)*ARcpF1(inputSizeInPixelsX));
  con3[1]=AU1_AF1(AF1_( 4.0)*ARcpF1(inputSizeInPixelsY));
- con3[2]=con3[3]=0;}
+ con3[2]=con3[3]=0u;}
 
 //If the an offset into the input image resource
 A_STATIC void FsrEasuConOffset(
@@ -668,8 +668,8 @@ AF1 sharpness){
  varAF2(hSharp)=initAF2(sharpness,sharpness);
  con[0]=AU1_AF1(sharpness);
  con[1]=AU1_AH2_AF2(hSharp);
- con[2]=0;
- con[3]=0;}
+ con[2]=0u;
+ con[3]=0u;}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //_____________________________________________________________/\_______________________________________________________________

@@ -6,15 +6,17 @@
 
 // High precision may or may not be supported in GLES3. If it isn't, use medium precision instead.
 static constexpr char fragment_shader_precision_OES[] = R"(
-#if GL_ES
+#ifdef GL_ES
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp int;
 precision highp float;
+precision highp sampler2D;
 precision highp samplerBuffer;
 precision highp uimage2D;
 #else
 precision mediump int;
 precision mediump float;
+precision highp sampler2D;
 precision mediump samplerBuffer;
 precision mediump uimage2D;
 #endif // GL_FRAGMENT_PRECISION_HIGH

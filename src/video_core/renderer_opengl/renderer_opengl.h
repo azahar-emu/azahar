@@ -116,9 +116,9 @@ private:
     std::array<OGLTexture, 2> antialiasFBOTexture;
 
     //Intermediate Textures at output size. These are for Top Screen, Bottom Screen and Additional Screen Respectively
-    std::array<std::array<OGLTexture, 3>, 3> intermediateOutputSizeTextures;
-    std::array<Common::Rectangle<u32>, 3> prevOutputScreenRects;
-    std::array<Common::Rectangle<u32>, 3> currOutputScreenRects;
+    std::array<std::array<std::array<OGLTexture, 3>, 3>, 2> intermediateOutputSizeTextures;
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;
     int currOutputScreen;
     OGLTexture areatex;
     OGLTexture searchtex;
@@ -158,6 +158,11 @@ private:
     float currBottomTextureWidth;
     float currBottomTextureHeight;
     std::array<int, 4> originalViewport;
+
+    // Secondary Layout Fix
+    bool usingSecondaryLayout;
+    bool isSecondaryWindow;
+
 };
 
 } // namespace OpenGL

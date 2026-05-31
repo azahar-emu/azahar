@@ -124,6 +124,21 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
 RendererOpenGL::~RendererOpenGL() = default;
 
 void RendererOpenGL::SwapBuffers() {
+#ifdef ANDROID
+    // On Android, if secondary_window is defined at all,
+    // it means we have a second display
+    if (secondary_window) {
+        usingSecondaryLayout = true;
+    } else {
+        usingSecondaryLayout = false;
+    }
+#else
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
+        usingSecondaryLayout = true;
+    } else {
+        usingSecondaryLayout = false;
+    }
+#endif
     system.perf_stats->StartSwap();
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
@@ -138,6 +153,7 @@ void RendererOpenGL::SwapBuffers() {
     render_window.SwapBuffers();
 #else
     const auto& main_layout = render_window.GetFramebufferLayout();
+    isSecondaryWindow = false;
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
 #ifdef ANDROID
@@ -145,6 +161,7 @@ void RendererOpenGL::SwapBuffers() {
     // it means we have a second display
     if (secondary_window) {
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -152,6 +169,7 @@ void RendererOpenGL::SwapBuffers() {
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -412,17 +430,25 @@ void RendererOpenGL::AllocatePPTextures(){
 }
 
 void RendererOpenGL::AllocateOutputSizeTextures(){
-    for (int i = 0; i < intermediateOutputSizeTextures.size(); i++){
-        if (currOutputScreenRects[i].GetHeight() != 0 && currOutputScreenRects[i].GetWidth() != 0){
-            for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
-                intermediateOutputSizeTextures[i][j].Release();
-                intermediateOutputSizeTextures[i][j].Create();
-                intermediateOutputSizeTextures[i][j].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currOutputScreenRects[i].GetWidth(),  currOutputScreenRects[i].GetHeight());
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currOutputScreenRects[isSecondaryWindow][i].GetWidth() != 0){
+            for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Release();
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Create();
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currOutputScreenRects[isSecondaryWindow][i].GetWidth(),  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
             }
         }
     }
 
-    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures");
+    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures. PrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][0].GetWidth(), currOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][1].GetWidth(), currOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][2].GetWidth(), currOutputScreenRects[isSecondaryWindow][2].GetHeight()
+    );
+    //
 }
 
 /**
@@ -589,7 +615,9 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_PART3_FRAG;
     FSR_PASS_1_shader.Create(HostShaders::OPENGL_FSR_PASS1_VERT, FSR_PASS_1_shader_frag_data);
 
-    SharpBilinear_shader.Create(HostShaders::OPENGL_SHARPBILINEAR_VERT, HostShaders::OPENGL_SHARPBILINEAR_FRAG);
+    std::string SharpBilinear_shader_frag_data = fragment_shader_precision_OES;
+    SharpBilinear_shader_frag_data += HostShaders::OPENGL_SHARPBILINEAR_FRAG;
+    SharpBilinear_shader.Create(HostShaders::OPENGL_SHARPBILINEAR_VERT, SharpBilinear_shader_frag_data);
     
     state.Apply();
     if (render_3d == Settings::StereoRenderOption::Anaglyph ||
@@ -1085,7 +1113,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.viewport.width = screenWidth;
                 state.viewport.height = screenHeight;
                 state.Apply();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][0].handle, 0);  
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle, 0);  
                 glClear(GL_COLOR_BUFFER_BIT);
                 state.draw.shader_program = FSR_PASS_0_shader.handle;
                 state.Apply();
@@ -1104,12 +1132,12 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.viewport.width = screenWidth;
                 state.viewport.height = screenHeight;
                 state.Apply();
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[currOutputScreen][1].handle, 0);  
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][1].handle, 0);  
                 glClear(GL_COLOR_BUFFER_BIT);
                 state.draw.shader_program = FSR_PASS_1_shader.handle;
                 state.Apply();
                 AttachUniforms();
-                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][0].handle;
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle;
                 state.texture_units[0].sampler = samplers[1].handle;
                 glUniform1f(uniform_fsr_sharpening, fsr_sharpening);
                 glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
@@ -1129,7 +1157,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.draw.shader_program = Present_shader.handle;
                 state.Apply();
                 AttachUniforms();
-                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[currOutputScreen][1].handle;
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][1].handle;
                 state.texture_units[0].sampler = samplers[1].handle;
                 glUniform1i(uniform_color_texture, 0);
                 glUniform1i(uniform_convert_colors, 0);
@@ -1304,15 +1332,21 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     prevBottomTextureHeight = currBottomTextureHeight;
 
     //Track Layout Changes
-    currOutputScreenRects[0] = layout.top_screen;
-    currOutputScreenRects[1] = layout.bottom_screen;
-    currOutputScreenRects[2] = layout.additional_screen;
-    if (currOutputScreenRects[0] != prevOutputScreenRects[0] || currOutputScreenRects[1] != prevOutputScreenRects[1] || currOutputScreenRects[2] != prevOutputScreenRects[2]){
-        AllocateOutputSizeTextures();
+    currOutputScreenRects[isSecondaryWindow][0] = layout.top_screen;
+    currOutputScreenRects[isSecondaryWindow][1] = layout.bottom_screen;
+    currOutputScreenRects[isSecondaryWindow][2] = layout.additional_screen;
+    if (currOutputScreenRects[isSecondaryWindow][0] != prevOutputScreenRects[isSecondaryWindow][0] || currOutputScreenRects[isSecondaryWindow][1] != prevOutputScreenRects[isSecondaryWindow][1]){
+        if (layout.additional_screen_enabled){
+            if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
+                AllocateOutputSizeTextures();
+            }
+        } else {
+            AllocateOutputSizeTextures();
+        }
     }
-    prevOutputScreenRects[0] = currOutputScreenRects[0];
-    prevOutputScreenRects[1] = currOutputScreenRects[1];
-    prevOutputScreenRects[2] = currOutputScreenRects[2];
+    prevOutputScreenRects[isSecondaryWindow][0] = currOutputScreenRects[isSecondaryWindow][0];
+    prevOutputScreenRects[isSecondaryWindow][1] = currOutputScreenRects[isSecondaryWindow][1];
+    prevOutputScreenRects[isSecondaryWindow][2] = currOutputScreenRects[isSecondaryWindow][2];
 
     //Set the Viewport
     state.viewport.x = 0;

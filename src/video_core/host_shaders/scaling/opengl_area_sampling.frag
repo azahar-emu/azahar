@@ -52,8 +52,8 @@ vec4 AreaSampling(sampler2D textureSampler, vec2 texCoords) {
     avg_color += area_se * texelFetch(textureSampler, ivec2(f_end.x, f_end.y), 0);
 
     // Determine the size of the pixel box.
-    int x_range = int(f_end.x - f_beg.x - 0.5);
-    int y_range = int(f_end.y - f_beg.y - 0.5);
+    int x_range = int(float(f_end.x) - float(f_beg.x) - 0.5);
+    int y_range = int(float(f_end.y) - float(f_beg.y) - 0.5);
 
     // Accumulate top and bottom edge pixels.
     for (int x = f_beg.x + 1; x <= f_beg.x + x_range; ++x) {
