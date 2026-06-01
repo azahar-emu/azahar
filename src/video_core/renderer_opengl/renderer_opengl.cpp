@@ -425,7 +425,7 @@ void RendererOpenGL::AllocateOutputSizeTextures(){
         }
     }
 
-    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures. PrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
     prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
     prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
     prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
@@ -433,7 +433,6 @@ void RendererOpenGL::AllocateOutputSizeTextures(){
     currOutputScreenRects[isSecondaryWindow][1].GetWidth(), currOutputScreenRects[isSecondaryWindow][1].GetHeight(),
     currOutputScreenRects[isSecondaryWindow][2].GetWidth(), currOutputScreenRects[isSecondaryWindow][2].GetHeight()
     );
-    //
 }
 
 /**

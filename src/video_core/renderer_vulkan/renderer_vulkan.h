@@ -269,6 +269,8 @@ private:
 
     // Secondary Layout Fix
     bool isSecondaryWindow;
+    bool secondaryWindowEnabled;
+    bool usingAndroid;
 };
 
 } // namespace Vulkan

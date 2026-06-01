@@ -586,7 +586,15 @@ void RendererVulkan::AllocateOutputSizeTextures(){
             AllocateTexture(intermediateOutputSizeTextures[isSecondaryWindow][i][j], currOutputScreenRects[isSecondaryWindow][i].GetWidth(),  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
         }
     }
-    LOG_INFO(Render_Vulkan, "Reallocated Output Size Textures");
+    // LOG_INFO(Render_Vulkan, "Reallocated Output Size Textures");
+    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][0].GetWidth(), currOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][1].GetWidth(), currOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][2].GetWidth(), currOutputScreenRects[isSecondaryWindow][2].GetHeight()
+    );
 };
 
 void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
@@ -2082,23 +2090,75 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
 
     clearingColorAttachment = true;
     applyingOpacity = true;
-    if (!Settings::values.swap_screen.GetValue()) {
-        drawingPrimaryScreen = true;
-        DrawTopScreen(layout, top_screen);
-        draw_info.layer = 0;
-        drawingPrimaryScreen = false;
-        usingTopOpacity = false;
-        clearingColorAttachment = false;
-        DrawBottomScreen(layout, bottom_screen);
+    if (!secondaryWindowEnabled){
+        if (!Settings::values.swap_screen.GetValue()) {
+            drawingPrimaryScreen = true;
+            DrawTopScreen(layout, top_screen);
+            draw_info.layer = 0;
+            drawingPrimaryScreen = false;
+            usingTopOpacity = false;
+            clearingColorAttachment = false;
+            DrawBottomScreen(layout, bottom_screen);
+        } else {
+            drawingPrimaryScreen = true;
+            DrawBottomScreen(layout, bottom_screen);
+            draw_info.layer = 0;
+            drawingPrimaryScreen = false;
+            usingTopOpacity = true;
+            clearingColorAttachment = false;
+            DrawTopScreen(layout, top_screen);
+        }
     } else {
-        drawingPrimaryScreen = true;
-        DrawBottomScreen(layout, bottom_screen);
-        draw_info.layer = 0;
-        drawingPrimaryScreen = false;
-        usingTopOpacity = true;
-        clearingColorAttachment = false;
-        DrawTopScreen(layout, top_screen);
+        if (!Settings::values.swap_screen.GetValue()) {
+            if (usingAndroid){
+                // Change this block to conditionally display based on layout of primary and secondary screen
+                if (isSecondaryWindow){
+                    return;
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                    draw_info.layer = 0;
+                    drawingPrimaryScreen = false;
+                    usingTopOpacity = false;
+                    clearingColorAttachment = false;
+                    DrawBottomScreen(layout, bottom_screen);
+                }
+            } else {
+                if (isSecondaryWindow) {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                }
+            }
+        } else {
+            if (usingAndroid){
+                // Change this block to conditionally display based on layout of primary and secondary screen
+                if (isSecondaryWindow){
+                    return;
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                    draw_info.layer = 0;
+                    drawingPrimaryScreen = false;
+                    usingTopOpacity = true;
+                    clearingColorAttachment = false;
+                    DrawTopScreen(layout, top_screen);
+                }
+            } else {
+                if (isSecondaryWindow) {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                }
+            }
+
+        }
     }
+
 
     applyingOpacity = false;
     if (layout.additional_screen_enabled) {
@@ -2176,6 +2236,23 @@ void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
 
 void RendererVulkan::SwapBuffers() {
     system.perf_stats->StartSwap();
+#ifndef ANDROID
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
+        ASSERT(secondary_window);
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
+
+#ifdef ANDROID
+    usingAndroid = true;
+    if (secondary_window) {
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
