@@ -2112,9 +2112,9 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         if (!Settings::values.swap_screen.GetValue()) {
             if (usingAndroid){
                 // Change this block to conditionally display based on layout of primary and secondary screen
-                if (isSecondaryWindow){
-                    return;
-                } else {
+                // if (isSecondaryWindow){
+                //     return;
+                // } else {
                     drawingPrimaryScreen = true;
                     DrawTopScreen(layout, top_screen);
                     draw_info.layer = 0;
@@ -2122,7 +2122,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
                     usingTopOpacity = false;
                     clearingColorAttachment = false;
                     DrawBottomScreen(layout, bottom_screen);
-                }
+                // }
             } else {
                 if (isSecondaryWindow) {
                     drawingPrimaryScreen = true;
@@ -2135,9 +2135,9 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         } else {
             if (usingAndroid){
                 // Change this block to conditionally display based on layout of primary and secondary screen
-                if (isSecondaryWindow){
-                    return;
-                } else {
+                // if (isSecondaryWindow){
+                //     return;
+                // } else {
                     drawingPrimaryScreen = true;
                     DrawBottomScreen(layout, bottom_screen);
                     draw_info.layer = 0;
@@ -2145,7 +2145,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
                     usingTopOpacity = true;
                     clearingColorAttachment = false;
                     DrawTopScreen(layout, top_screen);
-                }
+                // }
             } else {
                 if (isSecondaryWindow) {
                     drawingPrimaryScreen = true;

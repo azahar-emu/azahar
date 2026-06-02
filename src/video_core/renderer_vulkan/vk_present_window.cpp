@@ -490,7 +490,7 @@ void PresentWindow::CopyToSwapchain(Frame* frame) {
 vk::RenderPass PresentWindow::CreateRenderpass() {
     const vk::AttachmentReference color_ref = {
         .attachment = 0,
-        .layout = vk::ImageLayout::eGeneral,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
     };
 
     const vk::SubpassDescription subpass = {
@@ -537,7 +537,7 @@ vk::RenderPass PresentWindow::CreateRenderpass() {
 vk::RenderPass PresentWindow::CreateLoadRenderpass() {
     const vk::AttachmentReference color_ref = {
         .attachment = 0,
-        .layout = vk::ImageLayout::eGeneral,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
     };
 
     const vk::SubpassDescription subpass = {
