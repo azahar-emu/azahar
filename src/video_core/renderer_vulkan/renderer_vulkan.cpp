@@ -159,6 +159,8 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
     BuildLayouts();
     CreateTextureRenderPass();
     AllocateSMAATextures();
+    AllocatePPTextures();
+    CreatePPTextureFramebuffers();
     BuildPipelines();
     if (secondary_window) {
         secondary_present_window_ptr = std::make_unique<PresentWindow>(
@@ -171,6 +173,13 @@ RendererVulkan::~RendererVulkan() {
     scheduler.Finish();
     main_present_window.WaitPresent();
     device.waitIdle();
+
+    vmaDestroyBuffer(instance.GetAllocator(), areaTexInfo.buffer, areaTexInfo.bufferAllocation);
+    vmaDestroyBuffer(instance.GetAllocator(), searchTexInfo.buffer, searchTexInfo.bufferAllocation);
+    device.destroyImageView(areaTexInfo.image_view);
+    vmaDestroyImage(instance.GetAllocator(), areaTexInfo.image, areaTexInfo.imageAllocation);
+    device.destroyImageView(searchTexInfo.image_view);
+    vmaDestroyImage(instance.GetAllocator(), searchTexInfo.image, searchTexInfo.imageAllocation);
 
     device.destroyShaderModule(present_vertex_shader);
     for (u32 i = 0; i < PRESENT_PIPELINES; i++) {
@@ -215,6 +224,16 @@ RendererVulkan::~RendererVulkan() {
         device.destroyFramebuffer(antialiasTextureFBOs[j]);
         device.destroyImageView(antialiasTextures[j].image_view);
         vmaDestroyImage(instance.GetAllocator(), antialiasTextures[j].image, antialiasTextures[j].allocation);
+    }
+
+    for (int i = 0; i < intermediateOutputSizeTextures.size(); i++) {
+        for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
+            for (int k = 0; k < intermediateOutputSizeTextures[0][0].size(); k++){
+                device.destroyFramebuffer(intermediateOutputSizeTextureFBOs[i][j][k]);
+                device.destroyImageView(intermediateOutputSizeTextures[i][j][k].image_view);
+                vmaDestroyImage(instance.GetAllocator(), intermediateOutputSizeTextures[i][j][k].image, intermediateOutputSizeTextures[i][j][k].allocation);
+            }
+        }
     }
     device.destroyRenderPass(textureRenderpass);
     device.destroyPipeline(cursor_pipeline);
@@ -611,6 +630,10 @@ void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
 void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
     if (texture.width == 0 || texture.height == 0){
         return;
+    }
+    vk::Device device = instance.GetDevice();
+    if (framebuffer){
+        device.destroyFramebuffer(framebuffer);
     }
     const vk::FramebufferCreateInfo framebuffer_info = {
         .renderPass = textureRenderpass,
@@ -1606,9 +1629,6 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     //Vectors for sampling
     std::vector<u32> screen_ids;
     std::vector<TextureInfo> texturesToSample;
-
-
-
 
     currentPass = 0;
     if (antialiasingMode == 1){
