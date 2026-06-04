@@ -172,9 +172,11 @@ endfunction()
 
 function(download_moltenvk)
     if (IOS)
-        set(MOLTENVK_PLATFORM "static/MoltenVK.xcframework/ios-arm64")
+        set(platform "static/MoltenVK.xcframework/ios-arm64")
+        set(lib libMoltenVK.a)
     else()
-        set(MOLTENVK_PLATFORM "dynamic/dylib/macOS")
+        set(platform "dynamic/dylib/macOS")
+        set(lib libMoltenVK.dylib)
     endif()
 
     set(MOLTENVK_DIR "${CMAKE_BINARY_DIR}/externals/MoltenVK")
@@ -189,9 +191,9 @@ function(download_moltenvk)
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
     endif()
 
-    # Add the MoltenVK library path to the prefix so find_library can locate it.
-    list(APPEND CMAKE_PREFIX_PATH "${MOLTENVK_DIR}/MoltenVK/${MOLTENVK_PLATFORM}")
-    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
+    # Forcefully set the MoltenVK library in cache so find_library calls don't override it
+    set(MOLTENVK_LIBRARY "${MOLTENVK_DIR}/MoltenVK/${platform}/${lib}")
+    return(PROPAGATE MOLTENVK_LIBRARY)
 endfunction()
 
 function(get_external_prefix lib_name prefix_var)
