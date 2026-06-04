@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <vector>
 #include <QDialog>
 #include <QValidator>
 #include "core/frontend/applets/swkbd.h"
@@ -11,6 +12,7 @@
 class QDialogButtonBox;
 class QLabel;
 class QLineEdit;
+class QPushButton;
 class QVBoxLayout;
 class QtKeyboard;
 
@@ -31,7 +33,6 @@ public:
     void Submit();
 
 private:
-    void HandleValidationError(Frontend::ValidationError error);
     QDialogButtonBox* buttons;
     QLabel* label;
     QLineEdit* line_edit;
@@ -39,6 +40,35 @@ private:
     QtKeyboard* keyboard;
     QString text;
     u8 button;
+
+    friend class QtKeyboard;
+};
+
+class QtSoftwareKeyboardDialog final : public QDialog {
+    Q_OBJECT
+
+public:
+    QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* keyboard);
+
+private:
+    void AppendText(const QString& value);
+    void Backspace();
+    void Cancel();
+    void Submit();
+    void ToggleCase();
+    void UpdateLengthLabel();
+    void ShowInlineValidationError(Frontend::ValidationError error);
+    void ClearValidationError();
+
+    QLineEdit* line_edit;
+    QLabel* length_label;
+    QLabel* validation_label;
+    QPushButton* shift_button;
+    QtKeyboard* keyboard;
+    QString text;
+    u8 button;
+    std::vector<QPushButton*> letter_buttons;
+    bool uppercase = true;
 
     friend class QtKeyboard;
 };
@@ -53,6 +83,7 @@ public:
 
 private:
     Q_INVOKABLE void OpenInputDialog();
+    Q_INVOKABLE void OpenSoftwareKeyboardDialog();
     Q_INVOKABLE void ShowErrorDialog(QString message);
 
     /// Index of the buttons
@@ -66,5 +97,6 @@ private:
     int result_button;
 
     friend class QtKeyboardDialog;
+    friend class QtSoftwareKeyboardDialog;
     friend class QtKeyboardValidator;
 };

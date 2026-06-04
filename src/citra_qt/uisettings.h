@@ -89,6 +89,8 @@ struct Values {
     Settings::Setting<bool> pause_when_in_background{false, "pauseWhenInBackground"};
     Settings::Setting<bool> mute_when_in_background{false, "muteWhenInBackground"};
     Settings::Setting<bool> hide_mouse{false, "hideInactiveMouse"};
+    Settings::Setting<bool> use_on_screen_software_keyboard{false,
+                                                            "useOnScreenSoftwareKeyboard"};
 #ifdef ENABLE_QT_UPDATE_CHECKER
     Settings::Setting<bool> check_for_update_on_start{true, "check_for_update_on_start"};
     Settings::Setting<int> update_check_channel{UpdateCheckChannels::STABLE,
