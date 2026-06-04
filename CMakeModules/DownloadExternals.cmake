@@ -191,7 +191,7 @@ function(download_moltenvk)
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
     endif()
 
-    # Forcefully set the MoltenVK library in cache so find_library calls don't override it
+    # Set the MoltenVK library independent of cache so find_library calls don't override it
     set(MOLTENVK_LIBRARY "${MOLTENVK_DIR}/MoltenVK/${platform}/${lib}")
     return(PROPAGATE MOLTENVK_LIBRARY)
 endfunction()
