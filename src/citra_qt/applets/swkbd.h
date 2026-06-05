@@ -103,6 +103,7 @@ private:
     void ShowInlineValidationError(Frontend::ValidationError error);
     void ClearValidationError();
     void MoveSelection(int row_delta, int column_delta);
+    int FindClosestColumnInRow(int row, int source_x) const;
     void SetSelectedButton(int row, int column);
     void ActivateSelectedButton();
     void HandleInputAction(SoftwareKeyboardInputInterpreter::Action action);

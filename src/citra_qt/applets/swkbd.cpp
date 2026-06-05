@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <unordered_map>
 #include <utility>
 #include <QDialogButtonBox>
@@ -371,15 +372,38 @@ void QtSoftwareKeyboardDialog::MoveSelection(int row_delta, int column_delta) {
         next_row = 0;
     }
 
-    int next_column = selected_column + column_delta;
     const int row_size = static_cast<int>(button_rows[next_row].size());
-    if (next_column < 0) {
-        next_column = row_size - 1;
-    } else if (next_column >= row_size) {
-        next_column = 0;
+    int next_column = selected_column;
+    if (row_delta != 0) {
+        const auto* const selected_button = button_rows[selected_row][selected_column];
+        next_column = FindClosestColumnInRow(
+            next_row, selected_button->geometry().center().x());
+    } else {
+        next_column += column_delta;
+        if (next_column < 0) {
+            next_column = row_size - 1;
+        } else if (next_column >= row_size) {
+            next_column = 0;
+        }
     }
 
     SetSelectedButton(next_row, next_column);
+}
+
+int QtSoftwareKeyboardDialog::FindClosestColumnInRow(int row, int source_x) const {
+    int closest_column = 0;
+    int closest_distance = std::numeric_limits<int>::max();
+
+    for (int column = 0; column < static_cast<int>(button_rows[row].size()); ++column) {
+        const int distance =
+            std::abs(button_rows[row][column]->geometry().center().x() - source_x);
+        if (distance < closest_distance) {
+            closest_column = column;
+            closest_distance = distance;
+        }
+    }
+
+    return closest_column;
 }
 
 void QtSoftwareKeyboardDialog::SetSelectedButton(int row, int column) {
