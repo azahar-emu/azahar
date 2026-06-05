@@ -171,17 +171,8 @@ function(download_qt target)
 endfunction()
 
 function(download_moltenvk)
-    if (IOS)
-        set(platform "static/MoltenVK.xcframework/ios-arm64")
-        set(lib libMoltenVK.a)
-    else()
-        set(platform "dynamic/dylib/macOS")
-        set(lib libMoltenVK.dylib)
-    endif()
-
-    set(MOLTENVK_DIR "${CMAKE_BINARY_DIR}/externals/MoltenVK")
     set(MOLTENVK_TAR "${CMAKE_BINARY_DIR}/externals/MoltenVK.tar")
-    if (NOT EXISTS ${MOLTENVK_DIR})
+    if (NOT EXISTS "${CMAKE_BINARY_DIR}/externals/MoltenVK")
         if (NOT EXISTS ${MOLTENVK_TAR})
             file(DOWNLOAD https://github.com/KhronosGroup/MoltenVK/releases/download/v1.2.9/MoltenVK-all.tar
                 ${MOLTENVK_TAR} SHOW_PROGRESS)
@@ -190,10 +181,6 @@ function(download_moltenvk)
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${MOLTENVK_TAR}"
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
     endif()
-
-    # Set the MoltenVK library independent of cache so find_library calls don't override it
-    set(MOLTENVK_LIBRARY "${MOLTENVK_DIR}/MoltenVK/${platform}/${lib}")
-    return(PROPAGATE MOLTENVK_LIBRARY)
 endfunction()
 
 function(get_external_prefix lib_name prefix_var)
