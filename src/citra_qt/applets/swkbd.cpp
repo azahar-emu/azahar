@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <iterator>
 #include <unordered_map>
+#include <utility>
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -12,11 +14,50 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QString>
+#include <QStyle>
+#include <QTimer>
 #include <QVBoxLayout>
 #include "citra_qt/applets/swkbd.h"
 #include "citra_qt/uisettings.h"
+#include "common/param_package.h"
+#include "common/settings.h"
+#ifdef HAVE_SDL2
+#include <SDL.h>
+#endif
 
 namespace {
+constexpr int CONTROLLER_POLL_INTERVAL_MS = 16;
+constexpr float CIRCLE_PAD_DIRECTION_THRESHOLD = 0.5f;
+
+void PumpAppletInputEvents() {
+#ifdef HAVE_SDL2
+    if (SDL_WasInit(SDL_INIT_GAMECONTROLLER) != 0) {
+        SDL_PumpEvents();
+        SDL_GameControllerUpdate();
+    }
+#endif
+}
+
+std::unique_ptr<Input::ButtonDevice> CreateAppletButtonDevice(const std::string& params) {
+    const Common::ParamPackage package(params);
+    const auto engine = package.Get("engine", "");
+    // Keyboard bindings are left to Qt text input so physical typing works even when
+    // the active emulator input profile is controller-based.
+    if (engine.empty() || engine == "keyboard") {
+        return {};
+    }
+    return Input::CreateDevice<Input::ButtonDevice>(params);
+}
+
+std::unique_ptr<Input::AnalogDevice> CreateAppletAnalogDevice(const std::string& params) {
+    const Common::ParamPackage package(params);
+    const auto engine = package.Get("engine", "");
+    if (engine.empty() || engine == "analog_from_button") {
+        return {};
+    }
+    return Input::CreateDevice<Input::AnalogDevice>(params);
+}
+
 QString GetValidationErrorMessage(Frontend::ValidationError error, int max_text_length) {
     using namespace Frontend;
     const std::unordered_map<ValidationError, QString> validation_error_messages = {
@@ -51,6 +92,66 @@ QtKeyboardValidator::State QtKeyboardValidator::validate(QString& input, int& po
     } else {
         return State::Invalid;
     }
+}
+
+SoftwareKeyboardInputInterpreter::SoftwareKeyboardInputInterpreter() {
+    using namespace Settings::NativeButton;
+
+    const auto& profile_buttons = Settings::values.current_input_profile.buttons;
+    buttons[ButtonA] = CreateAppletButtonDevice(profile_buttons[A]);
+    buttons[ButtonB] = CreateAppletButtonDevice(profile_buttons[B]);
+    buttons[ButtonUp] = CreateAppletButtonDevice(profile_buttons[Up]);
+    buttons[ButtonDown] = CreateAppletButtonDevice(profile_buttons[Down]);
+    buttons[ButtonLeft] = CreateAppletButtonDevice(profile_buttons[Left]);
+    buttons[ButtonRight] = CreateAppletButtonDevice(profile_buttons[Right]);
+
+    circle_pad = CreateAppletAnalogDevice(
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CirclePad]);
+}
+
+std::vector<SoftwareKeyboardInputInterpreter::Action> SoftwareKeyboardInputInterpreter::Poll() {
+    PumpAppletInputEvents();
+
+    std::vector<Action> actions;
+    const std::array<Action, NumButtons> button_actions{{
+        Action::Accept,
+        Action::CancelOrBackspace,
+        Action::MoveUp,
+        Action::MoveDown,
+        Action::MoveLeft,
+        Action::MoveRight,
+    }};
+
+    for (std::size_t index = 0; index < buttons.size(); ++index) {
+        if (!buttons[index]) {
+            continue;
+        }
+        const bool is_pressed = buttons[index]->GetStatus();
+        if (is_pressed && !previous_button_state[index]) {
+            actions.push_back(button_actions[index]);
+        }
+        previous_button_state[index] = is_pressed;
+    }
+
+    if (circle_pad) {
+        const auto [x, y] = circle_pad->GetStatus();
+        const std::array<std::pair<bool, Action>, NumDirections> direction_actions{{
+            {y > CIRCLE_PAD_DIRECTION_THRESHOLD, Action::MoveUp},
+            {y < -CIRCLE_PAD_DIRECTION_THRESHOLD, Action::MoveDown},
+            {x < -CIRCLE_PAD_DIRECTION_THRESHOLD, Action::MoveLeft},
+            {x > CIRCLE_PAD_DIRECTION_THRESHOLD, Action::MoveRight},
+        }};
+
+        for (std::size_t index = 0; index < direction_actions.size(); ++index) {
+            const auto [is_pressed, action] = direction_actions[index];
+            if (is_pressed && !previous_direction_state[index]) {
+                actions.push_back(action);
+            }
+            previous_direction_state[index] = is_pressed;
+        }
+    }
+
+    return actions;
 }
 
 QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
@@ -115,6 +216,12 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     : QDialog(parent), keyboard(keyboard_) {
     setWindowTitle(tr("Software Keyboard"));
     setMinimumWidth(560);
+    setStyleSheet(QStringLiteral(
+        "QPushButton[controllerSelected=\"true\"] {"
+        "border: 2px solid palette(highlight);"
+        "background-color: palette(highlight);"
+        "color: palette(highlighted-text);"
+        "}"));
 
     auto* const layout = new QVBoxLayout;
     auto* const label = new QLabel(QString::fromStdString(keyboard->config.hint_text));
@@ -135,6 +242,7 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     };
 
     for (int row = 0; row < std::size(rows); ++row) {
+        std::vector<QPushButton*> button_row;
         for (int column = 0; column < rows[row].size(); ++column) {
             const QString value = rows[row].mid(column, 1);
             auto* const button = new QPushButton(value);
@@ -147,7 +255,9 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
                 AppendText(button->text());
             });
             keys->addWidget(button, row, column);
+            button_row.push_back(button);
         }
+        button_rows.push_back(std::move(button_row));
     }
 
     auto* const controls = new QHBoxLayout;
@@ -170,6 +280,8 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     connect(ok, &QPushButton::clicked, this, [this] { Submit(); });
     connect(cancel, &QPushButton::clicked, this, [this] { Cancel(); });
 
+    button_rows.push_back({shift_button, space, backspace, ok, cancel});
+
     controls->addWidget(shift_button);
     controls->addWidget(space);
     controls->addWidget(backspace);
@@ -184,7 +296,13 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     layout->addLayout(controls);
     setLayout(layout);
     UpdateLengthLabel();
+    SetSelectedButton(0, 0);
     line_edit->setFocus();
+
+    controller_poll_timer = new QTimer(this);
+    connect(controller_poll_timer, &QTimer::timeout, this,
+            &QtSoftwareKeyboardDialog::PollControllerInput);
+    controller_poll_timer->start(CONTROLLER_POLL_INTERVAL_MS);
 }
 
 void QtSoftwareKeyboardDialog::AppendText(const QString& value) {
@@ -244,6 +362,84 @@ void QtSoftwareKeyboardDialog::ClearValidationError() {
     validation_label->clear();
     validation_label->setVisible(false);
 }
+
+void QtSoftwareKeyboardDialog::MoveSelection(int row_delta, int column_delta) {
+    int next_row = selected_row + row_delta;
+    if (next_row < 0) {
+        next_row = static_cast<int>(button_rows.size()) - 1;
+    } else if (next_row >= static_cast<int>(button_rows.size())) {
+        next_row = 0;
+    }
+
+    int next_column = selected_column + column_delta;
+    const int row_size = static_cast<int>(button_rows[next_row].size());
+    if (next_column < 0) {
+        next_column = row_size - 1;
+    } else if (next_column >= row_size) {
+        next_column = 0;
+    }
+
+    SetSelectedButton(next_row, next_column);
+}
+
+void QtSoftwareKeyboardDialog::SetSelectedButton(int row, int column) {
+    if (!button_rows.empty()) {
+        auto* const previous_button = button_rows[selected_row][selected_column];
+        previous_button->setProperty("controllerSelected", false);
+        previous_button->style()->unpolish(previous_button);
+        previous_button->style()->polish(previous_button);
+        previous_button->update();
+    }
+
+    selected_row = row;
+    selected_column = std::min(column, static_cast<int>(button_rows[selected_row].size()) - 1);
+
+    auto* const selected_button = button_rows[selected_row][selected_column];
+    selected_button->setProperty("controllerSelected", true);
+    selected_button->style()->unpolish(selected_button);
+    selected_button->style()->polish(selected_button);
+    selected_button->update();
+}
+
+void QtSoftwareKeyboardDialog::ActivateSelectedButton() {
+    button_rows[selected_row][selected_column]->click();
+}
+
+void QtSoftwareKeyboardDialog::HandleInputAction(SoftwareKeyboardInputInterpreter::Action action) {
+    using Action = SoftwareKeyboardInputInterpreter::Action;
+
+    switch (action) {
+    case Action::MoveUp:
+        MoveSelection(-1, 0);
+        break;
+    case Action::MoveDown:
+        MoveSelection(1, 0);
+        break;
+    case Action::MoveLeft:
+        MoveSelection(0, -1);
+        break;
+    case Action::MoveRight:
+        MoveSelection(0, 1);
+        break;
+    case Action::Accept:
+        ActivateSelectedButton();
+        break;
+    case Action::CancelOrBackspace:
+        if (line_edit->text().isEmpty()) {
+            Cancel();
+        } else {
+            Backspace();
+        }
+        break;
+    }
+}
+
+void QtSoftwareKeyboardDialog::PollControllerInput() {
+    for (const auto action : input_interpreter.Poll()) {
+        HandleInputAction(action);
+    }
+}
+
 QtKeyboard::QtKeyboard(QWidget& parent_) : parent(parent_) {}
 
 void QtKeyboard::Execute(const Frontend::KeyboardConfig& config) {
