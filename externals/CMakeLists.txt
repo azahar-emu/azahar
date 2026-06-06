@@ -168,20 +168,21 @@ endif()
 # Open Source Archives
 add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 
-if (USE_SYSTEM_FAAD2)
-    pkg_check_modules(FAAD2 faad2)
-endif()
+if(NOT USE_SYSTEM_FAAD)
+    if (USE_SYSTEM_FAAD2)
+        pkg_check_modules(FAAD2 faad2)
+    endif()
 
-if (NOT FAAD2_FOUND)
-    message(STATUS "Using bundled FAAD2")
-    add_subdirectory(faad2 EXCLUDE_FROM_ALL)
-else()
-    message(STATUS "Using system FAAD2")
-    add_library(faad2 INTERFACE)
-    target_include_directories(faad2 INTERFACE ${FAAD2_INCLUDE_DIRS})
-    target_link_libraries(faad2 INTERFACE ${FAAD2_LIBRARIES})
+    if (NOT FAAD2_FOUND)
+        message(STATUS "Using bundled FAAD2")
+        add_subdirectory(faad2 EXCLUDE_FROM_ALL)
+    else()
+        message(STATUS "Using system FAAD2")
+        add_library(faad2 INTERFACE)
+        target_include_directories(faad2 INTERFACE ${FAAD2_INCLUDE_DIRS})
+        target_link_libraries(faad2 INTERFACE ${FAAD2_LIBRARIES})
+    endif()
 endif()
-
 
 # Dynamic library headers
 add_library(library-headers INTERFACE)
