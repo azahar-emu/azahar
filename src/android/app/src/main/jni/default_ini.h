@@ -131,7 +131,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(use_vsync) BOOST_HANA_STRING(R"(
 
 # Skips display of duplicated frames in 30 fps games
-# 0 (default): Off, 1: On
+# 0: Off, 1 (default): On
 )") DECLARE_KEY(use_skip_duplicate_frames) BOOST_HANA_STRING(R"(
 
 # Reduce stuttering by storing and loading generated shaders to disk
