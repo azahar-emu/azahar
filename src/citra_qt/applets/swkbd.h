@@ -4,13 +4,19 @@
 
 #pragma once
 
+#include <array>
+#include <memory>
+#include <vector>
 #include <QDialog>
 #include <QValidator>
 #include "core/frontend/applets/swkbd.h"
+#include "core/frontend/input.h"
 
 class QDialogButtonBox;
 class QLabel;
 class QLineEdit;
+class QPushButton;
+class QTimer;
 class QVBoxLayout;
 class QtKeyboard;
 
@@ -23,6 +29,45 @@ private:
     QtKeyboard* keyboard;
 };
 
+class SoftwareKeyboardInputInterpreter {
+public:
+    enum class Action {
+        MoveUp,
+        MoveDown,
+        MoveLeft,
+        MoveRight,
+        Accept,
+        CancelOrBackspace,
+    };
+
+    SoftwareKeyboardInputInterpreter();
+    std::vector<Action> Poll();
+
+private:
+    enum Button {
+        ButtonA,
+        ButtonB,
+        ButtonUp,
+        ButtonDown,
+        ButtonLeft,
+        ButtonRight,
+        NumButtons,
+    };
+
+    enum Direction {
+        DirectionUp,
+        DirectionDown,
+        DirectionLeft,
+        DirectionRight,
+        NumDirections,
+    };
+
+    std::array<std::unique_ptr<Input::ButtonDevice>, NumButtons> buttons;
+    std::unique_ptr<Input::AnalogDevice> circle_pad;
+    std::array<bool, NumButtons> previous_button_state{};
+    std::array<bool, NumDirections> previous_direction_state{};
+};
+
 class QtKeyboardDialog final : public QDialog {
     Q_OBJECT
 
@@ -31,7 +76,6 @@ public:
     void Submit();
 
 private:
-    void HandleValidationError(Frontend::ValidationError error);
     QDialogButtonBox* buttons;
     QLabel* label;
     QLineEdit* line_edit;
@@ -39,6 +83,49 @@ private:
     QtKeyboard* keyboard;
     QString text;
     u8 button;
+
+    friend class QtKeyboard;
+};
+
+class QtSoftwareKeyboardDialog final : public QDialog {
+    Q_OBJECT
+
+public:
+    QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* keyboard);
+
+private:
+    void AppendText(const QString& value);
+    void Backspace();
+    void Cancel();
+    void Submit();
+    void ToggleCase();
+    void UpdateLengthLabel();
+    void ShowInlineValidationError(Frontend::ValidationError error);
+    void ClearValidationError();
+    void MoveSelection(int row_delta, int column_delta);
+    int FindClosestColumnInRow(int row, int source_x) const;
+    void SetButtonControllerSelected(QPushButton* button, bool selected);
+    void SetSelectedButton(int row, int column);
+    void ActivateSelectedButton();
+    void HandleInputAction(SoftwareKeyboardInputInterpreter::Action action);
+    void PollControllerInput();
+
+    QLineEdit* line_edit;
+    QLabel* length_label;
+    QLabel* validation_label;
+    QPushButton* shift_button;
+    QTimer* controller_poll_timer;
+    QtKeyboard* keyboard;
+    QString text;
+    u8 button;
+    std::vector<std::vector<QPushButton*>> button_rows;
+    std::vector<QPushButton*> letter_buttons;
+    SoftwareKeyboardInputInterpreter input_interpreter;
+    QPalette default_button_palette;
+    QPalette selected_button_palette;
+    int selected_row = 0;
+    int selected_column = 0;
+    bool uppercase = true;
 
     friend class QtKeyboard;
 };
@@ -53,6 +140,7 @@ public:
 
 private:
     Q_INVOKABLE void OpenInputDialog();
+    Q_INVOKABLE void OpenSoftwareKeyboardDialog();
     Q_INVOKABLE void ShowErrorDialog(QString message);
 
     /// Index of the buttons
@@ -66,5 +154,6 @@ private:
     int result_button;
 
     friend class QtKeyboardDialog;
+    friend class QtSoftwareKeyboardDialog;
     friend class QtKeyboardValidator;
 };
