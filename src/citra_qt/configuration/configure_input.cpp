@@ -722,19 +722,20 @@ void ConfigureInput::StopPolling() {
 }
 
 void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool abort) {
-    auto const currentBinding = GetMapping(params);
+    auto const current_binding = GetMapping(params);
     StopPolling();
-    if (!abort && currentBinding.binding_type != "") {
+    if (!abort && current_binding.binding_type != "") {
         auto response =
-            QMessageBox::question(this, QStringLiteral("Duplicate mapping"),
-                                  QString::fromStdString("This will clear the mapping for " +
-                                                         currentBinding.name + ". Proceed?"),
-                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+            QMessageBox::information(this, tr("Key Already Bound"),
+                                     tr("This key is already bound to the '%1' input.\n\n"
+                                        "Continuing will unbind the previous input. Proceed?")
+                                         .arg(current_binding.name),
+                                     QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
         if (response == QMessageBox::No) {
             abort = true;
             return;
         } else {
-            ClearBinding(currentBinding);
+            ClearBinding(current_binding);
         }
     }
     if (!abort && input_setter) {
