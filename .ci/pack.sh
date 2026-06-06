@@ -36,10 +36,10 @@ function pack_artifacts() {
     fi
 
     # Create .zip/.tar.gz
-    if [ "$OS" = "windows" ]; then
+    if [ "$OS" = "windows" ] && [ "$TARGET" != "mxe" ]; then
         ARCHIVE_FULL_NAME="$ARCHIVE_NAME.zip"
         powershell Compress-Archive "$REV_NAME" "$ARCHIVE_FULL_NAME"
-    elif [ "$OS" = "android" ] || [ "$OS" = "macos" ]; then
+    elif [ "$OS" = "android" ] || [ "$OS" = "macos" ] || [ "$TARGET" = "mxe" ]; then
         ARCHIVE_FULL_NAME="$ARCHIVE_NAME.zip"
         zip -r "$ARCHIVE_FULL_NAME" "$REV_NAME"
     else

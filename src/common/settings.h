@@ -484,6 +484,7 @@ struct Values {
     Setting<bool> use_virtual_sd{true, Keys::use_virtual_sd};
     Setting<bool> use_custom_storage{false, Keys::use_custom_storage};
     Setting<bool> compress_cia_installs{false, Keys::compress_cia_installs};
+    Setting<bool> async_fs_operations{true, Keys::async_fs_operations};
 
     // System
     SwitchableSetting<s32> region_value{REGION_VALUE_AUTO_SELECT, Keys::region_value};
@@ -540,8 +541,9 @@ struct Values {
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, Keys::texture_filter};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         Keys::texture_sampling};
-    SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 16000,
+    SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 65000,
                                                              Keys::delay_game_render_thread_us};
+    SwitchableSetting<bool> simulate_3ds_gpu_timings{true, Keys::simulate_3ds_gpu_timings};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, Keys::layout_option};
     SwitchableSetting<bool> swap_screen{false, Keys::swap_screen};
@@ -627,6 +629,7 @@ struct Values {
     Setting<std::string> output_device{"Auto", Keys::output_device};
     Setting<AudioCore::InputType> input_type{AudioCore::InputType::Auto, Keys::input_type};
     Setting<std::string> input_device{"Auto", Keys::input_device};
+    SwitchableSetting<bool> simulate_headphones_plugged{false, Keys::simulate_headphones_plugged};
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;
@@ -642,6 +645,7 @@ struct Values {
     Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
     Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
     Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
+    Setting<bool> break_on_unmapped_memory_access{false, Keys::break_on_unmapped_memory_access};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};

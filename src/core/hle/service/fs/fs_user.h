@@ -49,6 +49,9 @@ private:
 class FS_USER final : public ServiceFramework<FS_USER, ClientSlot> {
 public:
     explicit FS_USER(Core::System& system);
+    ~FS_USER() {
+        fs_async_worker.WaitForRequests();
+    }
 
     // On real HW this is part of FSReg (FSReg:Register). But since that module is only used by
     // loader and pm, which we HLEed, we can just directly use it here
@@ -755,6 +758,8 @@ private:
     ArchiveManager& archives;
 
     std::shared_ptr<FileSys::SecureValueBackend> secure_value_backend;
+
+    Common::ThreadWorker fs_async_worker{1, "FSUSER_Worker"};
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

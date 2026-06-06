@@ -75,8 +75,13 @@ void File::Read(Kernel::HLERequestContext& ctx) {
                   offset, length, backend->GetSize());
     }
 
+    const bool allows_cache_reads = backend->AllowsCachedReads();
+
     // Conventional reading if the backend does not support cache.
-    if (!backend->AllowsCachedReads()) {
+    // Do not use asynchronous operations on file reads, as in most cases
+    // there are many of them with small sizes. This causes a lot of delay
+    // due to thread communication overhead.
+    if (!allows_cache_reads) {
         auto& buffer = rp.PopMappedBuffer();
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
         std::unique_ptr<u8[]> data = std::make_unique_for_overwrite<u8[]>(length);
@@ -115,7 +120,8 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     async_data->length = length;
     async_data->offset = offset;
     async_data->cache_ready = backend->CacheReady(offset, length);
-    if (!async_data->cache_ready) {
+    const bool really_async = !async_data->cache_ready;
+    if (really_async) {
         async_data->pre_timer = std::chrono::steady_clock::now();
     }
 
@@ -161,7 +167,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
             }
             rb.PushMappedBuffer(*async_data->buffer);
         },
-        !async_data->cache_ready);
+        really_async);
 }
 
 void File::Write(Kernel::HLERequestContext& ctx) {
@@ -186,6 +192,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     }
     bool flush = (flags & 0xFF) != 0, update_timestamp = (flags & 0xFF00) != 0;
 
+    // Do not use asynchronous fs operations here for the same reason as File::Read.
     if (!backend->AllowsCachedReads()) {
         std::vector<u8> data(length);
         buffer.Read(data.data(), 0, data.size());
@@ -274,7 +281,7 @@ void File::SetSize(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    if (!backend->AllowsCachedReads()) {
+    if (!backend->AllowsCachedReads() && !Settings::values.async_fs_operations) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         file->size = size;
         backend->SetSize(size);
@@ -303,7 +310,7 @@ void File::Close(Kernel::HLERequestContext& ctx) {
         LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
                     connected_sessions.size());
 
-    if (!backend->AllowsCachedReads()) {
+    if (!backend->AllowsCachedReads() && !Settings::values.async_fs_operations) {
         backend->Close();
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultSuccess);
@@ -334,7 +341,7 @@ void File::Flush(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    if (!backend->AllowsCachedReads()) {
+    if (!backend->AllowsCachedReads() && !Settings::values.async_fs_operations) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         backend->Flush();
         rb.Push(ResultSuccess);

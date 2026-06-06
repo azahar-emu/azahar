@@ -76,6 +76,8 @@ enum class ResultStatus {
     ErrorGbaTitle,
     ErrorArtic,
     ErrorNotFound,
+    ErrorPatches,
+    ErrorPatchesInvalidTitle,
 };
 
 constexpr u32 MakeMagic(char a, char b, char c, char d) {
@@ -319,5 +321,8 @@ protected:
  * @return best loader for this file
  */
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
+
+std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
+    const std::string& filepath, bool compress);
 
 } // namespace Loader

@@ -511,12 +511,14 @@ void JitShader::Compile_DPH(Instruction instr) {
 
 void JitShader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    exp2_used = true;
     call(exp2_subroutine);
     Compile_DestEnable(instr, SRC1);
 }
 
 void JitShader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    log2_used = true;
     call(log2_subroutine);
     Compile_DestEnable(instr, SRC1);
 }
@@ -1038,6 +1040,14 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     // Compile entire program
     Compile_Block(static_cast<u32>(program_code->size()));
 
+    // Compile utility functions
+    if (log2_used) {
+        Compile_Log2(log2_subroutine);
+    }
+    if (exp2_used) {
+        Compile_Exp2(exp2_subroutine);
+    }
+
     // Free memory that's no longer needed
     program_code = nullptr;
     swizzle_data = nullptr;
@@ -1050,18 +1060,9 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     LOG_DEBUG(HW_GPU, "Compiled shader size={}", getSize());
 }
 
-JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {
-    CompilePrelude();
-}
+JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {}
 
-void JitShader::CompilePrelude() {
-    log2_subroutine = CompilePrelude_Log2();
-    exp2_subroutine = CompilePrelude_Exp2();
-}
-
-Xbyak::Label JitShader::CompilePrelude_Log2() {
-    Xbyak::Label subroutine;
-
+void JitShader::Compile_Log2(Xbyak::Label subroutine) {
     // SSE does not have a log instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [1.0, 2.0).
     // A minimax polynomial which was fit for the function log2(x) / (x - 1) is then evaluated.
@@ -1163,12 +1164,9 @@ Xbyak::Label JitShader::CompilePrelude_Log2() {
     shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
 
     ret();
-
-    return subroutine;
 }
 
-Xbyak::Label JitShader::CompilePrelude_Exp2() {
-    Xbyak::Label subroutine;
+void JitShader::Compile_Exp2(Xbyak::Label subroutine) {
 
     // SSE does not have a exp instruction, thus we must approximate.
     // We perform this approximation first performaing a range reduction into the range [-0.5, 0.5).
@@ -1271,8 +1269,6 @@ Xbyak::Label JitShader::CompilePrelude_Exp2() {
     shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
 
     ret();
-
-    return subroutine;
 }
 
 } // namespace Pica::Shader

@@ -72,6 +72,7 @@ void FragmentModule::Generate() {
         break;
     case TexturingRegs::FogMode::Gas:
         WriteGas();
+        // Return early due to unimplemented gas mode
         return;
     default:
         break;
@@ -196,7 +197,12 @@ void FragmentModule::WriteFog() {
 void FragmentModule::WriteGas() {
     // TODO: Implement me
     LOG_CRITICAL(Render, "Unimplemented gas mode");
-    OpKill();
+    // Replace the output color with a transparent pixel,
+    // (just discarding the pixel causes graphical issues
+    // in some MH games).
+    OpStore(color_id, ConstF32(0.f, 0.f, 0.f, 0.f));
+
+    OpReturn();
     OpFunctionEnd();
 }
 

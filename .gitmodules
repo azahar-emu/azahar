@@ -55,18 +55,12 @@
 [submodule "sdl2"]
 	path = externals/sdl2/SDL
 	url = https://github.com/libsdl-org/SDL
-[submodule "cryptopp-cmake"]
-	path = externals/cryptopp-cmake
-	url = https://github.com/abdes/cryptopp-cmake.git
-[submodule "cryptopp"]
-	path = externals/cryptopp
-	url = https://github.com/weidai11/cryptopp.git
 [submodule "dds-ktx"]
 	path = externals/dds-ktx
 	url = https://github.com/septag/dds-ktx
 [submodule "openal-soft"]
 	path = externals/openal-soft
-	url = https://github.com/kcat/openal-soft
+	url = https://github.com/azahar-emu/openal-soft
 [submodule "glslang"]
 	path = externals/glslang
 	url = https://github.com/KhronosGroup/glslang
@@ -106,3 +100,9 @@
 [submodule "externals/libretro-common"]
 	path = externals/libretro-common/libretro-common
 	url = https://github.com/libretro/libretro-common.git
+[submodule "dllwalker"]
+	path = externals/dllwalker
+	url = https://github.com/azahar-emu/dllwalker
+[submodule "externals/cryptopp"]
+	path = externals/cryptopp
+	url = https://github.com/cryptopp-modern/cryptopp-modern.git

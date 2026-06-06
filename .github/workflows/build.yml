@@ -7,21 +7,41 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+
 jobs:
   source:
     if: ${{ !github.head_ref }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Pack
         run: ./.ci/source.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: spdx-json
+          output-file: artifacts/source.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: source
           path: artifacts/
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.tar.xz
+          sbom-path: artifacts/source.spdx.json
 
   linux-x86_64:
     runs-on: ubuntu-latest
@@ -39,14 +59,15 @@ jobs:
       OS: linux
       TARGET: ${{ matrix.target }}
       SHOULD_RUN: ${{ (matrix.target != 'appimage-wayland' || github.ref_type == 'tag') }}
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ env.SHOULD_RUN == 'true' }}
         with:
           submodules: recursive
       - name: Set up cache
-        if: ${{ env.SHOULD_RUN == 'true' }}
-        uses: actions/cache@v4
+        if: ${{ env.SHOULD_RUN == 'true' && env.CACHE_ENABLED == 'true' }}
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
@@ -64,12 +85,27 @@ jobs:
         if: ${{ matrix.target == 'appimage-wayland' && env.SHOULD_RUN == 'true' }}
         run: |
           mv artifacts/azahar.AppImage artifacts/azahar-wayland.AppImage
+      - name: Generate SBOM
+        if: ${{ contains(matrix.target, 'appimage') && github.ref_type == 'tag' && env.SHOULD_RUN == 'true' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: artifacts/linux-x86_64-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
         if: ${{ contains(matrix.target, 'appimage') && env.SHOULD_RUN == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ github.job }}-${{ matrix.target }}
           path: artifacts/
+      - name: Attest artifacts
+        if: ${{ contains(matrix.target, 'appimage') && github.ref_type == 'tag' && env.SHOULD_RUN == 'true' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.AppImage
+          sbom-path: artifacts/linux-x86_64-${{ matrix.target }}.spdx.json
 
   linux-arm64:
     runs-on: ubuntu-24.04-arm
@@ -87,11 +123,11 @@ jobs:
       OS: linux
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.target }}-${{ github.sha }}
@@ -106,13 +142,15 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: macos
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        if: ${{ env.CACHE_ENABLED == 'true' }}
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ github.sha }}
@@ -136,18 +174,43 @@ jobs:
         env:
           PACK_INDIVIDUALLY: 1
         run: ./.ci/pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: artifacts/macos.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}
           path: artifacts/
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.zip
+          sbom-path: artifacts/macos.spdx.json
 
   windows:
-    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        target: ["msvc", "msys2"]
+        include:
+        - target: msvc
+          os: windows-latest
+        - target: msys2
+          os: windows-latest
+        - target: mxe
+          os: ubuntu-latest
+          container:
+            image: opensauce04/azahar-build-environment:latest
+            options: -u 1001
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     defaults:
       run:
         shell: ${{ (matrix.target == 'msys2' && 'msys2') || 'bash' }} {0}
@@ -155,14 +218,16 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: windows
       TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up cache
-        uses: actions/cache@v4
+        if: ${{ env.CACHE_ENABLED == 'true' }}
+        uses: actions/cache@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ runner.os }}-${{ matrix.target }}-${{ github.sha }}
@@ -170,7 +235,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.target }}-
       - name: Set up MSVC
         if: ${{ matrix.target == 'msvc' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: azahar-emu/msvc-dev-cmd@v1
       - name: Install extra tools (MSVC)
         if: ${{ matrix.target == 'msvc' }}
         run: choco install ccache ninja ptime wget
@@ -191,34 +256,62 @@ jobs:
             qt6-base:p qt6-multimedia:p qt6-multimedia-wmf:p qt6-tools:p qt6-translations:p
       - name: Install extra tools (MSYS2)
         if: ${{ matrix.target == 'msys2' }}
-        uses: crazy-max/ghaction-chocolatey@v3
+        uses: crazy-max/ghaction-chocolatey@v4
         with:
           args: install ptime wget
       - name: Install NSIS
-        if: ${{ github.ref_type == 'tag' }}
+        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
           wget https://download.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11-setup.exe -O D:/a/_temp/nsis-setup.exe
           ptime D:/a/_temp/nsis-setup.exe /S
         shell: pwsh
       - name: Disable line ending translation
         run: git config --global core.autocrlf input
-      - name: Build
+      - name: Build (Native)
+        if: ${{ matrix.target != 'mxe' }}
         run: ./.ci/windows.sh
-      - name: Generate installer
-        if: ${{ github.ref_type == 'tag' }}
+      - name: Build (MXE)
+        if: ${{ matrix.target == 'mxe' }}
+        run: ./.ci/mxe.sh
+      - name: Generate installer (Native)
+        if: ${{ github.ref_type == 'tag' && matrix.target != 'mxe' }}
         run: |
           cd src\installer
           "C:\Program Files (x86)\NSIS\makensis.exe" /DPRODUCT_VARIANT=${{ matrix.target }} /DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
           mkdir ..\..\artifacts 2> NUL
           move /y *.exe ..\..\artifacts\
         shell: cmd
+      - name: Generate installer (MXE)
+        if: ${{ github.ref_type == 'tag' && matrix.target == 'mxe' }}
+        run: |
+          export PATH="/mxe/usr/bin:${PATH}" # TODO: Why do we have to do this if it's in the image?
+          cd src/installer
+          x86_64-w64-mingw32.shared-makensis -DPRODUCT_VARIANT=${{ matrix.target }} -DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
+          mkdir -p ../../artifacts
+          mv ./*.exe ../../artifacts/
       - name: Pack
         run: ./.ci/pack.sh
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: build/
+          format: spdx-json
+          output-file: artifacts/windows-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: artifacts/
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.zip
+            artifacts/*.exe
+          sbom-path: artifacts/windows-${{ matrix.target }}.spdx.json
 
   android:
     runs-on: ubuntu-latest
@@ -230,17 +323,18 @@ jobs:
       CCACHE_DIR: ${{ github.workspace }}/.ccache
       CCACHE_COMPILERCHECK: content
       CCACHE_SLOPPINESS: time_macros
+      CACHE_ENABLED: ${{ github.ref_type != 'tag' }}
       OS: android
       TARGET: ${{ matrix.target }}
       SHOULD_RUN: ${{ (matrix.target == 'vanilla' || github.ref_type == 'tag') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ env.SHOULD_RUN == 'true' }}
         with:
           submodules: recursive
       - name: Set up cache
-        if: ${{ env.SHOULD_RUN == 'true' }}
-        uses: actions/cache@v4
+        if: ${{ env.SHOULD_RUN == 'true' && env.CACHE_ENABLED == 'true' }}
+        uses: actions/cache@v5
         with:
           path: |
             ~/.gradle/caches
@@ -278,23 +372,48 @@ jobs:
         working-directory: src/android/app
         env:
           UNPACKED: 1
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
+        with:
+          path: src/android
+          format: spdx-json
+          output-file: src/android/app/artifacts/android-${{ matrix.target }}.spdx.json
+          upload-artifact: false
       - name: Upload
         if: ${{ env.SHOULD_RUN == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.OS }}-${{ env.TARGET }}
           path: src/android/app/artifacts/
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            src/android/app/artifacts/*.apk
+            src/android/app/artifacts/*.aab
+          sbom-path: src/android/app/artifacts/android-${{ matrix.target }}.spdx.json
 
   docker:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - target: x86_64
+          os: ubuntu-24.04
+        - target: arm64
+          os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
     container:
-      image: docker:dind
+      # Can't use docker:dind for ARM64 because it's Alpine-based, see https://github.com/actions/upload-artifact/issues/739
+      image: earthbuild/dind:ubuntu-24.04-docker-28.5.2-1
+    env:
+      TARGET: ${{ matrix.target }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-      - name: Install tools
-        run: apk add bash
       - name: Fix git ownership
         run: git config --global --add safe.directory .
       - name: Build Docker image
@@ -303,8 +422,23 @@ jobs:
         run: |
           mkdir -p artifacts
           mv build/*.dockerimage artifacts/
-      - name: Upload
-        uses: actions/upload-artifact@v4
+      - name: Generate SBOM
+        if: ${{ github.ref_type == 'tag' }}
+        uses: anchore/sbom-action@v0
         with:
-          name: docker
+          image: ${{ env.DOCKER_IMAGE_PATH }}
+          format: spdx-json
+          output-file: artifacts/docker-room.spdx.json
+          upload-artifact: false
+      - name: Upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-${{ env.TARGET }}
           path: artifacts/
+      - name: Attest artifacts
+        if: ${{ github.ref_type == 'tag' }}
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/*.dockerimage
+          sbom-path: artifacts/docker-room.spdx.json

@@ -4,6 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.features.settings.SettingKeys
+
 enum class IntListSetting(
     override val key: String,
     override val section: String,
@@ -11,7 +13,7 @@ enum class IntListSetting(
     val canBeEmpty: Boolean = true
 ) : AbstractListSetting<Int> {
 
-    LAYOUTS_TO_CYCLE("layouts_to_cycle", Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false);
+    LAYOUTS_TO_CYCLE(SettingKeys.layouts_to_cycle(), Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false);
 
     private var backingList: List<Int> = defaultValue
     private var lastValidList : List<Int> = defaultValue

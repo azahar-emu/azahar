@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -247,14 +247,14 @@ void LayeredFS::LoadExtRelocations() {
             std::vector<u8> buffer(file.relocation.size); // Original size
             romfs->ReadFile(file.relocation.original_offset, buffer.size(), buffer.data());
 
-            bool ret = false;
+            Loader::ResultStatus ret{};
             if (extension == ".ips") {
                 ret = Patch::ApplyIpsPatch(patch, buffer);
             } else {
                 ret = Patch::ApplyBpsPatch(patch, buffer);
             }
 
-            if (ret) {
+            if (ret == Loader::ResultStatus::Success) {
                 LOG_INFO(Service_FS, "LayeredFS patched file {}", file_path);
 
                 file.relocation.type = 2;

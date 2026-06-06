@@ -1,6 +1,6 @@
 include(GenerateSCMRev)
 
-add_library(citra_common STATIC
+add_library(citra_common STATIC EXCLUDE_FROM_ALL
     aarch64/cpu_detect.cpp
     aarch64/cpu_detect.h
     aarch64/oaknut_abi.h
@@ -59,6 +59,7 @@ add_library(citra_common STATIC
     microprofile.cpp
     microprofile.h
     microprofileui.h
+    optional_helper.h
     param_package.cpp
     param_package.h
     play_time_manager.cpp

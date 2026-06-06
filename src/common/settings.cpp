@@ -106,6 +106,7 @@ void LogSettings() {
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
     log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
+    log_setting("Renderer_Simulate3DSGPUTimings", values.simulate_3ds_gpu_timings.GetValue());
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
     log_setting("Stereoscopy_Factor3d", values.factor_3d.GetValue());
@@ -165,6 +166,8 @@ void LogSettings() {
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
     log_setting("Debugging_ToggleUniqueDataConsoleType",
                 values.toggle_unique_data_console_type.GetValue());
+    log_setting("Debugging_BreakOnUnmappedMemoryAccess",
+                values.break_on_unmapped_memory_access.GetValue());
 }
 
 bool IsConfiguringGlobal() {
@@ -215,6 +218,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.texture_filter.SetGlobal(true);
     values.texture_sampling.SetGlobal(true);
     values.delay_game_render_thread_us.SetGlobal(true);
+    values.simulate_3ds_gpu_timings.SetGlobal(true);
     values.layout_option.SetGlobal(true);
     values.portrait_layout_option.SetGlobal(true);
     values.secondary_display_layout.SetGlobal(true);
