@@ -4080,25 +4080,48 @@ void GMainWindow::UpdateUITheme() {
 }
 
 void GMainWindow::LoadTranslation() {
+    bool loaded = false;
+
+    const QString lang_en = QStringLiteral("en");
+    const QString languages_dir = QStringLiteral(":/languages/");
+
+    // Workaround for incorrect Qt system language detection
+    // TODO: Allow the "<System>" option to actually be selected rather than overriding the
+    //       selected language option? Current behaviour is better than the issue it fixes,
+    //       but not ideal.
+    if (UISettings::values.language.isEmpty()) {
+        const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+        for (const auto& lang : languages) {
+            // If the first language found is English, no need to install any translation
+            if (lang == lang_en) {
+                UISettings::values.language = lang_en;
+                return;
+            }
+            loaded = translator.load(lang, languages_dir);
+            if (loaded) {
+                UISettings::values.language = lang;
+                break;
+            }
+        }
+    }
+
     // If the selected language is English, no need to install any translation
-    if (UISettings::values.language == QStringLiteral("en")) {
+    if (UISettings::values.language == lang_en) {
         return;
     }
 
-    bool loaded;
-
-    if (UISettings::values.language.isEmpty()) {
+    if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
+        loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, QStringLiteral(":/languages/"));
+        loaded = translator.load(UISettings::values.language, languages_dir);
     }
 
     if (loaded) {
         qApp->installTranslator(&translator);
     } else {
-        UISettings::values.language = QStringLiteral("en");
+        UISettings::values.language = lang_en;
     }
 }
 
