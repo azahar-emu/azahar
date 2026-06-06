@@ -4082,6 +4082,9 @@ void GMainWindow::UpdateUITheme() {
 void GMainWindow::LoadTranslation() {
     bool loaded{false};
 
+    const QString lang_en = QStringLiteral("en");
+    const QString languages_dir = QStringLiteral(":/languages/");
+
     #ifdef _WIN32
     // Set the language to the first option in "preferred languages" Windows' OS settings
     if (UISettings::values.language.isEmpty()) {
@@ -4089,11 +4092,11 @@ void GMainWindow::LoadTranslation() {
         const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
         for (const auto& lang : languages) {
             // If the first language found is English, no need to install any translation
-            if (lang == QStringLiteral("en")) {
-                UISettings::values.language = lang;
+            if (lang == lang_en) {
+                UISettings::values.language = lang_en;
                 return;
             }
-            loaded = translator.load(lang, QStringLiteral(":/languages/"));
+            loaded = translator.load(lang, languages_dir);
             if (loaded) {
                 UISettings::values.language = lang;
                 break;
@@ -4103,23 +4106,23 @@ void GMainWindow::LoadTranslation() {
     #endif
 
     // If the selected language is English, no need to install any translation
-    if (UISettings::values.language == QStringLiteral("en")) {
+    if (UISettings::values.language == lang_en) {
         return;
     }
 
 
     if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
+        loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, QStringLiteral(":/languages/"));
+        loaded = translator.load(UISettings::values.language, languages_dir);
     }
 
     if (loaded) {
         qApp->installTranslator(&translator);
     } else {
-        UISettings::values.language = QStringLiteral("en");
+        UISettings::values.language = lang_en;
     }
 }
 
