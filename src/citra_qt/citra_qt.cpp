@@ -4080,7 +4080,7 @@ void GMainWindow::UpdateUITheme() {
 }
 
 void GMainWindow::LoadTranslation() {
-    bool loaded{false};
+    bool loaded = false;
 
     const QString lang_en = QStringLiteral("en");
     const QString languages_dir = QStringLiteral(":/languages/");
