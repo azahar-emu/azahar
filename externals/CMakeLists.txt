@@ -182,6 +182,8 @@ if(NOT USE_SYSTEM_FAAD)
         target_include_directories(faad2 INTERFACE ${FAAD2_INCLUDE_DIRS})
         target_link_libraries(faad2 INTERFACE ${FAAD2_LIBRARIES})
     endif()
+else()
+    pkg_check_modules(libfaad_PKGCONFIG IMPORTED_TARGET faad)
 endif()
 
 # Dynamic library headers
