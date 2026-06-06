@@ -32,7 +32,7 @@ class ConfigureInput : public QWidget {
 public:
     struct InputBinding {
         std::string binding_type;
-        std::string name;
+        QString name;
         int index;
         int sub_index = -1; // used for sub-buttons
     };
@@ -74,8 +74,8 @@ private:
 
     /// Each button input is represented by a QPushButton.
     std::array<QPushButton*, Settings::NativeButton::NumButtons> button_map;
-    std::array<std::string, Settings::NativeButton::NumButtons> button_names;
-    std::array<std::string, Settings::NativeAnalog::NumAnalogs> analog_names;
+    std::array<QString, Settings::NativeButton::NumButtons> button_names;
+    std::array<QString, Settings::NativeAnalog::NumAnalogs> analog_names;
 
     /// A group of five QPushButtons represent one analog input. The buttons each represent up,
     /// down, left, right, and modifier, respectively.
@@ -90,7 +90,8 @@ private:
     std::array<QLabel*, Settings::NativeAnalog::NumAnalogs>
         analog_map_deadzone_and_modifier_slider_label;
 
-    static const std::array<std::string, ANALOG_SUB_BUTTONS_NUM> analog_sub_buttons;
+    std::array<std::string, ANALOG_SUB_BUTTONS_NUM> analog_sub_buttons;
+    std::array<QString, ANALOG_SUB_BUTTONS_NUM> analog_sub_button_names;
 
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
 

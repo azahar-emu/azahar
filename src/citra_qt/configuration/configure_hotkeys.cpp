@@ -52,8 +52,8 @@ QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureHotkeys::GetUsedKeyLis
             auto seq = QKeySequence::fromString(keyseq->text(), QKeySequence::NativeText);
             if (seq.count() == 1 &&
                 seq[0].keyboardModifiers() == Qt::KeyboardModifier::NoModifier) {
-                auto binding = ConfigureInput::InputBinding(
-                    "Hotkey", parent->child(r2, 0)->text().toStdString(), r2);
+                auto binding =
+                    ConfigureInput::InputBinding("Hotkey", parent->child(r2, 0)->text(), r2);
                 list[seq] = binding;
             }
         }
@@ -171,7 +171,7 @@ void ConfigureHotkeys::OnClearBinding(ConfigureInput::InputBinding hotkey_to_cle
 std::pair<bool, ConfigureInput::InputBinding> ConfigureHotkeys::IsUsedKey(
     QKeySequence key_sequence) const {
     if (key_sequence == QKeySequence::fromString(QStringLiteral(""), QKeySequence::NativeText)) {
-        return std::make_pair(false, ConfigureInput::InputBinding{"", "", -1});
+        return std::make_pair(false, ConfigureInput::InputBinding{"", QStringLiteral(""), -1});
     }
 
     if (input_keys_list.contains(key_sequence)) {
@@ -188,13 +188,12 @@ std::pair<bool, ConfigureInput::InputBinding> ConfigureHotkeys::IsUsedKey(
 
             if (key_sequence == key_seq) {
                 return std::make_pair(
-                    true, ConfigureInput::InputBinding{
-                              "Hotkey", parent->child(r2, 0)->text().toStdString(), r2});
+                    true, ConfigureInput::InputBinding{"Hotkey", parent->child(r2, 0)->text(), r2});
             }
         }
     }
 
-    return std::make_pair(false, ConfigureInput::InputBinding{"", "", -1});
+    return std::make_pair(false, ConfigureInput::InputBinding{"", QStringLiteral(""), -1});
 }
 
 void ConfigureHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {

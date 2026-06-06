@@ -19,19 +19,6 @@
 #include "core/core.h"
 #include "ui_configure_input.h"
 
-const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
-    ConfigureInput::analog_sub_buttons{{
-        "up",
-        "down",
-        "left",
-        "right",
-        "up_left",
-        "up_right",
-        "down_left",
-        "down_right",
-        "modifier",
-    }};
-
 enum class AnalogSubButtons {
     up,
     down,
@@ -166,6 +153,17 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
 
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
 
+    // clang-format off
+    analog_sub_buttons = {
+        "up",       "down",      "left",       "right",    "up_left",
+        "up_right", "down_left", "down_right", "modifier",
+    };
+
+    analog_sub_button_names = {
+        tr("Up"),       tr("Down"),      tr("Left"),       tr("Right"),    tr("Up-Left"),
+        tr("Up-Right"), tr("Down-Left"), tr("Down-Right"), tr("Modifier"),
+    };
+
     button_map = {
         ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
         ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
@@ -174,11 +172,17 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         ui->buttonHome,   ui->buttonPower,
     };
 
-    button_names = {"A Button",     "B Button",      "X Button",     "Y Button",     "D-Pad Up",
-                    "D-Pad Down",   "D-Pad Left",    "D-Pad Right",  "L Button",     "R Button",
-                    "Start Button", "Select Button", "Debug Button", "GPIO4 Button", "ZL Button",
-                    "ZR Button",    "Home Button",   "Power Button"};
+    button_names = {
+        tr("A Button"),     tr("B Button"),      tr("X Button"),     tr("Y Button"),
+        tr("D-Pad Up"),     tr("D-Pad Down"),    tr("D-Pad Left"),   tr("D-Pad Right"),
+        tr("L Button"),     tr("R Button"),      tr("Start Button"), tr("Select Button"),
+        tr("Debug"),        tr("GPIO4"),         tr("ZL Button"),    tr("ZR Button"),
+        tr("Home Button"),  tr("Power Button")
+    };
+    // clang-format on
 
+    /// A group of five QPushButtons represent one analog input. The buttons each represent up,
+    /// down, left, right, and modifier, respectively.
     analog_map_buttons = {{
         {
             ui->buttonCircleUp,
@@ -203,7 +207,8 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
             nullptr,
         },
     }};
-    analog_names = {"Circle Pad", "C Stick"};
+
+    analog_names = {tr("Circle Pad"), tr("C Stick")};
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
     analog_map_deadzone_and_modifier_slider = {ui->sliderCirclePadDeadzoneAndModifier,
                                                ui->sliderCStickDeadzoneAndModifier};
@@ -469,7 +474,7 @@ bool sameInput(const Common::ParamPackage& param1, const Common::ParamPackage& p
 
 ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPackage& param) {
     if (!param.Has("engine"))
-        return {"", "", 0};
+        return {"", QStringLiteral(""), 0};
     // check for a button map
     for (int button = 0; button < Settings::NativeButton::NumButtons; ++button) {
         const auto& button_param = buttons_param[button];
@@ -486,7 +491,8 @@ ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPacka
                     analog_param.Get(analog_sub_buttons[sub_button_id], "")};
                 if (sameInput(param, sub_button)) {
                     return {"AnalogButton",
-                            analog_names[analog_id] + " " + analog_sub_buttons[sub_button_id],
+                            QStringLiteral("%1 (%2)").arg(analog_names[analog_id],
+                                                          analog_sub_button_names[sub_button_id]),
                             analog_id, sub_button_id};
                 }
             }
@@ -500,7 +506,7 @@ ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPacka
         return hotkey_list[QKeySequence(param.Get("code", 0))];
     }
 
-    return {"", "", 0};
+    return {"", QStringLiteral(""), 0};
 }
 
 QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureInput::GetUsedKeyboardKeys() {
@@ -521,8 +527,9 @@ QMap<QKeySequence, ConfigureInput::InputBinding> ConfigureInput::GetUsedKeyboard
                     analog_param.Get(analog_sub_buttons[sub_button_id], "")};
                 list[QKeySequence(sub_button.Get("code", 0))] = ConfigureInput::InputBinding{
                     "AnalogButton",
-                    analog_names[analog_id] + " " + analog_sub_buttons[sub_button_id], analog_id,
-                    sub_button_id};
+                    QStringLiteral("%1 (%2)").arg(analog_names[analog_id],
+                                                  analog_sub_button_names[sub_button_id]),
+                    analog_id, sub_button_id};
             }
         }
     }
