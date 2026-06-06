@@ -4110,7 +4110,6 @@ void GMainWindow::LoadTranslation() {
         return;
     }
 
-
     if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
         loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
