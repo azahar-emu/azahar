@@ -169,7 +169,7 @@ endif()
 add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 
 if(NOT USE_SYSTEM_FAAD)
-    if (USE_SYSTEM_FAAD2)
+    if (NOT USE_SYSTEM_FAAD2)
         pkg_check_modules(FAAD2 REQUIRED faad2)
         message(STATUS "Using bundled FAAD2")
         add_subdirectory(faad2 EXCLUDE_FROM_ALL)
