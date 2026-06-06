@@ -4086,6 +4086,9 @@ void GMainWindow::LoadTranslation() {
     const QString languages_dir = QStringLiteral(":/languages/");
 
     // Workaround for incorrect Qt system language detection
+    // TODO: Allow the "<System>" option to actually be selected rather than overriding the
+    //       selected language option? Current behaviour is better than the issue it fixes,
+    //       but not ideal.
     if (UISettings::values.language.isEmpty()) {
         const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
         for (const auto& lang : languages) {
