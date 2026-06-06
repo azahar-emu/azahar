@@ -4085,10 +4085,8 @@ void GMainWindow::LoadTranslation() {
     const QString lang_en = QStringLiteral("en");
     const QString languages_dir = QStringLiteral(":/languages/");
 
-    #ifdef _WIN32
-    // Set the language to the first option in "preferred languages" Windows' OS settings
+    // Workaround for incorrect Qt system language detection
     if (UISettings::values.language.isEmpty()) {
-
         const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
         for (const auto& lang : languages) {
             // If the first language found is English, no need to install any translation
@@ -4103,7 +4101,6 @@ void GMainWindow::LoadTranslation() {
             }
         }
     }
-    #endif
 
     // If the selected language is English, no need to install any translation
     if (UISettings::values.language == lang_en) {
