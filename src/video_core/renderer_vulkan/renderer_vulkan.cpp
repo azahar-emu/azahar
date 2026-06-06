@@ -236,8 +236,8 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
 
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
-
-    if ((Core::PerfStats::game_frames_updated && Settings::values.use_skip_duplicate_frames.GetValue()) || !Settings::values.use_skip_duplicate_frames.GetValue()){
+    if (!Settings::values.use_skip_duplicate_frames.GetValue() ||
+        Core::PerfStats::game_frames_updated) {
         Frame* frame = window.GetRenderFrame();
 
         if (layout.width != frame->width || layout.height != frame->height) {
@@ -254,7 +254,10 @@ void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::Framebu
         DrawScreens(frame, layout, flipped);
         scheduler.Flush(frame->render_ready);
         window.Present(frame);
-        Core::PerfStats::game_frames_updated = false;
+        if ((secondaryWindowEnabled && isSecondaryWindow) || (!secondaryWindowEnabled)) {
+            Core::PerfStats::game_frames_updated = false;
+            screenRendered = true;
+        }
     }
 }
 
@@ -1118,9 +1121,28 @@ void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
 
 void RendererVulkan::SwapBuffers() {
     system.perf_stats->StartSwap();
+    screenRendered = false;
+#ifndef ANDROID
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
+        ASSERT(secondary_window);
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
+
+#ifdef ANDROID
+    if (secondary_window) {
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
+
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
+    isSecondaryWindow = false;
     RenderToWindow(main_present_window, layout, false);
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
@@ -1130,6 +1152,7 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
@@ -1142,10 +1165,14 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
 #endif
+    if (!screenRendered) {
+        scheduler.Finish();
+    }
 
     system.perf_stats->EndSwap();
     rasterizer.TickFrame();

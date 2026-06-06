@@ -150,6 +150,9 @@ private:
     vk::ShaderModule cursor_fragment_shader{};
     vk::Pipeline cursor_pipeline{};
     vk::UniquePipelineLayout cursor_pipeline_layout{};
+    bool isSecondaryWindow;
+    bool secondaryWindowEnabled;
+    bool screenRendered;
 };
 
 } // namespace Vulkan
