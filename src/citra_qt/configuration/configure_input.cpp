@@ -208,7 +208,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         },
     }};
 
-    analog_names = {tr("Circle Pad"), tr("C Stick")};
+    analog_names = {tr("Circle Pad"), tr("C-Stick")};
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
     analog_map_deadzone_and_modifier_slider = {ui->sliderCirclePadDeadzoneAndModifier,
                                                ui->sliderCStickDeadzoneAndModifier};
