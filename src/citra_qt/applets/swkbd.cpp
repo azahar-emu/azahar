@@ -217,12 +217,6 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
     : QDialog(parent), keyboard(keyboard_) {
     setWindowTitle(tr("Software Keyboard"));
     setMinimumWidth(560);
-    setStyleSheet(QStringLiteral(
-        "QPushButton[controllerSelected=\"true\"] {"
-        "border: 2px solid palette(highlight);"
-        "background-color: palette(highlight);"
-        "color: palette(highlighted-text);"
-        "}"));
 
     auto* const layout = new QVBoxLayout;
     auto* const label = new QLabel(QString::fromStdString(keyboard->config.hint_text));
@@ -274,6 +268,12 @@ QtSoftwareKeyboardDialog::QtSoftwareKeyboardDialog(QWidget* parent, QtKeyboard* 
         button->setMinimumHeight(42);
         button->setFocusPolicy(Qt::NoFocus);
     }
+
+    default_button_palette = ok->palette();
+    selected_button_palette = default_button_palette;
+    selected_button_palette.setColor(QPalette::Button, palette().color(QPalette::Highlight));
+    selected_button_palette.setColor(QPalette::ButtonText,
+                                     palette().color(QPalette::HighlightedText));
 
     connect(shift_button, &QPushButton::clicked, this, [this] { ToggleCase(); });
     connect(space, &QPushButton::clicked, this, [this] { AppendText(QStringLiteral(" ")); });
@@ -406,23 +406,23 @@ int QtSoftwareKeyboardDialog::FindClosestColumnInRow(int row, int source_x) cons
     return closest_column;
 }
 
+void QtSoftwareKeyboardDialog::SetButtonControllerSelected(QPushButton* button, bool selected) {
+    button->setAutoFillBackground(selected);
+    button->setPalette(selected ? selected_button_palette : default_button_palette);
+    button->update();
+}
+
 void QtSoftwareKeyboardDialog::SetSelectedButton(int row, int column) {
     if (!button_rows.empty()) {
         auto* const previous_button = button_rows[selected_row][selected_column];
-        previous_button->setProperty("controllerSelected", false);
-        previous_button->style()->unpolish(previous_button);
-        previous_button->style()->polish(previous_button);
-        previous_button->update();
+        SetButtonControllerSelected(previous_button, false);
     }
 
     selected_row = row;
     selected_column = std::min(column, static_cast<int>(button_rows[selected_row].size()) - 1);
 
     auto* const selected_button = button_rows[selected_row][selected_column];
-    selected_button->setProperty("controllerSelected", true);
-    selected_button->style()->unpolish(selected_button);
-    selected_button->style()->polish(selected_button);
-    selected_button->update();
+    SetButtonControllerSelected(selected_button, true);
 }
 
 void QtSoftwareKeyboardDialog::ActivateSelectedButton() {

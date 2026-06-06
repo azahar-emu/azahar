@@ -104,6 +104,7 @@ private:
     void ClearValidationError();
     void MoveSelection(int row_delta, int column_delta);
     int FindClosestColumnInRow(int row, int source_x) const;
+    void SetButtonControllerSelected(QPushButton* button, bool selected);
     void SetSelectedButton(int row, int column);
     void ActivateSelectedButton();
     void HandleInputAction(SoftwareKeyboardInputInterpreter::Action action);
@@ -120,6 +121,8 @@ private:
     std::vector<std::vector<QPushButton*>> button_rows;
     std::vector<QPushButton*> letter_buttons;
     SoftwareKeyboardInputInterpreter input_interpreter;
+    QPalette default_button_palette;
+    QPalette selected_button_palette;
     int selected_row = 0;
     int selected_column = 0;
     bool uppercase = true;
