@@ -170,10 +170,7 @@ add_subdirectory(open_source_archives EXCLUDE_FROM_ALL)
 
 if(NOT USE_SYSTEM_FAAD)
     if (USE_SYSTEM_FAAD2)
-        pkg_check_modules(FAAD2 faad2)
-    endif()
-
-    if (NOT FAAD2_FOUND)
+        pkg_check_modules(FAAD2 REQUIRED faad2)
         message(STATUS "Using bundled FAAD2")
         add_subdirectory(faad2 EXCLUDE_FROM_ALL)
     else()
@@ -223,10 +220,7 @@ endif()
 
 # Teakra
 if (USE_SYSTEM_TEAKRA)
-    find_package(teakra CONFIG QUIET)
-endif()
-
-if(teakra_FOUND)
+    find_package(teakra CONFIG REQUIRED)
     message(STATUS "Using system Teakra")
 else()
     message(STATUS "Using bundled Teakra")
@@ -248,9 +242,7 @@ endif()
 
 # Zstandard
 if(USE_SYSTEM_ZSTD)
-    find_package(zstd)
-endif()
-if (zstd_FOUND)
+    find_package(zstd REQUIRED)
     add_library(zstd INTERFACE)
     if(TARGET zstd::libzstd_shared)
         message(STATUS "Found system Zstandard")
@@ -284,9 +276,7 @@ endif()
 
 # ENet
 if(USE_SYSTEM_ENET)
-    find_package(libenet)
-endif()
-if (libenet_FOUND)
+    find_package(libenet REQUIRED)
     add_library(enet INTERFACE)
     target_link_libraries(enet INTERFACE libenet::libenet)
 else()
@@ -475,10 +465,7 @@ if (ENABLE_VULKAN)
     endif()
 
 if (USE_SYSTEM_SPIRV_TOOLS)
-    find_package(SPIRV-Tools QUIET)
-endif()
-
-if (SPIRV-Tools_FOUND)
+    find_package(SPIRV-Tools REQUIRED)
     message(STATUS "Using system SPIRV-Tools")
 else()
     message(STATUS "Using bundled SPIRV-Tools")
