@@ -93,11 +93,26 @@ void RendererOpenGL::SwapBuffers() {
     // Maintain the rasterizer's state as a priority
     OpenGLState prev_state = OpenGLState::GetCurState();
     state.Apply();
+#ifdef ANDROID
+    if (secondary_window) {
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#else
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
+        ASSERT(secondary_window);
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
 
     render_window.SetupFramebuffer();
 
     PrepareRendertarget();
     RenderScreenshot();
+    isSecondaryWindow = false;
 #ifdef HAVE_LIBRETRO
     DrawScreens(render_window.GetFramebufferLayout(), false);
     render_window.SwapBuffers();
@@ -110,6 +125,7 @@ void RendererOpenGL::SwapBuffers() {
     // it means we have a second display
     if (secondary_window) {
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -117,6 +133,7 @@ void RendererOpenGL::SwapBuffers() {
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -196,6 +213,7 @@ void RendererOpenGL::PrepareRendertarget() {
 void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
                                      std::unique_ptr<Frontend::TextureMailbox>& mailbox,
                                      bool flipped) {
+    if ((Core::PerfStats::game_frames_updated && Settings::values.use_skip_duplicate_frames.GetValue()) || !Settings::values.use_skip_duplicate_frames.GetValue()){
 
     Frontend::Frame* frame;
     {
@@ -240,6 +258,11 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
         frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         glFlush();
         mailbox->ReleaseRenderFrame(frame);
+    }
+
+        if ((secondaryWindowEnabled && isSecondaryWindow) || (!secondaryWindowEnabled)){
+            Core::PerfStats::game_frames_updated = false;
+        }
     }
 }
 

@@ -271,6 +271,8 @@
     <string name="advanced">Advanced</string>
     <string name="texture_sampling_name">Texture Sampling</string>
     <string name="texture_sampling_description">Overrides the sampling filter used by games. This can be useful in certain cases with poorly behaved games when upscaling. If unsure, set this to Game Controlled.</string>
+    <string name="use_skip_duplicate_frames">Skip Presenting Duplicate Frames</string>
+    <string name="use_skip_duplicate_frames_description">Skips the presentation of frames that are not unique. It also allows external frame generation tools to work correctly with 30fps games</string>
     <string name="shaders_accurate_mul">Accurate Multiplication</string>
     <string name="shaders_accurate_mul_description">Uses more accurate multiplication in hardware shaders, which may fix some graphical bugs. When enabled, performance will be reduced.</string>
     <string name="asynchronous_gpu">Enable Asynchronous GPU Emulation</string>
