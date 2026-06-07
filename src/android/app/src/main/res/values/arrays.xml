@@ -384,6 +384,12 @@
         <item>@string/internal_resolution_setting_8x</item>
         <item>@string/internal_resolution_setting_9x</item>
         <item>@string/internal_resolution_setting_10x</item>
+        <item>@string/internal_resolution_setting_11x</item>
+        <item>@string/internal_resolution_setting_12x</item>
+        <item>@string/internal_resolution_setting_13x</item>
+        <item>@string/internal_resolution_setting_14x</item>
+        <item>@string/internal_resolution_setting_15x</item>
+        <item>@string/internal_resolution_setting_16x</item>
     </string-array>
     <integer-array name="resolutionFactorValues">
         <item>0</item>
@@ -397,6 +403,12 @@
         <item>8</item>
         <item>9</item>
         <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
     </integer-array>
 
     <string-array name="countries">
