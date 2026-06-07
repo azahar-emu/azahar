@@ -171,7 +171,7 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
         ui->buttonL,      ui->buttonR,        ui->buttonStart,    ui->buttonSelect,
         ui->buttonDebug,  ui->buttonGpio14,   ui->buttonZL,       ui->buttonZR,
-        ui->buttonHome,   ui->buttonPower,
+        ui->buttonHome,   ui->buttonPower,   ui->buttonToggleCStick,
     };
 
     analog_map_buttons = {{

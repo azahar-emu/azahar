@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "core/frontend/cursor.h"
 #include "video_core/renderer_base.h"
 #ifdef HAVE_LIBRETRO
 #include "citra_libretro/libretro_vk.h"
@@ -58,12 +59,14 @@ struct PresentUniformData {
     std::array<f32, 4 * 4> modelview;
     Common::Vec4f i_resolution;
     Common::Vec4f o_resolution;
+    Common::Vec2f cursor_pos;
+    int cursor_enable = 0;
     int screen_id_l = 0;
     int screen_id_r = 0;
     int layer = 0;
     int reverse_interlaced = 0;
 };
-static_assert(sizeof(PresentUniformData) == 112,
+static_assert(sizeof(PresentUniformData) == 124,
               "PresentUniformData does not structure in shader!");
 
 class RendererVulkan : public VideoCore::RendererBase {
@@ -151,6 +154,7 @@ private:
     vk::ShaderModule cursor_fragment_shader{};
     vk::Pipeline cursor_pipeline{};
     vk::UniquePipelineLayout cursor_pipeline_layout{};
+    int currScreenDraw; // 0 is Top, 1 is Bottom
 };
 
 } // namespace Vulkan

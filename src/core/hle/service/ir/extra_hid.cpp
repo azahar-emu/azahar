@@ -262,13 +262,20 @@ void ExtraHID::SendHIDStatus() {
     } else {
         float x, y;
         std::tie(x, y) = c_stick->GetStatus();
-
-        response.c_stick.header.Assign(static_cast<u8>(ResponseID::PollHID));
-        response.c_stick.c_stick_x.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * x));
-        response.c_stick.c_stick_y.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * y));
         response.buttons.battery_level.Assign(0x1F);
-        response.buttons.zl_not_held.Assign(!zl->GetStatus());
-        response.buttons.zr_not_held.Assign(!zr->GetStatus());
+        response.c_stick.header.Assign(static_cast<u8>(ResponseID::PollHID));
+        if (Service::HID::Module::cstickEnabled){
+            response.c_stick.c_stick_x.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * x));
+            response.c_stick.c_stick_y.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * y));
+            response.buttons.zl_not_held.Assign(!zl->GetStatus());
+            response.buttons.zr_not_held.Assign(!zr->GetStatus());
+        } else {
+            response.c_stick.c_stick_x.Assign(static_cast<u32>(C_STICK_CENTER));
+            response.c_stick.c_stick_y.Assign(static_cast<u32>(C_STICK_CENTER));
+            response.buttons.zl_not_held.Assign(true);
+            response.buttons.zr_not_held.Assign(true);
+        }
+
         response.buttons.r_not_held.Assign(1);
         response.unknown = 0;
     }

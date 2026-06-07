@@ -151,6 +151,8 @@ enum Values {
     Home,
     Power,
 
+    ToggleCStick,
+
     NumButtons,
 };
 
@@ -185,6 +187,7 @@ static const std::array<const char*, NumButtons> mapping = {{
     "button_zr",
     "button_home",
     "button_power",
+    "button_togglecstick",
 }};
 
 } // namespace NativeButton
