@@ -1121,6 +1121,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     IntSetting.TEXTURE_SAMPLING.defaultValue
                 )
             )
+            add(
+                SwitchSetting(
+                    BooleanSetting.USE_SKIP_DUPLICATE_FRAMES,
+                    R.string.use_skip_duplicate_frames,
+                    R.string.use_skip_duplicate_frames_description,
+                    BooleanSetting.USE_SKIP_DUPLICATE_FRAMES.key,
+                    BooleanSetting.USE_SKIP_DUPLICATE_FRAMES.defaultValue
+                )
+            )
 
             // Disabled until custom texture implementation gets rewrite, current one overloads RAM
             // and crashes Citra.
