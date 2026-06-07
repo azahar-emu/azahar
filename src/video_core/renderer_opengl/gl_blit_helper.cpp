@@ -11,7 +11,9 @@
 #include "video_core/renderer_opengl/gl_texture_runtime.h"
 
 #include "video_core/host_shaders/format_reinterpreter/d24s8_to_rgba8_frag.h"
+#include "video_core/host_shaders/format_reinterpreter/d24s8_to_rgba8_ms_frag.h"
 #include "video_core/host_shaders/format_reinterpreter/rgba4_to_rgb5a1_frag.h"
+#include "video_core/host_shaders/format_reinterpreter/rgba4_to_rgb5a1_ms_frag.h"
 #include "video_core/host_shaders/full_screen_triangle_vert.h"
 #include "video_core/host_shaders/texture_filtering/bicubic_frag.h"
 #include "video_core/host_shaders/texture_filtering/mmpx_frag.h"
@@ -65,8 +67,13 @@ BlitHelper::BlitHelper(const Driver& driver_)
       gradient_y_program{CreateProgram(HostShaders::Y_GRADIENT_FRAG, "Y_GRADIENT_FRAG")},
       refine_program{CreateProgram(HostShaders::REFINE_FRAG, "REFINE_FRAG")},
       d24s8_to_rgba8{CreateProgram(HostShaders::D24S8_TO_RGBA8_FRAG, "D24S8_TO_RGBA8_FRAG")},
-      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG, "RGBA4_TO_RGB5A1_FRAG")} {
+      d24s8_to_rgba8_ms{
+          CreateProgram(HostShaders::D24S8_TO_RGBA8_MS_FRAG, "D24S8_TO_RGBA8_MS_FRAG")},
+      rgba4_to_rgb5a1{CreateProgram(HostShaders::RGBA4_TO_RGB5A1_FRAG, "RGBA4_TO_RGB5A1_FRAG")},
+      rgba4_to_rgb5a1_ms{
+          CreateProgram(HostShaders::RGBA4_TO_RGB5A1_MS_FRAG, "RGBA4_TO_RGB5A1_MS_FRAG")} {
     vao.Create();
+    read_fbo.Create();
     draw_fbo.Create();
     state.draw.vertex_array = vao.handle;
     for (u32 i = 0; i < 3; i++) {
@@ -87,46 +94,63 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    state.texture_units[0].texture_2d = source.Handle();
+    const bool multisample = (source.sample_count > 1) && (dest.sample_count > 1);
+    const GLuint textarget = multisample ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+
+    state.texture_units[0].texture_2d = source.Handle(multisample ? 3 : 1);
+    state.texture_units[0].target = textarget;
     state.texture_units[0].sampler = 0;
     state.texture_units[1].sampler = 0;
 
     if (use_texture_view) {
         temp_tex.Create();
         glActiveTexture(GL_TEXTURE1);
-        glTextureView(temp_tex.handle, GL_TEXTURE_2D, source.Handle(), GL_DEPTH24_STENCIL8, 0, 1, 0,
-                      1);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureView(temp_tex.handle, textarget, source.Handle(multisample ? 3 : 1),
+                      GL_DEPTH24_STENCIL8, 0, 1, 0, 1);
+        if (!multisample) {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        }
     } else if (copy.extent.width > temp_extent.width || copy.extent.height > temp_extent.height) {
         temp_extent = copy.extent;
         temp_tex.Release();
         temp_tex.Create();
         state.texture_units[1].texture_2d = temp_tex.handle;
+        state.texture_units[1].target = textarget;
         state.Apply();
         glActiveTexture(GL_TEXTURE1);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, temp_extent.width,
-                       temp_extent.height);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        if (multisample) {
+            glTexStorage2DMultisample(textarget, source.sample_count, GL_DEPTH24_STENCIL8,
+                                      temp_extent.width, temp_extent.height, true);
+
+        } else {
+            glTexStorage2D(textarget, 1, GL_DEPTH24_STENCIL8, temp_extent.width,
+                           temp_extent.height);
+            glTexParameteri(textarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(textarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        }
     }
     state.texture_units[1].texture_2d = temp_tex.handle;
+    state.texture_units[1].target = textarget;
     state.Apply();
 
     glActiveTexture(GL_TEXTURE1);
     if (!use_texture_view) {
-        glCopyImageSubData(source.Handle(), GL_TEXTURE_2D, 0, copy.src_offset.x, copy.src_offset.y,
-                           0, temp_tex.handle, GL_TEXTURE_2D, 0, copy.src_offset.x,
+        glCopyImageSubData(source.Handle(multisample ? 3 : 1), textarget, 0, copy.src_offset.x,
+                           copy.src_offset.y, 0, temp_tex.handle, textarget, 0, copy.src_offset.x,
                            copy.src_offset.y, 0, copy.extent.width, copy.extent.height, 1);
     }
-    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
+    glTexParameteri(textarget, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
 
     const Common::Rectangle src_rect{copy.src_offset.x, copy.src_offset.y + copy.extent.height,
                                      copy.src_offset.x + copy.extent.width, copy.src_offset.x};
     const Common::Rectangle dst_rect{copy.dst_offset.x, copy.dst_offset.y + copy.extent.height,
                                      copy.dst_offset.x + copy.extent.width, copy.dst_offset.x};
-    SetParams(d24s8_to_rgba8, source.RealExtent(), src_rect);
-    Draw(d24s8_to_rgba8, dest.Handle(), draw_fbo.handle, 0, dst_rect);
+
+    OGLProgram& blit_program = multisample ? d24s8_to_rgba8_ms : d24s8_to_rgba8;
+    SetParams(blit_program, source.RealExtent(), src_rect);
+    Draw(blit_program, dest.Handle(multisample ? 3 : 1), draw_fbo.handle, 0, dst_rect, multisample);
 
     if (use_texture_view) {
         temp_tex.Release();
@@ -136,6 +160,11 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
     state.texture_units[0].sampler = linear_sampler.handle;
     state.texture_units[1].sampler = linear_sampler.handle;
 
+    if (multisample) {
+        // Resolve the destination image if needed
+        ResolveTexture(dest, copy.dst_level, copy.dst_layer);
+    }
+
     return true;
 }
 
@@ -144,16 +173,46 @@ bool BlitHelper::ConvertRGBA4ToRGB5A1(Surface& source, Surface& dest,
     OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    state.texture_units[0].texture_2d = source.Handle();
+    const bool multisample = (source.sample_count > 1) && (dest.sample_count > 1);
+
+    state.texture_units[0].texture_2d = source.Handle(multisample ? 3 : 1);
 
     const Common::Rectangle src_rect{copy.src_offset.x, copy.src_offset.y + copy.extent.height,
                                      copy.src_offset.x + copy.extent.width, copy.src_offset.x};
     const Common::Rectangle dst_rect{copy.dst_offset.x, copy.dst_offset.y + copy.extent.height,
                                      copy.dst_offset.x + copy.extent.width, copy.dst_offset.x};
-    SetParams(rgba4_to_rgb5a1, source.RealExtent(), src_rect);
-    Draw(rgba4_to_rgb5a1, dest.Handle(), draw_fbo.handle, 0, dst_rect);
+
+    OGLProgram& blit_program = multisample ? rgba4_to_rgb5a1_ms : rgba4_to_rgb5a1;
+    SetParams(blit_program, source.RealExtent(), src_rect);
+    Draw(blit_program, dest.Handle(multisample ? 3 : 1), draw_fbo.handle, 0, dst_rect, multisample);
+
+    if (multisample) {
+        // Resolve the destination image if needed
+        ResolveTexture(dest, copy.dst_level, copy.dst_layer);
+    }
 
     return true;
+}
+
+void BlitHelper::ResolveTexture(Surface& surface, u32 level, u32 layer) {
+    OpenGLState prev_state = OpenGLState::GetCurState();
+    SCOPE_EXIT({ prev_state.Apply(); });
+
+    state.draw.read_framebuffer = read_fbo.handle;
+    state.draw.draw_framebuffer = draw_fbo.handle;
+    state.texture_units[0].texture_2d = 0;
+    state.texture_units[1].texture_2d = 0;
+    state.texture_units[2].texture_2d = 0;
+    state.Apply();
+
+    surface.Attach(GL_READ_FRAMEBUFFER, level, layer, 3);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, level, layer, 1);
+    const GLbitfield buffer_mask = surface.type == SurfaceType::Depth ? GL_DEPTH_BUFFER_BIT
+                                   : surface.type == SurfaceType::DepthStencil
+                                       ? (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
+                                       : GL_COLOR_BUFFER_BIT;
+    glBlitFramebuffer(0, 0, surface.GetScaledWidth(), surface.GetScaledHeight(), 0, 0,
+                      surface.GetScaledWidth(), surface.GetScaledHeight(), buffer_mask, GL_NEAREST);
 }
 
 bool BlitHelper::Filter(Surface& surface, const VideoCore::TextureBlit& blit) {
@@ -290,7 +349,7 @@ void BlitHelper::SetParams(OGLProgram& program, const VideoCore::Extent& src_ext
 }
 
 void BlitHelper::Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 dst_level,
-                      Common::Rectangle<u32> dst_rect) {
+                      Common::Rectangle<u32> dst_rect, bool multisample) {
     state.draw.draw_framebuffer = dst_fbo;
     state.draw.shader_program = program.handle;
     state.viewport.x = dst_rect.left;
@@ -299,9 +358,11 @@ void BlitHelper::Draw(OGLProgram& program, GLuint dst_tex, GLuint dst_fbo, u32 d
     state.viewport.height = dst_rect.GetHeight();
     state.Apply();
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_tex,
+    const GLuint textarget = multisample ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textarget, dst_tex,
                            dst_level);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, textarget, 0, 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }

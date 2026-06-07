@@ -92,20 +92,27 @@ static constexpr std::array<FormatTuple, 8> CUSTOM_TUPLES = {{
     return 0;
 }
 
-[[nodiscard]] OGLTexture MakeHandle(GLenum target, u32 width, u32 height, u32 levels,
+[[nodiscard]] OGLTexture MakeHandle(GLenum target, u32 width, u32 height, u32 levels, u32 samples,
                                     const FormatTuple& tuple, std::string_view debug_name = "") {
     OGLTexture texture{};
     texture.Create();
 
-    glBindTexture(target, texture.handle);
-    glTexStorage2D(target, levels, tuple.internal_format, width, height);
+    if (samples > 1) {
+        ASSERT(target == GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture.handle);
+        glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, tuple.internal_format, width,
+                                  height, true);
+    } else {
+        glBindTexture(target, texture.handle);
+        glTexStorage2D(target, levels, tuple.internal_format, width, height);
+    }
 
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     if (!debug_name.empty()) {
-        glObjectLabel(GL_TEXTURE, texture.handle, -1, debug_name.data());
+        glObjectLabel(GL_TEXTURE, texture.handle, debug_name.size(), debug_name.data());
     }
 
     return texture;
@@ -215,6 +222,14 @@ bool TextureRuntime::ClearTextureWithoutFbo(Surface& surface,
     glClearTexSubImage(surface.Handle(), clear.texture_level, clear.texture_rect.left,
                        clear.texture_rect.bottom, 0, clear.texture_rect.GetWidth(),
                        clear.texture_rect.GetHeight(), 1, format, type, &clear.value);
+
+    if (surface.sample_count > 1) {
+        // Clear MSAA too
+        glClearTexSubImage(surface.Handle(3), clear.texture_level, clear.texture_rect.left,
+                           clear.texture_rect.bottom, 0, clear.texture_rect.GetWidth(),
+                           clear.texture_rect.GetHeight(), 1, format, type, &clear.value);
+    }
+
     return true;
 }
 
@@ -232,31 +247,40 @@ void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     state.draw.draw_framebuffer = draw_fbos[FboIndex(surface.type)].handle;
     state.Apply();
 
-    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    const auto ClearBuffer = [&surface, &state, &clear]() {
+        switch (surface.type) {
+        case SurfaceType::Color:
+        case SurfaceType::Texture:
+            state.color_mask.red_enabled = true;
+            state.color_mask.green_enabled = true;
+            state.color_mask.blue_enabled = true;
+            state.color_mask.alpha_enabled = true;
+            state.Apply();
+            glClearBufferfv(GL_COLOR, 0, clear.value.color.AsArray());
+            break;
+        case SurfaceType::Depth:
+            state.depth.write_mask = GL_TRUE;
+            state.Apply();
+            glClearBufferfv(GL_DEPTH, 0, &clear.value.depth);
+            break;
+        case SurfaceType::DepthStencil:
+            state.depth.write_mask = GL_TRUE;
+            state.stencil.write_mask = -1;
+            state.Apply();
+            glClearBufferfi(GL_DEPTH_STENCIL, 0, clear.value.depth, clear.value.stencil);
+            break;
+        default:
+            UNREACHABLE_MSG("Unknown surface type {}", surface.type);
+        }
+    };
 
-    switch (surface.type) {
-    case SurfaceType::Color:
-    case SurfaceType::Texture:
-        state.color_mask.red_enabled = true;
-        state.color_mask.green_enabled = true;
-        state.color_mask.blue_enabled = true;
-        state.color_mask.alpha_enabled = true;
-        state.Apply();
-        glClearBufferfv(GL_COLOR, 0, clear.value.color.AsArray());
-        break;
-    case SurfaceType::Depth:
-        state.depth.write_mask = GL_TRUE;
-        state.Apply();
-        glClearBufferfv(GL_DEPTH, 0, &clear.value.depth);
-        break;
-    case SurfaceType::DepthStencil:
-        state.depth.write_mask = GL_TRUE;
-        state.stencil.write_mask = -1;
-        state.Apply();
-        glClearBufferfi(GL_DEPTH_STENCIL, 0, clear.value.depth, clear.value.stencil);
-        break;
-    default:
-        UNREACHABLE_MSG("Unknown surface type {}", surface.type);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    ClearBuffer();
+
+    if (surface.GetSampleCount() > 1) {
+        // Clear MSAA too
+        surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0, 3);
+        ClearBuffer();
     }
 }
 
@@ -279,6 +303,15 @@ bool TextureRuntime::CopyTextures(Surface& source, Surface& dest,
 
 bool TextureRuntime::BlitTextures(Surface& source, Surface& dest,
                                   const VideoCore::TextureBlit& blit) {
+    // Must resolve images first
+    // Todo(wunk): Add a "dirty" flag for msaa resolves to avoid redundant image resolves
+    if (source.sample_count > 1) {
+        blit_helper.ResolveTexture(source, blit.src_level, blit.src_layer);
+    }
+    if (dest.sample_count > 1) {
+        blit_helper.ResolveTexture(dest, blit.dst_level, blit.dst_layer);
+    }
+
     OpenGLState state = OpenGLState::GetCurState();
     state.scissor.enabled = false;
     state.draw.read_framebuffer = read_fbos[FboIndex(source.type)].handle;
@@ -329,10 +362,15 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     const GLenum target =
         texture_type == VideoCore::TextureType::CubeMap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 
-    textures[0] = MakeHandle(target, width, height, levels, tuple, DebugName(false));
+    textures[0] = MakeHandle(target, width, height, levels, 1, tuple, DebugName(false));
     if (res_scale != 1) {
-        textures[1] = MakeHandle(target, GetScaledWidth(), GetScaledHeight(), levels, tuple,
+        textures[1] = MakeHandle(target, GetScaledWidth(), GetScaledHeight(), levels, 1, tuple,
                                  DebugName(true, false));
+    }
+
+    if (sample_count > 1) {
+        textures[3] = MakeHandle(target, GetScaledWidth(), GetScaledHeight(), levels, sample_count,
+                                 tuple, DebugName(true, false, sample_count));
     }
 }
 
@@ -351,15 +389,19 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
     custom_format = mat->format;
     material = mat;
 
-    textures[0] = MakeHandle(target, mat->width, mat->height, levels, tuple, DebugName(false));
+    textures[0] = MakeHandle(target, mat->width, mat->height, levels, 1, tuple, DebugName(false));
     if (res_scale != 1) {
-        textures[1] = MakeHandle(target, mat->width, mat->height, levels, DEFAULT_TUPLE,
+        textures[1] = MakeHandle(target, mat->width, mat->height, levels, 1, DEFAULT_TUPLE,
                                  DebugName(true, true));
     }
     const bool has_normal = mat->Map(MapType::Normal);
     if (has_normal) {
         textures[2] =
-            MakeHandle(target, mat->width, mat->height, levels, tuple, DebugName(true, true));
+            MakeHandle(target, mat->width, mat->height, levels, 1, tuple, DebugName(true, true));
+    }
+    if (sample_count > 1) {
+        textures[3] = MakeHandle(target, mat->width, mat->height, sample_count, levels,
+                                 DEFAULT_TUPLE, DebugName(true, true, sample_count));
     }
 }
 
@@ -374,8 +416,8 @@ GLuint Surface::Handle(u32 index) const noexcept {
 
 GLuint Surface::CopyHandle() noexcept {
     if (!copy_texture.handle) {
-        copy_texture = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, tuple,
-                                  DebugName(true));
+        copy_texture = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, 1,
+                                  tuple, DebugName(true));
     }
 
     for (u32 level = 0; level < levels; level++) {
@@ -534,45 +576,53 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
     return false;
 }
 
-void Surface::Attach(GLenum target, u32 level, u32 layer, bool scaled) {
-    const GLuint handle = Handle(static_cast<u32>(scaled));
-    const GLenum textarget = texture_type == TextureType::CubeMap
-                                 ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + layer
-                                 : GL_TEXTURE_2D;
+void Surface::Attach(GLenum target, u32 level, u32 layer, u32 handle) {
+    const GLuint gl_handle = Handle(handle);
+    GLenum textarget = texture_type == TextureType::CubeMap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + layer
+                                                            : GL_TEXTURE_2D;
+
+    if (handle == 3 && sample_count > 1) {
+        ASSERT(texture_type == TextureType::Texture2D);
+        textarget = GL_TEXTURE_2D_MULTISAMPLE;
+    }
 
     switch (type) {
     case SurfaceType::Color:
     case SurfaceType::Texture:
-        glFramebufferTexture2D(target, GL_COLOR_ATTACHMENT0, textarget, handle, level);
+        glFramebufferTexture2D(target, GL_COLOR_ATTACHMENT0, textarget, gl_handle, level);
         break;
     case SurfaceType::Depth:
-        glFramebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget, handle, level);
+        glFramebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget, gl_handle, level);
         break;
     case SurfaceType::DepthStencil:
-        glFramebufferTexture2D(target, GL_DEPTH_STENCIL_ATTACHMENT, textarget, handle, level);
+        glFramebufferTexture2D(target, GL_DEPTH_STENCIL_ATTACHMENT, textarget, gl_handle, level);
         break;
     default:
         UNREACHABLE_MSG("Invalid surface type!");
     }
 }
 
-void Surface::ScaleUp(u32 new_scale) {
-    if (res_scale == new_scale || new_scale == 1) {
-        return;
+void Surface::ScaleUp(u32 new_scale, u8 new_sample_count) {
+    const bool res_scale_modified = res_scale != new_scale;
+    if (res_scale_modified && new_scale > 1) {
+        res_scale = new_scale;
+        textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, 1,
+                                 tuple, DebugName(true));
+        for (u32 level = 0; level < levels; level++) {
+            const VideoCore::TextureBlit blit = {
+                .src_level = level,
+                .dst_level = level,
+                .src_rect = GetRect(level),
+                .dst_rect = GetScaledRect(level),
+            };
+            BlitScale(blit, true);
+        }
     }
 
-    res_scale = new_scale;
-    textures[1] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels, tuple,
-                             DebugName(true));
-
-    for (u32 level = 0; level < levels; level++) {
-        const VideoCore::TextureBlit blit = {
-            .src_level = level,
-            .dst_level = level,
-            .src_rect = GetRect(level),
-            .dst_rect = GetScaledRect(level),
-        };
-        BlitScale(blit, true);
+    if ((res_scale_modified || sample_count != new_sample_count) && new_sample_count > 1) {
+        sample_count = new_sample_count;
+        textures[3] = MakeHandle(GL_TEXTURE_2D, GetScaledWidth(), GetScaledHeight(), levels,
+                                 sample_count, tuple, DebugName(true));
     }
 }
 
@@ -606,7 +656,8 @@ void Surface::BlitScale(const VideoCore::TextureBlit& blit, bool up_scale) {
 Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferParams& params,
                          const Surface* color, const Surface* depth)
     : VideoCore::FramebufferParams{params},
-      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)} {
+      res_scale{color ? color->res_scale : (depth ? depth->res_scale : 1u)},
+      sample_count{color ? color->sample_count : (depth ? depth->sample_count : 1u)} {
 
     if (shadow_rendering && !color) {
         return;
@@ -617,6 +668,15 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
     }
     if (depth) {
         attachments[1] = depth->Handle();
+    }
+
+    if (sample_count > 1) {
+        if (color) {
+            attachments[2] = color->Handle(3);
+        }
+        if (depth) {
+            attachments[3] = depth->Handle(3);
+        }
     }
 
     framebuffer.Create();
@@ -649,6 +709,27 @@ Framebuffer::Framebuffer(TextureRuntime& runtime, const VideoCore::FramebufferPa
         } else {
             glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                                    0, 0);
+        }
+
+        if (sample_count > 1) {
+            if (color) {
+                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                       GL_TEXTURE_2D_MULTISAMPLE, color ? color->Handle(3) : 0,
+                                       color_level);
+            }
+            if (depth) {
+                if (depth->pixel_format == PixelFormat::D24S8) {
+                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                           GL_TEXTURE_2D_MULTISAMPLE, depth->Handle(3),
+                                           depth_level);
+                } else {
+                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                           GL_TEXTURE_2D_MULTISAMPLE, depth->Handle(3),
+                                           depth_level);
+                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                           GL_TEXTURE_2D_MULTISAMPLE, 0, 0);
+                }
+            }
         }
     }
 }
