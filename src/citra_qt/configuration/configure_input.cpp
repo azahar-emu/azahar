@@ -459,17 +459,24 @@ void ConfigureInput::OnClearBinding(ConfigureInput::InputBinding binding) {
 }
 
 bool sameInput(const Common::ParamPackage& param1, const Common::ParamPackage& param2) {
-    return param1.Has("engine") && param2.Has("engine") &&
-           param1.Get("engine", "") == param2.Get("engine", "") &&
-           param1.Get("guid", "") == param2.Get("guid", "") &&
-           (param1.Get("code", -1) == param2.Get("code", -2) ||
-            param1.Get("button", -1) == param2.Get("button", -2) ||
-            (param1.Get("axis", -1) == param2.Get("axis", -2) &&
-             param1.Get("direction", "a") == param2.Get("direction", "b")) ||
-            (param1.Get("axis_x", -1) == param2.Get("axis_x", -2) &&
-             param1.Get("axis_y", -1) == param2.Get("axis_y", -2)) ||
-            (param1.Get("hat", -1) == param2.Get("hat", -2) &&
-             param1.Get("direction", "a") == param2.Get("direction", "b")));
+    // if the engines or guid's don't match, return false as default
+    if (!param1.Has("engine") || !param2.Has("engine"))
+        return false;
+    if (param1.Get("engine", "") != param2.Get("engine", ""))
+        return false;
+    if (param1.Get("guid", "") != param2.Get("guid", ""))
+        return false;
+
+    const bool sameCode = param1.Get("code", -1) == param2.Get("code", -2);
+    const bool sameButton = param1.Get("button", -1) == param2.Get("button", -2);
+    const bool sameAxisAndDirection = param1.Get("axis", -1) == param2.Get("axis", -2) &&
+                                      param1.Get("direction", "a") == param2.Get("direction", "b");
+    const bool sameAxisXAndAxisY = param1.Get("axis_x", -1) == param2.Get("axis_x", -2) &&
+                                   param1.Get("axis_y", -1) == param2.Get("axis_y", -2);
+    const bool sameHatAndDirection = param1.Get("hat", -1) == param2.Get("hat", -2) &&
+                                     param1.Get("direction", "a") == param2.Get("direction", "b");
+    return sameCode || sameButton || sameAxisAndDirection || sameAxisXAndAxisY ||
+           sameHatAndDirection;
 }
 
 ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPackage& param) {
