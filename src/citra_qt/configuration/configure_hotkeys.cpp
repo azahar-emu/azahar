@@ -140,8 +140,8 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     if (key_sequence_used && key_sequence != QKeySequence(previous_key.toString())) {
         auto response = QMessageBox::information(
             this, tr("Combination Already Bound"),
-            tr("This key combination is already bound to the '%1' hotkey.\n\n"
-               "Continuing will unbind the previous hotkey. Proceed?")
+            tr("This key combination is already bound to the '%1' input.\n\n"
+               "Continuing will remove the previous binding. Proceed?")
                 .arg(current_binding.name),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
         if (response == QMessageBox::No) {
@@ -269,7 +269,7 @@ void ConfigureHotkeys::RestoreHotkey(QModelIndex index) {
         QMessageBox::warning(
             this, tr("Failed to Restore"),
             tr("Unable to restore the default binding for this hotkey, as it's already "
-               "bound to the '%1' hotkey.")
+               "bound to the '%1' input.")
                 .arg(used_action.name));
     } else {
         model->setData(index, default_key_sequence.toString(QKeySequence::NativeText));

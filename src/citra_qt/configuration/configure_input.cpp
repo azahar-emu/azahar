@@ -750,7 +750,7 @@ void ConfigureInput::SetPollingResult(const Common::ParamPackage& params, bool a
         auto response =
             QMessageBox::information(this, tr("Key Already Bound"),
                                      tr("This key is already bound to the '%1' input.\n\n"
-                                        "Continuing will unbind the previous input. Proceed?")
+                                        "Continuing will remove the previous binding. Proceed?")
                                          .arg(current_binding.name),
                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
         if (response == QMessageBox::No) {
