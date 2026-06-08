@@ -497,16 +497,15 @@ ConfigureInput::InputBinding ConfigureInput::GetMapping(const Common::ParamPacka
                 const Common::ParamPackage sub_button{
                     analog_param.Get(analog_sub_buttons[sub_button_id], "")};
                 if (sameInput(param, sub_button)) {
+                    const auto input_ui_string = QStringLiteral("%1 (%2)").arg(
+                        analog_names[analog_id], analog_sub_button_names[sub_button_id]);
+
                     if (analog_sub_buttons[sub_button_id] == "modifier") {
-                        return {"CircleModButton", QStringLiteral("circle mod button"), 0};
+                        return {"CircleModButton", input_ui_string, 0};
                     }
-                    return {"AnalogButton",
-                            QStringLiteral("%1 (%2)").arg(analog_names[analog_id],
-                                                          analog_sub_button_names[sub_button_id]),
-                            analog_id, sub_button_id};
+                    return {"AnalogButton", input_ui_string, analog_id, sub_button_id};
                 }
             }
-
         } else if (sameInput(param, analog_param)) {
             return {"Analog", analog_names[analog_id], analog_id};
         }
