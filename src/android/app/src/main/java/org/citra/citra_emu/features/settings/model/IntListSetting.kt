@@ -16,8 +16,11 @@ enum class IntListSetting(
 ) : AbstractListSetting<Int> {
 
     LAYOUTS_TO_CYCLE(SettingKeys.layouts_to_cycle(), Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false),
+    /**
+     * Combo Buttons will be given options on MultiChoice setting initialization. This just makes selections empty by default.
+     */
     COMBO_BUTTONS(SettingKeys.combo_buttons(), Settings.SECTION_CONTROLS,
-        CitraApplication.appContext.resources.getIntArray(R.array.comboOptionValues).toCollection(ArrayList()),
+        listOf(),
         canBeEmpty = true);
   
     private var backingList: List<Int> = defaultValue
