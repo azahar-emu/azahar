@@ -67,9 +67,9 @@ import org.citra.citra_emu.databinding.FragmentEmulationBinding
 import org.citra.citra_emu.display.PortraitScreenLayout
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.ScreenLayout
+import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
@@ -78,7 +78,6 @@ import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DirectoryInitialization.DirectoryInitializationState
 import org.citra.citra_emu.utils.EmulationMenuSettings
-import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.GameHelper
 import org.citra.citra_emu.utils.GameIconUtils
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
@@ -834,6 +833,11 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
                     true
                 }
 
+                R.id.menu_emulation_adjust_scale_button_combo -> {
+                    showAdjustScaleDialog("controlScale-" + Hotkey.COMBO_BUTTON.button)
+                    true
+                }
+
                 R.id.menu_emulation_adjust_opacity -> {
                     showAdjustOpacityDialog()
                     true
@@ -1051,13 +1055,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
     private fun showToggleControlsDialog() {
         val editor = preferences.edit()
-        val enabledButtons = BooleanArray(16)
+        val enabledButtons = BooleanArray(17)
         enabledButtons.forEachIndexed { i: Int, _: Boolean ->
             // Buttons that are disabled by default
             var defaultValue = true
             when (i) {
                 // TODO: Remove these magic numbers
-                6, 7, 12, 13, 14, 15 -> defaultValue = false
+                6, 7, 12, 13, 14, 15, 16 -> defaultValue = false
             }
             enabledButtons[i] = preferences.getBoolean("buttonToggle$i", defaultValue)
         }

@@ -13,6 +13,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.Settings
@@ -81,6 +82,7 @@ class HotkeyUtility(
             // this is a hotkey button
             if (hotkeyButtons.contains(button)) {
                 currentlyPressedButtons.remove(button)
+                handleHotkeyRelease(button)
                 if (!currentlyPressedButtons.any { hotkeyButtons.contains(it) }) {
                     // all hotkeys are no longer pressed
                     hotkeyIsPressed = false
@@ -106,6 +108,14 @@ class HotkeyUtility(
         return handled
     }
 
+    fun handleHotkeyRelease(bindedButton: Int): Boolean {
+        // Log.debug("Handling hotkey button release: " + bindedButton)
+        if (bindedButton == Hotkey.COMBO_BUTTON.button) {
+            ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
+        }
+        return true
+    }
+
     fun handleHotkey(bindedButton: Int): Boolean {
         when (bindedButton) {
             Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
@@ -121,7 +131,6 @@ class HotkeyUtility(
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
             Hotkey.QUICKLOAD.button -> {
                 val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                 val stringRes = if (wasLoaded) {
@@ -134,6 +143,9 @@ class HotkeyUtility(
                     context.getString(stringRes),
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+            Hotkey.COMBO_BUTTON.button -> {
+                ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
             }
 
             else -> {}

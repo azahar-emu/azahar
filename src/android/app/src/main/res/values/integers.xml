@@ -35,6 +35,8 @@
     <integer name="N3DS_BUTTON_SWAP_Y">850</integer>
     <integer name="N3DS_BUTTON_TURBO_X">630</integer>
     <integer name="N3DS_BUTTON_TURBO_Y">850</integer>
+    <integer name="N3DS_BUTTON_COMBO_X">740</integer>
+    <integer name="N3DS_BUTTON_COMBO_Y">480</integer>
 
     <!-- Default N3DS portrait layout -->
     <integer name="N3DS_BUTTON_A_PORTRAIT_X">810</integer>
@@ -69,5 +71,7 @@
     <integer name="N3DS_BUTTON_SWAP_PORTRAIT_Y">675</integer>
     <integer name="N3DS_BUTTON_TURBO_PORTRAIT_X">453</integer>
     <integer name="N3DS_BUTTON_TURBO_PORTRAIT_Y">720</integer>
+    <integer name="N3DS_BUTTON_COMBO_PORTRAIT_X">445</integer>
+    <integer name="N3DS_BUTTON_COMBO_PORTRAIT_Y">925</integer>
 
 </resources>

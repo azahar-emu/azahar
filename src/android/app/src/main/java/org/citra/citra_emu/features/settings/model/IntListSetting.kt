@@ -4,6 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model
 
+import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.SettingKeys
 
 enum class IntListSetting(
@@ -13,8 +15,14 @@ enum class IntListSetting(
     val canBeEmpty: Boolean = true
 ) : AbstractListSetting<Int> {
 
-    LAYOUTS_TO_CYCLE(SettingKeys.layouts_to_cycle(), Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false);
-
+    LAYOUTS_TO_CYCLE(SettingKeys.layouts_to_cycle(), Settings.SECTION_LAYOUT, listOf(0, 1, 2, 3, 4, 5), canBeEmpty = false),
+    /**
+     * Combo Buttons will be given options on MultiChoice setting initialization. This just makes selections empty by default.
+     */
+    COMBO_BUTTONS(SettingKeys.combo_buttons(), Settings.SECTION_CONTROLS,
+        listOf(),
+        canBeEmpty = true);
+  
     private var backingList: List<Int> = defaultValue
     private var lastValidList : List<Int> = defaultValue
 

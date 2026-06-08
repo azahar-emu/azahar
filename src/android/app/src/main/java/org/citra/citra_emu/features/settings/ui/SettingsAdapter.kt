@@ -44,6 +44,7 @@ import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
 import org.citra.citra_emu.features.settings.model.ScaledFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractShortSetting
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
@@ -571,15 +572,20 @@ class SettingsAdapter(
 
     //onclick for multichoice
     override fun onClick(dialog: DialogInterface?, which: Int, isChecked: Boolean) {
-        val mcsetting = clickedItem as? MultiChoiceSetting
-        mcsetting?.let {
-            val value = getValueForMultiChoiceSelection(it, which)
-            if (it.selectedValues.contains(value) != isChecked) {
-                val setting = it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
-                fragmentView?.putSetting(setting)
-                fragmentView?.onSettingChanged()
+        when (clickedItem) {
+            is MultiChoiceSetting -> {
+                val mcsetting = clickedItem as? MultiChoiceSetting
+                mcsetting?.let {
+                    val value = getValueForMultiChoiceSelection(it, which)
+                    if (it.selectedValues.contains(value) != isChecked) {
+                        val setting =
+                            it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
+                        fragmentView?.putSetting(setting)
+                        fragmentView?.onSettingChanged()
+                    }
+                    fragmentView.loadSettingsList()
+                }
             }
-            fragmentView.loadSettingsList()
         }
     }
 
