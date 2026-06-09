@@ -18,6 +18,7 @@
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 
+// Shaders
 #include "video_core/host_shaders/opengl_present_anaglyph_frag.h"
 #include "video_core/host_shaders/opengl_present_frag.h"
 #include "video_core/host_shaders/opengl_present_interlaced_frag.h"
@@ -25,37 +26,28 @@
 #include "video_core/host_shaders/opengl_simple_present_frag.h"
 #include "video_core/host_shaders/opengl_simple_present_vert.h"
 
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_fxaa_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_fxaa_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_post_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass0_post_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_post_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass1_post_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_post_frag.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_pass2_post_vert.h"
-#include "video_core/host_shaders/antialiasing/OpenGL/opengl_smaa_hlsl.h"
-#include "video_core/host_shaders/antialiasing/AreaTex.h"
-#include "video_core/host_shaders/antialiasing/SearchTex.h"
-#include "video_core/host_shaders/scaling/opengl_area_sampling_frag.h"
-#include "video_core/host_shaders/scaling/opengl_area_sampling_vert.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass0_vert.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass0_part1_frag.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass0_part2_frag.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass1_vert.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass1_part1_frag.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass1_part2_frag.h"
-#include "video_core/host_shaders/scaling/FSR/OpenGL/opengl_fsr_pass1_part3_frag.h"
-#include "video_core/host_shaders/scaling/FSR/ffx_a_h.h"
-#include "video_core/host_shaders/scaling/FSR/ffx_fsr1_h.h"
-#include "video_core/host_shaders/scaling/SharpBilinear/OpenGL/opengl_sharpbilinear_vert.h"
-#include "video_core/host_shaders/scaling/SharpBilinear/OpenGL/opengl_sharpbilinear_frag.h"
-
+// Post Processing Shaders
+#include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_frag.h"
+#include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/FXAA/opengl_fxaa_frag.h"
+#include "video_core/host_shaders/post_processing/FXAA/opengl_fxaa_vert.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/opengl_sharpbilinear_frag.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/opengl_sharpbilinear_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass2_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass2_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/smaa_hlsl.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/AreaTex.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/SearchTex.h"
 namespace OpenGL {
 
 MICROPROFILE_DEFINE(OpenGL_RenderFrame, "OpenGL", "Render Frame", MP_RGB(128, 128, 64));
@@ -502,6 +494,16 @@ void RendererOpenGL::InitOpenGLObjects() {
     state.Apply();
 }
 
+void RendererOpenGL::ReplaceInclude(std::string& shader_source, std::string_view include_name,
+                                  std::string_view include_content) {
+    const std::string include_string = fmt::format("#include \'{}\'", include_name);
+    const std::size_t pos = shader_source.find(include_string);
+    if (pos == std::string::npos){
+        LOG_ERROR(Render_OpenGL, "Failed to replace include: {}", include_name);
+    }
+    shader_source.replace(pos, include_string.size(), include_content);
+};
+
 void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     // Link shaders and get variable locations
     std::string shader_data = fragment_shader_precision_OES;
@@ -540,7 +542,7 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     AttachUniforms();
 
 
-    // Setup FXAA, SMAA and Simple Present Shaders
+    // Setup FXAA, SMAA and Simple Present, SMAA, FSR, Sharp Bilinear
     std::string FXAA_shader_data = fragment_shader_precision_OES;
     FXAA_shader_data += HostShaders::OPENGL_FXAA_FRAG;
     FXAA_shader.Create(HostShaders::OPENGL_FXAA_VERT, FXAA_shader_data);
@@ -554,49 +556,39 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     SimplePresent_shader.Create(HostShaders::OPENGL_SIMPLE_PRESENT_VERT, SimplePresent_shader_data);
 
     std::string SMAA_PASS_0_shader_frag_data = fragment_shader_precision_OES;
-    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_PRE_FRAG;
-    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_POST_FRAG;
+    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_FRAG;
+    ReplaceInclude(SMAA_PASS_0_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     std::string SMAA_PASS_0_shader_vert_data;
-    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_PRE_VERT;
-    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_POST_VERT;
+    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_VERT;
+    ReplaceInclude(SMAA_PASS_0_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     SMAA_PASS_0_shader.Create(SMAA_PASS_0_shader_vert_data, SMAA_PASS_0_shader_frag_data);
 
     std::string SMAA_PASS_1_shader_frag_data = fragment_shader_precision_OES;
-    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_PRE_FRAG;
-    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_POST_FRAG;
+    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_FRAG;
+    ReplaceInclude(SMAA_PASS_1_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     std::string SMAA_PASS_1_shader_vert_data;
-    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_PRE_VERT;
-    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_POST_VERT;
+    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_VERT;
+    ReplaceInclude(SMAA_PASS_1_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     SMAA_PASS_1_shader.Create(SMAA_PASS_1_shader_vert_data, SMAA_PASS_1_shader_frag_data);
 
     std::string SMAA_PASS_2_shader_frag_data = fragment_shader_precision_OES;
-    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_PRE_FRAG;
-    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_POST_FRAG;
+    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_FRAG;
+    ReplaceInclude(SMAA_PASS_2_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     std::string SMAA_PASS_2_shader_vert_data;
-    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_PRE_VERT;
-    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_HLSL;
-    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_POST_VERT;
+    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_VERT;
+    ReplaceInclude(SMAA_PASS_2_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
     SMAA_PASS_2_shader.Create(SMAA_PASS_2_shader_vert_data, SMAA_PASS_2_shader_frag_data);
     
-
     std::string FSR_PASS_0_shader_frag_data =  fragment_shader_precision_OES;
-    FSR_PASS_0_shader_frag_data += HostShaders::OPENGL_FSR_PASS0_PART1_FRAG;
-    FSR_PASS_0_shader_frag_data += HostShaders::FFX_A_H;
-    FSR_PASS_0_shader_frag_data += HostShaders::FFX_FSR1_H;
-    FSR_PASS_0_shader_frag_data += HostShaders::OPENGL_FSR_PASS0_PART2_FRAG;
+    FSR_PASS_0_shader_frag_data += HostShaders::OPENGL_FSR_PASS0_FRAG;
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
     FSR_PASS_0_shader.Create(HostShaders::OPENGL_FSR_PASS0_VERT, FSR_PASS_0_shader_frag_data);
 
     std::string FSR_PASS_1_shader_frag_data =  fragment_shader_precision_OES;
-    FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_PART1_FRAG;
-    FSR_PASS_1_shader_frag_data += HostShaders::FFX_A_H;
-    FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_PART2_FRAG;
-    FSR_PASS_1_shader_frag_data += HostShaders::FFX_FSR1_H;
-    FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_PART3_FRAG;
+    FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_FRAG;
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H); 
     FSR_PASS_1_shader.Create(HostShaders::OPENGL_FSR_PASS1_VERT, FSR_PASS_1_shader_frag_data);
 
     std::string SharpBilinear_shader_frag_data = fragment_shader_precision_OES;

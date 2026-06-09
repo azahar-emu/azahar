@@ -86,6 +86,8 @@ private:
                             bool right_eye, const Pica::ColorFill& color_fill);
     // Attach Uniforms to the current shader
     void AttachUniforms();
+    // Shader #include function. Modified from Yuzu
+    void ReplaceInclude(std::string& shader_source, std::string_view include_name, std::string_view include_content);
 
 private:
     Pica::PicaCore& pica;

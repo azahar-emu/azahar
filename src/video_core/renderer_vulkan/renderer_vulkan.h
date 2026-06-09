@@ -179,6 +179,8 @@ private:
     void CreatePPTextureFramebuffers();
     void CreateOutputSizeTextureFramebuffers();
     void SetStagedTextureTexInfo(StagedTextureInfo& texture);
+    // Shader #include function. Modified from Yuzu
+    void ReplaceInclude(std::string& shader_source, std::string_view include_name, std::string_view include_content);
 private:
     Memory::MemorySystem& memory;
     Pica::PicaCore& pica;

@@ -15,47 +15,38 @@
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
+// Shaders
 #include "video_core/host_shaders/vulkan_present_anaglyph_frag.h"
 #include "video_core/host_shaders/vulkan_present_frag.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag.h"
 #include "video_core/host_shaders/vulkan_present_vert.h"
-
 #include "video_core/host_shaders/vulkan_cursor_frag.h"
 #include "video_core/host_shaders/vulkan_cursor_vert.h"
-
 #include "video_core/host_shaders/vulkan_simple_present_frag.h"
 #include "video_core/host_shaders/vulkan_simple_present_vert.h"
 
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_fxaa_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_fxaa_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass0_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass0_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass0_post_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass0_post_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass1_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass1_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass1_post_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass1_post_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass2_pre_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass2_pre_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass2_post_frag.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_pass2_post_vert.h"
-#include "video_core/host_shaders/antialiasing/Vulkan/vulkan_smaa_hlsl.h"
-#include "video_core/host_shaders/antialiasing/AreaTex.h"
-#include "video_core/host_shaders/antialiasing/SearchTex.h"
-#include "video_core/host_shaders/scaling/vulkan_area_sampling_frag.h"
-#include "video_core/host_shaders/scaling/vulkan_area_sampling_vert.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_vert.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_part1_frag.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass0_part2_frag.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_vert.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part1_frag.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part2_frag.h"
-#include "video_core/host_shaders/scaling/FSR/Vulkan/vulkan_fsr_pass1_part3_frag.h"
-#include "video_core/host_shaders/scaling/FSR/ffx_a_h.h"
-#include "video_core/host_shaders/scaling/FSR/ffx_fsr1_h.h"
-#include "video_core/host_shaders/scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear_vert.h"
-#include "video_core/host_shaders/scaling/SharpBilinear/Vulkan/vulkan_sharpbilinear_frag.h"
+// Post Processing Shaders
+#include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_frag.h"
+#include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/FXAA/vulkan_fxaa_frag.h"
+#include "video_core/host_shaders/post_processing/FXAA/vulkan_fxaa_vert.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/vulkan_sharpbilinear_frag.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/vulkan_sharpbilinear_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass2_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass2_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/smaa_hlsl.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/AreaTex.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/SearchTex.h"
 
 #include <vk_mem_alloc.h>
 
@@ -933,6 +924,16 @@ void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     }
 }
 
+void RendererVulkan::ReplaceInclude(std::string& shader_source, std::string_view include_name,
+                                  std::string_view include_content) {
+    const std::string include_string = fmt::format("#include \'{}\'", include_name);
+    const std::size_t pos = shader_source.find(include_string);
+    if (pos == std::string::npos){
+        LOG_ERROR(Render_Vulkan, "Failed to replace include: {}", include_name);
+    }
+    shader_source.replace(pos, include_string.size(), include_content);
+};
+
 void RendererVulkan::CompileShaders() {
     const vk::Device device = instance.GetDevice();
     const std::string_view preamble =
@@ -970,64 +971,64 @@ void RendererVulkan::CompileShaders() {
         Compile(HostShaders::VULKAN_FXAA_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 0 Shader
-    std::string smaa_pass_0_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS0_PRE_VERT);
-    smaa_pass_0_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_0_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_PASS0_POST_VERT);
-    std::string smaa_pass_0_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS0_PRE_FRAG);
-    smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_0_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS0_POST_FRAG);
+    std::string smaa_pass_0_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS0_VERT);
+    ReplaceInclude(smaa_pass_0_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_0_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS0_FRAG);
+    ReplaceInclude(smaa_pass_0_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+
     post_vert_shaders_texture[2] =
         Compile(smaa_pass_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_texture[2] =
         Compile(smaa_pass_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 1 Shader
-    std::string smaa_pass_1_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS1_PRE_VERT);
-    smaa_pass_1_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_1_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_PASS1_POST_VERT);
-    std::string smaa_pass_1_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS1_PRE_FRAG);
-    smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_1_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS1_POST_FRAG);
+    std::string smaa_pass_1_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS1_VERT);
+    ReplaceInclude(smaa_pass_1_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_1_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS1_FRAG);
+    ReplaceInclude(smaa_pass_1_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    
     post_vert_shaders_texture[3] =
         Compile(smaa_pass_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_texture[3] =
         Compile(smaa_pass_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
     // SMAA Pass 2 Shader
-    std::string smaa_pass_2_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS2_PRE_VERT);
-    smaa_pass_2_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_2_shader_vert_data += std::string(HostShaders::VULKAN_SMAA_PASS2_POST_VERT);
-    std::string smaa_pass_2_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS2_PRE_FRAG);
-    smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_HLSL);
-    smaa_pass_2_shader_frag_data += std::string(HostShaders::VULKAN_SMAA_PASS2_POST_FRAG);
+    std::string smaa_pass_2_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS2_VERT);
+    ReplaceInclude(smaa_pass_2_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_2_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS2_FRAG);
+    ReplaceInclude(smaa_pass_2_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+  
     post_vert_shaders_texture[4] =
         Compile(smaa_pass_2_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_texture[4] =
         Compile(smaa_pass_2_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
-    std::string FSR_PASS_0_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS0_PART1_FRAG);
-    FSR_PASS_0_shader_frag_data += std::string(HostShaders::FFX_A_H);
-    FSR_PASS_0_shader_frag_data += std::string(HostShaders::FFX_FSR1_H);
-    FSR_PASS_0_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS0_PART2_FRAG);
+    // FSR Pass 0 Shader
+    std::string FSR_PASS_0_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS0_FRAG);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
     std::string FSR_PASS_0_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS0_VERT);
+    
     post_vert_shaders_texture[5] =
         Compile(FSR_PASS_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_texture[5] =
         Compile(FSR_PASS_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
-    std::string FSR_PASS_1_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS1_PART1_FRAG);
-    FSR_PASS_1_shader_frag_data += std::string(HostShaders::FFX_A_H);
-    FSR_PASS_1_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS1_PART2_FRAG);
-    FSR_PASS_1_shader_frag_data += std::string(HostShaders::FFX_FSR1_H);
-    FSR_PASS_1_shader_frag_data += std::string(HostShaders::VULKAN_FSR_PASS1_PART3_FRAG);
+    // FSR Pass 1 Shader
+    std::string FSR_PASS_1_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS1_FRAG);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
     std::string FSR_PASS_1_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS1_VERT);
+
     post_vert_shaders_texture[6] =
         Compile(FSR_PASS_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_texture[6] =
         Compile(FSR_PASS_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
 
+    // Sharp Bilinear Shader
     std::string SharpBilinear_shader_frag_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_FRAG);
     std::string SharpBilinear_shader_vert_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_VERT);
+    
     post_vert_shaders_screen[1] =
         Compile(SharpBilinear_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
     post_frag_shaders_screen[1] =
