@@ -429,14 +429,14 @@ void RendererVulkan::AllocateSMAATextures(){
     areaTexInfo = {
         .width = AREATEX_WIDTH,
         .height = AREATEX_HEIGHT,
-        .size = AREATEX_SIZE,
         .channels = 2,
+        .size = AREATEX_SIZE,
     };
     searchTexInfo = {
         .width = SEARCHTEX_WIDTH,
         .height = SEARCHTEX_HEIGHT,
-        .size = SEARCHTEX_SIZE,
         .channels = 1,
+        .size = SEARCHTEX_SIZE,
     };
     AllocateStagedTexture(areaTexInfo, areaTexInfo.width, areaTexInfo.height, vk::Format::eR8G8Unorm);
     CreateImageStagingBuffer(areaTexInfo);
@@ -503,6 +503,8 @@ void RendererVulkan::UploadImageDataToBuffer(StagedTextureInfo& texture, unsigne
 
 void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
     vk::ImageMemoryBarrier pre_barrier = {
+        .srcAccessMask = vk::AccessFlags{},
+        .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
         .oldLayout           = vk::ImageLayout::eUndefined,
         .newLayout           = vk::ImageLayout::eTransferDstOptimal,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
@@ -515,8 +517,7 @@ void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
             .baseArrayLayer = 0,
             .layerCount = 1,
         },
-        .srcAccessMask = vk::AccessFlags{},
-        .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
+
     };
 
     vk::BufferImageCopy region = {
@@ -534,6 +535,8 @@ void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
     };
 
     vk::ImageMemoryBarrier post_barrier = {
+        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
         .oldLayout     = vk::ImageLayout::eTransferDstOptimal,
         .newLayout     = vk::ImageLayout::eShaderReadOnlyOptimal,
         .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
@@ -546,8 +549,6 @@ void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
             .baseArrayLayer = 0,
             .layerCount = 1,
         },
-        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
-        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
     };
 
     scheduler.Record([texture, pre_barrier, region, post_barrier](vk::CommandBuffer cmdbuf) {
