@@ -164,6 +164,8 @@ private:
     // Secondary Layout Fix
     bool isSecondaryWindow;
 
+    // Fix External Shader
+    bool usingExternalShader;
 };
 
 } // namespace OpenGL
