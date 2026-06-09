@@ -44,6 +44,9 @@ object SettingKeys {
     external fun frame_limit(): String
     external fun turbo_limit(): String
     external fun texture_filter(): String
+    external fun antialiasing_filter(): String
+    external fun fsr_sharpness(): String
+    external fun output_scaling(): String
     external fun texture_sampling(): String
     external fun delay_game_render_thread_us(): String
     external fun simulate_3ds_gpu_timings(): String

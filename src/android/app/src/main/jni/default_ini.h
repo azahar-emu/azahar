@@ -190,6 +190,17 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Loaded from shaders/anaglyph
 )") DECLARE_KEY(anaglyph_shader_name) BOOST_HANA_STRING(R"(
 
+# Scaling mode for image output
+# 0: Nearest, 1: Bilinear, 2 (default): Adaptive, 3: FSR 1, 4: Sharp Bilinear
+)") DECLARE_KEY(output_scaling) BOOST_HANA_STRING(R"(
+
+# Antialiasing filter to use
+# 0 (default): None, 1: FXAA, 2: SMAA 
+)") DECLARE_KEY(antialiasing_filter) BOOST_HANA_STRING(R"(
+
+#  0 - 100: Strength of FSR Sharpening. 50 (default)
+)") DECLARE_KEY(fsr_sharpness) BOOST_HANA_STRING(R"(
+
 # Whether to enable linear filtering or not
 # This is required for some shaders to work correctly
 # 0: Nearest, 1 (default): Linear

@@ -15,13 +15,38 @@
 #include "video_core/renderer_vulkan/vk_memory_util.h"
 #include "video_core/renderer_vulkan/vk_shader_util.h"
 
+// Shaders
 #include "video_core/host_shaders/vulkan_present_anaglyph_frag.h"
 #include "video_core/host_shaders/vulkan_present_frag.h"
 #include "video_core/host_shaders/vulkan_present_interlaced_frag.h"
 #include "video_core/host_shaders/vulkan_present_vert.h"
-
 #include "video_core/host_shaders/vulkan_cursor_frag.h"
 #include "video_core/host_shaders/vulkan_cursor_vert.h"
+#include "video_core/host_shaders/vulkan_simple_present_frag.h"
+#include "video_core/host_shaders/vulkan_simple_present_vert.h"
+
+// Post Processing Shaders
+#include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_frag.h"
+#include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/FXAA/vulkan_fxaa_frag.h"
+#include "video_core/host_shaders/post_processing/FXAA/vulkan_fxaa_vert.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/vulkan_sharpbilinear_frag.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/vulkan_sharpbilinear_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass2_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/vulkan_smaa_pass2_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/smaa_hlsl.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/AreaTex.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/SearchTex.h"
 
 #include <vk_mem_alloc.h>
 
@@ -37,14 +62,6 @@ MICROPROFILE_DEFINE(Vulkan_RenderFrame, "Vulkan", "Render Frame", MP_RGB(128, 12
 
 namespace Vulkan {
 
-struct ScreenRectVertex {
-    ScreenRectVertex() = default;
-    ScreenRectVertex(float x, float y, float u, float v)
-        : position{Common::MakeVec(x, y)}, tex_coord{Common::MakeVec(u, v)} {}
-
-    Common::Vec2f position;
-    Common::Vec2f tex_coord;
-};
 
 constexpr u32 VERTEX_BUFFER_SIZE = sizeof(ScreenRectVertex) * 8192;
 
@@ -57,8 +74,10 @@ constexpr std::array<f32, 4 * 4> MakeOrthographicMatrix(u32 width, u32 height) {
     // clang-format on
 }
 
-constexpr static std::array<vk::DescriptorSetLayoutBinding, 1> PRESENT_BINDINGS = {{
-    {0, vk::DescriptorType::eCombinedImageSampler, 3, vk::ShaderStageFlagBits::eFragment},
+constexpr static std::array<vk::DescriptorSetLayoutBinding, 3> PRESENT_BINDINGS = {{
+    {0, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
+    {2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment},
 }};
 
 namespace {
@@ -129,6 +148,10 @@ RendererVulkan::RendererVulkan(Core::System& system, Pica::PicaCore& pica_,
       present_heap{instance, scheduler.GetMasterSemaphore(), PRESENT_BINDINGS, 32} {
     CompileShaders();
     BuildLayouts();
+    CreateTextureRenderPass();
+    AllocateSMAATextures();
+    AllocatePPTextures();
+    CreatePPTextureFramebuffers();
     BuildPipelines();
     if (secondary_window) {
         secondary_present_window_ptr = std::make_unique<PresentWindow>(
@@ -142,10 +165,35 @@ RendererVulkan::~RendererVulkan() {
     main_present_window.WaitPresent();
     device.waitIdle();
 
+    vmaDestroyBuffer(instance.GetAllocator(), areaTexInfo.buffer, areaTexInfo.bufferAllocation);
+    vmaDestroyBuffer(instance.GetAllocator(), searchTexInfo.buffer, searchTexInfo.bufferAllocation);
+    device.destroyImageView(areaTexInfo.image_view);
+    vmaDestroyImage(instance.GetAllocator(), areaTexInfo.image, areaTexInfo.imageAllocation);
+    device.destroyImageView(searchTexInfo.image_view);
+    vmaDestroyImage(instance.GetAllocator(), searchTexInfo.image, searchTexInfo.imageAllocation);
+
     device.destroyShaderModule(present_vertex_shader);
     for (u32 i = 0; i < PRESENT_PIPELINES; i++) {
         device.destroyPipeline(present_pipelines[i]);
         device.destroyShaderModule(present_shaders[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        device.destroyPipeline(post_pipelines_screen[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
+        device.destroyPipeline(post_pipelines_texture[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        device.destroyShaderModule(post_vert_shaders_screen[i]);
+        device.destroyShaderModule(post_frag_shaders_screen[i]);
+    }
+
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
+        device.destroyShaderModule(post_vert_shaders_texture[i]);
+        device.destroyShaderModule(post_frag_shaders_texture[i]);
     }
 
     for (auto& sampler : present_samplers) {
@@ -157,6 +205,28 @@ RendererVulkan::~RendererVulkan() {
         vmaDestroyImage(instance.GetAllocator(), info.texture.image, info.texture.allocation);
     }
 
+    for (int j = 0; j < intermediateTextures.size(); j++) {
+        for (int i = 0; i < intermediateTextures[0].size(); i++){
+            device.destroyFramebuffer(intermediateTextureFBOs[j][i]);
+            device.destroyImageView(intermediateTextures[j][i].image_view);
+            vmaDestroyImage(instance.GetAllocator(), intermediateTextures[j][i].image, intermediateTextures[j][i].allocation);
+
+        }
+        device.destroyFramebuffer(antialiasTextureFBOs[j]);
+        device.destroyImageView(antialiasTextures[j].image_view);
+        vmaDestroyImage(instance.GetAllocator(), antialiasTextures[j].image, antialiasTextures[j].allocation);
+    }
+
+    for (int i = 0; i < intermediateOutputSizeTextures.size(); i++) {
+        for (int j = 0; j < intermediateOutputSizeTextures[0].size(); j++){
+            for (int k = 0; k < intermediateOutputSizeTextures[0][0].size(); k++){
+                device.destroyFramebuffer(intermediateOutputSizeTextureFBOs[i][j][k]);
+                device.destroyImageView(intermediateOutputSizeTextures[i][j][k].image_view);
+                vmaDestroyImage(instance.GetAllocator(), intermediateOutputSizeTextures[i][j][k].image, intermediateOutputSizeTextures[i][j][k].allocation);
+            }
+        }
+    }
+    device.destroyRenderPass(textureRenderpass);
     device.destroyPipeline(cursor_pipeline);
     device.destroyShaderModule(cursor_vertex_shader);
     device.destroyShaderModule(cursor_fragment_shader);
@@ -186,18 +256,530 @@ void RendererVulkan::PrepareRendertarget() {
     }
 }
 
-void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& layout) {
-    const auto sampler = present_samplers[!Settings::values.filter_mode.GetValue()];
+void RendererVulkan::CreateTextureRenderPass(){
+    const vk::AttachmentReference color_ref = {
+        .attachment = 0,
+        .layout = vk::ImageLayout::eColorAttachmentOptimal,
+    };
+
+    const vk::SubpassDescription subpass = {
+        .pipelineBindPoint = vk::PipelineBindPoint::eGraphics,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
+        .colorAttachmentCount = 1u,
+        .pColorAttachments = &color_ref,
+        .pResolveAttachments = 0,
+        .pDepthStencilAttachment = nullptr,
+    };
+
+    const vk::AttachmentDescription color_attachment = {
+        .format = vk::Format::eR16G16B16A16Sfloat,
+        .samples = vk::SampleCountFlagBits::e1,
+        .loadOp = vk::AttachmentLoadOp::eClear,
+        .storeOp = vk::AttachmentStoreOp::eStore,
+        .stencilLoadOp = vk::AttachmentLoadOp::eDontCare,
+        .stencilStoreOp = vk::AttachmentStoreOp::eDontCare,
+        .initialLayout = vk::ImageLayout::eUndefined,
+        .finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+    };
+
+    vk::SubpassDependency dependency = {
+        .srcSubpass    = VK_SUBPASS_EXTERNAL,
+        .dstSubpass    = 0,
+        .srcStageMask  = vk::PipelineStageFlagBits::eColorAttachmentOutput,
+        .dstStageMask  = vk::PipelineStageFlagBits::eFragmentShader,
+        .srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+    };
+
+    const vk::RenderPassCreateInfo renderpass_info = {
+        .attachmentCount = 1,
+        .pAttachments = &color_attachment,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
+    };
+    textureRenderpass = instance.GetDevice().createRenderPass(renderpass_info);
+}
+
+void RendererVulkan::AllocateTexture(TextureInfo& texture, int width, int height, vk::Format colorFormat){
+    width = std::max(width, 10);
+    height = std::max(height, 10);
+    vk::Device device = instance.GetDevice();
+    if (texture.image_view) {
+        device.destroyImageView(texture.image_view);
+    }
+    if (texture.image) {
+        vmaDestroyImage(instance.GetAllocator(), texture.image, texture.allocation);
+    }
+
+    texture.width = width;
+    texture.height = height;
+
+    const vk::Format format = colorFormat;
+    const vk::ImageCreateInfo image_info = {
+        .imageType = vk::ImageType::e2D,
+        .format = format,
+        .extent = {texture.width, texture.height, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eColorAttachment,
+    };
+
+    const VmaAllocationCreateInfo alloc_info = {
+        .flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .requiredFlags = 0,
+        .preferredFlags = 0,
+        .pool = VK_NULL_HANDLE,
+        .pUserData = nullptr,
+    };
+
+    VkImage unsafe_image{};
+    VkImageCreateInfo unsafe_image_info = static_cast<VkImageCreateInfo>(image_info);
+
+    VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
+                                     &unsafe_image, &texture.allocation, nullptr);
+    if (result != VK_SUCCESS) [[unlikely]] {
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating regular texture ({}x{}) with error {}", texture.width, texture.height, result);
+        UNREACHABLE();
+    } else {
+        // LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
+    }
+    texture.image = vk::Image{unsafe_image};
+
+    const vk::ImageViewCreateInfo view_info = {
+        .image = texture.image,
+        .viewType = vk::ImageViewType::e2D,
+        .format = format,
+        .subresourceRange{
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    texture.image_view = device.createImageView(view_info);
+}
+
+void RendererVulkan::AllocateStagedTexture(StagedTextureInfo& texture, int width, int height, vk::Format colorFormat){
+    vk::Device device = instance.GetDevice();
+    if (texture.image_view) {
+        device.destroyImageView(texture.image_view);
+    }
+    if (texture.image) {
+        vmaDestroyImage(instance.GetAllocator(), texture.image, texture.imageAllocation);
+    }
+
+    texture.width = width;
+    texture.height = height;
+
+    const vk::Format format = colorFormat;
+    const vk::ImageCreateInfo image_info = {
+        .imageType = vk::ImageType::e2D,
+        .format = format,
+        .extent = {texture.width, texture.height, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = vk::SampleCountFlagBits::e1,
+        .usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst,
+    };
+
+    const VmaAllocationCreateInfo alloc_info = {
+        .flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+        .requiredFlags = 0,
+        .preferredFlags = 0,
+        .pool = VK_NULL_HANDLE,
+        .pUserData = nullptr,
+    };
+
+    VkImage unsafe_image{};
+    VkImageCreateInfo unsafe_image_info = static_cast<VkImageCreateInfo>(image_info);
+
+    VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
+                                     &unsafe_image, &texture.imageAllocation, nullptr);
+    if (result != VK_SUCCESS) [[unlikely]] {
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating regular texture ({}x{}) with error {}", texture.width, texture.height, result);
+        UNREACHABLE();
+    } else {
+        // LOG_INFO(Render_Vulkan, "Successfully allocated regular texture");
+    }
+    texture.image = vk::Image{unsafe_image};
+
+    const vk::ImageViewCreateInfo view_info = {
+        .image = texture.image,
+        .viewType = vk::ImageViewType::e2D,
+        .format = format,
+        .subresourceRange{
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+    texture.image_view = device.createImageView(view_info);
+}
+
+void RendererVulkan::AllocateSMAATextures(){
+    areaTexInfo = {
+        .width = AREATEX_WIDTH,
+        .height = AREATEX_HEIGHT,
+        .channels = 2,
+        .size = AREATEX_SIZE,
+    };
+    searchTexInfo = {
+        .width = SEARCHTEX_WIDTH,
+        .height = SEARCHTEX_HEIGHT,
+        .channels = 1,
+        .size = SEARCHTEX_SIZE,
+    };
+    AllocateStagedTexture(areaTexInfo, areaTexInfo.width, areaTexInfo.height, vk::Format::eR8G8Unorm);
+    CreateImageStagingBuffer(areaTexInfo);
+    UploadImageDataToBuffer(areaTexInfo, (unsigned char*) areaTexBytes);
+    UploadBufferToImage(areaTexInfo);
+    SetStagedTextureTexInfo(areaTexInfo);
+
+    AllocateStagedTexture(searchTexInfo, searchTexInfo.width, searchTexInfo.height, vk::Format::eR8Unorm);
+    CreateImageStagingBuffer(searchTexInfo);
+    UploadImageDataToBuffer(searchTexInfo, (unsigned char*) searchTexBytes);
+    UploadBufferToImage(searchTexInfo);
+    SetStagedTextureTexInfo(searchTexInfo);
+
+}
+
+void RendererVulkan::SetStagedTextureTexInfo(StagedTextureInfo& texture){
+    texture.texInfo = {
+        .width = texture.width,
+        .height = texture.height,
+        .image = texture.image,
+        .image_view = texture.image_view,
+        .allocation = texture.imageAllocation,
+    };
+}
+
+void RendererVulkan::CreateImageStagingBuffer(StagedTextureInfo& texture){
+    const vk::BufferCreateInfo staging_buffer_info = {
+        .size =  texture.size,
+        .usage = vk::BufferUsageFlagBits::eTransferSrc,
+    };
+
+    const VmaAllocationCreateInfo alloc_create_info = {
+        .flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT |
+                 VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+        .requiredFlags = 0,
+        .preferredFlags = 0,
+        .pool = VK_NULL_HANDLE,
+        .pUserData = nullptr,
+    };
+
+    VkBuffer unsafe_buffer{};
+    VmaAllocationInfo alloc_info;
+    VkBufferCreateInfo unsafe_buffer_info = static_cast<VkBufferCreateInfo>(staging_buffer_info);
+
+    VkResult result = vmaCreateBuffer(instance.GetAllocator(), &unsafe_buffer_info,
+                                      &alloc_create_info, &unsafe_buffer, &texture.bufferAllocation, &alloc_info);
+    if (result != VK_SUCCESS) [[unlikely]] {
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
+        UNREACHABLE();
+    }
+
+    texture.buffer = vk::Buffer{unsafe_buffer};
+}
+
+
+void RendererVulkan::UploadImageDataToBuffer(StagedTextureInfo& texture, unsigned char* imageData){
+    vmaMapMemory(instance.GetAllocator(), texture.bufferAllocation, &texture.bufferDataPtr);
+    std::memcpy(texture.bufferDataPtr, imageData, texture.size);
+    vmaUnmapMemory(instance.GetAllocator(), texture.bufferAllocation);
+    // Maybe Add FLush Allocation Here
+}
+
+
+void RendererVulkan::UploadBufferToImage(StagedTextureInfo& texture){
+    vk::ImageMemoryBarrier pre_barrier = {
+        .srcAccessMask = vk::AccessFlags{},
+        .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
+        .oldLayout           = vk::ImageLayout::eUndefined,
+        .newLayout           = vk::ImageLayout::eTransferDstOptimal,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image               = texture.image,
+        .subresourceRange    = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+
+    };
+
+    vk::BufferImageCopy region = {
+        .bufferOffset      = 0,
+        .bufferRowLength   = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource  = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .imageOffset = vk::Offset3D{ 0, 0, 0 },
+        .imageExtent = vk::Extent3D{ texture.width , texture.height, 1 },
+    };
+
+    vk::ImageMemoryBarrier post_barrier = {
+        .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
+        .dstAccessMask = vk::AccessFlagBits::eShaderRead,
+        .oldLayout     = vk::ImageLayout::eTransferDstOptimal,
+        .newLayout     = vk::ImageLayout::eShaderReadOnlyOptimal,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image               = texture.image,
+        .subresourceRange    = {
+            .aspectMask = vk::ImageAspectFlagBits::eColor,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+    };
+
+    scheduler.Record([texture, pre_barrier, region, post_barrier](vk::CommandBuffer cmdbuf) {
+        cmdbuf.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTopOfPipe,
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::DependencyFlags{},
+            nullptr,
+            nullptr,
+            pre_barrier
+        );
+        cmdbuf.copyBufferToImage(
+            texture.buffer,
+            texture.image,
+            vk::ImageLayout::eTransferDstOptimal,
+            region
+        );
+        cmdbuf.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eFragmentShader,
+            vk::DependencyFlags{},
+            nullptr,
+            nullptr,
+            post_barrier
+        );
+    });
+
+    scheduler.Finish();
+}
+
+void RendererVulkan::AllocatePPTextures(){
+    for (int i = 0; i < intermediateTextures[0].size(); i++){
+        AllocateTexture(intermediateTextures[0][i], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    }
+    for (int i = 0; i < intermediateTextures[1].size(); i++){
+        AllocateTexture(intermediateTextures[1][i], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    }
+    AllocateTexture(antialiasTextures[0], currTopTextureWidth, currTopTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    AllocateTexture(antialiasTextures[1], currBottomTextureWidth, currBottomTextureHeight, vk::Format::eR16G16B16A16Sfloat);
+    LOG_INFO(Render_Vulkan, "Reallocated Post Processing Textures");
+};
+
+void RendererVulkan::AllocateOutputSizeTextures(){
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+            AllocateTexture(intermediateOutputSizeTextures[isSecondaryWindow][i][j], currOutputScreenRects[isSecondaryWindow][i].GetWidth(),  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+        }
+    }
+    // LOG_INFO(Render_Vulkan, "Reallocated Output Size Textures");
+    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][0].GetWidth(), currOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][1].GetWidth(), currOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][2].GetWidth(), currOutputScreenRects[isSecondaryWindow][2].GetHeight()
+    );
+};
+
+void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currOutputScreenRects[isSecondaryWindow][i].GetWidth() != 0){
+            for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+                CreateTextureFramebuffer(intermediateOutputSizeTextures[isSecondaryWindow][i][j], intermediateOutputSizeTextureFBOs[isSecondaryWindow][i][j]);
+            }
+        }
+    }
+};
+
+
+void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
+    if (texture.width == 0 || texture.height == 0){
+        return;
+    }
+    vk::Device device = instance.GetDevice();
+    if (framebuffer){
+        device.destroyFramebuffer(framebuffer);
+    }
+    const vk::FramebufferCreateInfo framebuffer_info = {
+        .renderPass = textureRenderpass,
+        .attachmentCount = 1,
+        .pAttachments = &texture.image_view,
+        .width = texture.width,
+        .height = texture.height,
+        .layers = 1,
+    };
+    framebuffer = instance.GetDevice().createFramebuffer(framebuffer_info);
+}
+
+void RendererVulkan::CreatePPTextureFramebuffers(){
+    for (int i = 0; i < intermediateTextures.size(); i++){
+        for (int j = 0; j < intermediateTextures[0].size(); j++){
+            CreateTextureFramebuffer(intermediateTextures[i][j], intermediateTextureFBOs[i][j]);
+        }
+    }
+    for (int i = 0; i < antialiasTextures.size(); i++){
+        CreateTextureFramebuffer(antialiasTextures[i], antialiasTextureFBOs[i]);
+    }
+};
+
+void RendererVulkan::PrepareTextureDrawFromTextureInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode){
+    const auto sampler = present_samplers[filterMode];
     const auto present_set = present_heap.Commit();
-    for (u32 index = 0; index < screen_infos.size(); index++) {
-        update_queue.AddImageSampler(present_set, 0, index, screen_infos[index].image_view,
-                                     sampler);
+    for (u32 i = 0; i < texturesToSample.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
     }
 
     renderpass_cache.EndRendering();
+    scheduler.Record([this, framebufferTexture, framebuffer, shaderPipeline, present_set](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(framebufferTexture.width),
+            .height = static_cast<float>(framebufferTexture.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {framebufferTexture.width, framebufferTexture.height},
+        };
+
+        const vk::ClearColorValue clear_color = {
+            .float32 =
+                std::array{
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                },
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = textureRenderpass,
+            .framebuffer = framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {framebufferTexture.width, framebufferTexture.height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
+
+void RendererVulkan::PrepareTextureDrawFromScreenInfo(TextureInfo framebufferTexture, vk::Framebuffer framebuffer, vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode){
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < screenids.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
+                                     sampler, vk::ImageLayout::eGeneral);
+    }
+
+    renderpass_cache.EndRendering();
+    scheduler.Record([this, framebufferTexture, framebuffer, shaderPipeline, present_set](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(framebufferTexture.width),
+            .height = static_cast<float>(framebufferTexture.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {framebufferTexture.width, framebufferTexture.height},
+        };
+
+        const vk::ClearColorValue clear_color = {
+            .float32 =
+                std::array{
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                },
+        };
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = textureRenderpass,
+            .framebuffer = framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {framebufferTexture.width, framebufferTexture.height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
+
+void RendererVulkan::PrepareDrawFromScreenInfo(Frame* frame, const Layout::FramebufferLayout& layout,  vk::Pipeline shaderPipeline, std::vector<u32> screenids, int filterMode) {
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < screenids.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, screen_infos[screenids[i]].image_view,
+                                     sampler, vk::ImageLayout::eGeneral);
+    }
+
+    renderpass_cache.EndRendering();
+    vk::RenderPass currentRenderPass;
+    if (clearingColorAttachment){
+        currentRenderPass = main_present_window.Renderpass();
+    } else {
+        currentRenderPass = main_present_window.LoadRenderpass();
+    }
     scheduler.Record([this, layout, frame, present_set,
-                      renderpass = main_present_window.Renderpass(),
-                      index = current_pipeline](vk::CommandBuffer cmdbuf) {
+                      currentRenderPass,
+                      shaderPipeline](vk::CommandBuffer cmdbuf) {
         const vk::Viewport viewport = {
             .x = 0.0f,
             .y = 0.0f,
@@ -218,7 +800,7 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
         const vk::ClearValue clear{.color = clear_color};
         const vk::PipelineLayout layout{*present_pipeline_layout};
         const vk::RenderPassBeginInfo renderpass_begin_info = {
-            .renderPass = renderpass,
+            .renderPass = currentRenderPass,
             .framebuffer = frame->framebuffer,
             .renderArea =
                 vk::Rect2D{
@@ -228,13 +810,68 @@ void RendererVulkan::PrepareDraw(Frame* frame, const Layout::FramebufferLayout& 
             .clearValueCount = 1,
             .pClearValues = &clear,
         };
-
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
         cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
-        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, present_pipelines[index]);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
         cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
     });
 }
 
+void RendererVulkan::PrepareDrawFromTextureInfo(Frame* frame, const Layout::FramebufferLayout& layout, vk::Pipeline shaderPipeline, std::vector<TextureInfo> texturesToSample, int filterMode) {
+    const auto sampler = present_samplers[filterMode];
+    const auto present_set = present_heap.Commit();
+    for (u32 i = 0; i < texturesToSample.size(); i++) {
+        update_queue.AddImageSampler(present_set, i, 0, texturesToSample[i].image_view, sampler, vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    renderpass_cache.EndRendering();
+    vk::RenderPass currentRenderPass;
+    if (clearingColorAttachment){
+        currentRenderPass = main_present_window.Renderpass();
+    } else {
+        currentRenderPass = main_present_window.LoadRenderpass();
+    }
+    scheduler.Record([this, layout, frame, present_set,
+                      currentRenderPass,
+                      shaderPipeline](vk::CommandBuffer cmdbuf) {
+        const vk::Viewport viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(layout.width),
+            .height = static_cast<float>(layout.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f,
+        };
+
+        const vk::Rect2D scissor = {
+            .offset = {0, 0},
+            .extent = {layout.width, layout.height},
+        };
+
+        cmdbuf.setViewport(0, viewport);
+        cmdbuf.setScissor(0, scissor);
+
+        const vk::ClearValue clear{.color = clear_color};
+        const vk::PipelineLayout layout{*present_pipeline_layout};
+        const vk::RenderPassBeginInfo renderpass_begin_info = {
+            .renderPass = currentRenderPass,
+            .framebuffer = frame->framebuffer,
+            .renderArea =
+                vk::Rect2D{
+                    .offset = {0, 0},
+                    .extent = {frame->width, frame->height},
+                },
+            .clearValueCount = 1,
+            .pClearValues = &clear,
+        };
+        const std::array<float, 4> blendConstants = { 0.0f, 0.0f, 0.0f, 1.0f };
+        cmdbuf.setBlendConstants(blendConstants.data());
+        cmdbuf.beginRenderPass(renderpass_begin_info, vk::SubpassContents::eInline);
+        cmdbuf.bindPipeline(vk::PipelineBindPoint::eGraphics, shaderPipeline);
+        cmdbuf.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, layout, 0, present_set, {});
+    });
+}
 void RendererVulkan::RenderToWindow(PresentWindow& window, const Layout::FramebufferLayout& layout,
                                     bool flipped) {
     Frame* frame = window.GetRenderFrame();
@@ -288,6 +925,16 @@ void RendererVulkan::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     }
 }
 
+void RendererVulkan::ReplaceInclude(std::string& shader_source, std::string_view include_name,
+                                  std::string_view include_content) {
+    const std::string include_string = fmt::format("#include \'{}\'", include_name);
+    const std::size_t pos = shader_source.find(include_string);
+    if (pos == std::string::npos){
+        LOG_ERROR(Render_Vulkan, "Failed to replace include: {}", include_name);
+    }
+    shader_source.replace(pos, include_string.size(), include_content);
+};
+
 void RendererVulkan::CompileShaders() {
     const vk::Device device = instance.GetDevice();
     const std::string_view preamble =
@@ -306,9 +953,91 @@ void RendererVulkan::CompileShaders() {
     cursor_fragment_shader =
         Compile(HostShaders::VULKAN_CURSOR_FRAG, vk::ShaderStageFlagBits::eFragment, device);
 
+    // Simple Present Shader
+    post_vert_shaders_texture[0] =
+        Compile(HostShaders::VULKAN_SIMPLE_PRESENT_VERT, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[0] =
+        Compile(HostShaders::VULKAN_SIMPLE_PRESENT_FRAG, vk::ShaderStageFlagBits::eFragment, device, preamble);
+
+    // Area Sampling Shader
+    post_vert_shaders_screen[0] =
+        Compile(HostShaders::VULKAN_AREA_SAMPLING_VERT, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_screen[0] =
+        Compile(HostShaders::VULKAN_AREA_SAMPLING_FRAG, vk::ShaderStageFlagBits::eFragment, device);
+
+    // FXAA Shader
+    post_vert_shaders_texture[1] =
+        Compile(HostShaders::VULKAN_FXAA_VERT, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[1] =
+        Compile(HostShaders::VULKAN_FXAA_FRAG, vk::ShaderStageFlagBits::eFragment, device);
+
+    // SMAA Pass 0 Shader
+    std::string smaa_pass_0_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS0_VERT);
+    ReplaceInclude(smaa_pass_0_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_0_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS0_FRAG);
+    ReplaceInclude(smaa_pass_0_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+
+    post_vert_shaders_texture[2] =
+        Compile(smaa_pass_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[2] =
+        Compile(smaa_pass_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // SMAA Pass 1 Shader
+    std::string smaa_pass_1_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS1_VERT);
+    ReplaceInclude(smaa_pass_1_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_1_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS1_FRAG);
+    ReplaceInclude(smaa_pass_1_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    
+    post_vert_shaders_texture[3] =
+        Compile(smaa_pass_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[3] =
+        Compile(smaa_pass_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // SMAA Pass 2 Shader
+    std::string smaa_pass_2_shader_vert_data = std::string(HostShaders::VULKAN_SMAA_PASS2_VERT);
+    ReplaceInclude(smaa_pass_2_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string smaa_pass_2_shader_frag_data = std::string(HostShaders::VULKAN_SMAA_PASS2_FRAG);
+    ReplaceInclude(smaa_pass_2_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+  
+    post_vert_shaders_texture[4] =
+        Compile(smaa_pass_2_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[4] =
+        Compile(smaa_pass_2_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // FSR Pass 0 Shader
+    std::string FSR_PASS_0_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS0_FRAG);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
+    std::string FSR_PASS_0_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS0_VERT);
+    
+    post_vert_shaders_texture[5] =
+        Compile(FSR_PASS_0_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[5] =
+        Compile(FSR_PASS_0_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // FSR Pass 1 Shader
+    std::string FSR_PASS_1_shader_frag_data = std::string(HostShaders::VULKAN_FSR_PASS1_FRAG);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
+    std::string FSR_PASS_1_shader_vert_data = std::string(HostShaders::VULKAN_FSR_PASS1_VERT);
+
+    post_vert_shaders_texture[6] =
+        Compile(FSR_PASS_1_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[6] =
+        Compile(FSR_PASS_1_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // Sharp Bilinear Shader
+    std::string SharpBilinear_shader_frag_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_FRAG);
+    std::string SharpBilinear_shader_vert_data = std::string(HostShaders::VULKAN_SHARPBILINEAR_VERT);
+    
+    post_vert_shaders_screen[1] =
+        Compile(SharpBilinear_shader_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_screen[1] =
+        Compile(SharpBilinear_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+    
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
-        const vk::Filter filter_mode = i == 0 ? vk::Filter::eLinear : vk::Filter::eNearest;
+        const vk::Filter filter_mode = i == 0 ? vk::Filter::eNearest : vk::Filter::eLinear;
         const vk::SamplerCreateInfo sampler_info = {
             .magFilter = filter_mode,
             .minFilter = filter_mode,
@@ -476,6 +1205,78 @@ void RendererVulkan::BuildPipelines() {
         present_pipelines[i] = pipeline;
     }
 
+    // Build Post Processing Pipelines for RGBA16F textures
+    for (u32 i = 0; i < POST_PIPELINES_TEXTURE; i++) {
+        const std::array shader_stages = {
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eVertex,
+                .module = post_vert_shaders_texture[i],
+                .pName = "main",
+            },
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eFragment,
+                .module = post_frag_shaders_texture[i],
+                .pName = "main",
+            },
+        };
+
+        const vk::GraphicsPipelineCreateInfo pipeline_info = {
+            .stageCount = static_cast<u32>(shader_stages.size()),
+            .pStages = shader_stages.data(),
+            .pVertexInputState = &vertex_input_info,
+            .pInputAssemblyState = &input_assembly,
+            .pViewportState = &viewport_info,
+            .pRasterizationState = &raster_state,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depth_info,
+            .pColorBlendState = &color_blending,
+            .pDynamicState = &dynamic_info,
+            .layout = *present_pipeline_layout,
+            .renderPass = textureRenderpass,
+        };
+
+        const auto [result, pipeline] =
+            instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
+        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build post processing pipelines");
+        post_pipelines_texture[i] = pipeline;
+    }
+
+    // Build Post Processing Pipelines for presenting
+    for (u32 i = 0; i < POST_PIPELINES_SCREEN; i++) {
+        const std::array shader_stages = {
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eVertex,
+                .module = post_vert_shaders_screen[i],
+                .pName = "main",
+            },
+            vk::PipelineShaderStageCreateInfo{
+                .stage = vk::ShaderStageFlagBits::eFragment,
+                .module = post_frag_shaders_screen[i],
+                .pName = "main",
+            },
+        };
+
+        const vk::GraphicsPipelineCreateInfo pipeline_info = {
+            .stageCount = static_cast<u32>(shader_stages.size()),
+            .pStages = shader_stages.data(),
+            .pVertexInputState = &vertex_input_info,
+            .pInputAssemblyState = &input_assembly,
+            .pViewportState = &viewport_info,
+            .pRasterizationState = &raster_state,
+            .pMultisampleState = &multisampling,
+            .pDepthStencilState = &depth_info,
+            .pColorBlendState = &color_blending,
+            .pDynamicState = &dynamic_info,
+            .layout = *present_pipeline_layout,
+            .renderPass = main_present_window.Renderpass(),
+        };
+
+        const auto [result, pipeline] =
+            instance.GetDevice().createGraphicsPipeline({}, pipeline_info);
+        ASSERT_MSG(result == vk::Result::eSuccess, "Unable to build post processing pipelines");
+        post_pipelines_screen[i] = pipeline;
+    }
+
     // Build cursor pipeline (simple position-only, inverted color blending)
     {
         const vk::VertexInputBindingDescription cursor_binding = {
@@ -635,7 +1436,7 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
     VkResult result = vmaCreateImage(instance.GetAllocator(), &unsafe_image_info, &alloc_info,
                                      &unsafe_image, &texture.allocation, nullptr);
     if (result != VK_SUCCESS) [[unlikely]] {
-        LOG_CRITICAL(Render_Vulkan, "Failed allocating texture with error {}", result);
+        LOG_CRITICAL(Render_Vulkan, "Failed allocating framebuffer texture with error {}", result);
         UNREACHABLE();
     }
     texture.image = vk::Image{unsafe_image};
@@ -683,7 +1484,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
         const vk::ImageMemoryBarrier pre_barrier = {
             .srcAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eTransferRead,
             .dstAccessMask = vk::AccessFlagBits::eTransferWrite,
-            .oldLayout = vk::ImageLayout::eGeneral,
+            .oldLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             .newLayout = vk::ImageLayout::eTransferDstOptimal,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -695,7 +1496,7 @@ void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& textu
             .srcAccessMask = vk::AccessFlagBits::eTransferWrite,
             .dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eTransferRead,
             .oldLayout = vk::ImageLayout::eTransferDstOptimal,
-            .newLayout = vk::ImageLayout::eGeneral,
+            .newLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = image,
@@ -730,75 +1531,342 @@ void RendererVulkan::ReloadPipeline(Settings::StereoRenderOption render_3d) {
     }
 }
 
-void RendererVulkan::DrawSingleScreen(u32 screen_id, float x, float y, float w, float h,
+void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float screenTop, float screenWidth, float screenHeight,
                                       Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info = screen_infos[screen_id];
     const auto& texcoords = screen_info.texcoords;
+    const u32 scale_factor = GetResolutionScaleFactor();
+    // Texture Width and Height when correctly rotated to landscape
+    float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
+    float textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
+    int currScreen;
+    if (textureWidth == currTopTextureWidth && textureHeight == currTopTextureHeight){
+        currScreen = 0;
+    } else {
+        currScreen = 1;
+    }
+    bool isDownsampling = false;
+    int scalingMode; // 0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
+    scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
+    int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
+    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/ 100.0f));
+    if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
+        if (textureWidth > screenWidth){
+            isDownsampling = true;
+        }
+    } else {
+        if (textureWidth > screenHeight){
+            isDownsampling = true;
+        }
+    }
+    // LOG_INFO(Render_Vulkan, "Scaling Mode: {}, Anti Aliasing Mode: {}", scalingMode, antialiasingMode);
+    // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° internally)
+    std::array<ScreenRectVertex, 4> rotate_vertices;
+    rotate_vertices = {{
+            ScreenRectVertex(-1.f, 1.f, texcoords.top, texcoords.left),    //Left, Top
+            ScreenRectVertex(1.f, 1.f, texcoords.top, texcoords.right),     //Right, Top
+            ScreenRectVertex(-1.f, -1.f, texcoords.bottom, texcoords.left), //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, texcoords.bottom, texcoords.right), //Right, Bottom
+    }};
 
-    std::array<ScreenRectVertex, 4> vertices;
+    std::array<ScreenRectVertex, 4> pass_through_vertices;
+    pass_through_vertices = {{
+        ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
+        ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+        ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+        ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
+    }};
+
+    // Vertices for Azahar's Output Layout
+    std::array<ScreenRectVertex, 4> output_vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),
         }};
         break;
     case Layout::DisplayOrientation::Portrait:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 1.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 1.f),
         }};
-        std::swap(h, w);
+        std::swap(screenHeight, screenWidth);
         break;
     case Layout::DisplayOrientation::LandscapeFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),
         }};
         break;
     case Layout::DisplayOrientation::PortraitFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 0.f),
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 1.f),
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),
         }};
-        std::swap(h, w);
-        break;
-    default:
-        LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
+        std::swap(screenHeight, screenWidth);
         break;
     }
+    const u64 size = sizeof(ScreenRectVertex) * output_vertices.size();
 
+    int maxPasses = 10;
+    std::vector<VertexBufferPointer> vertexBufferPointers(maxPasses);
+    for (auto& vbp : vertexBufferPointers){
+        std::tie(vbp.data, vbp.offset, vbp.invalidate) = vertex_buffer.Map(size, 16);
+        vertex_buffer.Commit(size);
+    }
+    std::vector<PresentUniformData> drawInfos(maxPasses);
+    for (auto& info : drawInfos){
+        info = draw_info;
+    }
+
+    //Vectors for sampling
+    std::vector<u32> screen_ids;
+    std::vector<TextureInfo> texturesToSample;
+
+    currentPass = 0;
+    if (antialiasingMode == 1){
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 0;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[1], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 0;
+        } else {
+            drawInfos[currentPass].convert_colors = 1;
+        }
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } else if (antialiasingMode == 2) {
+        // Landscape Gamma Space Texture
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 0;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+
+        // Landscape Linear Space Texture
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][3], intermediateTextureFBOs[currScreen][3], post_pipelines_texture[0], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 1;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+
+        // Edge Detection
+        texturesToSample.assign({intermediateTextures[currScreen][0]});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][1], intermediateTextureFBOs[currScreen][1], post_pipelines_texture[2], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+
+        // Blending Weight Calculation
+        texturesToSample.assign({intermediateTextures[currScreen][1], areaTexInfo.texInfo, searchTexInfo.texInfo});
+        PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][2], intermediateTextureFBOs[currScreen][2], post_pipelines_texture[3], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+
+        // Neighborhood Blending
+        texturesToSample.assign({intermediateTextures[currScreen][2], intermediateTextures[currScreen][3]});
+        PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[4], texturesToSample, 1);
+        UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 2;
+        } else {
+            drawInfos[currentPass].convert_colors = 0;
+        }
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } else {
+        screen_ids.assign({screen_id});
+        PrepareTextureDrawFromScreenInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[0], screen_ids, 1);
+        UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
+        if (scalingMode == 3){
+            drawInfos[currentPass].convert_colors = 0;
+        } else {
+            drawInfos[currentPass].convert_colors = 1;
+        }
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    }
+
+    if (scalingMode == 2){
+        if (isDownsampling){
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 2;
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        } else {
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 2;
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        }
+    } else if (scalingMode == 3) {
+        if (isDownsampling){
+            // EASU (1x)
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][4], intermediateTextureFBOs[currScreen][4], post_pipelines_texture[5], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+
+            // RCAS
+            texturesToSample.assign({intermediateTextures[currScreen][4]});
+            PrepareTextureDrawFromTextureInfo(intermediateTextures[currScreen][5], intermediateTextureFBOs[currScreen][5], post_pipelines_texture[6], texturesToSample, 1);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
+            drawInfos[currentPass].o_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+
+            // Area Sampling
+            texturesToSample.assign({intermediateTextures[currScreen][5]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 0;
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        } else {
+            // EASU (to output resolution)
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currScreen][0], post_pipelines_texture[5], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+
+            // RCAS
+            texturesToSample.assign({intermediateOutputSizeTextures[isSecondaryWindow][currScreen][0]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currScreen][1], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currScreen][1], post_pipelines_texture[6], texturesToSample, 1);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].FSR_SHARPENING = fsr_sharpening;
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+            
+            // Normal Present
+            texturesToSample.assign({intermediateOutputSizeTextures[isSecondaryWindow][currScreen][1]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            drawInfos[currentPass].convert_colors = 0;
+            Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+            currentPass++;
+        }    
+    } else if (scalingMode == 4) {
+        texturesToSample.assign({antialiasTextures[currScreen]});
+        PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[1], texturesToSample, 1);
+        UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 2;
+        drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+        drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    } else {
+        texturesToSample.assign({antialiasTextures[currScreen]});
+        if (scalingMode == 1){
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+        } else {
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 0);
+        }
+        UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+        drawInfos[currentPass].convert_colors = 2;
+        Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
+        currentPass++;
+    }
+
+
+    // // Multipass
+    // screen_ids.assign({screen_id});
+    // PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
+    // UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[0]);
+    // drawInfos[0].convert_colors = 1;
+    // Draw(vertexBufferPointers[0], drawInfos[0]);
+
+    // texturesToSample.assign({intermediateTextures[currScreen][0]});
+    // PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+    // ApplySecondLayerOpacity();
+    // UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
+    // drawInfos[1].convert_colors = 2;
+    // Draw(vertexBufferPointers[1], drawInfos[1]);
+
+}
+
+
+void RendererVulkan::UpdateVertexBuffer(std::array<ScreenRectVertex, 4> vertices, VertexBufferPointer vbp){
     const u64 size = sizeof(ScreenRectVertex) * vertices.size();
-    auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, vertices.data(), size);
-    vertex_buffer.Commit(size);
+    std::memcpy(vbp.data, vertices.data(), size);
+}
 
-    const u32 scale_factor = GetResolutionScaleFactor();
-    draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info.texture.width * scale_factor),
-                        static_cast<f32>(screen_info.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
-    draw_info.screen_id_l = screen_id;
-
-    scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
-        const u32 first_vertex = static_cast<u32>(offset) / sizeof(ScreenRectVertex);
+void RendererVulkan::Draw(VertexBufferPointer vbp, PresentUniformData pushconstant){
+    scheduler.Record([this, vbp, pushconstant](vk::CommandBuffer cmdbuf) {
+        const u32 first_vertex = static_cast<u32>(vbp.offset) / sizeof(ScreenRectVertex);
         cmdbuf.pushConstants(*present_pipeline_layout,
                              vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
-                             0, sizeof(info), &info);
-
+                             0, sizeof(pushconstant), &pushconstant);
         cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
         cmdbuf.draw(4, 1, first_vertex, 0);
+        cmdbuf.endRenderPass();
     });
+    // LOG_INFO(Render_Vulkan, "Current Pass: {}", currentPass);
+}
+
+void RendererVulkan::ApplySecondLayerOpacity() {
+    float alpha;
+    if (applyingOpacity){
+        if (drawingPrimaryScreen){
+            alpha = 1.0;
+        } else {
+            if (usingTopOpacity){
+                if (currentFramebufferLayout.top_opacity < 1) {
+                    alpha = currentFramebufferLayout.top_opacity;
+                } else {
+                    return;
+                }
+            } else {
+                if (currentFramebufferLayout.bottom_opacity < 1) {
+                    alpha = currentFramebufferLayout.bottom_opacity;
+                } else {
+                    return;
+                }
+            }
+        }
+        scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
+            const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
+            cmdbuf.setBlendConstants(blend_constants.data());
+        });
+    }
 }
 
 void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, float x, float y,
@@ -806,6 +1874,9 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
                                             Layout::DisplayOrientation orientation) {
     const ScreenInfo& screen_info_l = screen_infos[screen_id_l];
     const auto& texcoords = screen_info_l.texcoords;
+    const u32 scale_factor = GetResolutionScaleFactor();
+    float textureWidth = static_cast<float>(screen_info_l.texture.height * scale_factor);
+    float textureHeight = static_cast<float>(screen_info_l.texture.width * scale_factor);
 
     std::array<ScreenRectVertex, 4> vertices;
     switch (orientation) {
@@ -847,38 +1918,23 @@ void RendererVulkan::DrawSingleScreenStereo(u32 screen_id_l, u32 screen_id_r, fl
         LOG_ERROR(Render_Vulkan, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
-
     const u64 size = sizeof(ScreenRectVertex) * vertices.size();
-    auto [data, offset, invalidate] = vertex_buffer.Map(size, 16);
-    std::memcpy(data, vertices.data(), size);
-    vertex_buffer.Commit(size);
+    int passes = 1;
+    std::vector<VertexBufferPointer> vertexBufferPointers(passes);
+    for (auto& vbp : vertexBufferPointers){
+        std::tie(vbp.data, vbp.offset, vbp.invalidate) = vertex_buffer.Map(size, 16);
+        vertex_buffer.Commit(size);
+    }
 
-    const u32 scale_factor = GetResolutionScaleFactor();
-    draw_info.i_resolution =
-        Common::MakeVec(static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        static_cast<f32>(screen_info_l.texture.height * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.width * scale_factor),
-                        1.0f / static_cast<f32>(screen_info_l.texture.height * scale_factor));
-    draw_info.o_resolution = Common::MakeVec(h, w, 1.0f / h, 1.0f / w);
+    std::vector<u32> screenids = {screen_id_l, screen_id_r};
+    PrepareDrawFromScreenInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], screenids, 1);
+    ApplySecondLayerOpacity(); // Apply the initial default opacity value; Needed to avoid flickering
+    UpdateVertexBuffer(vertices, vertexBufferPointers[0]);
+    draw_info.i_resolution = Common::MakeVec(static_cast<f32>(textureWidth), static_cast<f32>(textureHeight), 1.0f / static_cast<f32>(textureWidth), 1.0f / static_cast<f32>(textureHeight));
+    draw_info.o_resolution = Common::MakeVec(w, h, 1.0f / w, 1.0f / h);
     draw_info.screen_id_l = screen_id_l;
     draw_info.screen_id_r = screen_id_r;
-
-    scheduler.Record([this, offset = offset, info = draw_info](vk::CommandBuffer cmdbuf) {
-        const u32 first_vertex = static_cast<u32>(offset) / sizeof(ScreenRectVertex);
-        cmdbuf.pushConstants(*present_pipeline_layout,
-                             vk::ShaderStageFlagBits::eFragment | vk::ShaderStageFlagBits::eVertex,
-                             0, sizeof(info), &info);
-
-        cmdbuf.bindVertexBuffers(0, vertex_buffer.Handle(), {0});
-        cmdbuf.draw(4, 1, first_vertex, 0);
-    });
-}
-
-void RendererVulkan::ApplySecondLayerOpacity(float alpha) {
-    scheduler.Record([alpha](vk::CommandBuffer cmdbuf) {
-        const std::array<float, 4> blend_constants = {0.0f, 0.0f, 0.0f, alpha};
-        cmdbuf.setBlendConstants(blend_constants.data());
-    });
+    Draw(vertexBufferPointers[0], draw_info);
 }
 
 void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
@@ -907,6 +1963,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left / 2, top_screen_top, top_screen_width / 2,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(rightside, static_cast<float>((top_screen_left / 2) + (layout.width / 2)),
                          top_screen_top, top_screen_width / 2, top_screen_height, orientation);
         break;
@@ -915,6 +1972,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(rightside, top_screen_left + layout.width / 2, top_screen_top,
                          top_screen_width, top_screen_height, orientation);
         break;
@@ -923,6 +1981,7 @@ void RendererVulkan::DrawTopScreen(const Layout::FramebufferLayout& layout,
         DrawSingleScreen(leftside, top_screen_left, top_screen_top, top_screen_width,
                          top_screen_height, orientation);
         draw_info.layer = 1;
+        clearingColorAttachment = false;
         DrawSingleScreen(
             rightside,
             static_cast<float>(layout.cardboard.top_screen_right_eye + (layout.width / 2)),
@@ -1008,33 +2067,122 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         ReloadPipeline(layout.render_3d_mode);
     }
 
-    PrepareDraw(frame, layout);
+    // Track Texture Changes
+    currTopTextureWidth = static_cast<float>(screen_infos[0].texture.height * GetResolutionScaleFactor());
+    currTopTextureHeight = static_cast<float>(screen_infos[0].texture.width * GetResolutionScaleFactor());
+    currBottomTextureWidth = static_cast<float>(screen_infos[2].texture.height * GetResolutionScaleFactor());
+    currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
+    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
+        AllocatePPTextures();
+        CreatePPTextureFramebuffers();
+        // LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
+    }
+    prevTopTextureWidth = currTopTextureWidth;
+    prevTopTextureHeight = currTopTextureHeight;
+    prevBottomTextureWidth = currBottomTextureWidth;
+    prevBottomTextureHeight = currBottomTextureHeight;
 
+    //Track Layout Changes
+    currOutputScreenRects[isSecondaryWindow][0] = layout.top_screen;
+    currOutputScreenRects[isSecondaryWindow][1] = layout.bottom_screen;
+    currOutputScreenRects[isSecondaryWindow][2] = layout.additional_screen;
+
+    if (currOutputScreenRects[isSecondaryWindow][0] != prevOutputScreenRects[isSecondaryWindow][0] || currOutputScreenRects[isSecondaryWindow][1] != prevOutputScreenRects[isSecondaryWindow][1]){
+        if (layout.additional_screen_enabled){
+            if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
+                AllocateOutputSizeTextures();
+                CreateOutputSizeTextureFramebuffers();
+            }
+        } else {
+            AllocateOutputSizeTextures();
+            CreateOutputSizeTextureFramebuffers();
+        }
+    }
+    
+    prevOutputScreenRects[isSecondaryWindow][0] = currOutputScreenRects[isSecondaryWindow][0];
+    prevOutputScreenRects[isSecondaryWindow][1] = currOutputScreenRects[isSecondaryWindow][1];
+    prevOutputScreenRects[isSecondaryWindow][2] = currOutputScreenRects[isSecondaryWindow][2];
+
+    currentFrame = frame;
+    currentFramebufferLayout = layout;
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
     draw_info.modelview = MakeOrthographicMatrix(layout.width, layout.height);
-
     draw_info.layer = 0;
 
-    // Apply the initial default opacity value; Needed to avoid flickering
-    ApplySecondLayerOpacity(1.0f);
-
-    if (!Settings::values.swap_screen.GetValue()) {
-        DrawTopScreen(layout, top_screen);
-        draw_info.layer = 0;
-        if (layout.bottom_opacity < 1) {
-            ApplySecondLayerOpacity(layout.bottom_opacity);
+    clearingColorAttachment = true;
+    applyingOpacity = true;
+    if (!secondaryWindowEnabled){
+        if (!Settings::values.swap_screen.GetValue()) {
+            drawingPrimaryScreen = true;
+            DrawTopScreen(layout, top_screen);
+            draw_info.layer = 0;
+            drawingPrimaryScreen = false;
+            usingTopOpacity = false;
+            clearingColorAttachment = false;
+            DrawBottomScreen(layout, bottom_screen);
+        } else {
+            drawingPrimaryScreen = true;
+            DrawBottomScreen(layout, bottom_screen);
+            draw_info.layer = 0;
+            drawingPrimaryScreen = false;
+            usingTopOpacity = true;
+            clearingColorAttachment = false;
+            DrawTopScreen(layout, top_screen);
         }
-        DrawBottomScreen(layout, bottom_screen);
     } else {
-        DrawBottomScreen(layout, bottom_screen);
-        draw_info.layer = 0;
-        if (layout.top_opacity < 1) {
-            ApplySecondLayerOpacity(layout.top_opacity);
+        if (!Settings::values.swap_screen.GetValue()) {
+            if (usingAndroid){
+                // Change this block to conditionally display based on layout of primary and secondary screen
+                // if (isSecondaryWindow){
+                //     return;
+                // } else {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                    draw_info.layer = 0;
+                    drawingPrimaryScreen = false;
+                    usingTopOpacity = false;
+                    clearingColorAttachment = false;
+                    DrawBottomScreen(layout, bottom_screen);
+                // }
+            } else {
+                if (isSecondaryWindow) {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                }
+            }
+        } else {
+            if (usingAndroid){
+                // Change this block to conditionally display based on layout of primary and secondary screen
+                // if (isSecondaryWindow){
+                //     return;
+                // } else {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                    draw_info.layer = 0;
+                    drawingPrimaryScreen = false;
+                    usingTopOpacity = true;
+                    clearingColorAttachment = false;
+                    DrawTopScreen(layout, top_screen);
+                // }
+            } else {
+                if (isSecondaryWindow) {
+                    drawingPrimaryScreen = true;
+                    DrawTopScreen(layout, top_screen);
+                } else {
+                    drawingPrimaryScreen = true;
+                    DrawBottomScreen(layout, bottom_screen);
+                }
+            }
+
         }
-        DrawTopScreen(layout, top_screen);
     }
 
+
+    applyingOpacity = false;
     if (layout.additional_screen_enabled) {
         const auto& additional_screen = layout.additional_screen;
         if (!Settings::values.swap_screen.GetValue()) {
@@ -1044,9 +2192,8 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
         }
     }
 
-    DrawCursor(layout);
-
-    scheduler.Record([](vk::CommandBuffer cmdbuf) { cmdbuf.endRenderPass(); });
+    // Needs to be fixed
+    // DrawCursor(layout);
 }
 
 void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
@@ -1111,9 +2258,27 @@ void RendererVulkan::DrawCursor(const Layout::FramebufferLayout& layout) {
 
 void RendererVulkan::SwapBuffers() {
     system.perf_stats->StartSwap();
+#ifndef ANDROID
+    if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
+        ASSERT(secondary_window);
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
+
+#ifdef ANDROID
+    usingAndroid = true;
+    if (secondary_window) {
+        secondaryWindowEnabled = true;
+    } else {
+        secondaryWindowEnabled = false;
+    }
+#endif
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();
     PrepareRendertarget();
     RenderScreenshot();
+    isSecondaryWindow = false;
     RenderToWindow(main_present_window, layout, false);
 #ifndef ANDROID
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
@@ -1123,6 +2288,7 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }
@@ -1135,6 +2301,7 @@ void RendererVulkan::SwapBuffers() {
             secondary_present_window_ptr = std::make_unique<PresentWindow>(
                 *secondary_window, instance, scheduler, IsLowRefreshRate());
         }
+        isSecondaryWindow = true;
         RenderToWindow(*secondary_present_window_ptr, secondary_layout, false);
         secondary_window->PollEvents();
     }

@@ -264,6 +264,12 @@
     <string name="use_integer_scaling_description">Scales the screens with an integer multiplier of the original 3DS screen. For layouts with two different screen sizes, the largest screen is integer-scaled.</string>
     <string name="texture_filter_name">Texture Filter</string>
     <string name="texture_filter_description">Enhances the visuals of applications by applying a filter to textures. The supported filters are Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale, and MMPX.</string>
+    <string name="antialiasing_filter_name">Antialiasing Filter</string>
+    <string name="antialiasing_filter_description">Reduces the amount of aliasing, resulting in smoother edges. FXAA is extremely lightweight but more aggressive and lower quality. SMAA is heavier but is higher quality and more selective with the edges it smooths.</string>
+    <string name="output_scaling_name">Output Scaling</string>
+    <string name="output_scaling_description">The method by which the game output is scaled to the screen. Nearest doesn\'t smooth visuals but causes uneven pixels at non-integer ratios. Bilinear smooths visuals but may cause aliasing when downscaling. Adaptive uses bilinear for upscaling, but uses area sampling to downscale without creating aliasing. FSR 1 is an upscaler which allows sharpening and allows better visuals without increasing the internal resolution, but needs to be used with antialiasing and a minimum internal resolution of 2x Native. Sharp Bilinear looks similar to nearest but is slightly smoothed to prevent uneven pixels at non-integer ratios.</string>
+    <string name="fsr_sharpness_name">FSR Sharpness</string>
+    <string name="fsr_sharpness_description">Specifies the strength of the sharpening pass when using FSR</string>
     <string name="delay_render_thread">Delay Game Render Thread</string>
     <string name="delay_render_thread_description">Delay the game render thread when it submits data to the GPU. Helps with performance issues in the (very few) applications with dynamic framerates.</string>
     <string name="simulate_3ds_gpu_timings">Simulate 3DS GPU Timings</string>
@@ -796,6 +802,18 @@
     <string name="scaleforce">ScaleForce</string>
     <string name="xbrz">xBRZ</string>
     <string name="mmpx">MMPX</string>
+
+    <!-- Output scaling names -->
+    <string name="nearest">Nearest</string>
+    <string name="bilinear">Bilinear</string>
+    <string name="adaptive">Adaptive</string>
+    <string name="fsr">AMD FSR 1</string>
+    <string name="sharpbilinear">Sharp Bilinear</string>
+
+    <!-- Antialiasing names -->
+    <!-- None is already defined -->
+    <string name="fxaa">FXAA</string>
+    <string name="smaa">SMAA</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Game Controlled</string>

@@ -297,6 +297,34 @@
         <item>5</item>
     </integer-array>
 
+    <string-array name="outputScalingNames">
+        <item>@string/nearest</item>
+        <item>@string/bilinear</item>
+        <item>@string/adaptive</item>
+        <item>@string/fsr</item>
+        <item>@string/sharpbilinear</item>
+    </string-array>
+
+    <integer-array name="outputScalingValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </integer-array>
+
+    <string-array name="antialiasingFilterNames">
+        <item>@string/none</item>
+        <item>@string/fxaa</item>
+        <item>@string/smaa</item>
+    </string-array>
+
+    <integer-array name="antialiasingFilterValues">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </integer-array>
+
     <string-array name="textureSamplingNames">
         <item>@string/game_controlled</item>
         <item>@string/nearest_neighbor</item>

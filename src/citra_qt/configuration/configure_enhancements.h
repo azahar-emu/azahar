@@ -36,7 +36,8 @@ public:
 private:
     void updateShaders(Settings::StereoRenderOption stereo_option);
     void updateTextureFilter(int index);
-
+    void SetFSRSharpnessIndicatorText(int percentage);
+    void SetFSRSharpnessEnabled(int output);
     std::unique_ptr<Ui::ConfigureEnhancements> ui;
     ConfigurationShared::CheckState linear_filter;
     ConfigurationShared::CheckState use_integer_scaling;
