@@ -46,6 +46,7 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
+import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
@@ -900,7 +901,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.graphicsApiNames,
                     R.array.graphicsApiValues,
                     IntSetting.GRAPHICS_API.key,
-                    IntSetting.GRAPHICS_API.defaultValue
+                    IntSetting.GRAPHICS_API.defaultValue,
+                    isEnabled = !GraphicsUtil.isUsingAngleForOpenGL(),
+                    disabledMessage = R.string.setting_disabled_description_angle
                 )
             )
             add(

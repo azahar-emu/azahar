@@ -35,7 +35,7 @@
 #include "common/string_util.h"
 #endif
 #if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-#include "android_storage.h"
+#include "android_utils.h"
 #endif
 
 #ifdef HAVE_LIBRETRO_VFS
@@ -443,7 +443,7 @@ public:
         return fileno(filestream_get_vfs_handle(m_file)->fp);
 #else
 #ifdef ANDROID
-        if (!AndroidStorage::CanUseRawFS()) {
+        if (!AndroidUtils::CanUseRawFS()) {
             return m_fd;
         }
 #endif // ANDROID

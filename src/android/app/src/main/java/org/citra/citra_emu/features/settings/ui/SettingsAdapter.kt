@@ -16,6 +16,7 @@ import android.text.TextWatcher
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
@@ -641,7 +642,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         return true
     }
 
-    fun onClickDisabledSetting(isRuntimeDisabled: Boolean) {
+    fun onClickDisabledSetting(isRuntimeDisabled: Boolean, @StringRes disabledMessage: Int) {
         val titleId = if (isRuntimeDisabled) {
             R.string.setting_not_editable
         } else {
@@ -650,7 +651,7 @@ class SettingsAdapter(private val fragmentView: SettingsFragmentView, public val
         val messageId = if (isRuntimeDisabled) {
             R.string.setting_not_editable_description
         } else {
-            R.string.setting_disabled_description
+            disabledMessage
         }
 
         MessageDialogFragment.newInstance(
