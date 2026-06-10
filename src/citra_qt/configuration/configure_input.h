@@ -30,12 +30,21 @@ class ConfigureInput : public QWidget {
     Q_OBJECT
 
 public:
+    enum class InputBindingType {
+        NativeButton,
+        AnalogFromButton,
+        NativeAnalog,
+        Hotkey,
+        CModButton,
+        Empty
+    };
     struct InputBinding {
-        std::string binding_type;
+        ConfigureInput::InputBindingType binding_type;
         QString name;
-        int index;
+        int index = -1;     // used for anything there are multiple of
         int sub_index = -1; // used for sub-buttons
     };
+
     explicit ConfigureInput(Core::System& system, QWidget* parent = nullptr);
     ~ConfigureInput() override;
 
@@ -111,7 +120,8 @@ private:
     InputBinding GetMapping(const Common::ParamPackage& param);
 
     void ClearBinding(InputBinding binding);
-
+    void SetBinding(InputBinding binding, const Common::ParamPackage& params);
+    bool CheckForDuplicateMap(const Common::ParamPackage& params, InputBinding this_binding);
     void MapFromButton(const Common::ParamPackage& params);
     void AutoMap();
 
