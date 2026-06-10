@@ -31,6 +31,7 @@ import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.FileUtil
+import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RemovableStorageHelper
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
@@ -344,11 +345,12 @@ object NativeLibrary {
         return coreErrorAlertResult
     }
 
-    @get:Keep
-    @get:JvmStatic
-    val isPortraitMode: Boolean
-        get() = CitraApplication.appContext.resources.configuration.orientation ==
+    @Keep
+    @JvmStatic
+    fun isPortraitMode(): Boolean = (
+        CitraApplication.appContext.resources.configuration.orientation ==
             Configuration.ORIENTATION_PORTRAIT
+        )
 
     @Keep
     @JvmStatic
@@ -799,6 +801,10 @@ object NativeLibrary {
     @Keep
     @JvmStatic
     fun getBuildFlavor(): String = BuildConfig.FLAVOR
+
+    @Keep
+    @JvmStatic
+    fun isUsingAngleForOpenGL(): Boolean = GraphicsUtil.isUsingAngleForOpenGL()
 
     @Keep
     @JvmStatic

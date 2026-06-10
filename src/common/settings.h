@@ -685,6 +685,9 @@ void LogSettings();
 // Restore the global state of all applicable settings in the Values struct
 void RestoreGlobalState(bool is_powered_on);
 
+/// Gets the graphics API that should be used; not necessarily one set in settings
+Settings::GraphicsAPI GetWorkingGraphicsAPI();
+
 // Input profiles
 void LoadProfile(int index);
 void SaveProfile(int index);

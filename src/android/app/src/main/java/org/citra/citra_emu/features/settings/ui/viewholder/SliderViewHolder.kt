@@ -52,7 +52,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         if (setting.isActive) {
             adapter.onSliderClick(setting, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
         }
     }
 
@@ -60,7 +60,7 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         if (setting.isActive) {
             return adapter.onLongClick(setting.setting!!, bindingAdapterPosition)
         } else {
-            adapter.onClickDisabledSetting(!setting.isEditable)
+            adapter.onClickDisabledSetting(!setting.isEditable, setting.disabledMessage)
         }
         return false
     }

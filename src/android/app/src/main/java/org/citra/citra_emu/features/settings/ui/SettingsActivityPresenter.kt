@@ -101,7 +101,7 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
             settings.saveSettings(activityView)
             // added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
-            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
             updateAndroidImageVisibility()
             TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }

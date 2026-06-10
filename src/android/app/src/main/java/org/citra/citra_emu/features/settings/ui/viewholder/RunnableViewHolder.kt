@@ -59,7 +59,7 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
 
     override fun onClick(clicked: View) {
         if (!setting.isRuntimeRunnable && EmulationActivity.isRunning()) {
-            adapter.onClickDisabledSetting(true)
+            adapter.onClickDisabledSetting(true, setting.disabledMessage)
         } else {
             setting.runnable.invoke()
         }
@@ -67,7 +67,7 @@ class RunnableViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
 
     override fun onLongClick(clicked: View): Boolean {
         if (!setting.isEditable) {
-            adapter.onClickDisabledSetting(true)
+            adapter.onClickDisabledSetting(true, setting.disabledMessage)
             return true
         }
         return setting.onLongClick?.invoke() ?: true

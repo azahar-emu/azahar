@@ -25,7 +25,6 @@ jmethodID GetOnCoreError();
 jmethodID GetDisplayAlertMsg();
 jmethodID GetDisplayAlertPrompt();
 jmethodID GetAlertPromptButton();
-jmethodID GetIsPortraitMode();
 jmethodID GetLandscapeScreenLayout();
 jmethodID GetPortraitScreenLayout();
 jmethodID GetExitEmulationActivity();

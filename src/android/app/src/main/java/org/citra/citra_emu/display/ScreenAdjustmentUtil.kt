@@ -44,7 +44,7 @@ class ScreenAdjustmentUtil(
             }
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
-        if (NativeLibrary.isPortraitMode) {
+        if (NativeLibrary.isPortraitMode()) {
             val currentLayout = IntSetting.PORTRAIT_SCREEN_LAYOUT.int
             val pos = portraitValues.indexOf(currentLayout)
             val layoutOption = portraitValues[(pos + 1) % portraitValues.size]
@@ -61,21 +61,21 @@ class ScreenAdjustmentUtil(
         IntSetting.PORTRAIT_SCREEN_LAYOUT.int = layoutOption
         settings.saveSetting(IntSetting.PORTRAIT_SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
-        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeScreenOrientation(layoutOption: Int) {
         IntSetting.SCREEN_LAYOUT.int = layoutOption
         settings.saveSetting(IntSetting.SCREEN_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
-        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun changeSecondaryOrientation(layoutOption: Int) {
         IntSetting.SECONDARY_DISPLAY_LAYOUT.int = layoutOption
         settings.saveSetting(IntSetting.SECONDARY_DISPLAY_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
-        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 
     fun enableSecondaryDisplay(layoutOption: Int) {
@@ -101,6 +101,6 @@ class ScreenAdjustmentUtil(
         BooleanSetting.UPRIGHT_SCREEN.boolean = !uprightBoolean
         settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
-        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+        NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
     }
 }
