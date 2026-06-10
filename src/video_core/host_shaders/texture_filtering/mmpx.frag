@@ -1,9 +1,10 @@
 // Copyright 2023 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 /* =========================================================================
  * MMPX
  * by Morgan McGuire and Mara Gagiu
  * https://casual-effects.com/research/McGuire2021PixelArt/
- * License: MIT
  * =========================================================================
  * MMPX Advanced v3.2
  * =========================================================================
