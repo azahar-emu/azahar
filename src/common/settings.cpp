@@ -5,6 +5,9 @@
 #include <string_view>
 #include <utility>
 #include "audio_core/dsp_interface.h"
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO)
+#include "common/android_utils.h"
+#endif
 #include "common/file_util.h"
 #include "common/settings.h"
 
@@ -241,6 +244,17 @@ void RestoreGlobalState(bool is_powered_on) {
     values.custom_textures.SetGlobal(true);
     values.preload_textures.SetGlobal(true);
     values.disable_right_eye_render.SetGlobal(true);
+}
+
+/// Gets the graphics API that should be used; not necessarily one set in settings
+Settings::GraphicsAPI GetWorkingGraphicsAPI() {
+    auto graphics_api = Settings::values.graphics_api.GetValue();
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO)
+    if (AndroidUtils::IsUsingAngleForOpenGL()) {
+        graphics_api = Settings::GraphicsAPI::Vulkan;
+    }
+#endif
+    return graphics_api;
 }
 
 void LoadProfile(int index) {

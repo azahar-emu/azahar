@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -78,13 +78,17 @@ object GraphicsUtil {
             return UNKNOWN_RENDERER
         }
 
-        val openGLRendererString = GLES20.glGetString(GLES20.GL_RENDERER) ?: UNKNOWN_RENDERER
+        val rendererString = GLES20.glGetString(GLES20.GL_RENDERER) ?: UNKNOWN_RENDERER
 
         EGL14.eglMakeCurrent(glDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
         EGL14.eglDestroySurface(glDisplay, glSurface)
         EGL14.eglDestroyContext(glDisplay, glContext)
         EGL14.eglTerminate(glDisplay)
 
-        return openGLRendererString
+        return rendererString
+    }
+
+    fun isUsingAngleForOpenGL(): Boolean {
+        return (openGLRendererString.contains("ANGLE"))
     }
 }

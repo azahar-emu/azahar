@@ -83,7 +83,7 @@ typedef struct stat file_stat_t;
 #endif
 
 #if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-#include "common/android_storage.h"
+#include "common/android_utils.h"
 #include "common/string_util.h"
 #endif
 
@@ -168,11 +168,11 @@ bool Exists(const std::string& filename) {
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     int result;
-    if (AndroidStorage::CanUseRawFS()) {
+    if (AndroidUtils::CanUseRawFS()) {
         struct stat file_info;
-        result = stat(AndroidStorage::TranslateFilePath(copy).c_str(), &file_info);
+        result = stat(AndroidUtils::TranslateFilePath(copy).c_str(), &file_info);
     } else {
-        result = AndroidStorage::FileExists(filename) ? 0 : -1;
+        result = AndroidUtils::FileExists(filename) ? 0 : -1;
     }
 #else
     struct stat file_info;
@@ -197,10 +197,10 @@ bool IsDirectory(const std::string& filename) {
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
     struct stat file_info;
     int result;
-    if (AndroidStorage::CanUseRawFS()) {
-        result = stat(AndroidStorage::TranslateFilePath(copy).c_str(), &file_info);
+    if (AndroidUtils::CanUseRawFS()) {
+        result = stat(AndroidUtils::TranslateFilePath(copy).c_str(), &file_info);
     } else {
-        return AndroidStorage::IsDirectory(filename);
+        return AndroidUtils::IsDirectory(filename);
     }
 #else
     struct stat file_info;
@@ -260,13 +260,13 @@ bool Delete(const std::string& filepath) {
 
     return false;
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        if (unlink(AndroidStorage::TranslateFilePath(filepath).c_str()) == -1) {
+    if (AndroidUtils::CanUseRawFS()) {
+        if (unlink(AndroidUtils::TranslateFilePath(filepath).c_str()) == -1) {
             LOG_ERROR(Common_Filesystem, "unlink failed on {}: {}", filepath, GetLastErrorMsg());
             return false;
         }
     } else {
-        if (!AndroidStorage::DeleteDocument(filepath)) {
+        if (!AndroidUtils::DeleteDocument(filepath)) {
             LOG_ERROR(Common_Filesystem, "unlink failed on {}", filepath);
             return false;
         }
@@ -294,8 +294,8 @@ bool CreateDir(const std::string& path) {
     LOG_ERROR(Common_Filesystem, "CreateDirectory failed on {}: {}", path, error);
     return false;
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        if (mkdir(AndroidStorage::TranslateFilePath(path).c_str(), 0755) == 0)
+    if (AndroidUtils::CanUseRawFS()) {
+        if (mkdir(AndroidUtils::TranslateFilePath(path).c_str(), 0755) == 0)
             return true;
 
         int err = errno;
@@ -320,7 +320,7 @@ bool CreateDir(const std::string& path) {
         if (directory.empty()) {
             directory = "/";
         }
-        if (!AndroidStorage::CreateDir(directory, filename)) {
+        if (!AndroidUtils::CreateDir(directory, filename)) {
             LOG_ERROR(Common_Filesystem, "mkdir failed on {}", path);
             return false;
         };
@@ -397,11 +397,11 @@ bool DeleteDir(const std::string& filename) {
     if (::RemoveDirectoryW(Common::UTF8ToUTF16W(filename).c_str()))
         return true;
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        if (rmdir(AndroidStorage::TranslateFilePath(filename).c_str()) == 0)
+    if (AndroidUtils::CanUseRawFS()) {
+        if (rmdir(AndroidUtils::TranslateFilePath(filename).c_str()) == 0)
             return true;
     } else {
-        if (AndroidStorage::DeleteDocument(filename))
+        if (AndroidUtils::DeleteDocument(filename))
             return true;
     }
 #else
@@ -421,13 +421,13 @@ bool Rename(const std::string& srcFullPath, const std::string& destFullPath) {
         return true;
     }
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        if (rename(AndroidStorage::TranslateFilePath(srcFullPath).c_str(),
-                   AndroidStorage::TranslateFilePath(destFullPath).c_str()) == 0) {
+    if (AndroidUtils::CanUseRawFS()) {
+        if (rename(AndroidUtils::TranslateFilePath(srcFullPath).c_str(),
+                   AndroidUtils::TranslateFilePath(destFullPath).c_str()) == 0) {
             return true;
         }
     } else {
-        if (AndroidStorage::MoveAndRenameFile(srcFullPath, destFullPath)) {
+        if (AndroidUtils::MoveAndRenameFile(srcFullPath, destFullPath)) {
             return true;
         }
     }
@@ -496,12 +496,12 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     };
 
 #if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        return copy_files(AndroidStorage::TranslateFilePath(srcFilename),
-                          AndroidStorage::TranslateFilePath(destFilename));
+    if (AndroidUtils::CanUseRawFS()) {
+        return copy_files(AndroidUtils::TranslateFilePath(srcFilename),
+                          AndroidUtils::TranslateFilePath(destFilename));
     } else {
-        return AndroidStorage::CopyFile(srcFilename, std::string(GetParentPath(destFilename)),
-                                        std::string(GetFilename(destFilename)));
+        return AndroidUtils::CopyFile(srcFilename, std::string(GetParentPath(destFilename)),
+                                      std::string(GetFilename(destFilename)));
     }
 #else
     return copy_files(srcFilename, destFilename);
@@ -526,12 +526,12 @@ u64 GetSize(const std::string& filename) {
     struct _stat64 buf;
     if (_wstat64(Common::UTF8ToUTF16W(filename).c_str(), &buf) == 0)
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        if (stat(AndroidStorage::TranslateFilePath(filename).c_str(), &buf) == 0) {
+    if (AndroidUtils::CanUseRawFS()) {
+        if (stat(AndroidUtils::TranslateFilePath(filename).c_str(), &buf) == 0) {
             return buf.st_size;
         }
     } else {
-        u64 result = AndroidStorage::GetSize(filename);
+        u64 result = AndroidUtils::GetSize(filename);
         LOG_TRACE(Common_Filesystem, "{}: {}", filename, result);
         return result;
     }
@@ -608,10 +608,10 @@ std::optional<std::vector<std::string>> ListDirectoryEntries(const std::string& 
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
 
 std::optional<std::vector<std::string>> ListDirectoryEntries(const std::string& directory) {
-    if (AndroidStorage::CanUseRawFS()) {
+    if (AndroidUtils::CanUseRawFS()) {
         std::vector<std::string> entries;
 
-        DIR* dirp = opendir(AndroidStorage::TranslateFilePath(directory).c_str());
+        DIR* dirp = opendir(AndroidUtils::TranslateFilePath(directory).c_str());
         if (!dirp)
             return std::nullopt;
 
@@ -622,7 +622,7 @@ std::optional<std::vector<std::string>> ListDirectoryEntries(const std::string& 
         closedir(dirp);
         return entries;
     } else {
-        return AndroidStorage::GetFilesName(directory);
+        return AndroidUtils::GetFilesName(directory);
     }
 }
 
@@ -1354,27 +1354,27 @@ bool IOFile::Open() {
     m_good = m_file != nullptr;
 
 #elif defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-    if (AndroidStorage::CanUseRawFS()) {
-        m_file = FOPEN(AndroidStorage::TranslateFilePath(filename).c_str(), openmode.c_str());
+    if (AndroidUtils::CanUseRawFS()) {
+        m_file = FOPEN(AndroidUtils::TranslateFilePath(filename).c_str(), openmode.c_str());
     } else {
         // Check whether filepath is startsWith content
-        AndroidStorage::AndroidOpenMode android_open_mode = AndroidStorage::ParseOpenmode(openmode);
-        if (android_open_mode == AndroidStorage::AndroidOpenMode::WRITE ||
-            android_open_mode == AndroidStorage::AndroidOpenMode::READ_WRITE ||
-            android_open_mode == AndroidStorage::AndroidOpenMode::WRITE_APPEND ||
-            android_open_mode == AndroidStorage::AndroidOpenMode::WRITE_TRUNCATE ||
-            android_open_mode == AndroidStorage::AndroidOpenMode::READ_WRITE_TRUNCATE ||
-            android_open_mode == AndroidStorage::AndroidOpenMode::READ_WRITE_APPEND) {
+        AndroidUtils::AndroidOpenMode android_open_mode = AndroidUtils::ParseOpenmode(openmode);
+        if (android_open_mode == AndroidUtils::AndroidOpenMode::WRITE ||
+            android_open_mode == AndroidUtils::AndroidOpenMode::READ_WRITE ||
+            android_open_mode == AndroidUtils::AndroidOpenMode::WRITE_APPEND ||
+            android_open_mode == AndroidUtils::AndroidOpenMode::WRITE_TRUNCATE ||
+            android_open_mode == AndroidUtils::AndroidOpenMode::READ_WRITE_TRUNCATE ||
+            android_open_mode == AndroidUtils::AndroidOpenMode::READ_WRITE_APPEND) {
             if (!FileUtil::Exists(filename)) {
                 std::string directory(GetParentPath(filename));
                 std::string display_name(GetFilename(filename));
-                if (!AndroidStorage::CreateFile(directory, display_name)) {
+                if (!AndroidUtils::CreateFile(directory, display_name)) {
                     m_good = m_file != nullptr;
                     return m_good;
                 }
             }
         }
-        m_fd = AndroidStorage::OpenContentUri(filename, android_open_mode);
+        m_fd = AndroidUtils::OpenContentUri(filename, android_open_mode);
         if (m_fd != -1) {
             int error_num = 0;
             m_file = fdopen(m_fd, openmode.c_str());
