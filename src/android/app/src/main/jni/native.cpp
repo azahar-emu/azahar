@@ -63,10 +63,10 @@
 #endif
 #endif
 
+#include "common/android_utils.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
 #include "jni/ndk_motion.h"
-#include "jni/util.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -189,7 +189,7 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
         system.InsertCartridge(inserted_cartridge);
     }
 
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
@@ -466,7 +466,7 @@ void Java_org_citra_citra_1emu_NativeLibrary_swapScreens([[maybe_unused]] JNIEnv
     Settings::values.swap_screen = swap_screens;
     auto& system = Core::System::GetInstance();
     if (system.IsPoweredOn()) {
-        system.GPU().Renderer().UpdateCurrentFramebufferLayout(IsPortraitMode());
+        system.GPU().Renderer().UpdateCurrentFramebufferLayout(AndroidUtils::IsPortraitMode());
     }
     InputManager::screen_rotation = rotation;
     Camera::NDK::g_rotation = rotation;

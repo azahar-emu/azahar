@@ -7,13 +7,13 @@
 #include <cstdlib>
 #include <string>
 #include <android/native_window_jni.h>
+#include "common/android_utils.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "input_common/main.h"
 #include "jni/emu_window/emu_window.h"
 #include "jni/id_cache.h"
 #include "jni/input_manager.h"
-#include "jni/util.h"
 #include "network/network.h"
 #include "video_core/renderer_base.h"
 
@@ -48,7 +48,7 @@ void EmuWindow_Android::OnTouchMoved(int x, int y) {
 }
 
 void EmuWindow_Android::OnFramebufferSizeChanged() {
-    const bool is_portrait_mode{IsPortraitMode()};
+    const bool is_portrait_mode{AndroidUtils::IsPortraitMode()};
 
     const int bigger{window_width > window_height ? window_width : window_height};
     const int smaller{window_width < window_height ? window_width : window_height};

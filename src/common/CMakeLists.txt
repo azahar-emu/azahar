@@ -130,8 +130,8 @@ endif()
 # Android storage is only used for non-libretro Android builds
 if (ANDROID AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PRIVATE
-    android_storage.cpp
-    android_storage.h
+    android_utils.cpp
+    android_utils.h
   )
 endif()
 

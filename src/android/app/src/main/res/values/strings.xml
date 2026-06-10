@@ -411,7 +411,8 @@
     <string name="reset_setting_confirmation">Do you want to reset this setting back to its default value?</string>
     <string name="setting_not_editable">You can\'t edit this now</string>
     <string name="setting_disabled">Setting disabled</string>
-    <string name="setting_disabled_description">This setting is currently disabled due to another setting not being the appropriate value.</string>
+    <string name="setting_disabled_description_incompatible_setting">This setting is currently disabled due to another setting not being the appropriate value.</string>
+    <string name="setting_disabled_description_angle">The renderer can\'t be changed because the device is using ANGLE for OpenGL, which is currently incompatible with Azahar. Vulkan will be used.</string>
     <string name="setting_not_editable_description">This option can\'t be changed while a game is running.</string>
     <string name="auto_select">Auto-Select</string>
     <string name="start">Start</string>
