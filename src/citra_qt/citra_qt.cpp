@@ -4090,7 +4090,15 @@ void GMainWindow::LoadTranslation() {
     //       selected language option? Current behaviour is better than the issue it fixes,
     //       but not ideal.
     if (UISettings::values.language.isEmpty()) {
-        const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+        QStringList languages;
+    #if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        languages =
+            QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+    #else
+        languages = QLocale::system().uiLanguages();
+        for (auto& lang : languages)
+            lang.replace('-', '_');
+    #endif
         for (const auto& lang : languages) {
             // If the first language found is English, no need to install any translation
             if (lang == lang_en) {
