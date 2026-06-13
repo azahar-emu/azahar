@@ -4097,7 +4097,7 @@ void GMainWindow::LoadTranslation() {
     #else
         languages = QLocale::system().uiLanguages();
         for (auto& lang : languages)
-            lang.replace('-', '_');
+            lang.replace(u'-', u'_');
     #endif
         for (const auto& lang : languages) {
             // If the first language found is English, no need to install any translation
