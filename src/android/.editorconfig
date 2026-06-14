@@ -12,5 +12,6 @@ ij_kotlin_packages_to_use_import_on_demand = unset
 # Style configuration
 indent_size = 4
 indent_style = space
+ktlint_standard_comment-wrapping = disabled
 ktlint_standard_package-name = disabled
 max_line_length = 100
