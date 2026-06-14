@@ -52,7 +52,7 @@ class SystemFilesFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val gamesViewModel: GamesViewModel by activityViewModels()
 
-    private val REGION_START = "RegionStart"
+    private val regionStartSring = "RegionStart"
 
     private val homeMenuMap: MutableMap<String, String> = mutableMapOf()
     private var setupStateCached: BooleanArray? = null
@@ -85,7 +85,7 @@ class SystemFilesFragment : Fragment() {
         reloadUi()
         if (savedInstanceState != null) {
             binding.dropdownSystemRegionStart
-                .setText(savedInstanceState.getString(REGION_START), false)
+                .setText(savedInstanceState.getString(regionStartSring), false)
         }
     }
 
@@ -309,9 +309,10 @@ class SystemFilesFragment : Fragment() {
                                             setupStateCached = null
                                             progressDialog2?.dismiss()
                                             val action =
-                                                HomeNavigationDirections.actionGlobalEmulationActivity(
-                                                    menu
-                                                )
+                                                HomeNavigationDirections
+                                                    .actionGlobalEmulationActivity(
+                                                        menu
+                                                    )
                                             binding.root.findNavController().navigate(action)
                                         }
                                     }

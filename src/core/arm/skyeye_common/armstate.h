@@ -147,7 +147,7 @@ enum : u32 {
 enum {
     STOP = 0,       // Stop
     CHANGEMODE = 1, // Change mode
-    ONCE = 2,       // Execute just one iteration
+    ONCE = 2,       // execute just one iteration
     RUN = 3         // Continuous execution
 };
 

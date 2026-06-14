@@ -17,15 +17,15 @@ object MemoryUtil {
     private val Float.hundredths: String
         get() = String.format(Locale.ROOT, "%.2f", this)
 
-    const val Kb: Float = 1024F
-    const val Mb = Kb * 1024
-    const val Gb = Mb * 1024
-    const val Tb = Gb * 1024
-    const val Pb = Tb * 1024
-    const val Eb = Pb * 1024
+    const val KB: Float = 1024F
+    const val MB = KB * 1024
+    const val GB = MB * 1024
+    const val TB = GB * 1024
+    const val PB = TB * 1024
+    const val EB = PB * 1024
 
     fun bytesToSizeUnit(size: Float, roundUp: Boolean = false): String = when {
-        size < Kb -> {
+        size < KB -> {
             context.getString(
                 R.string.memory_formatted,
                 size.hundredths,
@@ -33,42 +33,42 @@ object MemoryUtil {
             )
         }
 
-        size < Mb -> {
+        size < MB -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Kb) else (size / Kb).hundredths,
+                if (roundUp) ceil(size / KB) else (size / KB).hundredths,
                 context.getString(R.string.memory_kilobyte)
             )
         }
 
-        size < Gb -> {
+        size < GB -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Mb) else (size / Mb).hundredths,
+                if (roundUp) ceil(size / MB) else (size / MB).hundredths,
                 context.getString(R.string.memory_megabyte)
             )
         }
 
-        size < Tb -> {
+        size < TB -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Gb) else (size / Gb).hundredths,
+                if (roundUp) ceil(size / GB) else (size / GB).hundredths,
                 context.getString(R.string.memory_gigabyte)
             )
         }
 
-        size < Pb -> {
+        size < PB -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Tb) else (size / Tb).hundredths,
+                if (roundUp) ceil(size / TB) else (size / TB).hundredths,
                 context.getString(R.string.memory_terabyte)
             )
         }
 
-        size < Eb -> {
+        size < EB -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Pb) else (size / Pb).hundredths,
+                if (roundUp) ceil(size / PB) else (size / PB).hundredths,
                 context.getString(R.string.memory_petabyte)
             )
         }
@@ -76,7 +76,7 @@ object MemoryUtil {
         else -> {
             context.getString(
                 R.string.memory_formatted,
-                if (roundUp) ceil(size / Eb) else (size / Eb).hundredths,
+                if (roundUp) ceil(size / EB) else (size / EB).hundredths,
                 context.getString(R.string.memory_exabyte)
             )
         }
@@ -97,13 +97,13 @@ object MemoryUtil {
         }
 
     fun isLessThan(minimum: Int, size: Float): Boolean = when (size) {
-        Kb -> totalMemory < Mb && totalMemory < minimum
-        Mb -> totalMemory < Gb && (totalMemory / Mb) < minimum
-        Gb -> totalMemory < Tb && (totalMemory / Gb) < minimum
-        Tb -> totalMemory < Pb && (totalMemory / Tb) < minimum
-        Pb -> totalMemory < Eb && (totalMemory / Pb) < minimum
-        Eb -> totalMemory / Eb < minimum
-        else -> totalMemory < Kb && totalMemory < minimum
+        KB -> totalMemory < MB && totalMemory < minimum
+        MB -> totalMemory < GB && (totalMemory / MB) < minimum
+        GB -> totalMemory < TB && (totalMemory / GB) < minimum
+        TB -> totalMemory < PB && (totalMemory / TB) < minimum
+        PB -> totalMemory < EB && (totalMemory / PB) < minimum
+        EB -> totalMemory / EB < minimum
+        else -> totalMemory < KB && totalMemory < minimum
     }
 
     // Devices are unlikely to have 0.5GB increments of memory so we'll just round up to account for

@@ -9,7 +9,7 @@ import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import org.citra.citra_emu.fragments.CitraDirectoryDialogFragment
-import org.citra.citra_emu.fragments.CopyDirProgressDialog
+import org.citra.citra_emu.fragments.CopyDirProgressDialogFragment
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
@@ -51,8 +51,16 @@ class CitraDirectoryHelper(
                 }
 
                 // If user check move data, show copy progress dialog.
-                CopyDirProgressDialog.newInstance(fragmentActivity, previous, path, callback)
-                    ?.show(fragmentActivity.supportFragmentManager, CopyDirProgressDialog.TAG)
+                CopyDirProgressDialogFragment.newInstance(
+                    fragmentActivity,
+                    previous,
+                    path,
+                    callback
+                )
+                    ?.show(
+                        fragmentActivity.supportFragmentManager,
+                        CopyDirProgressDialogFragment.TAG
+                    )
             }
         )
         citraDirectoryDialog.show(

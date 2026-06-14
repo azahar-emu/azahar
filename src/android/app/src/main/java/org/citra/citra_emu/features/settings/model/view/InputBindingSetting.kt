@@ -125,7 +125,7 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
                 Settings.HOTKEY_CLOSE_GAME -> Hotkey.CLOSE_GAME.button
                 Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
-                Settings.HOTKEY_QUICKlOAD -> Hotkey.QUICKLOAD.button
+                Settings.HOTKEY_QUICKLOAD -> Hotkey.QUICKLOAD.button
                 Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
                 else -> -1
             }
@@ -620,7 +620,11 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
          *   false if it should be mapped as individual button keycodes (DPAD_UP/DOWN/LEFT/RIGHT)
          */
         fun applyAutoMapBindings(isNintendoLayout: Boolean, useAxisDpad: Boolean) {
-            val faceButtons = if (isNintendoLayout) nintendoFaceButtonMappings else xboxFaceButtonMappings
+            val faceButtons = if (isNintendoLayout) {
+                nintendoFaceButtonMappings
+            } else {
+                xboxFaceButtonMappings
+            }
             val buttonMappings = if (useAxisDpad) {
                 faceButtons + commonButtonMappings
             } else {
@@ -657,7 +661,9 @@ class InputBindingSetting(val abstractSetting: AbstractSetting, titleId: Int) :
             editor.putBoolean(getInputAxisInvertedKey(mapping.hostAxis), mapping.inverted)
             val dir = if (mapping.orientation == 0) '+' else '-'
             editor.putString(mapping.settingKey, "Axis ${mapping.hostAxis}$dir")
-            val reverseKey = "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}_${mapping.orientation}"
+            @Suppress("ktlint:standard:max-line-length")
+            val reverseKey =
+                "${INPUT_MAPPING_PREFIX}_ReverseMapping_${mapping.settingKey}_${mapping.orientation}"
             editor.putString(reverseKey, axisKey)
         }
 

@@ -187,7 +187,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                     }
 
                     NativeLibrary.onGamePadEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         button.id,
                         button.status
                     )
@@ -211,22 +211,22 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                     anyOverlayStateChanged = true
 
                     NativeLibrary.onGamePadEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         dpad.upId,
                         dpad.upStatus
                     )
                     NativeLibrary.onGamePadEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         dpad.downId,
                         dpad.downStatus
                     )
                     NativeLibrary.onGamePadEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         dpad.leftId,
                         dpad.leftStatus
                     )
                     NativeLibrary.onGamePadEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         dpad.rightId,
                         dpad.rightStatus
                     )
@@ -250,7 +250,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
                     val axisID = joystick.joystickId
                     NativeLibrary.onGamePadMoveEvent(
-                        NativeLibrary.TouchScreenDevice,
+                        NativeLibrary.TOUCHSCREEN_DEVICE,
                         axisID,
                         joystick.xAxis,
                         joystick.yAxis

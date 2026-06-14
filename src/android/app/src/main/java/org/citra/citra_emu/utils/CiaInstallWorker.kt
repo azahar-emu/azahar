@@ -6,7 +6,6 @@ package org.citra.citra_emu.utils
 
 import android.app.NotificationManager
 import android.content.Context
-import android.net.Uri
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
@@ -19,11 +18,11 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.FileUtil.getFilename
 
 class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(context, params) {
-    private val GROUP_KEY_CIA_INSTALL_STATUS = "org.citra.citra_emu.CIA_INSTALL_STATUS"
+    private val groupKeyCiaInstallStatus = "org.citra.citra_emu.CIA_INSTALL_STATUS"
     private var lastNotifiedTime: Long = 0
-    private val SUMMARY_NOTIFICATION_ID = 0xC1A0000
-    private val PROGRESS_NOTIFICATION_ID = SUMMARY_NOTIFICATION_ID + 1
-    private var statusNotificationId = SUMMARY_NOTIFICATION_ID + 2
+    private val summaryNotificationId = 0xC1A0000
+    private val progressNotificationId = summaryNotificationId + 1
+    private var statusNotificationId = summaryNotificationId + 2
 
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
     private val installProgressBuilder = NotificationCompat.Builder(
@@ -38,14 +37,14 @@ class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
         .setSmallIcon(R.drawable.ic_stat_notification_logo)
-        .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
+        .setGroup(groupKeyCiaInstallStatus)
     private val summaryNotification = NotificationCompat.Builder(
         context,
         context.getString(R.string.cia_install_notification_channel_id)
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
         .setSmallIcon(R.drawable.ic_stat_notification_logo)
-        .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
+        .setGroup(groupKeyCiaInstallStatus)
         .setGroupSummary(true)
         .build()
 
@@ -112,7 +111,7 @@ class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(
 
         // Even if newer versions of Android don't show the group summary text that you design,
         // you always need to manually set a summary to enable grouped notifications.
-        notificationManager.notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
+        notificationManager.notify(summaryNotificationId, summaryNotification)
         notificationManager.notify(statusNotificationId++, installStatusBuilder.build())
     }
 
@@ -149,7 +148,7 @@ class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(
             val res = installCIA(fileFinal)
             notifyInstallStatus(filename, res)
         }
-        notificationManager.cancel(PROGRESS_NOTIFICATION_ID)
+        notificationManager.cancel(progressNotificationId)
         return Result.success()
     }
 
@@ -164,11 +163,11 @@ class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(
         }
         lastNotifiedTime = currentTime
         installProgressBuilder.setProgress(max, progress, false)
-        notificationManager.notify(PROGRESS_NOTIFICATION_ID, installProgressBuilder.build())
+        notificationManager.notify(progressNotificationId, installProgressBuilder.build())
     }
 
     override fun getForegroundInfo(): ForegroundInfo =
-        ForegroundInfo(PROGRESS_NOTIFICATION_ID, installProgressBuilder.build())
+        ForegroundInfo(progressNotificationId, installProgressBuilder.build())
 
     private external fun installCIA(path: String): InstallStatus
 }

@@ -252,7 +252,8 @@ class DocumentsTree {
         val newName = Paths.get(destinationPath).fileName.toString()
         val parentPath = Paths.get(destinationPath).parent.toString()
         val newParent = resolvePath(parentPath)
-        val newUri = (getUri(parentPath).toString() + "%2F$newName").toUri() // <- Is there a better way?
+        val newUri = (getUri(parentPath).toString() + "%2F$newName").toUri()
+        // ^- Is there a better way?
 
         if (sourceNode == null || newParent == null) {
             return false

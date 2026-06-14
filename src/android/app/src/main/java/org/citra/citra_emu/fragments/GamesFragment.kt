@@ -89,6 +89,7 @@ class GamesFragment : Fragment() {
 
                     fragment.requireActivity().runOnUiThread {
                         dialog.dismiss()
+                        @Suppress("ktlint:standard:max-line-length")
                         val resId = when (status) {
                             NativeLibrary.CompressStatus.SUCCESS -> if (shouldCompress) R.string.compress_success else R.string.decompress_success
                             NativeLibrary.CompressStatus.COMPRESS_UNSUPPORTED -> R.string.compress_unsupported

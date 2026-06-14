@@ -14,7 +14,7 @@ object MiiSelector {
     lateinit var data: MiiSelectorData
     val finishLock = Object()
 
-    private fun ExecuteImpl(config: MiiSelectorConfig) {
+    private fun executeImpl(config: MiiSelectorConfig) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         data = MiiSelectorData(0, 0)
         val fragment = MiiSelectorDialogFragment.newInstance(config)
@@ -22,8 +22,8 @@ object MiiSelector {
     }
 
     @JvmStatic
-    fun Execute(config: MiiSelectorConfig): MiiSelectorData {
-        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { ExecuteImpl(config) }
+    fun execute(config: MiiSelectorConfig): MiiSelectorData {
+        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { executeImpl(config) }
         synchronized(finishLock) {
             try {
                 finishLock.wait()

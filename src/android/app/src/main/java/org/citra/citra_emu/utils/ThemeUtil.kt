@@ -12,9 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.preference.PreferenceManager
 import kotlin.math.roundToInt
 import org.citra.citra_emu.CitraApplication
@@ -118,7 +115,7 @@ object ThemeUtil {
     // Listener that detects if the theme keys are being changed from the setting menu and recreates the activity
     private var listener: SharedPreferences.OnSharedPreferenceChangeListener? = null
 
-    fun ThemeChangeListener(activity: AppCompatActivity) {
+    fun themeChangeListener(activity: AppCompatActivity) {
         listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             val relevantKeys =
                 listOf(
