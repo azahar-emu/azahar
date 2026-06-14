@@ -38,6 +38,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
+import androidx.core.view.get
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -652,13 +653,13 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
         }
 
         savestates?.forEach {
-            var enableClick = true
-            val text = if (it.slot == NativeLibrary.QUICKSAVE_SLOT) {
-                getString(R.string.emulation_occupied_quicksave_slot, it.time)
+            var text: String
+            if (it.slot == NativeLibrary.QUICKSAVE_SLOT) {
+                text = getString(R.string.emulation_occupied_quicksave_slot, it.time)
             } else {
-                getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
+                text = getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
             }
-            popupMenu.menu.getItem(it.slot).setTitle(text).setEnabled(enableClick)
+            popupMenu.menu.getItem(it.slot).setTitle(text).setEnabled(true)
         }
 
         popupMenu.show()
@@ -685,7 +686,7 @@ class EmulationFragment : Fragment(), SurfaceHolder.Callback, Choreographer.Fram
 
         savestates?.forEach {
             val text = getString(R.string.emulation_occupied_state_slot, it.slot, it.time)
-            popupMenu.menu.getItem(it.slot - 1).setTitle(text).setEnabled(true)
+            popupMenu.menu[it.slot - 1].setTitle(text).setEnabled(true)
         }
 
         popupMenu.show()
