@@ -19,7 +19,9 @@ import org.citra.citra_emu.databinding.FragmentSettingsBinding
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
-class SettingsFragment : Fragment(), SettingsFragmentView {
+class SettingsFragment :
+    Fragment(),
+    SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
     private val fragmentPresenter = SettingsFragmentPresenter(this)

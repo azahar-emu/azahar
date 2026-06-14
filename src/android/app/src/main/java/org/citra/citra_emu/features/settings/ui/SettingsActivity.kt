@@ -22,11 +22,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.preference.PreferenceManager
 import com.google.android.material.color.MaterialColors
+import java.io.IOException
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.ActivitySettingsBinding
-import java.io.IOException
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
@@ -35,13 +35,15 @@ import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.SettingsViewModel
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
-import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.InsetsHelper
 import org.citra.citra_emu.utils.RefreshRateUtil
+import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
 
-class SettingsActivity : AppCompatActivity(), SettingsActivityView {
+class SettingsActivity :
+    AppCompatActivity(),
+    SettingsActivityView {
     private val presenter = SettingsActivityPresenter(this)
 
     private lateinit var binding: ActivitySettingsBinding
@@ -205,7 +207,7 @@ class SettingsActivity : AppCompatActivity(), SettingsActivityView {
         presenter.onSettingsReset()
 
         val controllerKeys = Settings.buttonKeys + Settings.circlePadKeys + Settings.cStickKeys +
-                Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
+            Settings.dPadAxisKeys + Settings.dPadButtonKeys + Settings.triggerKeys
         val editor =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext).edit()
         controllerKeys.forEach { editor.remove(it) }

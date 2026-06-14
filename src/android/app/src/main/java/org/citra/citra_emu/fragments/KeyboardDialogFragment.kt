@@ -78,21 +78,27 @@ class KeyboardDialogFragment : DialogFragment() {
                     return@setOnClickListener
                 }
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
         if (alertDialog.getButton(DialogInterface.BUTTON_NEUTRAL) != null) {
             alertDialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener {
                 SoftwareKeyboard.data.button = 1
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
         if (alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE) != null) {
             alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
                 SoftwareKeyboard.data.button = 0
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
 

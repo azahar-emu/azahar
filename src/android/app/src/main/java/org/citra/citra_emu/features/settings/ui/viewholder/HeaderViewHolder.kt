@@ -21,7 +21,7 @@ class HeaderViewHolder(val binding: ListItemSettingsHeaderBinding, adapter: Sett
         if (item.descriptionId != 0) {
             binding.textHeaderDescription.visibility = View.VISIBLE
             binding.textHeaderDescription.setText(item.descriptionId)
-        }else {
+        } else {
             binding.textHeaderDescription.visibility = View.GONE
         }
     }

@@ -174,28 +174,27 @@ class LicensesFragment : Fragment() {
         setInsets()
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { _: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
 
-            val mlpAppBar = binding.toolbarLicenses.layoutParams as MarginLayoutParams
-            mlpAppBar.leftMargin = leftInsets
-            mlpAppBar.rightMargin = rightInsets
-            binding.toolbarLicenses.layoutParams = mlpAppBar
+        val mlpAppBar = binding.toolbarLicenses.layoutParams as MarginLayoutParams
+        mlpAppBar.leftMargin = leftInsets
+        mlpAppBar.rightMargin = rightInsets
+        binding.toolbarLicenses.layoutParams = mlpAppBar
 
-            val mlpScrollAbout = binding.listLicenses.layoutParams as MarginLayoutParams
-            mlpScrollAbout.leftMargin = leftInsets
-            mlpScrollAbout.rightMargin = rightInsets
-            binding.listLicenses.layoutParams = mlpScrollAbout
+        val mlpScrollAbout = binding.listLicenses.layoutParams as MarginLayoutParams
+        mlpScrollAbout.leftMargin = leftInsets
+        mlpScrollAbout.rightMargin = rightInsets
+        binding.listLicenses.layoutParams = mlpScrollAbout
 
-            binding.listLicenses.updatePadding(bottom = barInsets.bottom)
+        binding.listLicenses.updatePadding(bottom = barInsets.bottom)
 
-            windowInsets
-        }
+        windowInsets
+    }
 }

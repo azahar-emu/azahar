@@ -29,7 +29,8 @@ class HomeSettingAdapter(
     private val activity: AppCompatActivity,
     private val viewLifecycle: LifecycleOwner,
     var options: List<HomeSetting>
-) : RecyclerView.Adapter<HomeSettingAdapter.HomeOptionViewHolder>(), View.OnClickListener {
+) : RecyclerView.Adapter<HomeSettingAdapter.HomeOptionViewHolder>(),
+    View.OnClickListener {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeOptionViewHolder {
         val binding =
             CardHomeOptionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,9 +38,7 @@ class HomeSettingAdapter(
         return HomeOptionViewHolder(binding)
     }
 
-    override fun getItemCount(): Int {
-        return options.size
-    }
+    override fun getItemCount(): Int = options.size
 
     override fun onBindViewHolder(holder: HomeOptionViewHolder, position: Int) {
         holder.bind(options[position])

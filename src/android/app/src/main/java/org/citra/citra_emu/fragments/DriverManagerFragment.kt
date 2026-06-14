@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.transition.MaterialSharedAxis
+import java.io.IOException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.R
@@ -27,9 +28,8 @@ import org.citra.citra_emu.databinding.FragmentDriverManagerBinding
 import org.citra.citra_emu.utils.FileUtil.asDocumentFile
 import org.citra.citra_emu.utils.FileUtil.inputStream
 import org.citra.citra_emu.utils.GpuDriverHelper
-import org.citra.citra_emu.viewmodel.HomeViewModel
 import org.citra.citra_emu.viewmodel.DriverViewModel
-import java.io.IOException
+import org.citra.citra_emu.viewmodel.HomeViewModel
 
 class DriverManagerFragment : Fragment() {
     private var _binding: FragmentDriverManagerBinding? = null
@@ -110,41 +110,40 @@ class DriverManagerFragment : Fragment() {
         driverViewModel.onCloseDriverManager()
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { _: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
 
-            val mlpAppBar = binding.toolbarDrivers.layoutParams as ViewGroup.MarginLayoutParams
-            mlpAppBar.leftMargin = leftInsets
-            mlpAppBar.rightMargin = rightInsets
-            binding.toolbarDrivers.layoutParams = mlpAppBar
+        val mlpAppBar = binding.toolbarDrivers.layoutParams as ViewGroup.MarginLayoutParams
+        mlpAppBar.leftMargin = leftInsets
+        mlpAppBar.rightMargin = rightInsets
+        binding.toolbarDrivers.layoutParams = mlpAppBar
 
-            val mlplistDrivers = binding.listDrivers.layoutParams as ViewGroup.MarginLayoutParams
-            mlplistDrivers.leftMargin = leftInsets
-            mlplistDrivers.rightMargin = rightInsets
-            binding.listDrivers.layoutParams = mlplistDrivers
+        val mlplistDrivers = binding.listDrivers.layoutParams as ViewGroup.MarginLayoutParams
+        mlplistDrivers.leftMargin = leftInsets
+        mlplistDrivers.rightMargin = rightInsets
+        binding.listDrivers.layoutParams = mlplistDrivers
 
-            val fabSpacing = resources.getDimensionPixelSize(R.dimen.spacing_fab)
-            val mlpFab =
-                binding.buttonInstall.layoutParams as ViewGroup.MarginLayoutParams
-            mlpFab.leftMargin = leftInsets + fabSpacing
-            mlpFab.rightMargin = rightInsets + fabSpacing
-            mlpFab.bottomMargin = barInsets.bottom + fabSpacing
-            binding.buttonInstall.layoutParams = mlpFab
+        val fabSpacing = resources.getDimensionPixelSize(R.dimen.spacing_fab)
+        val mlpFab =
+            binding.buttonInstall.layoutParams as ViewGroup.MarginLayoutParams
+        mlpFab.leftMargin = leftInsets + fabSpacing
+        mlpFab.rightMargin = rightInsets + fabSpacing
+        mlpFab.bottomMargin = barInsets.bottom + fabSpacing
+        binding.buttonInstall.layoutParams = mlpFab
 
-            binding.listDrivers.updatePadding(
-                bottom = barInsets.bottom +
-                        resources.getDimensionPixelSize(R.dimen.spacing_bottom_list_fab)
-            )
+        binding.listDrivers.updatePadding(
+            bottom = barInsets.bottom +
+                resources.getDimensionPixelSize(R.dimen.spacing_bottom_list_fab)
+        )
 
-            windowInsets
-        }
+        windowInsets
+    }
 
     private val getDriver =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { result ->

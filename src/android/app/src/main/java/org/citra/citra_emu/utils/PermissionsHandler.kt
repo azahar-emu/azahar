@@ -11,8 +11,8 @@ import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
 import androidx.activity.result.ActivityResultLauncher
-import androidx.preference.PreferenceManager
 import androidx.documentfile.provider.DocumentFile
+import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 
 object PermissionsHandler {
@@ -38,7 +38,10 @@ object PermissionsHandler {
             context.contentResolver.releasePersistableUriPermission(uri, takeFlags)
         } catch (e: Exception) {
             // Do not use native library logging, as the native library may not be loaded yet
-            android.util.Log.e("PermissionsHandler", "Cannot check citra data directory permission, error: ${e.message}")
+            android.util.Log.e(
+                "PermissionsHandler",
+                "Cannot check citra data directory permission, error: ${e.message}"
+            )
         }
         return false
     }
@@ -62,6 +65,5 @@ object PermissionsHandler {
             )
             activityLauncher.launch(initialUri)
         }
-
     }
 }

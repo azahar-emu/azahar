@@ -20,19 +20,63 @@ enum class BooleanSetting(
     SWAP_SCREEN(SettingKeys.swap_screen(), Settings.SECTION_LAYOUT, false),
     INSTANT_DEBUG_LOG(SettingKeys.instant_debug_log(), Settings.SECTION_DEBUG, false),
     ENABLE_RPC_SERVER(SettingKeys.enable_rpc_server(), Settings.SECTION_DEBUG, false),
-    TOGGLE_UNIQUE_DATA_CONSOLE_TYPE(SettingKeys.toggle_unique_data_console_type(), Settings.SECTION_DEBUG, false),
-    SWAP_EYES_3D(SettingKeys.swap_eyes_3d(),Settings.SECTION_RENDERER, false),
+    TOGGLE_UNIQUE_DATA_CONSOLE_TYPE(
+        SettingKeys.toggle_unique_data_console_type(),
+        Settings.SECTION_DEBUG,
+        false
+    ),
+    SWAP_EYES_3D(SettingKeys.swap_eyes_3d(), Settings.SECTION_RENDERER, false),
     PERF_OVERLAY_ENABLE(SettingKeys.performance_overlay_enable(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_SHOW_FPS(SettingKeys.performance_overlay_show_fps(), Settings.SECTION_LAYOUT, true),
-    PERF_OVERLAY_SHOW_FRAMETIME(SettingKeys.performance_overlay_show_frame_time(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_SHOW_SPEED(SettingKeys.performance_overlay_show_speed(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_SHOW_APP_RAM_USAGE(SettingKeys.performance_overlay_show_app_ram_usage(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_SHOW_AVAILABLE_RAM(SettingKeys.performance_overlay_show_available_ram(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_SHOW_BATTERY_TEMP(SettingKeys.performance_overlay_show_battery_temp(), Settings.SECTION_LAYOUT, false),
-    PERF_OVERLAY_BACKGROUND(SettingKeys.performance_overlay_background(), Settings.SECTION_LAYOUT, false),
-    DELAY_START_LLE_MODULES(SettingKeys.delay_start_for_lle_modules(), Settings.SECTION_DEBUG, true),
-    DETERMINISTIC_ASYNC_OPERATIONS(SettingKeys.deterministic_async_operations(), Settings.SECTION_DEBUG, false),
-    REQUIRED_ONLINE_LLE_MODULES(SettingKeys.enable_required_online_lle_modules(), Settings.SECTION_SYSTEM, false),
+    PERF_OVERLAY_SHOW_FPS(
+        SettingKeys.performance_overlay_show_fps(),
+        Settings.SECTION_LAYOUT,
+        true
+    ),
+    PERF_OVERLAY_SHOW_FRAMETIME(
+        SettingKeys.performance_overlay_show_frame_time(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    PERF_OVERLAY_SHOW_SPEED(
+        SettingKeys.performance_overlay_show_speed(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    PERF_OVERLAY_SHOW_APP_RAM_USAGE(
+        SettingKeys.performance_overlay_show_app_ram_usage(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    PERF_OVERLAY_SHOW_AVAILABLE_RAM(
+        SettingKeys.performance_overlay_show_available_ram(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    PERF_OVERLAY_SHOW_BATTERY_TEMP(
+        SettingKeys.performance_overlay_show_battery_temp(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    PERF_OVERLAY_BACKGROUND(
+        SettingKeys.performance_overlay_background(),
+        Settings.SECTION_LAYOUT,
+        false
+    ),
+    DELAY_START_LLE_MODULES(
+        SettingKeys.delay_start_for_lle_modules(),
+        Settings.SECTION_DEBUG,
+        true
+    ),
+    DETERMINISTIC_ASYNC_OPERATIONS(
+        SettingKeys.deterministic_async_operations(),
+        Settings.SECTION_DEBUG,
+        false
+    ),
+    REQUIRED_ONLINE_LLE_MODULES(
+        SettingKeys.enable_required_online_lle_modules(),
+        Settings.SECTION_SYSTEM,
+        false
+    ),
     LLE_APPLETS(SettingKeys.lle_applets(), Settings.SECTION_SYSTEM, false),
     NEW_3DS(SettingKeys.is_new_3ds(), Settings.SECTION_SYSTEM, true),
     LINEAR_FILTERING(SettingKeys.filter_mode(), Settings.SECTION_RENDERER, true),
@@ -44,23 +88,43 @@ enum class BooleanSetting(
     PRELOAD_TEXTURES(SettingKeys.preload_textures(), Settings.SECTION_UTILITY, false),
     ENABLE_AUDIO_STRETCHING(SettingKeys.enable_audio_stretching(), Settings.SECTION_AUDIO, true),
     ENABLE_REALTIME_AUDIO(SettingKeys.enable_realtime_audio(), Settings.SECTION_AUDIO, false),
-    SIMULATE_HEADPHONES_PLUGGED(SettingKeys.simulate_headphones_plugged(), Settings.SECTION_AUDIO, false),
+    SIMULATE_HEADPHONES_PLUGGED(
+        SettingKeys.simulate_headphones_plugged(),
+        Settings.SECTION_AUDIO,
+        false
+    ),
     CPU_JIT(SettingKeys.use_cpu_jit(), Settings.SECTION_CORE, true),
     HW_SHADER(SettingKeys.use_hw_shader(), Settings.SECTION_RENDERER, true),
     SHADER_JIT(SettingKeys.use_shader_jit(), Settings.SECTION_RENDERER, true),
     VSYNC(SettingKeys.use_vsync(), Settings.SECTION_RENDERER, false),
     USE_FRAME_LIMIT(SettingKeys.use_frame_limit(), Settings.SECTION_RENDERER, true),
     DEBUG_RENDERER(SettingKeys.renderer_debug(), Settings.SECTION_DEBUG, false),
-    DISABLE_RIGHT_EYE_RENDER(SettingKeys.disable_right_eye_render(), Settings.SECTION_RENDERER, false),
-    USE_ARTIC_BASE_CONTROLLER(SettingKeys.use_artic_base_controller(), Settings.SECTION_CONTROLS, false),
+    DISABLE_RIGHT_EYE_RENDER(
+        SettingKeys.disable_right_eye_render(),
+        Settings.SECTION_RENDERER,
+        false
+    ),
+    USE_ARTIC_BASE_CONTROLLER(
+        SettingKeys.use_artic_base_controller(),
+        Settings.SECTION_CONTROLS,
+        false
+    ),
     UPRIGHT_SCREEN(SettingKeys.upright_screen(), Settings.SECTION_LAYOUT, false),
-    COMPRESS_INSTALLED_CIA_CONTENT(SettingKeys.compress_cia_installs(), Settings.SECTION_STORAGE, false),
+    COMPRESS_INSTALLED_CIA_CONTENT(
+        SettingKeys.compress_cia_installs(),
+        Settings.SECTION_STORAGE,
+        false
+    ),
     ASYNC_FS_OPERATIONS(SettingKeys.async_fs_operations(), Settings.SECTION_STORAGE, true),
     ANDROID_HIDE_IMAGES(SettingKeys.android_hide_images(), Settings.SECTION_MISC, false),
     APPLY_REGION_FREE_PATCH(SettingKeys.apply_region_free_patch(), Settings.SECTION_SYSTEM, true),
     USE_INTEGER_SCALING(SettingKeys.use_integer_scaling(), Settings.SECTION_RENDERER, false),
     ENABLE_SECONDARY_DISPLAY(SettingKeys.enable_secondary_display(), Settings.SECTION_LAYOUT, true),
-    SIMULATE_3DS_GPU_TIMINGS(SettingKeys.simulate_3ds_gpu_timings(), Settings.SECTION_RENDERER, true);
+    SIMULATE_3DS_GPU_TIMINGS(
+        SettingKeys.simulate_3ds_gpu_timings(),
+        Settings.SECTION_RENDERER,
+        true
+    );
 
     override var boolean: Boolean = defaultValue
 
@@ -80,7 +144,7 @@ enum class BooleanSetting(
     companion object {
         private val NOT_RUNTIME_EDITABLE = listOf(
             PLUGIN_LOADER,
-            ALLOW_PLUGIN_LOADER, 
+            ALLOW_PLUGIN_LOADER,
             ASYNC_SHADERS,
             DELAY_START_LLE_MODULES,
             DETERMINISTIC_ASYNC_OPERATIONS,

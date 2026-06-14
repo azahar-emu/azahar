@@ -70,7 +70,12 @@ class InputOverlayDrawableButton(
      *
      * @return true if value was changed
      */
-    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(
+        event: MotionEvent,
+        pointerIndex: Int,
+        hasActiveButtons: Boolean,
+        overlay: InputOverlay
+    ): Boolean {
         val buttonSliding = EmulationMenuSettings.buttonSlide
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()

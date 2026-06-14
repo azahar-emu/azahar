@@ -38,8 +38,8 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentSystemFilesBinding
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.SettingKeys
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.viewmodel.GamesViewModel
@@ -163,10 +163,12 @@ class SystemFilesFragment : Fragment() {
         binding.buttonUnlinkConsoleData.setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete_system_files)
-                .setMessage(HtmlCompat.fromHtml(
-                    requireContext().getString(R.string.delete_system_files_description),
-                    HtmlCompat.FROM_HTML_MODE_COMPACT
-                ))
+                .setMessage(
+                    HtmlCompat.fromHtml(
+                        requireContext().getString(R.string.delete_system_files_description),
+                        HtmlCompat.FROM_HTML_MODE_COMPACT
+                    )
+                )
                 .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                     NativeLibrary.unlinkConsole()
                     binding.buttonUnlinkConsoleData.isEnabled = NativeLibrary.isFullConsoleLinked()
@@ -178,7 +180,10 @@ class SystemFilesFragment : Fragment() {
         binding.buttonSetUpSystemFiles.setOnClickListener {
             val inflater = LayoutInflater.from(context)
             val inputBinding = DialogSoftwareKeyboardBinding.inflate(inflater)
-            var textInputValue: String = preferences.getString(SettingKeys.last_artic_base_addr(), "")!!
+            var textInputValue: String = preferences.getString(
+                SettingKeys.last_artic_base_addr(),
+                ""
+            )!!
 
             val progressDialog = showProgressDialog(
                 getText(R.string.setup_system_files),
@@ -273,9 +278,14 @@ class SystemFilesFragment : Fragment() {
                             .setView(inputBinding.root)
                             .setTitle(getString(R.string.setup_system_files_enter_address))
                             .setPositiveButton(android.R.string.ok) { diag, _ ->
-                                if (textInputValue.isNotEmpty() && !(!buttonO3ds.isChecked && !buttonN3ds.isChecked)) {
+                                if (textInputValue.isNotEmpty() &&
+                                    !(!buttonO3ds.isChecked && !buttonN3ds.isChecked)
+                                ) {
                                     preferences.edit()
-                                        .putString(SettingKeys.last_artic_base_addr(), textInputValue)
+                                        .putString(
+                                            SettingKeys.last_artic_base_addr(),
+                                            textInputValue
+                                        )
                                         .apply()
                                     val menu = Game(
                                         title = getString(R.string.artic_base),

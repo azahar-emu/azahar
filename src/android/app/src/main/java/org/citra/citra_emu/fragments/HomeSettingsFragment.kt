@@ -32,19 +32,19 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.HomeSettingAdapter
 import org.citra.citra_emu.databinding.DialogSoftwareKeyboardBinding
 import org.citra.citra_emu.databinding.FragmentHomeSettingsBinding
-import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.SettingKeys
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.ui.SettingsActivity
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.model.HomeSetting
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.GameHelper
-import org.citra.citra_emu.utils.PermissionsHandler
-import org.citra.citra_emu.viewmodel.HomeViewModel
 import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.DriverViewModel
+import org.citra.citra_emu.viewmodel.HomeViewModel
 
 class HomeSettingsFragment : Fragment() {
     private var _binding: FragmentHomeSettingsBinding? = null
@@ -89,7 +89,10 @@ class HomeSettingsFragment : Fragment() {
                 {
                     val inflater = LayoutInflater.from(context)
                     val inputBinding = DialogSoftwareKeyboardBinding.inflate(inflater)
-                    var textInputValue: String = preferences.getString(SettingKeys.last_artic_base_addr(), "")!!
+                    var textInputValue: String = preferences.getString(
+                        SettingKeys.last_artic_base_addr(),
+                        ""
+                    )!!
 
                     inputBinding.editTextInput.setText(textInputValue)
                     inputBinding.editTextInput.doOnTextChanged { text, _, _, _ ->
@@ -103,7 +106,10 @@ class HomeSettingsFragment : Fragment() {
                             .setPositiveButton(android.R.string.ok) { _, _ ->
                                 if (textInputValue.isNotEmpty()) {
                                     preferences.edit()
-                                        .putString(SettingKeys.last_artic_base_addr(), textInputValue)
+                                        .putString(
+                                            SettingKeys.last_artic_base_addr(),
+                                            textInputValue
+                                        )
                                         .apply()
                                     val menu = Game(
                                         title = getString(R.string.artic_base),
@@ -115,7 +121,7 @@ class HomeSettingsFragment : Fragment() {
                                     binding.root.findNavController().navigate(action)
                                 }
                             }
-                            .setNegativeButton(android.R.string.cancel) {_, _ -> }
+                            .setNegativeButton(android.R.string.cancel) { _, _ -> }
                             .show()
                     }
                 }
@@ -267,37 +273,36 @@ class HomeSettingsFragment : Fragment() {
         }
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { view: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
-            val spacingNavigationRail =
-                resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { view: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+        val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
+        val spacingNavigationRail =
+            resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
 
-            binding.scrollViewSettings.updatePadding(
-                top = barInsets.top,
-                bottom = barInsets.bottom
-            )
+        binding.scrollViewSettings.updatePadding(
+            top = barInsets.top,
+            bottom = barInsets.bottom
+        )
 
-            val mlpScrollSettings = binding.scrollViewSettings.layoutParams as MarginLayoutParams
-            mlpScrollSettings.leftMargin = leftInsets
-            mlpScrollSettings.rightMargin = rightInsets
-            binding.scrollViewSettings.layoutParams = mlpScrollSettings
+        val mlpScrollSettings = binding.scrollViewSettings.layoutParams as MarginLayoutParams
+        mlpScrollSettings.leftMargin = leftInsets
+        mlpScrollSettings.rightMargin = rightInsets
+        binding.scrollViewSettings.layoutParams = mlpScrollSettings
 
-            binding.linearLayoutSettings.updatePadding(bottom = spacingNavigation)
+        binding.linearLayoutSettings.updatePadding(bottom = spacingNavigation)
 
-            if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
-                binding.linearLayoutSettings.updatePadding(left = spacingNavigationRail)
-            } else {
-                binding.linearLayoutSettings.updatePadding(right = spacingNavigationRail)
-            }
-
-            windowInsets
+        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+            binding.linearLayoutSettings.updatePadding(left = spacingNavigationRail)
+        } else {
+            binding.linearLayoutSettings.updatePadding(right = spacingNavigationRail)
         }
+
+        windowInsets
+    }
 }

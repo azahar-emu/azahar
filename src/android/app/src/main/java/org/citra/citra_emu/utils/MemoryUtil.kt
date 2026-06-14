@@ -6,10 +6,10 @@ package org.citra.citra_emu.utils
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
-import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.R
 import java.util.Locale
 import kotlin.math.ceil
+import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.R
 
 object MemoryUtil {
     private val context get() = CitraApplication.appContext
@@ -24,58 +24,63 @@ object MemoryUtil {
     const val Pb = Tb * 1024
     const val Eb = Pb * 1024
 
-    fun bytesToSizeUnit(size: Float, roundUp: Boolean = false): String =
-        when {
-            size < Kb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    size.hundredths,
-                    context.getString(R.string.memory_byte_shorthand)
-                )
-            }
-            size < Mb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Kb) else (size / Kb).hundredths,
-                    context.getString(R.string.memory_kilobyte)
-                )
-            }
-            size < Gb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Mb) else (size / Mb).hundredths,
-                    context.getString(R.string.memory_megabyte)
-                )
-            }
-            size < Tb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Gb) else (size / Gb).hundredths,
-                    context.getString(R.string.memory_gigabyte)
-                )
-            }
-            size < Pb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Tb) else (size / Tb).hundredths,
-                    context.getString(R.string.memory_terabyte)
-                )
-            }
-            size < Eb -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Pb) else (size / Pb).hundredths,
-                    context.getString(R.string.memory_petabyte)
-                )
-            }
-            else -> {
-                context.getString(
-                    R.string.memory_formatted,
-                    if (roundUp) ceil(size / Eb) else (size / Eb).hundredths,
-                    context.getString(R.string.memory_exabyte)
-                )
-            }
+    fun bytesToSizeUnit(size: Float, roundUp: Boolean = false): String = when {
+        size < Kb -> {
+            context.getString(
+                R.string.memory_formatted,
+                size.hundredths,
+                context.getString(R.string.memory_byte_shorthand)
+            )
         }
+
+        size < Mb -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Kb) else (size / Kb).hundredths,
+                context.getString(R.string.memory_kilobyte)
+            )
+        }
+
+        size < Gb -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Mb) else (size / Mb).hundredths,
+                context.getString(R.string.memory_megabyte)
+            )
+        }
+
+        size < Tb -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Gb) else (size / Gb).hundredths,
+                context.getString(R.string.memory_gigabyte)
+            )
+        }
+
+        size < Pb -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Tb) else (size / Tb).hundredths,
+                context.getString(R.string.memory_terabyte)
+            )
+        }
+
+        size < Eb -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Pb) else (size / Pb).hundredths,
+                context.getString(R.string.memory_petabyte)
+            )
+        }
+
+        else -> {
+            context.getString(
+                R.string.memory_formatted,
+                if (roundUp) ceil(size / Eb) else (size / Eb).hundredths,
+                context.getString(R.string.memory_exabyte)
+            )
+        }
+    }
 
     val totalMemory: Float
         get() {
@@ -91,16 +96,15 @@ object MemoryUtil {
             }
         }
 
-    fun isLessThan(minimum: Int, size: Float): Boolean =
-        when (size) {
-            Kb -> totalMemory < Mb && totalMemory < minimum
-            Mb -> totalMemory < Gb && (totalMemory / Mb) < minimum
-            Gb -> totalMemory < Tb && (totalMemory / Gb) < minimum
-            Tb -> totalMemory < Pb && (totalMemory / Tb) < minimum
-            Pb -> totalMemory < Eb && (totalMemory / Pb) < minimum
-            Eb -> totalMemory / Eb < minimum
-            else -> totalMemory < Kb && totalMemory < minimum
-        }
+    fun isLessThan(minimum: Int, size: Float): Boolean = when (size) {
+        Kb -> totalMemory < Mb && totalMemory < minimum
+        Mb -> totalMemory < Gb && (totalMemory / Mb) < minimum
+        Gb -> totalMemory < Tb && (totalMemory / Gb) < minimum
+        Tb -> totalMemory < Pb && (totalMemory / Tb) < minimum
+        Pb -> totalMemory < Eb && (totalMemory / Pb) < minimum
+        Eb -> totalMemory / Eb < minimum
+        else -> totalMemory < Kb && totalMemory < minimum
+    }
 
     // Devices are unlikely to have 0.5GB increments of memory so we'll just round up to account for
     // the potential error created by memInfo.totalMem

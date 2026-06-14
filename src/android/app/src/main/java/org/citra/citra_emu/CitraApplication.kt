@@ -13,9 +13,9 @@ import android.os.Build
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.DocumentsTree
 import org.citra.citra_emu.utils.GpuDriverHelper
-import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.MemoryUtil
+import org.citra.citra_emu.utils.PermissionsHandler
 
 class CitraApplication : Application() {
     private fun createNotificationChannel() {
