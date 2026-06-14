@@ -176,8 +176,10 @@ class InputOverlayDrawableJoystick(
             this.yAxis = sin(angle.toDouble()).toFloat() * radius
             setInnerBounds()
 
-            if (kotlin.math.abs(oldRadius - radius) > .34f ||
-                radius > .5f && kotlin.math.abs(oldAngle - angle) > kotlin.math.PI / 8
+            if ((
+                    (kotlin.math.abs(oldRadius - radius) > .34f) ||
+                        (radius > .5f)
+                    ) && (kotlin.math.abs(oldAngle - angle) > kotlin.math.PI / 8)
             ) {
                 this.radius = radius
                 this.angle = angle

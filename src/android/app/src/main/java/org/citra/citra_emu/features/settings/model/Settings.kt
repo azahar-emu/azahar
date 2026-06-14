@@ -140,7 +140,7 @@ class Settings {
         const val HOTKEY_CLOSE_GAME = "hotkey_close_game"
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
-        const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
+        const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
         const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
 
         val buttonKeys = listOf(
@@ -208,7 +208,7 @@ class Settings {
             HOTKEY_CLOSE_GAME,
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
-            HOTKEY_QUICKlOAD,
+            HOTKEY_QUICKLOAD,
             HOTKEY_TURBO_LIMIT
         )
         val hotkeyTitles = listOf(

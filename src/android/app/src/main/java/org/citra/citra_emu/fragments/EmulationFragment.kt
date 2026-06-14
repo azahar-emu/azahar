@@ -1460,22 +1460,23 @@ class EmulationFragment :
         }
 
         if (BooleanSetting.PERF_OVERLAY_ENABLE.boolean) {
-            val SYSTEM_FPS = 0
-            val FPS = 1
-            val SPEED = 2
-            val FRAMETIME = 3
-            val TIME_SVC = 4
-            val TIME_IPC = 5
-            val TIME_GPU = 6
-            val TIME_SWAP = 7
-            val TIME_REM = 8
+            @Suppress("UnusedVariable")
+            val systemFps = 0
+            val fps = 1
+            val speed = 2
+            val frametime = 3
+            val timeSvc = 4
+            val timeIpc = 5
+            val timeGpu = 6
+            val timeSwap = 7
+            val timeRem = 8
             perfStatsUpdater = Runnable {
                 val sb = StringBuilder()
                 val perfStats = NativeLibrary.getPerfStats()
                 val dividerString = "\u00A0\u2502 "
-                if (perfStats[FPS] > 0) {
+                if (perfStats[fps] > 0) {
                     if (BooleanSetting.PERF_OVERLAY_SHOW_FPS.boolean) {
-                        sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
+                        sb.append(String.format("FPS:\u00A0%d", (perfStats[fps] + 0.5).toInt()))
                     }
 
                     if (BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME.boolean) {
@@ -1483,12 +1484,12 @@ class EmulationFragment :
                         sb.append(
                             String.format(
                                 "Frame:\u00A0%.1fms (GPU: [CMD:\u00A0%.1fms SWP:\u00A0%.1fms] IPC:\u00A0%.1fms SVC:\u00A0%.1fms Rem:\u00A0%.1fms)",
-                                (perfStats[FRAMETIME] * 1000.0f).toFloat(),
-                                (perfStats[TIME_GPU] * 1000.0f).toFloat(),
-                                (perfStats[TIME_SWAP] * 1000.0f).toFloat(),
-                                (perfStats[TIME_IPC] * 1000.0f).toFloat(),
-                                (perfStats[TIME_SVC] * 1000.0f).toFloat(),
-                                (perfStats[TIME_REM] * 1000.0f).toFloat()
+                                (perfStats[frametime] * 1000.0f).toFloat(),
+                                (perfStats[timeGpu] * 1000.0f).toFloat(),
+                                (perfStats[timeSwap] * 1000.0f).toFloat(),
+                                (perfStats[timeIpc] * 1000.0f).toFloat(),
+                                (perfStats[timeSvc] * 1000.0f).toFloat(),
+                                (perfStats[timeRem] * 1000.0f).toFloat()
                             )
                         )
                     }
@@ -1498,7 +1499,7 @@ class EmulationFragment :
                         sb.append(
                             String.format(
                                 "Speed:\u00A0%d%%",
-                                (perfStats[SPEED] * 100.0 + 0.5).toInt()
+                                (perfStats[speed] * 100.0 + 0.5).toInt()
                             )
                         )
                     }

@@ -159,12 +159,15 @@ class CheatsFragment :
     }
 
     private fun onSelectedCheatChanged(selectedCheat: Cheat?) {
-        val cheatSelected = selectedCheat != null || cheatsViewModel.isEditing.value!!
+        val cheatSelected = selectedCheat != null || cheatsViewModel.isEditing.value
         if (!cheatSelected && binding.slidingPaneLayout.isOpen) {
             binding.slidingPaneLayout.close()
         }
-        binding.slidingPaneLayout.lockMode =
-            if (cheatSelected) SlidingPaneLayout.LOCK_MODE_UNLOCKED else SlidingPaneLayout.LOCK_MODE_LOCKED_CLOSED
+        binding.slidingPaneLayout.lockMode = if (cheatSelected) {
+            SlidingPaneLayout.LOCK_MODE_UNLOCKED
+        } else {
+            SlidingPaneLayout.LOCK_MODE_LOCKED_CLOSED
+        }
     }
 
     fun onListViewFocusChange(hasFocus: Boolean) {
@@ -205,7 +208,8 @@ class CheatsFragment :
             val keyboardInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
 
             // Set keyboard insets if the system supports smooth keyboard animations
-            val mlpDetails = binding.cheatDetailsContainer.layoutParams as ViewGroup.MarginLayoutParams
+            val mlpDetails = binding.cheatDetailsContainer.layoutParams
+                as ViewGroup.MarginLayoutParams
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                 if (keyboardInsets.bottom > 0) {
                     mlpDetails.bottomMargin = keyboardInsets.bottom
@@ -233,7 +237,8 @@ class CheatsFragment :
                         runningAnimations: List<WindowInsetsAnimationCompat>
                     ): WindowInsetsCompat {
                         val mlpDetails =
-                            binding.cheatDetailsContainer.layoutParams as ViewGroup.MarginLayoutParams
+                            binding.cheatDetailsContainer.layoutParams
+                                as ViewGroup.MarginLayoutParams
                         keyboardInsets = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
                         barInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
                         mlpDetails.bottomMargin = keyboardInsets.coerceAtLeast(barInsets)

@@ -152,6 +152,7 @@ class SetupFragment : Fragment() {
                                         pageButtonCallback = it
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                             manageExternalStoragePermissionLauncher.launch(
+                                                @Suppress("ktlint:standard:max-line-length")
                                                 Intent(
                                                     android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                                                     Uri.fromParts(

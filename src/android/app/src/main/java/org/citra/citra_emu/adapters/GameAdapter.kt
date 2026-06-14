@@ -265,7 +265,8 @@ class GameAdapter(
         val extraDir: String
     )
     private fun getGameDirectories(game: Game): GameDirectories {
-        val basePath = "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000"
+        val basePath =
+            "sdmc/Nintendo 3DS/00000000000000000000000000000000/00000000000000000000000000000000"
         return GameDirectories(
             gameDir = game.path.substringBeforeLast("/"),
             saveDir =
@@ -556,7 +557,8 @@ class GameAdapter(
                         ).show()
                         return@setPositiveButton
                     }
-                    val iconBitmap = (dialogShortcutBinding!!.shortcutIcon.drawable as BitmapDrawable).bitmap
+                    val iconBitmap =
+                        (dialogShortcutBinding!!.shortcutIcon.drawable as BitmapDrawable).bitmap
                     val shortcutManager = activity.getSystemService(ShortcutManager::class.java)
 
                     CoroutineScope(Dispatchers.IO).launch {

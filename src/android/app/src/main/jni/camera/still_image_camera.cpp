@@ -17,10 +17,10 @@ namespace Camera::StillImage {
 void InitJNI(JNIEnv* env) {
     s_still_image_camera_helper_class = reinterpret_cast<jclass>(
         env->NewGlobalRef(env->FindClass("org/citra/citra_emu/camera/StillImageCameraHelper")));
-    s_open_file_picker = env->GetStaticMethodID(s_still_image_camera_helper_class, "OpenFilePicker",
+    s_open_file_picker = env->GetStaticMethodID(s_still_image_camera_helper_class, "openFilePicker",
                                                 "()Ljava/lang/String;");
     s_load_image_from_file =
-        env->GetStaticMethodID(s_still_image_camera_helper_class, "LoadImageFromFile",
+        env->GetStaticMethodID(s_still_image_camera_helper_class, "loadImageFromFile",
                                "(Ljava/lang/String;II)Landroid/graphics/Bitmap;");
 }
 

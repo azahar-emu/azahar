@@ -40,7 +40,7 @@ class KeyboardDialogFragment : DialogFragment() {
         isCancelable = false
 
         when (config.buttonConfig) {
-            SoftwareKeyboard.ButtonConfig.Triple -> {
+            SoftwareKeyboard.ButtonConfig.TRIPLE -> {
                 val negativeText =
                     config.buttonText[0].ifEmpty { getString(android.R.string.cancel) }
                 val neutralText = config.buttonText[1].ifEmpty { getString(R.string.i_forgot) }
@@ -50,7 +50,7 @@ class KeyboardDialogFragment : DialogFragment() {
                     .setPositiveButton(positiveText, null)
             }
 
-            SoftwareKeyboard.ButtonConfig.Dual -> {
+            SoftwareKeyboard.ButtonConfig.DUAL -> {
                 val negativeText =
                     config.buttonText[0].ifEmpty { getString(android.R.string.cancel) }
                 val positiveText = config.buttonText[2].ifEmpty { getString(android.R.string.ok) }
@@ -58,7 +58,7 @@ class KeyboardDialogFragment : DialogFragment() {
                     .setPositiveButton(positiveText, null)
             }
 
-            SoftwareKeyboard.ButtonConfig.Single -> {
+            SoftwareKeyboard.ButtonConfig.SINGLE -> {
                 val positiveText = config.buttonText[2].ifEmpty { getString(android.R.string.ok) }
                 builder.setPositiveButton(positiveText, null)
             }
@@ -74,7 +74,7 @@ class KeyboardDialogFragment : DialogFragment() {
                 SoftwareKeyboard.data.text = binding.editTextInput.text.toString()
                 val error = SoftwareKeyboard.ValidateInput(SoftwareKeyboard.data.text)
                 if (error != SoftwareKeyboard.ValidationError.None) {
-                    SoftwareKeyboard.HandleValidationError(config, error)
+                    SoftwareKeyboard.handleValidationError(config, error)
                     return@setOnClickListener
                 }
                 dismiss()

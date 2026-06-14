@@ -43,7 +43,7 @@ object NativeLibrary {
     /**
      * Default touchscreen device
      */
-    const val TouchScreenDevice = "Touchscreen"
+    const val TOUCHSCREEN_DEVICE = "Touchscreen"
 
     @JvmField
     var sEmulationActivity = WeakReference<EmulationActivity?>(null)
@@ -461,16 +461,18 @@ object NativeLibrary {
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             emulationActivity = requireActivity() as EmulationActivity
 
-            var coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
+            val coreError = CoreError.fromInt(requireArguments().getInt(RESULT_CODE))
             val title: String
             val message: String
             when (coreError) {
-                CoreError.ErrorGetLoader, CoreError.ErrorLoader_ErrorInvalidFormat, CoreError.ErrorSystemMode -> {
+                CoreError.ErrorGetLoader,
+                CoreError.ErrorLoaderErrorInvalidFormat,
+                CoreError.ErrorSystemMode -> {
                     title = getString(R.string.loader_error_invalid_format)
                     message = getString(R.string.loader_error_invalid_format_description)
                 }
 
-                CoreError.ErrorLoader_ErrorEncrypted -> {
+                CoreError.ErrorLoaderErrorEncrypted -> {
                     title = getString(R.string.loader_error_encrypted)
                     message = getString(R.string.loader_error_encrypted_description)
                 }
@@ -485,12 +487,12 @@ object NativeLibrary {
                     message = getString(R.string.loader_error_invalid_system_mode_description)
                 }
 
-                CoreError.ErrorLoader_ErrorPatches -> {
+                CoreError.ErrorLoaderErrorPatches -> {
                     title = getString(R.string.loader_error_applying_patches)
                     message = getString(R.string.loader_error_applying_patches_description)
                 }
 
-                CoreError.ErrorLoader_ErrorPatchesInvalidTitle -> {
+                CoreError.ErrorLoaderErrorPatchesInvalidTitle -> {
                     title = getString(R.string.loader_error_applying_patches)
                     message = getString(R.string.loader_error_patch_wrong_application)
                 }
@@ -878,11 +880,11 @@ object NativeLibrary {
         ErrorGetLoader(2, R.string.core_error_get_loader),
         ErrorSystemMode(3, R.string.core_error_system_mode),
         ErrorLoader(4, R.string.core_error_loader),
-        ErrorLoader_ErrorEncrypted(5, R.string.core_error_loader_encrypted),
-        ErrorLoader_ErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
-        ErrorLoader_ErrorGBATitle(7, R.string.core_error_loader_gba_title),
-        ErrorLoader_ErrorPatches(8, R.string.core_error_loader_error_patches),
-        ErrorLoader_ErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
+        ErrorLoaderErrorEncrypted(5, R.string.core_error_loader_encrypted),
+        ErrorLoaderErrorInvalidFormat(6, R.string.core_error_loader_invalid_format),
+        ErrorLoaderErrorGBATitle(7, R.string.core_error_loader_gba_title),
+        ErrorLoaderErrorPatches(8, R.string.core_error_loader_error_patches),
+        ErrorLoaderErrorPatchesInvalidTitle(9, R.string.core_error_loader_patches_invalid_title),
         ErrorSystemFiles(10, R.string.core_error_system_files),
         ErrorSavestate(11, R.string.core_error_savestate),
         ErrorArticDisconnected(12, R.string.core_error_artic_disconnected),
