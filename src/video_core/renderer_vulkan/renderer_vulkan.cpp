@@ -1037,7 +1037,7 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
 
     if (layout.additional_screen_enabled) {
         const auto& additional_screen = layout.additional_screen;
-        if (!Settings::values.swap_screen.GetValue()) {
+        if (!layout.additional_screen_is_bottom) {
             DrawTopScreen(layout, additional_screen);
         } else {
             DrawBottomScreen(layout, additional_screen);
