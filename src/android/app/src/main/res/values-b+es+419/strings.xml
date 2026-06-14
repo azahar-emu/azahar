@@ -212,7 +212,6 @@
     <string name="storage">Almacenamiento</string>
     <string name="compress_cia_installs">Comprimir contenido CIA instalado</string>
     <string name="compress_cia_installs_description">Comprime el contenido de archivos CIA cuando son instalados a la SD emulada. Solo afecta contenido CIA instalado con esta opción activada.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Cámara interior</string>
     <string name="outer_left_camera">Cámara izquierda externa</string>

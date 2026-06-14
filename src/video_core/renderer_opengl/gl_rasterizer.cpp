@@ -666,8 +666,21 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
 
         // If the texture unit is disabled unbind the corresponding gl unit
         if (!texture.enabled) {
-            const Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
-            state.texture_units[texture_index].texture_2d = null_surface.Handle();
+            switch (texture.config.type.Value()) {
+            case TextureType::TextureCube:
+            case TextureType::ShadowCube: {
+                state.texture_units[texture_index].texture_2d =
+                    res_cache.GetSurface(VideoCore::NULL_SURFACE_CUBE_ID).Handle();
+                state.texture_units[texture_index].target = GL_TEXTURE_CUBE_MAP;
+                break;
+            }
+            default: {
+                state.texture_units[texture_index].texture_2d =
+                    res_cache.GetSurface(VideoCore::NULL_SURFACE_ID).Handle();
+                state.texture_units[texture_index].target = GL_TEXTURE_2D;
+                break;
+            }
+            }
             continue;
         }
 

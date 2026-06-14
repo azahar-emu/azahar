@@ -57,7 +57,9 @@
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/debugger/ipc/recorder.h"
 #include "citra_qt/debugger/lle_service_modules.h"
+#if MICROPROFILE_ENABLED
 #include "citra_qt/debugger/profiler.h"
+#endif
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
 #ifdef USE_DISCORD_PRESENCE
@@ -712,11 +714,6 @@ void GMainWindow::InitializeDebugWidgets() {
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();
     debug_menu->addAction(microProfileDialog->toggleViewAction());
-#else
-    auto micro_profile_stub = new QAction(tr("MicroProfile (unavailable)"), this);
-    micro_profile_stub->setEnabled(false);
-    micro_profile_stub->setChecked(false);
-    debug_menu->addAction(micro_profile_stub);
 #endif
 
     registersWidget = new RegistersWidget(system, this);
@@ -855,10 +852,11 @@ void GMainWindow::InitializeHotkeys() {
 
     // QAction Hotkeys
     const auto link_action_shortcut = [&](QAction* action, const QString& action_name,
-                                          const bool primary_only = false) {
+                                          const bool primary_only = false,
+                                          const bool auto_repeat = false) {
         static const QString main_window = QStringLiteral("Main Window");
         action->setShortcut(hotkey_registry.GetKeySequence(main_window, action_name));
-        action->setAutoRepeat(false);
+        action->setAutoRepeat(auto_repeat);
         this->addAction(action);
         if (!primary_only)
             secondary_window->addAction(action);
@@ -875,6 +873,11 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Show_Status_Bar, QStringLiteral("Toggle Status Bar"));
     link_action_shortcut(ui->action_Fullscreen, fullscreen, true);
     link_action_shortcut(ui->action_Capture_Screenshot, QStringLiteral("Capture Screenshot"));
+    link_action_shortcut(ui->action_Debug_Pause, QStringLiteral("Debug Pause"));
+    link_action_shortcut(ui->action_Debug_Resume, QStringLiteral("Debug Resume"));
+    link_action_shortcut(ui->action_Debug_Step, QStringLiteral("Debug Step"), false, true);
+    link_action_shortcut(ui->action_Debug_Unschedule_All, QStringLiteral("Debug Unschedule All"));
+    link_action_shortcut(ui->action_Debug_Schedule_All, QStringLiteral("Debug Schedule All"));
     link_action_shortcut(ui->action_Screen_Layout_Swap_Screens, QStringLiteral("Swap Screens"));
     link_action_shortcut(ui->action_Screen_Layout_Upright_Screens,
                          QStringLiteral("Rotate Screens Upright"));
@@ -1189,6 +1192,27 @@ void GMainWindow::ConnectMenuEvents() {
     connect_menu(ui->action_Capture_Screenshot, &GMainWindow::OnCaptureScreenshot);
     connect_menu(ui->action_Dump_Video, &GMainWindow::OnDumpVideo);
 
+    // Tools debug
+    connect_menu(ui->action_Debug_Pause, [this] {
+        if (emu_thread) {
+            emu_thread->SetRunning(false);
+        }
+    });
+    connect_menu(ui->action_Debug_Resume, [this] {
+        if (emu_thread) {
+            emu_thread->SetRunning(true);
+        }
+    });
+    connect_menu(ui->action_Debug_Step, [this] {
+        if (emu_thread) {
+            emu_thread->ExecStep();
+        }
+    });
+    connect_menu(ui->action_Debug_Unschedule_All,
+                 [this] { system.DebugUnscheduleAllThreadsFromFrontend(true); });
+    connect_menu(ui->action_Debug_Schedule_All,
+                 [this] { system.DebugUnscheduleAllThreadsFromFrontend(false); });
+
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
     connect_menu(ui->action_Decompress_ROM_File, &GMainWindow::OnDecompressFile);
@@ -1345,61 +1369,39 @@ bool GMainWindow::LoadROM(const QString& filename) {
         system.Load(*render_window, filename.toStdString(), secondary_window)};
 
     if (result != Core::System::ResultStatus::Success) {
+        QString invalid_format = tr("Invalid application format");
+        QString invalid_format_description =
+            tr("The application file format not supported.<br>Please make sure you are using one "
+               "of the compatible file formats:<ul><li>Cartridge images: "
+               "<b>.cci/.zcci/.3ds</b></li><li>Installable archives: "
+               "<b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
+               "containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>");
+
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
             LOG_CRITICAL(Frontend, "Failed to obtain loader for {}", filename.toStdString());
-            QMessageBox::critical(
-                this, tr("Invalid App Format"),
-                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorSystemMode:
-            LOG_CRITICAL(Frontend, "Failed to load App!");
-            QMessageBox::critical(
-                this, tr("App Corrupted"),
-                tr("Your app is corrupted. <br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            LOG_CRITICAL(Frontend, "Failed to load application!");
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
-            QMessageBox::critical(this, tr("App Encrypted"),
-                                  tr("Your app is encrypted. <br/>"
+            QMessageBox::critical(this, tr("Encrypted application"),
+                                  tr("Encrypted applications are not supported.<br/>"
                                      "<a "
                                      "href='https://azahar-emu.org/blog/game-loading-changes/'>"
                                      "Please check our blog for more info.</a>"));
             break;
         }
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
-            QMessageBox::critical(
-                this, tr("Invalid App Format"),
-                tr("Your app format is not supported.<br/>Please follow the guides to redump your "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/"
-                   "dumping-game-cartridges/'>game "
-                   "cartridges</a> or "
-                   "<a "
-                   "href='https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/"
-                   "dumping-installed-titles/'>installed "
-                   "titles</a>."));
+            QMessageBox::critical(this, invalid_format, invalid_format_description);
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorGbaTitle:
-            QMessageBox::critical(this, tr("Unsupported App"),
+            QMessageBox::critical(this, tr("Unsupported application"),
                                   tr("GBA Virtual Console is not supported by Azahar."));
             break;
 
@@ -1416,10 +1418,27 @@ bool GMainWindow::LoadROM(const QString& filename) {
                                   tr("New 3DS exclusive applications cannot be loaded without "
                                      "enabling the New 3DS mode."));
             break;
+        case Core::System::ResultStatus::ErrorLoader:
+            QMessageBox::critical(this, tr("Generic load error"),
+                                  tr("An generic load error occurred while loading the "
+                                     "application.<br/>Please check the log for more details."));
+            break;
+        case Core::System::ResultStatus::ErrorLoader_ErrorPatches:
+            QMessageBox::critical(this, tr("Error applying patches"),
+                                  tr("A generic error occurred while applying a patch to the "
+                                     "application.<br/>Please check the log for more details."));
+            break;
+        case Core::System::ResultStatus::ErrorLoader_ErrorPatchesInvalidTitle:
+            QMessageBox::critical(
+                this, tr("Error applying patches"),
+                tr("Failed to apply a patch because it is designed for a different "
+                   "application.<br/>Please make sure you are using the patches for "
+                   "the right application, region and version."));
+            break;
         default:
             QMessageBox::critical(
-                this, tr("Error while loading App!"),
-                tr("An unknown error occurred. Please see the log for more details."));
+                this, tr("Error while loading application"),
+                tr("An unknown error occurred.<br/>Please see the log for more details."));
             break;
         }
         return false;
@@ -1478,7 +1497,8 @@ void GMainWindow::BootGame(const QString& filename) {
     auto loader = Loader::GetLoader(path);
 
     u64 title_id{0};
-    Loader::ResultStatus res = loader->ReadProgramId(title_id);
+    Loader::ResultStatus res =
+        loader ? loader->ReadProgramId(title_id) : Loader::ResultStatus::Error;
 
     if (Loader::ResultStatus::Success == res) {
         // Load per game settings
@@ -1491,7 +1511,7 @@ void GMainWindow::BootGame(const QString& filename) {
 
     // Artic Server cannot accept a client multiple times, so multiple loaders are not
     // possible. Instead register the app loader early and do not create it again on system load.
-    if (!loader->SupportsMultipleInstancesForSameFile()) {
+    if (loader && !loader->SupportsMultipleInstancesForSameFile()) {
         system.RegisterAppLoaderEarly(loader);
     }
 
@@ -3218,64 +3238,6 @@ void GMainWindow::OnDumpVideo() {
     }
 }
 
-static std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
-    const std::string& filepath, bool compress) {
-    Loader::AppLoader::CompressFileInfo compress_info{};
-    compress_info.is_supported = false;
-    size_t frame_size{};
-    auto loader = Loader::GetLoader(filepath);
-    if (loader) {
-        compress_info = loader->GetCompressFileInfo();
-        frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_FRAME_SIZE;
-    } else {
-        bool is_compressed = false;
-        if (Service::AM::CheckCIAToInstall(filepath, is_compressed, compress ? true : false) ==
-            Service::AM::InstallStatus::Success) {
-            compress_info.is_supported = true;
-            compress_info.is_compressed = is_compressed;
-            compress_info.recommended_compressed_extension = "zcia";
-            compress_info.recommended_uncompressed_extension = "cia";
-            compress_info.underlying_magic = std::array<u8, 4>({'C', 'I', 'A', '\0'});
-            frame_size = FileUtil::Z3DSWriteIOFile::DEFAULT_CIA_FRAME_SIZE;
-            if (compress) {
-                auto meta_info = Service::AM::GetCIAInfos(filepath);
-                if (meta_info.Succeeded()) {
-                    const auto& meta_info_val = meta_info.Unwrap();
-                    std::vector<u8> value(sizeof(Service::AM::TitleInfo));
-                    memcpy(value.data(), &meta_info_val.first, sizeof(Service::AM::TitleInfo));
-                    compress_info.default_metadata.emplace("titleinfo", value);
-                    if (meta_info_val.second) {
-                        value.resize(sizeof(Loader::SMDH));
-                        memcpy(value.data(), meta_info_val.second.get(), sizeof(Loader::SMDH));
-                        compress_info.default_metadata.emplace("smdh", value);
-                    }
-                }
-            }
-        }
-    }
-
-    if (!compress_info.is_supported) {
-        LOG_ERROR(Frontend,
-                  "Error {} file {}, the selected file is not a compatible 3DS ROM format or is "
-                  "encrypted.",
-                  compress ? "compressing" : "decompressing", filepath);
-        return {};
-    }
-    if (compress_info.is_compressed && compress) {
-        LOG_ERROR(Frontend, "Error compressing file {}, the selected file is already compressed",
-                  filepath);
-        return {};
-    }
-    if (!compress_info.is_compressed && !compress) {
-        LOG_ERROR(Frontend,
-                  "Error decompressing file {}, the selected file is already decompressed",
-                  filepath);
-        return {};
-    }
-
-    return std::pair(compress_info, frame_size);
-}
-
 void GMainWindow::OnCompressFile() {
     // NOTE: Encrypted files SHOULD NEVER be compressed, otherwise the resulting
     // compressed file will have very poor compression ratios, due to the high
@@ -3298,7 +3260,7 @@ void GMainWindow::OnCompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = GetCompressFileInfo(filepaths[0].toStdString(), true);
+        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), true);
         if (!compress_info.has_value()) {
             emit CompressFinished(true, false);
             return;
@@ -3338,7 +3300,7 @@ void GMainWindow::OnCompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = GetCompressFileInfo(filepath.toStdString(), true);
+            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), true);
             if (!compress_info.has_value()) {
                 total_success = false;
                 continue;
@@ -3391,7 +3353,7 @@ void GMainWindow::OnDecompressFile() {
     bool single_file = filepaths.size() == 1;
     if (single_file) {
         // If it's a single file, ask the user for the output file.
-        auto compress_info = GetCompressFileInfo(filepaths[0].toStdString(), false);
+        auto compress_info = Loader::GetCompressFileInfo(filepaths[0].toStdString(), false);
         if (!compress_info.has_value()) {
             emit CompressFinished(false, false);
             return;
@@ -3432,7 +3394,7 @@ void GMainWindow::OnDecompressFile() {
             std::string in_path = filepath.toStdString();
 
             // Identify file type
-            auto compress_info = GetCompressFileInfo(filepath.toStdString(), false);
+            auto compress_info = Loader::GetCompressFileInfo(filepath.toStdString(), false);
             if (!compress_info.has_value()) {
                 total_success = false;
                 continue;
@@ -3880,6 +3842,18 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
+        title = tr("An exception occurred");
+        message = tr("An exception occurred while executing the emulated application.\n\n");
+        message += QString::fromStdString(details);
+        error_severity_icon = QMessageBox::Icon::Critical;
+        can_continue = false;
+    } else if (result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
+        title = tr("An invalid memory access occurred");
+        message =
+            tr("An invalid memory access occurred while executing the emulated application.\n\n");
+        message += QString::fromStdString(details);
+        error_severity_icon = QMessageBox::Icon::Critical;
     } else {
         title = tr("Fatal Error");
         message = tr("A fatal error occurred. "
@@ -4106,25 +4080,48 @@ void GMainWindow::UpdateUITheme() {
 }
 
 void GMainWindow::LoadTranslation() {
+    bool loaded = false;
+
+    const QString lang_en = QStringLiteral("en");
+    const QString languages_dir = QStringLiteral(":/languages/");
+
+    // Workaround for incorrect Qt system language detection
+    // TODO: Allow the "<System>" option to actually be selected rather than overriding the
+    //       selected language option? Current behaviour is better than the issue it fixes,
+    //       but not ideal.
+    if (UISettings::values.language.isEmpty()) {
+        const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+        for (const auto& lang : languages) {
+            // If the first language found is English, no need to install any translation
+            if (lang == lang_en) {
+                UISettings::values.language = lang_en;
+                return;
+            }
+            loaded = translator.load(lang, languages_dir);
+            if (loaded) {
+                UISettings::values.language = lang;
+                break;
+            }
+        }
+    }
+
     // If the selected language is English, no need to install any translation
-    if (UISettings::values.language == QStringLiteral("en")) {
+    if (UISettings::values.language == lang_en) {
         return;
     }
 
-    bool loaded;
-
-    if (UISettings::values.language.isEmpty()) {
+    if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
+        loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, QStringLiteral(":/languages/"));
+        loaded = translator.load(UISettings::values.language, languages_dir);
     }
 
     if (loaded) {
         qApp->installTranslator(&translator);
     } else {
-        UISettings::values.language = QStringLiteral("en");
+        UISettings::values.language = lang_en;
     }
 }
 

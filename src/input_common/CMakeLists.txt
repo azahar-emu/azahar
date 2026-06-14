@@ -1,4 +1,4 @@
-add_library(input_common STATIC
+add_library(input_common STATIC EXCLUDE_FROM_ALL
     analog_from_button.cpp
     analog_from_button.h
     keyboard.cpp

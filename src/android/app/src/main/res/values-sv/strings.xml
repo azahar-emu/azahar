@@ -212,7 +212,6 @@
     <string name="storage">Lagring</string>
     <string name="compress_cia_installs">Komprimera installerat CIA-innehåll</string>
     <string name="compress_cia_installs_description">Komprimerar innehållet i CIA-filer när det installeras på det emulerade SD-kortet. Påverkar endast CIA-innehåll som installeras medan inställningen är aktiverad.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innerkamera</string>
     <string name="outer_left_camera">Yttre vänstra kameran</string>
@@ -370,7 +369,6 @@
     <string name="learn_more">Lär dig mer</string>
     <string name="close">Stäng</string>
     <string name="reset_to_default">Återställ till standard</string>
-    <string name="redump_games"><![CDATA[Följ anvisningarna för att göra en ny dump av dina <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">spelkassetter</a> eller <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">installerade titlarna</a>.]]></string>
     <string name="option_default">Standard</string>
     <string name="none">Ingen</string>
     <string name="auto">Auto</string>
@@ -412,9 +410,7 @@
     <string name="preferences_theme">Tema och färg</string>
     <string name="preferences_layout">Layout</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Ditt ROM är krypterat</string>
-    <string name="loader_error_invalid_format"> Ogiltigt ROM-format</string>
     <string name="loader_error_file_not_found">ROM-filen finns inte</string>
     <string name="no_game_present">Inget startbart spel närvarande!</string>
 

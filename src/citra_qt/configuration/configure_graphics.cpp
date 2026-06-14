@@ -154,6 +154,7 @@ void ConfigureGraphics::SetConfiguration() {
         ui->toggle_display_refresh_rate_detection->setChecked(
             Settings::values.use_display_refresh_rate_detection.GetValue());
     }
+    ui->simulate_3ds_gpu_timings->setChecked(Settings::values.simulate_3ds_gpu_timings.GetValue());
 }
 
 void ConfigureGraphics::ApplyConfiguration() {
@@ -182,6 +183,9 @@ void ConfigureGraphics::ApplyConfiguration() {
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.delay_game_render_thread_us, ui->delay_render_combo,
         [this](s32) { return ui->delay_render_slider->value(); });
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.simulate_3ds_gpu_timings,
+                                             ui->simulate_3ds_gpu_timings,
+                                             simulate_3ds_gpu_timings);
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
@@ -212,6 +216,8 @@ void ConfigureGraphics::SetupPerGameUI() {
         ui->physical_device_combo->setEnabled(Settings::values.physical_device.UsingGlobal());
         ui->delay_render_combo->setEnabled(
             Settings::values.delay_game_render_thread_us.UsingGlobal());
+        ui->simulate_3ds_gpu_timings->setEnabled(
+            Settings::values.simulate_3ds_gpu_timings.UsingGlobal());
         return;
     }
 
@@ -254,6 +260,9 @@ void ConfigureGraphics::SetupPerGameUI() {
     ConfigurationShared::SetColoredTristate(ui->disable_spirv_optimizer,
                                             Settings::values.disable_spirv_optimizer,
                                             disable_spirv_optimizer);
+    ConfigurationShared::SetColoredTristate(ui->simulate_3ds_gpu_timings,
+                                            Settings::values.simulate_3ds_gpu_timings,
+                                            simulate_3ds_gpu_timings);
 }
 
 void ConfigureGraphics::SetPhysicalDeviceComboVisibility(int index) {

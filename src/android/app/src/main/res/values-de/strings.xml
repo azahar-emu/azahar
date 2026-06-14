@@ -193,7 +193,6 @@
     <string name="storage">Speicher</string>
     <string name="compress_cia_installs">Komprimiere installierten CIA Kontent</string>
     <string name="compress_cia_installs_description">Komprimiert den Inhalt von CIA-Dateien, wenn diese auf der emulierten SD-Karte installiert werden. Betrifft nur CIA-Inhalte, die installiert werden, während die Einstellung aktiviert ist.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -375,9 +374,7 @@
     <string name="preferences_theme">Design und Farbe</string>
     <string name="preferences_layout">Anordnung</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Deine ROM ist verschlüsselt</string>
-    <string name="loader_error_invalid_format">Ungültiges ROM-Format</string>
     <string name="loader_error_file_not_found">ROM-Datei existiert nicht</string>
     <string name="no_game_present">Kein ausführbares Spiel vorhanden!</string>
 

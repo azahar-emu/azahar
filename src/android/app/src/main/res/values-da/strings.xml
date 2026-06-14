@@ -203,7 +203,6 @@
     <string name="storage">Lager</string>
     <string name="compress_cia_installs">Komprimer installeret CIA-indhold</string>
     <string name="compress_cia_installs_description">Komprimerer indholdet af CIA-filer, når de installeres på det emulerede SD-kort. Påvirker kun CIA-indhold, der installeres, når indstillingen er aktiveret.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -396,9 +395,7 @@
     <string name="preferences_theme">Tema og farve</string>
     <string name="preferences_layout">Layout</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Din ROM er krypteret</string>
-    <string name="loader_error_invalid_format">Ugyldigt ROM-format</string>
     <string name="loader_error_file_not_found">ROM-fil eksisterer ikke</string>
     <string name="no_game_present">Intet startbart spil til stede!</string>
 

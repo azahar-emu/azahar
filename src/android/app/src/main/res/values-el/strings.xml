@@ -122,7 +122,6 @@
     <string name="preferences_theme">Θέμα και χρώμα</string>
     <string name="preferences_layout">Διάταξη</string>
 
-    <string name="loader_error_invalid_format">Μη έγκυρη μορφή ROM</string>
     <string name="emulation_save_state">Αποθήκευση κατάστασης</string>
     <string name="emulation_load_state">Φόρτωση κατάστασης</string>
     <string name="emulation_edit_layout">Επεξεργασία διάταξης</string>

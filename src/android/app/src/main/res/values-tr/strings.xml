@@ -88,6 +88,7 @@
     <string name="cannot_skip">Kullanıcı klasörü ayarlamayı atlayamazsınız</string>
     <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
     <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
+    <string name="invalid_selection">Geçersiz Seçim</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
     <string name="setup_theme_settings_description">Azahar için tema tercihlerinizi yapılandırın.</string>
     <string name="setup_set_theme">Tema Ayarla</string>
@@ -346,9 +347,7 @@
     <string name="preferences_theme">Tema ve Renk</string>
     <string name="preferences_layout">Düzen</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">ROM\'unuz Şifreli</string>
-    <string name="loader_error_invalid_format">Geçersiz ROM formatı</string>
     <string name="loader_error_file_not_found">ROM dosyası mevcut değil</string>
     <string name="no_game_present">Başlatılabilir oyun yok!</string>
 

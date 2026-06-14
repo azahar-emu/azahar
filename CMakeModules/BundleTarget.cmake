@@ -198,6 +198,10 @@ if (BUNDLE_TARGET_EXECUTE)
 
     # On Linux, always bundle an AppImage.
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        if (IS_MINGW)
+            return()
+        endif()
+
         if (IN_PLACE)
             message(FATAL_ERROR "Cannot bundle for Linux in-place.")
         endif()
@@ -273,15 +277,23 @@ else()
 
         # On Linux, add a command to prepare linuxdeploy and any required plugins before any bundling occurs.
         if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-            add_custom_command(
-                TARGET bundle
-                COMMAND ${CMAKE_COMMAND}
-                "-DBUNDLE_TARGET_DOWNLOAD_LINUXDEPLOY=1"
-                "-DLINUXDEPLOY_PATH=${CMAKE_BINARY_DIR}/externals/linuxdeploy"
-                "-DLINUXDEPLOY_ARCH=${CMAKE_HOST_SYSTEM_PROCESSOR}"
-                -P "${CMAKE_SOURCE_DIR}/CMakeModules/BundleTarget.cmake"
-                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-                POST_BUILD)
+            if (MINGW)
+                add_custom_command(
+                        TARGET bundle
+                        # The target here is arbitrary
+                        COMMAND cp -r "$<TARGET_FILE_DIR:citra_meta>/*" "${CMAKE_BINARY_DIR}/bundle/"
+                        POST_BUILD)
+            else()
+                add_custom_command(
+                    TARGET bundle
+                    COMMAND ${CMAKE_COMMAND}
+                    "-DBUNDLE_TARGET_DOWNLOAD_LINUXDEPLOY=1"
+                    "-DLINUXDEPLOY_PATH=${CMAKE_BINARY_DIR}/externals/linuxdeploy"
+                    "-DLINUXDEPLOY_ARCH=${CMAKE_HOST_SYSTEM_PROCESSOR}"
+                    -P "${CMAKE_SOURCE_DIR}/CMakeModules/BundleTarget.cmake"
+                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+                    POST_BUILD)
+            endif()
         endif()
     endfunction()
 
@@ -291,6 +303,11 @@ else()
         # Create base bundle target if it does not exist.
         if (NOT in_place AND NOT TARGET bundle)
             create_base_bundle_target()
+        endif()
+
+        if (CMAKE_HOST_SYSTEM STREQUAL "Linux" AND MINGW)
+            # We don't really need to "bundle" MXE builds, so don't do anything
+            return()
         endif()
 
         set(bundle_executable_path "$<TARGET_FILE:${target_name}>")
@@ -331,6 +348,7 @@ else()
             "-DBUNDLE_LIBRARY_PATHS=\"${bundle_library_paths}\""
             "-DBUNDLE_QT=${bundle_qt}"
             "-DIN_PLACE=${in_place}"
+            "-DIS_MINGW=${MINGW}"
             "-DLINUXDEPLOY=${CMAKE_BINARY_DIR}/externals/linuxdeploy/squashfs-root/AppRun"
             -P "${CMAKE_SOURCE_DIR}/CMakeModules/BundleTarget.cmake"
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")

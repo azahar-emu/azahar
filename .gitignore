@@ -60,3 +60,6 @@ VULKAN_SDK/
 # Version info files
 GIT-COMMIT
 GIT-TAG
+
+# verify-release.sh downloads
+verify/

@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -13,6 +13,7 @@
 #include <boost/container/static_vector.hpp>
 #include <boost/serialization/export.hpp>
 #include "common/bit_field.h"
+#include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
@@ -50,6 +51,13 @@ union ProcessFlags {
         memory_region;                ///< Default region for memory allocations for this process
     BitField<12, 1, u16> loaded_high; ///< Application loaded high (not at 0x00100000).
 };
+
+enum class UnscheduleMode : u32 {
+    SVC = (1 << 0),
+    GDB = (1 << 1),
+    FRONTEND = (1 << 2),
+};
+DECLARE_ENUM_FLAG_OPERATORS(UnscheduleMode);
 
 enum class ProcessStatus { Created, Running, Exited };
 
@@ -226,7 +234,17 @@ public:
     Result Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
                  bool privileged = false);
 
+    std::vector<std::shared_ptr<Kernel::Thread>> GetThreadList();
+
+    void SetUnscheduleMode(UnscheduleMode mode, std::vector<u32> thread_ids = {}) {
+        ChangeUnscheduleMode(mode, thread_ids, true);
+    }
+    void ClearUnscheduleMode(UnscheduleMode mode, std::vector<u32> thread_ids = {}) {
+        ChangeUnscheduleMode(mode, thread_ids, false);
+    }
+
 private:
+    void ChangeUnscheduleMode(UnscheduleMode mode, std::vector<u32> thread_ids, bool set);
     void FreeAllMemory();
 
     KernelSystem& kernel;
