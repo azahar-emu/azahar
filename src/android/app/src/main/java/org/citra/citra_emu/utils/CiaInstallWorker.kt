@@ -9,6 +9,7 @@ import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -16,12 +17,8 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.NativeLibrary.InstallStatus
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.FileUtil.getFilename
-import androidx.core.net.toUri
 
-class CiaInstallWorker(
-    val context: Context,
-    params: WorkerParameters
-) : Worker(context, params) {
+class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(context, params) {
     private val GROUP_KEY_CIA_INSTALL_STATUS = "org.citra.citra_emu.CIA_INSTALL_STATUS"
     private var lastNotifiedTime: Long = 0
     private val SUMMARY_NOTIFICATION_ID = 0xC1A0000
@@ -123,7 +120,8 @@ class CiaInstallWorker(
         val selectedFiles = inputData.getStringArray("CIA_FILES")!!
         val toastText: CharSequence = context.resources.getQuantityString(
             R.plurals.cia_install_toast,
-            selectedFiles.size, selectedFiles.size
+            selectedFiles.size,
+            selectedFiles.size
         )
         context.mainExecutor.execute {
             Toast.makeText(context, toastText, Toast.LENGTH_LONG).show()

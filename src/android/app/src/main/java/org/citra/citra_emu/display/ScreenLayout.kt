@@ -13,11 +13,8 @@ enum class ScreenLayout(val int: Int) {
     HYBRID_SCREEN(4),
     CUSTOM_LAYOUT(5);
 
-
     companion object {
-        fun from(int: Int): ScreenLayout {
-            return entries.firstOrNull { it.int == int } ?: LARGE_SCREEN
-        }
+        fun from(int: Int): ScreenLayout = entries.firstOrNull { it.int == int } ?: LARGE_SCREEN
     }
 }
 
@@ -32,9 +29,7 @@ enum class SmallScreenPosition(val int: Int) {
     BELOW(7);
 
     companion object {
-        fun from(int: Int): SmallScreenPosition {
-            return entries.firstOrNull { it.int == int } ?: TOP_RIGHT
-        }
+        fun from(int: Int): SmallScreenPosition = entries.firstOrNull { it.int == int } ?: TOP_RIGHT
     }
 }
 
@@ -45,9 +40,8 @@ enum class PortraitScreenLayout(val int: Int) {
     ORIGINAL(2);
 
     companion object {
-        fun from(int: Int): PortraitScreenLayout {
-            return entries.firstOrNull { it.int == int } ?: TOP_FULL_WIDTH
-        }
+        fun from(int: Int): PortraitScreenLayout =
+            entries.firstOrNull { it.int == int } ?: TOP_FULL_WIDTH
     }
 }
 
@@ -66,9 +60,7 @@ enum class SecondaryDisplayLayout(val int: Int) {
     ;
 
     companion object {
-        fun from(int: Int): SecondaryDisplayLayout {
-            return entries.firstOrNull { it.int == int } ?: NONE
-        }
+        fun from(int: Int): SecondaryDisplayLayout = entries.firstOrNull { it.int == int } ?: NONE
     }
 }
 
@@ -81,26 +73,22 @@ enum class StereoWhichDisplay(val int: Int) {
     SECONDARY_ONLY(3);
 
     companion object {
-        fun from(int: Int): StereoWhichDisplay {
-            return entries.firstOrNull { it.int == int } ?: NONE
-        }
+        fun from(int: Int): StereoWhichDisplay = entries.firstOrNull { it.int == int } ?: NONE
     }
 }
 
 enum class StereoMode(val int: Int) {
-     // These must match what is defined in src/common/settings.h
+    // These must match what is defined in src/common/settings.h
 
     OFF(0),
     SIDE_BY_SIDE(1),
     SIDE_BY_SIDE_FULL(2),
     ANAGLYPH(3),
     INTERLACED(4),
-    REVERSE_INTERLACED (5),
-    CARDBOARD_VR (6);
+    REVERSE_INTERLACED(5),
+    CARDBOARD_VR(6);
 
     companion object {
-        fun from(int: Int): StereoMode {
-            return entries.firstOrNull { it.int == int } ?: OFF
-        }
+        fun from(int: Int): StereoMode = entries.firstOrNull { it.int == int } ?: OFF
     }
 }

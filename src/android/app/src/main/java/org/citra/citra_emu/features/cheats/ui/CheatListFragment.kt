@@ -128,7 +128,7 @@ class CheatListFragment : Fragment() {
                 left = leftInsets,
                 right = rightInsets,
                 bottom = barInsets.bottom +
-                        resources.getDimensionPixelSize(R.dimen.spacing_fab_list)
+                    resources.getDimensionPixelSize(R.dimen.spacing_fab_list)
             )
 
             val mlpFab = binding.fab.layoutParams as MarginLayoutParams

@@ -4,15 +4,15 @@
 
 package org.citra.citra_emu.display
 
+import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.app.Activity
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.BooleanSetting
-import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.utils.EmulationMenuSettings
@@ -20,7 +20,7 @@ import org.citra.citra_emu.utils.EmulationMenuSettings
 class ScreenAdjustmentUtil(
     private val context: Context,
     private val windowManager: WindowManager,
-    private val settings: Settings,
+    private val settings: Settings
 ) {
     fun swapScreen() {
         val isEnabled = !EmulationMenuSettings.swapScreens
@@ -34,14 +34,15 @@ class ScreenAdjustmentUtil(
     }
 
     fun cycleLayouts() {
-
-        val landscapeLayoutsToCycle = IntListSetting.LAYOUTS_TO_CYCLE.list;
+        val landscapeLayoutsToCycle = IntListSetting.LAYOUTS_TO_CYCLE.list
         val landscapeValues =
-            if (landscapeLayoutsToCycle.isNotEmpty())
+            if (landscapeLayoutsToCycle.isNotEmpty()) {
                 landscapeLayoutsToCycle.toIntArray()
-            else context.resources.getIntArray(
-                R.array.landscapeValues
-            )
+            } else {
+                context.resources.getIntArray(
+                    R.array.landscapeValues
+                )
+            }
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
         if (NativeLibrary.isPortraitMode) {
@@ -73,7 +74,7 @@ class ScreenAdjustmentUtil(
 
     fun changeSecondaryOrientation(layoutOption: Int) {
         IntSetting.SECONDARY_DISPLAY_LAYOUT.int = layoutOption
-        settings.saveSetting(IntSetting.SECONDARY_DISPLAY_LAYOUT,SettingsFile.FILE_NAME_CONFIG)
+        settings.saveSetting(IntSetting.SECONDARY_DISPLAY_LAYOUT, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
     }
@@ -102,6 +103,5 @@ class ScreenAdjustmentUtil(
         settings.saveSetting(BooleanSetting.UPRIGHT_SCREEN, SettingsFile.FILE_NAME_CONFIG)
         NativeLibrary.reloadSettings()
         NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
-
     }
 }

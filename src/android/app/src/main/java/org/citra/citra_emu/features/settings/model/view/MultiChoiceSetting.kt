@@ -25,7 +25,7 @@ class MultiChoiceSetting(
             try {
                 val setting = setting as IntListSetting
                 return setting.list
-            }catch (_: ClassCastException) {
+            } catch (_: ClassCastException) {
             }
             return defaultValue!!
         }
@@ -42,5 +42,4 @@ class MultiChoiceSetting(
         intSetting.list = selection
         return intSetting
     }
-
 }

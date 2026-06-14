@@ -52,9 +52,7 @@ class CopyDirProgressDialog : DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return binding.root
-    }
+    ): View = binding.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -144,7 +142,8 @@ class CopyDirProgressDialog : DialogFragment() {
                                 callback?.onStepCompleted(0, false)
                                 viewModel.setCopyComplete(true)
                             }
-                        })
+                        }
+                    )
                 }
             }
             return CopyDirProgressDialog()

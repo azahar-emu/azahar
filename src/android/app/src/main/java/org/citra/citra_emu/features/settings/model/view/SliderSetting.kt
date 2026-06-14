@@ -29,8 +29,11 @@ class SliderSetting(
 
             val ret = when (setting) {
                 is AbstractIntSetting -> setting.int.toFloat()
+
                 is FloatSetting -> setting.float
+
                 is ScaledFloatSetting -> setting.float
+
                 else -> {
                     Log.error("[SliderSetting] Error casting setting type.")
                     -1f
@@ -38,6 +41,7 @@ class SliderSetting(
             }
             return ret.coerceIn(min.toFloat(), max.toFloat())
         }
+
     /**
      * Write a value to the backing int. If that int was previously null,
      * initializes a new one and returns it, so it can be added to the Hashmap.

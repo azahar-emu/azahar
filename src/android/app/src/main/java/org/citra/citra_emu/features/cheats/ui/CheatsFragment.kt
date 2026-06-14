@@ -32,7 +32,9 @@ import org.citra.citra_emu.ui.TwoPaneOnBackPressedCallback
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
-class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
+class CheatsFragment :
+    Fragment(),
+    SlidingPaneLayout.PanelSlideListener {
     private var cheatListLastFocus: View? = null
     private var cheatDetailsLastFocus: View? = null
 
@@ -238,7 +240,8 @@ class CheatsFragment : Fragment(), SlidingPaneLayout.PanelSlideListener {
                         binding.cheatDetailsContainer.layoutParams = mlpDetails
                         return insets
                     }
-                })
+                }
+            )
         }
     }
 }

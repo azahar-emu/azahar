@@ -46,9 +46,9 @@ import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.ControllerMappingHelper
-import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
@@ -334,11 +334,13 @@ class EmulationActivity : AppCompatActivity() {
                 }
                 return hotkeyUtility.handleKeyPress(event)
             }
+
             KeyEvent.ACTION_UP -> {
                 return hotkeyUtility.handleKeyRelease(event)
             }
+
             else -> {
-                return false;
+                return false
             }
         }
     }
@@ -358,7 +360,8 @@ class EmulationActivity : AppCompatActivity() {
         // TODO: Move this check into native code - prevents crash if input pressed before starting emulation
         if (!NativeLibrary.isRunning() ||
             (event.source and InputDevice.SOURCE_CLASS_JOYSTICK == 0) ||
-            emulationFragment.isDrawerOpen()) {
+            emulationFragment.isDrawerOpen()
+        ) {
             return super.dispatchGenericMotionEvent(event)
         }
 
@@ -387,7 +390,10 @@ class EmulationActivity : AppCompatActivity() {
                 preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
             val guestOrientation =
                 preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
-            val inverted = preferences.getBoolean(InputBindingSetting.getInputAxisInvertedKey(axis),false);
+            val inverted = preferences.getBoolean(
+                InputBindingSetting.getInputAxisInvertedKey(axis),
+                false
+            )
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped
                 continue
@@ -396,7 +402,7 @@ class EmulationActivity : AppCompatActivity() {
                 // Skip joystick wobble
                 value = 0f
             }
-            if (inverted) value = -value;
+            if (inverted) value = -value
 
             when (nextMapping) {
                 NativeLibrary.ButtonType.STICK_LEFT -> {
@@ -573,7 +579,9 @@ class EmulationActivity : AppCompatActivity() {
         registerForActivityResult(OpenFileResultContract()) { result: Intent? ->
             if (result == null) return@registerForActivityResult
             val selectedFiles = FileBrowserHelper.getSelectedFiles(
-                result, applicationContext, listOf<String>("bin")
+                result,
+                applicationContext,
+                listOf<String>("bin")
             ) ?: return@registerForActivityResult
             if (BuildUtil.isGooglePlayBuild) {
                 onAmiiboSelected(selectedFiles[0])
@@ -596,8 +604,6 @@ class EmulationActivity : AppCompatActivity() {
     companion object {
         private var instance: EmulationActivity? = null
 
-        fun isRunning(): Boolean {
-            return instance?.isEmulationRunning ?: false
-        }
+        fun isRunning(): Boolean = instance?.isEmulationRunning ?: false
     }
 }

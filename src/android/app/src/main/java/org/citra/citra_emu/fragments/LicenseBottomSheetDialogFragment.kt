@@ -57,9 +57,7 @@ class LicenseBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         const val LICENSE = "License"
 
-        fun newInstance(
-            license: License
-        ): LicenseBottomSheetDialogFragment {
+        fun newInstance(license: License): LicenseBottomSheetDialogFragment {
             val dialog = LicenseBottomSheetDialogFragment()
             val bundle = Bundle()
             bundle.putParcelable(LICENSE, license)

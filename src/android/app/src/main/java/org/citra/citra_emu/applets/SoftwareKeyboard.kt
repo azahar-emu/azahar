@@ -7,13 +7,13 @@ package org.citra.citra_emu.applets
 import android.text.InputFilter
 import android.text.Spanned
 import androidx.annotation.Keep
+import java.io.Serializable
 import org.citra.citra_emu.CitraApplication.Companion.appContext
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.fragments.KeyboardDialogFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.utils.Log
-import java.io.Serializable
 
 @Keep
 object SoftwareKeyboard {
@@ -81,17 +81,17 @@ object SoftwareKeyboard {
     private external fun ValidateFilters(text: String): ValidationError
     external fun ValidateInput(text: String): ValidationError
 
-    /// Corresponds to Frontend::ButtonConfig
+    // / Corresponds to Frontend::ButtonConfig
     interface ButtonConfig {
         companion object {
-            const val Single = 0 /// Ok button
-            const val Dual = 1 /// Cancel | Ok buttons
-            const val Triple = 2 /// Cancel | I Forgot | Ok buttons
-            const val None = 3 /// No button (returned by swkbdInputText in special cases)
+            const val Single = 0 // / Ok button
+            const val Dual = 1 // / Cancel | Ok buttons
+            const val Triple = 2 // / Cancel | I Forgot | Ok buttons
+            const val None = 3 // / No button (returned by swkbdInputText in special cases)
         }
     }
 
-    /// Corresponds to Frontend::ValidationError
+    // / Corresponds to Frontend::ValidationError
     enum class ValidationError {
         None,
 
@@ -128,7 +128,7 @@ object SoftwareKeyboard {
         lateinit var buttonText: Array<String>
     }
 
-    /// Corresponds to Frontend::KeyboardData
+    // / Corresponds to Frontend::KeyboardData
     class KeyboardData(var button: Int, var text: String)
     class Filter : InputFilter {
         override fun filter(

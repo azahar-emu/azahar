@@ -10,7 +10,9 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 abstract class SettingViewHolder(itemView: View, protected val adapter: SettingsAdapter) :
-    RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
+    RecyclerView.ViewHolder(itemView),
+    View.OnClickListener,
+    View.OnLongClickListener {
 
     init {
         itemView.setOnClickListener(this)

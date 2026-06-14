@@ -5,9 +5,9 @@
 package org.citra.citra_emu.applets
 
 import androidx.annotation.Keep
+import java.io.Serializable
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.fragments.MiiSelectorDialogFragment
-import java.io.Serializable
 
 @Keep
 object MiiSelector {
@@ -43,5 +43,5 @@ object MiiSelector {
         lateinit var miiNames: Array<String>
     }
 
-    class MiiSelectorData (var returnCode: Long, var index: Int)
+    class MiiSelectorData(var returnCode: Long, var index: Int)
 }

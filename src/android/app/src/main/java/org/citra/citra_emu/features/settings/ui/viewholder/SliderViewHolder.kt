@@ -31,7 +31,9 @@ class SliderViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAda
         binding.textSettingValue.text = when (setting.setting) {
             is ScaledFloatSetting ->
                 "${(setting.setting as ScaledFloatSetting).float.toInt()}${setting.units}"
+
             is FloatSetting -> "${(setting.setting as AbstractFloatSetting).float}${setting.units}"
+
             else -> "${(setting.setting as AbstractIntSetting).int}${setting.units}"
         }
 

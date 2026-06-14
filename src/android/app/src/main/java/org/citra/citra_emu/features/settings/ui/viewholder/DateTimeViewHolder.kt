@@ -6,16 +6,16 @@ package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.annotation.SuppressLint
 import android.view.View
-import org.citra.citra_emu.databinding.ListItemSettingBinding
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import org.citra.citra_emu.databinding.ListItemSettingBinding
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
-import java.text.SimpleDateFormat
 
 class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder(binding.root, adapter) {
@@ -39,7 +39,7 @@ class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsA
             val time = setting.value.substringAfter(" ")
 
             val formatter = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssZZZZ")
-            val gmt = formatter.parse("${date}T${time}+0000")
+            val gmt = formatter.parse("${date}T$time+0000")
             gmt!!.time / 1000
         }
         val instant = Instant.ofEpochMilli(epochTime * 1000)
