@@ -695,6 +695,7 @@ void RendererOpenGL::AttachUniforms(){
     uniform_o_resolution = glGetUniformLocation(state.draw.shader_program, "o_resolution");
     uniform_convert_colors = glGetUniformLocation(state.draw.shader_program, "convert_colors");
     uniform_fsr_sharpening = glGetUniformLocation(state.draw.shader_program, "FSR_SHARPENING");
+    uniform_sgsr_sharpening = glGetUniformLocation(state.draw.shader_program, "EdgeSharpness");
     uniform_layer = glGetUniformLocation(state.draw.shader_program, "layer");
     attrib_position = glGetAttribLocation(state.draw.shader_program, "vert_position");
     attrib_tex_coord = glGetAttribLocation(state.draw.shader_program, "vert_tex_coord");
@@ -722,7 +723,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
     int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
     scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
-    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/ 100.0f));
+    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/100.0f));
+    float sgsr_sharpening = 1 + (Settings::values.fsr_sharpness.GetValue()/100.0f);
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
             isDownsampling = true;
@@ -1189,7 +1191,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.Apply();
                 AttachUniforms();
                 state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
-                state.texture_units[0].sampler = samplers[1].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform1f(uniform_sgsr_sharpening, sgsr_sharpening);
                 glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
                 state.Apply();
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());

@@ -215,7 +215,7 @@
             <item>
              <widget class="QLabel" name="fsr_sharpness_label">
               <property name="text">
-               <string>FSR Sharpness</string>
+               <string>FSR/SGSR Sharpness</string>
               </property>
              </widget>
             </item>

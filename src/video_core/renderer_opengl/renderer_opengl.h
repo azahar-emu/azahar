@@ -139,7 +139,7 @@ private:
     GLuint uniform_convert_colors;
     
     GLuint uniform_fsr_sharpening;
-
+    GLuint uniform_sgsr_sharpening;
     // Shader uniform for Dolphin compatibility
     GLuint uniform_i_resolution;
     GLuint uniform_o_resolution;

@@ -74,7 +74,7 @@ void ConfigureEnhancements::SetConfiguration() {
         ui->output_scaling_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.output_scaling.GetValue()));
     }
-    ui->fsr_sharpness_slider->setEnabled(ui->output_scaling_combobox->currentIndex() == 3);
+    ui->fsr_sharpness_slider->setEnabled((ui->output_scaling_combobox->currentIndex() == 3) || ui->output_scaling_combobox->currentIndex() == 4);
     ui->render_3d_combobox->setCurrentIndex(
         static_cast<int>(Settings::values.render_3d.GetValue()));
     ui->swap_eyes_3d->setChecked(Settings::values.swap_eyes_3d.GetValue());
@@ -91,11 +91,11 @@ void ConfigureEnhancements::SetConfiguration() {
 }
 
 void ConfigureEnhancements::SetFSRSharpnessIndicatorText(int percentage) {
-    ui->fsr_sharpness_indicator->setText(tr("%1%", "FSR Sharpness (e.g. 50%)").arg(percentage));
+    ui->fsr_sharpness_indicator->setText(tr("%1%", "FSR/SGSR Sharpness (e.g. 50%)").arg(percentage));
 }
 
 void ConfigureEnhancements::SetFSRSharpnessEnabled(int output) {
-        ui->fsr_sharpness_slider->setEnabled(output == 3);
+        ui->fsr_sharpness_slider->setEnabled(output == 3 || output == 4);
 }
 void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
     ui->shader_combobox->clear();

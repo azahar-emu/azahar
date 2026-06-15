@@ -26,6 +26,8 @@ layout (push_constant, std140) uniform DrawInfo {
     int layer;
     int reverse_interlaced;
     int convert_colors;
+    float FSR_SHARPENING;
+		float EdgeSharpness;
 };
 
 ////////////////////////
@@ -46,7 +48,6 @@ layout (push_constant, std140) uniform DrawInfo {
 */
 #define UseEdgeDirection
 #define EdgeThreshold 4.0/255.0
-#define EdgeSharpness 2.0
 
 ////////////////////////
 ////////////////////////

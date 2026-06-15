@@ -34,7 +34,7 @@ uniform highp vec4 i_resolution;
 */
 #define UseEdgeDirection
 #define EdgeThreshold 4.0/255.0
-#define EdgeSharpness 2.0
+uniform float EdgeSharpness;
 
 ////////////////////////
 ////////////////////////

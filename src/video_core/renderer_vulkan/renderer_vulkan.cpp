@@ -1560,7 +1560,8 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
     int scalingMode; // 0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
     scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
-    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/ 100.0f));
+    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/100.0f));
+    float sgsr_sharpening = 1 + (Settings::values.fsr_sharpness.GetValue()/100.0f);
     if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
         if (textureWidth > screenWidth){
             isDownsampling = true;
@@ -1801,15 +1802,18 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             texturesToSample.assign({antialiasTextures[currScreen]});
             PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
             UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
-            drawInfos[currentPass].convert_colors = 0;
+            drawInfos[currentPass].convert_colors = 2;
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
             Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
             currentPass++;
         } else {
             // SGSR
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 1);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 0);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            drawInfos[currentPass].EdgeSharpness = sgsr_sharpening;
             Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
             currentPass++;
             

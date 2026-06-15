@@ -94,8 +94,9 @@ struct PresentUniformData {
     int reverse_interlaced = 0;
     int convert_colors;
     float FSR_SHARPENING;
+    float EdgeSharpness;
 };
-static_assert(sizeof(PresentUniformData) == 120,
+static_assert(sizeof(PresentUniformData) == 124,
               "PresentUniformData does not structure in shader!");
 
 class RendererVulkan : public VideoCore::RendererBase {
