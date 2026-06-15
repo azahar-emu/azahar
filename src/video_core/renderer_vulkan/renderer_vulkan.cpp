@@ -1810,7 +1810,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         } else {
             // SGSR
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 0);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 1);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
             drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
             drawInfos[currentPass].EdgeSharpness = sgsr_sharpening;

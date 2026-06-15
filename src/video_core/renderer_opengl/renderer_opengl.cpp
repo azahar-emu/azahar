@@ -1191,7 +1191,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.Apply();
                 AttachUniforms();
                 state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
-                state.texture_units[0].sampler = samplers[0].handle;
+                state.texture_units[0].sampler = samplers[1].handle;
                 glUniform1f(uniform_sgsr_sharpening, sgsr_sharpening);
                 glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
                 state.Apply();
