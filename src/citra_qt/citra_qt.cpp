@@ -3845,6 +3845,7 @@ void GMainWindow::UpdateOutputScalingIndicator(bool update) {
         QStringLiteral("BILINEAR"),
         QStringLiteral("ADAPTIVE"),
         QStringLiteral("FSR"),
+        QStringLiteral("SGSR"),
         QStringLiteral("SHARP BILINEAR"),
     };
 

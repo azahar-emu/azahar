@@ -101,7 +101,7 @@ static_assert(sizeof(PresentUniformData) == 120,
 class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
     static constexpr std::size_t POST_PIPELINES_SCREEN = 2;
-    static constexpr std::size_t POST_PIPELINES_TEXTURE = 7;
+    static constexpr std::size_t POST_PIPELINES_TEXTURE = 8;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
@@ -201,12 +201,12 @@ private:
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
-    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1
+    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1 and SGSR
     std::array<vk::Pipeline, POST_PIPELINES_TEXTURE> post_pipelines_texture;
     // Post Processing Pipelines for presenting to screen. Contains: Area Sampling and Sharp Bilinear
     std::array<vk::Pipeline, POST_PIPELINES_SCREEN> post_pipelines_screen;
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
-    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1
+    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1 and SGSR
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_vert_shaders_texture;
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_frag_shaders_texture;
     // Post Processing Shaders for presenting to screen. Contains: Area Sampling and Sharp Bilinear
@@ -240,6 +240,8 @@ private:
     // Array of framebuffer objects. 0 is top screen, 1 is bottom screen.
     std::array<std::array<vk::Framebuffer, 7>, 2> intermediateTextureFBOs;
     std::array<vk::Framebuffer, 2 > antialiasTextureFBOs;
+    
+    // Intermediate Textures/FBOs at output size. These are 3 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
     std::array<std::array<std::array<TextureInfo, 3>, 3>, 2> intermediateOutputSizeTextures;
     std::array<std::array<std::array<vk::Framebuffer, 3>, 3>, 2> intermediateOutputSizeTextureFBOs;
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;

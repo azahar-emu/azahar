@@ -123,7 +123,8 @@ enum class OutputScaling : u32 {
     Bilinear = 1,
     Adaptive = 2,
     FSR = 3,
-    SharpBilinear = 4,
+    SGSR = 4,
+    SharpBilinear = 5,
 };
 
 enum class TextureSampling : u32 {

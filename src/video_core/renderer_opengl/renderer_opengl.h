@@ -107,17 +107,18 @@ private:
     OGLProgram AREA_SAMPLING_shader;
     OGLProgram FSR_PASS_0_shader;
     OGLProgram FSR_PASS_1_shader;
+    OGLProgram SGSR_shader;
     OGLProgram SharpBilinear_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 
     // OpenGL objects for post processing
     OGLFramebuffer textureFBO;
-    //Textures for Top and Bottom Screen Respectively
+    // Textures for Top and Bottom Screen Respectively
     std::array<std::array<OGLTexture, 7>, 2> intermediateTextures;
     std::array<OGLTexture, 2> antialiasFBOTexture;
 
-    //Intermediate Textures at output size. These are for Top Screen, Bottom Screen and Additional Screen Respectively
+    // Intermediate Textures at output size. These are 3 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
     std::array<std::array<std::array<OGLTexture, 3>, 3>, 2> intermediateOutputSizeTextures;
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;

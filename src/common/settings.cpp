@@ -80,6 +80,8 @@ std::string_view GetOutputScalingName(OutputScaling scaling) {
         return "Adaptive";
     case OutputScaling::FSR:
         return "AMD FidelityFX Super Resolution 1";
+    case OutputScaling::SGSR:
+        return "Snapdragon Game Super Resolution 1";
     case OutputScaling::SharpBilinear:
         return "Sharp Bilinear";
     default:

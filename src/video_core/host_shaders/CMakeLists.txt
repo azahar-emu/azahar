@@ -27,6 +27,10 @@ set(SHADER_FILES
     post_processing/FSR/vulkan_fsr_pass0.vert
     post_processing/FSR/vulkan_fsr_pass1.frag
     post_processing/FSR/vulkan_fsr_pass1.vert
+    post_processing/SGSR/opengl_sgsr.frag
+    post_processing/SGSR/opengl_sgsr.vert
+    post_processing/SGSR/vulkan_sgsr.frag
+    post_processing/SGSR/vulkan_sgsr.vert
     post_processing/FXAA/opengl_fxaa.frag
     post_processing/FXAA/opengl_fxaa.vert
     post_processing/FXAA/vulkan_fxaa.frag
