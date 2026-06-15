@@ -1795,7 +1795,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
             currentPass++;
         }    
-    } else if (scalingMode = 4) {
+    } else if (scalingMode == 4) {
         if (isDownsampling){
             // Area Sample
             texturesToSample.assign({antialiasTextures[currScreen]});
@@ -1807,9 +1807,9 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         } else {
             // SGSR
             texturesToSample.assign({antialiasTextures[currScreen]});
-            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 0);
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[7], texturesToSample, 1);
             UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
-            drawInfos[currentPass].o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            drawInfos[currentPass].i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
             Draw(vertexBufferPointers[currentPass], drawInfos[currentPass]);
             currentPass++;
             

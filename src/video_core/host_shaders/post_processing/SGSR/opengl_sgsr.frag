@@ -14,7 +14,7 @@ precision highp int;
 layout(location = 0) in highp vec2 frag_tex_coord;
 layout(location = 0) out vec4 fragColor;
 layout(binding = 0) uniform mediump sampler2D color_texture;
-uniform highp vec4 o_resolution;
+uniform highp vec4 i_resolution;
 
 ////////////////////////
 // USER CONFIGURATION //
@@ -87,7 +87,7 @@ vec2 edgeDirection(vec4 left, vec4 right)
 
 void main()
 {
-	vec4 viewportInfo = vec4(0, 0, o_resolution.x, o_resolution.y);
+	vec4 viewportInfo = vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y);
 	vec4 color;
 	if(OperationMode == 1)
 		color.xyz = textureLod(color_texture,frag_tex_coord.xy,0.0).xyz;

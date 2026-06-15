@@ -99,7 +99,7 @@ vec2 edgeDirection(vec4 left, vec4 right)
 
 void main()
 {
-	vec4 viewportInfo = vec4(0, 0, o_resolution.x, o_resolution.y);
+	vec4 viewportInfo = vec4(i_resolution.z, i_resolution.w, i_resolution.x, i_resolution.y);
 	vec4 color;
 	if(OperationMode == 1)
 		color.xyz = textureLod(color_texture,frag_tex_coord.xy,0.0).xyz;

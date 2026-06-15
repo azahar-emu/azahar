@@ -1189,8 +1189,8 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
                 state.Apply();
                 AttachUniforms();
                 state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
-                state.texture_units[0].sampler = samplers[0].handle;
-                glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                state.texture_units[0].sampler = samplers[1].handle;
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
                 state.Apply();
                 glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
