@@ -82,7 +82,6 @@ class HotkeyUtility(
             // this is a hotkey button
             if (hotkeyButtons.contains(button)) {
                 currentlyPressedButtons.remove(button)
-                handleHotkeyRelease(button)
                 if (!currentlyPressedButtons.any { hotkeyButtons.contains(it) }) {
                     // all hotkeys are no longer pressed
                     hotkeyIsPressed = false
@@ -106,14 +105,6 @@ class HotkeyUtility(
             }
         }
         return handled
-    }
-
-    fun handleHotkeyRelease(bindedButton: Int): Boolean {
-        // Log.debug("Handling hotkey button release: " + bindedButton)
-        if (bindedButton == Hotkey.COMBO_BUTTON.button) {
-            ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
-        }
-        return true
     }
 
     fun handleHotkey(bindedButton: Int): Boolean {
@@ -146,6 +137,7 @@ class HotkeyUtility(
             }
             Hotkey.COMBO_BUTTON.button -> {
                 ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
+                ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
             }
 
             else -> {}
