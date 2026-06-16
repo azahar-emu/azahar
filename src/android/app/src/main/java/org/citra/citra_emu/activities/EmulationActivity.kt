@@ -64,7 +64,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private lateinit var secondaryDisplay: SecondaryDisplay
+    lateinit var secondaryDisplayManager: SecondaryDisplay
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launched_from_shortcut", false)) {
@@ -102,8 +102,8 @@ class EmulationActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        secondaryDisplay = SecondaryDisplay(this)
-        secondaryDisplay.updateDisplay()
+        secondaryDisplayManager = SecondaryDisplay(this)
+        secondaryDisplayManager.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
@@ -188,7 +188,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        secondaryDisplay.releasePresentation()
+        secondaryDisplayManager.releasePresentation()
         super.onStop()
     }
 
@@ -199,7 +199,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
-        secondaryDisplay.updateDisplay()
+        secondaryDisplayManager.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -222,8 +222,8 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
-        secondaryDisplay.releasePresentation()
-        secondaryDisplay.releaseVD()
+        secondaryDisplayManager.releasePresentation()
+        secondaryDisplayManager.releaseVD()
 
         super.onDestroy()
     }

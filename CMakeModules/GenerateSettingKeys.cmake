@@ -238,6 +238,7 @@ if (ANDROID)
         "android_hide_images"
         "screen_orientation"
         "performance_overlay_position"
+        "enable_secondary_display"
         "combo_buttons"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})

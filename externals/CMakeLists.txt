@@ -69,17 +69,9 @@ if(USE_SYSTEM_CRYPTOPP)
     add_library(cryptopp INTERFACE)
     target_link_libraries(cryptopp INTERFACE cryptopp::cryptopp)
 else()
-    if (WIN32 AND NOT MSVC AND "arm64" IN_LIST ARCHITECTURE)
-        # TODO: CryptoPP ARM64 ASM does not seem to support Windows unless compiled with MSVC.
-        # TODO: See https://github.com/weidai11/cryptopp/issues/1260
-        set(CRYPTOPP_DISABLE_ASM ON CACHE BOOL "")
-    endif()
-
-    set(CRYPTOPP_BUILD_DOCUMENTATION OFF CACHE BOOL "")
     set(CRYPTOPP_BUILD_TESTING OFF CACHE BOOL "")
     set(CRYPTOPP_INSTALL OFF CACHE BOOL "")
-    set(CRYPTOPP_SOURCES "${CMAKE_SOURCE_DIR}/externals/cryptopp" CACHE STRING "")
-    add_subdirectory(cryptopp-cmake EXCLUDE_FROM_ALL)
+    add_subdirectory(cryptopp EXCLUDE_FROM_ALL)
 endif()
 
 # dds-ktx

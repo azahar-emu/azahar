@@ -121,7 +121,7 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
-option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" ON)
 option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
@@ -411,13 +411,21 @@ if (APPLE)
     endif()
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
-    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY})
 
     if (ENABLE_VULKAN AND NOT ENABLE_LIBRETRO)
-        if (NOT USE_SYSTEM_MOLTENVK)
+        if (USE_SYSTEM_MOLTENVK)
+            find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+        else()
             download_moltenvk()
+            if (IOS)
+                set(MOLTENVK_RELATIVE_LIBPATH "static/MoltenVK.xcframework/ios-arm64/libMoltenVK.a")
+            else()
+                set(MOLTENVK_RELATIVE_LIBPATH "dynamic/dylib/macOS/libMoltenVK.dylib")
+            endif()
+            set(MOLTENVK_LIBRARY "${CMAKE_BINARY_DIR}/externals/MoltenVK/MoltenVK/${MOLTENVK_RELATIVE_LIBPATH}")
         endif()
-        find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+
         message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
         set(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${MOLTENVK_LIBRARY})
     endif()
