@@ -8,6 +8,7 @@ plugins {
     id("com.android.library") version "8.13.2" apply false
     id("org.jetbrains.kotlin.android") version "2.0.20" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
 
 tasks.register("clean").configure {
@@ -17,6 +18,7 @@ tasks.register("clean").configure {
 buildscript {
     repositories {
         google()
+        mavenCentral()
     }
     dependencies {
         classpath("androidx.navigation:navigation-safe-args-gradle-plugin:2.8.0")

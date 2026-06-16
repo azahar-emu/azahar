@@ -12,6 +12,7 @@ plugins {
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "2.0.20"
     id("androidx.navigation.safeargs.kotlin")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 /**
@@ -241,6 +242,11 @@ val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLay
 
 tasks.named("preBuild") {
     dependsOn(unzipVulkanValidationLayers)
+    dependsOn("ktlintCheck")
+}
+
+ktlint {
+    version = "1.8.0"
 }
 
 fun getGitVersion(): String {
