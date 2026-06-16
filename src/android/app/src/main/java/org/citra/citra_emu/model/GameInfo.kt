@@ -5,7 +5,6 @@
 package org.citra.citra_emu.model
 
 import androidx.annotation.Keep
-import java.io.IOException
 
 class GameInfo(path: String) {
     @Keep

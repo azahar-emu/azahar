@@ -6,7 +6,6 @@ package org.citra.citra_emu.display
 
 import android.app.Activity
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.view.WindowManager
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R

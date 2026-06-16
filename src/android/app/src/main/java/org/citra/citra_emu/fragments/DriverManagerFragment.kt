@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.DriverAdapter
 import org.citra.citra_emu.databinding.FragmentDriverManagerBinding
-import org.citra.citra_emu.utils.FileUtil.asDocumentFile
 import org.citra.citra_emu.utils.FileUtil.inputStream
 import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.viewmodel.DriverViewModel

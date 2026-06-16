@@ -9,21 +9,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.CardHomeOptionBinding
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.HomeSetting
-import org.citra.citra_emu.viewmodel.GamesViewModel
 
 class HomeSettingAdapter(
     private val activity: AppCompatActivity,
