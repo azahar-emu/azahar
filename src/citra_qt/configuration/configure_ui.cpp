@@ -55,7 +55,8 @@ void ConfigureUi::InitializeLanguageComboBox() {
 void ConfigureUi::SetConfiguration() {
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
     ui->language_combobox->setCurrentIndex(
-        ui->language_combobox->findData(UISettings::values.language));
+        // findData returns -1 if nothing found; Use <System> in this case (index 0).
+        std::max(0, ui->language_combobox->findData(UISettings::values.language)));
     ui->icon_size_combobox->setCurrentIndex(
         static_cast<int>(UISettings::values.game_list_icon_size.GetValue()));
     ui->row_1_text_combobox->setCurrentIndex(
