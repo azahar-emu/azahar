@@ -15,6 +15,10 @@
             app:argType="org.citra.citra_emu.model.Game"
             app:nullable="true"
             android:defaultValue="@null" />
+        <argument
+            android:name="noGameEditMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
 
     <activity

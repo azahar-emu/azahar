@@ -6,6 +6,7 @@ package org.citra.citra_emu.activities
 
 import android.Manifest.permission
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
@@ -127,22 +128,29 @@ class EmulationActivity : AppCompatActivity() {
 
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
 
-        isEmulationRunning = true
-        instance = this
-
-        val game = try {
-            intent.extras?.let { extras ->
-                BundleCompat.getParcelable(extras, "game", Game::class.java)
-            } ?: run {
-                Log.error("[EmulationActivity] Missing game data in intent extras")
-                return
-            }
-        } catch (e: Exception) {
-            Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
-            return
+        if (!intent.getBooleanExtra(NO_GAME_EDIT_MODE, false)) {
+            isEmulationRunning = true
+            instance = this
         }
 
-        NativeLibrary.playTimeManagerStart(game.titleId)
+        applyOrientationSettings() // Check for orientation settings at startup
+
+        if (!intent.getBooleanExtra(NO_GAME_EDIT_MODE, false)) {
+            val game = try {
+                intent.extras?.let { extras ->
+                    BundleCompat.getParcelable(extras, "game", Game::class.java)
+                } ?: run {
+                    Log.error("[EmulationActivity] Missing game data in intent extras")
+                    return
+                }
+            } catch (e: Exception) {
+                Log.error("[EmulationActivity] Failed to retrieve game data: ${e.message}")
+                return
+            }
+
+
+            NativeLibrary.playTimeManagerStart(game.titleId)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -220,8 +228,10 @@ class EmulationActivity : AppCompatActivity() {
     override fun onDestroy() {
         EmulationLifecycleUtil.removeHook(onShutdown)
         NativeLibrary.playTimeManagerStop()
-        isEmulationRunning = false
-        instance = null
+        if (!intent.getBooleanExtra(NO_GAME_EDIT_MODE, false)) {
+            isEmulationRunning = false
+            instance = null
+        }
         secondaryDisplayManager.releasePresentation()
         secondaryDisplayManager.releaseVD()
 
@@ -595,6 +605,13 @@ class EmulationActivity : AppCompatActivity() {
 
     companion object {
         private var instance: EmulationActivity? = null
+        const val NO_GAME_EDIT_MODE = "noGameEditMode"
+
+        fun launchForOverlayEdit(context: Context): Intent {
+            return Intent(context, EmulationActivity::class.java).apply {
+                putExtra(NO_GAME_EDIT_MODE, true)
+            }
+        }
 
         fun isRunning(): Boolean {
             return instance?.isEmulationRunning ?: false
