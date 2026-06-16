@@ -17,7 +17,7 @@ permissions:
   attestations: write
 
 jobs:
-  android:
+  libretro-android:
     runs-on: ubuntu-22.04
     env:
       OS: android
@@ -76,7 +76,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-android.spdx.json
 
-  linux:
+  libretro-linux:
     runs-on: ubuntu-22.04
     env:
       OS: linux
@@ -122,7 +122,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-linux.spdx.json
 
-  windows:
+  libretro-windows:
     runs-on: ubuntu-latest
     env:
       OS: windows
@@ -171,7 +171,7 @@ jobs:
           subject-path: |
             ./*.zip
           sbom-path: libretro-windows.spdx.json
-  macos:
+  libretro-macos:
     runs-on: macos-26
     strategy:
       fail-fast: false
@@ -219,7 +219,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-macos-${{ matrix.target }}.spdx.json
 
-  ios:
+  libretro-ios:
     runs-on: macos-26
     env:
       OS: ios
@@ -261,7 +261,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-ios.spdx.json
 
-  tvos:
+  libretro-tvos:
     runs-on: macos-26
     env:
       OS: tvos
