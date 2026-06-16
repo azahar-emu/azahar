@@ -13,6 +13,7 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.Settings
@@ -121,7 +122,6 @@ class HotkeyUtility(
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
             Hotkey.QUICKLOAD.button -> {
                 val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                 val stringRes = if (wasLoaded) {
@@ -134,6 +134,10 @@ class HotkeyUtility(
                     context.getString(stringRes),
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+            Hotkey.COMBO_BUTTON.button -> {
+                ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
+                ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
             }
 
             else -> {}

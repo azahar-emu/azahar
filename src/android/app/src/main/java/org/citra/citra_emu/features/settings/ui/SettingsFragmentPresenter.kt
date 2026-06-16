@@ -14,7 +14,6 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.serialization.builtins.IntArraySerializer
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -787,6 +786,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
 
     private fun addControlsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_controls))
+
         sl.apply {
             add(
                 RunnableSetting(
@@ -798,6 +798,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     onLongClick = { settingsAdapter.onLongClickAutoMap() }
                 )
             )
+
             add(HeaderSetting(R.string.generic_buttons))
             Settings.buttonKeys.forEachIndexed { i: Int, key: String ->
                 val button = getInputObject(key)
@@ -838,6 +839,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 val button = getInputObject(key)
                 add(InputBindingSetting(button, Settings.hotkeyTitles[i]))
             }
+
             add(HeaderSetting(R.string.miscellaneous))
             add(
                 SwitchSetting(
@@ -846,6 +848,18 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.use_artic_base_controller_description,
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.key,
                     BooleanSetting.USE_ARTIC_BASE_CONTROLLER.defaultValue
+                )
+            )
+
+            add(
+                MultiChoiceSetting(
+                    IntListSetting.COMBO_BUTTONS,
+                    R.string.combo_key_options,
+                    R.string.combo_key_description,
+                    R.array.comboOptions,
+                    R.array.comboOptionValues,
+                    IntListSetting.COMBO_BUTTONS.key,
+                    IntListSetting.COMBO_BUTTONS.defaultValue
                 )
             )
         }

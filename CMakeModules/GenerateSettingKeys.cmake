@@ -239,6 +239,7 @@ if (ANDROID)
         "screen_orientation"
         "performance_overlay_position"
         "enable_secondary_display"
+        "combo_buttons"
     )
         string(REPLACE "_" "_1" KEY_JNI_ESCAPED ${KEY})
         set(SETTING_KEY_LIST "${SETTING_KEY_LIST}\n\"${KEY}\",")
