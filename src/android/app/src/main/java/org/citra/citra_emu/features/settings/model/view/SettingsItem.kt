@@ -4,7 +4,6 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 

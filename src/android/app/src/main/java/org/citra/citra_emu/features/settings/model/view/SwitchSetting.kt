@@ -5,8 +5,6 @@
 package org.citra.citra_emu.features.settings.model.view
 
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
-import org.citra.citra_emu.features.settings.model.AbstractIntSetting
-import org.citra.citra_emu.features.settings.model.AbstractSetting
 
 class SwitchSetting(
     setting: AbstractBooleanSetting,
