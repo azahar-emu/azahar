@@ -619,7 +619,6 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         // Fallthrough: Standard page table lookup
     }
 
-
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
     case PageType::Unmapped: {
@@ -708,14 +707,13 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
         // MMIO (0x1xxxxxxx, >= IO_AREA_PADDR) - Strictly 32-bit
         if ((paddr & 0xF0000000) == 0x10000000 && paddr >= Memory::IO_AREA_PADDR) [[unlikely]] {
             ASSERT(sizeof(data) == sizeof(u32));
-            impl->system.GPU().WriteReg(
-                static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR + 0x1EC00000,
-                static_cast<u32>(data));
+            impl->system.GPU().WriteReg(static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR +
+                                            0x1EC00000,
+                                        static_cast<u32>(data));
             return;
         }
         // Fallthrough: Standard page table lookup
     }
-
 
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
     switch (type) {
