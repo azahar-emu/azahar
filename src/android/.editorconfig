@@ -13,5 +13,8 @@ ij_kotlin_packages_to_use_import_on_demand = unset
 indent_size = 4
 indent_style = space
 ktlint_standard_comment-wrapping = disabled
+ktlint_standard_no-unused-imports = enabled
+# ^- Reportedly finicky, use for now but maybe delete later if there are issues.
+#     See https://github.com/ktlint/ktlint/issues/3038
 ktlint_standard_package-name = disabled
 max_line_length = 100
