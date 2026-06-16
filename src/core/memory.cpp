@@ -598,8 +598,7 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         return value;
     }
 
-    // Luma3DS physical address alias (bit 31 set) Bypasses page tables for FCRAM/MMIO
-    // Fixes UB: '1 << 31' is signed integer overflow Use unsigned constant 0x80000000u
+    // Custom Luma3ds mapping (bit 31 set) Bypasses page tables for FCRAM/MMIO
     constexpr VAddr LUMA_ALIAS_BIT = 0x80000000u;
 
     if (vaddr & LUMA_ALIAS_BIT) [[unlikely]] {
@@ -694,8 +693,7 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
         return;
     }
 
-    // Luma3DS physical address alias (bit 31 set) Bypasses page tables for FCRAM/MMIO
-    // Fixes UB: '1 << 31' is signed integer overflow Use unsigned constant 0x80000000u
+    // Custom Luma3ds mapping (bit 31 set) Bypasses page tables for FCRAM/MMIO
     constexpr VAddr LUMA_ALIAS_BIT = 0x80000000u;
 
     if (vaddr & LUMA_ALIAS_BIT) [[unlikely]] {
