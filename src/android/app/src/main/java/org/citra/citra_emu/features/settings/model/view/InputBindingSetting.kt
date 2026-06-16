@@ -136,7 +136,8 @@ class InputBindingSetting(
                 Settings.HOTKEY_PAUSE_OR_RESUME -> Hotkey.PAUSE_OR_RESUME.button
                 Settings.HOTKEY_QUICKSAVE -> Hotkey.QUICKSAVE.button
                 Settings.HOTKEY_QUICKlOAD -> Hotkey.QUICKLOAD.button
-                Settings.HOTKEY_TURBO_LIMIT -> Hotkey.TURBO_LIMIT.button
+                Settings.HOTKEY_TURBO_TOGGLE -> Hotkey.TURBO_TOGGLE.button
+                Settings.HOTKEY_TURBO_HOLD -> Hotkey.TURBO_HOLD.button
                 else -> -1
             }
 

@@ -16,6 +16,7 @@ import org.citra.citra_emu.utils.TurboHelper
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.utils.Log
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
@@ -40,6 +41,7 @@ class HotkeyUtility(
 
         // Now process all internal buttons associated with this keypress
         for (button in buttonSet) {
+            Log.debug("Button pressed: " + button)
             currentlyPressedButtons.add(button)
             //option 1 - this is the enable command, which was already handled
             if (button == Hotkey.ENABLE.button) {
@@ -78,9 +80,11 @@ class HotkeyUtility(
         }
 
         for (button in buttonSet) {
+            Log.debug("Button released: " + button)
             // this is a hotkey button
             if (hotkeyButtons.contains(button)) {
                 currentlyPressedButtons.remove(button)
+                handleHotkeyRelease(button)
                 if (!currentlyPressedButtons.any { hotkeyButtons.contains(it) }) {
                     // all hotkeys are no longer pressed
                     hotkeyIsPressed = false
@@ -106,13 +110,23 @@ class HotkeyUtility(
         return handled
     }
 
+    fun handleHotkeyRelease(bindedButton: Int): Boolean {
+        Log.debug("Handling hotkey button release: " + bindedButton)
+        if (bindedButton == Hotkey.TURBO_HOLD.button) {
+            TurboHelper.setTurboEnabled(false, false)
+        }
+        return true
+    }
+
     fun handleHotkey(bindedButton: Int): Boolean {
+        Log.debug("Handling hotkey button press: " + bindedButton)
         when (bindedButton) {
             Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
             Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
             Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
             Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
-            Hotkey.TURBO_LIMIT.button -> TurboHelper.toggleTurbo(true)
+            Hotkey.TURBO_TOGGLE.button -> TurboHelper.toggleTurbo(true)
+            Hotkey.TURBO_HOLD.button -> TurboHelper.setTurboEnabled(true, false)
             Hotkey.QUICKSAVE.button -> {
                 NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                 Toast.makeText(
