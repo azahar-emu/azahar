@@ -10,24 +10,24 @@ enum class FloatSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: Float,
-    val scale:Int = 1
+    val scale: Int = 1
 ) : AbstractSetting<Float> {
-    LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(),Settings.SECTION_LAYOUT,2.25f),
-    SECOND_SCREEN_OPACITY(SettingKeys.custom_second_layer_opacity(), Settings.SECTION_RENDERER, 100f),
+    LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(), Settings.SECTION_LAYOUT, 2.25f),
+    SECOND_SCREEN_OPACITY(
+        SettingKeys.custom_second_layer_opacity(),
+        Settings.SECTION_RENDERER,
+        100f
+    ),
     BACKGROUND_RED(SettingKeys.bg_red(), Settings.SECTION_RENDERER, 0f, 255),
     BACKGROUND_BLUE(SettingKeys.bg_blue(), Settings.SECTION_RENDERER, 0f, 255),
     BACKGROUND_GREEN(SettingKeys.bg_green(), Settings.SECTION_RENDERER, 0f, 255),
     AUDIO_VOLUME(SettingKeys.volume(), Settings.SECTION_AUDIO, 100f, 100);
 
     // valueFromString reads raw setting from file, scales up for UI
-    override fun valueFromString(string: String): Float? {
-        return string.toFloatOrNull()?.times(scale)
-    }
+    override fun valueFromString(string: String): Float? = string.toFloatOrNull()?.times(scale)
 
     // valueToString scales back down to raw for file
-    override fun valueToString(value: Float): String {
-        return (value / scale).toString()
-    }
+    override fun valueToString(value: Float): String = (value / scale).toString()
 
     override val isRuntimeEditable: Boolean
         get() {

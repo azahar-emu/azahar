@@ -11,7 +11,6 @@ import java.io.BufferedReader
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.TreeMap
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractSetting
@@ -34,14 +33,15 @@ object SettingsFile {
 
     private val allSettings: List<AbstractSetting<*>> by lazy {
         BooleanSetting.values().toList() +
-                IntSetting.values().toList() +
-                FloatSetting.values().toList() +
-                StringSetting.values().toList() +
-                IntListSetting.values().toList()
+            IntSetting.values().toList() +
+            FloatSetting.values().toList() +
+            StringSetting.values().toList() +
+            IntListSetting.values().toList()
     }
 
     private fun findSettingByKey(key: String): AbstractSetting<*>? =
         allSettings.firstOrNull { it.key == key }
+
     /**
      * Reads a given .ini file from disk and updates a instance of the Settings class appropriately
      *
@@ -66,7 +66,7 @@ object SettingsFile {
             var line: String?
             while (reader.readLine().also { line = it } != null) {
                 if (line!!.startsWith("[") && line.endsWith("]")) {
-                    currentSection = line.substring(1, line.length-1)
+                    currentSection = line.substring(1, line.length - 1)
                 } else if (currentSection != null) {
                     val pair = parseLineToKeyValuePair(line) ?: continue
                     val (key, rawValue) = pair
@@ -95,7 +95,7 @@ object SettingsFile {
      * Load global settings from the config file into the settings instance
      */
     fun loadSettings(settings: Settings, view: SettingsActivityView? = null) {
-        readFile(getSettingsFile(FILE_NAME_CONFIG),settings,false,view)
+        readFile(getSettingsFile(FILE_NAME_CONFIG), settings, false, view)
     }
 
     /**
@@ -134,10 +134,7 @@ object SettingsFile {
      * @param settings The Settings instance we are saving
      * @param view     The current view.
      */
-    fun saveGlobalFile(
-        settings: Settings,
-        view: SettingsActivityView? = null
-    ) {
+    fun saveGlobalFile(settings: Settings, view: SettingsActivityView? = null) {
         val ini = getSettingsFile(FILE_NAME_CONFIG)
         try {
             val context: Context = CitraApplication.appContext
@@ -158,7 +155,7 @@ object SettingsFile {
             Log.error("[SettingsFile] File not found: $FILE_NAME_CONFIG.ini: ${e.message}")
             view?.showToastMessage(
                 CitraApplication.appContext
-                    .getString(R.string.error_saving, fileName, e.message),
+                    .getString(R.string.error_saving, FILE_NAME_CONFIG, e.message),
                 false
             )
         }
@@ -168,10 +165,7 @@ object SettingsFile {
      * Save the per-game overrides to a per-game config file
      */
 
-    fun saveCustomFile(
-        settings: Settings,
-        view: SettingsActivityView? = null
-    ) {
+    fun saveCustomFile(settings: Settings, view: SettingsActivityView? = null) {
         if (!settings.isPerGame()) return
         val ini = getOrCreateCustomGameSettingsFile(settings.gameId!!)
         try {
@@ -189,7 +183,9 @@ object SettingsFile {
             outputStream?.flush()
             outputStream?.close()
         } catch (e: Exception) {
-            Log.error("[SettingsFile] Error saving custom file for ${settings.gameId}: ${e.message}")
+            Log.error(
+                "[SettingsFile] Error saving custom file for ${settings.gameId}: ${e.message}"
+            )
             view?.onSettingsFileNotFound()
         }
     }
@@ -206,7 +202,11 @@ object SettingsFile {
         }
     }
 
-    private fun <T> writeSingleSettingToFile(ini: DocumentFile, setting: AbstractSetting<T>, value: T) {
+    private fun <T> writeSingleSettingToFile(
+        ini: DocumentFile,
+        setting: AbstractSetting<T>,
+        value: T
+    ) {
         try {
             val context = CitraApplication.appContext
             val inputStream = context.contentResolver.openInputStream(ini.uri)
@@ -221,6 +221,7 @@ object SettingsFile {
             Log.error("[SettingsFile] Error saving setting ${setting.key}: ${e.message}")
         }
     }
+
     @Suppress("UNCHECKED_CAST")
     private fun <T> writeSettingToWini(writer: Wini, descriptor: AbstractSetting<T>, value: Any) {
         val typedValue = value as T
@@ -235,7 +236,6 @@ object SettingsFile {
         if (value.isEmpty()) return null
         return Pair(key, value)
     }
-
 
     fun getSettingsFile(fileName: String): DocumentFile {
         val root = DocumentFile.fromTreeUri(CitraApplication.appContext, Uri.parse(userDirectory))

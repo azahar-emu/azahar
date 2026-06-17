@@ -17,8 +17,8 @@ class StringInputSetting(
     val defaultValue: String,
     val characterLimit: Int = 0,
     override var isEnabled: Boolean = true,
-    private val getValue: (()->String)? = null,
-    private val setValue: ((String)-> Unit)? = null,
+    private val getValue: (() -> String)? = null,
+    private val setValue: ((String) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
@@ -35,7 +35,7 @@ class StringInputSetting(
     fun setSelectedValue(selection: String) {
         if (setValue != null) {
             setValue.invoke(selection)
-        }else {
+        } else {
             @Suppress("UNCHECKED_CAST")
             val stringSetting = setting as AbstractSetting<String>
             settings.set(stringSetting, selection)

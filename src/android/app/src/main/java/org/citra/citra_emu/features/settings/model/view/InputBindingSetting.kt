@@ -19,10 +19,8 @@ import org.citra.citra_emu.features.hotkeys.Hotkey
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.Settings
 
-class InputBindingSetting(
-    val abstractSetting: AbstractSetting<*>,
-    titleId: Int
-) : SettingsItem(abstractSetting, titleId, 0) {
+class InputBindingSetting(val abstractSetting: AbstractSetting<*>, titleId: Int) :
+    SettingsItem(abstractSetting, titleId, 0) {
     private val context: Context get() = CitraApplication.appContext
     private val preferences: SharedPreferences
         get() = PreferenceManager.getDefaultSharedPreferences(context)
@@ -157,7 +155,7 @@ class InputBindingSetting(
         // Try remove all possible keys we wrote for this setting
         val oldKey = preferences.getString(reverseKey, "")
         if (oldKey != "") {
-            //settings.set(setting as AbstractSetting<String>,"")
+            // settings.set(setting as AbstractSetting<String>,"")
             preferences.edit()
                 .remove(abstractSetting.key) // Used for ui text
                 .remove(oldKey + "_GuestOrientation") // Used for axis orientation

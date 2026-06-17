@@ -14,6 +14,7 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlin.math.roundToInt
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -22,8 +23,8 @@ import org.citra.citra_emu.display.StereoWhichDisplay
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.IntListSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.StringSetting
 import org.citra.citra_emu.features.settings.model.view.DateTimeSetting
@@ -45,7 +46,6 @@ import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.ThemeUtil
-import kotlin.math.roundToInt
 
 class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) {
     private var menuTag: String? = null
@@ -69,7 +69,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         preferences = PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
         loadSettingsList()
     }
-
 
     fun loadSettingsList() {
         if (!TextUtils.isEmpty(gameId)) {
@@ -274,7 +273,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun checkCountryCompatibility() {
         if (countryCompatibilityChanged) {
             countryCompatibilityChanged = false
-            val compatFlags = SystemSaveGame.getCountryCompatibility(settings.get(IntSetting.EMULATED_REGION))
+            val compatFlags = SystemSaveGame.getCountryCompatibility(
+                settings.get(IntSetting.EMULATED_REGION)
+            )
             if (compatFlags != 0) {
                 var message = ""
                 if (compatFlags and 1 != 0) {
@@ -839,8 +840,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
     }
 
-    private fun getInputObject(key: String): AbstractSetting<String> {
-        return object : AbstractSetting<String> {
+    private fun getInputObject(key: String): AbstractSetting<String> =
+        object : AbstractSetting<String> {
             override val key = key
             override val section = Settings.SECTION_CONTROLS
             override val isRuntimeEditable = true
@@ -850,7 +851,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             // TODO: make input mappings also work per-game, which will be easy if we move
             //  them to config files
         }
-    }
     private fun addGraphicsSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_graphics))
         sl.apply {
@@ -1000,7 +1000,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.render3dValues,
                     IntSetting.STEREOSCOPIC_3D_MODE.key,
                     IntSetting.STEREOSCOPIC_3D_MODE.defaultValue,
-                    isEnabled = settings.get(IntSetting.RENDER_3D_WHICH_DISPLAY) != StereoWhichDisplay.NONE.int
+                    isEnabled =
+                        settings.get(IntSetting.RENDER_3D_WHICH_DISPLAY) !=
+                            StereoWhichDisplay.NONE.int
                 )
             )
 
@@ -1036,7 +1038,9 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.swap_eyes_3d_description,
                     BooleanSetting.SWAP_EYES_3D.key,
                     BooleanSetting.SWAP_EYES_3D.defaultValue,
-                    isEnabled = settings.get(IntSetting.RENDER_3D_WHICH_DISPLAY) != StereoWhichDisplay.NONE.int
+                    isEnabled =
+                        settings.get(IntSetting.RENDER_3D_WHICH_DISPLAY) !=
+                            StereoWhichDisplay.NONE.int
                 )
             )
 
@@ -1052,7 +1056,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     IntSetting.CARDBOARD_SCREEN_SIZE.key,
                     IntSetting.CARDBOARD_SCREEN_SIZE.defaultValue.toFloat(),
-                    isEnabled = settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
+                    isEnabled =
+                        settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
                 )
             )
             add(
@@ -1066,7 +1071,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     IntSetting.CARDBOARD_X_SHIFT.key,
                     IntSetting.CARDBOARD_X_SHIFT.defaultValue.toFloat(),
-                    isEnabled = settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
+                    isEnabled =
+                        settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
                 )
             )
             add(
@@ -1080,7 +1086,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     "%",
                     IntSetting.CARDBOARD_Y_SHIFT.key,
                     IntSetting.CARDBOARD_Y_SHIFT.defaultValue.toFloat(),
-                    isEnabled = settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
+                    isEnabled =
+                        settings.get(IntSetting.STEREOSCOPIC_3D_MODE) == StereoMode.CARDBOARD_VR.int
                 )
             )
 
@@ -1248,7 +1255,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.aspectRatioValues,
                     IntSetting.ASPECT_RATIO.key,
                     IntSetting.ASPECT_RATIO.defaultValue,
-                    isEnabled = settings.get(IntSetting.SCREEN_LAYOUT) == ScreenLayout.SINGLE_SCREEN.int,
+                    isEnabled =
+                        settings.get(IntSetting.SCREEN_LAYOUT) == ScreenLayout.SINGLE_SCREEN.int
                 )
             )
             add(
@@ -1301,7 +1309,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     FloatSetting.SECOND_SCREEN_OPACITY.key,
                     FloatSetting.SECOND_SCREEN_OPACITY.defaultValue,
                     0,
-                    isEnabled = settings.get(IntSetting.SCREEN_LAYOUT) == ScreenLayout.CUSTOM_LAYOUT.int
+                    isEnabled =
+                        settings.get(IntSetting.SCREEN_LAYOUT) == ScreenLayout.CUSTOM_LAYOUT.int
                 )
             )
             add(HeaderSetting(R.string.bg_color, R.string.bg_color_description))

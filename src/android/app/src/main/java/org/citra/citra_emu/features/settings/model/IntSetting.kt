@@ -65,15 +65,12 @@ enum class IntSetting(
     RENDER_3D_WHICH_DISPLAY(SettingKeys.render_3d_which_display(), Settings.SECTION_RENDERER, 0),
     ASPECT_RATIO(SettingKeys.aspect_ratio(), Settings.SECTION_LAYOUT, 0);
 
-
-    override fun valueFromString(string: String): Int? {
-        return string.toIntOrNull() ?: when (string.trim().lowercase()) {
+    override fun valueFromString(string: String): Int? =
+        string.toIntOrNull() ?: when (string.trim().lowercase()) {
             "true" -> 1
             "false" -> 0
             else -> null
         }
-    }
-
 
     override val isRuntimeEditable: Boolean
         get() {
@@ -94,6 +91,5 @@ enum class IntSetting(
         )
 
         fun from(key: String): IntSetting? = IntSetting.values().firstOrNull { it.key == key }
-
     }
 }

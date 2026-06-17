@@ -35,7 +35,6 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.Insets
@@ -46,6 +45,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -199,7 +199,11 @@ class EmulationFragment :
         retainInstance = true
         emulationState = EmulationState(game.path)
         screenAdjustmentUtil =
-            ScreenAdjustmentUtil(requireContext(), requireActivity().windowManager, Settings.settings)
+            ScreenAdjustmentUtil(
+                requireContext(),
+                requireActivity().windowManager,
+                Settings.settings
+            )
         EmulationLifecycleUtil.addPauseResumeHook(onPause)
         EmulationLifecycleUtil.addShutdownHook(onShutdown)
     }
@@ -752,8 +756,10 @@ class EmulationFragment :
                 }
 
                 R.id.menu_performance_overlay_show -> {
-                    Settings.settings.update(BooleanSetting.PERF_OVERLAY_ENABLE,
-                        Settings.settings.get(BooleanSetting.PERF_OVERLAY_ENABLE))
+                    Settings.settings.update(
+                        BooleanSetting.PERF_OVERLAY_ENABLE,
+                        Settings.settings.get(BooleanSetting.PERF_OVERLAY_ENABLE)
+                    )
                     SettingsFile.saveSetting(BooleanSetting.PERF_OVERLAY_ENABLE, Settings.settings)
                     updateShowPerformanceOverlay()
                     true
@@ -1474,7 +1480,7 @@ class EmulationFragment :
                 val dividerString = "\u00A0\u2502 "
                 if (perfStats[fps] > 0) {
                     if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FPS)) {
-                        sb.append(String.format("FPS:\u00A0%d", (perfStats[FPS] + 0.5).toInt()))
+                        sb.append(String.format("FPS:\u00A0%d", (perfStats[fps] + 0.5).toInt()))
                     }
 
                     if (Settings.settings.get(BooleanSetting.PERF_OVERLAY_SHOW_FRAMETIME)) {

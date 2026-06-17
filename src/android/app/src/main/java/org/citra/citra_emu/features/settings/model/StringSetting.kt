@@ -10,7 +10,7 @@ enum class StringSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: String
-) : AbstractSetting<String>{
+) : AbstractSetting<String> {
     INIT_TIME(SettingKeys.init_time(), Settings.SECTION_SYSTEM, "946731601"),
     CAMERA_INNER_NAME(SettingKeys.camera_inner_name(), Settings.SECTION_CAMERA, "ndk"),
     CAMERA_INNER_CONFIG(SettingKeys.camera_inner_config(), Settings.SECTION_CAMERA, "_front"),
@@ -51,6 +51,5 @@ enum class StringSetting(
         )
 
         fun from(key: String): StringSetting? = StringSetting.values().firstOrNull { it.key == key }
-
     }
 }

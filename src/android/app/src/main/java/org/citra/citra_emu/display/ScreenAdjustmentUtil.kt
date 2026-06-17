@@ -44,7 +44,7 @@ class ScreenAdjustmentUtil(
             }
         val portraitValues = context.resources.getIntArray(R.array.portraitValues)
 
-        if (NativeLibrary.isPortraitMode) {
+        if (NativeLibrary.isPortraitMode()) {
             val currentLayout = settings.get(IntSetting.PORTRAIT_SCREEN_LAYOUT)
             val pos = portraitValues.indexOf(currentLayout)
             val layoutOption = portraitValues[(pos + 1) % portraitValues.size]
