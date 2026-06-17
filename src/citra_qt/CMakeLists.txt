@@ -202,6 +202,8 @@ if (APPLE)
   target_sources(citra_qt PUBLIC
     qt_swizzle.h
     qt_swizzle.mm
+    util/metal_util.h
+    util/metal_util.mm
   )
 endif()
 

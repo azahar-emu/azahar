@@ -37,8 +37,7 @@
 #endif
 
 #if defined(__APPLE__)
-#include <objc/message.h>
-#include <objc/objc.h>
+#include "util/metal_util.h"
 #elif !defined(WIN32)
 #include <qpa/qplatformnativeinterface.h>
 #endif
@@ -420,21 +419,7 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
         // Our Win32 Qt external doesn't have the private API.
         wsi.render_surface = reinterpret_cast<void*>(window->winId());
 #elif defined(__APPLE__)
-        // Qt's MetalSurface QWindow on macOS does not always back the NSView
-        // with a CAMetalLayer immediately; MoltenVK 1.3+ aborts in
-        // MVKSurface::getNaturalExtent() if the layer is not CAMetalLayer.
-        // Force-install a fresh CAMetalLayer on the view.
-        {
-            id view = reinterpret_cast<id>(window->winId());
-            Class metal_layer_class = objc_getClass("CAMetalLayer");
-            id metal_layer = reinterpret_cast<id (*)(Class, SEL)>(objc_msgSend)(
-                metal_layer_class, sel_registerName("layer"));
-            reinterpret_cast<void (*)(id, SEL, id)>(objc_msgSend)(
-                view, sel_registerName("setLayer:"), metal_layer);
-            reinterpret_cast<void (*)(id, SEL, BOOL)>(objc_msgSend)(
-                view, sel_registerName("setWantsLayer:"), YES);
-            wsi.render_surface = reinterpret_cast<void*>(metal_layer);
-        }
+        wsi.render_surface = MetalUtil::CreateMetalLayer(window->winId());
 #else
         QPlatformNativeInterface* pni = QGuiApplication::platformNativeInterface();
         wsi.display_connection = pni->nativeResourceForWindow("display", window);
