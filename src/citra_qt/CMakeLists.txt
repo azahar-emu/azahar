@@ -340,13 +340,13 @@ target_compile_definitions(citra_qt PRIVATE
     -DQT_NO_CAST_TO_ASCII
 )
 
-if (USE_DISCORD_PRESENCE)
+if (ENABLE_DISCORD_RPC)
     target_sources(citra_qt PUBLIC
         discord_impl.cpp
         discord_impl.h
     )
     target_link_libraries(citra_qt PRIVATE discord-rpc)
-    target_compile_definitions(citra_qt PRIVATE -DUSE_DISCORD_PRESENCE)
+    target_compile_definitions(citra_qt PRIVATE -DENABLE_DISCORD_RPC)
 endif()
 
 if (ENABLE_WEB_SERVICE)

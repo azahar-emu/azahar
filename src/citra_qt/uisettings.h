@@ -97,7 +97,7 @@ struct Values {
 
     Settings::Setting<std::string> inserted_cartridge{"", "inserted_cartridge"};
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     // Discord RPC
     Settings::Setting<bool> enable_discord_presence{true, "enable_discord_presence"};
 #endif

@@ -14,7 +14,7 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureWeb>()) {
     ui->setupUi(this);
 
-#ifndef USE_DISCORD_PRESENCE
+#ifndef ENABLE_DISCORD_RPC
     ui->discord_group->setEnabled(false);
 #endif
     SetConfiguration();
@@ -23,13 +23,13 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
 ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
 #endif
 }
 
 void ConfigureWeb::ApplyConfiguration() {
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
 #endif
 }

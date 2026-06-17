@@ -63,7 +63,7 @@
 #endif
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord.h"
 #endif
 #include "citra_qt/dumping/dumping_dialog.h"
@@ -123,7 +123,7 @@
 Q_IMPORT_PLUGIN(QDarwinCameraPermissionPlugin);
 #endif
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord_impl.h"
 #endif
 
@@ -422,7 +422,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
     discord_rpc->Update(false);
 #endif
@@ -1627,7 +1627,7 @@ void GMainWindow::ShutdownGame() {
 
     AllowOSSleep();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     discord_rpc->Pause();
 #endif
 
@@ -1658,7 +1658,7 @@ void GMainWindow::ShutdownGame() {
 
     OnCloseMovie();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     discord_rpc->Update(false);
 #endif
 #ifdef __unix__
@@ -2602,7 +2602,7 @@ void GMainWindow::OnResumeGame(bool first_start) {
     play_time_manager->Start();
 
     if (first_start) {
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         discord_rpc->Update(true);
 #endif
     }
@@ -2945,7 +2945,7 @@ void GMainWindow::OnConfigure() {
     const int old_input_profile_index = Settings::values.current_input_profile_index;
     const auto old_input_profiles = Settings::values.input_profiles;
     const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     const bool old_discord_presence = UISettings::values.enable_discord_presence.GetValue();
 #endif
 #ifdef __unix__
@@ -2959,7 +2959,7 @@ void GMainWindow::OnConfigure() {
         if (UISettings::values.theme != old_theme) {
             UpdateUITheme();
         }
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
             discord_rpc->Update(system.IsPoweredOn());
@@ -4317,7 +4317,7 @@ void GMainWindow::RetranslateStatusBar() {
     multiplayer_state->retranslateUi();
 }
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
     if (state) {
         discord_rpc = std::make_unique<DiscordRPC::DiscordImpl>(system);
