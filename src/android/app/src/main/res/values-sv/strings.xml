@@ -383,7 +383,6 @@
     <string name="reset_setting_confirmation">Vill du återställa inställningen till standardvärdet? </string>
     <string name="setting_not_editable">Du kan inte redigera detta nu</string>
     <string name="setting_disabled">Inställning inaktiverad</string>
-    <string name="setting_disabled_description">Denna inställning är för närvarande inaktiverad på grund av att en annan inställning inte har rätt värde.</string>
     <string name="setting_not_editable_description">Det här alternativet kan inte ändras medan ett spel pågår.</string>
     <string name="auto_select">Autovälj</string>
     <string name="start">Starta</string>
@@ -410,9 +409,24 @@
     <string name="preferences_theme">Tema och färg</string>
     <string name="preferences_layout">Layout</string>
 
+    <string name="loader_error_invalid_system_mode">Ogiltigt systemläge</string>
     <string name="loader_error_encrypted">Ditt ROM är krypterat</string>
     <string name="loader_error_file_not_found">ROM-filen finns inte</string>
     <string name="no_game_present">Inget startbart spel närvarande!</string>
+
+    <string name="core_error_success">Lyckades</string>
+    <string name="core_error_not_initialized">Inte initierad</string>
+    <string name="core_error_system_mode">Misslyckades med att tolka filen</string>
+    <string name="core_error_loader">Allmänt fel i inläsaren</string>
+    <string name="core_error_loader_encrypted">Krypterad fil</string>
+    <string name="core_error_loader_invalid_format">Skadad fil</string>
+    <string name="core_error_loader_gba_title">Filen är GBA-titel</string>
+    <string name="core_error_loader_error_patches">Fel vid tillämpning av patchar</string>
+    <string name="core_error_loader_patches_invalid_title">Patchar är för en annan applikation</string>
+    <string name="core_error_system_files">Saknade systemfiler</string>
+    <string name="core_error_artic_disconnected">Artic Base frånkopplad</string>
+    <string name="core_error_shutdown_requested">Avstängning begärd</string>
+    <string name="core_error_unknown">Okänt fel</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Tryck på Tillbaka för att komma till menyn.</string>
@@ -442,7 +456,6 @@
     <string name="emulation_aspect_ratio">Bildförhållande</string>
     <string name="emulation_switch_screen_layout">Liggande skärmlayout</string>
     <string name="emulation_switch_portrait_layout">Stående skärmlayout</string>
-    <string name="emulation_switch_secondary_layout">Layout för sekundär skärm</string>
     <string name="emulation_switch_secondary_layout_description">Layouten som används av en ansluten sekundär skärm, trådbunden eller trådlös (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Stor skärm</string>
     <string name="emulation_screen_layout_portrait">Stående</string>
@@ -451,7 +464,6 @@
     <string name="emulation_screen_layout_hybrid">Hybridskärmar</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
-    <string name="emulation_secondary_display_default">Systemstandard (spegel)</string>
     <string name="emulation_screen_layout_custom">Anpassad layout</string>
     <string name="bg_color">Bakgrundsfärg</string>
     <string name="bg_color_description">Den färg som visas bakom skärmarna under emulering, representerad som ett RGB-värde.</string>

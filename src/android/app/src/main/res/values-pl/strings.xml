@@ -388,7 +388,6 @@
     <string name="reset_setting_confirmation">Czy chcesz przywrócić to ustawienie do domyślnej wartości?</string>
     <string name="setting_not_editable">Nie możesz teraz tego edytować</string>
     <string name="setting_disabled">Ustawienie wyłączone</string>
-    <string name="setting_disabled_description">To ustawienie jest obecnie wyłączone, ponieważ inne ustawienie nie jest odpowiednią wartością.</string>
     <string name="setting_not_editable_description">Tej opcji nie można zmienić podczas gry.</string>
     <string name="auto_select">Wybór automatyczny</string>
     <string name="start">Rozpocznij</string>
@@ -477,7 +476,6 @@
     <string name="emulation_aspect_ratio">Proporcje obrazu</string>
     <string name="emulation_switch_screen_layout">Geometryczny Układ Ekranu</string>
     <string name="emulation_switch_portrait_layout">Pionowy Układ Ekranu</string>
-    <string name="emulation_switch_secondary_layout">Układ ekranu wyświetlacza dodatkowego</string>
     <string name="emulation_switch_secondary_layout_description">Układ używany przez podłączony dodatkowy ekran, przewodowy lub bezprzewodowy (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Duży Ekran</string>
     <string name="emulation_screen_layout_portrait">Ekran</string>
@@ -486,7 +484,6 @@
     <string name="emulation_screen_layout_hybrid">Hybrydowy Ekran</string>
     <string name="emulation_screen_layout_original">Oryginalny</string>
     <string name="emulation_portrait_layout_top_full">Domyślny</string>
-    <string name="emulation_secondary_display_default">Ustawienia domyślne systemu (mirror)</string>
     <string name="emulation_screen_layout_custom">Niestandardowy Układ</string>
     <string name="bg_color">Kolor tła</string>
     <string name="bg_color_description">Kolor wyświetlany za ekranami podczas emulacji, wyświetlany jako wartość RGB.</string>

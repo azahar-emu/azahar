@@ -390,7 +390,6 @@
     <string name="reset_setting_confirmation">Vuoi reimpostare questa opzione al suo valore predefinito?</string>
     <string name="setting_not_editable">Non puoi modificare questo ora</string>
     <string name="setting_disabled">Impostazione disabilitata</string>
-    <string name="setting_disabled_description">Questa impostazione è disattivata perché un\'altra opzione non ha il valore richiesto.</string>
     <string name="setting_not_editable_description">Questa opzione non può essere modificata mentre un gioco è in esecuzione.</string>
     <string name="auto_select">Seleziona automaticamente</string>
     <string name="start">Avvia</string>
@@ -479,7 +478,11 @@
     <string name="emulation_aspect_ratio">Proporzione</string>
     <string name="emulation_switch_screen_layout">Layout degli schermi in orizzontale</string>
     <string name="emulation_switch_portrait_layout">Layout degli schermi in verticale</string>
-    <string name="emulation_switch_secondary_layout">Layout degli schermi sullo schermo secondario</string>
+    <string name="emulation_secondary_display_enable">Abilita schermo secondario</string>
+    <string name="emulation_secondary_display_enable_description">Se disattivata, Azahar lascerà che sia Android a gestire gli schermi collegati. Se attivata e sono connessi più schermi, potrai selezionare quale utilizzare dal menu rapido di emulazione</string>
+    <string name="emulation_switch_secondary_layout">Layout schermo secondario</string>
+    <string name="emulation_secondary_display_management">Schermo secondario</string>
+    <string name="emulation_select_secondary_display">Scegli schermo</string>
     <string name="emulation_switch_secondary_layout_description">Il layout utilizzato da uno schermo secondario connesso, cablato o wireless (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Schermo grande</string>
     <string name="emulation_screen_layout_portrait">Verticale</string>
@@ -488,7 +491,7 @@
     <string name="emulation_screen_layout_hybrid">Schermi ibridi</string>
     <string name="emulation_screen_layout_original">Originale</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
-    <string name="emulation_secondary_display_default">Predefinito del sistema (specchio)</string>
+    <string name="emulation_secondary_display_opposite">Schermo opposto</string>
     <string name="emulation_screen_layout_custom">Layout personalizzato</string>
     <string name="bg_color">Colore dello sfondo</string>
     <string name="bg_color_description">Il colore che appare dietro gli schermi durante l\'emulazione, rappresentato come valore RGB.</string>

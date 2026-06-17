@@ -347,7 +347,6 @@
     <string name="reset_setting_confirmation">您要将此设置项重置为默认值吗？</string>
     <string name="setting_not_editable">您现在不能编辑此项</string>
     <string name="setting_disabled">设置已禁用</string>
-    <string name="setting_disabled_description">由于另一个设置不是合适的值，此设置当前已被禁用。</string>
     <string name="setting_not_editable_description">在游戏运行时此项不能更改。</string>
     <string name="auto_select">自动选择</string>
     <string name="start">开始</string>
@@ -406,7 +405,6 @@
     <string name="emulation_aspect_ratio">宽高比</string>
     <string name="emulation_switch_screen_layout">屏幕布局</string>
     <string name="emulation_switch_portrait_layout">纵向屏幕布局</string>
-    <string name="emulation_switch_secondary_layout">副屏幕布局</string>
     <string name="emulation_switch_secondary_layout_description">有线或无线连接的副屏幕使用布局（Chromecast, Miracast）</string>
     <string name="emulation_screen_layout_largescreen">大屏幕</string>
     <string name="emulation_screen_layout_portrait">纵向</string>
@@ -415,7 +413,6 @@
     <string name="emulation_screen_layout_hybrid">混合式屏幕</string>
     <string name="emulation_screen_layout_original">原始</string>
     <string name="emulation_portrait_layout_top_full">默认</string>
-    <string name="emulation_secondary_display_default">系统默认（镜像）</string>
     <string name="emulation_screen_layout_custom">自定义布局</string>
     <string name="bg_color">背景颜色</string>
     <string name="bg_color_description">在模拟运行时屏幕后面出现的颜色，以 RGB 值表示。</string>

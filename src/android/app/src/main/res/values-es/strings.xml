@@ -384,7 +384,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="reset_setting_confirmation">¿Quiere reiniciar esta configuración a su valor por defecto?</string>
     <string name="setting_not_editable">No puedes editarlo ahora</string>
     <string name="setting_disabled">Configuración deshabilitada</string>
-    <string name="setting_disabled_description">Esta configuración está actualmente deshabilitada debido a que otra configuración no tiene el valor apropiado.</string>
     <string name="setting_not_editable_description">Esta opción no puede cambiarse mientras se está ejecutando un juego.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
@@ -443,7 +442,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_aspect_ratio">Relación de Aspecto</string>
     <string name="emulation_switch_screen_layout">Estilo de Pantalla Apaisada</string>
     <string name="emulation_switch_portrait_layout">Estilo de Pantalla de Perfil</string>
-    <string name="emulation_switch_secondary_layout">Estilo de Pantalla Secundaria</string>
     <string name="emulation_switch_secondary_layout_description">El estilo de la pantalla secundaria conectada, con cable o inalámbrica (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
@@ -452,7 +450,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_screen_layout_hybrid">Pantallas híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Por defecto</string>
-    <string name="emulation_secondary_display_default">Por defecto del sistema (espejo)</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
     <string name="bg_color">Color de fondo</string>
     <string name="bg_color_description">El color que aparece detrás de las pantallas durante la emulación, representado como un valor RGB.</string>
