@@ -37,8 +37,7 @@
 #endif
 
 #if defined(__APPLE__)
-#include <objc/message.h>
-#include <objc/objc.h>
+#include "util/metal_util.h"
 #elif !defined(WIN32)
 #include <qpa/qplatformnativeinterface.h>
 #endif
@@ -420,8 +419,7 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
         // Our Win32 Qt external doesn't have the private API.
         wsi.render_surface = reinterpret_cast<void*>(window->winId());
 #elif defined(__APPLE__)
-        wsi.render_surface = reinterpret_cast<void* (*)(id, SEL)>(objc_msgSend)(
-            reinterpret_cast<id>(window->winId()), sel_registerName("layer"));
+        wsi.render_surface = MetalUtil::CreateMetalLayer(window->winId());
 #else
         QPlatformNativeInterface* pni = QGuiApplication::platformNativeInterface();
         wsi.display_connection = pni->nativeResourceForWindow("display", window);
