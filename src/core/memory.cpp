@@ -598,19 +598,25 @@ T MemorySystem::Read(const std::shared_ptr<PageTable>& page_table, const VAddr v
         return value;
     }
 
-    // Custom Luma3ds mapping
-    // Is there a more efficient way to do this?
-    if (vaddr & (1 << 31)) {
-        PAddr paddr = (vaddr & ~(1 << 31));
-        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) { // Check FCRAM region
+    // Custom Luma3ds mapping (bit 31 set) Bypasses page tables for FCRAM/MMIO
+    constexpr VAddr LUMA_ALIAS_BIT = 0x80000000u;
+
+    if (vaddr & LUMA_ALIAS_BIT) [[unlikely]] {
+        const PAddr paddr = vaddr & ~LUMA_ALIAS_BIT;
+
+        // FCRAM (0x2xxxxxxx)
+        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) {
             ReadType value;
             std::memcpy(&value, GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), read_size);
             return value;
-        } else if ((paddr & 0xF0000000) == 0x10000000 &&
-                   paddr >= Memory::IO_AREA_PADDR) { // Check MMIO region
+        }
+
+        // MMIO (0x1xxxxxxx, >= IO_AREA_PADDR) - Strictly 32-bit
+        if ((paddr & 0xF0000000) == 0x10000000 && paddr >= Memory::IO_AREA_PADDR) [[unlikely]] {
             return static_cast<ReadType>(impl->system.GPU().ReadReg(
                 static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR + 0x1EC00000));
         }
+        // Fallthrough: Standard page table lookup
     }
 
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
@@ -686,21 +692,27 @@ void MemorySystem::Write(const std::shared_ptr<PageTable>& page_table, const VAd
         return;
     }
 
-    // Custom Luma3ds mapping
-    // Is there a more efficient way to do this?
-    if (vaddr & (1 << 31)) {
-        PAddr paddr = (vaddr & ~(1 << 31));
-        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) { // Check FCRAM region
+    // Custom Luma3ds mapping (bit 31 set) Bypasses page tables for FCRAM/MMIO
+    constexpr VAddr LUMA_ALIAS_BIT = 0x80000000u;
+
+    if (vaddr & LUMA_ALIAS_BIT) [[unlikely]] {
+        const PAddr paddr = vaddr & ~LUMA_ALIAS_BIT;
+
+        // FCRAM (0x2xxxxxxx)
+        if ((paddr & 0xF0000000) == Memory::FCRAM_PADDR) {
             std::memcpy(GetFCRAMPointer(paddr - Memory::FCRAM_PADDR), &data, sizeof(T));
             return;
-        } else if ((paddr & 0xF0000000) == 0x10000000 &&
-                   paddr >= Memory::IO_AREA_PADDR) { // Check MMIO region
+        }
+
+        // MMIO (0x1xxxxxxx, >= IO_AREA_PADDR) - Strictly 32-bit
+        if ((paddr & 0xF0000000) == 0x10000000 && paddr >= Memory::IO_AREA_PADDR) [[unlikely]] {
             ASSERT(sizeof(data) == sizeof(u32));
             impl->system.GPU().WriteReg(static_cast<VAddr>(paddr) - Memory::IO_AREA_PADDR +
                                             0x1EC00000,
                                         static_cast<u32>(data));
             return;
         }
+        // Fallthrough: Standard page table lookup
     }
 
     PageType type = page_table->attributes[vaddr >> CITRA_PAGE_BITS];
