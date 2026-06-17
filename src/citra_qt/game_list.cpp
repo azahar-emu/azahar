@@ -490,21 +490,47 @@ void GameList::DonePopulating(const QStringList& watch_list) {
         AddFavorite(id);
     }
 
-    // Clear out the old directories to watch for changes and add the new ones
-    auto watch_dirs = watcher->directories();
-    if (!watch_dirs.isEmpty()) {
-        watcher->removePaths(watch_dirs);
-    }
+    // Update watcher paths
+    auto current_watch_list = watcher->directories();
+    QStringList to_remove, to_add;
+
     // Workaround: Add the watch paths in chunks to allow the gui to refresh
     // This prevents the UI from stalling when a large number of watch paths are added
     // Also artificially caps the watcher to a certain number of directories
     constexpr qsizetype LIMIT_WATCH_DIRECTORIES = 5000;
     constexpr int SLICE_SIZE = 25;
-    const qsizetype len = std::min(watch_list.length(), LIMIT_WATCH_DIRECTORIES);
-    for (qsizetype i = 0; i < len; i += SLICE_SIZE) {
-        watcher->addPaths(watch_list.mid(i, i + SLICE_SIZE));
-        QCoreApplication::processEvents();
+
+    const auto slice = [&](const QStringList& list,
+                           std::function<void(const QStringList&)> callback) {
+        const int len = (std::min)(list.size(), LIMIT_WATCH_DIRECTORIES);
+        for (int i = 0; i < len; i += SLICE_SIZE) {
+            auto chunk = list.mid(i, SLICE_SIZE);
+            if (!chunk.isEmpty()) {
+                callback(chunk);
+            }
+
+            QCoreApplication::processEvents();
+        }
+    };
+
+    // remove any paths not in the new watch list
+    for (const auto& path : std::as_const(current_watch_list)) {
+        if (!watch_list.contains(path)) {
+            to_remove.emplaceBack(path);
+        }
     }
+
+    slice(to_remove, [this](const QStringList& chunk) { watcher->removePaths(chunk); });
+
+    // add any paths not in the old watch list
+    for (const auto& path : std::as_const(watch_list)) {
+        if (!current_watch_list.contains(path)) {
+            to_add.emplaceBack(path);
+        }
+    }
+
+    slice(to_add, [this](const QStringList& chunk) { watcher->addPaths(chunk); });
+
     tree_view->setEnabled(true);
     const int folderCount = tree_view->model()->rowCount();
     int children_total = 0;
@@ -1130,20 +1156,12 @@ const QStringList GameList::supported_file_extensions = {
 };
 
 void GameList::RefreshGameDirectory() {
+
     // Do not scan directories when the system is powered on, it will be
     // repopulated on shutdown anyways.
     if (Core::System::GetInstance().IsPoweredOn()) {
         return;
     }
-
-    const auto time_now = std::chrono::steady_clock::now();
-
-    // Max of 1 refresh every 1 second.
-    if (time_last_refresh + std::chrono::seconds(1) > time_now) {
-        return;
-    }
-
-    time_last_refresh = time_now;
 
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
         LOG_INFO(Frontend, "Change detected in the applications directory. Reloading game list.");
