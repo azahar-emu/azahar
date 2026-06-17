@@ -67,7 +67,7 @@ namespace Camera {
 class QtMultimediaCameraHandlerFactory;
 }
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 namespace DiscordRPC {
 class DiscordInterface;
 }
@@ -110,7 +110,7 @@ public:
 
     GameList* game_list;
     std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 #endif
 
@@ -174,7 +174,7 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     void SetDiscordEnabled(bool state);
 #endif
     void LoadAmiibo(const QString& filename);

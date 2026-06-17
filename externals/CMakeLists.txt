@@ -276,7 +276,7 @@ if (ENABLE_CUBEB)
 endif()
 
 # DiscordRPC
-if (USE_DISCORD_PRESENCE)
+if (ENABLE_DISCORD_RPC)
     # rapidjson used by discord-rpc is old and doesn't correctly detect endianness for some platforms.
     include(TestBigEndian)
     test_big_endian(RAPIDJSON_BIG_ENDIAN)
