@@ -17,6 +17,14 @@ set(SHADER_FILES
     post_processing/AREA/opengl_area_sampling.vert
     post_processing/AREA/vulkan_area_sampling.frag
     post_processing/AREA/vulkan_area_sampling.vert
+    post_processing/LANCZOS/opengl_lanczos3_pass_0.frag
+    post_processing/LANCZOS/opengl_lanczos3_pass_0.vert
+    post_processing/LANCZOS/opengl_lanczos3_pass_1.frag
+    post_processing/LANCZOS/opengl_lanczos3_pass_1.vert
+    post_processing/LANCZOS/vulkan_lanczos3_pass_0.frag
+    post_processing/LANCZOS/vulkan_lanczos3_pass_0.vert
+    post_processing/LANCZOS/vulkan_lanczos3_pass_1.frag
+    post_processing/LANCZOS/vulkan_lanczos3_pass_1.vert
     post_processing/FSR/ffx_a.h
     post_processing/FSR/ffx_fsr1.h
     post_processing/FSR/opengl_fsr_pass0.frag

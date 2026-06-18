@@ -76,8 +76,8 @@ std::string_view GetOutputScalingName(OutputScaling scaling) {
         return "Nearest";
     case OutputScaling::Bilinear:
         return "Bilinear";
-    case OutputScaling::Adaptive:
-        return "Adaptive";
+    case OutputScaling::Lanczos:
+        return "Lanczos";
     case OutputScaling::FSR:
         return "AMD FidelityFX Super Resolution 1";
     case OutputScaling::SGSR:

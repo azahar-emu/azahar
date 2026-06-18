@@ -28,6 +28,10 @@
 // Post Processing Shaders
 #include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_frag.h"
 #include "video_core/host_shaders/post_processing/AREA/vulkan_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/vulkan_lanczos3_pass_0_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/vulkan_lanczos3_pass_0_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/vulkan_lanczos3_pass_1_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/vulkan_lanczos3_pass_1_vert.h"
 #include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
 #include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
 #include "video_core/host_shaders/post_processing/FSR/vulkan_fsr_pass0_frag.h"
@@ -226,6 +230,13 @@ RendererVulkan::~RendererVulkan() {
                 device.destroyImageView(intermediateOutputSizeTextures[i][j][k].image_view);
                 vmaDestroyImage(instance.GetAllocator(), intermediateOutputSizeTextures[i][j][k].image, intermediateOutputSizeTextures[i][j][k].allocation);
             }
+        }
+    }
+    for (int i = 0; i < intermediateHybridSizeTextures.size(); i++) {
+        for (int j = 0; j < intermediateHybridSizeTextures[0].size(); j++){
+            device.destroyFramebuffer(intermediateHybridSizeTextureFBOs[i][j]);
+            device.destroyImageView(intermediateHybridSizeTextures[i][j].image_view);
+            vmaDestroyImage(instance.GetAllocator(), intermediateHybridSizeTextures[i][j].image, intermediateHybridSizeTextures[i][j].allocation);
         }
     }
     device.destroyRenderPass(textureRenderpass);
@@ -600,7 +611,7 @@ void RendererVulkan::AllocateOutputSizeTextures(){
         }
     }
     // LOG_INFO(Render_Vulkan, "Reallocated Output Size Textures");
-    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    LOG_INFO(Render_Vulkan, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
     prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
     prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
     prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
@@ -620,7 +631,30 @@ void RendererVulkan::CreateOutputSizeTextureFramebuffers(){
     }
 };
 
+void RendererVulkan::AllocateHybridSizeTextures(){
+    for (int i = 0; i < intermediateHybridSizeTextures[isSecondaryWindow].size(); i++){
+        if (i == 2){ // Additional Screen
+            if (!Settings::values.swap_screen.GetValue()){
+                AllocateTexture(intermediateHybridSizeTextures[isSecondaryWindow][i], currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+            } else {
+                AllocateTexture(intermediateHybridSizeTextures[isSecondaryWindow][i], currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+            }
+        } else if (i == 0) { // Top Screen
+            AllocateTexture(intermediateHybridSizeTextures[isSecondaryWindow][i], currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+        } else if (i == 1){ // Bottom Screen
+            AllocateTexture(intermediateHybridSizeTextures[isSecondaryWindow][i], currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight(), vk::Format::eR16G16B16A16Sfloat);
+        }
+    }
+    LOG_INFO(Render_Vulkan, "Reallocated HybridSize Textures.");
+};
 
+void RendererVulkan::CreateHybridSizeTextureFramebuffers(){
+    for (int i = 0; i < intermediateHybridSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currOutputScreenRects[isSecondaryWindow][i].GetWidth() != 0){
+            CreateTextureFramebuffer(intermediateHybridSizeTextures[isSecondaryWindow][i], intermediateHybridSizeTextureFBOs[isSecondaryWindow][i]);
+        }
+    }
+};
 void RendererVulkan::CreateTextureFramebuffer(TextureInfo& texture, vk::Framebuffer& framebuffer) {
     if (texture.width == 0 || texture.height == 0){
         return;
@@ -1557,7 +1591,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         currScreen = 1;
     }
     bool isDownsampling = false;
-    int scalingMode; // 0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
+    int scalingMode; // 0 is Nearest Neighbor, 1 is Bilinear, 2 is Lanczos, 3 is FSR, 4 is SGSR, 5 is Sharp Bilinear
     scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
     float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/100.0f));
@@ -1718,7 +1752,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         currentPass++;
     }
 
-    if (scalingMode == 2){
+    if (scalingMode == 1){
         if (isDownsampling){
             texturesToSample.assign({antialiasTextures[currScreen]});
             PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
@@ -1736,6 +1770,11 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             Draw(vertexBufferPointers[currentPass], draw_info);
             currentPass++;
         }
+    } else if (scalingMode == 2){
+        // Lanczos Y-Pass
+
+        // Lanczos X-Pass
+
     } else if (scalingMode == 3) {
         if (isDownsampling){
             // EASU (1x)
@@ -1832,32 +1871,12 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         currentPass++;
     } else {
         texturesToSample.assign({antialiasTextures[currScreen]});
-        if (scalingMode == 1){
-            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
-        } else {
-            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 0);
-        }
+        PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 0);
         UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
         draw_info.convert_colors = 2;
         Draw(vertexBufferPointers[currentPass], draw_info);
         currentPass++;
     }
-
-
-    // // Multipass
-    // screen_ids.assign({screen_id});
-    // PrepareTextureDrawFromScreenInfo(intermediateTextures[currScreen][0], intermediateTextureFBOs[currScreen][0], post_pipelines_texture[0], screen_ids, 1);
-    // UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[0]);
-    // drawInfos[0].convert_colors = 1;
-    // Draw(vertexBufferPointers[0], drawInfos[0]);
-
-    // texturesToSample.assign({intermediateTextures[currScreen][0]});
-    // PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
-    // ApplySecondLayerOpacity();
-    // UpdateVertexBuffer(output_vertices, vertexBufferPointers[1]);
-    // drawInfos[1].convert_colors = 2;
-    // Draw(vertexBufferPointers[1], drawInfos[1]);
-
 }
 
 
@@ -2112,6 +2131,8 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
     if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
         AllocatePPTextures();
         CreatePPTextureFramebuffers();
+        AllocateHybridSizeTextures();
+        CreateHybridSizeTextureFramebuffers();
         // LOG_INFO(Render_Vulkan, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
     }
     prevTopTextureWidth = currTopTextureWidth;
@@ -2129,10 +2150,14 @@ void RendererVulkan::DrawScreens(Frame* frame, const Layout::FramebufferLayout& 
             if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
                 AllocateOutputSizeTextures();
                 CreateOutputSizeTextureFramebuffers();
+                AllocateHybridSizeTextures();
+                CreateHybridSizeTextureFramebuffers();
             }
         } else {
             AllocateOutputSizeTextures();
             CreateOutputSizeTextureFramebuffers();
+            AllocateHybridSizeTextures();
+            CreateHybridSizeTextureFramebuffers();
         }
     }
     

@@ -61,6 +61,7 @@ private:
     void AllocateSMAATextures();
     void AllocatePPTextures();
     void AllocateOutputSizeTextures();
+    void AllocateHybridSizeTextures();
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
@@ -118,8 +119,11 @@ private:
     std::array<std::array<OGLTexture, 7>, 2> intermediateTextures;
     std::array<OGLTexture, 2> antialiasFBOTexture;
 
-    // Intermediate Textures at output size. These are 3 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
-    std::array<std::array<std::array<OGLTexture, 3>, 3>, 2> intermediateOutputSizeTextures;
+    // Intermediate Textures at output size. These are 2 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
+    std::array<std::array<std::array<OGLTexture, 2>, 3>, 2> intermediateOutputSizeTextures;
+    // Intermediate Textures at output height, but source width (for separable filters like Lanczos). These are for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
+    std::array<std::array<OGLTexture, 3>, 2> intermediateHybridSizeTextures;
+
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;
     int currOutputScreen;

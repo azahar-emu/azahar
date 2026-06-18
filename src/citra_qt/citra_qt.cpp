@@ -3843,7 +3843,7 @@ void GMainWindow::UpdateOutputScalingIndicator(bool update) {
     static std::array output_scaling_options = {
         QStringLiteral("NEAREST"),
         QStringLiteral("BILINEAR"),
-        QStringLiteral("ADAPTIVE"),
+        QStringLiteral("LANCZOS"),
         QStringLiteral("FSR"),
         QStringLiteral("SGSR"),
         QStringLiteral("SHARP BILINEAR"),

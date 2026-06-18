@@ -29,6 +29,10 @@
 // Post Processing Shaders
 #include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_frag.h"
 #include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_0_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_0_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_1_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_1_vert.h"
 #include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
 #include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
 #include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass0_frag.h"
@@ -429,6 +433,28 @@ void RendererOpenGL::AllocateOutputSizeTextures(){
     );
 }
 
+void RendererOpenGL::AllocateHybridSizeTextures(){
+    // Allocate Texture with Source Width, Output Height
+    for (int i = 0; i < intermediateHybridSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currTopTextureWidth != 0 && currBottomTextureWidth != 0){
+            intermediateHybridSizeTextures[isSecondaryWindow][i].Release();
+            intermediateHybridSizeTextures[isSecondaryWindow][i].Create();
+            if (i == 2){ // Additional Screen
+                if (!Settings::values.swap_screen.GetValue()){
+                    intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+                } else {
+                    intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+                }
+            } else if (i == 0) { // Top Screen
+                intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+            } else if (i == 1){ // Bottom Screen
+                intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+            }
+        }
+    }
+    LOG_INFO(Render_OpenGL, "Reallocated HybridSize Textures");
+}
+
 /**
  * Initializes the OpenGL state and creates persistent objects.
  */
@@ -720,7 +746,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
    
     // Texture Width and Height when correctly rotated to landscape
     bool isDownsampling = false;
-    int scalingMode; //0 is Nearest Neighbor, 1 is Gamma Corrected Bilinear, 2 is Adaptive (Bilinear/Area), 3 is FSR, 4 is Sharp Bilinear
+    int scalingMode; // 0 is Nearest Neighbor, 1 is Bilinear, 2 is Lanczos, 3 is FSR, 4 is SGSR, 5 is Sharp Bilinear
     scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
     int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
     float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/100.0f));
@@ -985,7 +1011,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
-        if (scalingMode == 2){
+        if (scalingMode == 1){
             if (isDownsampling){
                 //Output
                 state.draw.read_framebuffer = originalReadFramebuffer;
@@ -1256,11 +1282,7 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float scree
             state.Apply();
             AttachUniforms();
             state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
-            if (scalingMode == 1){
-                state.texture_units[0].sampler = samplers[1].handle;
-            } else {
-                state.texture_units[0].sampler = samplers[0].handle;
-            }
+            state.texture_units[0].sampler = samplers[0].handle;
             glUniform1i(uniform_color_texture, 0);
             glUniform1i(uniform_convert_colors, 2);
             glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
@@ -1425,6 +1447,7 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
     if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
         AllocatePPTextures();
+        AllocateHybridSizeTextures();
         // LOG_INFO(Render_OpenGL, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
     }
     prevTopTextureWidth = currTopTextureWidth;
@@ -1440,9 +1463,11 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
         if (layout.additional_screen_enabled){
             if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
                 AllocateOutputSizeTextures();
+                AllocateHybridSizeTextures();
             }
         } else {
             AllocateOutputSizeTextures();
+            AllocateHybridSizeTextures();
         }
     }
     prevOutputScreenRects[isSecondaryWindow][0] = currOutputScreenRects[isSecondaryWindow][0];

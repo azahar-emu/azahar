@@ -159,7 +159,7 @@
            </item>
            <item>
             <property name="text">
-             <string>Adaptive</string>
+             <string>Lanczos</string>
             </property>
            </item>
            <item>

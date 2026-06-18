@@ -176,9 +176,11 @@ private:
     void UploadBufferToImage(StagedTextureInfo& texture);
     void AllocatePPTextures();
     void AllocateOutputSizeTextures();
+    void AllocateHybridSizeTextures();
     // Create Framebuffers that are attached to the Post Processing Textures
     void CreatePPTextureFramebuffers();
     void CreateOutputSizeTextureFramebuffers();
+    void CreateHybridSizeTextureFramebuffers();
     void SetStagedTextureTexInfo(StagedTextureInfo& texture);
     // Shader #include function. Modified from Yuzu
     void ReplaceInclude(std::string& shader_source, std::string_view include_name, std::string_view include_content);
@@ -245,6 +247,11 @@ private:
     // Intermediate Textures/FBOs at output size. These are 3 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
     std::array<std::array<std::array<TextureInfo, 3>, 3>, 2> intermediateOutputSizeTextures;
     std::array<std::array<std::array<vk::Framebuffer, 3>, 3>, 2> intermediateOutputSizeTextureFBOs;
+
+    // Intermediate Textures/FBOs at at output height, but source width (for separable filters like Lanczos). These are for each Main/Secondary Display + Top/Bottom/Additional Screen combo  
+    std::array<std::array<TextureInfo, 3>, 2> intermediateHybridSizeTextures;
+    std::array<std::array<vk::Framebuffer, 3>, 2> intermediateHybridSizeTextureFBOs;
+
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
     std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;
     int currOutputScreen;

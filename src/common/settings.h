@@ -121,7 +121,7 @@ enum class AntiAliasingFilter : u32 {
 enum class OutputScaling : u32 {
     Nearest = 0,
     Bilinear = 1,
-    Adaptive = 2,
+    Lanczos = 2,
     FSR = 3,
     SGSR = 4,
     SharpBilinear = 5,
@@ -554,7 +554,7 @@ struct Values {
     SwitchableSetting<double, true> turbo_limit{200, 0, 1000, Keys::turbo_limit};
     SwitchableSetting<TextureFilter> texture_filter{TextureFilter::NoFilter, Keys::texture_filter};
     SwitchableSetting<AntiAliasingFilter> antialiasing_filter{AntiAliasingFilter::None, Keys::antialiasing_filter};
-    SwitchableSetting<OutputScaling> output_scaling{OutputScaling::Adaptive, Keys::output_scaling};
+    SwitchableSetting<OutputScaling> output_scaling{OutputScaling::Bilinear, Keys::output_scaling};
     SwitchableSetting<int, true> fsr_sharpness{50, 0, 100, Keys::fsr_sharpness};
     SwitchableSetting<TextureSampling> texture_sampling{TextureSampling::GameControlled,
                                                         Keys::texture_sampling};
