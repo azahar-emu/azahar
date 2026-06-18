@@ -152,6 +152,15 @@ struct ConsoleCountryInfo {
     std::array<u8, 2> unknown; ///< Unknown data
     u8 state_code;             ///< The state or province code.
     u8 country_code;           ///< The country code of the console
+
+    bool operator==(const ConsoleCountryInfo& other) const {
+        return unknown == other.unknown && state_code == other.state_code &&
+               country_code == other.country_code;
+    }
+
+    bool operator!=(const ConsoleCountryInfo& other) const {
+        return !(*this == other);
+    }
 };
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
 
@@ -314,6 +323,8 @@ public:
          *      2 : 0 if the system is a Nintendo 2DS, 1 otherwise
          */
         void GetModelNintendo2DS(Kernel::HLERequestContext& ctx);
+
+        void TranslateCountryInfo(Kernel::HLERequestContext& ctx);
 
         /**
          * CFG::GetConfig service function
