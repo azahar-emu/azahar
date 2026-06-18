@@ -265,7 +265,7 @@
     <string name="antialiasing_filter_name">Antialiasing Filter</string>
     <string name="antialiasing_filter_description">Reduces the amount of aliasing, resulting in smoother edges. FXAA is extremely lightweight but more aggressive and lower quality. SMAA is heavier but is higher quality and more selective with the edges it smooths.</string>
     <string name="output_scaling_name">Output Scaling</string>
-    <string name="output_scaling_description">The method by which the game output is scaled to the screen. Nearest doesn\'t smooth visuals but causes uneven pixels at non-integer ratios. Bilinear smooths visuals but may cause aliasing when downscaling. Adaptive uses bilinear for upscaling, but uses area sampling to downscale without creating aliasing. FSR 1 is an upscaler which allows sharpening and allows better visuals without increasing the internal resolution. SGSR 1 is similar to FSR except its lower quality but much faster.   Sharp Bilinear looks similar to nearest but is slightly smoothed to prevent uneven pixels at non-integer ratios.</string>
+    <string name="output_scaling_description">The method by which the game output is scaled to the screen. Nearest doesn\'t smooth visuals but causes uneven pixels at non-integer ratios. Bilinear smooths visuals but may be blurry. Lanczos smooths visuals and is sharper than bilinear. FSR 1 is an upscaler which allows sharpening and allows better visuals without increasing the internal resolution. SGSR 1 is similar to FSR except its lower quality but much faster.   Sharp Bilinear looks similar to nearest but is slightly smoothed to prevent uneven pixels at non-integer ratios.</string>
     <string name="fsr_sharpness_name">FSR/SGSR Sharpness</string>
     <string name="fsr_sharpness_description">Specifies the strength of the sharpening pass when using FSR/SGSR</string>
     <string name="delay_render_thread">Delay Game Render Thread</string>
@@ -773,7 +773,7 @@
     <!-- Output scaling names -->
     <string name="nearest">Nearest</string>
     <string name="bilinear">Bilinear</string>
-    <string name="adaptive">Adaptive</string>
+    <string name="lanczos">Lanczos</string>
     <string name="fsr">AMD FSR 1</string>
     <string name="sgsr">Snapdragon GSR 1</string>
     <string name="sharpbilinear">Sharp Bilinear</string>

@@ -102,7 +102,7 @@ static_assert(sizeof(PresentUniformData) == 124,
 class RendererVulkan : public VideoCore::RendererBase {
     static constexpr std::size_t PRESENT_PIPELINES = 3;
     static constexpr std::size_t POST_PIPELINES_SCREEN = 2;
-    static constexpr std::size_t POST_PIPELINES_TEXTURE = 8;
+    static constexpr std::size_t POST_PIPELINES_TEXTURE = 10;
 public:
     explicit RendererVulkan(Core::System& system, Pica::PicaCore& pica, Frontend::EmuWindow& window,
                             Frontend::EmuWindow* secondary_window);
@@ -204,12 +204,12 @@ private:
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
-    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1 and SGSR
+    // Post Processing Pipelines for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1, SGSR, lanczos Pass 0, Lanczos Pass 1
     std::array<vk::Pipeline, POST_PIPELINES_TEXTURE> post_pipelines_texture;
     // Post Processing Pipelines for presenting to screen. Contains: Area Sampling and Sharp Bilinear
     std::array<vk::Pipeline, POST_PIPELINES_SCREEN> post_pipelines_screen;
     std::array<vk::ShaderModule, PRESENT_PIPELINES> present_shaders;
-    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1 and SGSR
+    // Post Processing Shaders for use with RGBA16F Textures. Contains: Simple Present, FXAA, SMAA Pass 0, SMAA Pass 1, SMAA Pass 2, FSR Pass 0, FSR Pass 1, SGSR, lanczos Pass 0, Lanczos Pass 1
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_vert_shaders_texture;
     std::array<vk::ShaderModule, POST_PIPELINES_TEXTURE> post_frag_shaders_texture;
     // Post Processing Shaders for presenting to screen. Contains: Area Sampling and Sharp Bilinear

@@ -300,7 +300,7 @@
     <string-array name="outputScalingNames">
         <item>@string/nearest</item>
         <item>@string/bilinear</item>
-        <item>@string/adaptive</item>
+        <item>@string/lanczos</item>
         <item>@string/fsr</item>
         <item>@string/sgsr</item>
         <item>@string/sharpbilinear</item>

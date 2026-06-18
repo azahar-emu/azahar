@@ -109,6 +109,8 @@ private:
     OGLProgram FSR_PASS_0_shader;
     OGLProgram FSR_PASS_1_shader;
     OGLProgram SGSR_shader;
+    OGLProgram Lanczos_PASS_0_shader;
+    OGLProgram Lanczos_PASS_1_shader;
     OGLProgram SharpBilinear_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;

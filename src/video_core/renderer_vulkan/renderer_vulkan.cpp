@@ -1071,7 +1071,7 @@ void RendererVulkan::CompileShaders() {
     post_frag_shaders_screen[1] =
         Compile(SharpBilinear_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
     
-   // SGSR Shader
+    // SGSR Shader
     std::string SGSR_shader_frag_data = std::string(HostShaders::VULKAN_SGSR_FRAG);
     std::string SGSR_shader_vert_data = std::string(HostShaders::VULKAN_SGSR_VERT);
     
@@ -1080,6 +1080,25 @@ void RendererVulkan::CompileShaders() {
     post_frag_shaders_texture[7] =
         Compile(SGSR_shader_frag_data, vk::ShaderStageFlagBits::eFragment, device);
     
+    // Lanczos Pass 0 Shader
+    std::string LANCZOS_PASS_0_frag_data = std::string(HostShaders::VULKAN_LANCZOS3_PASS_0_FRAG);
+    std::string LANCZOS_PASS_0_vert_data = std::string(HostShaders::VULKAN_LANCZOS3_PASS_0_VERT);
+    
+    post_vert_shaders_texture[8] =
+        Compile(LANCZOS_PASS_0_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[8] =
+        Compile(LANCZOS_PASS_0_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+    // Lanczos Pass 1 Shader
+    std::string LANCZOS_PASS_1_frag_data = std::string(HostShaders::VULKAN_LANCZOS3_PASS_1_FRAG);
+    std::string LANCZOS_PASS_1_vert_data = std::string(HostShaders::VULKAN_LANCZOS3_PASS_1_VERT);
+    
+    post_vert_shaders_texture[9] =
+        Compile(LANCZOS_PASS_1_vert_data, vk::ShaderStageFlagBits::eVertex, device);
+    post_frag_shaders_texture[9] =
+        Compile(LANCZOS_PASS_1_frag_data, vk::ShaderStageFlagBits::eFragment, device);
+
+
     auto properties = instance.GetPhysicalDevice().getProperties();
     for (std::size_t i = 0; i < present_samplers.size(); i++) {
         const vk::Filter filter_mode = i == 0 ? vk::Filter::eNearest : vk::Filter::eLinear;
@@ -1686,7 +1705,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         texturesToSample.assign({intermediateTextures[currScreen][0]});
         PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[1], texturesToSample, 1);
         UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
-        if (scalingMode == 3|| (scalingMode == 4 && !isDownsampling)){
+        if (scalingMode == 3|| (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
             draw_info.convert_colors = 0;
         } else {
             draw_info.convert_colors = 1;
@@ -1732,7 +1751,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         PrepareTextureDrawFromTextureInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[4], texturesToSample, 1);
         UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
         draw_info.i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
-        if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling)){
+        if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
             draw_info.convert_colors = 2;
         } else {
             draw_info.convert_colors = 0;
@@ -1743,7 +1762,7 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
         screen_ids.assign({screen_id});
         PrepareTextureDrawFromScreenInfo(antialiasTextures[currScreen], antialiasTextureFBOs[currScreen], post_pipelines_texture[0], screen_ids, 1);
         UpdateVertexBuffer(rotate_vertices, vertexBufferPointers[currentPass]);
-        if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling)){
+        if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
             draw_info.convert_colors = 0;
         } else {
             draw_info.convert_colors = 1;
@@ -1771,10 +1790,41 @@ void RendererVulkan::DrawSingleScreen(u32 screen_id, float screenLeft, float scr
             currentPass++;
         }
     } else if (scalingMode == 2){
-        // Lanczos Y-Pass
+        if (isDownsampling){
+            // Area Sampling
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, post_pipelines_screen[0], texturesToSample, 0);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            draw_info.convert_colors = 2;
+            draw_info.i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            draw_info.o_resolution = Common::Vec4f{screenWidth, screenHeight, 1.0f/ screenWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], draw_info);
+            currentPass++;
+        } else {
+            // Lanczos Y-Pass
+            texturesToSample.assign({antialiasTextures[currScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateHybridSizeTextures[isSecondaryWindow][currOutputScreen], intermediateHybridSizeTextureFBOs[isSecondaryWindow][currOutputScreen], post_pipelines_texture[8], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            draw_info.i_resolution = Common::Vec4f{textureWidth, textureHeight, 1.0f/ textureWidth, 1.0f / textureHeight};
+            Draw(vertexBufferPointers[currentPass], draw_info);
+            currentPass++;
 
-        // Lanczos X-Pass
+            // Lanczos X-Pass
+            texturesToSample.assign({intermediateHybridSizeTextures[isSecondaryWindow][currOutputScreen]});
+            PrepareTextureDrawFromTextureInfo(intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0], intermediateOutputSizeTextureFBOs[isSecondaryWindow][currOutputScreen][0], post_pipelines_texture[9], texturesToSample, 0);
+            UpdateVertexBuffer(pass_through_vertices, vertexBufferPointers[currentPass]);
+            draw_info.i_resolution = Common::Vec4f{textureWidth, screenHeight, 1.0f/ textureWidth, 1.0f / screenHeight};
+            Draw(vertexBufferPointers[currentPass], draw_info);
+            currentPass++;
 
+            // Normal Present
+            texturesToSample.assign({intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0]});
+            PrepareDrawFromTextureInfo(currentFrame, currentFramebufferLayout, present_pipelines[current_pipeline], texturesToSample, 1);
+            UpdateVertexBuffer(output_vertices, vertexBufferPointers[currentPass]);
+            draw_info.convert_colors = 0;
+            Draw(vertexBufferPointers[currentPass], draw_info);
+            currentPass++;
+        }
     } else if (scalingMode == 3) {
         if (isDownsampling){
             // EASU (1x)
