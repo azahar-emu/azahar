@@ -27,7 +27,7 @@ APT_A::APT_A(std::shared_ptr<Module> apt)
         {0x000E, &APT_A::GlanceParameter, "GlanceParameter"},
         {0x000F, &APT_A::CancelParameter, "CancelParameter"},
         {0x0010, nullptr, "DebugFunc"},
-        {0x0011, nullptr, "MapProgramIdForDebug"},
+        {0x0011, &APT_A::MapProgramIdForDebug, "MapProgramIdForDebug"},
         {0x0012, nullptr, "SetHomeMenuAppletIdForDebug"},
         {0x0013, nullptr, "GetPreparationState"},
         {0x0014, nullptr, "SetPreparationState"},

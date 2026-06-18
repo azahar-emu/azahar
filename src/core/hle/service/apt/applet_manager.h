@@ -288,6 +288,8 @@ public:
     bool CancelParameter(bool check_sender, AppletId sender_appid, bool check_receiver,
                          AppletId receiver_appid);
 
+    void MapProgramIdForDebug(AppletId app_id, u64 title_id, FS::MediaType media_type);
+
     struct GetLockHandleResult {
         AppletAttributes corrected_attributes;
         u32 state;

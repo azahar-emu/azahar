@@ -574,6 +574,28 @@ void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
                                                  receiver_appid));
 }
 
+void Module::APTInterface::MapProgramIdForDebug(Kernel::HLERequestContext& ctx) {
+    // This function got stubbed at some point and no longer
+    // does anything on real hardware. It is implemented here
+    // so that emulated applications can take advantage of it.
+
+    IPC::RequestParser rp(ctx);
+    const auto app_id = rp.PopEnum<AppletId>();
+    u64 title_id = rp.Pop<u64>();
+
+    // NOTE: Real hardware forces the media type to nand.
+    // To allow better control of this service call,
+    // treat the highest byte of the title ID as the
+    // media type instead.
+    FS::MediaType media_type = static_cast<FS::MediaType>(title_id >> 56);
+    title_id &= ~0xFF00000000000000ULL;
+
+    apt->applet_manager->MapProgramIdForDebug(app_id, title_id, media_type);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess); // No error
+}
+
 void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto flags = rp.PopEnum<ApplicationJumpFlags>();
