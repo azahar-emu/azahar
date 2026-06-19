@@ -359,6 +359,15 @@ bool AppletManager::CancelParameter(bool check_sender, AppletId sender_appid, bo
     return cancellation_success;
 }
 
+void AppletManager::MapProgramIdForDebug(AppletId app_id, u64 title_id, FS::MediaType media_type) {
+    auto slot = GetAppletSlotFromId(app_id);
+    if (slot != AppletSlot::Error) {
+        auto applet_slot = GetAppletSlot(slot);
+        applet_slot->title_id = title_id;
+        applet_slot->media_type = media_type;
+    }
+}
+
 ResultVal<AppletManager::GetLockHandleResult> AppletManager::GetLockHandle(
     AppletAttributes attributes) {
     auto corrected_attributes = attributes;
