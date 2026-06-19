@@ -655,9 +655,8 @@ jstring Java_org_citra_citra_1emu_NativeLibrary_getRecommendedExtension(
     return env->NewStringUTF(j_should_compress ? compressed_ext.c_str() : uncompressed_ext.c_str());
 }
 
-JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_NativeLibrary_isUpdateCheckerEnabled(
-        JNIEnv* env,
-        jobject obj) {
+JNIEXPORT jboolean JNICALL
+Java_org_citra_citra_1emu_NativeLibrary_isUpdateCheckerEnabled(JNIEnv* env, jobject obj) {
 #ifdef ENABLE_UPDATE_CHECKER
     return JNI_TRUE;
 #else
@@ -666,10 +665,9 @@ JNIEXPORT jboolean JNICALL Java_org_citra_citra_1emu_NativeLibrary_isUpdateCheck
 }
 
 #ifdef ENABLE_UPDATE_CHECKER
-JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_setCACertificatePath(
-        JNIEnv* env,
-        jobject obj,
-        jstring path) {
+JNIEXPORT void JNICALL Java_org_citra_citra_1emu_NativeLibrary_setCACertificatePath(JNIEnv* env,
+                                                                                    jobject obj,
+                                                                                    jstring path) {
     const char* path_str = env->GetStringUTFChars(path, nullptr);
     UpdateChecker::SetCACertPath(path_str);
 }
@@ -683,7 +681,7 @@ bool IsPrereleaseBuild() {
 static bool ShouldCheckForPrereleaseUpdates() {
     const bool update_channel = Settings::values.update_check_channel.GetValue();
     const bool using_prerelease_channel =
-            (update_channel == Settings::UpdateCheckChannels::PRERELEASE);
+        (update_channel == Settings::UpdateCheckChannels::PRERELEASE);
     return (IsPrereleaseBuild() || using_prerelease_channel);
 }
 
@@ -696,11 +694,10 @@ static int GetMajorVersion(const std::string& version) {
     }
 }
 
-JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateTag(
-        JNIEnv* env,
-        jobject obj) {
+JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateTag(JNIEnv* env,
+                                                                               jobject obj) {
     const std::optional<std::string> latest_release_tag =
-            UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
+        UpdateChecker::GetLatestRelease(ShouldCheckForPrereleaseUpdates());
 
     if (latest_release_tag && latest_release_tag.value() != Common::g_build_fullname) {
         const int latest_major_version = GetMajorVersion(latest_release_tag.value());
@@ -713,9 +710,8 @@ JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateTag(
     return env->NewStringUTF("");
 }
 
-JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateUrl(
-        JNIEnv* env,
-        jobject obj) {
+JNIEXPORT jstring JNICALL Java_org_citra_citra_1emu_NativeLibrary_getUpdateUrl(JNIEnv* env,
+                                                                               jobject obj) {
     std::string update_page_url;
     if (ShouldCheckForPrereleaseUpdates()) {
         update_page_url = "https://github.com/azahar-emu/azahar/releases";

@@ -25,7 +25,6 @@ public:
     static constexpr int PRERELEASE = 1;
 };
 
-
 enum class GraphicsAPI {
     Software = 0,
     OpenGL = 1,

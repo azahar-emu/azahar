@@ -10,4 +10,4 @@
 namespace UpdateChecker {
 std::optional<std::string> GetLatestRelease(bool);
 void SetCACertPath(std::string path);
-}
+} // namespace UpdateChecker
