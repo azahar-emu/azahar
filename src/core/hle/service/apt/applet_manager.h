@@ -101,6 +101,7 @@ enum class AppletId : u32 {
     Mint2 = 0x407,
     Extrapad2 = 0x408,
     Memolib2 = 0x409,
+    TypeMask = 0xF00,
 };
 
 /// Application Old/New 3DS target platforms
