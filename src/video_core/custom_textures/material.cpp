@@ -100,13 +100,23 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
     if (IsDecoded()) {
         return;
     }
-    for (CustomTexture* const texture : textures) {
+    for (std::size_t index = 0; index < textures.size(); index++) {
+        CustomTexture* const texture = textures[index];
         if (!texture || texture->IsLoaded()) {
             continue;
         }
         texture->LoadFromDisk(flip_png);
         size += texture->data.size();
         LOG_DEBUG(Render, "Loading {} map {}", MapTypeName(texture->type), texture->path);
+        if (!texture->IsLoaded()) {
+            LOG_ERROR(Render, "Failed to load {} map {} of material with hash {:#016X}",
+                      MapTypeName(texture->type), texture->path, hash);
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[index] = nullptr;
+        }
     }
     if (!textures[0]) {
         LOG_ERROR(Render, "Unable to create material without color texture!");
@@ -126,16 +136,24 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
                       "which do not match the color texture dimentions {}x{}",
                       MapTypeName(texture->type), texture->path, hash, texture->width,
                       texture->height, width, height);
-            state = DecodeState::Failed;
-            return;
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[static_cast<std::size_t>(texture->type)] = nullptr;
+            continue;
         }
         if (texture->format != format) {
             LOG_ERROR(
                 Render, "{} map {} is stored with {} format which does not match color format {}",
                 MapTypeName(texture->type), texture->path,
                 CustomPixelFormatAsString(texture->format), CustomPixelFormatAsString(format));
-            state = DecodeState::Failed;
-            return;
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[static_cast<std::size_t>(texture->type)] = nullptr;
+            continue;
         }
     }
     state = DecodeState::Decoded;

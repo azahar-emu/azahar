@@ -138,7 +138,12 @@ ClearValue SurfaceBase::MakeClearValue(PAddr copy_addr, PixelFormat dst_format) 
     case SurfaceType::Fill: {
         Pica::Texture::TextureInfo tex_info{};
         tex_info.format = static_cast<Pica::TexturingRegs::TextureFormat>(dst_format);
-        const auto color = Pica::Texture::LookupTexture(fill_buffer.data(), 0, 0, tex_info);
+        const std::size_t tile_size = Pica::Texture::CalculateTileSize(tex_info.format);
+        std::vector<u8> fill_tile(std::max(tile_size, fill_buffer.size()));
+        for (std::size_t i = 0; i < fill_tile.size(); i++) {
+            fill_tile[i] = fill_data[(copy_addr - addr + i) % fill_size];
+        }
+        const auto color = Pica::Texture::LookupTexture(fill_tile.data(), 0, 0, tex_info);
         result.color = color / 255.f;
         break;
     }
