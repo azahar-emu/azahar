@@ -178,6 +178,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     const SoftwareKeyboardConfig& config) const {
     using namespace Frontend;
     KeyboardConfig frontend_config;
+    frontend_config.type = static_cast<KeyboardType>(static_cast<u32>(config.type));
     frontend_config.button_config =
         static_cast<ButtonConfig>(static_cast<u32>(config.num_buttons_m1));
     frontend_config.accept_mode = static_cast<AcceptedInput>(static_cast<u32>(config.valid_input));
