@@ -572,20 +572,15 @@ class SettingsAdapter(
 
     //onclick for multichoice
     override fun onClick(dialog: DialogInterface?, which: Int, isChecked: Boolean) {
-        when (clickedItem) {
-            is MultiChoiceSetting -> {
-                val mcsetting = clickedItem as? MultiChoiceSetting
-                mcsetting?.let {
-                    val value = getValueForMultiChoiceSelection(it, which)
-                    if (it.selectedValues.contains(value) != isChecked) {
-                        val setting =
-                            it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
-                        fragmentView?.putSetting(setting)
-                        fragmentView?.onSettingChanged()
-                    }
-                    fragmentView.loadSettingsList()
-                }
+        val mcsetting = clickedItem as? MultiChoiceSetting
+        mcsetting?.let {
+            val value = getValueForMultiChoiceSelection(it, which)
+            if (it.selectedValues.contains(value) != isChecked) {
+                val setting = it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
+                fragmentView?.putSetting(setting)
+                fragmentView?.onSettingChanged()
             }
+            fragmentView.loadSettingsList()
         }
     }
 

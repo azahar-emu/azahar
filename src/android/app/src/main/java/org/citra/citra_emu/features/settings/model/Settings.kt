@@ -130,7 +130,6 @@ class Settings {
         const val KEY_BUTTON_R = "button_r"
         const val KEY_BUTTON_ZL = "button_zl"
         const val KEY_BUTTON_ZR = "button_zr"
-        const val KEY_BUTTON_COMBO = "button_combo"
         const val KEY_CIRCLEPAD_AXIS_VERTICAL = "circlepad_axis_vertical"
         const val KEY_CIRCLEPAD_AXIS_HORIZONTAL = "circlepad_axis_horizontal"
         const val KEY_CSTICK_AXIS_VERTICAL = "cstick_axis_vertical"

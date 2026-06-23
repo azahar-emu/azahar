@@ -177,8 +177,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) : SurfaceView(contex
                     else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO && button.status == NativeLibrary.ButtonState.PRESSED) {
                         TurboHelper.toggleTurbo(true)
                     }
-                    else if (button.id == Hotkey.COMBO_BUTTON.button && button.status == NativeLibrary.ButtonState.PRESSED) {
-                        ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
+                    else if (button.id == Hotkey.COMBO_BUTTON.button) {
+                        ComboHelper.comboActivate(button.status)
                     }
 
                     NativeLibrary.onGamePadEvent(

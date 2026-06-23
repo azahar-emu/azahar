@@ -72,10 +72,15 @@ class HotkeyUtility(
         var handled = false
         val buttonSet = InputBindingSetting.getButtonSet(keyEvent)
         val thisKeyIsEnableButton = buttonSet.contains(Hotkey.ENABLE.button)
+        val thisKeyIsComboButton = buttonSet.contains(Hotkey.COMBO_BUTTON.button)
         val thisKeyIsHotkey =
             !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
         if (thisKeyIsEnableButton) {
             handled = true; hotkeyIsEnabled = false
+        }
+        if (thisKeyIsComboButton) {
+            ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
+            handled = true
         }
 
         for (button in buttonSet) {
@@ -137,7 +142,6 @@ class HotkeyUtility(
             }
             Hotkey.COMBO_BUTTON.button -> {
                 ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
-                ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
             }
 
             else -> {}
