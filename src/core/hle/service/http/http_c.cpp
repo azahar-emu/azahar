@@ -281,7 +281,7 @@ std::string Context::ParseMultipartFormData() {
 void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
 
-    state = RequestState::ConnectingToServer;
+    state = RequestState::SendingRequest;
 
     static const std::unordered_map<RequestMethod, std::string> request_method_strings{
         {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
@@ -861,10 +861,24 @@ void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, context_handle={}", context_handle);
 
     Context& http_context = GetContext(context_handle);
+    RequestState state = http_context.state;
+
+    // When POST data is pending to be set, HTTPC stays in the SendingRequest
+    // state until NotifyFinishSendPostData is called. Most likely HTTPC
+    // already started the HTTP request at this point, has send the headers
+    // and is waiting for the client to set the post body to send.
+    // We cannot do that with httplib so instead fake the state to SendingRequest
+    // if post data is pending. TODO(PabloMK7): Fix if we get a more
+    // flexible HTTP library.
+    if (state == RequestState::NotStarted && http_context.post_pending_request) {
+        state = RequestState::SendingRequest;
+    }
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={} state={}", context_handle, state);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.PushEnum<RequestState>(http_context.state);
+    rb.PushEnum<RequestState>(state);
 }
 
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
