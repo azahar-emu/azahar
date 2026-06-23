@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstdarg>
+#include <cstring>
 #include <mutex>
 #include <vector>
 #include <cubeb/cubeb.h>
