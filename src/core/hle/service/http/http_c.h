@@ -55,6 +55,8 @@ enum class RequestState : u8 {
     ConnectingToServer = 0x5,
 
     /// Request in progress, sending HTTP request.
+    /// HTTPC stays in this state when there is POST
+    /// data pending.
     SendingRequest = 0x6,
 
     // Request in progress, receiving HTTP response and headers.
