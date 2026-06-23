@@ -11,6 +11,7 @@
 #include <fmt/format.h>
 #include "common/archives.h"
 #include "common/assert.h"
+#include "common/file_util.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
 #include "core/core.h"
@@ -297,6 +298,9 @@ void Context::MakeRequest() {
     request.method = request_method_strings.at(method);
     request.path = url_info.path;
 
+    // Apply URL replacements if any
+    url_info.host = url_replacer->Apply(url_info.host);
+
     request.progress = [this](u64 current, u64 total) -> bool {
         // TODO(B3N30): Is there a state that shows response header are available
         current_download_size_bytes = current;
@@ -450,8 +454,6 @@ void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
 }
 
 bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
-
     if (!post_data_raw.empty()) {
         sink.write(post_data_raw.data() + offset, length);
     }
@@ -462,8 +464,6 @@ bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& s
 }
 
 bool Context::ChunkedContentProvider(size_t offset, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
-
     finish_post_data.Wait();
 
     switch (post_data_type) {
@@ -788,6 +788,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     contexts[context_counter].socket_buffer_size = 0;
     contexts[context_counter].handle = context_counter;
     contexts[context_counter].session_id = session_data->session_id;
+    contexts[context_counter].url_replacer = &url_replacer;
 
     session_data->num_http_contexts++;
 
@@ -857,8 +858,6 @@ void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
     if (!session_data) {
         return;
     }
-
-    LOG_DEBUG(Service_HTTP, "called, context_handle={}", context_handle);
 
     Context& http_context = GetContext(context_handle);
     RequestState state = http_context.state;
@@ -1414,7 +1413,6 @@ void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
     }
 
     http_context.finish_post_data.Set();
-    http_context.post_pending_request = false;
 
     http_context.current_copied_data = 0;
     http_context.request_future =
@@ -2017,6 +2015,61 @@ void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_HTTP, "(STUBBED) called");
 }
 
+void HTTP_C::RegisterURLReplacement(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 pattern_size = rp.Pop<u32>();
+    const u32 replacement_size = rp.Pop<u32>();
+
+    const std::vector<u8>& pattern_buf = rp.PopStaticBuffer();
+    const std::vector<u8>& replacement_buf = rp.PopStaticBuffer();
+
+    std::string pattern(reinterpret_cast<const char*>(pattern_buf.data()),
+                        std::min(static_cast<size_t>(pattern_size), pattern_buf.size()));
+    std::string replacement(
+        reinterpret_cast<const char*>(replacement_buf.data()),
+        std::min(static_cast<size_t>(replacement_size), replacement_buf.size()));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (url_replacer.HasRule(pattern)) {
+        rb.Push(Result{ErrorDescription::AlreadyExists, ErrorModule::HTTP,
+                       ErrorSummary::InvalidArgument, ErrorLevel::Status});
+        return;
+    }
+
+    Result res = url_replacer.AddRule(pattern, replacement)
+                     ? ResultSuccess
+                     : Result{ErrorDescription::InvalidCombination, ErrorModule::HTTP,
+                              ErrorSummary::InvalidArgument, ErrorLevel::Status};
+    if (res.IsSuccess()) {
+        res = url_replacer.Save() ? res
+                                  : Result{ErrorDescription::OutOfMemory, ErrorModule::HTTP,
+                                           ErrorSummary::Internal, ErrorLevel::Permanent};
+    }
+
+    rb.Push(res);
+}
+
+void HTTP_C::UnregisterURLReplacement(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 pattern_size = rp.Pop<u32>();
+
+    const std::vector<u8>& pattern_buf = rp.PopStaticBuffer();
+
+    std::string pattern(reinterpret_cast<const char*>(pattern_buf.data()),
+                        std::min(static_cast<size_t>(pattern_size), pattern_buf.size()));
+
+    bool deleted = url_replacer.DeleteRule(pattern);
+    Result res = deleted ? ResultSuccess
+                         : Result{ErrorDescription::NotFound, ErrorModule::HTTP,
+                                  ErrorSummary::NotFound, ErrorLevel::Info};
+    if (deleted) {
+        url_replacer.Save();
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(res);
+}
+
 void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const Context::Handle context_handle = rp.Pop<u32>();
@@ -2185,6 +2238,96 @@ void HTTP_C::DecryptClCertA() {
     ClCertA.init = true;
 }
 
+URLReplacer::URLReplacer() {
+    const std::string path{fmt::format("{}/http_hle_replace_rules.txt",
+                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+
+    FileUtil::IOFile f(path, "rb");
+    if (!f.IsOpen()) {
+        return;
+    }
+
+    std::string pattern;
+    std::string replacement;
+    while (f.ReadLine(pattern) && f.ReadLine(replacement)) {
+        try {
+            rules.push_back(Rule{
+                .regex = boost::regex(pattern),
+                .pattern = pattern,
+                .replacement = replacement,
+            });
+        } catch (const boost::regex_error& e) {
+            LOG_ERROR(Service_HTTP, "Failed to load HTTP HLE replacement pattern \"{}\": {}",
+                      pattern, e.what());
+        }
+    }
+}
+
+bool URLReplacer::HasRule(const std::string& pattern) {
+    for (const auto& rule : rules) {
+        if (rule.pattern == pattern) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool URLReplacer::AddRule(const std::string& pattern, const std::string& replacement) {
+    try {
+        rules.push_back(Rule{
+            .regex = boost::regex(pattern),
+            .pattern = pattern,
+            .replacement = replacement,
+        });
+    } catch (const boost::regex_error& e) {
+        return false;
+    }
+    return true;
+}
+
+bool URLReplacer::DeleteRule(const std::string& pattern) {
+    const auto old_size = rules.size();
+
+    std::erase_if(rules, [&](const Rule& rule) { return rule.pattern == pattern; });
+
+    return rules.size() != old_size;
+}
+
+std::string URLReplacer::Apply(const std::string& url) const {
+    std::string result = url;
+
+    for (const auto& rule : rules) {
+        if (boost::regex_search(result, rule.regex)) {
+            result = boost::regex_replace(result, rule.regex, rule.replacement,
+                                          boost::match_default | boost::format_all);
+            LOG_WARNING(Service_HTTP, "rule \"{}\" has replaced URL \"{}\" to \"{}\"", rule.pattern,
+                        url, result);
+            break;
+        }
+    }
+
+    return result;
+}
+
+bool URLReplacer::Save() {
+    const std::string path{fmt::format("{}/http_hle_replace_rules.txt",
+                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+
+    FileUtil::IOFile f(path, "wb");
+
+    for (const auto& rule : rules) {
+        if ((f.WriteLine(rule.pattern) != rule.pattern.size() + 1) ||
+            (f.WriteLine(rule.replacement) != rule.replacement.size() + 1)) {
+            LOG_ERROR(Service_HTTP, "failed to write URL replacement rules");
+            f.Close();
+            FileUtil::Delete(path);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -2245,6 +2388,9 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0037, &HTTP_C::SetKeepAlive, "SetKeepAlive"},
         {0x0038, &HTTP_C::SetPostDataTypeSize, "SetPostDataTypeSize"},
         {0x0039, &HTTP_C::Finalize, "Finalize"},
+        // Custom
+        {0x0C00, &HTTP_C::RegisterURLReplacement, "RegisterURLReplacement"},
+        {0x0C01, &HTTP_C::UnregisterURLReplacement, "UnregisterURLReplacement"},
         // clang-format on
     };
     RegisterHandlers(functions);

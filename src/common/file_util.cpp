@@ -1516,6 +1516,46 @@ std::size_t IOFile::WriteImpl(const void* data, std::size_t length, std::size_t 
 #endif
 }
 
+bool IOFile::ReadLine(std::string& line) {
+    line.clear();
+
+    char ch;
+    bool read_anything = false;
+
+    while (true) {
+        const std::size_t read = ReadImpl(&ch, sizeof(ch), 1);
+
+        if (read != sizeof(ch)) {
+            return read_anything;
+        }
+        read_anything = true;
+
+        if (ch == '\n') {
+            return true;
+        }
+
+        // Always convert to UNIX style
+        if (ch != '\r') {
+            line.push_back(ch);
+        }
+    }
+}
+
+size_t IOFile::WriteLine(const std::string_view line) {
+    const size_t written_line = WriteImpl(line.data(), line.size(), 1);
+    if (written_line != line.size()) {
+        return written_line;
+    }
+
+    char nl = '\n';
+    const size_t written_nl = WriteImpl(&nl, sizeof(nl), 1);
+    if (written_nl != sizeof(nl)) {
+        return written_nl;
+    }
+
+    return written_line + written_nl;
+}
+
 bool IOFile::Resize(u64 size) {
     if (!IsOpen() || 0 !=
 #if defined(HAVE_LIBRETRO_VFS)
