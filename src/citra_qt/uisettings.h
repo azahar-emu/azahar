@@ -70,7 +70,7 @@ struct Values {
     QByteArray state;
 
     QByteArray renderwindow_geometry;
-
+    QByteArray secondarywindow_geometry;
     QByteArray gamelist_header_state;
 
     QByteArray microprofile_geometry;
