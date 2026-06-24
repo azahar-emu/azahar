@@ -142,4 +142,6 @@ object SettingKeys {
     external fun screen_orientation(): String
     external fun performance_overlay_position(): String
     external fun enable_secondary_display(): String
+    external fun check_for_update_on_start(): String
+    external fun update_check_channel(): String
 }
