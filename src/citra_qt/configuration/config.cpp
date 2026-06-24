@@ -63,6 +63,8 @@ const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys {{
      {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
      {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Configure"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+,"), Qt::WidgetWithChildrenShortcut}},
+     {QStringLiteral("Configure Current Application"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+."), Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
      {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
