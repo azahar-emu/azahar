@@ -333,6 +333,8 @@ private:
     void OpenPerGameConfiguration(u64 title_id, const QString& file_name);
     void UpdateVolumeUI();
     void UpdateAPIIndicator(bool update = false);
+    void UpdateOutputScalingIndicator(bool update = false);
+    void UpdateAntialiasingFilterIndicator(bool update = false);
     void UpdateStatusButtons();
 #ifdef __unix__
     void SetGamemodeEnabled(bool state);
@@ -359,6 +361,8 @@ private:
     QLabel* emu_frametime_label = nullptr;
     QPushButton* graphics_api_button = nullptr;
     QPushButton* volume_button = nullptr;
+    QPushButton* output_scaling_button = nullptr;
+    QPushButton* antialiasing_filter_button = nullptr;
     QWidget* volume_popup = nullptr;
     QSlider* volume_slider = nullptr;
     QTimer status_bar_update_timer;

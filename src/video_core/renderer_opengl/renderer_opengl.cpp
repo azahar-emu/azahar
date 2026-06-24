@@ -9,18 +9,51 @@
 #include "core/frontend/emu_window.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "core/memory.h"
+#include "gl_state.h"
 #include "video_core/pica/pica_core.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_texture_mailbox.h"
 #include "video_core/renderer_opengl/post_processing_opengl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/shader/generator/glsl_shader_gen.h"
 
+// Shaders
 #include "video_core/host_shaders/opengl_present_anaglyph_frag.h"
 #include "video_core/host_shaders/opengl_present_frag.h"
 #include "video_core/host_shaders/opengl_present_interlaced_frag.h"
 #include "video_core/host_shaders/opengl_present_vert.h"
+#include "video_core/host_shaders/opengl_simple_present_frag.h"
+#include "video_core/host_shaders/opengl_simple_present_vert.h"
 
+// Post Processing Shaders
+#include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_frag.h"
+#include "video_core/host_shaders/post_processing/AREA/opengl_area_sampling_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_0_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_0_vert.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_1_frag.h"
+#include "video_core/host_shaders/post_processing/LANCZOS/opengl_lanczos3_pass_1_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_a_h.h"
+#include "video_core/host_shaders/post_processing/FSR/ffx_fsr1_h.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/FSR/opengl_fsr_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/FXAA/opengl_fxaa_frag.h"
+#include "video_core/host_shaders/post_processing/FXAA/opengl_fxaa_vert.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/opengl_sharpbilinear_frag.h"
+#include "video_core/host_shaders/post_processing/SHARPBILINEAR/opengl_sharpbilinear_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass0_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass0_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass1_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass1_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass2_frag.h"
+#include "video_core/host_shaders/post_processing/SMAA/opengl_smaa_pass2_vert.h"
+#include "video_core/host_shaders/post_processing/SMAA/smaa_hlsl.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/AreaTex.h"
+#include "video_core/host_shaders/post_processing/SMAA/textures/SearchTex.h"
+#include "video_core/host_shaders/post_processing/SGSR/opengl_sgsr_frag.h"
+#include "video_core/host_shaders/post_processing/SGSR/opengl_sgsr_vert.h"
 namespace OpenGL {
 
 MICROPROFILE_DEFINE(OpenGL_RenderFrame, "OpenGL", "Render Frame", MP_RGB(128, 128, 64));
@@ -103,6 +136,7 @@ void RendererOpenGL::SwapBuffers() {
     render_window.SwapBuffers();
 #else
     const auto& main_layout = render_window.GetFramebufferLayout();
+    isSecondaryWindow = false;
     RenderToMailbox(main_layout, render_window.mailbox, false);
 
 #ifdef ANDROID
@@ -110,6 +144,7 @@ void RendererOpenGL::SwapBuffers() {
     // it means we have a second display
     if (secondary_window) {
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -117,6 +152,7 @@ void RendererOpenGL::SwapBuffers() {
     if (Settings::values.layout_option.GetValue() == Settings::LayoutOption::SeparateWindows) {
         ASSERT(secondary_window);
         const auto& secondary_layout = secondary_window->GetFramebufferLayout();
+        isSecondaryWindow = true;
         RenderToMailbox(secondary_layout, secondary_window->mailbox, false);
         secondary_window->PollEvents();
     }
@@ -315,12 +351,116 @@ void RendererOpenGL::LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuff
     }
 }
 
+std::vector<unsigned char> flipVertically(const unsigned char* data, int width, int height, int channels)
+{
+    int rowSize = width * channels;
+    std::vector<unsigned char> flipped(width * height * channels);
+
+    for (int y = 0; y < height; y++)
+    {
+        const unsigned char* src = data + (height - 1 - y) * rowSize;
+        unsigned char* dst       = flipped.data() + y * rowSize;
+        memcpy(dst, src, rowSize);
+    }
+
+    return flipped;
+}
+
+
+void RendererOpenGL::AllocateSMAATextures(){
+    //Load AreaTex and SearchTex  to OGLTexture Objects 
+    areatex.Create();
+    searchtex.Create();
+    std::vector<unsigned char> areaTexBytes_Flipped = flipVertically(areaTexBytes, AREATEX_WIDTH, AREATEX_HEIGHT, 2);
+    std::vector<unsigned char> searchTexBytes_Flipped = flipVertically(searchTexBytes, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 1);
+    GLuint old_tex = OpenGLState::GetCurState().texture_units[0].texture_2d;
+    
+    glBindTexture(GL_TEXTURE_2D, areatex.handle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes_Flipped.data());
+
+    glBindTexture(GL_TEXTURE_2D, searchtex.handle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes_Flipped.data());
+
+    glBindTexture(GL_TEXTURE_2D, old_tex);  
+}
+
+void RendererOpenGL::AllocatePPTextures(){
+
+
+    for (int j = 0; j < intermediateTextures[0].size(); j++){
+        intermediateTextures[0][j].Release();
+        intermediateTextures[0][j].Create();
+        intermediateTextures[0][j].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currTopTextureHeight);
+        intermediateTextures[1][j].Release();
+        intermediateTextures[1][j].Create();
+        intermediateTextures[1][j].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currBottomTextureHeight);
+    }
+    antialiasFBOTexture[0].Release();
+    antialiasFBOTexture[0].Create();
+    antialiasFBOTexture[0].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currTopTextureHeight);
+    antialiasFBOTexture[1].Release();
+    antialiasFBOTexture[1].Create();
+    antialiasFBOTexture[1].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currBottomTextureHeight);
+    LOG_INFO(Render_OpenGL, "Reallocated Textures");
+}
+
+void RendererOpenGL::AllocateOutputSizeTextures(){
+    for (int i = 0; i < intermediateOutputSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currOutputScreenRects[isSecondaryWindow][i].GetWidth() != 0){
+            for (int j = 0; j < intermediateOutputSizeTextures[isSecondaryWindow][0].size(); j++){
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Release();
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Create();
+                intermediateOutputSizeTextures[isSecondaryWindow][i][j].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currOutputScreenRects[isSecondaryWindow][i].GetWidth(),  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+            }
+        }
+    }
+
+    LOG_INFO(Render_OpenGL, "Reallocated OutputSize Textures.\nPrevRects:\n{}x{}\n{}x{}\n{}x{}\nCurrRects:\n{}x{}\n{}x{}\n{}x{}",
+    prevOutputScreenRects[isSecondaryWindow][0].GetWidth(), prevOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][1].GetWidth(), prevOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    prevOutputScreenRects[isSecondaryWindow][2].GetWidth(), prevOutputScreenRects[isSecondaryWindow][2].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][0].GetWidth(), currOutputScreenRects[isSecondaryWindow][0].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][1].GetWidth(), currOutputScreenRects[isSecondaryWindow][1].GetHeight(),
+    currOutputScreenRects[isSecondaryWindow][2].GetWidth(), currOutputScreenRects[isSecondaryWindow][2].GetHeight()
+    );
+}
+
+void RendererOpenGL::AllocateHybridSizeTextures(){
+    // Allocate Texture with Source Width, Output Height
+    for (int i = 0; i < intermediateHybridSizeTextures[isSecondaryWindow].size(); i++){
+        if (currOutputScreenRects[isSecondaryWindow][i].GetHeight() != 0 && currTopTextureWidth != 0 && currBottomTextureWidth != 0){
+            intermediateHybridSizeTextures[isSecondaryWindow][i].Release();
+            intermediateHybridSizeTextures[isSecondaryWindow][i].Create();
+            if (i == 2){ // Additional Screen
+                if (!Settings::values.swap_screen.GetValue()){
+                    intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+                } else {
+                    intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+                }
+            } else if (i == 0) { // Top Screen
+                intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currTopTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+            } else if (i == 1){ // Bottom Screen
+                intermediateHybridSizeTextures[isSecondaryWindow][i].Allocate(GL_TEXTURE_2D, 1, GL_RGBA16F, currBottomTextureWidth,  currOutputScreenRects[isSecondaryWindow][i].GetHeight());
+            }
+        }
+    }
+    LOG_INFO(Render_OpenGL, "Reallocated HybridSize Textures");
+}
+
 /**
  * Initializes the OpenGL state and creates persistent objects.
  */
 void RendererOpenGL::InitOpenGLObjects() {
     glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                 Settings::values.bg_blue.GetValue(), 1.0f);
+                 Settings::values.bg_blue.GetValue(), 0.0f);
 
     for (std::size_t i = 0; i < samplers.size(); i++) {
         samplers[i].Create();
@@ -354,6 +494,10 @@ void RendererOpenGL::InitOpenGLObjects() {
     glEnableVertexAttribArray(attrib_position);
     glEnableVertexAttribArray(attrib_tex_coord);
 
+    // Allocate textures for Post Processing
+    AllocateSMAATextures();
+    textureFBO.Create();
+    
     // Allocate textures for each screen
     for (auto& screen_info : screen_infos) {
         screen_info.texture.resource.Create();
@@ -373,10 +517,20 @@ void RendererOpenGL::InitOpenGLObjects() {
 
         screen_info.display_texture = screen_info.texture.resource.handle;
     }
-
+    AllocatePPTextures();
     state.texture_units[0].texture_2d = 0;
     state.Apply();
 }
+
+void RendererOpenGL::ReplaceInclude(std::string& shader_source, std::string_view include_name,
+                                  std::string_view include_content) {
+    const std::string include_string = fmt::format("#include \'{}\'", include_name);
+    const std::size_t pos = shader_source.find(include_string);
+    if (pos == std::string::npos){
+        LOG_ERROR(Render_OpenGL, "Failed to replace include: {}", include_name);
+    }
+    shader_source.replace(pos, include_string.size(), include_content);
+};
 
 void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     // Link shaders and get variable locations
@@ -400,41 +554,102 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     } else {
         if (Settings::values.pp_shader_name.GetValue() == "None (builtin)") {
             shader_data += HostShaders::OPENGL_PRESENT_FRAG;
+            usingExternalShader = false;
         } else {
             std::string shader_text = OpenGL::GetPostProcessingShaderCode(
                 false, Settings::values.pp_shader_name.GetValue());
             if (shader_text.empty()) {
                 // Should probably provide some information that the shader couldn't load
                 shader_data += HostShaders::OPENGL_PRESENT_FRAG;
+                usingExternalShader = false;
             } else {
                 shader_data += shader_text;
+                usingExternalShader = true;
             }
         }
     }
-    shader.Create(HostShaders::OPENGL_PRESENT_VERT, shader_data);
-    state.draw.shader_program = shader.handle;
+    Present_shader.Create(HostShaders::OPENGL_PRESENT_VERT, shader_data);
+    state.draw.shader_program = Present_shader.handle;
+    AttachUniforms();
+
+
+    // Setup FXAA, SMAA and Simple Present, SMAA, FSR, Sharp Bilinear
+    std::string FXAA_shader_data = fragment_shader_precision_OES;
+    FXAA_shader_data += HostShaders::OPENGL_FXAA_FRAG;
+    FXAA_shader.Create(HostShaders::OPENGL_FXAA_VERT, FXAA_shader_data);
+
+    std::string AREA_SAMPLING_shader_data = fragment_shader_precision_OES;
+    AREA_SAMPLING_shader_data += HostShaders::OPENGL_AREA_SAMPLING_FRAG;
+    AREA_SAMPLING_shader.Create(HostShaders::OPENGL_AREA_SAMPLING_VERT, AREA_SAMPLING_shader_data);
+
+    std::string SimplePresent_shader_data = fragment_shader_precision_OES;
+    SimplePresent_shader_data += HostShaders::OPENGL_SIMPLE_PRESENT_FRAG;
+    SimplePresent_shader.Create(HostShaders::OPENGL_SIMPLE_PRESENT_VERT, SimplePresent_shader_data);
+
+    std::string SMAA_PASS_0_shader_frag_data = fragment_shader_precision_OES;
+    SMAA_PASS_0_shader_frag_data += HostShaders::OPENGL_SMAA_PASS0_FRAG;
+    ReplaceInclude(SMAA_PASS_0_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string SMAA_PASS_0_shader_vert_data;
+    SMAA_PASS_0_shader_vert_data += HostShaders::OPENGL_SMAA_PASS0_VERT;
+    ReplaceInclude(SMAA_PASS_0_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    SMAA_PASS_0_shader.Create(SMAA_PASS_0_shader_vert_data, SMAA_PASS_0_shader_frag_data);
+
+    std::string SMAA_PASS_1_shader_frag_data = fragment_shader_precision_OES;
+    SMAA_PASS_1_shader_frag_data += HostShaders::OPENGL_SMAA_PASS1_FRAG;
+    ReplaceInclude(SMAA_PASS_1_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string SMAA_PASS_1_shader_vert_data;
+    SMAA_PASS_1_shader_vert_data += HostShaders::OPENGL_SMAA_PASS1_VERT;
+    ReplaceInclude(SMAA_PASS_1_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    SMAA_PASS_1_shader.Create(SMAA_PASS_1_shader_vert_data, SMAA_PASS_1_shader_frag_data);
+
+    std::string SMAA_PASS_2_shader_frag_data = fragment_shader_precision_OES;
+    SMAA_PASS_2_shader_frag_data += HostShaders::OPENGL_SMAA_PASS2_FRAG;
+    ReplaceInclude(SMAA_PASS_2_shader_frag_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    std::string SMAA_PASS_2_shader_vert_data;
+    SMAA_PASS_2_shader_vert_data += HostShaders::OPENGL_SMAA_PASS2_VERT;
+    ReplaceInclude(SMAA_PASS_2_shader_vert_data, "SMAA.hlsl", HostShaders::SMAA_HLSL);
+    SMAA_PASS_2_shader.Create(SMAA_PASS_2_shader_vert_data, SMAA_PASS_2_shader_frag_data);
+    
+    std::string FSR_PASS_0_shader_frag_data =  fragment_shader_precision_OES;
+    FSR_PASS_0_shader_frag_data += HostShaders::OPENGL_FSR_PASS0_FRAG;
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_0_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H);
+    FSR_PASS_0_shader.Create(HostShaders::OPENGL_FSR_PASS0_VERT, FSR_PASS_0_shader_frag_data);
+
+    std::string FSR_PASS_1_shader_frag_data =  fragment_shader_precision_OES;
+    FSR_PASS_1_shader_frag_data += HostShaders::OPENGL_FSR_PASS1_FRAG;
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_a.h", HostShaders::FFX_A_H);
+    ReplaceInclude(FSR_PASS_1_shader_frag_data, "ffx_fsr1.h", HostShaders::FFX_FSR1_H); 
+    FSR_PASS_1_shader.Create(HostShaders::OPENGL_FSR_PASS1_VERT, FSR_PASS_1_shader_frag_data);
+
+    std::string SharpBilinear_shader_frag_data = fragment_shader_precision_OES;
+    SharpBilinear_shader_frag_data += HostShaders::OPENGL_SHARPBILINEAR_FRAG;
+    SharpBilinear_shader.Create(HostShaders::OPENGL_SHARPBILINEAR_VERT, SharpBilinear_shader_frag_data);
+    
+    std::string SGSR_shader_data = fragment_shader_precision_OES;
+    SGSR_shader_data += HostShaders::OPENGL_SGSR_FRAG;
+    SGSR_shader.Create(HostShaders::OPENGL_SGSR_VERT, SGSR_shader_data);
+
+    std::string Lanczos_PASS_0_shader_data = fragment_shader_precision_OES;
+    Lanczos_PASS_0_shader_data += HostShaders::OPENGL_LANCZOS3_PASS_0_FRAG;
+    Lanczos_PASS_0_shader.Create(HostShaders::OPENGL_LANCZOS3_PASS_0_VERT, Lanczos_PASS_0_shader_data);
+
+    std::string Lanczos_PASS_1_shader_data = fragment_shader_precision_OES;
+    Lanczos_PASS_1_shader_data += HostShaders::OPENGL_LANCZOS3_PASS_1_FRAG;
+    Lanczos_PASS_1_shader.Create(HostShaders::OPENGL_LANCZOS3_PASS_1_VERT, Lanczos_PASS_1_shader_data);
+    
     state.Apply();
-    uniform_modelview_matrix = glGetUniformLocation(shader.handle, "modelview_matrix");
-    uniform_color_texture = glGetUniformLocation(shader.handle, "color_texture");
     if (render_3d == Settings::StereoRenderOption::Anaglyph ||
         render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        uniform_color_texture_r = glGetUniformLocation(shader.handle, "color_texture_r");
     }
     if (render_3d == Settings::StereoRenderOption::Interlaced ||
         render_3d == Settings::StereoRenderOption::ReverseInterlaced) {
-        GLuint uniform_reverse_interlaced =
-            glGetUniformLocation(shader.handle, "reverse_interlaced");
         if (render_3d == Settings::StereoRenderOption::ReverseInterlaced)
             glUniform1i(uniform_reverse_interlaced, 1);
         else
             glUniform1i(uniform_reverse_interlaced, 0);
     }
-    uniform_i_resolution = glGetUniformLocation(shader.handle, "i_resolution");
-    uniform_o_resolution = glGetUniformLocation(shader.handle, "o_resolution");
-    uniform_layer = glGetUniformLocation(shader.handle, "layer");
-    attrib_position = glGetAttribLocation(shader.handle, "vert_position");
-    attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
 }
 
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
@@ -505,69 +720,714 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
     state.Apply();
 }
 
+void RendererOpenGL::AttachUniforms(){
+    uniform_modelview_matrix = glGetUniformLocation(state.draw.shader_program, "modelview_matrix");
+    uniform_color_texture = glGetUniformLocation(state.draw.shader_program, "color_texture");
+    uniform_color_texture_r = glGetUniformLocation(state.draw.shader_program, "color_texture_r");
+    uniform_reverse_interlaced = glGetUniformLocation(state.draw.shader_program, "reverse_interlaced");
+    uniform_i_resolution = glGetUniformLocation(state.draw.shader_program, "i_resolution");
+    uniform_o_resolution = glGetUniformLocation(state.draw.shader_program, "o_resolution");
+    uniform_convert_colors = glGetUniformLocation(state.draw.shader_program, "convert_colors");
+    uniform_fsr_sharpening = glGetUniformLocation(state.draw.shader_program, "FSR_SHARPENING");
+    uniform_sgsr_sharpening = glGetUniformLocation(state.draw.shader_program, "EdgeSharpness");
+    uniform_layer = glGetUniformLocation(state.draw.shader_program, "layer");
+    attrib_position = glGetAttribLocation(state.draw.shader_program, "vert_position");
+    attrib_tex_coord = glGetAttribLocation(state.draw.shader_program, "vert_tex_coord");
+}
+
 /**
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD
  * rotation.
  */
-void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, float y, float w,
-                                      float h, Layout::DisplayOrientation orientation) {
+void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float screenLeft, float screenTop, float screenWidth,
+                                      float screenHeight, Layout::DisplayOrientation orientation) {
     const auto& texcoords = screen_info.display_texcoords;
+    const u32 scale_factor = GetResolutionScaleFactor();
+    float textureWidth = static_cast<float>(screen_info.texture.height * scale_factor);
+    float textureHeight = static_cast<float>(screen_info.texture.width * scale_factor);
+    int currScreen;
+    if (textureWidth == currTopTextureWidth && textureHeight == currTopTextureHeight){
+        currScreen = 0;
+    } else {
+        currScreen = 1;
+    }
+   
+    // Texture Width and Height when correctly rotated to landscape
+    bool isDownsampling = false;
+    int scalingMode; // 0 is Nearest Neighbor, 1 is Bilinear, 2 is Lanczos, 3 is FSR, 4 is SGSR, 5 is Sharp Bilinear
+    scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
+    int antialiasingMode = static_cast<int>(Settings::values.antialiasing_filter.GetValue()); //0 is none, 1 is FXAA, 2 is SMAA
+    float fsr_sharpening = 2 - (2 * (Settings::values.fsr_sharpness.GetValue()/100.0f));
+    float sgsr_sharpening = 1 + (Settings::values.fsr_sharpness.GetValue()/100.0f);
+    if (orientation == Layout::DisplayOrientation::Landscape || orientation == Layout::DisplayOrientation::LandscapeFlipped) {
+        if (textureWidth > screenWidth){
+            isDownsampling = true;
+        }
+    } else {
+        if (textureWidth > screenHeight){
+            isDownsampling = true;
+        }
+    }
+    // Rotate Internal Texture to Landscape (The 3DS stores images rotated 90° internally)
+    std::array<ScreenRectVertex, 4> rotate_vertices;
+    rotate_vertices = {{
+            ScreenRectVertex(-1.f, 1.f, texcoords.bottom, texcoords.left),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, texcoords.bottom, texcoords.right),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, texcoords.top, texcoords.left),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, texcoords.top, texcoords.right),   //Right, Bottom
+    }};
 
-    std::array<ScreenRectVertex, 4> vertices;
+    // Vertices for 1:1 Texture Mapping.
+    std::array<ScreenRectVertex, 4> pass_through_vertices;
+    pass_through_vertices = {{
+            ScreenRectVertex(-1.f, 1.f, 0.f, 1.f),   //Left, Top
+            ScreenRectVertex(1.f, 1.f, 1.f, 1.f),    //Right, Top
+            ScreenRectVertex(-1.f, -1.f, 0.f, 0.f),  //Left, Bottom
+            ScreenRectVertex(1.f, -1.f, 1.f, 0.f),   //Right, Bottom
+    }};
+
+    // Vertices for Azahar's Output Layout (Assuming Landscape Texture)
+    std::array<ScreenRectVertex, 4> output_vertices;
     switch (orientation) {
     case Layout::DisplayOrientation::Landscape:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 0.f),  //Right, Bottom
         }};
         break;
     case Layout::DisplayOrientation::Portrait:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x + w, y + h, texcoords.top, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 1.f, 1.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 0.f, 0.f),  //Right, Bottom
         }};
-        std::swap(h, w);
+        std::swap(screenHeight, screenWidth);
         break;
     case Layout::DisplayOrientation::LandscapeFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.bottom, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.left),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 1.f, 0.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 0.f, 1.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
         }};
         break;
     case Layout::DisplayOrientation::PortraitFlipped:
-        vertices = {{
-            ScreenRectVertex(x, y, texcoords.top, texcoords.left),
-            ScreenRectVertex(x + w, y, texcoords.bottom, texcoords.left),
-            ScreenRectVertex(x, y + h, texcoords.top, texcoords.right),
-            ScreenRectVertex(x + w, y + h, texcoords.bottom, texcoords.right),
+        output_vertices = {{
+                ScreenRectVertex(screenLeft, screenTop, 0.f, 0.f),                               //Left, Top
+                ScreenRectVertex(screenLeft + screenWidth, screenTop, 0.f, 1.f),                 //Right, Top
+                ScreenRectVertex(screenLeft, screenTop + screenHeight, 1.f, 0.f),                //Left, Bottom
+                ScreenRectVertex(screenLeft + screenWidth, screenTop + screenHeight, 1.f, 1.f),  //Right, Bottom
         }};
-        std::swap(h, w);
+        std::swap(screenHeight, screenWidth);
         break;
     default:
         LOG_ERROR(Render_OpenGL, "Unknown DisplayOrientation: {}", orientation);
         break;
     }
 
-    const u32 scale_factor = GetResolutionScaleFactor();
-    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
-    glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
-                static_cast<float>(screen_info.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
-    glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
-    state.texture_units[0].texture_2d = screen_info.display_texture;
-    state.texture_units[0].sampler = sampler;
-    state.Apply();
+    GLuint originalReadFramebuffer = state.draw.read_framebuffer;
+    GLuint originalDrawFramebuffer = state.draw.draw_framebuffer;
+    if (!usingExternalShader){
+        if (antialiasingMode == 1){
+            //Pass 1
+            state.draw.read_framebuffer = textureFBO.handle;
+            state.draw.draw_framebuffer = textureFBO.handle;
+            state.Apply();
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][0].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SimplePresent_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = screen_info.display_texture;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_convert_colors, 0);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            //Pass 2
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, antialiasFBOTexture[currScreen].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = FXAA_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = intermediateTextures[currScreen][0].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
+                glUniform1i(uniform_convert_colors, 0);
+            } else {
+                glUniform1i(uniform_convert_colors, 1);
+            }
+            glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+        } else if (antialiasingMode == 2){  
+            // Landscape Gamma Space Texture
+            state.draw.read_framebuffer = textureFBO.handle;
+            state.draw.draw_framebuffer = textureFBO.handle;
+            state.Apply();
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][0].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SimplePresent_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = screen_info.display_texture;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_convert_colors, 0);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);        
+
+            // Landscape Linear Space Texture
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][3].handle, 0);
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SimplePresent_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = intermediateTextures[currScreen][0].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_convert_colors, 1);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            // Edge Detection
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][1].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SMAA_PASS_0_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = intermediateTextures[currScreen][0].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            // Blending Weight Calculation
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][2].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SMAA_PASS_1_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = intermediateTextures[currScreen][1].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            state.texture_units[1].texture_2d = areatex.handle;
+            state.texture_units[1].sampler = samplers[1].handle;
+            state.texture_units[2].texture_2d = searchtex.handle;
+            state.texture_units[2].sampler = samplers[1].handle;
+            GLuint uniform_areatex = glGetUniformLocation(state.draw.shader_program, "areaTex");
+            GLuint uniform_searchtex = glGetUniformLocation(state.draw.shader_program, "searchTex");
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_areatex, 1);
+            glUniform1i(uniform_searchtex, 2);
+            glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+            // Neighborhood Blending
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, antialiasFBOTexture[currScreen].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SMAA_PASS_2_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = intermediateTextures[currScreen][2].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            state.texture_units[1].texture_2d = intermediateTextures[currScreen][3].handle;
+            state.texture_units[1].sampler = samplers[1].handle;
+            GLuint uniform_smaa_input = glGetUniformLocation(state.draw.shader_program, "SMAA_Input");
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_smaa_input, 1);
+            if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
+                glUniform1i(uniform_convert_colors, 2);
+            } else {
+                glUniform1i(uniform_convert_colors, 0);
+            }
+            glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        } else {
+            state.draw.read_framebuffer = textureFBO.handle;
+            state.draw.draw_framebuffer = textureFBO.handle;
+            state.Apply();
+            state.viewport.x = 0;
+            state.viewport.y = 0;
+            state.viewport.width = textureWidth;
+            state.viewport.height = textureHeight;
+            state.Apply();
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, antialiasFBOTexture[currScreen].handle, 0);  
+            glClear(GL_COLOR_BUFFER_BIT);
+            state.draw.shader_program = SimplePresent_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = screen_info.display_texture;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            if (scalingMode == 3 || (scalingMode == 4 && !isDownsampling) || (scalingMode == 2 && !isDownsampling)){
+                glUniform1i(uniform_convert_colors, 0);
+            } else {
+                glUniform1i(uniform_convert_colors, 1);
+            }
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        }
+        if (scalingMode == 1){
+            if (isDownsampling){
+                //Output
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = AREA_SAMPLING_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 2);
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            } else {
+                //Output
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = Present_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[1].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 2);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            }
+        } else if (scalingMode == 2) {
+            if (isDownsampling){
+                // Area Sampling
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = AREA_SAMPLING_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 2);
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            } else {
+                // Lanczos Y-Pass
+                state.viewport.x = 0;
+                state.viewport.y = 0;
+                state.viewport.width = textureWidth;
+                state.viewport.height = screenHeight;
+                state.Apply();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateHybridSizeTextures[isSecondaryWindow][currOutputScreen].handle, 0);  
+                glClear(GL_COLOR_BUFFER_BIT);
+                state.draw.shader_program = Lanczos_PASS_0_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                
+                // Lanczos X-Pass
+                state.viewport.x = 0;
+                state.viewport.y = 0;
+                state.viewport.width = screenWidth;
+                state.viewport.height = screenHeight;
+                state.Apply();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle, 0);  
+                glClear(GL_COLOR_BUFFER_BIT);
+                state.draw.shader_program = Lanczos_PASS_1_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = intermediateHybridSizeTextures[isSecondaryWindow][currOutputScreen].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform4f(uniform_i_resolution, textureWidth, screenHeight, 1.0f / textureWidth, 1.0f / screenHeight);
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                // Normal Present
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = Present_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle;
+                state.texture_units[0].sampler = samplers[1].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 0);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            }
+        } else if (scalingMode == 3){
+                //Use intermiedatetextures[currScreen]
+                if (isDownsampling){
+                    // EASU (1x)
+                    state.viewport.x = 0;
+                    state.viewport.y = 0;
+                    state.viewport.width = textureWidth;
+                    state.viewport.height = textureHeight;
+                    state.Apply();
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][4].handle, 0);  
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    state.draw.shader_program = FSR_PASS_0_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                    state.texture_units[0].sampler = samplers[0].handle;
+                    glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                    glUniform4f(uniform_o_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    // RCAS
+                    state.viewport.x = 0;
+                    state.viewport.y = 0;
+                    state.viewport.width = textureWidth;
+                    state.viewport.height = textureHeight;
+                    state.Apply();
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][5].handle, 0);  
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    state.draw.shader_program = FSR_PASS_1_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = intermediateTextures[currScreen][4].handle;
+                    state.texture_units[0].sampler = samplers[1].handle;
+                    glUniform1f(uniform_fsr_sharpening, fsr_sharpening);
+                    glUniform4f(uniform_o_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    // Area Sampling
+                    state.draw.read_framebuffer = originalReadFramebuffer;
+                    state.draw.draw_framebuffer = originalDrawFramebuffer;
+                    state.Apply();
+                    state.viewport.x = originalViewport[0];
+                    state.viewport.y = originalViewport[1];
+                    state.viewport.width = originalViewport[2];
+                    state.viewport.height = originalViewport[3];
+                    state.Apply();
+                    state.draw.shader_program = AREA_SAMPLING_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = intermediateTextures[currScreen][5].handle;
+                    state.texture_units[0].sampler = samplers[0].handle;
+                    glUniform1i(uniform_color_texture, 0);
+                    glUniform1i(uniform_convert_colors, 0);
+                    glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                    glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                } else {
+                    // EASU (to output resolution)
+                    state.viewport.x = 0;
+                    state.viewport.y = 0;
+                    state.viewport.width = screenWidth;
+                    state.viewport.height = screenHeight;
+                    state.Apply();
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle, 0);  
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    state.draw.shader_program = FSR_PASS_0_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                    state.texture_units[0].sampler = samplers[0].handle;
+                    glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                    glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    // RCAS
+                    state.viewport.x = 0;
+                    state.viewport.y = 0;
+                    state.viewport.width = screenWidth;
+                    state.viewport.height = screenHeight;
+                    state.Apply();
+                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][1].handle, 0);  
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    state.draw.shader_program = FSR_PASS_1_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle;
+                    state.texture_units[0].sampler = samplers[1].handle;
+                    glUniform1f(uniform_fsr_sharpening, fsr_sharpening);
+                    glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                    // Normal Present
+                    state.draw.read_framebuffer = originalReadFramebuffer;
+                    state.draw.draw_framebuffer = originalDrawFramebuffer;
+                    state.Apply();
+                    state.viewport.x = originalViewport[0];
+                    state.viewport.y = originalViewport[1];
+                    state.viewport.width = originalViewport[2];
+                    state.viewport.height = originalViewport[3];
+                    state.Apply();
+                    state.draw.shader_program = Present_shader.handle;
+                    state.Apply();
+                    AttachUniforms();
+                    state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][1].handle;
+                    state.texture_units[0].sampler = samplers[1].handle;
+                    glUniform1i(uniform_color_texture, 0);
+                    glUniform1i(uniform_convert_colors, 0);
+                    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                    state.Apply();
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                }
+        } else if (scalingMode == 4){
+            if (isDownsampling){
+                //Output
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = AREA_SAMPLING_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[0].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 2);
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);   
+            } else {
+                // SGSR
+                state.viewport.x = 0;
+                state.viewport.y = 0;
+                state.viewport.width = screenWidth;
+                state.viewport.height = screenHeight;
+                state.Apply();
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle, 0);  
+                glClear(GL_COLOR_BUFFER_BIT);
+                state.draw.shader_program = SGSR_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+                state.texture_units[0].sampler = samplers[1].handle;
+                glUniform1f(uniform_sgsr_sharpening, sgsr_sharpening);
+                glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pass_through_vertices), pass_through_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                // Normal Present
+                state.draw.read_framebuffer = originalReadFramebuffer;
+                state.draw.draw_framebuffer = originalDrawFramebuffer;
+                state.Apply();
+                state.viewport.x = originalViewport[0];
+                state.viewport.y = originalViewport[1];
+                state.viewport.width = originalViewport[2];
+                state.viewport.height = originalViewport[3];
+                state.Apply();
+                state.draw.shader_program = Present_shader.handle;
+                state.Apply();
+                AttachUniforms();
+                state.texture_units[0].texture_2d = intermediateOutputSizeTextures[isSecondaryWindow][currOutputScreen][0].handle;
+                state.texture_units[0].sampler = samplers[1].handle;
+                glUniform1i(uniform_color_texture, 0);
+                glUniform1i(uniform_convert_colors, 0);
+                glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+                state.Apply();
+                glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            }
+        } else if (scalingMode == 5){
+            //Output
+            state.draw.read_framebuffer = originalReadFramebuffer;
+            state.draw.draw_framebuffer = originalDrawFramebuffer;
+            state.Apply();
+            state.viewport.x = originalViewport[0];
+            state.viewport.y = originalViewport[1];
+            state.viewport.width = originalViewport[2];
+            state.viewport.height = originalViewport[3];
+            state.Apply();
+            state.draw.shader_program = SharpBilinear_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+            state.texture_units[0].sampler = samplers[1].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_convert_colors, 2);
+            glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+            glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+            glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        } else {
+            //Output
+            state.draw.read_framebuffer = originalReadFramebuffer;
+            state.draw.draw_framebuffer = originalDrawFramebuffer;
+            state.Apply();
+            state.viewport.x = originalViewport[0];
+            state.viewport.y = originalViewport[1];
+            state.viewport.width = originalViewport[2];
+            state.viewport.height = originalViewport[3];
+            state.Apply();
+            state.draw.shader_program = Present_shader.handle;
+            state.Apply();
+            AttachUniforms();
+            state.texture_units[0].texture_2d = antialiasFBOTexture[currScreen].handle;
+            state.texture_units[0].sampler = samplers[0].handle;
+            glUniform1i(uniform_color_texture, 0);
+            glUniform1i(uniform_convert_colors, 2);
+            glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+            state.Apply();
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        }
+    } else { 
+        // Rotate 
+        state.draw.read_framebuffer = textureFBO.handle;
+        state.draw.draw_framebuffer = textureFBO.handle;
+        state.Apply();
+        state.viewport.x = 0;
+        state.viewport.y = 0;
+        state.viewport.width = textureWidth;
+        state.viewport.height = textureHeight;
+        state.Apply();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, intermediateTextures[currScreen][0].handle, 0);  
+        glClear(GL_COLOR_BUFFER_BIT);
+        state.draw.shader_program = SimplePresent_shader.handle;
+        state.Apply();
+        AttachUniforms();
+        state.texture_units[0].texture_2d = screen_info.display_texture;
+        state.texture_units[0].sampler = samplers[1].handle;
+        glUniform1i(uniform_color_texture, 0);
+        glUniform1i(uniform_convert_colors, 0);
+        state.Apply();
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(rotate_vertices), rotate_vertices.data());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        state.draw.read_framebuffer = originalReadFramebuffer;
+        state.draw.draw_framebuffer = originalDrawFramebuffer;
+        state.Apply();
+        state.viewport.x = originalViewport[0];
+        state.viewport.y = originalViewport[1];
+        state.viewport.width = originalViewport[2];
+        state.viewport.height = originalViewport[3];
+        state.Apply();
+        state.draw.shader_program = Present_shader.handle;
+        state.Apply();
+        AttachUniforms();
+        state.texture_units[0].texture_2d = intermediateTextures[currScreen][0].handle;
+        if (scalingMode == 0){
+            state.texture_units[0].sampler = samplers[0].handle;
+        } else {
+            state.texture_units[0].sampler = samplers[1].handle;
+        }
+        glUniform1i(uniform_color_texture, 0);
+        glUniform4f(uniform_i_resolution, textureWidth, textureHeight, 1.0f / textureWidth, 1.0f / textureHeight);
+        glUniform4f(uniform_o_resolution, screenWidth, screenHeight, 1.0f / screenWidth, 1.0f / screenHeight);
+        glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+        state.Apply();
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(output_vertices), output_vertices.data());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
     state.texture_units[0].texture_2d = 0;
     state.texture_units[0].sampler = 0;
     state.Apply();
@@ -625,13 +1485,15 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     }
 
     const u32 scale_factor = GetResolutionScaleFactor();
-    const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
+    int scalingMode = static_cast<int>(Settings::values.output_scaling.GetValue());
+    const GLuint sampler = samplers[scalingMode > 0 ? 1 : 0].handle;
     glUniform4f(uniform_i_resolution,
                 static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),
                 1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
                 1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
     glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
+    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = sampler;
@@ -655,12 +1517,12 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     if (settings.bg_color_update_requested.exchange(false)) {
         // Update background color before drawing
         glClearColor(Settings::values.bg_red.GetValue(), Settings::values.bg_green.GetValue(),
-                     Settings::values.bg_blue.GetValue(), 1.0f);
+                     Settings::values.bg_blue.GetValue(), 0.0f);
     }
 
     if (settings.shader_update_requested.exchange(false)) {
         // Update fragment shader before drawing
-        shader.Release();
+        Present_shader.Release();
         // Link shaders and get variable locations
         ReloadShader(layout.render_3d_mode);
     }
@@ -668,15 +1530,55 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
 
-    glViewport(0, 0, layout.width, layout.height);
+    // Track Texture Changes
+    currTopTextureWidth = static_cast<float>(screen_infos[0].texture.height * GetResolutionScaleFactor());
+    currTopTextureHeight = static_cast<float>(screen_infos[0].texture.width * GetResolutionScaleFactor());
+    currBottomTextureWidth = static_cast<float>(screen_infos[2].texture.height * GetResolutionScaleFactor());
+    currBottomTextureHeight = static_cast<float>(screen_infos[2].texture.width * GetResolutionScaleFactor());
+    if (currTopTextureWidth != prevTopTextureWidth || currTopTextureHeight != prevTopTextureHeight || currBottomTextureWidth != prevBottomTextureWidth || currBottomTextureHeight != prevBottomTextureHeight){
+        AllocatePPTextures();
+        AllocateHybridSizeTextures();
+        // LOG_INFO(Render_OpenGL, "PrevTopTexture Res: {}x{}, CurrTopTexture Res: {}x{}, PrevBottomTexture Res: {}x{}, CurrBottomTexture Res: {}x{}", prevTopTextureWidth, prevTopTextureHeight, currTopTextureWidth, currTopTextureHeight, prevBottomTextureWidth, prevBottomTextureHeight, currBottomTextureWidth, currBottomTextureHeight);
+    }
+    prevTopTextureWidth = currTopTextureWidth;
+    prevTopTextureHeight = currTopTextureHeight;
+    prevBottomTextureWidth = currBottomTextureWidth;
+    prevBottomTextureHeight = currBottomTextureHeight;
+
+    //Track Layout Changes
+    currOutputScreenRects[isSecondaryWindow][0] = layout.top_screen;
+    currOutputScreenRects[isSecondaryWindow][1] = layout.bottom_screen;
+    currOutputScreenRects[isSecondaryWindow][2] = layout.additional_screen;
+    if (currOutputScreenRects[isSecondaryWindow][0] != prevOutputScreenRects[isSecondaryWindow][0] || currOutputScreenRects[isSecondaryWindow][1] != prevOutputScreenRects[isSecondaryWindow][1]){
+        if (layout.additional_screen_enabled){
+            if (currOutputScreenRects[isSecondaryWindow][2] != prevOutputScreenRects[isSecondaryWindow][2]){
+                AllocateOutputSizeTextures();
+                AllocateHybridSizeTextures();
+            }
+        } else {
+            AllocateOutputSizeTextures();
+            AllocateHybridSizeTextures();
+        }
+    }
+    prevOutputScreenRects[isSecondaryWindow][0] = currOutputScreenRects[isSecondaryWindow][0];
+    prevOutputScreenRects[isSecondaryWindow][1] = currOutputScreenRects[isSecondaryWindow][1];
+    prevOutputScreenRects[isSecondaryWindow][2] = currOutputScreenRects[isSecondaryWindow][2];
+
+    //Set the Viewport
+    state.viewport.x = 0;
+    state.viewport.y = 0;
+    state.viewport.width = layout.width;
+    state.viewport.height = layout.height;
+    originalViewport = {0, 0, static_cast<int>(layout.width), static_cast<int>(layout.height)};
+
+    state.Apply();
+    
     if (render_window.NeedsClearing()) {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
     // Set projection matrix
-    std::array<GLfloat, 3 * 2> ortho_matrix =
-        MakeOrthographicMatrix((float)layout.width, (float)layout.height, flipped);
-    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+    ortho_matrix = MakeOrthographicMatrix((float)layout.width, (float)layout.height, flipped);
 
     // Bind texture in Texture Unit 0
     glUniform1i(uniform_color_texture, 0);
@@ -693,18 +1595,23 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout, bool f
 
     glUniform1i(uniform_layer, 0);
     if (!Settings::values.swap_screen.GetValue()) {
+        currOutputScreen = 0;
         DrawTopScreen(layout, top_screen);
         glUniform1i(uniform_layer, 0);
         ApplySecondLayerOpacity(layout.bottom_opacity);
+        currOutputScreen = 1;
         DrawBottomScreen(layout, bottom_screen);
     } else {
+        currOutputScreen = 1;
         DrawBottomScreen(layout, bottom_screen);
         glUniform1i(uniform_layer, 0);
         ApplySecondLayerOpacity(layout.top_opacity);
+        currOutputScreen = 0;
         DrawTopScreen(layout, top_screen);
     }
 
     if (layout.additional_screen_enabled) {
+        currOutputScreen = 2;
         const auto& additional_screen = layout.additional_screen;
         if (!layout.additional_screen_is_bottom) {
             DrawTopScreen(layout, additional_screen);

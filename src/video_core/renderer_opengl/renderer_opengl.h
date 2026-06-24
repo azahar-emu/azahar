@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include "gl_resource_manager.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/frame_dumper_opengl.h"
 #include "video_core/renderer_opengl/gl_driver.h"
@@ -57,6 +58,10 @@ public:
 private:
     void InitOpenGLObjects();
     void ReloadShader(Settings::StereoRenderOption render_3d);
+    void AllocateSMAATextures();
+    void AllocatePPTextures();
+    void AllocateOutputSizeTextures();
+    void AllocateHybridSizeTextures();
     void PrepareRendertarget();
     void RenderScreenshot();
     void RenderToMailbox(const Layout::FramebufferLayout& layout,
@@ -80,6 +85,10 @@ private:
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const Pica::FramebufferConfig& framebuffer, ScreenInfo& screen_info,
                             bool right_eye, const Pica::ColorFill& color_fill);
+    // Attach Uniforms to the current shader
+    void AttachUniforms();
+    // Shader #include function. Modified from Yuzu
+    void ReplaceInclude(std::string& shader_source, std::string_view include_name, std::string_view include_content);
 
 private:
     Pica::PicaCore& pica;
@@ -90,18 +99,53 @@ private:
     // OpenGL object IDs
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
-    OGLProgram shader;
+    OGLProgram Present_shader;
+    OGLProgram SimplePresent_shader;
+    OGLProgram FXAA_shader;
+    OGLProgram SMAA_PASS_0_shader;
+    OGLProgram SMAA_PASS_1_shader;
+    OGLProgram SMAA_PASS_2_shader;
+    OGLProgram AREA_SAMPLING_shader;
+    OGLProgram FSR_PASS_0_shader;
+    OGLProgram FSR_PASS_1_shader;
+    OGLProgram SGSR_shader;
+    OGLProgram Lanczos_PASS_0_shader;
+    OGLProgram Lanczos_PASS_1_shader;
+    OGLProgram SharpBilinear_shader;
     OGLFramebuffer screenshot_framebuffer;
     std::array<OGLSampler, 2> samplers;
 
+    // OpenGL objects for post processing
+    OGLFramebuffer textureFBO;
+    // Textures for Top and Bottom Screen Respectively
+    std::array<std::array<OGLTexture, 7>, 2> intermediateTextures;
+    std::array<OGLTexture, 2> antialiasFBOTexture;
+
+    // Intermediate Textures at output size. These are 2 textures for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
+    std::array<std::array<std::array<OGLTexture, 2>, 3>, 2> intermediateOutputSizeTextures;
+    // Intermediate Textures at output height, but source width (for separable filters like Lanczos). These are for each Main/Secondary Display + Top/Bottom/Additional Screen combo 
+    std::array<std::array<OGLTexture, 3>, 2> intermediateHybridSizeTextures;
+
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> prevOutputScreenRects;
+    std::array<std::array<Common::Rectangle<u32>, 3>, 2> currOutputScreenRects;
+    int currOutputScreen;
+    OGLTexture areatex;
+    OGLTexture searchtex;
+
     // Display information for top and bottom screens respectively
     std::array<ScreenInfo, 3> screen_infos;
-
+    std::array<GLfloat, 3 * 2> ortho_matrix;
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;
     GLuint uniform_color_texture_r;
+    GLuint uniform_reverse_interlaced;
 
+    // Shader Uniform for converting colors. 0 is no conversion, 1 is sRGB -> linear, 2 is Linear -> sRGB
+    GLuint uniform_convert_colors;
+    
+    GLuint uniform_fsr_sharpening;
+    GLuint uniform_sgsr_sharpening;
     // Shader uniform for Dolphin compatibility
     GLuint uniform_i_resolution;
     GLuint uniform_o_resolution;
@@ -112,6 +156,23 @@ private:
     GLuint attrib_tex_coord;
 
     FrameDumperOpenGL frame_dumper;
+
+    // Variables tracking texture changes
+    float prevTopTextureWidth;
+    float prevTopTextureHeight;
+    float prevBottomTextureWidth;
+    float prevBottomTextureHeight;
+    float currTopTextureWidth;
+    float currTopTextureHeight;
+    float currBottomTextureWidth;
+    float currBottomTextureHeight;
+    std::array<int, 4> originalViewport;
+
+    // Secondary Layout Fix
+    bool isSecondaryWindow;
+
+    // Fix External Shader
+    bool usingExternalShader;
 };
 
 } // namespace OpenGL

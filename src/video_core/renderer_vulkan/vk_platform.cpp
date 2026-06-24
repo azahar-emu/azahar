@@ -318,7 +318,6 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
         .apiVersion = TargetVulkanApiVersion,
     };
-
     boost::container::static_vector<const char*, 2> layers;
     if (enable_validation) {
         layers.push_back("VK_LAYER_KHRONOS_validation");
