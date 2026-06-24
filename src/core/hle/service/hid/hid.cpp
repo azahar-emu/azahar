@@ -24,12 +24,15 @@
 #include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/service.h"
 #include "core/movie.h"
+#include "hid.h"
 
 SERVICE_CONSTRUCT_IMPL(Service::HID::Module)
 SERIALIZE_EXPORT_IMPL(Service::HID::Module)
 
 namespace Service::HID {
-
+std::array<float, 4> Module::stylusInput = {};
+std::array<float, 4> Module::modButtons = {};
+bool Module::cstickEnabled = false;
 template <class Archive>
 void Module::serialize(Archive& ar, const unsigned int file_version) {
     DEBUG_SERIALIZATION_POINT;
@@ -121,9 +124,17 @@ void Module::LoadInputDevices() {
                    Settings::values.current_input_profile.buttons.begin() +
                        Settings::NativeButton::BUTTON_HID_END,
                    buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
+    zl_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZL]);
+    zr_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZR]);
+    toggle_cstick_button = Input::CreateDevice<Input::ButtonDevice>(
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ToggleCStick]);
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CirclePad]);
-    motion_device = Input::CreateDevice<Input::MotionDevice>(
+    c_stick = Input::CreateDevice<Input::AnalogDevice>(
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CStick]);
+        motion_device = Input::CreateDevice<Input::MotionDevice>(
         Settings::values.current_input_profile.motion_device);
     touch_device = Input::CreateDevice<Input::TouchDevice>(
         Settings::values.current_input_profile.touch_device);
@@ -216,6 +227,24 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
         state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
         state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
         state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
+
+        // Setting up inputs for Cursor Class.
+        float c_stick_x_f, c_stick_y_f;
+        std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
+        stylusInput[0] = c_stick_x_f;
+        stylusInput[1] = c_stick_y_f;
+        stylusInput[2] = static_cast<float>(zl_button->GetStatus());
+        stylusInput[3] = static_cast<float>(zr_button->GetStatus());
+        for (int i = 0; i < 4; i++){
+            modButtons[i] = zl_button->GetStatus() && buttons[i - BUTTON_HID_BEGIN]->GetStatus();
+        }
+
+        //Toggle for Cstick
+        if (!prev_toggle_cstick_button_state && toggle_cstick_button->GetStatus()){
+            cstickEnabled = !cstickEnabled;
+        }
+        //LOG_INFO(Service_HID, "C-Stick Enabled: {}, Prev C-Stick Button State {}, Current C-Stick Button State {}", cstickEnabled, prev_toggle_cstick_button_state, toggle_cstick_button->GetStatus());
+        prev_toggle_cstick_button_state = toggle_cstick_button->GetStatus();
 
         // Get current circle pad position and update circle pad direction
         float circle_pad_x_f, circle_pad_y_f;
@@ -318,6 +347,14 @@ void Module::UpdatePadCallback(std::uintptr_t user_data, s64 cycles_late) {
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
+}
+
+std::array<float, 4> Module::getStylusInputs(){
+    return stylusInput;
+}
+
+std::array<float, 4> Module::getModButtons(){
+    return modButtons;
 }
 
 void Module::UpdateAccelerometerCallback(std::uintptr_t user_data, s64 cycles_late) {
