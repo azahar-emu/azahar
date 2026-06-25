@@ -151,6 +151,7 @@ signals:
     void InfoLEDColorChanged();
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
+    void InstalledTitlesChanged();
 
 private:
     void InitializeWidgets();

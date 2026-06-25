@@ -2564,6 +2564,7 @@ void GMainWindow::UninstallTitles(
     } else if (!future_watcher.isCanceled()) {
         QMessageBox::information(this, tr("Azahar"),
                                  tr("Successfully uninstalled '%1'.").arg(first_name));
+        emit InstalledTitlesChanged();
     }
 }
 
