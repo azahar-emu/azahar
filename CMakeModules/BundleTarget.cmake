@@ -96,7 +96,7 @@ if (BUNDLE_TARGET_EXECUTE)
             # Some local filesystem providers attach FinderInfo/resource-fork xattrs during copy,
             # which causes codesign to reject the bundle.
             find_program(xattr_executable xattr REQUIRED)
-            execute_process(COMMAND "${xattr_executable}" -cr "${executable_path}"
+            execute_process(COMMAND find "${executable_path}" -exec "${xattr_executable}" -c "{}" "+"
                             RESULT_VARIABLE xattr_result)
             if (NOT xattr_result EQUAL "0")
                 message(FATAL_ERROR "xattr cleanup failed: ${xattr_result}")

@@ -8,6 +8,13 @@
 #include "video_core/texture/texture_decode.h"
 
 namespace VideoCore {
+namespace {
+
+bool IsValidFillSize(u32 fill_size) {
+    return fill_size != 0 && fill_size <= sizeof(SurfaceBase::fill_data);
+}
+
+} // Anonymous namespace
 
 SurfaceBase::SurfaceBase(const SurfaceParams& params, const SurfaceFlagBits& initial_flag_bits)
     : SurfaceParams{params}, flags(initial_flag_bits) {}
@@ -20,6 +27,9 @@ bool SurfaceBase::CanFill(const SurfaceParams& dest_surface, SurfaceInterval fil
         boost::icl::last_next(fill_interval) <= end && // dest_surface is within our fill range
         dest_surface.FromInterval(fill_interval).GetInterval() ==
             fill_interval) { // make sure interval is a rectangle in dest surface
+        if (!IsValidFillSize(fill_size)) {
+            return false;
+        }
         if (fill_size * 8 != dest_surface.GetFormatBpp()) {
             // Check if bits repeat for our fill_size
             const u32 dest_bytes_per_pixel = std::max(dest_surface.GetFormatBpp() / 8, 1u);
@@ -130,6 +140,7 @@ bool SurfaceBase::HasNormalMap() const noexcept {
 ClearValue SurfaceBase::MakeClearValue(PAddr copy_addr, PixelFormat dst_format) {
     const SurfaceType dst_type = GetFormatType(dst_format);
     const std::array fill_buffer = MakeFillBuffer(copy_addr);
+    const bool valid_fill = IsValidFillSize(fill_size);
 
     ClearValue result{};
     switch (dst_type) {
@@ -141,7 +152,8 @@ ClearValue SurfaceBase::MakeClearValue(PAddr copy_addr, PixelFormat dst_format) 
         const std::size_t tile_size = Pica::Texture::CalculateTileSize(tex_info.format);
         std::vector<u8> fill_tile(std::max(tile_size, fill_buffer.size()));
         for (std::size_t i = 0; i < fill_tile.size(); i++) {
-            fill_tile[i] = fill_data[(copy_addr - addr + i) % fill_size];
+            fill_tile[i] = valid_fill ? fill_data[(copy_addr - addr + i) % fill_size]
+                                      : fill_buffer[i % fill_buffer.size()];
         }
         const auto color = Pica::Texture::LookupTexture(fill_tile.data(), 0, 0, tex_info);
         result.color = color / 255.f;
@@ -173,9 +185,12 @@ ClearValue SurfaceBase::MakeClearValue(PAddr copy_addr, PixelFormat dst_format) 
 }
 
 std::array<u8, 4> SurfaceBase::MakeFillBuffer(PAddr copy_addr) {
-    const PAddr fill_offset = (copy_addr - addr) % fill_size;
-    std::array<u8, 4> fill_buffer;
+    std::array<u8, 4> fill_buffer{};
+    if (!IsValidFillSize(fill_size)) {
+        return fill_buffer;
+    }
 
+    const PAddr fill_offset = (copy_addr - addr) % fill_size;
     u32 fill_buff_pos = fill_offset;
     for (std::size_t i = 0; i < fill_buffer.size(); i++) {
         fill_buffer[i] = fill_data[fill_buff_pos++ % fill_size];
