@@ -327,6 +327,7 @@ void TextureRuntime::GenerateMipmaps(Surface& surface) {
 
     const auto generate = [&](u32 index) {
         state.texture_units[0].texture_2d = surface.Handle(index);
+        state.texture_units[0].target = GL_TEXTURE_2D;
         state.Apply();
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, surface.levels - 1);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -555,6 +556,7 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
         // that only support up to 4.3
         OpenGLState state = OpenGLState::GetCurState();
         state.texture_units[0].texture_2d = Handle(0);
+        state.texture_units[0].target = GL_TEXTURE_2D;
         state.Apply();
 
         glGetTexImage(GL_TEXTURE_2D, download.texture_level, tuple.format, tuple.type,
