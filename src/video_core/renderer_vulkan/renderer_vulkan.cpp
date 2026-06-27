@@ -660,6 +660,11 @@ void RendererVulkan::ConfigureFramebufferTexture(TextureInfo& texture,
 }
 
 void RendererVulkan::FillScreen(Common::Vec3<u8> color, const TextureInfo& texture) {
+    // When loading some 3GX extensions, FillScreen may be called before texture image is available
+    if (!texture.image) {
+        return;
+    }
+    
     const vk::ClearColorValue clear_color = {
         .float32 =
             std::array{
