@@ -37,7 +37,7 @@ public:
     explicit CustomTexture(Frontend::ImageInterface& image_interface);
     ~CustomTexture();
 
-    void LoadFromDisk(bool flip_png);
+    [[nodiscard]] bool LoadFromDisk(bool flip_png);
 
     [[nodiscard]] bool IsParsed() const noexcept {
         return file_format != CustomFileFormat::None && !hashes.empty();

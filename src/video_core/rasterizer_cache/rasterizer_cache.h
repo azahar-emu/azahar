@@ -578,10 +578,10 @@ SurfaceId RasterizerCache<T>::GetTextureSurface(const Pica::Texture::TextureInfo
         }
         const auto [src_surface_id, rect] =
             GetSurfaceSubRect(params, ScaleMatch::Ignore, true, initial_flags);
-        Surface& src_surface = slot_surfaces[src_surface_id];
 
-        params.res_scale = src_surface.res_scale;
+        params.res_scale = slot_surfaces[src_surface_id].res_scale;
         SurfaceId tmp_surface_id = CreateSurface(params, initial_flags);
+        Surface& src_surface = slot_surfaces[src_surface_id];
         Surface& tmp_surface = slot_surfaces[tmp_surface_id];
         sentenced.emplace_back(tmp_surface_id, frame_tick);
 
@@ -758,12 +758,15 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
         ValidateSurface(color_id, boost::icl::first(color_vp_interval),
                         boost::icl::length(color_vp_interval));
     }
+    depth_surface = depth_id ? &slot_surfaces[depth_id] : nullptr;
     if (depth_id) {
         depth_level = depth_surface->LevelOf(depth_params.addr);
         depth_surface->flags |= SurfaceFlagBits::RenderTarget;
         ValidateSurface(depth_id, boost::icl::first(depth_vp_interval),
                         boost::icl::length(depth_vp_interval));
     }
+    color_surface = color_id ? &slot_surfaces[color_id] : nullptr;
+    depth_surface = depth_id ? &slot_surfaces[depth_id] : nullptr;
 
     const FramebufferParams fb_params = {
         .color_id = color_id,
@@ -947,23 +950,23 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
         return;
     }
 
-    Surface& surface = slot_surfaces[surface_id];
     const SurfaceInterval validate_interval(addr, addr + size);
 
-    if (surface.type == SurfaceType::Fill) {
-        ASSERT_MSG(surface.IsRegionValid(validate_interval),
+    Surface& initial_surface = slot_surfaces[surface_id];
+    if (initial_surface.type == SurfaceType::Fill) {
+        ASSERT_MSG(initial_surface.IsRegionValid(validate_interval),
                    "Attempted to validate a non-valid fill surface");
         return;
     }
 
-    SurfaceRegions validate_regions = surface.invalid_regions & validate_interval;
+    SurfaceRegions validate_regions = initial_surface.invalid_regions & validate_interval;
 
     if (validate_regions.empty()) {
         return;
     }
 
     auto notify_validated = [&](SurfaceInterval interval) {
-        surface.MarkValid(interval);
+        slot_surfaces[surface_id].MarkValid(interval);
         validate_regions.erase(interval);
     };
 
@@ -971,9 +974,12 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
                            "RasterizerCache::ValidateSurface (from {:#x} to {:#x})", addr,
                            addr + size};
 
-    u32 level = surface.LevelOf(addr);
-    SurfaceInterval level_interval = surface.LevelInterval(level);
+    u32 level = initial_surface.LevelOf(addr);
+    SurfaceInterval level_interval = initial_surface.LevelInterval(level);
     while (!validate_regions.empty()) {
+        // UploadCustomSurface may grow slot_surfaces and invalidate references to its entries.
+        Surface& surface = slot_surfaces[surface_id];
+
         // Take an invalid interval from the validation regions and clamp it
         // to the current level interval. If the interval is empty
         // then we have validated the entire level so move to the next.
@@ -1004,13 +1010,14 @@ void RasterizerCache<T>::ValidateSurface(SurfaceId surface_id, PAddr addr, u32 s
 
         FlushRegion(params.addr, params.size);
         if (!use_custom_textures || !UploadCustomSurface(surface_id, interval)) {
-            UploadSurface(surface, interval);
+            UploadSurface(slot_surfaces[surface_id], interval);
         }
         notify_validated(params.GetInterval());
     }
 
     // Filtered mipmaps often look really bad. We can achieve better quality by
     // generating them from the base level.
+    Surface& surface = slot_surfaces[surface_id];
     if (surface.res_scale != 1 && level != 0) {
         runtime.GenerateMipmaps(surface);
     }
@@ -1093,22 +1100,42 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
         return true;
     }
 
-    surface.flags |= SurfaceFlagBits::Custom;
+    const SurfaceParams expected_surface = surface;
 
-    const auto upload = [this, level, surface_id, material]() -> bool {
-        ASSERT_MSG(True(slot_surfaces[surface_id].flags & SurfaceFlagBits::Custom),
-                   "Surface is not suitable for custom upload, aborting!");
-        if (!slot_surfaces[surface_id].IsCustom()) {
-            const SurfaceBase old_surface{slot_surfaces[surface_id]};
+    const auto upload = [this, level, surface_id, material, expected_surface, load_info,
+                         hash]() -> bool {
+        if (!slot_surfaces.contains(surface_id)) {
+            return false;
+        }
+
+        Surface& target = slot_surfaces[surface_id];
+        if (False(target.flags & SurfaceFlagBits::Registered) ||
+            !(static_cast<const SurfaceParams&>(target) == expected_surface) ||
+            !runtime.SupportsCustomFormat(material->format)) {
+            return false;
+        }
+
+        MemoryRef source_ptr = memory.GetPhysicalRef(load_info.addr);
+        if (!source_ptr) {
+            return false;
+        }
+        const auto upload_data = source_ptr.GetWriteBytes(load_info.end - load_info.addr);
+        if (ComputeHash(load_info, upload_data) != hash) {
+            return false;
+        }
+
+        target.flags |= SurfaceFlagBits::Custom;
+        if (!target.IsCustom() || target.material != material) {
+            const SurfaceBase old_surface{target};
             const SurfaceId old_id =
                 slot_surfaces.swap_and_insert(surface_id, runtime, old_surface, material);
             slot_surfaces[old_id].flags &= ~SurfaceFlagBits::Registered;
             sentenced.emplace_back(old_id, frame_tick);
         }
-        Surface& surface = slot_surfaces[surface_id];
-        surface.UploadCustom(material, level);
+        Surface& custom_surface = slot_surfaces[surface_id];
+        custom_surface.UploadCustom(material, level);
         if (custom_tex_manager.SkipMipmaps()) {
-            runtime.GenerateMipmaps(surface);
+            runtime.GenerateMipmaps(custom_surface);
         }
         return true;
     };
