@@ -407,8 +407,8 @@ static constexpr std::array<MortonFunc, 18> UNSWIZZLE_TABLE_CONVERTED = {
     nullptr,                                  // 9
     nullptr,                                  // 10
     nullptr,                                  // 11
-    nullptr,                                  // 12
-    nullptr,                                  // 13
+    MortonCopy<true, PixelFormat::ETC1, true>,   // 12
+    MortonCopy<true, PixelFormat::ETC1A4, true>, // 13
     MortonCopy<true, PixelFormat::D16, true>, // 14
     nullptr,                                  // 15
     MortonCopy<true, PixelFormat::D24, true>, // 16

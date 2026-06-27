@@ -828,9 +828,10 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface
         raw_images[num_images++] = handles[Type::Scaled].image;
     }
     if (has_normal) {
-        handles[Type::Custom].Create(mat->width, mat->height, levels, texture_type, format,
-                                     traits.usage, flags, traits.aspect, false, debug_name);
-        raw_images[num_images++] = handles[Type::Custom].image;
+        LOG_WARNING(Render_Vulkan,
+                    "Ignoring custom normal map for material hash {:#016X}: Vulkan does not bind "
+                    "custom normal maps yet",
+                    mat->hash);
     }
 
     current = res_scale != 1 ? Type::Scaled : Type::Base;
@@ -1005,8 +1006,11 @@ void Surface::UploadCustom(const VideoCore::Material* material, u32 level) {
     };
 
     upload(Type::Base, color);
-    if (auto* texture = material->textures[u32(MapType::Normal)]) {
-        upload(Type::Custom, texture);
+    if (material->textures[u32(MapType::Normal)]) {
+        LOG_DEBUG(Render_Vulkan,
+                  "Skipping custom normal map upload for material hash {:#016X}: Vulkan does not "
+                  "bind custom normal maps yet",
+                  material->hash);
     }
 }
 
@@ -1281,7 +1285,12 @@ vk::ImageView Surface::CopyImageView() noexcept {
 }
 
 vk::ImageView Surface::ImageView(ViewType view_type, Type type) noexcept {
-    auto& handle = handles[type == Type::Current ? current : type];
+    const Type resolved_type = type == Type::Current ? current : type;
+    if (!handles[resolved_type] && resolved_type != Type::Base) {
+        return ImageView(view_type, Type::Base);
+    }
+
+    auto& handle = handles[resolved_type];
     if (auto image_view = handle.image_views[view_type]) {
         return image_view;
     }
