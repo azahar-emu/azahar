@@ -222,8 +222,9 @@ bool TextureRuntime::ClearTextureWithoutFbo(Surface& surface,
         UNREACHABLE_MSG("Unknown surface type {}", surface.type);
     }
     glClearTexSubImage(surface.Handle(), clear.texture_level, clear.texture_rect.left,
-                       clear.texture_rect.bottom, 0, clear.texture_rect.GetWidth(),
-                       clear.texture_rect.GetHeight(), 1, format, type, &clear.value);
+                       clear.texture_rect.bottom, clear.texture_layer,
+                       clear.texture_rect.GetWidth(), clear.texture_rect.GetHeight(), 1, format,
+                       type, &clear.value);
     return true;
 }
 
@@ -245,7 +246,7 @@ void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     state.draw.draw_framebuffer = draw_fbos[FboIndex(surface.type)].handle;
     state.Apply();
 
-    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, clear.texture_layer);
 
     switch (surface.type) {
     case SurfaceType::Color:

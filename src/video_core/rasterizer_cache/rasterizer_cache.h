@@ -71,6 +71,7 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
     auto& null_surface = slot_surfaces[NULL_SURFACE_ID];
     runtime.ClearTexture(null_surface, {
                                            .texture_level = 0,
+                                           .texture_layer = 0,
                                            .texture_rect = null_surface.GetScaledRect(),
                                            .value =
                                                {
