@@ -15,6 +15,7 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_input.h"
 #include "citra_qt/configuration/configure_motion_touch.h"
+#include "citra_qt/uisettings.h"
 #include "common/param_package.h"
 #include "core/core.h"
 #include "ui_configure_input.h"
@@ -422,6 +423,7 @@ ConfigureInput::~ConfigureInput() = default;
 void ConfigureInput::ApplyConfiguration() {
 
     Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
+    UISettings::values.use_on_screen_software_keyboard = ui->use_onscreen_keyboard->isChecked();
 
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
@@ -470,6 +472,8 @@ void ConfigureInput::LoadConfiguration() {
 
     ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
     ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
+    ui->use_onscreen_keyboard->setChecked(
+        UISettings::values.use_on_screen_software_keyboard.GetValue());
 
     std::transform(Settings::values.current_input_profile.buttons.begin(),
                    Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),

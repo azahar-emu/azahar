@@ -32,6 +32,13 @@ enum class ButtonConfig {
     None,   /// No button (returned by swkbdInputText in special cases)
 };
 
+enum class KeyboardType {
+    Normal,
+    QWERTY,
+    NumPad,
+    Western,
+};
+
 /// Default English button text mappings. Frontends may need to copy this to internationalize it.
 constexpr char SWKBD_BUTTON_OKAY[] = "Ok";
 constexpr char SWKBD_BUTTON_CANCEL[] = "Cancel";
@@ -40,6 +47,7 @@ constexpr char SWKBD_BUTTON_FORGOT[] = "I Forgot";
 /// Configuration thats relevent to frontend implementation of applets. Anything missing that we
 /// later learn is needed can be added here and filled in by the backend HLE applet
 struct KeyboardConfig {
+    KeyboardType type = KeyboardType::Normal;
     ButtonConfig button_config;
     AcceptedInput accept_mode; /// What kinds of input are accepted (blank/empty/fixed width)
     bool multiline_mode;       /// True if the keyboard accepts multiple lines of input
