@@ -428,6 +428,27 @@ public:
         return WriteImpl(data.data(), data.size(), sizeof(T));
     }
 
+    /**
+     * Reads the file line by line, returning true if data
+     * was read and false when reaching the end of file.
+     *
+     * @param line The output string to write the read data to
+     *
+     * @returns Whether the line was read or not
+     */
+    bool ReadLine(std::string& line);
+
+    /**
+     * Writes the specified line to the file
+     * automatically appending a newline
+     * character to it.
+     *
+     * @param line The input string to write
+     *
+     * @returns Count of bytes written, including the newline.
+     */
+    size_t WriteLine(const std::string_view line);
+
     [[nodiscard]] virtual bool IsOpen() const {
         return nullptr != m_file;
     }

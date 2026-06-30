@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
+#include <boost/regex.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/string.hpp>
@@ -55,6 +56,8 @@ enum class RequestState : u8 {
     ConnectingToServer = 0x5,
 
     /// Request in progress, sending HTTP request.
+    /// HTTPC stays in this state when there is POST
+    /// data pending.
     SendingRequest = 0x6,
 
     // Request in progress, receiving HTTP response and headers.
@@ -158,6 +161,28 @@ struct ClCertAData {
     std::vector<u8> certificate;
     std::vector<u8> private_key;
     bool init = false;
+};
+
+class URLReplacer {
+private:
+    struct Rule {
+        boost::regex regex;
+
+        std::string pattern;
+        std::string replacement;
+    };
+
+    std::vector<Rule> rules;
+
+public:
+    URLReplacer();
+
+    bool HasRule(const std::string& pattern);
+    bool AddRule(const std::string& pattern, const std::string& replacement);
+    bool DeleteRule(const std::string& pattern);
+    std::string Apply(const std::string& url) const;
+
+    bool Save();
 };
 
 /// Represents an HTTP context.
@@ -274,6 +299,7 @@ public:
     u32 socket_buffer_size;
     std::vector<RequestHeader> headers;
     const ClCertAData* clcert_data;
+    const URLReplacer* url_replacer;
     bool post_data_added = false;
     bool post_pending_request = false;
     Params post_data;
@@ -864,6 +890,10 @@ private:
      */
     void Finalize(Kernel::HLERequestContext& ctx);
 
+    void RegisterURLReplacement(Kernel::HLERequestContext& ctx);
+
+    void UnregisterURLReplacement(Kernel::HLERequestContext& ctx);
+
     [[nodiscard]] SessionData* EnsureSessionInitialized(Kernel::HLERequestContext& ctx,
                                                         IPC::RequestParser rp);
 
@@ -897,6 +927,8 @@ private:
     std::unordered_map<ClientCertContext::Handle, std::shared_ptr<ClientCertContext>> client_certs;
 
     ClCertAData ClCertA;
+
+    URLReplacer url_replacer;
 
 private:
     template <class Archive>
