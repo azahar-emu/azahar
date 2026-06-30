@@ -124,7 +124,8 @@ enum class BooleanSetting(
         SettingKeys.simulate_3ds_gpu_timings(),
         Settings.SECTION_RENDERER,
         true
-    );
+    ),
+    CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), Settings.SECTION_THEME, true);
 
     override var boolean: Boolean = defaultValue
 
