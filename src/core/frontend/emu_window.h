@@ -199,6 +199,9 @@ public:
      */
     bool TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y);
 
+    /// Signal a touch pressed event occured, bypassing the framebuffer (e.g. stylus touch button pressed on controller)
+    bool TouchDirectlyPressed(unsigned internal_x, unsigned internal_y);
+
     /// Signal that a touch released event has occurred (e.g. mouse click released)
     void TouchReleased();
 

@@ -78,6 +78,8 @@ RendererOpenGL::RendererOpenGL(Core::System& system, Pica::PicaCore& pica_,
       rasterizer{system.Memory(), pica, system.CustomTexManager(), *this, driver},
       frame_dumper{system, window} {
     const bool has_debug_tool = driver.HasDebugTool();
+    vCursor = new Cursor();
+    vCursor->setEmuWindow(&window);
     window.mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
     if (secondary_window) {
         secondary_window->mailbox = std::make_unique<OGLTextureMailbox>(has_debug_tool);
@@ -235,6 +237,7 @@ void RendererOpenGL::RenderToMailbox(const Layout::FramebufferLayout& layout,
 
         state.draw.draw_framebuffer = frame->render.handle;
         state.Apply();
+        vCursor->update();
         DrawScreens(layout, flipped);
         // Create a fence for the frontend to wait on and swap this frame to OffTex
         frame->render_fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -433,6 +436,8 @@ void RendererOpenGL::ReloadShader(Settings::StereoRenderOption render_3d) {
     uniform_i_resolution = glGetUniformLocation(shader.handle, "i_resolution");
     uniform_o_resolution = glGetUniformLocation(shader.handle, "o_resolution");
     uniform_layer = glGetUniformLocation(shader.handle, "layer");
+    uniform_cursor_pos = glGetUniformLocation(shader.handle, "cursor_pos");
+    uniform_cursor_enable = glGetUniformLocation(shader.handle, "cursor_enable");
     attrib_position = glGetAttribLocation(shader.handle, "vert_position");
     attrib_tex_coord = glGetAttribLocation(shader.handle, "vert_tex_coord");
 }
@@ -556,11 +561,17 @@ void RendererOpenGL::DrawSingleScreen(const ScreenInfo& screen_info, float x, fl
 
     const u32 scale_factor = GetResolutionScaleFactor();
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
-    glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.width * scale_factor),
-                static_cast<float>(screen_info.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info.texture.height * scale_factor));
-    glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
+    glUniform4f(uniform_i_resolution, static_cast<float>(screen_info.texture.height * scale_factor),
+                static_cast<float>(screen_info.texture.width * scale_factor),
+                1.0f / static_cast<float>(screen_info.texture.height * scale_factor),
+                1.0f / static_cast<float>(screen_info.texture.width * scale_factor));
+    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
+    if (currScreenDraw == 1){
+        glUniform1i(uniform_cursor_enable, 1);
+    } else {
+        glUniform1i(uniform_cursor_enable, 0);
+    }
+    glUniform2f(uniform_cursor_pos, vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info.display_texture;
     state.texture_units[0].sampler = sampler;
     state.Apply();
@@ -627,11 +638,17 @@ void RendererOpenGL::DrawSingleScreenStereo(const ScreenInfo& screen_info_l,
     const u32 scale_factor = GetResolutionScaleFactor();
     const GLuint sampler = samplers[Settings::values.filter_mode.GetValue()].handle;
     glUniform4f(uniform_i_resolution,
-                static_cast<float>(screen_info_l.texture.width * scale_factor),
                 static_cast<float>(screen_info_l.texture.height * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor),
-                1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor));
-    glUniform4f(uniform_o_resolution, h, w, 1.0f / h, 1.0f / w);
+                static_cast<float>(screen_info_l.texture.width * scale_factor),
+                1.0f / static_cast<float>(screen_info_l.texture.height * scale_factor),
+                1.0f / static_cast<float>(screen_info_l.texture.width * scale_factor));
+    glUniform4f(uniform_o_resolution, w, h, 1.0f / w, 1.0f / h);
+    if (currScreenDraw == 1){
+        glUniform1i(uniform_cursor_enable, 1);
+    } else {
+        glUniform1i(uniform_cursor_enable, 0);
+    }
+    glUniform2f(uniform_cursor_pos, vCursor->cursorPos[0]/320.0f, vCursor->cursorPos[1]/240.0f);
     state.texture_units[0].texture_2d = screen_info_l.display_texture;
     state.texture_units[1].texture_2d = screen_info_r.display_texture;
     state.texture_units[0].sampler = sampler;
@@ -736,6 +753,7 @@ void RendererOpenGL::DrawTopScreen(const Layout::FramebufferLayout& layout,
     if (!layout.top_screen_enabled) {
         return;
     }
+    currScreenDraw = 0;
     int leftside, rightside;
     leftside = Settings::values.swap_eyes_3d.GetValue() ? 1 : 0;
     rightside = Settings::values.swap_eyes_3d.GetValue() ? 0 : 1;
@@ -797,7 +815,7 @@ void RendererOpenGL::DrawBottomScreen(const Layout::FramebufferLayout& layout,
     if (!layout.bottom_screen_enabled) {
         return;
     }
-
+    currScreenDraw = 1;
     const float bottom_screen_left = static_cast<float>(bottom_screen.left);
     const float bottom_screen_top = static_cast<float>(bottom_screen.top);
     const float bottom_screen_width = static_cast<float>(bottom_screen.GetWidth());
