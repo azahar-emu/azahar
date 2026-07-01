@@ -32,7 +32,7 @@ CustomPixelFormat ToCustomPixelFormat(ddsktx_format format) {
         return CustomPixelFormat::ASTC8;
     default:
         LOG_ERROR(Common, "Unknown dds/ktx pixel format {}", format);
-        return CustomPixelFormat::RGBA8;
+        return CustomPixelFormat::Invalid;
     }
 }
 
@@ -54,18 +54,27 @@ CustomTexture::CustomTexture(Frontend::ImageInterface& image_interface_)
 
 CustomTexture::~CustomTexture() = default;
 
-void CustomTexture::LoadFromDisk(bool flip_png) {
+bool CustomTexture::LoadFromDisk(bool flip_png) {
     std::scoped_lock lock{decode_mutex};
     if (IsLoaded()) {
-        return;
+        return true;
     }
 
     FileUtil::IOFile file{path, "rb"};
+    if (!file.IsOpen() || file.GetSize() == 0) {
+        LOG_CRITICAL(Render, "Failed to open custom texture: {}", path);
+        return false;
+    }
     std::vector<u8> input(file.GetSize());
     if (file.ReadBytes(input.data(), input.size()) != input.size()) {
         LOG_CRITICAL(Render, "Failed to open custom texture: {}", path);
-        return;
+        return false;
     }
+
+    data.clear();
+    width = 0;
+    height = 0;
+    format = CustomPixelFormat::Invalid;
     switch (file_format) {
     case CustomFileFormat::PNG:
         LoadPNG(input, flip_png);
@@ -77,6 +86,12 @@ void CustomTexture::LoadFromDisk(bool flip_png) {
     default:
         LOG_ERROR(Render, "Unknown file format {}", file_format);
     }
+    if (format == CustomPixelFormat::Invalid || data.empty() || width == 0 || height == 0) {
+        data.clear();
+        format = CustomPixelFormat::Invalid;
+        return false;
+    }
+    return true;
 }
 
 void CustomTexture::LoadPNG(std::span<const u8> input, bool flip_png) {
@@ -100,13 +115,27 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
     if (IsDecoded()) {
         return;
     }
-    for (CustomTexture* const texture : textures) {
-        if (!texture || texture->IsLoaded()) {
+    size = 0;
+    width = 0;
+    height = 0;
+    format = CustomPixelFormat::Invalid;
+    for (std::size_t index = 0; index < textures.size(); index++) {
+        CustomTexture* const texture = textures[index];
+        if (!texture) {
             continue;
         }
-        texture->LoadFromDisk(flip_png);
+        const bool loaded = texture->LoadFromDisk(flip_png);
         size += texture->data.size();
         LOG_DEBUG(Render, "Loading {} map {}", MapTypeName(texture->type), texture->path);
+        if (!loaded) {
+            LOG_ERROR(Render, "Failed to load {} map {} of material with hash {:#016X}",
+                      MapTypeName(texture->type), texture->path, hash);
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[index] = nullptr;
+        }
     }
     if (!textures[0]) {
         LOG_ERROR(Render, "Unable to create material without color texture!");
@@ -126,16 +155,24 @@ void Material::LoadFromDisk(bool flip_png) noexcept {
                       "which do not match the color texture dimentions {}x{}",
                       MapTypeName(texture->type), texture->path, hash, texture->width,
                       texture->height, width, height);
-            state = DecodeState::Failed;
-            return;
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[static_cast<std::size_t>(texture->type)] = nullptr;
+            continue;
         }
         if (texture->format != format) {
             LOG_ERROR(
                 Render, "{} map {} is stored with {} format which does not match color format {}",
                 MapTypeName(texture->type), texture->path,
                 CustomPixelFormatAsString(texture->format), CustomPixelFormatAsString(format));
-            state = DecodeState::Failed;
-            return;
+            if (texture->type == MapType::Color) {
+                state = DecodeState::Failed;
+                return;
+            }
+            textures[static_cast<std::size_t>(texture->type)] = nullptr;
+            continue;
         }
     }
     state = DecodeState::Decoded;
