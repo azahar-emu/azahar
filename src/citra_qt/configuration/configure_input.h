@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,6 +30,21 @@ class ConfigureInput : public QWidget {
     Q_OBJECT
 
 public:
+    enum class InputBindingType {
+        NativeButton,
+        AnalogFromButton,
+        NativeAnalog,
+        Hotkey,
+        CModButton,
+        Empty
+    };
+    struct InputBinding {
+        ConfigureInput::InputBindingType binding_type;
+        QString name;
+        int index = -1;     // used for anything there are multiple of
+        int sub_index = -1; // used for sub-buttons
+    };
+
     explicit ConfigureInput(Core::System& system, QWidget* parent = nullptr);
     ~ConfigureInput() override;
 
@@ -44,10 +59,12 @@ public:
     /// Save the current input profile index
     void ApplyProfile();
 public slots:
-    void OnHotkeysChanged(QList<QKeySequence> new_key_list);
+    void OnHotkeysChanged(QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list);
+    void OnClearBinding(ConfigureInput::InputBinding binding);
 
 signals:
-    void InputKeysChanged(QList<QKeySequence> new_key_list);
+    void InputKeysChanged(QMap<QKeySequence, ConfigureInput::InputBinding> new_key_list);
+    void ClearHotkey(ConfigureInput::InputBinding hotkey_to_clear);
 
 private:
     Core::System& system;
@@ -66,6 +83,8 @@ private:
 
     /// Each button input is represented by a QPushButton.
     std::array<QPushButton*, Settings::NativeButton::NumButtons> button_map;
+    std::array<QString, Settings::NativeButton::NumButtons> button_names;
+    std::array<QString, Settings::NativeAnalog::NumAnalogs> analog_names;
 
     /// A group of five QPushButtons represent one analog input. The buttons each represent up,
     /// down, left, right, and modifier, respectively.
@@ -80,7 +99,8 @@ private:
     std::array<QLabel*, Settings::NativeAnalog::NumAnalogs>
         analog_map_deadzone_and_modifier_slider_label;
 
-    static const std::array<std::string, ANALOG_SUB_BUTTONS_NUM> analog_sub_buttons;
+    std::array<std::string, ANALOG_SUB_BUTTONS_NUM> analog_sub_buttons;
+    std::array<QString, ANALOG_SUB_BUTTONS_NUM> analog_sub_button_names;
 
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
 
@@ -89,15 +109,19 @@ private:
      * These can't be bound to any input key.
      * Synchronised with ConfigureHotkeys via signal-slot.
      */
-    QList<QKeySequence> hotkey_list;
+    QMap<QKeySequence, ConfigureInput::InputBinding> hotkey_list;
 
     /// A flag to indicate if keyboard keys are okay when configuring an input. If this is false,
     /// keyboard events are ignored.
     bool want_keyboard_keys = false;
 
-    /// Generates list of all used keys
-    QList<QKeySequence> GetUsedKeyboardKeys();
+    /// Generates list of all used keyboard keys for sharing with hotkey code
+    QMap<QKeySequence, ConfigureInput::InputBinding> GetUsedKeyboardKeys();
+    InputBinding GetMapping(const Common::ParamPackage& param);
 
+    void ClearBinding(InputBinding binding);
+    void SetBinding(InputBinding binding, const Common::ParamPackage& params);
+    bool CheckForDuplicateMap(const Common::ParamPackage& params, InputBinding this_binding);
     void MapFromButton(const Common::ParamPackage& params);
     void AutoMap();
 
@@ -117,7 +141,9 @@ private:
     /// The key code of the previous state of the key being currently bound.
     int previous_key_code;
 
-    /// Finish polling and configure input using the input_setter
+    /// Stop polling
+    void StopPolling();
+    /// configure input using the input_setter
     void SetPollingResult(const Common::ParamPackage& params, bool abort);
 
     /// Handle key press events.
