@@ -411,19 +411,19 @@ private:
     std::vector<QString> physical_devices;
 
     // Debugger panes
-    ProfilerWidget* profilerWidget;
+    ProfilerWidget* profilerWidget{};
 #if MICROPROFILE_ENABLED
-    MicroProfileDialog* microProfileDialog;
+    MicroProfileDialog* microProfileDialog{};
 #endif
-    RegistersWidget* registersWidget;
-    GPUCommandStreamWidget* graphicsWidget;
-    GPUCommandListWidget* graphicsCommandsWidget;
-    GraphicsBreakPointsWidget* graphicsBreakpointsWidget;
-    GraphicsVertexShaderWidget* graphicsVertexShaderWidget;
-    GraphicsTracingWidget* graphicsTracingWidget;
-    IPCRecorderWidget* ipcRecorderWidget;
-    LLEServiceModulesWidget* lleServiceModulesWidget;
-    WaitTreeWidget* waitTreeWidget;
+    RegistersWidget* registersWidget{};
+    GPUCommandStreamWidget* graphicsWidget{};
+    GPUCommandListWidget* graphicsCommandsWidget{};
+    GraphicsBreakPointsWidget* graphicsBreakpointsWidget{};
+    GraphicsVertexShaderWidget* graphicsVertexShaderWidget{};
+    GraphicsTracingWidget* graphicsTracingWidget{};
+    IPCRecorderWidget* ipcRecorderWidget{};
+    LLEServiceModulesWidget* lleServiceModulesWidget{};
+    WaitTreeWidget* waitTreeWidget{};
 
     QAction* actions_recent_files[max_recent_files_item];
     std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;

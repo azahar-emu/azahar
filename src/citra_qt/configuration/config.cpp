@@ -513,6 +513,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.use_gdbstub);
     ReadBasicSetting(Settings::values.gdbstub_port);
     ReadBasicSetting(Settings::values.renderer_debug);
+    ReadBasicSetting(Settings::values.pica_debugging);
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
@@ -1103,6 +1104,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);
     WriteBasicSetting(Settings::values.renderer_debug);
+    WriteBasicSetting(Settings::values.pica_debugging);
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);

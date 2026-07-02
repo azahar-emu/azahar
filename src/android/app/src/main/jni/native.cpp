@@ -255,7 +255,13 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
     // Register microphone permission check
     system.RegisterMicPermissionCheck(&CheckMicPermission);
 
-    Pica::g_debug_context = Pica::DebugContext::Construct();
+    // No PICA debugging on Android
+    if (Settings::values.pica_debugging) {
+        Pica::g_debug_context = Pica::DebugContext::Construct();
+    } else {
+        Pica::g_debug_context.reset();
+    }
+
     InputManager::Init();
 
     window->MakeCurrent();

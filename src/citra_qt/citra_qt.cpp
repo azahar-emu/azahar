@@ -414,7 +414,11 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     LoadTranslation();
 
-    Pica::g_debug_context = Pica::DebugContext::Construct();
+    if (Settings::values.pica_debugging) {
+        Pica::g_debug_context = Pica::DebugContext::Construct();
+    } else {
+        Pica::g_debug_context.reset();
+    }
     setAcceptDrops(true);
     ui->setupUi(this);
     statusBar()->hide();
@@ -706,8 +710,12 @@ void GMainWindow::InitializeWidgets() {
 }
 
 void GMainWindow::InitializeDebugWidgets() {
-    connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
-            &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    if (Pica::g_debug_context) {
+        connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
+                &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    } else {
+        ui->action_Create_Pica_Surface_Viewer->setEnabled(false);
+    }
 
     QMenu* debug_menu = ui->menu_View_Debugging;
 
@@ -726,35 +734,37 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
 
-    graphicsWidget = new GPUCommandStreamWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
-    graphicsWidget->hide();
-    debug_menu->addAction(graphicsWidget->toggleViewAction());
+    if (Pica::g_debug_context) {
+        graphicsWidget = new GPUCommandStreamWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
+        graphicsWidget->hide();
+        debug_menu->addAction(graphicsWidget->toggleViewAction());
 
-    graphicsCommandsWidget = new GPUCommandListWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
-    graphicsCommandsWidget->hide();
-    debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+        graphicsCommandsWidget = new GPUCommandListWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
+        graphicsCommandsWidget->hide();
+        debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
 
-    graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
-    graphicsBreakpointsWidget->hide();
-    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
+        graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+        graphicsBreakpointsWidget->hide();
+        debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
-    graphicsVertexShaderWidget =
-        new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
-    graphicsVertexShaderWidget->hide();
-    debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
+        graphicsVertexShaderWidget =
+            new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
+        graphicsVertexShaderWidget->hide();
+        debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
-    graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
-    graphicsTracingWidget->hide();
-    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
-    connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStopping);
+        graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
+        graphicsTracingWidget->hide();
+        debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
+        connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStarting);
+        connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStopping);
+    }
 
     waitTreeWidget = new WaitTreeWidget(system, this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
@@ -1553,7 +1563,7 @@ void GMainWindow::BootGame(const QString& filename) {
     }
 
     // Register debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Register();
     }
 
@@ -1638,10 +1648,12 @@ void GMainWindow::ShutdownGame() {
     // breakpoint after (or before) RequestStop() is called, the emulation would never be able
     // to continue out to the main loop and terminate. Thus wait() would hang forever.
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
-    Pica::g_debug_context->ClearBreakpoints();
+    if (Pica::g_debug_context) {
+        Pica::g_debug_context->ClearBreakpoints();
+    }
 
     // Unregister debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Unregister();
     }
 

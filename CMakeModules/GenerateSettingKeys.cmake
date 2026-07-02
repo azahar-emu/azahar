@@ -32,6 +32,7 @@ foreach(KEY IN ITEMS
     "physical_device"
     "use_gles"
     "renderer_debug"
+    "pica_debugging"
     "dump_command_buffers"
     "spirv_shader_gen"
     "disable_spirv_optimizer"
