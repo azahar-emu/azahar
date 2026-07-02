@@ -90,7 +90,7 @@ void RasterizerAccelerated::AddTriangle(const Pica::OutputVertex& v0, const Pica
 }
 
 RasterizerAccelerated::VertexArrayInfo RasterizerAccelerated::AnalyzeVertexArray(
-    bool is_indexed, u32 stride_alignment) {
+    bool is_indexed, u32 stride_alignment) [[hot]] {
     const auto& vertex_attributes = regs.pipeline.vertex_attributes;
 
     u32 vertex_min;

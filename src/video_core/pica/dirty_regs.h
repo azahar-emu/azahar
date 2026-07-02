@@ -16,6 +16,37 @@ union DirtyRegs {
         qwords[reg_id >> 6] |= 1ULL << (reg_id & 0x3f);
     }
 
+    void SetRange(u32 start_reg_id, u32 count) {
+        if (count == 0) [[unlikely]] {
+            return;
+        }
+
+        const u32 end = start_reg_id + count;
+        const u32 first_word = start_reg_id >> 6;
+        const u32 last_word = (end - 1) >> 6;
+        const u32 start_bit = start_reg_id & 0x3f;
+
+        if (first_word == last_word) {
+            // Entire range fits in one qword.
+            const u64 mask = (count >= 64) ? ~0ULL : (((1ULL << count) - 1ULL) << start_bit);
+            qwords[first_word] |= mask;
+            return;
+        }
+
+        // Partial first qword, set from start_bit until bit 63.
+        qwords[first_word] |= (~0ULL << start_bit);
+
+        // Set all middle qwords.
+        for (u32 w = first_word + 1; w < last_word; ++w) {
+            qwords[w] = ~0ULL;
+        }
+
+        // Partial last qword, set bits from 0 to end_bit.
+        const u32 end_bit = end & 0x3f;
+        const u64 last_mask = (end_bit == 0) ? ~0ULL : ((1ULL << end_bit) - 1ULL);
+        qwords[last_word] |= last_mask;
+    }
+
     void SetAllDirty() {
         qwords.fill(UINT64_MAX);
     }
