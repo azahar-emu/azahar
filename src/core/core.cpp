@@ -53,6 +53,9 @@
 #include "core/rpc/server.h"
 #endif
 #include "network/network.h"
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+#include "retro_achievements/client.h"
+#endif
 #include "video_core/custom_textures/custom_tex_manager.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
@@ -76,7 +79,11 @@ Core::Timing& Global() {
     return System::GetInstance().CoreTiming();
 }
 
-System::System() : movie{*this}, cheat_engine{*this} {}
+System::System() : movie{*this}, cheat_engine{*this} {
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    retro_achievements_client = std::make_unique<RetroAchievements::Client>();
+#endif
+}
 
 System::~System() = default;
 
@@ -667,6 +674,16 @@ Cheats::CheatEngine& System::CheatEngine() {
 const Cheats::CheatEngine& System::CheatEngine() const {
     return cheat_engine;
 }
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+RetroAchievements::Client& System::RetroAchievementsClient() {
+    return *retro_achievements_client;
+}
+
+const RetroAchievements::Client& System::RetroAchievementsClient() const {
+    return *retro_achievements_client;
+}
+#endif
 
 void System::RegisterVideoDumper(std::shared_ptr<VideoDumper::Backend> dumper) {
     video_dumper = std::move(dumper);
