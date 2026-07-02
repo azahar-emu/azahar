@@ -27,6 +27,8 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
                 updateShaders(static_cast<Settings::StereoRenderOption>(currentIndex));
             });
 
+    connect(ui->fsr_sharpness_slider, &QSlider::valueChanged, this,
+            &ConfigureEnhancements::SetFSRSharpnessIndicatorText);
     ui->toggle_preload_textures->setEnabled(ui->toggle_custom_textures->isChecked());
     ui->toggle_async_custom_loading->setEnabled(ui->toggle_custom_textures->isChecked());
     connect(ui->toggle_custom_textures, &QCheckBox::toggled, this, [this] {
@@ -35,11 +37,17 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
         if (!ui->toggle_preload_textures->isEnabled())
             ui->toggle_preload_textures->setChecked(false);
     });
+    connect(ui->output_scaling_combobox, &QComboBox::currentIndexChanged, this, &ConfigureEnhancements::SetFSRSharpnessEnabled);
 }
 
 ConfigureEnhancements::~ConfigureEnhancements() = default;
 
 void ConfigureEnhancements::SetConfiguration() {
+
+    const s32 sharpness =
+        static_cast<s32>(Settings::values.fsr_sharpness.GetValue());
+    ui->fsr_sharpness_slider->setValue(sharpness);
+    SetFSRSharpnessIndicatorText(ui->fsr_sharpness_slider->sliderPosition());
 
     if (!Settings::IsConfiguringGlobal()) {
         ConfigurationShared::SetPerGameSetting(ui->resolution_factor_combobox,
@@ -48,13 +56,25 @@ void ConfigureEnhancements::SetConfiguration() {
                                                &Settings::values.texture_filter);
         ConfigurationShared::SetHighlight(ui->widget_texture_filter,
                                           !Settings::values.texture_filter.UsingGlobal());
+        ConfigurationShared::SetPerGameSetting(ui->antialiasing_filter_combobox,
+                                               &Settings::values.antialiasing_filter);
+        ConfigurationShared::SetHighlight(ui->widget_antialiasing_filter,
+                                          !Settings::values.antialiasing_filter.UsingGlobal());
+        ConfigurationShared::SetPerGameSetting(ui->output_scaling_combobox,
+                                               &Settings::values.output_scaling);
+        ConfigurationShared::SetHighlight(ui->widget_output_scaling,
+                                          !Settings::values.output_scaling.UsingGlobal());
     } else {
         ui->resolution_factor_combobox->setCurrentIndex(
             Settings::values.resolution_factor.GetValue());
         ui->texture_filter_combobox->setCurrentIndex(
             static_cast<int>(Settings::values.texture_filter.GetValue()));
+        ui->antialiasing_filter_combobox->setCurrentIndex(
+            static_cast<int>(Settings::values.antialiasing_filter.GetValue()));
+        ui->output_scaling_combobox->setCurrentIndex(
+            static_cast<int>(Settings::values.output_scaling.GetValue()));
     }
-
+    ui->fsr_sharpness_slider->setEnabled((ui->output_scaling_combobox->currentIndex() == 3) || ui->output_scaling_combobox->currentIndex() == 4);
     ui->render_3d_combobox->setCurrentIndex(
         static_cast<int>(Settings::values.render_3d.GetValue()));
     ui->swap_eyes_3d->setChecked(Settings::values.swap_eyes_3d.GetValue());
@@ -62,7 +82,6 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->mono_rendering_eye->setCurrentIndex(
         static_cast<int>(Settings::values.mono_render_option.GetValue()));
     updateShaders(Settings::values.render_3d.GetValue());
-    ui->toggle_linear_filter->setChecked(Settings::values.filter_mode.GetValue());
     ui->use_integer_scaling->setChecked(Settings::values.use_integer_scaling.GetValue());
     ui->toggle_dump_textures->setChecked(Settings::values.dump_textures.GetValue());
     ui->toggle_custom_textures->setChecked(Settings::values.custom_textures.GetValue());
@@ -71,6 +90,13 @@ void ConfigureEnhancements::SetConfiguration() {
     ui->disable_right_eye_render->setChecked(Settings::values.disable_right_eye_render.GetValue());
 }
 
+void ConfigureEnhancements::SetFSRSharpnessIndicatorText(int percentage) {
+    ui->fsr_sharpness_indicator->setText(tr("%1%", "FSR/SGSR Sharpness (e.g. 50%)").arg(percentage));
+}
+
+void ConfigureEnhancements::SetFSRSharpnessEnabled(int output) {
+        ui->fsr_sharpness_slider->setEnabled(output == 3 || output == 4);
+}
 void ConfigureEnhancements::updateShaders(Settings::StereoRenderOption stereo_option) {
     ui->shader_combobox->clear();
     ui->shader_combobox->setEnabled(true);
@@ -124,14 +150,17 @@ void ConfigureEnhancements::ApplyConfiguration() {
         Settings::values.pp_shader_name =
             ui->shader_combobox->itemText(ui->shader_combobox->currentIndex()).toStdString();
     }
+    Settings::values.fsr_sharpness = ui->fsr_sharpness_slider->sliderPosition();
     Settings::values.disable_right_eye_render = ui->disable_right_eye_render->isChecked();
 
-    ConfigurationShared::ApplyPerGameSetting(&Settings::values.filter_mode,
-                                             ui->toggle_linear_filter, linear_filter);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.use_integer_scaling,
                                              ui->use_integer_scaling, use_integer_scaling);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.texture_filter,
                                              ui->texture_filter_combobox);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.antialiasing_filter,
+                                             ui->antialiasing_filter_combobox);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.output_scaling,
+                                            ui->output_scaling_combobox);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.dump_textures,
                                              ui->toggle_dump_textures, dump_textures);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.custom_textures,
@@ -150,7 +179,8 @@ void ConfigureEnhancements::SetupPerGameUI() {
     if (Settings::IsConfiguringGlobal()) {
         ui->widget_resolution->setEnabled(Settings::values.resolution_factor.UsingGlobal());
         ui->widget_texture_filter->setEnabled(Settings::values.texture_filter.UsingGlobal());
-        ui->toggle_linear_filter->setEnabled(Settings::values.filter_mode.UsingGlobal());
+        ui->widget_antialiasing_filter->setEnabled(Settings::values.antialiasing_filter.UsingGlobal());
+        ui->widget_output_scaling->setEnabled(Settings::values.output_scaling.UsingGlobal());
         ui->use_integer_scaling->setEnabled(Settings::values.use_integer_scaling.UsingGlobal());
         ui->toggle_dump_textures->setEnabled(Settings::values.dump_textures.UsingGlobal());
         ui->toggle_custom_textures->setEnabled(Settings::values.custom_textures.UsingGlobal());
@@ -168,8 +198,6 @@ void ConfigureEnhancements::SetupPerGameUI() {
 
     ui->widget_shader->setVisible(false);
 
-    ConfigurationShared::SetColoredTristate(ui->toggle_linear_filter, Settings::values.filter_mode,
-                                            linear_filter);
     ConfigurationShared::SetColoredTristate(
         ui->use_integer_scaling, Settings::values.use_integer_scaling, use_integer_scaling);
     ConfigurationShared::SetColoredTristate(ui->toggle_dump_textures,
@@ -192,4 +220,12 @@ void ConfigureEnhancements::SetupPerGameUI() {
     ConfigurationShared::SetColoredComboBox(
         ui->texture_filter_combobox, ui->widget_texture_filter,
         static_cast<int>(Settings::values.texture_filter.GetValue(true)));
+    
+    ConfigurationShared::SetColoredComboBox(
+        ui->antialiasing_filter_combobox, ui->widget_antialiasing_filter,
+        static_cast<int>(Settings::values.antialiasing_filter.GetValue(true)));
+
+    ConfigurationShared::SetColoredComboBox(
+        ui->output_scaling_combobox, ui->widget_output_scaling,
+        static_cast<int>(Settings::values.output_scaling.GetValue(true)));
 }
