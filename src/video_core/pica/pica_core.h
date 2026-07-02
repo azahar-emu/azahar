@@ -123,6 +123,16 @@ public:
 private:
     void InitializeRegs();
 
+    void HandleSpecialRegBatch(u32 id, const u32* values, u32 count);
+
+    void HandleSpecialReg(u32 id, u32 value, bool& stop_requested);
+
+    void WriteInternalRegBatch(u32 id, const u32* values, u32 count, u32 mask,
+                               bool& stop_requested);
+
+    void WriteInternalRegSequential(u32 id, const u32* __restrict values, u32 count, u32 mask,
+                                    bool& stop_requested);
+
     void WriteInternalReg(u32 id, u32 value, u32 mask, bool& stop_requested);
 
     void SubmitImmediate(u32 data);
