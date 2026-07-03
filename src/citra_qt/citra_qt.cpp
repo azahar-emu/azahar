@@ -75,7 +75,7 @@
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/qt_swizzle.h"
-#include "citra_qt/retro_achievements_dialog.h"
+#include "citra_qt/retro_achievements/dialog.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -431,7 +431,9 @@ GMainWindow::GMainWindow(Core::System& system_)
     discord_rpc->Update(false);
 #endif
 
-#ifndef ENABLE_RETRO_ACHIEVEMENTS
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    system.RetroAchievementsClient().RegisterObserver(ra_client_observer);
+#else
     ui->action_RetroAchievements.setVisible(false);
 #endif
 
@@ -3484,12 +3486,25 @@ void GMainWindow::OnDecompressFile() {
 
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
 void GMainWindow::OnRetroAchievements() {
-    RetroAchievementsDialog dialog(this);
+    RetroAchievements::Dialog dialog(this);
 
-    connect(&dialog, &RetroAchievementsDialog::logInAttempted, this,
+    connect(&dialog, &RetroAchievements::Dialog::LogInAttempted, this,
             [this](const QString& username, const QString& password) {
                 system.RetroAchievementsClient().AttemptLogin(username.toUtf8().constData(),
                                                               password.toUtf8().constData());
+            });
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,
+            &RetroAchievements::Dialog::OnLoginSucceeded);
+
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, this,
+            [this, &dialog](const rc_client_user_t* user) {
+                system.RetroAchievementsClient().FetchImage(
+                    user->avatar_url, [&dialog](std::vector<u8>&& image_data) {
+                        QPixmap pixmap;
+                        pixmap.loadFromData(image_data.data(), image_data.size());
+
+                        dialog.OnAvatarImageDownloaded(pixmap);
+                    });
             });
 
     auto result = dialog.exec();
