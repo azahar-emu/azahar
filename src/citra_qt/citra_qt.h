@@ -296,6 +296,9 @@ private slots:
     void OnDumpVideo();
     void OnCompressFile();
     void OnDecompressFile();
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    void OnRetroAchievements();
+#endif
 #ifdef _WIN32
     void OnOpenFFmpeg();
 #endif

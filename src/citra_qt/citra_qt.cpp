@@ -75,6 +75,7 @@
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/qt_swizzle.h"
+#include "citra_qt/retro_achievements_dialog.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -427,6 +428,10 @@ GMainWindow::GMainWindow(Core::System& system_)
 #ifdef ENABLE_DISCORD_RPC
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
     discord_rpc->Update(false);
+#endif
+
+#ifndef ENABLE_RETRO_ACHIEVEMENTS
+    ui->action_RetroAchievements.setVisible(false);
 #endif
 
     play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
@@ -1221,6 +1226,10 @@ void GMainWindow::ConnectMenuEvents() {
     // Tools
     connect_menu(ui->action_Compress_ROM_File, &GMainWindow::OnCompressFile);
     connect_menu(ui->action_Decompress_ROM_File, &GMainWindow::OnDecompressFile);
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    connect_menu(ui->action_RetroAchievements, &GMainWindow::OnRetroAchievements);
+#endif
 
     // Help
     connect_menu(ui->action_Open_Log_Folder, []() {
@@ -3478,6 +3487,21 @@ void GMainWindow::OnDecompressFile() {
         emit CompressFinished(false, total_success);
     });
 }
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+void GMainWindow::OnRetroAchievements() {
+    RetroAchievementsDialog dialog(this);
+
+    connect(&dialog, &RetroAchievementsDialog::logInAttempted, this,
+            [this](const QString& username, const QString& password) {
+                // LOG_DEBUG(Frontend, "TODO: {} - {}", qPrintable(username), qPrintable(password));
+                system.RetroAchievementsClient().AttemptLogin(username.toUtf8().constData(),
+                                                              password.toUtf8().constData());
+            });
+
+    auto result = dialog.exec();
+}
+#endif
 
 #ifdef _WIN32
 void GMainWindow::OnOpenFFmpeg() {

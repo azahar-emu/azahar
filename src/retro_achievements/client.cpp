@@ -22,6 +22,11 @@ static void log_message(const char* message, const rc_client_t* client) {
     LOG_INFO(RetroAchievements, "rcheevos message: \"{}\"", message);
 }
 
+static void login_callback(int result, const char* error_message, rc_client_t* client,
+                           void* userdata) {
+    LOG_CRITICAL(RetroAchievements, "login_callback stub: result = {}", result);
+}
+
 namespace RetroAchievements {
 
 Client::Client() {
@@ -36,6 +41,10 @@ Client::~Client() {
         rc_client_destroy(m_rc_client);
         m_rc_client = nullptr;
     }
+}
+
+void Client::AttemptLogin(const char* username, const char* password) {
+    rc_client_begin_login_with_password(m_rc_client, username, password, login_callback, nullptr);
 }
 
 } // namespace RetroAchievements
