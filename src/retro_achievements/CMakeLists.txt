@@ -3,4 +3,7 @@ add_library(retro_achievements STATIC
     client.h
 )
 
-target_link_libraries(retro_achievements PUBLIC rcheevos PRIVATE citra_common)
+target_link_libraries(retro_achievements
+    PUBLIC rcheevos
+    PRIVATE citra_common httplib
+)

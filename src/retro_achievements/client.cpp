@@ -4,18 +4,68 @@
 
 #include "client.h"
 
+#include <cstring>
+#include <string>
+#include <utility>
+
+#include <httplib.h>
 #include <rc_client.h>
 
 #include "common/logging/log.h"
+#include "common/scm_rev.h"
+
+// TODO: Make this use a numeric version as per
+// https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
+static const std::string user_agent = std::string("Azahar/") + Common::g_build_fullname;
+static const httplib::Headers headers = httplib::Headers({{"User-Agent", user_agent}});
 
 static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_bytes,
                             rc_client_t* client) {
     LOG_CRITICAL(RetroAchievements, "read_memory stub");
 }
 
+static std::pair<std::string, std::string> parse_url(const char* full_url_cstr) {
+    if (!full_url_cstr) {
+        return {"", "/"};
+    }
+
+    std::string full_url(full_url_cstr);
+
+    size_t protocol_end = full_url.find("://");
+    size_t host_start = (protocol_end == std::string::npos) ? 0 : protocol_end + 3;
+
+    size_t path_start = full_url.find('/', host_start);
+
+    if (path_start == std::string::npos) {
+        return {full_url, "/"};
+    } else {
+        return {full_url.substr(0, path_start), full_url.substr(path_start)};
+    }
+}
+
 static void call_server(const rc_api_request_t* request, rc_client_server_callback_t callback,
                         void* callback_data, rc_client_t* client) {
-    LOG_CRITICAL(RetroAchievements, "call_server stub");
+    const auto [base_url, path] = parse_url(request->url);
+
+    httplib::Client http_client(base_url);
+
+    httplib::Result result =
+        request->post_data
+            ? http_client.Post(path, headers, request->post_data, std::strlen(request->post_data),
+                               request->content_type)
+            : http_client.Get(path, headers);
+
+    if (result) {
+        LOG_DEBUG(RetroAchievements, "Server response status = {}", result->status);
+        LOG_DEBUG(RetroAchievements, "Server response body = {}", result->body);
+
+        rc_api_server_response_t server_response = {.body = result->body.c_str(),
+                                                    .body_length = result->body.length(),
+                                                    .http_status_code = result->status};
+        callback(&server_response, callback_data);
+    } else {
+        LOG_ERROR(RetroAchievements, "httplib error: {}", result.error());
+    }
 }
 
 static void log_message(const char* message, const rc_client_t* client) {
