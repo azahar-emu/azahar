@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <string_view>
-
 #include <QDialog>
 #include <QString>
 

@@ -3488,7 +3488,6 @@ void GMainWindow::OnRetroAchievements() {
 
     connect(&dialog, &RetroAchievementsDialog::logInAttempted, this,
             [this](const QString& username, const QString& password) {
-                // LOG_DEBUG(Frontend, "TODO: {} - {}", qPrintable(username), qPrintable(password));
                 system.RetroAchievementsClient().AttemptLogin(username.toUtf8().constData(),
                                                               password.toUtf8().constData());
             });
