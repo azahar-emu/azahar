@@ -13,6 +13,8 @@ public:
     explicit Client();
     ~Client();
 
+    void AttemptLogin(const char* username, const char* password);
+
 private:
     rc_client_t* m_rc_client;
 };
