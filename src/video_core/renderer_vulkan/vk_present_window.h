@@ -58,6 +58,10 @@ public:
     [[nodiscard]] vk::RenderPass Renderpass() const noexcept {
         return present_renderpass;
     }
+    // Returns Renderpass that doesn't clear the image
+    [[nodiscard]] vk::RenderPass LoadRenderpass() const noexcept {
+        return present_load_renderpass;
+    }
 
     u32 ImageCount() const noexcept {
         return swapchain.GetImageCount();
@@ -73,7 +77,7 @@ private:
     void CopyToSwapchain(Frame* frame);
 
     vk::RenderPass CreateRenderpass();
-
+    vk::RenderPass CreateLoadRenderpass();
 private:
     Frontend::EmuWindow& emu_window;
     const Instance& instance;
@@ -85,6 +89,7 @@ private:
     vk::CommandPool command_pool;
     vk::Queue graphics_queue;
     vk::RenderPass present_renderpass;
+    vk::RenderPass present_load_renderpass;
     std::vector<Frame> swap_chain;
     std::queue<Frame*> free_queue;
     std::queue<Frame*> present_queue;

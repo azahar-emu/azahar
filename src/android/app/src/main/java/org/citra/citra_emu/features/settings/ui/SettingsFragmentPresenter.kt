@@ -954,14 +954,48 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
-                SwitchSetting(
-                    BooleanSetting.LINEAR_FILTERING,
-                    R.string.linear_filtering,
-                    R.string.linear_filtering_description,
-                    BooleanSetting.LINEAR_FILTERING.key,
-                    BooleanSetting.LINEAR_FILTERING.defaultValue
+                SingleChoiceSetting(
+                    IntSetting.OUTPUT_SCALING,
+                    R.string.output_scaling_name,
+                    R.string.output_scaling_description,
+                    R.array.outputScalingNames,
+                    R.array.outputScalingValues,
+                    IntSetting.OUTPUT_SCALING.key,
+                    IntSetting.OUTPUT_SCALING.defaultValue
                 )
             )
+            add(
+                SliderSetting(
+                    IntSetting.FSR_SHARPNESS,
+                    R.string.fsr_sharpness_name,
+                    R.string.fsr_sharpness_description,
+                    0,
+                    100,
+                    "%",
+                    IntSetting.FSR_SHARPNESS.key,
+                    IntSetting.FSR_SHARPNESS.defaultValue.toFloat()
+                )
+            )
+            add(
+                SingleChoiceSetting(
+                    IntSetting.ANTIALIASING_FILTER,
+                    R.string.antialiasing_filter_name,
+                    R.string.antialiasing_filter_description,
+                    R.array.antialiasingFilterNames,
+                    R.array.antialiasingFilterValues,
+                    IntSetting.ANTIALIASING_FILTER.key,
+                    IntSetting.ANTIALIASING_FILTER.defaultValue
+                )
+            )
+//            add(
+//                SwitchSetting(
+//                    BooleanSetting.LINEAR_FILTERING,
+//                    R.string.linear_filtering,
+//                    R.string.linear_filtering_description,
+//                    BooleanSetting.LINEAR_FILTERING.key,
+//                    BooleanSetting.LINEAR_FILTERING.defaultValue
+//                )
+//            )
             add(
                 SwitchSetting(
                     BooleanSetting.SHADERS_ACCURATE_MUL,

@@ -631,6 +631,23 @@ void GMainWindow::InitializeWidgets() {
 
     statusBar()->insertPermanentWidget(0, graphics_api_button);
 
+    // Setup Output Scaling button
+    output_scaling_button = new QPushButton();
+    output_scaling_button->setObjectName(QStringLiteral("StatusBarButton"));
+    output_scaling_button->setFocusPolicy(Qt::NoFocus);
+    UpdateOutputScalingIndicator();
+    connect(output_scaling_button, &QPushButton::clicked, this, [this] { UpdateOutputScalingIndicator(true); });
+    statusBar()->insertPermanentWidget(1, output_scaling_button);
+
+    // Setup Antialiasing Filter button
+    antialiasing_filter_button = new QPushButton();
+    antialiasing_filter_button->setObjectName(QStringLiteral("StatusBarButton"));
+    antialiasing_filter_button->setFocusPolicy(Qt::NoFocus);
+    UpdateAntialiasingFilterIndicator();
+    connect(antialiasing_filter_button, &QPushButton::clicked, this, [this] { UpdateAntialiasingFilterIndicator(true); });
+    statusBar()->insertPermanentWidget(2, antialiasing_filter_button);
+
+    // Setup Volume button and slider
     volume_popup = new QWidget(this);
     volume_popup->setWindowFlags(Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint | Qt::Popup);
     volume_popup->setLayout(new QVBoxLayout());
@@ -661,7 +678,7 @@ void GMainWindow::InitializeWidgets() {
         bottomLeft.setY(bottomLeft.y() - volume_popup->geometry().height());
         volume_popup->setGeometry(QRect(bottomLeft, QSize(rect.width(), rect.height())));
     });
-    statusBar()->insertPermanentWidget(1, volume_button);
+    statusBar()->insertPermanentWidget(3, volume_button);
 
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusText());
     statusBar()->addPermanentWidget(multiplayer_state->GetStatusIcon());
@@ -3785,8 +3802,46 @@ void GMainWindow::UpdateAPIIndicator(bool update) {
     graphics_api_button->setStyleSheet(style_sheet);
 }
 
+
+void GMainWindow::UpdateOutputScalingIndicator(bool update) {
+    static std::array output_scaling_options = {
+        QStringLiteral("NEAREST"),
+        QStringLiteral("BILINEAR"),
+        QStringLiteral("LANCZOS"),
+        QStringLiteral("FSR"),
+        QStringLiteral("SGSR"),
+        QStringLiteral("SHARP BILINEAR"),
+    };
+
+    u32 selection_index = static_cast<u32>(Settings::values.output_scaling.GetValue());
+    if (update) {
+        selection_index = (selection_index + 1) % output_scaling_options.size();
+        Settings::values.output_scaling = static_cast<Settings::OutputScaling>(selection_index);
+    }
+
+    output_scaling_button->setText(output_scaling_options[selection_index]);
+}
+
+void GMainWindow::UpdateAntialiasingFilterIndicator(bool update) {
+    static std::array antialiasing_filter_options = {
+        QStringLiteral("NO AA"),
+        QStringLiteral("FXAA"),
+        QStringLiteral("SMAA"),
+    };
+
+    u32 selection_index = static_cast<u32>(Settings::values.antialiasing_filter.GetValue());
+    if (update) {
+        selection_index = (selection_index + 1) % antialiasing_filter_options.size();
+        Settings::values.antialiasing_filter = static_cast<Settings::AntiAliasingFilter>(selection_index);
+    }
+
+    antialiasing_filter_button->setText(antialiasing_filter_options[selection_index]);
+}
+
 void GMainWindow::UpdateStatusButtons() {
     UpdateAPIIndicator();
+    UpdateOutputScalingIndicator();
+    UpdateAntialiasingFilterIndicator();
     UpdateVolumeUI();
 }
 
