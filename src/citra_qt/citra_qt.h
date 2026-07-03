@@ -22,6 +22,9 @@
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/notification_led.h"
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+#include "citra_qt/retro_achievements/qt_client_observer.h"
+#endif
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
 #include "core/savestate.h"
@@ -465,6 +468,10 @@ private:
 
 #ifdef __unix__
     QDBusObjectPath wake_lock{};
+#endif
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    RetroAchievements::QtClientObserver ra_client_observer;
 #endif
 
 protected:

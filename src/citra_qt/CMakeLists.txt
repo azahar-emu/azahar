@@ -358,9 +358,11 @@ endif()
 
 if (ENABLE_RETRO_ACHIEVEMENTS)
     target_sources(citra_qt PRIVATE
-        retro_achievements_dialog.cpp
-        retro_achievements_dialog.h
-        retro_achievements_dialog.ui
+        retro_achievements/dialog.cpp
+        retro_achievements/dialog.h
+        retro_achievements/dialog.ui
+        retro_achievements/qt_client_observer.cpp
+        retro_achievements/qt_client_observer.h
     )
     target_link_libraries(citra_qt PUBLIC retro_achievements)
     target_compile_definitions(citra_qt PUBLIC ENABLE_RETRO_ACHIEVEMENTS)
