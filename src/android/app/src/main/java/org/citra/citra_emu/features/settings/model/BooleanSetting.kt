@@ -10,7 +10,7 @@ enum class BooleanSetting(
     override val key: String,
     override val section: String,
     override val defaultValue: Boolean
-) : AbstractBooleanSetting {
+) : AbstractSetting<Boolean> {
     EXPAND_TO_CUTOUT_AREA(SettingKeys.expand_to_cutout_area(), Settings.SECTION_LAYOUT, false),
     SPIRV_SHADER_GEN(SettingKeys.spirv_shader_gen(), Settings.SECTION_RENDERER, true),
     ASYNC_SHADERS(SettingKeys.async_shader_compilation(), Settings.SECTION_RENDERER, false),
@@ -131,10 +131,11 @@ enum class BooleanSetting(
         true
     );
 
-    override var boolean: Boolean = defaultValue
-
-    override val valueAsString: String
-        get() = boolean.toString()
+    override fun valueFromString(string: String): Boolean? = when (string.trim().lowercase()) {
+        "1", "true" -> true
+        "0", "false" -> false
+        else -> null
+    }
 
     override val isRuntimeEditable: Boolean
         get() {
@@ -172,7 +173,5 @@ enum class BooleanSetting(
 
         fun from(key: String): BooleanSetting? =
             BooleanSetting.values().firstOrNull { it.key == key }
-
-        fun clear() = BooleanSetting.values().forEach { it.boolean = it.defaultValue }
     }
 }

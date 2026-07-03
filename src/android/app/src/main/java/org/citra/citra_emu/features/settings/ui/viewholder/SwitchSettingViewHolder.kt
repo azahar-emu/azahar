@@ -12,9 +12,9 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 class SwitchSettingViewHolder(val binding: ListItemSettingSwitchBinding, adapter: SettingsAdapter) :
-    SettingViewHolder(binding.root, adapter) {
+    SettingViewHolder<SwitchSetting>(binding.root, adapter) {
 
-    private lateinit var setting: SwitchSetting
+    override lateinit var setting: SwitchSetting
 
     override fun bind(item: SettingsItem) {
         setting = item as SwitchSetting

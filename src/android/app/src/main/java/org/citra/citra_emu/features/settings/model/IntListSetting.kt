@@ -11,7 +11,7 @@ enum class IntListSetting(
     override val section: String,
     override val defaultValue: List<Int>,
     val canBeEmpty: Boolean = true
-) : AbstractListSetting<Int> {
+) : AbstractSetting<List<Int>> {
 
     LAYOUTS_TO_CYCLE(
         SettingKeys.layouts_to_cycle(),
@@ -20,23 +20,11 @@ enum class IntListSetting(
         canBeEmpty = false
     );
 
-    private var backingList: List<Int> = defaultValue
-    private var lastValidList: List<Int> = defaultValue
+    override fun valueToString(value: List<Int>): String = value.joinToString()
 
-    override var list: List<Int>
-        get() = backingList
-        set(value) {
-            if (!canBeEmpty && value.isEmpty()) {
-                backingList = lastValidList
-            } else {
-                backingList = value
-                lastValidList = value
-            }
-        }
-
-    override val valueAsString: String
-        get() = list.joinToString()
-
+    override fun valueFromString(string: String): List<Int>? = string.split(",")
+        .mapNotNull { it.trim().toIntOrNull() }
+        .takeIf { canBeEmpty || it.isNotEmpty() }
     override val isRuntimeEditable: Boolean
         get() {
             for (setting in NOT_RUNTIME_EDITABLE) {
@@ -51,7 +39,5 @@ enum class IntListSetting(
         private val NOT_RUNTIME_EDITABLE: List<IntListSetting> = emptyList()
 
         fun from(key: String): IntListSetting? = values().firstOrNull { it.key == key }
-
-        fun clear() = values().forEach { it.list = it.defaultValue }
     }
 }
