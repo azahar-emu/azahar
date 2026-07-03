@@ -258,7 +258,7 @@ object SettingsFile {
 
         val intListSetting = IntListSetting.from(key)
         if (intListSetting != null) {
-            intListSetting.list = value.split(", ").mapNotNull { it.toIntOrNull() }
+            intListSetting.list = value.split(", ").map { it.toInt() }
         }
 
         return null
