@@ -1421,6 +1421,7 @@ class EmulationFragment :
         resetScale("controlScale-" + NativeLibrary.ButtonType.STICK_C)
         resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_HOME)
         resetScale("controlScale-" + NativeLibrary.ButtonType.BUTTON_SWAP)
+        resetScale("controlScale-" + Hotkey.COMBO_BUTTON.button)
         binding.surfaceInputOverlay.refreshControls()
     }
 
@@ -1448,10 +1449,11 @@ class EmulationFragment :
             .apply()
 
         val editor = preferences.edit()
-        for (i in 0 until 16) {
+        // TODO: This code sucks balls. We need to do this differently. -OS
+        for (i in 0 until 17) {
             var defaultValue = true
             when (i) {
-                6, 7, 12, 13, 14, 15 -> defaultValue = false
+                6, 7, 12, 13, 14, 15, 16 -> defaultValue = false
             }
             editor.putBoolean("buttonToggle$i", defaultValue)
         }
