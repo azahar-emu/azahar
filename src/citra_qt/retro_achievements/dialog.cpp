@@ -9,14 +9,16 @@
 
 namespace RetroAchievements {
 
-Dialog::Dialog(QWidget* parent)
+Dialog::Dialog(bool enabled, QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
       ui(std::make_unique<Ui::RetroAchievementsDialog>()) {
     ui->setupUi(this);
 
+    ui->enabled_check_box->setChecked(enabled);
+
     connect(ui->authentication_button, &QPushButton::clicked, this,
             &Dialog::OnAuthenticationButtonPressed);
-    connect(ui->enabled_check_box, &QCheckBox::toggled, this, &Dialog::UpdateUI);
+    connect(ui->enabled_check_box, &QCheckBox::toggled, this, &Dialog::OnEnabledToggled);
 
     UpdateUI();
 }
@@ -29,6 +31,8 @@ void Dialog::OnAuthenticationButtonPressed() {
     if (m_user) {
         m_user = nullptr;
         ui->password_input->clear();
+
+        emit LoggedOut();
     } else {
         QString username = ui->username_input->text();
         QString password = ui->password_input->text();
@@ -40,6 +44,14 @@ void Dialog::OnAuthenticationButtonPressed() {
             return;
         }
     }
+
+    UpdateUI();
+}
+
+void Dialog::OnEnabledToggled(bool enabled) {
+    LOG_DEBUG(Frontend, "Dialog::OnEnabledToggled");
+
+    emit EnabledToggled(enabled);
 
     UpdateUI();
 }
@@ -82,6 +94,8 @@ void Dialog::UpdateUI() {
     ui->authentication_credentials->setEnabled(is_enabled && !has_user);
 
     if (m_user) {
+        ui->username_input->setText(QString::fromUtf8(m_user->username));
+
         ui->user_display_name->setText(QString::fromUtf8(m_user->username));
         ui->user_display_points->setText(QStringLiteral("%1 points").arg(m_user->score));
         // The avatar image is set in `OnAvatarImageDownloaded`.
