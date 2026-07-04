@@ -117,6 +117,10 @@ public:
         return instance;
     }
 
+    bool SupportsCustomFormat(VideoCore::CustomPixelFormat pixel_format) const {
+        return instance.GetTraits(pixel_format).transfer_support;
+    }
+
     Scheduler& GetScheduler() const {
         return scheduler;
     }
@@ -192,7 +196,12 @@ public:
 
     /// Returns the image at index, otherwise the base image
     vk::Image Image(Type type = Type::Current) const noexcept {
-        return handles[type == Type::Current ? current : type].image;
+        const Type resolved_type = type == Type::Current ? current : type;
+        const auto& handle = handles[resolved_type];
+        if (!handle && resolved_type != Type::Base) {
+            return handles[Type::Base].image;
+        }
+        return handle.image;
     }
 
     /// Returns the image view at index, otherwise the base view

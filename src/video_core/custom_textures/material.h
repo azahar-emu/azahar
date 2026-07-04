@@ -37,7 +37,7 @@ public:
     explicit CustomTexture(Frontend::ImageInterface& image_interface);
     ~CustomTexture();
 
-    void LoadFromDisk(bool flip_png);
+    [[nodiscard]] bool LoadFromDisk(bool flip_png);
 
     [[nodiscard]] bool IsParsed() const noexcept {
         return file_format != CustomFileFormat::None && !hashes.empty();
@@ -55,23 +55,23 @@ private:
 public:
     Frontend::ImageInterface& image_interface;
     std::string path;
-    u32 width;
-    u32 height;
+    u32 width{};
+    u32 height{};
     std::vector<u64> hashes;
     std::mutex decode_mutex;
-    CustomPixelFormat format;
-    CustomFileFormat file_format;
+    CustomPixelFormat format{CustomPixelFormat::Invalid};
+    CustomFileFormat file_format{};
     std::vector<u8> data;
-    MapType type;
+    MapType type{MapType::Color};
 };
 
 struct Material {
-    u32 width;
-    u32 height;
-    u64 size;
-    u64 hash;
-    CustomPixelFormat format;
-    std::array<CustomTexture*, MAX_MAPS> textures;
+    u32 width{};
+    u32 height{};
+    u64 size{};
+    u64 hash{};
+    CustomPixelFormat format{CustomPixelFormat::Invalid};
+    std::array<CustomTexture*, MAX_MAPS> textures{};
     std::atomic<DecodeState> state{};
 
     void LoadFromDisk(bool flip_png) noexcept;

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <charconv>
 #include <json.hpp>
 #include "common/file_util.h"
 #include "common/literals.h"
@@ -124,7 +125,7 @@ void CustomTexManager::FindCustomTextures() {
 
 bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTexture* texture) {
     auto parts = Common::SplitString(file.virtualName, '.');
-    if (parts.size() > 3) {
+    if (parts.empty() || parts.size() > 3) {
         LOG_ERROR(Render, "Invalid filename {}, ignoring", file.virtualName);
         return false;
     }
@@ -139,6 +140,10 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
     }
     texture->file_format = file_format;
     parts.pop_back();
+    if (parts.empty()) {
+        LOG_ERROR(Render, "Invalid filename {}, ignoring", file.virtualName);
+        return false;
+    }
 
     // This means the texture is a material type other than color.
     texture->type = MapType::Color;
@@ -169,6 +174,10 @@ bool CustomTexManager::ParseFilename(const FileUtil::FSTEntry& file, CustomTextu
     }
 
     texture->path = file.physicalName;
+    if (!texture->IsParsed()) {
+        LOG_ERROR(Render, "Unable to identify custom texture {}, ignoring", file.virtualName);
+        return false;
+    }
     return true;
 }
 
@@ -299,6 +308,9 @@ Material* CustomTexManager::GetMaterial(u64 data_hash) {
 bool CustomTexManager::Decode(Material* material, std::function<bool()>&& upload) {
     if (!async_custom_loading) {
         material->LoadFromDisk(flip_png_files);
+        if (!material->IsDecoded()) {
+            return false;
+        }
         return upload();
     }
     if (material->IsUnloaded()) {
@@ -331,22 +343,56 @@ bool CustomTexManager::ReadConfig(u64 title_id, bool options_only) {
         return false;
     }
 
-    nlohmann::json json = nlohmann::json::parse(config, nullptr, false, true);
+    const nlohmann::json json = nlohmann::json::parse(config, nullptr, false, true);
+    if (json.is_discarded() || !json.is_object()) {
+        LOG_ERROR(Render, "Failed to parse custom texture config {}", config_path);
+        return false;
+    }
 
-    const auto& options = json["options"];
-    skip_mipmap = options["skip_mipmap"].get<bool>();
-    flip_png_files = options["flip_png_files"].get<bool>();
-    use_new_hash = options["use_new_hash"].get<bool>();
+    const auto options_it = json.find("options");
+    if (options_it == json.end() || !options_it->is_object()) {
+        LOG_ERROR(Render, "Custom texture config {} has no valid options object", config_path);
+        return false;
+    }
+    const auto read_bool = [&](std::string_view key, bool& value) {
+        const auto it = options_it->find(key);
+        if (it == options_it->end() || !it->is_boolean()) {
+            LOG_ERROR(Render, "Custom texture config {} has invalid option {}", config_path, key);
+            return false;
+        }
+        value = it->get<bool>();
+        return true;
+    };
+    bool parsed_skip_mipmap{};
+    bool parsed_flip_png_files{};
+    bool parsed_use_new_hash{};
+    if (!read_bool("skip_mipmap", parsed_skip_mipmap) ||
+        !read_bool("flip_png_files", parsed_flip_png_files) ||
+        !read_bool("use_new_hash", parsed_use_new_hash)) {
+        return false;
+    }
+    skip_mipmap = parsed_skip_mipmap;
+    flip_png_files = parsed_flip_png_files;
+    use_new_hash = parsed_use_new_hash;
 
     if (options_only) {
         return true;
     }
 
-    const auto& textures = json["textures"];
+    const auto textures_it = json.find("textures");
+    if (textures_it == json.end()) {
+        return true;
+    }
+    if (!textures_it->is_object()) {
+        LOG_ERROR(Render, "Custom texture config {} has an invalid textures object", config_path);
+        return false;
+    }
+    const auto& textures = *textures_it;
     for (const auto& material : textures.items()) {
-        std::size_t idx{};
-        const u64 hash = std::stoull(material.key(), &idx, 16);
-        if (!idx) {
+        u64 hash{};
+        const std::string& key = material.key();
+        const auto [end, error] = std::from_chars(key.data(), key.data() + key.size(), hash, 16);
+        if (error != std::errc{} || end != key.data() + key.size()) {
             LOG_ERROR(Render, "Key {} is invalid, skipping", material.key());
             continue;
         }

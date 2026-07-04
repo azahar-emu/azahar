@@ -93,6 +93,15 @@ if (BUNDLE_TARGET_EXECUTE)
                 message(FATAL_ERROR "macdeployqt failed: ${macdeployqt_result}")
             endif()
 
+            # Some local filesystem providers attach FinderInfo/resource-fork xattrs during copy,
+            # which causes codesign to reject the bundle.
+            find_program(xattr_executable xattr REQUIRED)
+            execute_process(COMMAND find "${executable_path}" -exec "${xattr_executable}" -c "{}" "+"
+                            RESULT_VARIABLE xattr_result)
+            if (NOT xattr_result EQUAL "0")
+                message(FATAL_ERROR "xattr cleanup failed: ${xattr_result}")
+            endif()
+
             # Bundling libraries can rewrite path information and break code signatures of system libraries.
             # Perform an ad-hoc re-signing on the whole app bundle to fix this.
             execute_process(COMMAND codesign --deep -fs - "${executable_path}"
