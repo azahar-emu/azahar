@@ -1293,18 +1293,25 @@ class EmulationFragment :
         val sliderBinding = DialogSliderBinding.inflate(layoutInflater)
 
         sliderBinding.apply {
-            slider.valueTo = 150f
-            slider.valueFrom = 0f
-            slider.value = preferences.getInt(target, 50).toFloat()
-            textValue.setText((slider.value + 50).toInt().toString())
+            val sliderStart = 50
+            val sliderMin = 0
+            val sliderMax = 150
+            slider.valueFrom = sliderMin.toFloat()
+            slider.valueTo = sliderMax.toFloat()
+            slider.value = preferences.getInt(target, sliderStart)
+                .toFloat()
+                .coerceIn(slider.valueFrom..slider.valueTo)
+            @SuppressLint("SetTextI18n")
+            textValue.setText((slider.value + sliderStart).toInt().toString())
             textValue.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
                     val value = s.toString().toIntOrNull()
-                    if (value == null || value < 50 || value > 150) {
+                    val realValue = value?.minus(sliderStart)
+                    if (realValue == null || realValue < sliderMin || realValue > sliderMax) {
                         textInput.error = "Inappropriate Value"
                     } else {
                         textInput.error = null
-                        slider.value = value.toFloat() - 50
+                        slider.value = realValue.toFloat()
                     }
                 }
 
@@ -1317,8 +1324,10 @@ class EmulationFragment :
                         progress: Float,
                         _: Boolean
                     ->
-                    if (textValue.text.toString() != (slider.value + 50).toInt().toString()) {
-                        textValue.setText((slider.value + 50).toInt().toString())
+                    if (textValue.text.toString() !=
+                        (slider.value + sliderStart).toInt().toString()
+                    ) {
+                        textValue.setText((slider.value + sliderStart).toInt().toString())
                         textValue.setSelection(textValue.length())
                         setControlScale(slider.value.toInt(), target)
                     }
