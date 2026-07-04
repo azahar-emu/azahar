@@ -878,7 +878,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 MultiChoiceSetting(
                     IntListSetting.COMBO_BUTTON_BUTTONS,
                     R.string.combo_button_settings,
-                    R.string.combo_button_description,
+                    R.string.combo_button_settings_description,
                     R.array.comboOptions,
                     R.array.comboOptionValues,
                     IntListSetting.COMBO_BUTTON_BUTTONS.key,
