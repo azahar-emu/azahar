@@ -299,8 +299,7 @@ GMainWindow::GMainWindow(Core::System& system_)
             if (i >= args.size() - 1 || args[i + 1].startsWith(QChar::fromLatin1('-'))) {
                 continue;
             }
-            Settings::values.use_gdbstub = true;
-            Settings::values.gdbstub_port = strtoul(args[++i].toLatin1(), NULL, 0);
+            gdbport_from_arg = strtoul(args[++i].toLatin1(), NULL, 0);
             continue;
         }
 
@@ -1524,6 +1523,13 @@ void GMainWindow::BootGame(const QString& filename) {
     // possible. Instead register the app loader early and do not create it again on system load.
     if (loader && !loader->SupportsMultipleInstancesForSameFile()) {
         system.RegisterAppLoaderEarly(loader);
+    }
+
+    // Override GDB settings if emulator was launched with
+    // GDB port option.
+    if (gdbport_from_arg != -1) {
+        system.SetGDBPortOverride(gdbport_from_arg);
+        system.SetDebugNextProcessFlag();
     }
 
     system.ApplySettings();
