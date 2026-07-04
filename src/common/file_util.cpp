@@ -864,12 +864,16 @@ const std::string& GetExeDirectory() {
 }
 
 std::string AppDataRoamingDirectory() {
-    PWSTR pw_local_path = nullptr;
-    // Only supported by Windows Vista or later
-    SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &pw_local_path);
-    std::string local_path = Common::UTF16ToUTF8(pw_local_path);
-    CoTaskMemFree(pw_local_path);
-    return local_path;
+    PWSTR path = nullptr;
+
+    const HRESULT hr =
+        SHGetKnownFolderPath(FOLDERID_RoamingAppData, KF_FLAG_DEFAULT, nullptr, &path);
+
+    ASSERT_MSG(SUCCEEDED(hr) && path != nullptr, "Failed to get AppData directory: {:X}", hr);
+
+    std::string result = Common::UTF16ToUTF8(path);
+    CoTaskMemFree(path);
+    return result;
 }
 #else
 /**
