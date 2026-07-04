@@ -18,5 +18,6 @@ public:
 
 signals:
     void LoginSucceeded(const rc_client_user_t* user);
+    void LoginFailed(const char* error_message);
 };
 } // namespace RetroAchievements

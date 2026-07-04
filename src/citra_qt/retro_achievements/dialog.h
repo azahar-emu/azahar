@@ -23,12 +23,11 @@ public:
     ~Dialog() override;
 
 private slots:
-    void OnLoginButtonPressed();
-    void OnEnabledStateChanged(bool checked);
+    void OnAuthenticationButtonPressed();
 
 public slots:
     void OnLoginSucceeded(const rc_client_user_t* user);
-    void OnLoginFailed();
+    void OnLoginFailed(const char* error_message);
 
     void OnAvatarImageDownloaded(QPixmap image);
 
@@ -39,6 +38,11 @@ signals:
 
 private:
     std::unique_ptr<Ui::RetroAchievementsDialog> ui;
+
+    const rc_client_user_t* m_user = nullptr;
+    const char* m_error_message = nullptr;
+
+    void UpdateUI();
 };
 
 } // namespace RetroAchievements
