@@ -142,6 +142,7 @@ class Settings {
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
         const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
         const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
+        const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -209,7 +210,8 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKLOAD,
-            HOTKEY_TURBO_LIMIT
+            HOTKEY_TURBO_LIMIT,
+            HOTKEY_BUTTON_COMBO
         )
         val hotkeyTitles = listOf(
             R.string.controller_hotkey_enable_button,
@@ -219,7 +221,8 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
-            R.string.turbo_limit_hotkey
+            R.string.turbo_limit_hotkey,
+            R.string.button_combo
         )
 
         // TODO: Move these in with the other setting keys in GenerateSettingKeys.cmake

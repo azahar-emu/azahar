@@ -18,6 +18,16 @@ enum class IntListSetting(
         Settings.SECTION_LAYOUT,
         listOf(0, 1, 2, 3, 4, 5),
         canBeEmpty = false
+    ),
+
+    /**
+     * Combo Buttons will be given options on MultiChoice setting initialization. This just makes selections empty by default.
+     */
+    COMBO_BUTTON_BUTTONS(
+        SettingKeys.combo_button_buttons(),
+        Settings.SECTION_CONTROLS,
+        listOf(),
+        canBeEmpty = true
     );
 
     private var backingList: List<Int> = defaultValue

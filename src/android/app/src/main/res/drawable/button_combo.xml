@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="99.27"
+    android:viewportHeight="99.27">
+
+    <!-- Outer circle -->
+    <path
+        android:fillAlpha="0.5"
+        android:fillColor="#eaeaea"
+        android:pathData="M49.64,49.64m-49.64,0a49.64,49.64 0,1 1,99.28 0a49.64,49.64 0,1 1,-99.28 0"
+        android:strokeAlpha="0.5" />
+
+    <!-- Centered blocky "C" icon -->
+    <path
+        android:fillAlpha="0.75"
+        android:fillColor="#FF000000"
+        android:pathData="M42,30
+                          H62
+                          V40
+                          H47
+                          V60
+                          H62
+                          V70
+                          H42
+                          V60
+                          H37
+                          V40
+                          H42
+                          Z"
+        android:strokeAlpha="0.75" />
+</vector>

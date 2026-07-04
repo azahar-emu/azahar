@@ -26,6 +26,8 @@ import kotlin.math.min
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.features.hotkeys.Hotkey
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
 
@@ -184,6 +186,8 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                         button.status == NativeLibrary.ButtonState.PRESSED
                     ) {
                         TurboHelper.toggleTurbo(true)
+                    } else if (button.id == Hotkey.COMBO_BUTTON.button) {
+                        ComboHelper.comboActivate(button.status)
                     }
 
                     NativeLibrary.onGamePadEvent(
@@ -593,6 +597,18 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                 )
             )
         }
+
+        if (preferences.getBoolean("buttonToggle16", false)) {
+            overlayButtons.add(
+                initializeOverlayButton(
+                    context,
+                    R.drawable.button_combo,
+                    R.drawable.button_combo_pressed,
+                    Hotkey.COMBO_BUTTON.button,
+                    orientation
+                )
+            )
+        }
     }
 
     fun refreshControls() {
@@ -806,6 +822,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_Y).toFloat() / 1000 * maxY
             )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_Y).toFloat() / 1000 * maxY
+            )
             .apply()
     }
 
@@ -956,6 +980,14 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
             .putFloat(
                 NativeLibrary.ButtonType.BUTTON_TURBO.toString() + portrait + "-Y",
                 resources.getInteger(R.integer.N3DS_BUTTON_TURBO_PORTRAIT_Y).toFloat() / 1000 * maxY
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-X",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_X).toFloat() / 1000 * maxX
+            )
+            .putFloat(
+                Hotkey.COMBO_BUTTON.button.toString() + portrait + "-Y",
+                resources.getInteger(R.integer.N3DS_BUTTON_COMBO_PORTRAIT_Y).toFloat() / 1000 * maxY
             )
             .apply()
     }
