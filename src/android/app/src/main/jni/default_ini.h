@@ -81,7 +81,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 )") DECLARE_KEY(use_artic_base_controller) BOOST_HANA_STRING(R"(
 
 # Listing of Combo Buttons attached to the Hotkey. (Default [] or empty)
-)") DECLARE_KEY(combo_buttons) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(combo_button_buttons) BOOST_HANA_STRING(R"(
 
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation

@@ -9,7 +9,7 @@ import org.citra.citra_emu.features.settings.model.IntListSetting
 
 object ComboHelper {
     fun comboActivate(buttonStatus: Int) {
-        val comboArray = IntListSetting.COMBO_BUTTONS.list
+        val comboArray = IntListSetting.COMBO_BUTTON_BUTTONS.list
         for (nativeButton in comboArray) {
             if (nativeButton == -1) {
                 // We don't want to parse any bad inputs here so we continue loop

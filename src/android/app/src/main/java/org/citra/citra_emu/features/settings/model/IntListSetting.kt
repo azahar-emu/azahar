@@ -23,8 +23,8 @@ enum class IntListSetting(
     /**
      * Combo Buttons will be given options on MultiChoice setting initialization. This just makes selections empty by default.
      */
-    COMBO_BUTTONS(
-        SettingKeys.combo_buttons(),
+    COMBO_BUTTON_BUTTONS(
+        SettingKeys.combo_button_buttons(),
         Settings.SECTION_CONTROLS,
         listOf(),
         canBeEmpty = true
