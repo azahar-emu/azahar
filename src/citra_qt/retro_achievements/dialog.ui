@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>616</width>
-    <height>400</height>
+    <width>400</width>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,7 +56,7 @@
           <item>
            <widget class="QLabel" name="user_display_points">
             <property name="text">
-             <string>%1 points</string>
+             <string>N points</string>
             </property>
            </widget>
           </item>
@@ -67,6 +67,12 @@
             </property>
             <property name="sizeType">
              <enum>QSizePolicy::Policy::Minimum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
             </property>
            </spacer>
           </item>
@@ -106,9 +112,6 @@
    </item>
    <item>
     <widget class="QWidget" name="authentication_credentials" native="true">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
      <layout class="QGridLayout" name="authentication_credentials_layout">
       <item row="0" column="0">
        <widget class="QLabel" name="username_label">

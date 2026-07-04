@@ -3495,6 +3495,8 @@ void GMainWindow::OnRetroAchievements() {
             });
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,
             &RetroAchievements::Dialog::OnLoginSucceeded);
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginFailed, &dialog,
+            &RetroAchievements::Dialog::OnLoginFailed);
 
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, this,
             [this, &dialog](const rc_client_user_t* user) {

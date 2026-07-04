@@ -14,33 +14,34 @@ Dialog::Dialog(QWidget* parent)
       ui(std::make_unique<Ui::RetroAchievementsDialog>()) {
     ui->setupUi(this);
 
-    ui->user_display->hide();
-    ui->authentication_error_label->hide();
+    connect(ui->authentication_button, &QPushButton::clicked, this,
+            &Dialog::OnAuthenticationButtonPressed);
+    connect(ui->enabled_check_box, &QCheckBox::toggled, this, &Dialog::UpdateUI);
 
-    connect(ui->authentication_button, &QPushButton::clicked, this, &Dialog::OnLoginButtonPressed);
-    connect(ui->enabled_check_box, &QCheckBox::toggled, this, &Dialog::OnEnabledStateChanged);
+    UpdateUI();
 }
 
 Dialog::~Dialog() = default;
 
-void Dialog::OnLoginButtonPressed() {
-    LOG_DEBUG(Frontend, "Dialog::loginButtonPressed");
+void Dialog::OnAuthenticationButtonPressed() {
+    LOG_DEBUG(Frontend, "Dialog::OnAuthenticationButtonPressed");
 
-    QString username = ui->username_input->text();
-    QString password = ui->password_input->text();
+    if (m_user) {
+        m_user = nullptr;
+        ui->password_input->clear();
+    } else {
+        QString username = ui->username_input->text();
+        QString password = ui->password_input->text();
 
-    if (username.isEmpty() || password.isEmpty()) {
-        ui->authentication_error_label->setText(tr("Fields cannot be empty."));
-        return;
+        if (username.isEmpty() || password.isEmpty()) {
+            m_error_message = "Fields cannot be empty.";
+        } else {
+            emit LogInAttempted(username, password);
+            return;
+        }
     }
 
-    emit LogInAttempted(username, password);
-}
-
-void Dialog::OnEnabledStateChanged(bool checked) {
-    LOG_DEBUG(Frontend, "Dialog::enabledStateChanged");
-
-    ui->authentication_credentials->setEnabled(checked);
+    UpdateUI();
 }
 
 void Dialog::OnAvatarImageDownloaded(QPixmap image) {
@@ -55,14 +56,45 @@ void Dialog::OnLoginSucceeded(const rc_client_user_t* user) {
               "Dialog::OnLoginSucceeded(user[.display_name] = \"{}\", user[.avatar_url] = \"{}\")",
               user->display_name, user->avatar_url);
 
-    ui->user_display_name->setText(QString::fromUtf8(user->username));
-    ui->user_display_points->setText(ui->user_display_points->text().arg(user->score));
+    m_user = user;
+    m_error_message = nullptr;
 
-    ui->user_display->show();
+    UpdateUI();
 }
 
-void Dialog::OnLoginFailed() {
-    LOG_DEBUG(Frontend, "STUB: Dialog::OnLoginFailed");
+void Dialog::OnLoginFailed(const char* error_message) {
+    LOG_DEBUG(Frontend, "Dialog::OnLoginFailed");
+
+    m_error_message = error_message;
+
+    UpdateUI();
+}
+
+void Dialog::UpdateUI() {
+    bool is_enabled = ui->enabled_check_box->isChecked();
+    bool has_user = m_user != nullptr;
+
+    ui->user_display->setVisible(is_enabled && has_user);
+
+    ui->password_label->setVisible(!has_user);
+    ui->password_input->setVisible(!has_user);
+
+    ui->authentication_credentials->setEnabled(is_enabled && !has_user);
+
+    if (m_user) {
+        ui->user_display_name->setText(QString::fromUtf8(m_user->username));
+        ui->user_display_points->setText(QStringLiteral("%1 points").arg(m_user->score));
+        // The avatar image is set in `OnAvatarImageDownloaded`.
+    }
+
+    ui->authentication_error_label->setVisible(m_error_message != nullptr);
+    if (m_error_message) {
+        ui->authentication_error_label->setText(QString::fromUtf8(m_error_message));
+    }
+
+    ui->authentication_button->setEnabled(is_enabled);
+    ui->authentication_button->setText(has_user ? QStringLiteral("Log Out")
+                                                : QStringLiteral("Log In"));
 }
 
 } // namespace RetroAchievements

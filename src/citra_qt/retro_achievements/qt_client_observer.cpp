@@ -9,17 +9,11 @@
 namespace RetroAchievements {
 
 void QtClientObserver::OnLoginSucceeded(const rc_client_user_t* user) {
-    LOG_DEBUG(Frontend, "QtClientObserver::OnLoginSucceeded(user[.display_name] = \"{}\")",
-              user->display_name);
-
     emit LoginSucceeded(user);
 }
 
 void QtClientObserver::OnLoginFailed(int result, const char* error_message) {
-    LOG_CRITICAL(Frontend,
-                 "STUB: QtClientObserver::OnLoginFailed(int result = {}, const char* error_message "
-                 "= \"{}\")",
-                 result, error_message);
+    emit LoginFailed(error_message);
 }
 
 } // namespace RetroAchievements
