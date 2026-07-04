@@ -19,11 +19,12 @@ class Dialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Dialog(QWidget* parent = 0);
+    explicit Dialog(bool enabled, QWidget* parent = 0);
     ~Dialog() override;
 
 private slots:
     void OnAuthenticationButtonPressed();
+    void OnEnabledToggled(bool enabled);
 
 public slots:
     void OnLoginSucceeded(const rc_client_user_t* user);
@@ -32,7 +33,7 @@ public slots:
     void OnAvatarImageDownloaded(QPixmap image);
 
 signals:
-    void Toggled(bool enabled);
+    void EnabledToggled(bool enabled);
     void LogInAttempted(const QString& username, const QString& password);
     void LoggedOut();
 

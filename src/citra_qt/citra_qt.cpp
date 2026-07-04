@@ -3486,13 +3486,20 @@ void GMainWindow::OnDecompressFile() {
 
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
 void GMainWindow::OnRetroAchievements() {
-    RetroAchievements::Dialog dialog(this);
+    RetroAchievements::Dialog dialog(Settings::values.retro_achievements_enabled.GetValue(), this);
 
     connect(&dialog, &RetroAchievements::Dialog::LogInAttempted, this,
             [this](const QString& username, const QString& password) {
                 system.RetroAchievementsClient().AttemptLogin(username.toUtf8().constData(),
                                                               password.toUtf8().constData());
             });
+    connect(&dialog, &RetroAchievements::Dialog::LoggedOut, this, []() {
+        Settings::values.retro_achievements_username.SetValue("");
+        Settings::values.retro_achievements_token.SetValue("");
+    });
+    connect(&dialog, &RetroAchievements::Dialog::EnabledToggled, this,
+            [](bool enabled) { Settings::values.retro_achievements_enabled.SetValue(enabled); });
+
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,
             &RetroAchievements::Dialog::OnLoginSucceeded);
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginFailed, &dialog,
@@ -3500,6 +3507,9 @@ void GMainWindow::OnRetroAchievements() {
 
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, this,
             [this, &dialog](const rc_client_user_t* user) {
+                Settings::values.retro_achievements_username.SetValue(user->display_name);
+                Settings::values.retro_achievements_token.SetValue(user->token);
+
                 system.RetroAchievementsClient().FetchImage(
                     user->avatar_url, [&dialog](std::vector<u8>&& image_data) {
                         QPixmap pixmap;
@@ -3508,6 +3518,13 @@ void GMainWindow::OnRetroAchievements() {
                         dialog.OnAvatarImageDownloaded(pixmap);
                     });
             });
+
+    std::string existing_username = Settings::values.retro_achievements_username.GetValue(),
+                existing_token = Settings::values.retro_achievements_token.GetValue();
+    if (!existing_username.empty() && !existing_token.empty()) {
+        system.RetroAchievementsClient().AttemptLoginWithToken(existing_username.c_str(),
+                                                               existing_token.c_str());
+    }
 
     auto result = dialog.exec();
 }

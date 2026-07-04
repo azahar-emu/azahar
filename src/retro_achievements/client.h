@@ -21,6 +21,7 @@ public:
     void RegisterObserver(ClientObserver& observer);
 
     void AttemptLogin(const char* username, const char* password);
+    void AttemptLoginWithToken(const char* username, const char* token);
 
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
     void FetchImage(const char* url, ImageCallback callback) const;
