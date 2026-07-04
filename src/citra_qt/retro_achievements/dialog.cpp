@@ -9,9 +9,9 @@
 
 namespace RetroAchievements {
 
-Dialog::Dialog(bool enabled, QWidget* parent)
+Dialog::Dialog(const rc_client_user_t* user, bool enabled, QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::RetroAchievementsDialog>()) {
+      ui(std::make_unique<Ui::RetroAchievementsDialog>()), m_user(user) {
     ui->setupUi(this);
 
     ui->enabled_check_box->setChecked(enabled);

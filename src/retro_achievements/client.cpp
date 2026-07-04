@@ -14,6 +14,8 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 
+#define USE_RETRO_ACHIEVEMENTS_DEV_SERVER
+
 // TODO: Make this use a numeric version as per
 // https://github.com/RetroAchievements/rcheevos/wiki/rc_client-integration#user-agent-header
 static const std::string user_agent = std::string("Azahar/") + Common::g_build_fullname;
@@ -88,6 +90,10 @@ Client::Client() {
 
     rc_client_enable_logging(m_rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
     rc_client_set_hardcore_enabled(m_rc_client, 0);
+
+#ifdef USE_RETRO_ACHIEVEMENTS_DEV_SERVER
+    rc_client_set_host(m_rc_client, "http://localhost:64000");
+#endif
 }
 
 Client::~Client() {
@@ -121,11 +127,15 @@ void Client::FetchImage(const char* url, ImageCallback callback) const {
     }
 }
 
-void Client::OnLoginCallback(int result, const char* error_message) const {
+const rc_client_user_t* Client::GetUser() const {
+    return m_user;
+}
+
+void Client::OnLoginCallback(int result, const char* error_message) {
     if (result == 0) {
-        const rc_client_user_t* user = rc_client_get_user_info(m_rc_client);
+        m_user = rc_client_get_user_info(m_rc_client);
         for (ClientObserver* observer : m_observers) {
-            observer->OnLoginSucceeded(user);
+            observer->OnLoginSucceeded(m_user);
         }
     } else {
         for (ClientObserver* observer : m_observers) {
