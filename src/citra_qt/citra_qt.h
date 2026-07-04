@@ -67,7 +67,7 @@ namespace Camera {
 class QtMultimediaCameraHandlerFactory;
 }
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 namespace DiscordRPC {
 class DiscordInterface;
 }
@@ -110,7 +110,7 @@ public:
 
     GameList* game_list;
     std::unique_ptr<PlayTime::PlayTimeManager> play_time_manager;
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 #endif
 
@@ -151,6 +151,7 @@ signals:
     void InfoLEDColorChanged();
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
+    void InstalledTitlesChanged();
 
 private:
     void InitializeWidgets();
@@ -174,7 +175,7 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     void SetDiscordEnabled(bool state);
 #endif
     void LoadAmiibo(const QString& filename);
@@ -410,19 +411,19 @@ private:
     std::vector<QString> physical_devices;
 
     // Debugger panes
-    ProfilerWidget* profilerWidget;
+    ProfilerWidget* profilerWidget{};
 #if MICROPROFILE_ENABLED
-    MicroProfileDialog* microProfileDialog;
+    MicroProfileDialog* microProfileDialog{};
 #endif
-    RegistersWidget* registersWidget;
-    GPUCommandStreamWidget* graphicsWidget;
-    GPUCommandListWidget* graphicsCommandsWidget;
-    GraphicsBreakPointsWidget* graphicsBreakpointsWidget;
-    GraphicsVertexShaderWidget* graphicsVertexShaderWidget;
-    GraphicsTracingWidget* graphicsTracingWidget;
-    IPCRecorderWidget* ipcRecorderWidget;
-    LLEServiceModulesWidget* lleServiceModulesWidget;
-    WaitTreeWidget* waitTreeWidget;
+    RegistersWidget* registersWidget{};
+    GPUCommandStreamWidget* graphicsWidget{};
+    GPUCommandListWidget* graphicsCommandsWidget{};
+    GraphicsBreakPointsWidget* graphicsBreakpointsWidget{};
+    GraphicsVertexShaderWidget* graphicsVertexShaderWidget{};
+    GraphicsTracingWidget* graphicsTracingWidget{};
+    IPCRecorderWidget* ipcRecorderWidget{};
+    LLEServiceModulesWidget* lleServiceModulesWidget{};
+    WaitTreeWidget* waitTreeWidget{};
 
     QAction* actions_recent_files[max_recent_files_item];
     std::array<QAction*, Core::SaveStateSlotCount> actions_load_state;
@@ -439,7 +440,8 @@ private:
     QAction* action_secondary_swap_screen;
     QAction* action_secondary_rotate_screen;
 
-    QTranslator translator;
+    QTranslator qtTranslator;
+    QTranslator citraTranslator;
 
     // stores default icon theme search paths for the platform
     QStringList default_theme_paths;

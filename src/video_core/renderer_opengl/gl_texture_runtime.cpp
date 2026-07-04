@@ -222,8 +222,9 @@ bool TextureRuntime::ClearTextureWithoutFbo(Surface& surface,
         UNREACHABLE_MSG("Unknown surface type {}", surface.type);
     }
     glClearTexSubImage(surface.Handle(), clear.texture_level, clear.texture_rect.left,
-                       clear.texture_rect.bottom, 0, clear.texture_rect.GetWidth(),
-                       clear.texture_rect.GetHeight(), 1, format, type, &clear.value);
+                       clear.texture_rect.bottom, clear.texture_layer,
+                       clear.texture_rect.GetWidth(), clear.texture_rect.GetHeight(), 1, format,
+                       type, &clear.value);
     return true;
 }
 
@@ -245,7 +246,7 @@ void TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
     state.draw.draw_framebuffer = draw_fbos[FboIndex(surface.type)].handle;
     state.Apply();
 
-    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, 0);
+    surface.Attach(GL_DRAW_FRAMEBUFFER, clear.texture_level, clear.texture_layer);
 
     switch (surface.type) {
     case SurfaceType::Color:
@@ -326,6 +327,7 @@ void TextureRuntime::GenerateMipmaps(Surface& surface) {
 
     const auto generate = [&](u32 index) {
         state.texture_units[0].texture_2d = surface.Handle(index);
+        state.texture_units[0].target = GL_TEXTURE_2D;
         state.Apply();
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, surface.levels - 1);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -554,6 +556,7 @@ bool Surface::DownloadWithoutFbo(const VideoCore::BufferTextureCopy& download,
         // that only support up to 4.3
         OpenGLState state = OpenGLState::GetCurState();
         state.texture_units[0].texture_2d = Handle(0);
+        state.texture_units[0].target = GL_TEXTURE_2D;
         state.Apply();
 
         glGetTexImage(GL_TEXTURE_2D, download.texture_level, tuple.format, tuple.type,

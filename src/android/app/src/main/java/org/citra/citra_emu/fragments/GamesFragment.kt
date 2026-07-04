@@ -59,7 +59,13 @@ class GamesFragment : Fragment() {
     private var pendingCompressInvocation: String? = null
 
     companion object {
-        fun doCompression(fragment: Fragment, gamesViewModel: GamesViewModel, inputPath: String?, outputUri: Uri?, shouldCompress: Boolean) {
+        fun doCompression(
+            fragment: Fragment,
+            gamesViewModel: GamesViewModel,
+            inputPath: String?,
+            outputUri: Uri?,
+            shouldCompress: Boolean
+        ) {
             if (outputUri != null) {
                 val outputPath: String =
                     if (!BuildUtil.isGooglePlayBuild) {
@@ -83,6 +89,7 @@ class GamesFragment : Fragment() {
 
                     fragment.requireActivity().runOnUiThread {
                         dialog.dismiss()
+                        @Suppress("ktlint:standard:max-line-length")
                         val resId = when (status) {
                             NativeLibrary.CompressStatus.SUCCESS -> if (shouldCompress) R.string.compress_success else R.string.decompress_success
                             NativeLibrary.CompressStatus.COMPRESS_UNSUPPORTED -> R.string.compress_unsupported
@@ -247,41 +254,40 @@ class GamesFragment : Fragment() {
         }
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { view: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
-            val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_large)
-            val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
-            val spacingNavigationRail =
-                resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { view: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+        val extraListSpacing = resources.getDimensionPixelSize(R.dimen.spacing_large)
+        val spacingNavigation = resources.getDimensionPixelSize(R.dimen.spacing_navigation)
+        val spacingNavigationRail =
+            resources.getDimensionPixelSize(R.dimen.spacing_navigation_rail)
 
-            binding.gridGames.updatePadding(
-                top = barInsets.top + extraListSpacing,
-                bottom = barInsets.bottom + spacingNavigation + extraListSpacing
-            )
+        binding.gridGames.updatePadding(
+            top = barInsets.top + extraListSpacing,
+            bottom = barInsets.bottom + spacingNavigation + extraListSpacing
+        )
 
-            binding.swipeRefresh.setProgressViewEndTarget(
-                false,
-                barInsets.top + resources.getDimensionPixelSize(R.dimen.spacing_refresh_end)
-            )
+        binding.swipeRefresh.setProgressViewEndTarget(
+            false,
+            barInsets.top + resources.getDimensionPixelSize(R.dimen.spacing_refresh_end)
+        )
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
-            val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
-            if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
-                mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
-                mlpSwipe.rightMargin = rightInsets
-            } else {
-                mlpSwipe.leftMargin = leftInsets
-                mlpSwipe.rightMargin = rightInsets + spacingNavigationRail
-            }
-            binding.swipeRefresh.layoutParams = mlpSwipe
-
-            binding.noticeText.updatePadding(bottom = spacingNavigation)
-
-            windowInsets
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
+        val mlpSwipe = binding.swipeRefresh.layoutParams as MarginLayoutParams
+        if (ViewCompat.getLayoutDirection(view) == ViewCompat.LAYOUT_DIRECTION_LTR) {
+            mlpSwipe.leftMargin = leftInsets + spacingNavigationRail
+            mlpSwipe.rightMargin = rightInsets
+        } else {
+            mlpSwipe.leftMargin = leftInsets
+            mlpSwipe.rightMargin = rightInsets + spacingNavigationRail
         }
+        binding.swipeRefresh.layoutParams = mlpSwipe
+
+        binding.noticeText.updatePadding(bottom = spacingNavigation)
+
+        windowInsets
+    }
 }

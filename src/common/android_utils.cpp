@@ -6,11 +6,11 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include "common/android_storage.h"
+#include "common/android_utils.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 
-namespace AndroidStorage {
+namespace AndroidUtils {
 JNIEnv* GetEnvForThread() {
     thread_local static struct OwnedEnv {
         OwnedEnv() {
@@ -36,21 +36,21 @@ AndroidOpenMode ParseOpenmode(const std::string_view openmode) {
     int o = 0;
     switch (*mode++) {
     case 'r':
-        android_open_mode = AndroidStorage::AndroidOpenMode::READ;
+        android_open_mode = AndroidUtils::AndroidOpenMode::READ;
         break;
     case 'w':
-        android_open_mode = AndroidStorage::AndroidOpenMode::WRITE;
+        android_open_mode = AndroidUtils::AndroidOpenMode::WRITE;
         o = O_TRUNC;
         break;
     case 'a':
-        android_open_mode = AndroidStorage::AndroidOpenMode::WRITE;
+        android_open_mode = AndroidUtils::AndroidOpenMode::WRITE;
         o = O_APPEND;
         break;
     }
 
     // [rwa]\+ or [rwa]b\+ means read and write
     if (*mode == '+' || (*mode == 'b' && mode[1] == '+')) {
-        android_open_mode = AndroidStorage::AndroidOpenMode::READ_WRITE;
+        android_open_mode = AndroidUtils::AndroidOpenMode::READ_WRITE;
     }
 
     return android_open_mode | o;
@@ -67,7 +67,7 @@ void InitJNI(JNIEnv* env, jclass clazz) {
 #define F(JMethodID, JMethodName, Signature)                                                       \
     JMethodID = env->GetStaticMethodID(native_library, JMethodName, Signature);
     ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(FR)
-    ANDROID_STORAGE_FUNCTIONS(FS)
+    ANDROID_JNI_FUNCTIONS(FS)
 #undef F
 #undef FS
 #undef FR
@@ -78,7 +78,7 @@ void CleanupJNI() {
 #define FS(FunctionName, ReturnValue, Parameters, JMethodID, JMethodName, Signature) F(JMethodID)
 #define F(JMethodID) JMethodID = nullptr;
     ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(FR)
-    ANDROID_STORAGE_FUNCTIONS(FS)
+    ANDROID_JNI_FUNCTIONS(FS)
 #undef F
 #undef FS
 #undef FR
@@ -199,6 +199,16 @@ std::string GetBuildFlavor() {
     return env->GetStringUTFChars(jflavor, nullptr);
 }
 
+bool IsPortraitMode() {
+    auto env = GetEnvForThread();
+    return (JNI_FALSE != env->CallStaticBooleanMethod(native_library, is_portrait_mode));
+}
+
+bool IsUsingAngleForOpenGL() {
+    auto env = GetEnvForThread();
+    return env->CallStaticBooleanMethod(native_library, is_using_angle_for_opengl);
+}
+
 bool CopyFile(const std::string& source, const std::string& destination_path,
               const std::string& destination_filename) {
     if (copy_file == nullptr) {
@@ -268,14 +278,14 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
     bool result;
 
     const std::string tmp_path = "/tmp";
-    AndroidStorage::CreateDir("/", "tmp");
+    AndroidUtils::CreateDir("/", "tmp");
 
     // If a simultaneous move and rename are not necessary, use individual methods
     if (src_filename == dest_filename || src_parent_path == dest_parent_path) {
         if (src_filename != dest_filename) {
-            return AndroidStorage::RenameFile(src_full_path, dest_filename);
+            return AndroidUtils::RenameFile(src_full_path, dest_filename);
         } else if (src_parent_path != dest_parent_path) {
-            return AndroidStorage::MoveFile(src_filename, src_parent_path, dest_parent_path);
+            return AndroidUtils::MoveFile(src_filename, src_parent_path, dest_parent_path);
         }
     }
 
@@ -283,28 +293,28 @@ bool MoveAndRenameFile(const std::string& src_full_path, const std::string& dest
     //         This prevents clashes if files with the same name are moved simultaneously.
     const auto uuid = boost::uuids::to_string(boost::uuids::time_generator_v7()());
     const auto allocated_tmp_path = tmp_path + "/" + uuid;
-    AndroidStorage::CreateDir(tmp_path, uuid);
+    AndroidUtils::CreateDir(tmp_path, uuid);
 
     // Step 2: Attempt to move to allocated temporary directory.
     //         If this step fails, skip everything except the cleanup.
-    result = AndroidStorage::MoveFile(src_filename, src_parent_path, allocated_tmp_path);
+    result = AndroidUtils::MoveFile(src_filename, src_parent_path, allocated_tmp_path);
     if (result == true) {
         // Step 3: Rename to desired file name.
-        AndroidStorage::RenameFile((allocated_tmp_path + "/" + src_filename), dest_filename);
+        AndroidUtils::RenameFile((allocated_tmp_path + "/" + src_filename), dest_filename);
 
         // Step 4: If a file with the desired name in the destination exists, remove it.
-        AndroidStorage::DeleteDocument(dest_full_path);
+        AndroidUtils::DeleteDocument(dest_full_path);
 
         // Step 5: Attempt to move file to desired location.
         //         If this step fails, move the file back to where it came from.
-        result = AndroidStorage::MoveFile(dest_filename, allocated_tmp_path, dest_parent_path);
+        result = AndroidUtils::MoveFile(dest_filename, allocated_tmp_path, dest_parent_path);
         if (result == false) {
-            AndroidStorage::MoveAndRenameFile((allocated_tmp_path + "/" + dest_filename),
-                                              src_full_path);
+            AndroidUtils::MoveAndRenameFile((allocated_tmp_path + "/" + dest_filename),
+                                            src_full_path);
         }
     }
     // Step 6: Clean up the allocated temp directory.
-    AndroidStorage::DeleteDocument(allocated_tmp_path);
+    AndroidUtils::DeleteDocument(allocated_tmp_path);
     return result;
 }
 
@@ -326,7 +336,7 @@ std::string TranslateFilePath(const std::string& filepath) {
 }
 
 bool CanUseRawFS() {
-    return AndroidStorage::GetBuildFlavor() != AndroidBuildFlavors::GOOGLEPLAY;
+    return AndroidUtils::GetBuildFlavor() != AndroidBuildFlavors::GOOGLEPLAY;
 }
 
 #define FR(FunctionName, ReturnValue, JMethodID, Caller, JMethodName, Signature)                   \
@@ -344,5 +354,5 @@ ANDROID_SINGLE_PATH_DETERMINE_FUNCTIONS(FR)
 #undef F
 #undef FR
 
-} // namespace AndroidStorage
+} // namespace AndroidUtils
 #endif

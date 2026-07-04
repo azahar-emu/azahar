@@ -305,43 +305,43 @@ void GatewayCheat::Execute(Core::System& system, u32 process_id) const {
             WriteOp<u8>(line, state, Read8, Write8, system);
             break;
         case CheatType::GreaterThan32:
-            // 3XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY > word[XXXXXXX]   ;unsigned
+            // 3XXXXXXX YYYYYYYY - execute next block IF YYYYYYYY > word[XXXXXXX]   ;unsigned
             CompOp<u32>(line, state, Read32, [&line](u32 val) -> bool { return line.value > val; });
             break;
         case CheatType::LessThan32:
-            // 4XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY < word[XXXXXXX]   ;unsigned
+            // 4XXXXXXX YYYYYYYY - execute next block IF YYYYYYYY < word[XXXXXXX]   ;unsigned
             CompOp<u32>(line, state, Read32, [&line](u32 val) -> bool { return line.value < val; });
             break;
         case CheatType::EqualTo32:
-            // 5XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY == word[XXXXXXX]   ;unsigned
+            // 5XXXXXXX YYYYYYYY - execute next block IF YYYYYYYY == word[XXXXXXX]   ;unsigned
             CompOp<u32>(line, state, Read32,
                         [&line](u32 val) -> bool { return line.value == val; });
             break;
         case CheatType::NotEqualTo32:
-            // 6XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY != word[XXXXXXX]   ;unsigned
+            // 6XXXXXXX YYYYYYYY - execute next block IF YYYYYYYY != word[XXXXXXX]   ;unsigned
             CompOp<u32>(line, state, Read32,
                         [&line](u32 val) -> bool { return line.value != val; });
             break;
         case CheatType::GreaterThan16WithMask:
-            // 7XXXXXXX ZZZZYYYY - Execute next block IF YYYY > ((not ZZZZ) AND half[XXXXXXX])
+            // 7XXXXXXX ZZZZYYYY - execute next block IF YYYY > ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) > (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::LessThan16WithMask:
-            // 8XXXXXXX ZZZZYYYY - Execute next block IF YYYY < ((not ZZZZ) AND half[XXXXXXX])
+            // 8XXXXXXX ZZZZYYYY - execute next block IF YYYY < ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) < (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::EqualTo16WithMask:
-            // 9XXXXXXX ZZZZYYYY - Execute next block IF YYYY = ((not ZZZZ) AND half[XXXXXXX])
+            // 9XXXXXXX ZZZZYYYY - execute next block IF YYYY = ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) == (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::NotEqualTo16WithMask:
-            // AXXXXXXX ZZZZYYYY - Execute next block IF YYYY <> ((not ZZZZ) AND half[XXXXXXX])
+            // AXXXXXXX ZZZZYYYY - execute next block IF YYYY <> ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) != (static_cast<u16>(~line.value >> 16) & val);
             });

@@ -602,6 +602,43 @@ void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
     rb.Push(model != Service::CFG::NINTENDO_2DS);
 }
 
+void Module::Interface::TranslateCountryInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    ConsoleCountryInfo country_info = rp.PopRaw<ConsoleCountryInfo>();
+    u8 translate_direction = rp.Pop<u8>();
+
+    // Translation table, left is version A and right is version B.
+    static constexpr std::array<std::pair<ConsoleCountryInfo, ConsoleCountryInfo>, 5> translations =
+        {{
+            {{{0x00, 0x00}, 0x03, 0x6E}, {{0x00, 0x00}, 0x04, 0x6E}},
+            {{{0x00, 0x00}, 0x04, 0x6E}, {{0x00, 0x00}, 0x05, 0x6E}},
+            {{{0x00, 0x00}, 0x05, 0x6E}, {{0x00, 0x00}, 0x06, 0x6E}},
+            {{{0x00, 0x00}, 0x06, 0x6E}, {{0x00, 0x00}, 0x07, 0x6E}},
+            {{{0x00, 0x00}, 0x07, 0x6E}, {{0x00, 0x00}, 0x03, 0x6E}},
+        }};
+
+    ConsoleCountryInfo final_info = country_info;
+    if (translate_direction == 0) {
+        for (const auto& [vA, vB] : translations) {
+            if (country_info == vB) {
+                final_info = vA;
+                break;
+            }
+        }
+    } else if (translate_direction == 1) {
+        for (const auto& [vA, vB] : translations) {
+            if (country_info == vA) {
+                final_info = vB;
+                break;
+            }
+        }
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.PushRaw<ConsoleCountryInfo>(final_info);
+}
+
 void Module::Interface::GetConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 size = rp.Pop<u32>();

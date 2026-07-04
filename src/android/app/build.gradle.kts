@@ -12,6 +12,7 @@ plugins {
     id("kotlin-parcelize")
     kotlin("plugin.serialization") version "2.0.20"
     id("androidx.navigation.safeargs.kotlin")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 /**
@@ -79,8 +80,9 @@ android {
                     "-DENABLE_QT=0", // Don't use QT
                     "-DENABLE_SDL2=0", // Don't use SDL
                     "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
-                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page sizes
-                    "-DENABLE_GDBSTUB=OFF", // Disable GDB stub
+                    "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON", // Support Android 15 16KiB page
+                    // sizes
+                    "-DENABLE_GDBSTUB=OFF" // Disable GDB stub
                 )
             }
         }
@@ -125,7 +127,8 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             signingConfig = signingConfigs.getByName("debug")
-            isShrinkResources = true // TODO: Does this actually do anything when isDebuggable is enabled? -OS
+            isShrinkResources = true
+            // TODO: ^- Does this actually do anything when isDebuggable is enabled? -OS
             isDebuggable = true
             isJniDebuggable = true
             proguardFiles(
@@ -136,8 +139,10 @@ android {
         }
 
         // Same as above, but with isDebuggable disabled.
-        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS) without constantly tripping over years-old and seemingly harmless memory bugs.
-        // We should fix those bugs eventually, but for now this exists as a workaround to allow other work to be done.
+        // Primarily exists to allow development on hardened_malloc systems (e.g. GrapheneOS)
+        // without constantly tripping over years-old and seemingly harmless memory bugs.
+        // We should fix those bugs eventually, but for now this exists as a workaround to
+        // allow other work to be done on these devices.
         register("relWithDebInfoLite") {
             initWith(getByName("relWithDebInfo"))
             signingConfig = signingConfigs.getByName("debug")
@@ -147,7 +152,7 @@ android {
             }
             lint {
                 checkReleaseBuilds = false // Ditto
-                                           // The name of this property is misleading, this doesn't actually disable linting for the `release` build.
+                // ^- The name of this property is misleading, this doesn't actually disable linting for the `release` build.
             }
         }
 
@@ -215,7 +220,9 @@ dependencies {
 
 // Download Vulkan Validation Layers from the KhronosGroup GitHub.
 val downloadVulkanValidationLayers = tasks.register<Download>("downloadVulkanValidationLayers") {
-    src("https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.313.0/android-binaries-1.4.313.0.zip")
+    src(
+        "https://github.com/KhronosGroup/Vulkan-ValidationLayers/releases/download/vulkan-sdk-1.4.313.0/android-binaries-1.4.313.0.zip"
+    )
     dest(file("${layout.buildDirectory.get().asFile.path}/tmp/Vulkan-ValidationLayers.zip"))
     onlyIfModified(true)
 }
@@ -235,6 +242,11 @@ val unzipVulkanValidationLayers = tasks.register<Copy>("unzipVulkanValidationLay
 
 tasks.named("preBuild") {
     dependsOn(unzipVulkanValidationLayers)
+    dependsOn("ktlintCheck")
+}
+
+ktlint {
+    version = "1.8.0"
 }
 
 fun getGitVersion(): String {
@@ -266,7 +278,7 @@ fun getGitHash(): String =
 fun getBranch(): String =
     runGitCommand(ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")) ?: "dummy-branch"
 
-fun runGitCommand(command: ProcessBuilder) : String? {
+fun runGitCommand(command: ProcessBuilder): String? {
     try {
         command.directory(project.rootDir)
         val process = command.start()
@@ -292,7 +304,7 @@ android.applicationVariants.configureEach {
     val variant = this
     val capitalizedName = variant.name.capitalizeUS()
 
-    val copyTask = tasks.register("copyBundle${capitalizedName}") {
+    val copyTask = tasks.register("copyBundle$capitalizedName") {
         doLast {
             project.copy {
                 from(variant.outputs.first().outputFile.parentFile)
@@ -306,5 +318,5 @@ android.applicationVariants.configureEach {
             }
         }
     }
-    tasks.named("bundle${capitalizedName}").configure { finalizedBy(copyTask) }
+    tasks.named("bundle$capitalizedName").configure { finalizedBy(copyTask) }
 }

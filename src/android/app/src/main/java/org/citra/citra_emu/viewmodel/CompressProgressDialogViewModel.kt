@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-object CompressProgressDialogViewModel: ViewModel() {
+object CompressProgressDialogViewModel : ViewModel() {
     private val _progress = MutableStateFlow(0)
     val progress = _progress.asStateFlow()
 

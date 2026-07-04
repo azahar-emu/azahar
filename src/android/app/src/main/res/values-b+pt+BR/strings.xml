@@ -390,7 +390,6 @@
     <string name="reset_setting_confirmation">Você quer redefinir essa configuração para o valor padrão?</string>
     <string name="setting_not_editable">Você não pode editar isso agora</string>
     <string name="setting_disabled">Configuração desativada</string>
-    <string name="setting_disabled_description">Esta configuração está atualmente desativada porque outra configuração não está com o valor correto.</string>
     <string name="setting_not_editable_description">Esta opção não pode ser alterada enquanto o jogo estiver em execução.</string>
     <string name="auto_select">Seleção Automática</string>
     <string name="start">Iniciar</string>
@@ -479,7 +478,6 @@
     <string name="emulation_aspect_ratio">Proporção da Tela</string>
     <string name="emulation_switch_screen_layout">Disposição de tela em paisagem</string>
     <string name="emulation_switch_portrait_layout">Disposição da tela em retrato</string>
-    <string name="emulation_switch_secondary_layout">Layout da Tela de Exibição Secundária</string>
     <string name="emulation_switch_secondary_layout_description">O layout usado por uma tela secundária conectada, com ou sem fio (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Tela Grande</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
@@ -488,7 +486,6 @@
     <string name="emulation_screen_layout_hybrid">Telas Híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Padrão</string>
-    <string name="emulation_secondary_display_default">Padrão do Sistema (espelhamento)</string>
     <string name="emulation_screen_layout_custom">Disposição Personalizada</string>
     <string name="bg_color">Cor de Fundo</string>
     <string name="bg_color_description">A cor que aparece atrás das telas durante a emulação, representada por um valor RGB.</string>

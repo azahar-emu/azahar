@@ -5,11 +5,11 @@
 package org.citra.citra_emu.features.settings.model
 
 import android.text.TextUtils
+import java.util.TreeMap
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.ui.SettingsActivityView
 import org.citra.citra_emu.features.settings.utils.SettingsFile
-import java.util.TreeMap
 
 class Settings {
     private var gameId: String? = null
@@ -33,9 +33,7 @@ class Settings {
 
     var sections: HashMap<String, SettingSection?> = SettingsSectionMap()
 
-    fun getSection(sectionName: String): SettingSection? {
-        return sections[sectionName]
-    }
+    fun getSection(sectionName: String): SettingSection? = sections[sectionName]
 
     val isEmpty: Boolean
         get() = sections.isEmpty()
@@ -142,7 +140,7 @@ class Settings {
         const val HOTKEY_CLOSE_GAME = "hotkey_close_game"
         const val HOTKEY_PAUSE_OR_RESUME = "hotkey_pause_or_resume_game"
         const val HOTKEY_QUICKSAVE = "hotkey_quickload"
-        const val HOTKEY_QUICKlOAD = "hotkey_quickpause"
+        const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
         const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
         const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
 
@@ -183,7 +181,7 @@ class Settings {
             KEY_BUTTON_RIGHT
         )
         val axisTitles = listOf(
-           R.string.controller_axis_vertical,
+            R.string.controller_axis_vertical,
             R.string.controller_axis_horizontal
         )
         val dPadTitles = listOf(
@@ -211,7 +209,7 @@ class Settings {
             HOTKEY_CLOSE_GAME,
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
-            HOTKEY_QUICKlOAD,
+            HOTKEY_QUICKLOAD,
             HOTKEY_TURBO_LIMIT,
             HOTKEY_BUTTON_COMBO
         )

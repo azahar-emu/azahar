@@ -13,5 +13,5 @@ enum class Hotkey(val button: Int) {
     QUICKLOAD(10006),
     TURBO_LIMIT(10007),
     ENABLE(10008),
-    COMBO_BUTTON(10009);
+    COMBO_BUTTON(10009)
 }

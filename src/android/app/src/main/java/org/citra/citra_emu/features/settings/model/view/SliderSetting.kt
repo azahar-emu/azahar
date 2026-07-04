@@ -4,6 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
+import androidx.annotation.StringRes
+import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractFloatSetting
 import org.citra.citra_emu.features.settings.model.AbstractIntSetting
 import org.citra.citra_emu.features.settings.model.AbstractSetting
@@ -20,7 +22,9 @@ class SliderSetting(
     val units: String,
     val key: String? = null,
     val defaultValue: Float? = null,
-    override var isEnabled: Boolean = true
+    override var isEnabled: Boolean = true,
+    @StringRes override var disabledMessage: Int =
+        R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SLIDER
     val selectedFloat: Float
@@ -29,8 +33,11 @@ class SliderSetting(
 
             val ret = when (setting) {
                 is AbstractIntSetting -> setting.int.toFloat()
+
                 is FloatSetting -> setting.float
+
                 is ScaledFloatSetting -> setting.float
+
                 else -> {
                     Log.error("[SliderSetting] Error casting setting type.")
                     -1f
@@ -38,6 +45,7 @@ class SliderSetting(
             }
             return ret.coerceIn(min.toFloat(), max.toFloat())
         }
+
     /**
      * Write a value to the backing int. If that int was previously null,
      * initializes a new one and returns it, so it can be added to the Hashmap.

@@ -592,7 +592,7 @@ bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
         bool hit = false;
 
         if (type == BreakpointType::Execute) {
-            // Execute breakpoints should only trigger on exact PC match.
+            // execute breakpoints should only trigger on exact PC match.
             hit = (addr == bp.addr);
         } else {
             // Range overlap test:

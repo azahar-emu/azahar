@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -170,24 +170,23 @@ class CheatDetailsFragment : Fragment() {
         binding.buttonOk.visibility = if (isEditing) View.VISIBLE else View.GONE
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View?, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { _: View?, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
 
-            val mlpAppBar = binding.toolbarCheatDetails.layoutParams as ViewGroup.MarginLayoutParams
-            mlpAppBar.leftMargin = leftInsets
-            mlpAppBar.rightMargin = rightInsets
-            binding.toolbarCheatDetails.layoutParams = mlpAppBar
+        val mlpAppBar = binding.toolbarCheatDetails.layoutParams as ViewGroup.MarginLayoutParams
+        mlpAppBar.leftMargin = leftInsets
+        mlpAppBar.rightMargin = rightInsets
+        binding.toolbarCheatDetails.layoutParams = mlpAppBar
 
-            binding.scrollView.updatePadding(left = leftInsets, right = rightInsets)
-            binding.buttonContainer.updatePadding(left = leftInsets, right = rightInsets)
+        binding.scrollView.updatePadding(left = leftInsets, right = rightInsets)
+        binding.buttonContainer.updatePadding(left = leftInsets, right = rightInsets)
 
-            windowInsets
-        }
+        windowInsets
+    }
 }

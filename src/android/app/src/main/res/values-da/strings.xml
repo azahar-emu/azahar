@@ -107,9 +107,18 @@
     <string name="search_recently_added">For nyligt tilføjet</string>
     <string name="search_installed">Installeret</string>
 
+    <!-- Input related strings -->
+    <string name="controller_auto_map">Automatisk controller opsætning</string>
+    <string name="controller_auto_map_description">Anvend standard gamepad-opsætning for alle knapper og akser</string>
+    <string name="auto_map_prompt">Tryk på denne knap på din controller!</string>
+    <string name="auto_map_image_description">3DS-forsideknap med diamantformet A-knap fremhævet</string>
+    <string name="controller_clear_all">Ryd alle bindinger</string>
+    <string name="controller_clear_all_confirm">Dette vil fjerne alle nuværende controller-bindinger.</string>
     <string name="controller_circlepad">Circle Pad</string>
     <string name="controller_c">C-Stick</string>
     <string name="controller_hotkeys">Genvejstaster</string>
+    <string name="controller_hotkeys_description">Hvis tasten \"Aktiver genvejstast\" er tilknyttet, skal denne taste trykkes ned udover den tilknyttede genvejstast.</string>
+    <string name="controller_hotkey_enable_button">Aktivér genvejstast</string>
     <string name="controller_triggers">Triggers</string>
     <string name="controller_trigger">Trigger</string>
     <string name="controller_dpad">D-Pad</string>
@@ -203,6 +212,9 @@
     <string name="storage">Lager</string>
     <string name="compress_cia_installs">Komprimer installeret CIA-indhold</string>
     <string name="compress_cia_installs_description">Komprimerer indholdet af CIA-filer, når de installeres på det emulerede SD-kort. Påvirker kun CIA-indhold, der installeres, når indstillingen er aktiveret.</string>
+    <string name="async_fs_operations">Asynkrone filsystemoperationer</string>
+    <string name="async_fs_operations_description">Gør emulerede filsystemadgange asynkrone. Reducerer filsystemrelateret hakken betydeligt, men kan øge indlæsningstiderne en smule.</string>
+
     <!-- Camera settings strings -->
     <string name="inner_camera">Indre kamera</string>
     <string name="outer_left_camera">Ydre venstre kamera</string>
@@ -227,10 +239,14 @@
     <string name="async_shaders_description">Kompilerer shaders i baggrunden for at reducere hakken under spilet. Når det er aktiveret, skal du forvente tilfældige grafiske fejl</string>
     <string name="linear_filtering">Lineær filtrering</string>
     <string name="linear_filtering_description">Aktiverer lineær filtrering, hvilket får spillets grafik til at se mere jævnt ud.</string>
+    <string name="use_integer_scaling">Heltalsskalering</string>
+    <string name="use_integer_scaling_description">Skalerer skærmene med en heltalsmultiplikator af den originale 3DS-skærm. For layouts med to forskellige skærmstørrelser skaleres den største skærm heltalsskaleret.</string>
     <string name="texture_filter_name">Teksturfilter</string>
     <string name="texture_filter_description">Forbedrer det visuelle i applikationer ved at anvende et filter på teksturer. De understøttede filtre er Anime4K Ultrafast, Bicubic, ScaleForce, xBRZ freescale og MMPX.</string>
     <string name="delay_render_thread">Forsink spillets renderingstråd</string>
     <string name="delay_render_thread_description">Forsink spillets remderingstråd, når den sender data til GPU\'en. Hjælper med ydeevneproblemer i de (meget få) applikationer med dynamiske framerates.</string>
+    <string name="simulate_3ds_gpu_timings">Simuler 3DS GPU-timings</string>
+    <string name="simulate_3ds_gpu_timings_description">Forsinker GPU-fuldførelseshændelser baseret på målinger taget fra rigtig hardware, så spil har mere realistiske GPU-tidsmålinger. Hjælper med at stabilisere dynamiske FPS-spil. Deaktivering af denne funktion kan i nogle sjældne tilfælde forbedre ydeevnen på bekostning af stabilitet.</string>
     <string name="advanced">Avanceret</string>
     <string name="texture_sampling_name">Tekstur sampling</string>
     <string name="texture_sampling_description">Tilsidesætter det samplingsfilter, der bruges af spillene. Dette kan i nogle tilfælde være nyttigt for spil, der ikke håndterer opskalering godt. Hvis du er usikker, skal du indstille dette til Styret af spillene.</string>
@@ -303,6 +319,8 @@
     <string name="audio_stretch_description">Strækker lyden for at reducere hakken. Når det er aktiveret, øges lydforsinkelsen og ydeevnen reduceres lidt.</string>
     <string name="realtime_audio">Aktiver lyd i realtid</string>
     <string name="realtime_audio_description">Skalerer lydafspilningshastigheden for at tage højde for fald i emuleringens billedhastighed. Dette betyder, at lyden afspilles med fuld hastighed, selvom spillets billedhastighed er lav. Kan give problemer med synkroniseringen af lyd.</string>
+    <string name="simulate_headphones_plugged">Simuler hovedtelefoner tilsluttet</string>
+    <string name="simulate_headphones_plugged_description">Simulerer om hovedtelefoner er tilsluttet det emulerede 3DS-system.</string>
     <string name="audio_input_type">Lydindgangsenhed</string>
     <string name="sound_output_mode">Lydudgangstilstand</string>
 
@@ -324,6 +342,8 @@
     <string name="deterministic_async_operations_description">Gør asynkrone operationer deterministiske for fejlretning. Aktivering af dette kan forårsage at programmet fryser fast.</string>
     <string name="enable_rpc_server">Aktivér RPC-server</string>
     <string name="enable_rpc_server_desc">Aktiverer RPC-serveren på port 45987. Dette tillader fjernlæsning/skrivning af gæstehukommelse.</string>
+    <string name="toggle_unique_data_console_type">Slå unik datakonsoltype til/fra</string>
+    <string name="toggle_unique_data_console_type_desc">Skifter den unikke datakonsoltype (Gammel 3DS &#8596; Ny 3DS) for at kunne downloade den modsatte systemfirmwaretype fra systemindstillingerne.</string>
     <string name="shader_jit">Aktiver shader-JIT</string>
     <string name="shader_jit_description">Brug JIT-motoren i stedet for fortolkeren til software-shader-emulering.</string>
 
@@ -334,6 +354,8 @@
     <string name="layout_screen_orientation_landscape_reverse">Omvendt landskab</string>
     <string name="layout_screen_orientation_portrait">Portræt</string>
     <string name="layout_screen_orientation_portrait_reverse">Omvendt portræt</string>
+    <string name="layouts_to_cycle">Layouts at skifte imellem</string>
+    <string name="layouts_to_cycle_description">Hvilke layouts skiftes imellem med genvejstasten Skift Layout</string>
     <string name="aspect_ratio_default">Standard</string>
     <string name="aspect_ratio_16_9">16:9</string>
     <string name="aspect_ratio_4_3">4:3</string>
@@ -368,7 +390,6 @@
     <string name="reset_setting_confirmation">Vil du nulstille denne indstilling til standardværdien?</string>
     <string name="setting_not_editable">Du kan ikke redigere dette nu</string>
     <string name="setting_disabled">Indstillinger deaktiveret</string>
-    <string name="setting_disabled_description">Indstillingen er i øjeblikket deaktiveret, fordi en anden indstilling ikke har en passende værdi.</string>
     <string name="setting_not_editable_description">Denne indstilling kan ikke ændres, mens et spil kører.</string>
     <string name="auto_select">Automatisk valg</string>
     <string name="start">Start</string>
@@ -395,9 +416,39 @@
     <string name="preferences_theme">Tema og farve</string>
     <string name="preferences_layout">Layout</string>
 
+    <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Fejl ved indlæsning af applikation</string>
+    <string name="loader_error_invalid_format">Ugyldigt ansøgningsformat</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[Programmets filformat understøttes ikke.<br>Sørg for, at du bruger et af de kompatible filformater:<ul><li>Cartridge afbildninger: <b>.cci/.zcci/.3ds</b></li><li>Installerbare arkiver: <b>.cia/.zcia</b></li><li>Hjemmelavede titler: <b>.3dsx/.z3dsx</b></li><li>NCCH containere: <b>.cxi/.zcxi/.app</b></li><li>ELF filer: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Ugyldig systemtilstand</string>
+    <string name="loader_error_invalid_system_mode_description">Nye 3DS-eksklusive applikationer kan ikke indlæses uden at aktivere Ny 3DS-tilstanden.</string>
+    <string name="loader_error_applying_patches">Fejl ved anvendelse af programrettelser</string>
+    <string name="loader_error_applying_patches_description">Der opstod en generisk fejl under installation af en programrettelse til applikationen. Se loggen for flere oplysninger.</string>
+    <string name="loader_error_patch_wrong_application">Kunne ikke installere en programrettelse, fordi den er designet til et andet program. Sørg for, at du bruger programrettelserne til det rigtige program, region og version.</string>
     <string name="loader_error_encrypted">Din ROM er krypteret</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar understøtter ikke krypterede applikationer. Læs vores <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">blog indlæg</a> for mere information.]]></string>
     <string name="loader_error_file_not_found">ROM-fil eksisterer ikke</string>
     <string name="no_game_present">Intet startbart spil til stede!</string>
+
+    <string name="loader_error_generic">Der opstod en fejl under indlæsning af ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Succes</string>
+    <string name="core_error_not_initialized">Ikke initialiseret</string>
+    <string name="core_error_get_loader">Indlæser til fil ikke fundet, inkompatibel filtype</string>
+    <string name="core_error_system_mode">Kunne ikke parse filen</string>
+    <string name="core_error_loader">Generisk indlæserfejl</string>
+    <string name="core_error_loader_encrypted">Krypteret fil</string>
+    <string name="core_error_loader_invalid_format">Beskadiget fil</string>
+    <string name="core_error_loader_gba_title">Filen er GBA-titel</string>
+    <string name="core_error_loader_error_patches">Fejl ved anvendelse af programrettelser</string>
+    <string name="core_error_loader_patches_invalid_title">Programrettelser er til en anden applikation</string>
+    <string name="core_error_system_files">Manglende systemfiler</string>
+    <string name="core_error_savestate">Gemte tilstande mislykkedes</string>
+    <string name="core_error_artic_disconnected">Arktisk base afkoblet</string>
+    <string name="core_error_n3ds_application">Filen er en ny 3DS-applikation</string>
+    <string name="core_error_core_exception_raised">Kerneundtagelse hævet</string>
+    <string name="core_error_memory_exception_raised">Hukommelsesundtagelse opstået</string>
+    <string name="core_error_shutdown_requested">Nedlukning anmodet</string>
+    <string name="core_error_unknown">Ukendt fejl</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Tryk på Tilbage for at få adgang til menuen.</string>
@@ -427,7 +478,6 @@
     <string name="emulation_aspect_ratio">Billedformat</string>
     <string name="emulation_switch_screen_layout">Landskab skærmlayout</string>
     <string name="emulation_switch_portrait_layout">Portræt skærmlayout</string>
-    <string name="emulation_switch_secondary_layout">Layout af sekundær skærm</string>
     <string name="emulation_switch_secondary_layout_description">Layoutet, der bruges af en tilsluttet sekundær skærm, kablet eller trådløs (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Stor skærm</string>
     <string name="emulation_screen_layout_portrait">Portræt</string>
@@ -436,7 +486,6 @@
     <string name="emulation_screen_layout_hybrid">Hybrid skærme</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
-    <string name="emulation_secondary_display_default">Systemstandard (spejl)</string>
     <string name="emulation_screen_layout_custom">Brugerdefineret layout</string>
     <string name="bg_color">Baggrundsfarve</string>
     <string name="bg_color_description">Farven, der vises bag skærmene under emulering, repræsenteret som en RGB-værdi.</string>
@@ -545,6 +594,12 @@
 
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Forberedelse af shaders</string>
+    <string name="building_shaders">Bygger %s</string>
+    <string name="delete_shader_cache">Slet shader-cache</string>
+    <string name="delete_cache_select_backend">Vælg hvilken grafik-API shader-cachen skal slettes fra</string>
+    <string name="deleting_shader_cache">Sletter shader-cache for titel, vent venligst…</string>
+    <string name="shader_cache_deleted">Shader-cache slettet</string>
+
     <!-- About Game Dialog -->
     <string name="play">Spil</string>
     <string name="uninstall_cia">Afinstaller applikation</string>

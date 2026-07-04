@@ -101,6 +101,7 @@ enum class AppletId : u32 {
     Mint2 = 0x407,
     Extrapad2 = 0x408,
     Memolib2 = 0x409,
+    TypeMask = 0xF00,
 };
 
 /// Application Old/New 3DS target platforms
@@ -287,6 +288,8 @@ public:
     ResultVal<MessageParameter> ReceiveParameter(AppletId app_id);
     bool CancelParameter(bool check_sender, AppletId sender_appid, bool check_receiver,
                          AppletId receiver_appid);
+
+    void MapProgramIdForDebug(AppletId app_id, u64 title_id, FS::MediaType media_type);
 
     struct GetLockHandleResult {
         AppletAttributes corrected_attributes;

@@ -25,7 +25,7 @@ namespace VideoCore {
 std::unique_ptr<RendererBase> CreateRenderer(Frontend::EmuWindow& emu_window,
                                              Frontend::EmuWindow* secondary_window,
                                              Pica::PicaCore& pica, Core::System& system) {
-    const Settings::GraphicsAPI graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     switch (graphics_api) {
 #ifdef ENABLE_SOFTWARE_RENDERER
     case Settings::GraphicsAPI::Software:

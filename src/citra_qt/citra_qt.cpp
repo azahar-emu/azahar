@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <thread>
+#include <unordered_map>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QIcon>
@@ -62,7 +63,7 @@
 #endif
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord.h"
 #endif
 #include "citra_qt/dumping/dumping_dialog.h"
@@ -122,7 +123,7 @@
 Q_IMPORT_PLUGIN(QDarwinCameraPermissionPlugin);
 #endif
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 #include "citra_qt/discord_impl.h"
 #endif
 
@@ -413,7 +414,11 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     LoadTranslation();
 
-    Pica::g_debug_context = Pica::DebugContext::Construct();
+    if (Settings::values.pica_debugging) {
+        Pica::g_debug_context = Pica::DebugContext::Construct();
+    } else {
+        Pica::g_debug_context.reset();
+    }
     setAcceptDrops(true);
     ui->setupUi(this);
     statusBar()->hide();
@@ -421,7 +426,7 @@ GMainWindow::GMainWindow(Core::System& system_)
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
     discord_rpc->Update(false);
 #endif
@@ -705,8 +710,12 @@ void GMainWindow::InitializeWidgets() {
 }
 
 void GMainWindow::InitializeDebugWidgets() {
-    connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
-            &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    if (Pica::g_debug_context) {
+        connect(ui->action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
+                &GMainWindow::OnCreateGraphicsSurfaceViewer);
+    } else {
+        ui->action_Create_Pica_Surface_Viewer->setEnabled(false);
+    }
 
     QMenu* debug_menu = ui->menu_View_Debugging;
 
@@ -725,35 +734,37 @@ void GMainWindow::InitializeDebugWidgets() {
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
 
-    graphicsWidget = new GPUCommandStreamWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
-    graphicsWidget->hide();
-    debug_menu->addAction(graphicsWidget->toggleViewAction());
+    if (Pica::g_debug_context) {
+        graphicsWidget = new GPUCommandStreamWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
+        graphicsWidget->hide();
+        debug_menu->addAction(graphicsWidget->toggleViewAction());
 
-    graphicsCommandsWidget = new GPUCommandListWidget(system, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
-    graphicsCommandsWidget->hide();
-    debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+        graphicsCommandsWidget = new GPUCommandListWidget(system, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
+        graphicsCommandsWidget->hide();
+        debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
 
-    graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
-    graphicsBreakpointsWidget->hide();
-    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
+        graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+        graphicsBreakpointsWidget->hide();
+        debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
-    graphicsVertexShaderWidget =
-        new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
-    graphicsVertexShaderWidget->hide();
-    debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
+        graphicsVertexShaderWidget =
+            new GraphicsVertexShaderWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
+        graphicsVertexShaderWidget->hide();
+        debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
-    graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
-    graphicsTracingWidget->hide();
-    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
-    connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
-            &GraphicsTracingWidget::OnEmulationStopping);
+        graphicsTracingWidget = new GraphicsTracingWidget(system, Pica::g_debug_context, this);
+        addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
+        graphicsTracingWidget->hide();
+        debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
+        connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStarting);
+        connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
+                &GraphicsTracingWidget::OnEmulationStopping);
+    }
 
     waitTreeWidget = new WaitTreeWidget(system, this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
@@ -1552,7 +1563,7 @@ void GMainWindow::BootGame(const QString& filename) {
     }
 
     // Register debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Register();
     }
 
@@ -1626,7 +1637,7 @@ void GMainWindow::ShutdownGame() {
 
     AllowOSSleep();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     discord_rpc->Pause();
 #endif
 
@@ -1637,10 +1648,12 @@ void GMainWindow::ShutdownGame() {
     // breakpoint after (or before) RequestStop() is called, the emulation would never be able
     // to continue out to the main loop and terminate. Thus wait() would hang forever.
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
-    Pica::g_debug_context->ClearBreakpoints();
+    if (Pica::g_debug_context) {
+        Pica::g_debug_context->ClearBreakpoints();
+    }
 
     // Unregister debug widgets
-    if (graphicsWidget->isVisible()) {
+    if (graphicsWidget && graphicsWidget->isVisible()) {
         graphicsWidget->Unregister();
     }
 
@@ -1657,7 +1670,7 @@ void GMainWindow::ShutdownGame() {
 
     OnCloseMovie();
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     discord_rpc->Update(false);
 #endif
 #ifdef __unix__
@@ -2563,6 +2576,7 @@ void GMainWindow::UninstallTitles(
     } else if (!future_watcher.isCanceled()) {
         QMessageBox::information(this, tr("Azahar"),
                                  tr("Successfully uninstalled '%1'.").arg(first_name));
+        emit InstalledTitlesChanged();
     }
 }
 
@@ -2601,7 +2615,7 @@ void GMainWindow::OnResumeGame(bool first_start) {
     play_time_manager->Start();
 
     if (first_start) {
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         discord_rpc->Update(true);
 #endif
     }
@@ -2944,7 +2958,7 @@ void GMainWindow::OnConfigure() {
     const int old_input_profile_index = Settings::values.current_input_profile_index;
     const auto old_input_profiles = Settings::values.input_profiles;
     const auto old_touch_from_button_maps = Settings::values.touch_from_button_maps;
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     const bool old_discord_presence = UISettings::values.enable_discord_presence.GetValue();
 #endif
 #ifdef __unix__
@@ -2958,7 +2972,7 @@ void GMainWindow::OnConfigure() {
         if (UISettings::values.theme != old_theme) {
             UpdateUITheme();
         }
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         if (UISettings::values.enable_discord_presence.GetValue() != old_discord_presence) {
             SetDiscordEnabled(UISettings::values.enable_discord_presence.GetValue());
             discord_rpc->Update(system.IsPoweredOn());
@@ -4090,14 +4104,21 @@ void GMainWindow::LoadTranslation() {
     //       selected language option? Current behaviour is better than the issue it fixes,
     //       but not ideal.
     if (UISettings::values.language.isEmpty()) {
-        const auto languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+        QStringList languages;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        languages = QLocale::system().uiLanguages(QLocale::TagSeparator::Underscore);
+#else
+        languages = QLocale::system().uiLanguages();
+        for (auto& lang : languages)
+            lang.replace(u'-', u'_');
+#endif
         for (const auto& lang : languages) {
             // If the first language found is English, no need to install any translation
             if (lang == lang_en) {
                 UISettings::values.language = lang_en;
                 return;
             }
-            loaded = translator.load(lang, languages_dir);
+            loaded = citraTranslator.load(lang, languages_dir);
             if (loaded) {
                 UISettings::values.language = lang;
                 break;
@@ -4110,16 +4131,22 @@ void GMainWindow::LoadTranslation() {
         return;
     }
 
+    const QString qtbase_prefix = QStringLiteral("qtbase_");
     if (UISettings::values.language.isEmpty() && !loaded) {
         // Use the system's default locale
-        loaded = translator.load(QLocale::system(), {}, {}, languages_dir);
+        qtTranslator.load(qtbase_prefix + QLocale::system().name(), {}, {},
+                          QStringLiteral(":/languages/"));
+        loaded = citraTranslator.load(QLocale::system(), {}, {}, QStringLiteral(":/languages/"));
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(UISettings::values.language, languages_dir);
+        qtTranslator.load(qtbase_prefix + UISettings::values.language,
+                          QStringLiteral(":/languages/"));
+        loaded = citraTranslator.load(UISettings::values.language, QStringLiteral(":/languages/"));
     }
 
     if (loaded) {
-        qApp->installTranslator(&translator);
+        qApp->installTranslator(&qtTranslator);
+        qApp->installTranslator(&citraTranslator);
     } else {
         UISettings::values.language = lang_en;
     }
@@ -4127,7 +4154,8 @@ void GMainWindow::LoadTranslation() {
 
 void GMainWindow::OnLanguageChanged(const QString& locale) {
     if (UISettings::values.language != QStringLiteral("en")) {
-        qApp->removeTranslator(&translator);
+        qApp->removeTranslator(&qtTranslator);
+        qApp->removeTranslator(&citraTranslator);
     }
 
     UISettings::values.language = locale;
@@ -4302,7 +4330,7 @@ void GMainWindow::RetranslateStatusBar() {
     multiplayer_state->retranslateUi();
 }
 
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
 void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
     if (state) {
         discord_rpc = std::make_unique<DiscordRPC::DiscordImpl>(system);
@@ -4440,6 +4468,9 @@ int LaunchQtFrontend(int argc, char* argv[]) {
 
     QObject::connect(&app, &QGuiApplication::applicationStateChanged, &main_window,
                      &GMainWindow::OnAppFocusStateChanged);
+
+    // Process any pending events before executing the app (prevents freeze-on–boot on macOS)
+    app.processEvents();
 
     int result = app.exec();
     return result;

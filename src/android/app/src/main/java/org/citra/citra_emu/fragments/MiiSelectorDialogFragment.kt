@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -23,11 +23,22 @@ class MiiSelectorDialogFragment : DialogFragment() {
         list.add(getString(R.string.standard_mii))
         list.addAll(config.miiNames)
         val initialIndex =
-            if (config.initiallySelectedMiiIndex < list.size) config.initiallySelectedMiiIndex.toInt() else 0
+            if (config.initiallySelectedMiiIndex <
+                list.size
+            ) {
+                config.initiallySelectedMiiIndex.toInt()
+            } else {
+                0
+            }
         MiiSelector.data.index = initialIndex
         val builder = MaterialAlertDialogBuilder(requireActivity())
-            .setTitle(if (config.title!!.isEmpty()) getString(R.string.mii_selector) else config.title)
-            .setSingleChoiceItems(list.toTypedArray(), initialIndex) { _: DialogInterface?, which: Int ->
+            .setTitle(
+                if (config.title!!.isEmpty()) getString(R.string.mii_selector) else config.title
+            )
+            .setSingleChoiceItems(list.toTypedArray(), initialIndex) {
+                    _: DialogInterface?,
+                    which: Int
+                ->
                 MiiSelector.data.index = which
             }
             .setPositiveButton(android.R.string.ok) { _: DialogInterface?, _: Int ->

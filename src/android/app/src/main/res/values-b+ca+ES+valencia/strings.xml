@@ -384,7 +384,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="reset_setting_confirmation">Vols reiniciar esta configuració al seu valor per defecte?</string>
     <string name="setting_not_editable">No pots editar-ho ara</string>
     <string name="setting_disabled">Configuració deshabilitada</string>
-    <string name="setting_disabled_description">Esta configuració està actualment deshabilitada perquè una altra configuració no té el valor apropiat.</string>
     <string name="setting_not_editable_description">Esta opció no pot canviar-se mentres s\'està executant un joc.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
@@ -443,7 +442,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_aspect_ratio">Relació d\'Aspecte</string>
     <string name="emulation_switch_screen_layout">Estil de Pantalla Apaïsada</string>
     <string name="emulation_switch_portrait_layout">Estil de Pantalla de Perfil</string>
-    <string name="emulation_switch_secondary_layout">Estil de Pantalla Secundària</string>
     <string name="emulation_switch_secondary_layout_description">La disposició de la pantalla secundària connectada, amb cable o sense fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Vertical</string>
@@ -452,7 +450,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_screen_layout_hybrid">Pantalles híbrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Per omissió</string>
-    <string name="emulation_secondary_display_default">Per defecte del sistema (espill)</string>
     <string name="emulation_screen_layout_custom">Estil Personalitzat</string>
     <string name="bg_color">Color de fons</string>
     <string name="bg_color_description">El color que apareix darrere de les pantalles durant l\'emulació, representat com un valor RGB.</string>

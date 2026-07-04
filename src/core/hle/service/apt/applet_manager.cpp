@@ -154,11 +154,13 @@ static u64 ConvertTitleID(Core::System& system, u64 base_title_id) {
 }
 
 static bool IsSystemAppletId(AppletId applet_id) {
-    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::AnySystemApplet)) != 0;
+    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::TypeMask)) ==
+           static_cast<u32>(AppletId::AnySystemApplet);
 }
 
 static bool IsApplicationAppletId(AppletId applet_id) {
-    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::Application)) != 0;
+    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::TypeMask)) ==
+           static_cast<u32>(AppletId::Application);
 }
 
 AppletManager::AppletSlot AppletManager::GetAppletSlotFromId(AppletId id) {
@@ -357,6 +359,15 @@ bool AppletManager::CancelParameter(bool check_sender, AppletId sender_appid, bo
         next_parameter = {};
 
     return cancellation_success;
+}
+
+void AppletManager::MapProgramIdForDebug(AppletId app_id, u64 title_id, FS::MediaType media_type) {
+    auto slot = GetAppletSlotFromId(app_id);
+    if (slot != AppletSlot::Error) {
+        auto applet_slot = GetAppletSlot(slot);
+        applet_slot->title_id = title_id;
+        applet_slot->media_type = media_type;
+    }
 }
 
 ResultVal<AppletManager::GetLockHandleResult> AppletManager::GetLockHandle(

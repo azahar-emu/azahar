@@ -12,11 +12,11 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
+import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.TurboHelper
 
 class SettingsActivityPresenter(private val activityView: SettingsActivityView) {
@@ -72,11 +72,15 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         val nomediaFileExists: Boolean
         try {
             dataDirTreeUri = PermissionsHandler.citraDirectory
-            dataDirDocument = DocumentFile.fromTreeUri(CitraApplication.appContext, dataDirTreeUri)!!
+            dataDirDocument =
+                DocumentFile.fromTreeUri(CitraApplication.appContext, dataDirTreeUri)!!
             nomediaFileDocument = dataDirDocument.findFile(".nomedia")
             nomediaFileExists = (nomediaFileDocument != null)
         } catch (e: Exception) {
-            Log.error("[SettingsActivity]: Error occurred while trying to find .nomedia, error: " + e.message)
+            Log.error(
+                "[SettingsActivity]: Error occurred while trying to find .nomedia, error: " +
+                    e.message
+            )
             return
         }
 
@@ -95,9 +99,9 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView) 
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
             settings.saveSettings(activityView)
-            //added to ensure that layout changes take effect as soon as settings window closes
+            // added to ensure that layout changes take effect as soon as settings window closes
             NativeLibrary.reloadSettings()
-            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode)
+            NativeLibrary.updateFramebuffer(NativeLibrary.isPortraitMode())
             updateAndroidImageVisibility()
             TurboHelper.reloadTurbo(false) // TODO: Can this go somewhere else? -OS
         }

@@ -37,8 +37,7 @@
 #endif
 
 #if defined(__APPLE__)
-#include <objc/message.h>
-#include <objc/objc.h>
+#include "util/metal_util.h"
 #elif !defined(WIN32)
 #include <qpa/qplatformnativeinterface.h>
 #endif
@@ -420,8 +419,7 @@ static Frontend::EmuWindow::WindowSystemInfo GetWindowSystemInfo(QWindow* window
         // Our Win32 Qt external doesn't have the private API.
         wsi.render_surface = reinterpret_cast<void*>(window->winId());
 #elif defined(__APPLE__)
-        wsi.render_surface = reinterpret_cast<void* (*)(id, SEL)>(objc_msgSend)(
-            reinterpret_cast<id>(window->winId()), sel_registerName("layer"));
+        wsi.render_surface = MetalUtil::CreateMetalLayer(window->winId());
 #else
         QPlatformNativeInterface* pni = QGuiApplication::platformNativeInterface();
         wsi.display_connection = pni->nativeResourceForWindow("display", window);
@@ -650,7 +648,7 @@ bool GRenderWindow::InitRenderTarget() {
 
     first_frame = false;
 
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     switch (graphics_api) {
 #ifdef ENABLE_SOFTWARE_RENDERER
     case Settings::GraphicsAPI::Software:
@@ -837,7 +835,7 @@ void GRenderWindow::showEvent(QShowEvent* event) {
 
 std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() const {
 #ifdef ENABLE_OPENGL
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     if (graphics_api == Settings::GraphicsAPI::OpenGL) {
         auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());
         // Bind the shared contexts to the main surface in case the backend wants to take over

@@ -15,7 +15,11 @@ object ComboHelper {
                 // We don't want to parse any bad inputs here so we continue loop
                 continue
             } else {
-                NativeLibrary.onGamePadEvent(NativeLibrary.TouchScreenDevice, nativeButton, buttonStatus)
+                NativeLibrary.onGamePadEvent(
+                    NativeLibrary.TOUCHSCREEN_DEVICE,
+                    nativeButton,
+                    buttonStatus
+                )
             }
         }
     }

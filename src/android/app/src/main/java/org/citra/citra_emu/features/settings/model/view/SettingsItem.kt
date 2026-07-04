@@ -4,7 +4,8 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
-import org.citra.citra_emu.NativeLibrary
+import androidx.annotation.StringRes
+import org.citra.citra_emu.R
 import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 
@@ -29,6 +30,9 @@ abstract class SettingsItem(
         }
 
     open var isEnabled: Boolean = true
+
+    @StringRes open var disabledMessage: Int =
+        R.string.setting_disabled_description_incompatible_setting
 
     val isActive: Boolean
         get() {

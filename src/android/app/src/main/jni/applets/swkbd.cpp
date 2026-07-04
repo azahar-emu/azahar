@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -84,11 +84,11 @@ void InitJNI(JNIEnv* env) {
         env->FindClass("org/citra/citra_emu/applets/SoftwareKeyboard$ValidationError")));
 
     s_swkbd_execute = env->GetStaticMethodID(
-        s_software_keyboard_class, "Execute",
+        s_software_keyboard_class, "execute",
         "(Lorg/citra/citra_emu/applets/SoftwareKeyboard$KeyboardConfig;)Lorg/citra/citra_emu/"
         "applets/SoftwareKeyboard$KeyboardData;");
     s_swkbd_show_error =
-        env->GetStaticMethodID(s_software_keyboard_class, "ShowError", "(Ljava/lang/String;)V");
+        env->GetStaticMethodID(s_software_keyboard_class, "showError", "(Ljava/lang/String;)V");
 }
 
 void CleanupJNI(JNIEnv* env) {

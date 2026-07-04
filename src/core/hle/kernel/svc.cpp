@@ -1701,7 +1701,7 @@ Result SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_per
     std::shared_ptr<SharedMemory> shared_memory = nullptr;
 
     auto VerifyPermissions = [](MemoryPermission permission) {
-        // SharedMemory blocks can not be created with Execute permissions
+        // SharedMemory blocks can not be created with execute permissions
         switch (permission) {
         case MemoryPermission::None:
         case MemoryPermission::Read:

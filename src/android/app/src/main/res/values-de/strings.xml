@@ -347,7 +347,6 @@
     <string name="reset_setting_confirmation">Möchtest du diese Einstellung auf den Werkzustand zurücksetzen?</string>
     <string name="setting_not_editable">Du kannst das nicht bearbeiten</string>
     <string name="setting_disabled">Einstellungen deaktiviert</string>
-    <string name="setting_disabled_description">Diese Einstellung ist aktuell deaktiviert, da eine andere Einstellung nicht den geeigneten Wert hat. </string>
     <string name="setting_not_editable_description">Diese Einstellung kann nicht geändert werden, solange ein Spiel läuft.</string>
     <string name="auto_select">Automatisch auswählen</string>
     <string name="start">Start</string>

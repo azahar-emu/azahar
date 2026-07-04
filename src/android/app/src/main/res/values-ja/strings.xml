@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Home Strings -->
+    <string name="grid_menu_core_settings">設定</string>
+    <string name="home_options">オプション</string>
+    <string name="home_search">検索</string>
+    <string name="home_games">アプリケーション</string>
+    <string name="settings_description">エミュレーターの設定をコンフィグする</string>
+    <string name="install_game_content">CIAファイルをインストールする</string>
+    <string name="install_game_content_description">アプリケーション、アップデート、またはダウンロードコンテンツをインストール</string>
+    <string name="share_log">シェアログ</string>
+    <string name="share_log_description">問題をデバッグするためにAzaharにログファイルを送る</string>
+    <string name="gpu_driver_manager">GPUドライバーマネージャー</string>
+    <string name="install_gpu_driver">GPUドライバーをインストール</string>
+    <string name="driver_already_installed">ドライバーはもうインストールしています</string>
     <!-- System settings strings -->
     <string name="emulation_settings">エミュレーション設定</string>
     <string name="enable_required_online_lle_modules">オンラインに必要なLLEモジュールを有効にする（インストール済みの場合）</string>

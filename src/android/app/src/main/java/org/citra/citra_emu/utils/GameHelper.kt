@@ -15,7 +15,6 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.model.CheapDocument
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.model.GameInfo
-import java.io.IOException
 
 object GameHelper {
     const val KEY_GAME_PATH = "game_path"
@@ -32,7 +31,9 @@ object GameHelper {
 
         addGamesRecursive(games, FileUtil.listFiles(gamesUri), 3)
         NativeLibrary.getInstalledGamePaths().forEach {
-            games.add(getGame(Uri.parse(it.path), isInstalled = true, addedToLibrary = true, it.mediaType))
+            games.add(
+                getGame(Uri.parse(it.path), isInstalled = true, addedToLibrary = true, it.mediaType)
+            )
         }
 
         // Cache list of games found on disk
@@ -62,24 +63,38 @@ object GameHelper {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
                 if (Game.allExtensions.contains(FileUtil.getExtension(it.uri))) {
-                    games.add(getGame(it.uri, isInstalled = false, addedToLibrary = true, Game.MediaType.GAME_CARD))
+                    games.add(
+                        getGame(
+                            it.uri,
+                            isInstalled = false,
+                            addedToLibrary = true,
+                            Game.MediaType.GAME_CARD
+                        )
+                    )
                 }
             }
         }
     }
 
-    fun getGame(uri: Uri, isInstalled: Boolean, addedToLibrary: Boolean, mediaType: Game.MediaType): Game {
+    fun getGame(
+        uri: Uri,
+        isInstalled: Boolean,
+        addedToLibrary: Boolean,
+        mediaType: Game.MediaType
+    ): Game {
         val filePath = uri.toString()
         var nativePath: String? = null
         var gameInfo: GameInfo?
-        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) || filePath.startsWith("!")) {
+        if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) ||
+            filePath.startsWith("!")
+        ) {
             gameInfo = GameInfo(filePath)
         } else {
             nativePath = if (uri.scheme == "fd") {
                 uri.toString()
             } else {
                 "!" + NativeLibrary.getNativePath(uri)
-            };
+            }
             gameInfo = GameInfo(nativePath)
         }
 
@@ -92,10 +107,16 @@ object GameHelper {
 
         val newGame = Game(
             valid,
-            (gameInfo?.getTitle() ?: FileUtil.getFilename(uri)).replace("[\\t\\n\\r]+".toRegex(), " "),
+            (
+                gameInfo?.getTitle() ?: FileUtil.getFilename(
+                    uri
+                )
+                ).replace("[\\t\\n\\r]+".toRegex(), " "),
             filePath.replace("\n", " "),
             // TODO: This next line can be deduplicated but I don't want to right now -OS
-            if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) || filePath.startsWith("!")) {
+            if (BuildUtil.isGooglePlayBuild || FileUtil.isNativePath(filePath) ||
+                filePath.startsWith("!")
+            ) {
                 filePath
             } else {
                 nativePath!!
@@ -103,7 +124,12 @@ object GameHelper {
             gameInfo?.getTitleID() ?: 0,
             mediaType,
             gameInfo?.getCompany() ?: "",
-            if (isEncrypted) { CitraApplication.appContext.getString(R.string.unsupported_encrypted) } else { gameInfo?.getRegions() ?: "" },
+            if (isEncrypted) {
+                CitraApplication.appContext.getString(R.string.unsupported_encrypted)
+            } else {
+                gameInfo?.getRegions()
+                    ?: ""
+            },
             isInstalled,
             gameInfo?.isSystemTitle() ?: false,
             gameInfo?.getIsVisibleSystemTitle() ?: false,

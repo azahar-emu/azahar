@@ -11,12 +11,12 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
+import org.citra.citra_emu.display.ScreenAdjustmentUtil
+import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.TurboHelper
-import org.citra.citra_emu.utils.ComboHelper
-import org.citra.citra_emu.display.ScreenAdjustmentUtil
-import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
-import org.citra.citra_emu.features.settings.model.Settings
 
 class HotkeyUtility(
     private val screenAdjustmentUtil: ScreenAdjustmentUtil,
@@ -42,7 +42,7 @@ class HotkeyUtility(
         // Now process all internal buttons associated with this keypress
         for (button in buttonSet) {
             currentlyPressedButtons.add(button)
-            //option 1 - this is the enable command, which was already handled
+            // option 1 - this is the enable command, which was already handled
             if (button == Hotkey.ENABLE.button) {
                 handled = true
             }
@@ -76,7 +76,8 @@ class HotkeyUtility(
         val thisKeyIsHotkey =
             !thisKeyIsEnableButton && Hotkey.entries.any { buttonSet.contains(it.button) }
         if (thisKeyIsEnableButton) {
-            handled = true; hotkeyIsEnabled = false
+            handled = true
+            hotkeyIsEnabled = false
         }
         if (thisKeyIsComboButton) {
             ComboHelper.comboActivate(NativeLibrary.ButtonState.RELEASED)
@@ -115,10 +116,15 @@ class HotkeyUtility(
     fun handleHotkey(bindedButton: Int): Boolean {
         when (bindedButton) {
             Hotkey.SWAP_SCREEN.button -> screenAdjustmentUtil.swapScreen()
+
             Hotkey.CYCLE_LAYOUT.button -> screenAdjustmentUtil.cycleLayouts()
+
             Hotkey.CLOSE_GAME.button -> EmulationLifecycleUtil.closeGame()
+
             Hotkey.PAUSE_OR_RESUME.button -> EmulationLifecycleUtil.pauseOrResume()
+
             Hotkey.TURBO_LIMIT.button -> TurboHelper.toggleTurbo(true)
+
             Hotkey.QUICKSAVE.button -> {
                 NativeLibrary.saveState(NativeLibrary.QUICKSAVE_SLOT)
                 Toast.makeText(
@@ -127,6 +133,7 @@ class HotkeyUtility(
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
             Hotkey.QUICKLOAD.button -> {
                 val wasLoaded = NativeLibrary.loadStateIfAvailable(NativeLibrary.QUICKSAVE_SLOT)
                 val stringRes = if (wasLoaded) {
@@ -140,6 +147,7 @@ class HotkeyUtility(
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
             Hotkey.COMBO_BUTTON.button -> {
                 ComboHelper.comboActivate(NativeLibrary.ButtonState.PRESSED)
             }

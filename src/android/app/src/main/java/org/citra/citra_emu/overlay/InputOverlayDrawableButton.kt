@@ -45,7 +45,8 @@ class InputOverlayDrawableButton(
 ) {
     var trackId: Int
 
-    private var isMotionFirstButton = false // mark the first activated button with the current motion
+    private var isMotionFirstButton = false
+    // ^- mark the first activated button with the current motion
 
     private var previousTouchX = 0
     private var previousTouchY = 0
@@ -70,7 +71,12 @@ class InputOverlayDrawableButton(
      *
      * @return true if value was changed
      */
-    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(
+        event: MotionEvent,
+        pointerIndex: Int,
+        hasActiveButtons: Boolean,
+        overlay: InputOverlay
+    ): Boolean {
         val buttonSliding = EmulationMenuSettings.buttonSlide
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
@@ -189,7 +195,11 @@ class InputOverlayDrawableButton(
     }
 
     val status: Int
-        get() = if (pressedState) NativeLibrary.ButtonState.PRESSED else NativeLibrary.ButtonState.RELEASED
+        get() = if (pressedState) {
+            NativeLibrary.ButtonState.PRESSED
+        } else {
+            NativeLibrary.ButtonState.RELEASED
+        }
     val bounds: Rect
         get() = defaultStateBitmap.bounds
 }

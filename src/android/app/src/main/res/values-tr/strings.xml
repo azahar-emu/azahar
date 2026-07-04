@@ -66,10 +66,14 @@
     <string name="give_permission">İzin ver</string>
     <string name="notification_warning">Bildirim izni vermeyi geçmek istediğinizden emin misiniz?</string>
     <string name="notification_warning_description">Azahar sizi önemli bilgiler hakkında bilgilendiremeyecek.</string>
+    <string name="filesystem_permission_warning">İzinler eksik</string>
+    <string name="filesystem_permission_warning_description">Azahar çalışması için gerekli olan dosyaları oluşturabilmek ve yönetebilmek için dosya izinleri gerektiriyor. \n\nLütfen devam etmeden önce dosya yönetimi izinlerinin sağlandığından emin olun.</string>
     <string name="camera_permission">Kamera</string>
     <string name="camera_permission_description">3DS kamera emülasyonu için aşağıdaki izni verin.</string>
     <string name="microphone_permission">Mikrofon</string>
     <string name="microphone_permission_description">3DS mikrofon emülasyonu için aşağıdaki izni verin.</string>
+    <string name="filesystem_permission">Dosya Sistemi</string>
+    <string name="filesystem_permission_description">Azahar\'ın çalışması için gerekli dosyaları oluşturabilmesi için lütfen izin veriniz.</string>
     <string name="permission_denied">İzin reddedildi</string>
     <string name="add_games_warning">Uygulama dosyasını seçmeyi atla?</string>
     <string name="add_games_warning_description">Eğer bir dosya seçili değilse yazılımlar uygulama listesinde görünmeyecektir.</string>
@@ -110,6 +114,8 @@
     <string name="controller_dpad_axis_description">Bazı oyun kolları D-pad\'lerini bir eksen olarak atayamayabilir. Durum buysa D-Pad (butonlar) bölümünü kullanın.</string>
     <string name="controller_dpad_button">D-pad (Buton)</string>
     <string name="controller_dpad_button_description">Sadece D-Pad (Eksen) atamasında sorun yaşıyorsanız D-Pad\'inizi bunlara atayın.</string>
+    <string name="controller_axis_vertical">Dikey Eksen</string>
+    <string name="controller_axis_horizontal">Yatay Eksen</string>
     <string name="direction_up">Yukarı</string>
     <string name="direction_down">Aşağı</string>
     <string name="direction_left">Sol</string>
@@ -320,7 +326,6 @@
     <string name="reset_setting_confirmation">Bu ayarı varsayılan değerlerine döndürmek ister misiniz?</string>
     <string name="setting_not_editable">Bunu şu an düzenleyemezsin</string>
     <string name="setting_disabled">Ayar devre dışı bırakıldı</string>
-    <string name="setting_disabled_description">Bu ayar, başka bir ayarın uygun değer olmaması nedeniyle şu anda devre dışı bırakılmıştır.</string>
     <string name="setting_not_editable_description">Bu seçenek oyun devam ederken değiştirilemez.</string>
     <string name="auto_select">Otomatik Seç</string>
     <string name="start">Başlat</string>
@@ -380,7 +385,6 @@
     <string name="emulation_screen_layout_hybrid">Hibrit Ekranlar</string>
     <string name="emulation_screen_layout_original">Orijinal</string>
     <string name="emulation_portrait_layout_top_full">Varsayılan</string>
-    <string name="emulation_secondary_display_default">Sistem Varsayılanı (ayna)</string>
     <string name="emulation_screen_layout_custom">Özel Düzen</string>
     <string name="bg_color">Arkaplan Rengi</string>
     <string name="bg_red">Kırmızı</string>
@@ -410,6 +414,7 @@
     <string name="emulation_custom_layout_width">Genişlik</string>
     <string name="emulation_custom_layout_height">Yükseklik</string>
     <string name="emulation_swap_screens">Ekranları Değiştir</string>
+    <string name="emulation_rotate_upright">Ekranı dikey konuma çevir</string>
     <string name="emulation_touch_overlay_reset">Yerleşimi Sıfırla</string>
     <string name="emulation_show_controller_overlay">Kontrolcü Yerleşimini Göster</string>
     <string name="emulation_close_game">Oyunu Kapat</string>
@@ -476,8 +481,17 @@
     <string name="fatal_error">Ölümcül Hata</string>
     <string name="fatal_error_message">Ölümcül bir hata oluştu. Ayrıntılar için log\'u kontrol edin.\nEmülasyona devam etmek çökmelere ve hatalara neden olabilir.</string>
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
+    <string name="invalid_system_mode">Sistem modu geçersiz</string>
+    <string name="invalid_system_mode_message">New 3DS için yapılmış için uygulamalar, New 3DS modunu aktive etmeden başlatılamaz.</string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
+    <string name="building_shaders">Shaderlar Derleniyor: %s</string>
+    <string name="delete_shader_cache">Shader Önbelleğini sil</string>
+    <string name="delete_cache_select_backend">Shader Önbelleğini silmek için grafik API\'ını seç</string>
+    <string name="deleting_shader_cache">Uygulamanın Shader Önbelleği siliniyor, lütfen bekleyin...</string>
+    <string name="shader_cache_deleted">Shader Önbelleği silindi</string>
+
     <!-- About Game Dialog -->
     <string name="play">Oyna</string>
     <string name="uninstall_cia">Uygulamayı Sil</string>
@@ -495,19 +509,42 @@
     <string name="shortcut_name">Kısayol Adı</string>
     <string name="edit_icon">Simgeyi düzenle</string>
     <string name="create_shortcut">Kısayol Oluştur</string>
+    <string name="shortcut_name_empty">Kısayol ismi boş olamaz</string>
+    <string name="shortcut_image_stretch_toggle">Kareyi sığdırmak için esnet</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Dosya:</string>
     <string name="game_context_type">Tür:</string>
+    <string name="game_context_insert">Kartuşu tak</string>
+    <string name="game_context_eject">Kartuşu çıkar</string>
+
+    <!-- Performance Overlay settings -->
+    <string name="performance_overlay_show">Performans Overlay Penceresini göster</string>
+    <string name="performance_overlay_options">Performans Overlay Penceresi</string>
+    <string name="performance_overlay_enable">Performans Overlay Penceresini aktive et</string>
+    <string name="performance_overlay_options_description">Performans Overlay Penceresinin görünürlüğünü ayarla ve hangi bilgilerin gösterileceğini seç.</string>
     <string name="performance_overlay_show_fps">FPS\'i Göster</string>
+    <string name="performance_overlay_show_fps_description">Güncel Saniye Başına Kareyi göster.</string>
+    <string name="performance_overlay_show_frametime">Kare Süresini göster.</string>
+    <string name="performance_overlay_show_frametime_description">Güncel Kare Süresini göster.</string>
     <string name="performance_overlay_show_speed">Hızı Göster</string>
+    <string name="performance_overlay_show_speed_description">Güncel emülasyon hızını yüzde olarak göster.</string>
+    <string name="performance_overlay_show_app_ram_usage">Uygulama Hafıza tüketimini göster</string>
+    <string name="performance_overlay_show_app_ram_usage_description">Emülatör tarafından kullanılan RAM miktarını göster.</string>
     <string name="performance_overlay_show_available_ram">Kullanılabilir Belleği Göster</string>
+    <string name="performance_overlay_show_available_ram_description">Kullanılabilir RAM miktarını göster.</string>
     <string name="performance_overlay_show_battery_temp">Pil Sıcaklığını Göster</string>
+    <string name="performance_overlay_show_battery_temp_description">Güncel Pil sıcaklığını santigrat ve fahrenheit ile göster.</string>
+    <string name="performance_overlay_position">Overlay Penceresinin Konumu</string>
+    <string name="performance_overlay_position_description">Performans Overlay Penceresinin ekranda nerede bulunacağını seç.</string>
     <string name="performance_overlay_position_top_left">Sol Üst</string>
     <string name="performance_overlay_position_top_right">Sağ Üst</string>
     <string name="performance_overlay_position_bottom_left">Sol Alt</string>
     <string name="performance_overlay_position_bottom_right">Sağ Alt</string>
     <string name="performance_overlay_position_center_top">Orta Üst</string>
     <string name="performance_overlay_position_center_bottom">Orta Alt</string>
+    <string name="performance_overlay_background">Overlay Penceresi Arkaplanı</string>
+    <string name="performance_overlay_background_description">Daha kolay okunabilirlik için Overlay Penceresinin arkasına arkaplan ekler.</string>
+
     <!-- Cheats -->
     <string name="cheats">Hileler</string>
     <string name="cheats_add">Hile Ekle</string>
@@ -610,6 +647,7 @@
 
     <!-- Render 3D modes -->
     <string name="side_by_side">Yan Yana</string>
+    <string name="side_by_side_full">Yan Yana Tam Genişlik</string>
     <string name="anaglyph">Anaglif</string>
     <string name="interlaced">Geçmeli</string>
     <string name="reverse_interlaced">Ters Geçmeli</string>
@@ -798,4 +836,19 @@
     <string name="emulation_occupied_quicksave_slot">Hızlı Kayıt - %1$tF %1$tR</string>
     <string name="quickload_not_found">Hiçbir Hızlı Kayıt mevcut değil.</string>
 
-    </resources>
+    <!-- File Compression -->
+    <string name="compress">Sıkıştır</string>
+    <string name="compressing">Sıkıştırılıyor...</string>
+    <string name="decompress">Ayıkla</string>
+    <string name="decompressing">Ayıklanıyor...</string>
+    <string name="compress_success">Dosya sıkıştırma işlemi başarı ile tamamlandı.</string>
+    <string name="compress_unsupported">Dosya sıkıştırma işlemi bu dosya için destekli değil.</string>
+    <string name="compress_already">Dosya halihazırda sıkıştırılmış.</string>
+    <string name="compress_failed">Dosya sıkıştırma işlemi başarısız.</string>
+    <string name="decompress_success">Dosya ayıklama işlemi başarı ile tamamlandı.</string>
+    <string name="decompress_unsupported">Dosya ayıklama işlemi bu dosya için destekli değil. </string>
+    <string name="decompress_not_compressed">Dosya sıkıştırılmış değil.</string>
+    <string name="decompress_failed">Dosya ayıklama işlemi başarısız.</string>
+    <string name="compress_decompress_installed_app">Halihazırda kurulu olan uygulamalar sıkıştırılamaz veya ayıklanamaz.</string>
+
+</resources>
