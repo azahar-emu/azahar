@@ -168,7 +168,7 @@
     <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed Enabled</string>
     <string name="turbo_disabled_toast">Turbo Speed Disabled</string>
-    <string name="combo_button_options">Combo Button Settings</string>
+    <string name="combo_button_settings">Combo Button Settings</string>
     <string name="combo_button_description">Enable and Change Combo Button Bindings.</string>
 
     <!-- System files strings -->
