@@ -19,7 +19,7 @@ class Dialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Dialog(bool enabled, QWidget* parent = 0);
+    explicit Dialog(const rc_client_user_t* user, bool enabled, QWidget* parent = 0);
     ~Dialog() override;
 
 private slots:

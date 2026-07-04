@@ -26,10 +26,13 @@ public:
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
     void FetchImage(const char* url, ImageCallback callback) const;
 
-    void OnLoginCallback(int result, const char* error_message) const;
+    const rc_client_user_t* GetUser() const;
+
+    void OnLoginCallback(int result, const char* error_message);
 
 private:
     rc_client_t* m_rc_client;
+    const rc_client_user_t* m_user = nullptr;
 
     std::vector<ClientObserver*> m_observers;
 };
