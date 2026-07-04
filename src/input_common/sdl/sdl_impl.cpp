@@ -141,6 +141,10 @@ static int SDLEventWatcher(void* userdata, SDL_Event* event) {
     }
     // deal
     if (sdl_state->polling) {
+        if (sdl_state->event_queue.Size() >= sdl_state->MAX_EVENT_QUEUE_SIZE) {
+            // safety - before pushing, clear if it has somehow ballooned in size
+            sdl_state->event_queue.Clear();
+        }
         sdl_state->event_queue.Push(*event);
     } else {
         sdl_state->HandleGameControllerEvent(*event);
@@ -938,6 +942,7 @@ public:
     }
 
     void Stop() override {
+        state.event_queue.Clear();
         state.polling = false;
     }
 

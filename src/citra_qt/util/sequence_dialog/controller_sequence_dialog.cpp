@@ -28,6 +28,7 @@ ControllerSequenceDialog::ControllerSequenceDialog(QWidget* parent)
 
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(this, &QDialog::finished, this, [this](int) { StopPolling(); });
 
     LaunchPollers();
 }
@@ -90,4 +91,11 @@ void ControllerSequenceDialog::LaunchPollers() {
         }
     });
     poll_timer->start(100);
+}
+
+void ControllerSequenceDialog::StopPolling() {
+    poll_timer->stop();
+    for (auto& poller : device_pollers) {
+        poller->Stop();
+    }
 }

@@ -22,6 +22,7 @@ public:
 
 private:
     void LaunchPollers();
+    void StopPolling();
     QLabel* textBox;
     QString key_sequence;
     Common::ParamPackage params1, params2;

@@ -47,6 +47,7 @@ public:
     /// Used by the Pollers during config
     std::atomic<bool> polling = false;
     Common::SPSCQueue<SDL_Event> event_queue;
+    static constexpr size_t MAX_EVENT_QUEUE_SIZE = 10000;
 
 private:
     void InitJoystick(int joystick_index);
@@ -72,5 +73,6 @@ private:
     std::atomic<bool> initialized = false;
 
     std::thread poll_thread;
+    // maximum events allowed in the queue - if more than this are there, something is wrong
 };
 } // namespace InputCommon::SDL
