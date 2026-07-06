@@ -436,6 +436,17 @@ bool Source::DequeueBuffer() {
 
     // Because our interpolation consumes samples instead of using an index,
     // let's just consume the samples up to the current sample number.
+    // Guard like the partial-embedded-buffer path in ParseConfig: a play_position
+    // beyond the decoded length would otherwise erase past the end (undefined
+    // behavior). Log when this triggers so affected titles can be identified.
+    if (state.current_sample_number > state.current_buffer.size()) {
+        LOG_WARNING(Audio_DSP,
+                    "source_id={} buffer_id={} play_position={} exceeds decoded buffer "
+                    "size={}; resetting to 0",
+                    source_id, buf.buffer_id, state.current_sample_number,
+                    state.current_buffer.size());
+        state.current_sample_number = 0;
+    }
     state.current_buffer.erase(
         state.current_buffer.begin(),
         std::next(state.current_buffer.begin(), state.current_sample_number));

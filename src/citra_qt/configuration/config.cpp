@@ -474,6 +474,7 @@ void QtConfig::ReadCoreValues() {
     qt_config->beginGroup(QStringLiteral("Core"));
 
     ReadGlobalSetting(Settings::values.cpu_clock_percentage);
+    ReadGlobalSetting(Settings::values.cpu_legacy_instruction_ticks);
 
     if (global) {
         ReadBasicSetting(Settings::values.use_cpu_jit);
@@ -1071,6 +1072,7 @@ void QtConfig::SaveCoreValues() {
     qt_config->beginGroup(QStringLiteral("Core"));
 
     WriteGlobalSetting(Settings::values.cpu_clock_percentage);
+    WriteGlobalSetting(Settings::values.cpu_legacy_instruction_ticks);
 
     if (global) {
         WriteBasicSetting(Settings::values.use_cpu_jit);

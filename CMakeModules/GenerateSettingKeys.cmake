@@ -9,6 +9,7 @@ foreach(KEY IN ITEMS
     "use_artic_base_controller"
     "enable_gamemode"
     "use_cpu_jit"
+    "cpu_legacy_instruction_ticks"
     "cpu_clock_percentage"
     "is_new_3ds"
     "lle_applets"

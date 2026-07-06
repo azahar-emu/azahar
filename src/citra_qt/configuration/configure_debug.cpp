@@ -143,6 +143,8 @@ void ConfigureDebug::SetConfiguration() {
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
     ui->toggle_pica_debugging->setChecked(Settings::values.pica_debugging.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
+    ui->toggle_cpu_legacy_instruction_ticks->setChecked(
+        Settings::values.cpu_legacy_instruction_ticks.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
         if (Settings::values.cpu_clock_percentage.UsingGlobal()) {
@@ -192,6 +194,9 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
 
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.cpu_legacy_instruction_ticks,
+                                             ui->toggle_cpu_legacy_instruction_ticks,
+                                             cpu_legacy_instruction_ticks);
     ConfigurationShared::ApplyPerGameSetting(
         &Settings::values.cpu_clock_percentage, ui->clock_speed_combo,
         [this](s32) { return SliderToSettings(ui->slider_clock_speed->value()); });
@@ -201,8 +206,14 @@ void ConfigureDebug::SetupPerGameUI() {
     // Block the global settings if a game is currently running that overrides them
     if (Settings::IsConfiguringGlobal()) {
         ui->slider_clock_speed->setEnabled(Settings::values.cpu_clock_percentage.UsingGlobal());
+        ui->toggle_cpu_legacy_instruction_ticks->setEnabled(
+            Settings::values.cpu_legacy_instruction_ticks.UsingGlobal());
         return;
     }
+
+    ConfigurationShared::SetColoredTristate(ui->toggle_cpu_legacy_instruction_ticks,
+                                            Settings::values.cpu_legacy_instruction_ticks,
+                                            cpu_legacy_instruction_ticks);
 
     connect(ui->clock_speed_combo, qOverload<int>(&QComboBox::activated), this, [this](int index) {
         ui->slider_clock_speed->setEnabled(index == 1);
