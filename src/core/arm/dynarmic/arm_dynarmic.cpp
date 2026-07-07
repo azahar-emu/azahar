@@ -8,7 +8,6 @@
 #include <dynarmic/interface/optimization_flags.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
-#include "common/settings.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dynarmic/arm_dynarmic_cp15.h"
 #include "core/arm/dynarmic/arm_exclusive_monitor.h"
@@ -160,9 +159,6 @@ public:
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
     }
     std::uint64_t GetTicksForCode(bool is_thumb, VAddr, std::uint32_t instruction) override {
-        if (Settings::values.cpu_legacy_instruction_ticks.GetValue()) [[unlikely]] {
-            return 1;
-        }
         return Core::TicksForInstruction(is_thumb, instruction);
     }
 

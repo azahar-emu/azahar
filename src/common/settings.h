@@ -482,8 +482,6 @@ struct Values {
     // Core
     Setting<bool> use_cpu_jit{true, Keys::use_cpu_jit};
     SwitchableSetting<s32, true> cpu_clock_percentage{100, 5, 400, Keys::cpu_clock_percentage};
-    SwitchableSetting<bool> cpu_legacy_instruction_ticks{false,
-                                                         Keys::cpu_legacy_instruction_ticks};
     SwitchableSetting<bool> is_new_3ds{true, Keys::is_new_3ds};
     SwitchableSetting<bool> lle_applets{true, Keys::lle_applets};
     SwitchableSetting<bool> deterministic_async_operations{false,

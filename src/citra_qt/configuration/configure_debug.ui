@@ -61,11 +61,11 @@
          </layout>
         </item>
         <item>
-         <widget class="QCheckBox" name="debug_next_process">
-          <property name="text">
-           <string>Pause next non-sysmodule process at start</string>
-          </property>
-         </widget>
+          <widget class="QCheckBox" name="debug_next_process">
+            <property name="text">
+              <string>Pause next non-sysmodule process at start</string>
+            </property>
+          </widget>
         </item>
        </layout>
       </widget>
@@ -125,14 +125,14 @@
        </layout>
       </item>
       <item>
-       <widget class="QCheckBox" name="instant_debug_log">
-        <property name="text">
-         <string>Flush log output on every message</string>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;body&gt;Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.&lt;br&gt;Enabling this feature will decrease performance, only use it for debugging purposes.&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
+        <widget class="QCheckBox" name="instant_debug_log">
+          <property name="text">
+            <string>Flush log output on every message</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;body&gt;Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.&lt;br&gt;Enabling this feature will decrease performance, only use it for debugging purposes.&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
       </item>
      </layout>
     </widget>
@@ -226,13 +226,13 @@
       <item row="2" column="0">
        <widget class="QLabel" name="label_cpu_clock_info">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::RichText</enum>
-        </property>
-       </widget>
-      </item>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;Underclocking can increase performance but may cause the application to freeze.&lt;br/&gt;Overclocking may reduce lag in applications but also might cause freezes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::RichText</enum>
+       </property>
+      </widget>
+     </item>
       <item row="3" column="0">
        <widget class="QCheckBox" name="toggle_cpu_jit">
         <property name="toolTip">
@@ -243,16 +243,6 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="0">
-       <widget class="QCheckBox" name="toggle_cpu_legacy_instruction_ticks">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Counts every ARM instruction as a single cycle instead of using the per-instruction timing table. A few applications contain scripted logic that is sensitive to the emulated CPU speed and only progresses correctly with this enabled (e.g. the rooftop chase in LEGO City Undercover: The Chase Begins). Leave unchecked unless an application misbehaves. Requires restarting the application to fully apply.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Use legacy CPU cycle timing (1 tick per instruction)</string>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="0">
        <widget class="QCheckBox" name="toggle_renderer_debug">
         <property name="text">
@@ -260,13 +250,13 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="toggle_pica_debugging">
-        <property name="text">
-         <string>Enable PICA200 debugging</string>
-        </property>
-       </widget>
-      </item>
+       <item row="5" column="0">
+         <widget class="QCheckBox" name="toggle_pica_debugging">
+           <property name="text">
+             <string>Enable PICA200 debugging</string>
+           </property>
+         </widget>
+       </item>
       <item row="6" column="0">
        <widget class="QCheckBox" name="toggle_dump_command_buffers">
         <property name="text">
@@ -314,14 +304,14 @@
        </widget>
       </item>
       <item row="4" column="0">
-       <widget class="QCheckBox" name="enable_rpc_server">
-        <property name="text">
-         <string>Enable RPC server</string>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server on port 45987. This allows remotely reading/writing guest memory, do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-       </widget>
+        <widget class="QCheckBox" name="enable_rpc_server">
+          <property name="text">
+            <string>Enable RPC server</string>
+          </property>
+          <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the RPC server on port 45987. This allows remotely reading/writing guest memory, do not enable if you don't know what you are doing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+        </widget>
       </item>
       <item row="5" column="0">
        <widget class="QCheckBox" name="break_on_unmapped_memory_access">
