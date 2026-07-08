@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -81,8 +81,8 @@ u64 DataProcessing_rsr(auto i) {
 // predicted by the return stack
 u64 MovReg(auto i) {
     if (i.template Get<"d">() == 15) {
-        const bool is_return = i.template Get<"m">() == 14 && i.template Get<"v">() == 0 &&
-                               i.template Get<"r">() == 0;
+        const bool is_return =
+            i.template Get<"m">() == 14 && i.template Get<"v">() == 0 && i.template Get<"r">() == 0;
         return is_return ? 1 : pipeline_flush_cycles;
     }
     return 1;

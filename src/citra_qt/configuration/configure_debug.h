@@ -8,7 +8,7 @@
 #include <QWidget>
 
 namespace Ui {
-    class ConfigureDebug;
+class ConfigureDebug;
 }
 
 class ConfigureDebug : public QWidget {
