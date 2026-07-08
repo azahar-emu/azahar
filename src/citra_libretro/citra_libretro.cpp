@@ -552,7 +552,7 @@ bool retro_load_game(const struct retro_game_info* info) {
     emu_instance->emu_window->UpdateLayout();
 
     switch (Settings::values.graphics_api.GetValue()) {
-    case Settings::GraphicsAPI::OpenGL:
+    case Settings::GraphicsAPI::OpenGL: {
 #ifdef ENABLE_OPENGL
         LOG_INFO(Frontend, "Using OpenGL hw renderer");
         LibRetro::SetHWSharedContext();
@@ -576,7 +576,12 @@ bool retro_load_game(const struct retro_game_info* info) {
         LibRetro::SetFramebufferCallback(emu_instance->hw_render.get_current_framebuffer);
 #endif
         break;
-    case Settings::GraphicsAPI::Vulkan:
+    }
+    case Settings::GraphicsAPI::Vulkan: {
+        // These braces are required (not only for consistency): vk_negotiation
+        // below is declared with an initializer, so without an explicit scope
+        // the following case label would jump past that initialization. MSVC
+        // rejects that as error C2360 under /permissive- /WX.
 #ifdef ENABLE_VULKAN
         LOG_INFO(Frontend, "Using Vulkan hw renderer");
         emu_instance->hw_render.context_type = RETRO_HW_CONTEXT_VULKAN;
@@ -601,12 +606,14 @@ bool retro_load_game(const struct retro_game_info* info) {
         LibRetro::SetHWRenderContextNegotiationInterface((void**)&vk_negotiation);
 #endif
         break;
-    case Settings::GraphicsAPI::Software:
+    }
+    case Settings::GraphicsAPI::Software: {
         emu_instance->emu_window->CreateContext();
         emu_instance->game_loaded = do_load_game();
         if (!emu_instance->game_loaded)
             return false;
         break;
+    }
     }
 
     uint64_t quirks =
