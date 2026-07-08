@@ -105,7 +105,7 @@ static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     // TODO(Subv): Fill in the rest of the titleids
 }};
 
-static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
+u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
     ASSERT_MSG(id != AppletId::None, "Invalid applet id");
 
     auto itr = std::find_if(applet_titleids.begin(), applet_titleids.end(),

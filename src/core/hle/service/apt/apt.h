@@ -1009,6 +1009,8 @@ public:
          */
         void Reboot(Kernel::HLERequestContext& ctx);
 
+        void GetAppletProgramInfo(Kernel::HLERequestContext& ctx);
+
         /**
          * APT::HardwareResetAsync service function.
          * Outputs:
