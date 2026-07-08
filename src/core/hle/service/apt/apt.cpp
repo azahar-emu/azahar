@@ -1123,7 +1123,7 @@ void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_APT, "called");
 
-    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfo();
+    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfoSuspendedApp();
     auto real_size = std::min(static_cast<u32>(screen_capture_buffer.size()), size);
     screen_capture_buffer.resize(size);
 
