@@ -29,12 +29,14 @@ import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
@@ -231,6 +233,30 @@ class GamesFragment : Fragment() {
         }
 
         setInsets()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Perform update check
+        if (!BuildUtil.isGooglePlayBuild && !homeViewModel.updatePromptShown) {
+            Thread({
+                val checkForPrereleaseUpdates = false
+                val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+                if (latestReleaseTag != BuildConfig.GIT_VERSION) {
+                    // const int latest_major_version = GetMajorVersion(latest_release_tag.value());
+                    // const int current_major_version = GetMajorVersion(Common::g_build_fullname);
+                    // if (current_major_version <= latest_major_version) {
+                    UpdateAvailableNotificationFragment.newInstance(checkForPrereleaseUpdates)
+                        .show(
+                            requireActivity().supportFragmentManager,
+                            UpdateAvailableNotificationFragment.TAG
+                        )
+                    // }
+                }
+            }).start()
+            homeViewModel.updatePromptShown = true
+        }
     }
 
     override fun onDestroyView() {

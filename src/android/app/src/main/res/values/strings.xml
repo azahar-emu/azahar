@@ -995,4 +995,10 @@
     <string name="decompress_failed">Decompression failed.</string>
     <string name="compress_decompress_installed_app">Already installed applications cannot be compressed or decompressed.</string>
 
+    <!-- Update Checker -->
+    <string name="stable_channel_update_link" translatable="false">https://azahar-emu.org/pages/download/</string>
+    <string name="prerelease_channel_update_link" translatable="false">https://github.com/azahar-emu/azahar/releases</string>
+    <string name="update_available">Update Available</string>
+    <string name="update_available_description">An update is available for Azahar.\nWould you like to download it?</string>
+
 </resources>
