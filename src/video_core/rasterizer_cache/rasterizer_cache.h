@@ -1167,14 +1167,14 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
     const u32 flush_end = boost::icl::last_next(interval);
     ASSERT(flush_start >= surface.addr && flush_end <= surface.end);
 
-    MemoryRef dest_ptr = memory.GetPhysicalRef(flush_start);
+    MemoryRef dest_ptr = memory.GetPhysicalRef(surface.addr);
     if (!dest_ptr) [[unlikely]] {
         return;
     }
 
     const u32 start_offset = flush_start - surface.addr;
-    const u32 download_size =
-        std::clamp(flush_end - flush_start, 0u, static_cast<u32>(dest_ptr.GetSize()));
+    const u32 end_offset =
+        std::clamp(flush_end - surface.addr, 0u, static_cast<u32>(dest_ptr.GetSize()));
     const u32 coarse_start_offset = start_offset - (start_offset % surface.fill_size);
     const u32 backup_bytes = start_offset % surface.fill_size;
 
@@ -1183,9 +1183,9 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
         std::memcpy(backup_data.data(), &dest_ptr[coarse_start_offset], backup_bytes);
     }
 
-    for (u32 offset = coarse_start_offset; offset < download_size; offset += surface.fill_size) {
+    for (u32 offset = coarse_start_offset; offset < end_offset; offset += surface.fill_size) {
         std::memcpy(&dest_ptr[offset], &surface.fill_data[0],
-                    std::min(surface.fill_size, download_size - offset));
+                    std::min(surface.fill_size, end_offset - offset));
     }
 
     if (backup_bytes) {
