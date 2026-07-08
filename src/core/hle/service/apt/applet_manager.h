@@ -104,6 +104,8 @@ enum class AppletId : u32 {
     TypeMask = 0xF00,
 };
 
+u64 GetTitleIdForApplet(AppletId id, u32 region_value);
+
 /// Application Old/New 3DS target platforms
 enum class TargetPlatform : u8 {
     Old3ds = 0,
