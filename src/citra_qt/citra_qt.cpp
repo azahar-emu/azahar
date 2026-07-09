@@ -879,6 +879,9 @@ void GMainWindow::InitializeHotkeys() {
     link_action_shortcut(ui->action_Restart, QStringLiteral("Restart Emulation"));
     link_action_shortcut(ui->action_Pause, QStringLiteral("Continue/Pause Emulation"));
     link_action_shortcut(ui->action_Stop, QStringLiteral("Stop Emulation"));
+    link_action_shortcut(ui->action_Configure, QStringLiteral("Configure"));
+    link_action_shortcut(ui->action_Configure_Current_Game,
+                         QStringLiteral("Configure Current Application"));
     link_action_shortcut(ui->action_Show_Filter_Bar, QStringLiteral("Toggle Filter Bar"));
     link_action_shortcut(ui->action_Show_Status_Bar, QStringLiteral("Toggle Status Bar"));
     link_action_shortcut(ui->action_Fullscreen, fullscreen, true);
