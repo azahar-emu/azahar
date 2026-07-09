@@ -1057,6 +1057,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QCheckBox" name="use_onscreen_keyboard">
+       <property name="text">
+        <string>Use on-screen software keyboard</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
