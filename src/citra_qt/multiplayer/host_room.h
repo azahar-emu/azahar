@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -46,6 +46,9 @@ public:
      */
     void UpdateGameList(QStandardItemModel* list);
     void RetranslateUi();
+
+protected:
+    void showEvent(QShowEvent* event) override;
 
 private:
     void Host();

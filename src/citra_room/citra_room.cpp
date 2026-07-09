@@ -310,14 +310,12 @@ int LaunchRoom(int argc, char** argv, bool called_by_option) {
         if (username.empty()) {
             std::cout << "Hosting a public room\n\n";
             Settings::values.web_api_url = web_api_url;
-            Settings::values.citra_username = UsernameFromDisplayToken(token);
-            username = Settings::values.citra_username.GetValue();
-            Settings::values.citra_token = TokenFromDisplayToken(token);
+            username = UsernameFromDisplayToken(token);
+            Settings::values.network_token = TokenFromDisplayToken(token);
         } else {
             std::cout << "Hosting a public room\n\n";
             Settings::values.web_api_url = web_api_url;
-            Settings::values.citra_username = username;
-            Settings::values.citra_token = token;
+            Settings::values.network_token = token;
         }
     }
 
@@ -351,7 +349,7 @@ int LaunchRoom(int argc, char** argv, bool called_by_option) {
             return -1;
         }
         std::cout << "Room is open. Close with Q+Enter...\n\n";
-        auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>();
+        auto announce_session = std::make_unique<Network::AnnounceMultiplayerSession>(username);
         if (announce) {
             announce_session->Start();
         }

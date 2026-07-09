@@ -603,12 +603,9 @@ void QtConfig::ReadMiscellaneousValues() {
 void QtConfig::ReadMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    UISettings::values.nickname = ReadSetting(Settings::QKeys::nickname, QString{}).toString();
     UISettings::values.ip = ReadSetting(Settings::QKeys::ip, QString{}).toString();
     UISettings::values.port =
         ReadSetting(Settings::QKeys::port, Network::DefaultRoomPort).toString();
-    UISettings::values.room_nickname =
-        ReadSetting(Settings::QKeys::room_nickname, QString{}).toString();
     UISettings::values.room_name = ReadSetting(Settings::QKeys::room_name, QString{}).toString();
     UISettings::values.room_port =
         ReadSetting(Settings::QKeys::room_port, QStringLiteral("24872")).toString();
@@ -920,8 +917,7 @@ void QtConfig::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
     ReadBasicSetting(Settings::values.web_api_url);
-    ReadBasicSetting(Settings::values.citra_username);
-    ReadBasicSetting(Settings::values.citra_token);
+    ReadBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }
@@ -1194,10 +1190,8 @@ void QtConfig::SaveMiscellaneousValues() {
 void QtConfig::SaveMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    WriteSetting(Settings::QKeys::nickname, UISettings::values.nickname, QString{});
     WriteSetting(Settings::QKeys::ip, UISettings::values.ip, QString{});
     WriteSetting(Settings::QKeys::port, UISettings::values.port, Network::DefaultRoomPort);
-    WriteSetting(Settings::QKeys::room_nickname, UISettings::values.room_nickname, QString{});
     WriteSetting(Settings::QKeys::room_name, UISettings::values.room_name, QString{});
     WriteSetting(Settings::QKeys::room_port, UISettings::values.room_port, QStringLiteral("24872"));
     WriteSetting(Settings::QKeys::host_type, UISettings::values.host_type, 0);
@@ -1454,8 +1448,7 @@ void QtConfig::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
     WriteBasicSetting(Settings::values.web_api_url);
-    WriteBasicSetting(Settings::values.citra_username);
-    WriteBasicSetting(Settings::values.citra_token);
+    WriteBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }

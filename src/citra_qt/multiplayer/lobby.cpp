@@ -53,12 +53,7 @@ Lobby::Lobby(Core::System& system_, QWidget* parent, QStandardItemModel* list,
     ui->room_list->setExpandsOnDoubleClick(false);
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    ui->nickname->setValidator(validation.GetNickname());
-    ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.GetValue().empty()) {
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username.GetValue()));
-    }
+    ui->nickname->setReadOnly(true);
 
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::clicked, this, &Lobby::RefreshLobby);
@@ -104,6 +99,11 @@ void Lobby::RetranslateUi() {
     ui->retranslateUi(this);
 }
 
+void Lobby::showEvent(QShowEvent* event) {
+    ui->nickname->setText(QString::fromStdString(Service::CFG::GetUsername(system)));
+    QDialog::showEvent(event);
+}
+
 QString Lobby::PasswordPrompt() {
     bool ok;
     const QString text =
@@ -134,7 +134,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     if (source.parent() != QModelIndex()) {
         index = source.parent();
     }
-    if (!ui->nickname->hasAcceptableInput()) {
+    QString nickname_qs = ui->nickname->text();
+    int pos = 0;
+    if (validation.GetNickname()->validate(nickname_qs, pos) != QValidator::State::Acceptable) {
         NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
@@ -159,11 +161,9 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     QFuture<void> f = QtConcurrent::run([this, nickname, ip, port, password, verify_UID] {
         std::string token;
 #ifdef ENABLE_WEB_SERVICE
-        if (!Settings::values.citra_username.GetValue().empty() &&
-            !Settings::values.citra_token.GetValue().empty()) {
-            WebService::Client client(Settings::values.web_api_url.GetValue(),
-                                      Settings::values.citra_username.GetValue(),
-                                      Settings::values.citra_token.GetValue());
+        if (!nickname.empty() && !Settings::values.network_token.GetValue().empty()) {
+            WebService::Client client(Settings::values.web_api_url.GetValue(), nickname,
+                                      Settings::values.network_token.GetValue());
             token = client.GetExternalJWT(verify_UID).returned_data;
             if (token.empty()) {
                 LOG_ERROR(WebService, "Could not get external JWT, verification may fail");
@@ -183,7 +183,6 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     // TODO(jroweboy): disable widgets and display a connecting while we wait
 
     // Save settings
-    UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = proxy->data(connection_index, LobbyItemHost::HostIPRole).toString();
     UISettings::values.port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toString();
     UISettings::values.multiplayer_filter_text = ui->search->text();

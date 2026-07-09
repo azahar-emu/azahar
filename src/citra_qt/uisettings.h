@@ -147,10 +147,8 @@ struct Values {
     Settings::Setting<u32> callout_flags{0, Settings::Keys::calloutFlags};
 
     // multiplayer settings
-    QString nickname;
     QString ip;
     QString port;
-    QString room_nickname;
     QString room_name;
     quint32 max_player;
     QString room_port;

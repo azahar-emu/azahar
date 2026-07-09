@@ -662,12 +662,8 @@ struct Values {
     Setting<bool> break_on_unmapped_memory_access{false, Keys::break_on_unmapped_memory_access};
 
     // WebService
-    Setting<std::string> web_api_url{"", "web_api_url"};
-    Setting<std::string> citra_username{
-        "Azahar",
-        "citra_username",
-    };
-    Setting<std::string> citra_token{"", "citra_token"};
+    Setting<std::string> web_api_url{"", Keys::web_api_url};
+    Setting<std::string> network_token{"", Keys::network_token};
 
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};

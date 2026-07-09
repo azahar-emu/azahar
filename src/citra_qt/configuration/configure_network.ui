@@ -33,19 +33,9 @@
    <item>
     <widget class="QGroupBox" name="network_group">
      <property name="title">
-      <string>Ntwork / Room</string>
+      <string>Network / Room</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_22">
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Network Username:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="username_lineedit"/>
-      </item>
       <item>
        <widget class="QLabel" name="label_2">
         <property name="text">

@@ -31,9 +31,10 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
       ui(std::make_unique<Ui::HostRoom>()), system{system_}, announce_multiplayer_session(session) {
     ui->setupUi(this);
 
+    ui->username->setReadOnly(true);
+
     // set up validation for all of the fields
     ui->room_name->setValidator(validation.GetRoomName());
-    ui->username->setValidator(validation.GetNickname());
     ui->port->setValidator(validation.GetPort());
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
 
@@ -50,11 +51,6 @@ HostRoomWindow::HostRoomWindow(Core::System& system_, QWidget* parent, QStandard
     connect(ui->host, &QPushButton::clicked, this, &HostRoomWindow::Host);
 
     // Restore the settings:
-    ui->username->setText(UISettings::values.room_nickname);
-    if (ui->username->text().isEmpty() && !Settings::values.citra_username.GetValue().empty()) {
-        // Use Citra Web Service user name as nickname by default
-        ui->username->setText(QString::fromStdString(Settings::values.citra_username.GetValue()));
-    }
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
     ui->max_player->setValue(UISettings::values.max_player);
@@ -85,6 +81,11 @@ void HostRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);
 }
 
+void HostRoomWindow::showEvent(QShowEvent* event) {
+    ui->username->setText(QString::fromStdString(Service::CFG::GetUsername(system)));
+    QDialog::showEvent(event);
+}
+
 std::unique_ptr<Network::VerifyUser::Backend> HostRoomWindow::CreateVerifyBackend(
     bool use_validation) const {
     std::unique_ptr<Network::VerifyUser::Backend> verify_backend;
@@ -102,7 +103,9 @@ std::unique_ptr<Network::VerifyUser::Backend> HostRoomWindow::CreateVerifyBacken
 }
 
 void HostRoomWindow::Host() {
-    if (!ui->username->hasAcceptableInput()) {
+    QString username = ui->username->text();
+    int pos = 0;
+    if (validation.GetNickname()->validate(username, pos) != QValidator::State::Acceptable) {
         NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
@@ -140,11 +143,11 @@ void HostRoomWindow::Host() {
             ban_list = UISettings::values.ban_list;
         }
         if (auto room = Network::GetRoom().lock()) {
-            bool created = room->Create(
-                ui->room_name->text().toStdString(),
-                ui->room_description->toPlainText().toStdString(), "", static_cast<u16>(port),
-                password, ui->max_player->value(), Settings::values.citra_username.GetValue(),
-                game_name.toStdString(), game_id, CreateVerifyBackend(is_public), ban_list);
+            bool created = room->Create(ui->room_name->text().toStdString(),
+                                        ui->room_description->toPlainText().toStdString(), "",
+                                        static_cast<u16>(port), password, ui->max_player->value(),
+                                        ui->username->text().toStdString(), game_name.toStdString(),
+                                        game_id, CreateVerifyBackend(is_public), ban_list);
             if (!created) {
                 NetworkMessage::ErrorManager::ShowError(
                     NetworkMessage::ErrorManager::COULD_NOT_CREATE_ROOM);
@@ -179,8 +182,8 @@ void HostRoomWindow::Host() {
 #ifdef ENABLE_WEB_SERVICE
         if (is_public) {
             WebService::Client client(Settings::values.web_api_url.GetValue(),
-                                      Settings::values.citra_username.GetValue(),
-                                      Settings::values.citra_token.GetValue());
+                                      ui->username->text().toStdString(),
+                                      Settings::values.network_token.GetValue());
             if (auto room = Network::GetRoom().lock()) {
                 token = client.GetExternalJWT(room->GetVerifyUID()).returned_data;
             }
@@ -196,7 +199,6 @@ void HostRoomWindow::Host() {
                      Service::CFG::GetConsoleMacAddress(system), password, token);
 
         // Store settings
-        UISettings::values.room_nickname = ui->username->text();
         UISettings::values.room_name = ui->room_name->text();
         UISettings::values.game_id =
             ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();

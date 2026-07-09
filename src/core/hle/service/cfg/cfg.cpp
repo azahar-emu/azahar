@@ -1299,6 +1299,11 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
 }
 
+std::string GetUsername(Core::System& system) {
+    auto username = GetModule(system)->GetUsername();
+    return Common::UTF16ToUTF8(username);
+}
+
 std::string GetConsoleIdHash(Core::System& system) {
     u64_le console_id = GetModule(system)->GetConsoleUniqueId();
     std::array<u8, sizeof(console_id)> buffer;

@@ -475,6 +475,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     usernameSetting,
                     R.string.username,
                     0,
+                    null,
                     "AZAHAR",
                     10
                 )
@@ -1790,16 +1791,6 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
     private fun addNetworkSettings (sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
         sl.apply {
-            add(
-                StringInputSetting(
-                    StringSetting.NETWORK_USERNAME,
-                    R.string.network_username,
-                    R.string.network_username_description,
-                    StringSetting.NETWORK_USERNAME.key,
-                    StringSetting.NETWORK_USERNAME.defaultValue,
-                    10,
-                )
-            )
             add(
                 StringInputSetting(
                     StringSetting.WEB_API_URL,

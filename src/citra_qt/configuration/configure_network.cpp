@@ -16,6 +16,10 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
 #ifndef ENABLE_DISCORD_RPC
     ui->discord_group->setEnabled(false);
 #endif
+#ifndef ENABLE_WEB_SERVICE
+    ui->web_api_url_lineedit->setEnabled(false);
+    ui->token_lineedit->setEnabled(false);
+#endif
     SetConfiguration();
 }
 
@@ -23,14 +27,9 @@ ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
 
-        ui->username_lineedit->setText(
-            QString::fromStdString(Settings::values.citra_username.GetValue()));
-
     ui->web_api_url_lineedit->setText(
         QString::fromStdString(Settings::values.web_api_url.GetValue()));
-
-    ui->token_lineedit->setEnabled(ENABLE_WEB_SERVICE);
-    ui->token_lineedit->setText(QString::fromStdString(Settings::values.citra_token.GetValue()));
+    ui->token_lineedit->setText(QString::fromStdString(Settings::values.network_token.GetValue()));
 
 #ifdef ENABLE_DISCORD_RPC
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
@@ -42,12 +41,8 @@ void ConfigureWeb::ApplyConfiguration() {
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
 #endif
 
-    Settings::values.citra_username = ui->username_lineedit->text().toStdString();
-
     Settings::values.web_api_url = ui->web_api_url_lineedit->text().toStdString();
-
-    Settings::values.citra_token = ui->token_lineedit->text().toStdString();
-
+    Settings::values.network_token = ui->token_lineedit->text().toStdString();
 }
 
 void ConfigureWeb::RetranslateUI() {

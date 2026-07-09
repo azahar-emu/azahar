@@ -590,8 +590,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # URL for Web API
 )") DECLARE_KEY(web_api_url) BOOST_HANA_STRING(R"(
 # Username and token for Citra Web Service
-)") DECLARE_KEY(citra_username) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(citra_token) BOOST_HANA_STRING("\n")).c_str();
+)") DECLARE_KEY(network_username) BOOST_HANA_STRING(R"(
+)") DECLARE_KEY(network_token) BOOST_HANA_STRING("\n")
+
+).c_str();
 
 // clang-format on
 

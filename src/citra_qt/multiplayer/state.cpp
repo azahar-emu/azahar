@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,6 +16,7 @@
 #include "citra_qt/uisettings.h"
 #include "citra_qt/util/clickable_label.h"
 #include "common/logging/log.h"
+#include "core/hle/service/cfg/cfg.h"
 
 MultiplayerState::MultiplayerState(Core::System& system_, QWidget* parent,
                                    QStandardItemModel* game_list_model, QAction* leave_room,
@@ -36,7 +37,15 @@ MultiplayerState::MultiplayerState(Core::System& system_, QWidget* parent,
     qRegisterMetaType<Network::RoomMember::State>();
     qRegisterMetaType<Network::RoomMember::Error>();
     qRegisterMetaType<Common::WebResult>();
-    announce_multiplayer_session = std::make_shared<Network::AnnounceMultiplayerSession>();
+    {
+        Validation validation;
+        QString username = QString::fromStdString(Service::CFG::GetUsername(system));
+        int pos = 0;
+        announce_multiplayer_session = std::make_shared<Network::AnnounceMultiplayerSession>(
+            validation.GetNickname()->validate(username, pos) == QValidator::State::Acceptable
+                ? username.toStdString()
+                : "Azahar");
+    }
     announce_multiplayer_session->BindErrorCallback(
         [this](const Common::WebResult& result) { emit AnnounceFailed(result); });
     connect(this, &MultiplayerState::AnnounceFailed, this, &MultiplayerState::OnAnnounceFailed);
@@ -285,7 +294,13 @@ bool MultiplayerState::IsHostingPublicRoom() const {
 }
 
 void MultiplayerState::UpdateCredentials() {
-    announce_multiplayer_session->UpdateCredentials();
+    Validation validation;
+    QString username = QString::fromStdString(Service::CFG::GetUsername(system));
+    int pos = 0;
+    announce_multiplayer_session->UpdateCredentials(
+        validation.GetNickname()->validate(username, pos) == QValidator::State::Acceptable
+            ? username.toStdString()
+            : "Azahar");
 }
 
 void MultiplayerState::UpdateGameList(QStandardItemModel* game_list) {

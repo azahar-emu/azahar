@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <string>
 #include <thread>
 #include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
@@ -26,7 +27,7 @@ class Room;
 class AnnounceMultiplayerSession : NonCopyable {
 public:
     using CallbackHandle = std::shared_ptr<std::function<void(const Common::WebResult&)>>;
-    AnnounceMultiplayerSession();
+    explicit AnnounceMultiplayerSession(const std::string& name);
     ~AnnounceMultiplayerSession();
 
     /**
@@ -74,7 +75,7 @@ public:
      * Recreates the backend, updating the credentials.
      * This can only be used when the announce session is not running.
      */
-    void UpdateCredentials();
+    void UpdateCredentials(const std::string& new_username);
 
 private:
     Common::Event shutdown_event;
@@ -86,6 +87,8 @@ private:
     std::unique_ptr<AnnounceMultiplayerRoom::Backend> backend;
 
     std::atomic_bool registered = false; ///< Whether the room has been registered
+
+    std::string username;
 
     void UpdateBackendData(std::shared_ptr<Network::Room> room);
     void AnnounceMultiplayerLoop();

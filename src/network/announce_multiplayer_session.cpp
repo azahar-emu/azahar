@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -19,11 +19,12 @@ namespace Network {
 // Time between room is announced to web_service
 static constexpr std::chrono::seconds announce_time_interval(15);
 
-AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
+AnnounceMultiplayerSession::AnnounceMultiplayerSession(const std::string& username_)
+    : username(username_) {
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(),
-                                                     Settings::values.citra_username.GetValue(),
-                                                     Settings::values.citra_token.GetValue());
+    backend =
+        std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(), username,
+                                               Settings::values.network_token.GetValue());
 #else
     backend = std::make_unique<AnnounceMultiplayerRoom::NullBackend>();
 #endif
@@ -150,13 +151,15 @@ bool AnnounceMultiplayerSession::IsRunning() const {
     return announce_multiplayer_thread != nullptr;
 }
 
-void AnnounceMultiplayerSession::UpdateCredentials() {
+void AnnounceMultiplayerSession::UpdateCredentials(const std::string& new_username) {
     ASSERT_MSG(!IsRunning(), "Credentials can only be updated when session is not running");
 
+    username = new_username;
+
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(),
-                                                     Settings::values.citra_username.GetValue(),
-                                                     Settings::values.citra_token.GetValue());
+    backend =
+        std::make_unique<WebService::RoomJson>(Settings::values.web_api_url.GetValue(), username,
+                                               Settings::values.network_token.GetValue());
 #endif
 }
 
