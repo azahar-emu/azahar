@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2024 Mandarine Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -43,10 +47,13 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
 
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        behavior.skipCollapsed = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        behavior.skipCollapsed =
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
         when {
-            NetPlayManager.netPlayIsJoined() -> DialogMultiplayerLobbyBinding.inflate(layoutInflater)
+            NetPlayManager.netPlayIsJoined() -> DialogMultiplayerLobbyBinding.inflate(
+                layoutInflater
+            )
                 .apply {
                     setContentView(root)
                     adapter = NetPlayAdapter()
@@ -63,12 +70,13 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
 
                     refreshAdapterItems()
 
-                    btnModeration.visibility = if (NetPlayManager.netPlayIsModerator()) View.VISIBLE else View.GONE
+                    btnModeration.visibility =
+                        if (NetPlayManager.netPlayIsModerator()) View.VISIBLE else View.GONE
                     btnModeration.setOnClickListener {
                         showModerationDialog()
                     }
-
                 }
+
             else -> {
                 DialogMultiplayerConnectBinding.inflate(layoutInflater).apply {
                     setContentView(root)
@@ -102,12 +110,7 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         }
     }
 
-    data class NetPlayItems(
-        val option: Int,
-        val name: String,
-        val type: Int,
-        val id: Int = 0
-    ) {
+    data class NetPlayItems(val option: Int, val name: String, val type: Int, val id: Int = 0) {
         companion object {
             const val MULTIPLAYER_ROOM_TEXT = 1
             const val MULTIPLAYER_ROOM_MEMBER = 2
@@ -122,14 +125,18 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
     inner class NetPlayAdapter : RecyclerView.Adapter<NetPlayAdapter.NetPlayViewHolder>() {
         val netPlayItems = mutableListOf<NetPlayItems>()
 
-        abstract inner class NetPlayViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+        abstract inner class NetPlayViewHolder(itemView: View) :
+            RecyclerView.ViewHolder(itemView),
+            View.OnClickListener {
             init {
                 itemView.setOnClickListener(this)
             }
+
             abstract fun bind(item: NetPlayItems)
         }
 
-        inner class TextViewHolder(private val binding: ItemTextNetplayBinding) : NetPlayViewHolder(binding.root) {
+        inner class TextViewHolder(private val binding: ItemTextNetplayBinding) :
+            NetPlayViewHolder(binding.root) {
             private lateinit var netPlayItem: NetPlayItems
 
             override fun onClick(clicked: View) {}
@@ -146,12 +153,15 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                     visibility = if (iconRes != 0) {
                         setImageResource(iconRes)
                         View.VISIBLE
-                    } else View.GONE
+                    } else {
+                        View.GONE
+                    }
                 }
             }
         }
 
-        inner class ButtonViewHolder(private val binding: ItemButtonNetplayBinding) : NetPlayViewHolder(binding.root) {
+        inner class ButtonViewHolder(private val binding: ItemButtonNetplayBinding) :
+            NetPlayViewHolder(binding.root) {
             private lateinit var netPlayItems: NetPlayItems
             private val isModerator = NetPlayManager.netPlayIsModerator()
 
@@ -167,10 +177,10 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             private fun showPopupMenu(view: View) {
                 PopupMenu(view.context, view).apply {
                     inflate(R.menu.menu_netplay_member)
-                    menu.findItem(R.id.action_kick).isEnabled = isModerator &&
-                            netPlayItems.name != NetPlayManager.getUsername(context)
-                    menu.findItem(R.id.action_ban).isEnabled = isModerator &&
-                            netPlayItems.name != NetPlayManager.getUsername(context)
+                    menu.findItem(R.id.action_kick).isEnabled =
+                        isModerator && netPlayItems.name != NetPlayManager.getUsername(context)
+                    menu.findItem(R.id.action_ban).isEnabled =
+                        isModerator && netPlayItems.name != NetPlayManager.getUsername(context)
                     setOnMenuItemClickListener { item ->
                         if (item.itemId == R.id.action_kick) {
                             NetPlayManager.netPlayKickUser(netPlayItems.name)
@@ -178,7 +188,9 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                         } else if (item.itemId == R.id.action_ban) {
                             NetPlayManager.netPlayBanUser(netPlayItems.name)
                             true
-                        } else false
+                        } else {
+                            false
+                        }
                     }
                     show()
                 }
@@ -194,11 +206,35 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             val infos = NetPlayManager.netPlayRoomInfo()
             if (infos.isNotEmpty()) {
                 val roomInfo = infos[0].split("|")
-                netPlayItems.add(NetPlayItems(NetPlayItems.MULTIPLAYER_ROOM_TEXT, roomInfo[0], NetPlayItems.TYPE_TEXT))
-                netPlayItems.add(NetPlayItems(NetPlayItems.MULTIPLAYER_ROOM_COUNT, "${infos.size - 1}/${roomInfo[1]}", NetPlayItems.TYPE_TEXT))
-                netPlayItems.add(NetPlayItems(NetPlayItems.MULTIPLAYER_SEPARATOR, "", NetPlayItems.TYPE_SEPARATOR))
+                netPlayItems.add(
+                    NetPlayItems(
+                        NetPlayItems.MULTIPLAYER_ROOM_TEXT,
+                        roomInfo[0],
+                        NetPlayItems.TYPE_TEXT
+                    )
+                )
+                netPlayItems.add(
+                    NetPlayItems(
+                        NetPlayItems.MULTIPLAYER_ROOM_COUNT,
+                        "${infos.size - 1}/${roomInfo[1]}",
+                        NetPlayItems.TYPE_TEXT
+                    )
+                )
+                netPlayItems.add(
+                    NetPlayItems(
+                        NetPlayItems.MULTIPLAYER_SEPARATOR,
+                        "",
+                        NetPlayItems.TYPE_SEPARATOR
+                    )
+                )
                 for (i in 1 until infos.size) {
-                    netPlayItems.add(NetPlayItems(NetPlayItems.MULTIPLAYER_ROOM_MEMBER, infos[i], NetPlayItems.TYPE_BUTTON))
+                    netPlayItems.add(
+                        NetPlayItems(
+                            NetPlayItems.MULTIPLAYER_ROOM_MEMBER,
+                            infos[i],
+                            NetPlayItems.TYPE_BUTTON
+                        )
+                    )
                 }
             }
         }
@@ -208,12 +244,33 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NetPlayViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             return when (viewType) {
-                NetPlayItems.TYPE_TEXT -> TextViewHolder(ItemTextNetplayBinding.inflate(inflater, parent, false))
-                NetPlayItems.TYPE_BUTTON -> ButtonViewHolder(ItemButtonNetplayBinding.inflate(inflater, parent, false))
-                NetPlayItems.TYPE_SEPARATOR -> object : NetPlayViewHolder(inflater.inflate(R.layout.item_separator_netplay, parent, false)) {
+                NetPlayItems.TYPE_TEXT -> TextViewHolder(
+                    ItemTextNetplayBinding.inflate(
+                        inflater,
+                        parent,
+                        false
+                    )
+                )
+
+                NetPlayItems.TYPE_BUTTON -> ButtonViewHolder(
+                    ItemButtonNetplayBinding.inflate(
+                        inflater,
+                        parent,
+                        false
+                    )
+                )
+
+                NetPlayItems.TYPE_SEPARATOR -> object : NetPlayViewHolder(
+                    inflater.inflate(
+                        R.layout.item_separator_netplay,
+                        parent,
+                        false
+                    )
+                ) {
                     override fun bind(item: NetPlayItems) {}
                     override fun onClick(clicked: View) {}
                 }
+
                 else -> throw IllegalStateException("Unsupported view type")
             }
         }
@@ -228,7 +285,7 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
     fun refreshAdapterItems() {
         val handler = Handler(Looper.getMainLooper())
 
-        NetPlayManager.setOnAdapterRefreshListener() { type, msg ->
+        NetPlayManager.setOnAdapterRefreshListener { type, msg ->
             handler.post {
                 adapter.netPlayItems.clear()
                 adapter.loadMultiplayerMenu()
@@ -243,41 +300,45 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
 
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        dialog.behavior.skipCollapsed = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
+        dialog.behavior.skipCollapsed =
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
         val binding = DialogMultiplayerRoomBinding.inflate(LayoutInflater.from(activity))
         dialog.setContentView(binding.root)
 
         binding.textTitle.text = activity.getString(
-            if (isCreateRoom) R.string.multiplayer_create_room
-            else R.string.multiplayer_join_room
+            if (isCreateRoom) {
+                R.string.multiplayer_create_room
+            } else {
+                R.string.multiplayer_join_room
+            }
         )
 
         binding.ipAddress.setText(
-            if (isCreateRoom) NetPlayManager.getIpAddressByWifi(activity)
-            else NetPlayManager.getRoomAddress(activity)
+            if (isCreateRoom) {
+                NetPlayManager.getIpAddressByWifi(activity)
+            } else {
+                NetPlayManager.getRoomAddress(activity)
+            }
         )
         binding.ipPort.setText(NetPlayManager.getRoomPort(activity))
         binding.username.setText(NetPlayManager.getUsername(activity))
 
         binding.dropdownPreferedGameName.apply {
-            setAdapter(
-                ArrayAdapter(
-                    activity,
-                    R.layout.dropdown_item,
-                    gameNameList.map { it[0] }
-                )
-            )
+            setAdapter(ArrayAdapter(activity, R.layout.dropdown_item, gameNameList.map { it[0] }))
         }
 
         binding.preferedGameName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.roomName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.maxPlayersContainer.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
-        binding.maxPlayersLabel.text = context.getString(R.string.multiplayer_max_players_value, binding.maxPlayers.value.toInt())
+        binding.maxPlayersLabel.text = context.getString(
+            R.string.multiplayer_max_players_value,
+            binding.maxPlayers.value.toInt()
+        )
 
         binding.maxPlayers.addOnChangeListener { _, value, _ ->
-            binding.maxPlayersLabel.text = context.getString(R.string.multiplayer_max_players_value, value.toInt())
+            binding.maxPlayersLabel.text =
+                context.getString(R.string.multiplayer_max_players_value, value.toInt())
         }
 
         binding.btnConfirm.setOnClickListener {
@@ -288,10 +349,12 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             val username = binding.username.text.toString()
             val portStr = binding.ipPort.text.toString()
             val preferedGameName = binding.dropdownPreferedGameName.text.toString()
-            val preferedGameId = gameIdList[gameNameList.indexOfFirst { it[0] == preferedGameName }][0]
+            val preferedGameId =
+                gameIdList[gameNameList.indexOfFirst { it[0] == preferedGameName }][0]
             val password = binding.password.text.toString()
             val port = portStr.toIntOrNull() ?: run {
-                Toast.makeText(activity, R.string.multiplayer_port_invalid, Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, R.string.multiplayer_port_invalid, Toast.LENGTH_LONG)
+                    .show()
                 binding.btnConfirm.isEnabled = true
                 binding.btnConfirm.text = activity.getString(R.string.original_button_text)
                 return@setOnClickListener
@@ -300,27 +363,42 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             val maxPlayers = binding.maxPlayers.value.toInt()
 
             if (isCreateRoom && (roomName.length !in 3..20)) {
-                Toast.makeText(activity, R.string.multiplayer_room_name_invalid, Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, R.string.multiplayer_room_name_invalid, Toast.LENGTH_LONG)
+                    .show()
                 binding.btnConfirm.isEnabled = true
                 binding.btnConfirm.text = activity.getString(R.string.original_button_text)
                 return@setOnClickListener
             }
 
             if (isCreateRoom && preferedGameName.isEmpty()) {
-                Toast.makeText(activity, R.string.multiplayer_prefered_game_name_invalid, Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    activity,
+                    R.string.multiplayer_prefered_game_name_invalid,
+                    Toast.LENGTH_LONG
+                ).show()
                 binding.btnConfirm.isEnabled = true
                 binding.btnConfirm.text = activity.getString(R.string.original_button_text)
                 return@setOnClickListener
             }
 
             if (ipAddress.length < 7 || username.length < 5) {
-                Toast.makeText(activity, R.string.multiplayer_input_invalid, Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, R.string.multiplayer_input_invalid, Toast.LENGTH_LONG)
+                    .show()
                 binding.btnConfirm.isEnabled = true
                 binding.btnConfirm.text = activity.getString(R.string.original_button_text)
             } else {
                 Handler(Looper.getMainLooper()).post {
                     val result = if (isCreateRoom) {
-                        NetPlayManager.netPlayCreateRoom(ipAddress, port, username, preferedGameName, preferedGameId, password, roomName, maxPlayers)
+                        NetPlayManager.netPlayCreateRoom(
+                            ipAddress,
+                            port,
+                            username,
+                            preferedGameName,
+                            preferedGameId,
+                            password,
+                            roomName,
+                            maxPlayers
+                        )
                     } else {
                         NetPlayManager.netPlayJoinRoom(ipAddress, port, username, password)
                     }
@@ -331,13 +409,20 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                         if (!isCreateRoom) NetPlayManager.setRoomAddress(activity, ipAddress)
                         Toast.makeText(
                             CitraApplication.appContext,
-                            if (isCreateRoom) R.string.multiplayer_create_room_success
-                            else R.string.multiplayer_join_room_success,
+                            if (isCreateRoom) {
+                                R.string.multiplayer_create_room_success
+                            } else {
+                                R.string.multiplayer_join_room_success
+                            },
                             Toast.LENGTH_LONG
                         ).show()
                         dialog.dismiss()
                     } else {
-                        Toast.makeText(activity, R.string.multiplayer_could_not_connect, Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            activity,
+                            R.string.multiplayer_could_not_connect,
+                            Toast.LENGTH_LONG
+                        ).show()
                         binding.btnConfirm.isEnabled = true
                         binding.btnConfirm.text = activity.getString(R.string.original_button_text)
                     }
@@ -368,15 +453,12 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         lateinit var adapter: BanListAdapter
 
         val onUnban: (String) -> Unit = { bannedItem ->
-            MaterialAlertDialogBuilder(activity)
-                .setTitle(R.string.multiplayer_unban_title)
+            MaterialAlertDialogBuilder(activity).setTitle(R.string.multiplayer_unban_title)
                 .setMessage(activity.getString(R.string.multiplayer_unban_message, bannedItem))
                 .setPositiveButton(R.string.multiplayer_unban) { _, _ ->
                     NetPlayManager.netPlayUnbanUser(bannedItem)
                     adapter.removeBan(bannedItem)
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
+                }.setNegativeButton(android.R.string.cancel, null).show()
         }
 
         adapter = BanListAdapter(banList, onUnban)
@@ -387,10 +469,8 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         dialog.show()
     }
 
-    private class BanListAdapter(
-        banList: List<String>,
-        private val onUnban: (String) -> Unit
-    ) : RecyclerView.Adapter<BanListAdapter.ViewHolder>() {
+    private class BanListAdapter(banList: List<String>, private val onUnban: (String) -> Unit) :
+        RecyclerView.Adapter<BanListAdapter.ViewHolder>() {
 
         private val usernameBans = banList.filter { !it.contains(".") }.toMutableList()
         private val ipBans = banList.filter { it.contains(".") }.toMutableList()
@@ -399,13 +479,17 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val binding = ItemBanListBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false)
+                LayoutInflater.from(parent.context),
+                parent,
+                false
+            )
             return ViewHolder(binding)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val isUsername = position < usernameBans.size
-            val item = if (isUsername) usernameBans[position] else ipBans[position - usernameBans.size]
+            val item =
+                if (isUsername) usernameBans[position] else ipBans[position - usernameBans.size]
 
             holder.binding.apply {
                 banText.text = item
@@ -432,6 +516,5 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 notifyItemRemoved(position)
             }
         }
-
     }
 }

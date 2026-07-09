@@ -50,8 +50,8 @@ import org.citra.citra_emu.utils.ControllerMappingHelper
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.FileBrowserHelper
-import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel

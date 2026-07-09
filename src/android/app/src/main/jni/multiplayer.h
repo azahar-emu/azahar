@@ -1,19 +1,23 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2024 Mandarine Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
-#include <common/common_types.h>
 #include <string>
 #include <vector>
+#include <common/common_types.h>
 #include <network/network.h>
 
 namespace Core {
-    class System;
+class System;
 }
 
 namespace Network {
-    class AnnounceMultiplayerSession;
+class AnnounceMultiplayerSession;
 }
 
 enum class NetPlayStatus : s32 {
@@ -64,12 +68,14 @@ public:
 
     void ClearChat();
 
-    NetPlayStatus NetPlayCreateRoom(const std::string &ipaddress, int port,
-                                    const std::string &username, const std::string &preferedGameName,const u64 &preferedGameId , const std::string &password,
-                                    const std::string &room_name, int max_players);
+    NetPlayStatus NetPlayCreateRoom(const std::string& ipaddress, int port,
+                                    const std::string& username,
+                                    const std::string& preferedGameName, const u64& preferedGameId,
+                                    const std::string& password, const std::string& room_name,
+                                    int max_players);
 
-    NetPlayStatus NetPlayJoinRoom(const std::string &ipaddress, int port,
-                                  const std::string &username, const std::string &password);
+    NetPlayStatus NetPlayJoinRoom(const std::string& ipaddress, int port,
+                                  const std::string& username, const std::string& password);
 
     std::vector<std::string> NetPlayRoomInfo();
 
@@ -79,11 +85,11 @@ public:
 
     bool NetPlayIsModerator();
 
-    void NetPlaySendMessage(const std::string &msg);
+    void NetPlaySendMessage(const std::string& msg);
 
-    void NetPlayKickUser(const std::string &username);
+    void NetPlayKickUser(const std::string& username);
 
-    void NetPlayBanUser(const std::string &username);
+    void NetPlayBanUser(const std::string& username);
 
     void NetPlayLeaveRoom();
 
@@ -91,14 +97,12 @@ public:
 
     std::vector<std::string> NetPlayGetBanList();
 
-    void NetPlayUnbanUser(const std::string &username);
+    void NetPlayUnbanUser(const std::string& username);
 
     std::vector<std::string> NetPlayGetPublicRooms();
 
 private:
     Core::System& system;
-    static std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) ;
+    static std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation);
     std::weak_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
-
-
 };

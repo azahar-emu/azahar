@@ -55,8 +55,9 @@ class HomeSettingsFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val driverViewModel: DriverViewModel by activityViewModels()
 
-    private val preferences get() =
-        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+    private val preferences
+        get() =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,6 +1,6 @@
-// Copyright 2025 Azahar Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
-// Refer to the license.txt file included
+// Refer to the license.txt file included.
 
 package org.citra.citra_emu.dialogs
 
@@ -15,20 +15,19 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.text.SimpleDateFormat
+import java.util.*
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogChatBinding
 import org.citra.citra_emu.databinding.ItemChatMessageBinding
 import org.citra.citra_emu.utils.NetPlayManager
-import java.text.SimpleDateFormat
-import java.util.*
 
 class ChatMessage(
     val nickname: String, // This is the common name youll see on private servers
     val username: String, // Username is the community/forum username
     val message: String,
     val timestamp: String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-) {
-}
+)
 
 class ChatDialog(context: Context) : BottomSheetDialog(context) {
     private lateinit var binding: DialogChatBinding
@@ -45,8 +44,8 @@ class ChatDialog(context: Context) : BottomSheetDialog(context) {
 
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        behavior.skipCollapsed = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
+        behavior.skipCollapsed =
+            context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
         handler.post {
             chatAdapter.notifyDataSetChanged()
@@ -128,10 +127,12 @@ class ChatAdapter(private val messages: List<ChatMessage>) :
         fun bind(message: ChatMessage) {
             binding.usernameText.text = message.nickname
             binding.messageText.text = message.message
-            binding.userIcon.setImageResource(when (message.nickname) {
-                "System" -> R.drawable.ic_system
-                else -> R.drawable.ic_user
-            })
+            binding.userIcon.setImageResource(
+                when (message.nickname) {
+                    "System" -> R.drawable.ic_system
+                    else -> R.drawable.ic_user
+                }
+            )
         }
     }
 }

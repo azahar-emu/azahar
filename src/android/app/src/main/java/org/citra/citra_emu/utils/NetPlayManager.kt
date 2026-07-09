@@ -1,3 +1,7 @@
+// Copyright Citra Emulator Project / Azahar Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 // Copyright 2024 Mandarine Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
@@ -8,21 +12,35 @@ import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.format.Formatter
 import android.widget.Toast
 import androidx.preference.PreferenceManager
+import java.net.Inet4Address
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.dialogs.ChatMessage
-import java.net.Inet4Address
 
 object NetPlayManager {
-    external fun netPlayCreateRoom(ipAddress: String, port: Int, username: String, preferedGameName:String, preferredGameId: Long, password: String, roomName: String, maxPlayers: Int): Int
-    external fun netPlayJoinRoom(ipAddress: String, port: Int, username: String, password: String): Int
+    external fun netPlayCreateRoom(
+        ipAddress: String,
+        port: Int,
+        username: String,
+        preferedGameName: String,
+        preferredGameId: Long,
+        password: String,
+        roomName: String,
+        maxPlayers: Int
+    ): Int
+
+    external fun netPlayJoinRoom(
+        ipAddress: String,
+        port: Int,
+        username: String,
+        password: String
+    ): Int
+
     external fun netPlayRoomInfo(): Array<String>
     external fun netPlayIsJoined(): Boolean
     external fun netPlayIsHostedRoom(): Boolean
@@ -99,7 +117,7 @@ object NetPlayManager {
 
     fun refreshRoomListAsync(callback: (List<RoomInfo>) -> Unit) {
         Thread {
-            val rooms =  getPublicRooms()
+            val rooms = getPublicRooms()
 
             Handler(Looper.getMainLooper()).post {
                 callback(rooms)
@@ -111,7 +129,8 @@ object NetPlayManager {
         adapterRefreshListener = listener
     }
 
-    fun getUsername(activity: Context): String {        val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
+    fun getUsername(activity: Context): String {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
         val name = "Azahar${(Math.random() * 100).toInt()}"
         return prefs.getString("NetPlayUsername", name) ?: name
     }
@@ -171,70 +190,114 @@ object NetPlayManager {
                     val chatMessage = parts[1].trim()
                     addChatMessage(
                         ChatMessage(
-                        nickname = nickname,
-                        username = "",
-                        message = chatMessage
-                    )
+                            nickname = nickname,
+                            username = "",
+                            message = chatMessage
+                        )
                     )
                 }
             }
+
             NetPlayStatus.MEMBER_JOIN,
             NetPlayStatus.MEMBER_LEAVE,
             NetPlayStatus.MEMBER_KICKED,
             NetPlayStatus.MEMBER_BANNED -> {
                 addChatMessage(
                     ChatMessage(
-                    nickname = "System",
-                    username = "",
-                    message = message
-                )
+                        nickname = "System",
+                        username = "",
+                        message = message
+                    )
                 )
             }
         }
 
-            Handler(Looper.getMainLooper()).post {
-                if (!isChatOpen) {
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                }
+        Handler(Looper.getMainLooper()).post {
+            if (!isChatOpen) {
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
-
+        }
 
         messageListener?.invoke(type, msg)
         adapterRefreshListener?.invoke(type, msg)
     }
 
-    private fun formatNetPlayStatus(context: Context, type: Int, msg: String): String {
-        return when (type) {
+    private fun formatNetPlayStatus(context: Context, type: Int, msg: String): String =
+        when (type) {
             NetPlayStatus.NETWORK_ERROR -> context.getString(R.string.multiplayer_network_error)
+
             NetPlayStatus.LOST_CONNECTION -> context.getString(R.string.multiplayer_lost_connection)
+
             NetPlayStatus.NAME_COLLISION -> context.getString(R.string.multiplayer_name_collision)
+
             NetPlayStatus.MAC_COLLISION -> context.getString(R.string.multiplayer_mac_collision)
-            NetPlayStatus.CONSOLE_ID_COLLISION -> context.getString(R.string.multiplayer_console_id_collision)
+
+            NetPlayStatus.CONSOLE_ID_COLLISION -> context.getString(
+                R.string.multiplayer_console_id_collision
+            )
+
             NetPlayStatus.WRONG_VERSION -> context.getString(R.string.multiplayer_wrong_version)
+
             NetPlayStatus.WRONG_PASSWORD -> context.getString(R.string.multiplayer_wrong_password)
-            NetPlayStatus.COULD_NOT_CONNECT -> context.getString(R.string.multiplayer_could_not_connect)
+
+            NetPlayStatus.COULD_NOT_CONNECT -> context.getString(
+                R.string.multiplayer_could_not_connect
+            )
+
             NetPlayStatus.ROOM_IS_FULL -> context.getString(R.string.multiplayer_room_is_full)
+
             NetPlayStatus.HOST_BANNED -> context.getString(R.string.multiplayer_host_banned)
-            NetPlayStatus.PERMISSION_DENIED -> context.getString(R.string.multiplayer_permission_denied)
+
+            NetPlayStatus.PERMISSION_DENIED -> context.getString(
+                R.string.multiplayer_permission_denied
+            )
+
             NetPlayStatus.NO_SUCH_USER -> context.getString(R.string.multiplayer_no_such_user)
+
             NetPlayStatus.ALREADY_IN_ROOM -> context.getString(R.string.multiplayer_already_in_room)
-            NetPlayStatus.CREATE_ROOM_ERROR -> context.getString(R.string.multiplayer_create_room_error)
+
+            NetPlayStatus.CREATE_ROOM_ERROR -> context.getString(
+                R.string.multiplayer_create_room_error
+            )
+
             NetPlayStatus.HOST_KICKED -> context.getString(R.string.multiplayer_host_kicked)
+
             NetPlayStatus.UNKNOWN_ERROR -> context.getString(R.string.multiplayer_unknown_error)
-            NetPlayStatus.ROOM_UNINITIALIZED -> context.getString(R.string.multiplayer_room_uninitialized)
+
+            NetPlayStatus.ROOM_UNINITIALIZED -> context.getString(
+                R.string.multiplayer_room_uninitialized
+            )
+
             NetPlayStatus.ROOM_IDLE -> context.getString(R.string.multiplayer_room_idle)
+
             NetPlayStatus.ROOM_JOINING -> context.getString(R.string.multiplayer_room_joining)
+
             NetPlayStatus.ROOM_JOINED -> context.getString(R.string.multiplayer_room_joined)
+
             NetPlayStatus.ROOM_MODERATOR -> context.getString(R.string.multiplayer_room_moderator)
+
             NetPlayStatus.MEMBER_JOIN -> context.getString(R.string.multiplayer_member_join, msg)
+
             NetPlayStatus.MEMBER_LEAVE -> context.getString(R.string.multiplayer_member_leave, msg)
-            NetPlayStatus.MEMBER_KICKED -> context.getString(R.string.multiplayer_member_kicked, msg)
-            NetPlayStatus.MEMBER_BANNED -> context.getString(R.string.multiplayer_member_banned, msg)
-            NetPlayStatus.ADDRESS_UNBANNED -> context.getString(R.string.multiplayer_address_unbanned)
+
+            NetPlayStatus.MEMBER_KICKED -> context.getString(
+                R.string.multiplayer_member_kicked,
+                msg
+            )
+
+            NetPlayStatus.MEMBER_BANNED -> context.getString(
+                R.string.multiplayer_member_banned,
+                msg
+            )
+
+            NetPlayStatus.ADDRESS_UNBANNED -> context.getString(
+                R.string.multiplayer_address_unbanned
+            )
+
             NetPlayStatus.CHAT_MESSAGE -> msg
+
             else -> ""
         }
-    }
 
     fun isConnectedToWifi(activity: Activity): Boolean {
         val connectivityManager = activity.getSystemService(ConnectivityManager::class.java)
