@@ -27,7 +27,6 @@ enum class StringSetting(
         "_back"
     ),
     WEB_API_URL(SettingKeys.web_api_url(), Settings.SECTION_NETWORK, ""),
-    NETWORK_USERNAME(SettingKeys.network_username(), Settings.SECTION_NETWORK, "Azahar"),
     NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, "");
 
     override var string: String = defaultValue

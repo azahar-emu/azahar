@@ -76,6 +76,8 @@ object NetPlayManager {
     private var messageListener: ((Int, String) -> Unit)? = null
     private var adapterRefreshListener: ((Int, String) -> Unit)? = null
 
+    private val usernameRegex = Regex("^[a-zA-Z0-9._\\- ]{4,20}$")
+
     fun setOnMessageReceivedListener(listener: (Int, String) -> Unit) {
         messageListener = listener
     }
@@ -129,16 +131,12 @@ object NetPlayManager {
         adapterRefreshListener = listener
     }
 
-    fun getUsername(activity: Context): String {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
-        val name = "Azahar${(Math.random() * 100).toInt()}"
-        return prefs.getString("NetPlayUsername", name) ?: name
+    fun getUsername(): String {
+        SystemSaveGame.load()
+        return SystemSaveGame.getUsername()
     }
 
-    fun setUsername(activity: Activity, name: String) {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
-        prefs.edit().putString("NetPlayUsername", name).apply()
-    }
+    fun isUsernameValid(): Boolean = getUsername().matches(usernameRegex)
 
     fun getRoomAddress(activity: Activity): String {
         val prefs = PreferenceManager.getDefaultSharedPreferences(activity)

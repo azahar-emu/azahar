@@ -123,7 +123,7 @@ class LobbyBrowser(context: Context) : BottomSheetDialog(context) {
     }
 
     private fun joinRoom(room: NetPlayManager.RoomInfo, password: String) {
-        val username = NetPlayManager.getUsername(context)
+        val username = NetPlayManager.getUsername()
 
         Thread {
             val result = NetPlayManager.netPlayJoinRoom(room.ip, room.port, username, password)

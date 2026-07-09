@@ -330,8 +330,7 @@ void Config::ReadValues() {
 
     // Web Service
     ReadSetting("WebService", Settings::values.web_api_url);
-    ReadSetting("WebService", Settings::values.citra_username);
-    ReadSetting("WebService", Settings::values.citra_token);
+    ReadSetting("WebService", Settings::values.network_token);
 }
 
 void Config::Reload() {

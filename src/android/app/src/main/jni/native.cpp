@@ -105,7 +105,7 @@ std::condition_variable running_cv;
 
 std::string inserted_cartridge;
 
-// Abdroid Multiplayer which can be initialized with parameters
+// Android Multiplayer which can be initialized with parameters
 std::unique_ptr<AndroidMultiplayer> multiplayer{nullptr};
 std::shared_ptr<Network::AnnounceMultiplayerSession> announce_multiplayer_session;
 
@@ -1020,7 +1020,8 @@ Java_org_citra_citra_1emu_NativeLibrary_initMultiplayer(JNIEnv* env, [[maybe_unu
         return;
     }
 
-    announce_multiplayer_session = std::make_shared<Network::AnnounceMultiplayerSession>();
+    announce_multiplayer_session = std::make_shared<Network::AnnounceMultiplayerSession>(
+        Service::CFG::GetUsername(Core::System::GetInstance()));
 
     multiplayer = std::make_unique<AndroidMultiplayer>(Core::System::GetInstance(),
                                                        announce_multiplayer_session);

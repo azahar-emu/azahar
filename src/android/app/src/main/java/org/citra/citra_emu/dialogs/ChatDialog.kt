@@ -76,7 +76,7 @@ class ChatDialog(context: Context) : BottomSheetDialog(context) {
     }
 
     private fun sendMessage(message: String) {
-        val username = NetPlayManager.getUsername(context)
+        val username = NetPlayManager.getUsername()
         NetPlayManager.netPlaySendMessage(message)
 
         val chatMessage = ChatMessage(

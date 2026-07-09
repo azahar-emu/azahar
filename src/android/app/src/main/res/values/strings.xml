@@ -43,6 +43,8 @@
     <string name="web_api_url_description">Web API URL for public room functionality</string>
     <string name="network_token">Network Token</string>
     <string name="network_token_description">Token for public room functionality</string>
+    <string name="username_uses_system">This property is linked to the 3DS system username.</string>
+    <string name="username_invalid">Username is not valid. Must be 4 to 20 alphanumeric characters.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Select GPU driver</string>

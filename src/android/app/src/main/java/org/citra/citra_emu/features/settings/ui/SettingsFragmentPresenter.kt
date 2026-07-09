@@ -16,7 +16,6 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
 import org.citra.citra_emu.display.StereoMode
@@ -1788,7 +1787,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
         }
     }
 
-    private fun addNetworkSettings (sl: ArrayList<SettingsItem>) {
+    private fun addNetworkSettings(sl: ArrayList<SettingsItem>) {
         settingsActivity.setToolbarTitle(settingsActivity.getString(R.string.preferences_network))
         sl.apply {
             add(
@@ -1797,7 +1796,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.web_api_url,
                     R.string.web_api_url_description,
                     StringSetting.WEB_API_URL.key,
-                    StringSetting.WEB_API_URL.defaultValue,
+                    StringSetting.WEB_API_URL.defaultValue
                 )
             )
             add(
@@ -1806,7 +1805,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.network_token,
                     R.string.network_token_description,
                     StringSetting.NETWORK_TOKEN.key,
-                    StringSetting.NETWORK_TOKEN.defaultValue,
+                    StringSetting.NETWORK_TOKEN.defaultValue
                 )
             )
         }

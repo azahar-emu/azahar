@@ -128,7 +128,6 @@ object SettingKeys {
     external fun udp_pad_index(): String
     external fun record_frame_times(): String
     external fun web_api_url(): String
-    external fun network_username(): String
     external fun network_token(): String
     external fun check_for_update_on_start(): String
     external fun update_check_channel(): String

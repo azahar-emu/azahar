@@ -102,6 +102,15 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                         dismiss()
                     }
                     btnLobbyBrowser.setOnClickListener {
+                        if (!NetPlayManager.isUsernameValid()) {
+                            Toast.makeText(
+                                it.context,
+                                it.context.getString(R.string.username_invalid),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@setOnClickListener
+                        }
+
                         LobbyBrowser(context).show()
                         dismiss()
                     }
@@ -178,9 +187,9 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 PopupMenu(view.context, view).apply {
                     inflate(R.menu.menu_netplay_member)
                     menu.findItem(R.id.action_kick).isEnabled =
-                        isModerator && netPlayItems.name != NetPlayManager.getUsername(context)
+                        isModerator && netPlayItems.name != NetPlayManager.getUsername()
                     menu.findItem(R.id.action_ban).isEnabled =
-                        isModerator && netPlayItems.name != NetPlayManager.getUsername(context)
+                        isModerator && netPlayItems.name != NetPlayManager.getUsername()
                     setOnMenuItemClickListener { item ->
                         if (item.itemId == R.id.action_kick) {
                             NetPlayManager.netPlayKickUser(netPlayItems.name)
@@ -322,7 +331,7 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             }
         )
         binding.ipPort.setText(NetPlayManager.getRoomPort(activity))
-        binding.username.setText(NetPlayManager.getUsername(activity))
+        binding.username.setText(NetPlayManager.getUsername())
 
         binding.dropdownPreferedGameName.apply {
             setAdapter(ArrayAdapter(activity, R.layout.dropdown_item, gameNameList.map { it[0] }))
@@ -341,7 +350,25 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 context.getString(R.string.multiplayer_max_players_value, value.toInt())
         }
 
+        binding.username.setOnClickListener {
+            Toast.makeText(
+                it.context,
+                it.context.getString(R.string.username_uses_system),
+                Toast.LENGTH_LONG
+            ).show()
+            true
+        }
+
         binding.btnConfirm.setOnClickListener {
+            if (!NetPlayManager.isUsernameValid()) {
+                Toast.makeText(
+                    it.context,
+                    it.context.getString(R.string.username_invalid),
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+
             binding.btnConfirm.isEnabled = false
             binding.btnConfirm.text = activity.getString(R.string.disabled_button_text)
 
@@ -404,7 +431,6 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                     }
 
                     if (result == 0) {
-                        NetPlayManager.setUsername(activity, username)
                         NetPlayManager.setRoomPort(activity, portStr)
                         if (!isCreateRoom) NetPlayManager.setRoomAddress(activity, ipAddress)
                         Toast.makeText(
