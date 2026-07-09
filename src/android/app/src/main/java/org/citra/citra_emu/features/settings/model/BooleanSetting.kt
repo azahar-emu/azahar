@@ -128,7 +128,7 @@ enum class BooleanSetting(
     SIMULATE_3DS_GPU_TIMINGS(
         SettingKeys.simulate_3ds_gpu_timings(),
         Settings.SECTION_RENDERER,
-        true
+        false
     );
 
     override var boolean: Boolean = defaultValue
