@@ -235,6 +235,8 @@ class GamesFragment : Fragment() {
         setInsets()
     }
 
+    private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
+
     override fun onResume() {
         super.onResume()
 
@@ -243,16 +245,21 @@ class GamesFragment : Fragment() {
             Thread({
                 val checkForPrereleaseUpdates = false
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
-                if (latestReleaseTag != BuildConfig.GIT_VERSION) {
-                    // const int latest_major_version = GetMajorVersion(latest_release_tag.value());
-                    // const int current_major_version = GetMajorVersion(Common::g_build_fullname);
-                    // if (current_major_version <= latest_major_version) {
-                    UpdateAvailableNotificationFragment.newInstance(checkForPrereleaseUpdates)
-                        .show(
-                            requireActivity().supportFragmentManager,
-                            UpdateAvailableNotificationFragment.TAG
-                        )
-                    // }
+                if (!latestReleaseTag.isNullOrEmpty() &&
+                    latestReleaseTag != BuildConfig.GIT_VERSION
+                ) {
+                    val latestMajorVersion = getMajorVersion(latestReleaseTag)
+                    val currentMajorVersion = getMajorVersion(BuildConfig.GIT_VERSION)
+                    if (latestMajorVersion != null &&
+                        currentMajorVersion != null &&
+                        currentMajorVersion <= latestMajorVersion
+                    ) {
+                        UpdateAvailableNotificationFragment.newInstance(checkForPrereleaseUpdates)
+                            .show(
+                                requireActivity().supportFragmentManager,
+                                UpdateAvailableNotificationFragment.TAG
+                            )
+                    }
                 }
             }).start()
             homeViewModel.updatePromptShown = true
