@@ -82,6 +82,7 @@ object UpdateChecker {
             val latestTag = Json.decodeFromString<JsonElement>(
                 response
             ).jsonObject["tag_name"].toString()
+                .drop(1).dropLast(1) // Remove quotation mark
             return latestTag
         }
     }
