@@ -48,6 +48,7 @@ class UpdateAvailableNotificationFragment(
                 )
                 startActivity(intent)
             }
+            .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
