@@ -158,10 +158,10 @@ jobs:
             ${{ runner.os }}-
       - name: Install tools
         run: brew install ccache ninja spirv-tools
-      - name: Build (x86_64)
-        run: BUILD_ARCH=x86_64 ./.ci/macos.sh
       - name: Build (arm64)
         run: BUILD_ARCH=arm64 ./.ci/macos.sh
+      - name: Build (x86_64)
+        run: BUILD_ARCH=x86_64 ./.ci/macos.sh
       - name: Create universal app
         run: ./.ci/macos-universal.sh
       - name: Prepare for packing
