@@ -3251,8 +3251,7 @@ void GMainWindow::ShowFFmpegErrorMessage() {
     auto result = message_box.exec();
     if (result == QMessageBox::Help) {
         QDesktopServices::openUrl(
-            QUrl(QStringLiteral("https://web.archive.org/web/20240301121456/https://"
-                                "citra-emu.org/wiki/installing-ffmpeg-for-the-video-dumper/")));
+            QUrl(QStringLiteral("https://github.com/azahar-emu/azahar/wiki/Installing-FFmpeg")));
 #ifdef _WIN32
     } else if (result == QMessageBox::Open) {
         OnOpenFFmpeg();
@@ -3853,8 +3852,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     if (result == Core::System::ResultStatus::ErrorSystemFiles) {
         const QString common_message =
             tr("%1 is missing. Please <a "
-               "href='https://web.archive.org/web/20240304201103/https://citra-emu.org/wiki/"
-               "dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/'>dump your "
+               "href='https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files'>dump your "
                "system archives</a>.<br/>Continuing emulation may result in crashes and bugs.");
 
         if (!details.empty()) {
@@ -3892,9 +3890,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     } else {
         title = tr("Fatal Error");
         message = tr("A fatal error occurred. "
-                     "<a href='https://web.archive.org/web/20240228001712/https://"
-                     "community.citra-emu.org/t/how-to-upload-the-log-file/296'>Check "
-                     "the log</a> for details."
+                     "Check the log for details."
                      "<br/>Continuing emulation may result in crashes and bugs.");
         status_message = tr("Fatal Error encountered");
         error_severity_icon = QMessageBox::Icon::Critical;
