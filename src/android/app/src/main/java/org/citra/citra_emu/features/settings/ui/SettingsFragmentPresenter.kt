@@ -14,6 +14,7 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -272,7 +273,8 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.string.check_for_updates,
                     R.string.check_for_updates_description,
                     BooleanSetting.CHECK_FOR_UPDATES.key,
-                    BooleanSetting.CHECK_FOR_UPDATES.defaultValue
+                    BooleanSetting.CHECK_FOR_UPDATES.defaultValue,
+                    isEnabled = !BuildConfig.DEBUG
                 )
             )
             add(
@@ -284,7 +286,7 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                     R.array.updateCheckChannelsValues,
                     IntSetting.UPDATE_CHECK_CHANNEL.key,
                     IntSetting.UPDATE_CHECK_CHANNEL.defaultValue,
-                    isEnabled = BooleanSetting.CHECK_FOR_UPDATES.boolean
+                    isEnabled = (!BuildConfig.DEBUG && BooleanSetting.CHECK_FOR_UPDATES.boolean)
                 )
             )
             add(

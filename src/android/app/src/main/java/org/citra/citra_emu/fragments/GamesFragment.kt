@@ -243,7 +243,8 @@ class GamesFragment : Fragment() {
         super.onResume()
 
         // Perform update check
-        if (!BuildUtil.isGooglePlayBuild &&
+        if (!BuildConfig.DEBUG &&
+            !BuildUtil.isGooglePlayBuild &&
             BooleanSetting.CHECK_FOR_UPDATES.boolean &&
             !homeViewModel.updatePromptShown
         ) {
