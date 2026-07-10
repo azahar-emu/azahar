@@ -265,6 +265,8 @@ private slots:
     void OnLoadAmiibo();
     void OnRemoveAmiibo();
     void OnOpenCitraFolder();
+    void OnOpenNANDFolder();
+    void OnOpenSDMCFolder();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
     void InitializeHotkeys();
