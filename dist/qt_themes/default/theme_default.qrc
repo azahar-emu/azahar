@@ -15,6 +15,7 @@
         <file alias="48x48/sd_card.png">icons/48x48/sd_card.png</file>
         <file alias="128x128/cartridge.png">icons/128x128/cartridge.png</file>
         <file alias="256x256/azahar.png">icons/256x256/azahar.png</file>
+        <file alias="256x256/automap_face_buttons.png">icons/256x256/automap_face_buttons.png</file>
         <file alias="48x48/star.png">icons/48x48/star.png</file>
         <file alias="256x256/plus_folder.png">icons/256x256/plus_folder.png</file>
     </qresource>

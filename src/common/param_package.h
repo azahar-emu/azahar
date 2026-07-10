@@ -1,7 +1,6 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
-
 #pragma once
 
 #include <initializer_list>
@@ -23,7 +22,6 @@ public:
 
     ParamPackage& operator=(const ParamPackage& other) = default;
     ParamPackage& operator=(ParamPackage&& other) = default;
-
     [[nodiscard]] std::string Serialize() const;
     [[nodiscard]] std::string Get(const std::string& key, const std::string& default_value) const;
     [[nodiscard]] int Get(const std::string& key, int default_value) const;
