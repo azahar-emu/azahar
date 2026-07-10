@@ -7,38 +7,36 @@
 #include <boost/hana/string.hpp>
 #include "common/setting_keys.h"
 
-namespace Keys = Settings::Keys;
-
 namespace DefaultINI {
 
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
 constexpr std::array android_config_omitted_keys = {
-    Keys::enable_gamemode,
-    Keys::use_custom_storage,
-    Keys::init_time_offset,
-    Keys::physical_device,
-    Keys::use_gles, // Niche
-    Keys::dump_command_buffers,
-    Keys::use_display_refresh_rate_detection,
-    Keys::screen_top_stretch,
-    Keys::screen_top_leftright_padding,
-    Keys::screen_top_topbottom_padding,
-    Keys::screen_bottom_stretch,
-    Keys::screen_bottom_leftright_padding,
-    Keys::screen_bottom_topbottom_padding,
-    Keys::mono_render_option,
-    Keys::log_regex_filter, // Niche
-    Keys::video_encoder,
-    Keys::video_encoder_options,
-    Keys::video_bitrate,
-    Keys::audio_encoder,
-    Keys::audio_encoder_options,
-    Keys::audio_bitrate,
-    Keys::last_artic_base_addr,            // On Android, this value is stored as a "preference"
-    Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
-    Keys::use_gdbstub,                     // GDB functionality disabled by deafult on Android
-    Keys::gdbstub_port,
+    Settings::Keys::enable_gamemode,
+    Settings::Keys::use_custom_storage,
+    Settings::Keys::init_time_offset,
+    Settings::Keys::physical_device,
+    Settings::Keys::use_gles, // Niche
+    Settings::Keys::dump_command_buffers,
+    Settings::Keys::use_display_refresh_rate_detection,
+    Settings::Keys::screen_top_stretch,
+    Settings::Keys::screen_top_leftright_padding,
+    Settings::Keys::screen_top_topbottom_padding,
+    Settings::Keys::screen_bottom_stretch,
+    Settings::Keys::screen_bottom_leftright_padding,
+    Settings::Keys::screen_bottom_topbottom_padding,
+    Settings::Keys::mono_render_option,
+    Settings::Keys::log_regex_filter, // Niche
+    Settings::Keys::video_encoder,
+    Settings::Keys::video_encoder_options,
+    Settings::Keys::video_bitrate,
+    Settings::Keys::audio_encoder,
+    Settings::Keys::audio_encoder_options,
+    Settings::Keys::audio_bitrate,
+    Settings::Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Settings::Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
+    Settings::Keys::use_gdbstub, // GDB functionality disabled by deafult on Android
+    Settings::Keys::gdbstub_port,
 };
 
 // clang-format off
