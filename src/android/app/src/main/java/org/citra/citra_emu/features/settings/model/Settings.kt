@@ -247,7 +247,8 @@ class Settings {
                     SECTION_STORAGE,
                     SECTION_UTILITY,
                     SECTION_AUDIO,
-                    SECTION_DEBUG
+                    SECTION_DEBUG,
+                    SECTION_MISC
                 )
         }
     }

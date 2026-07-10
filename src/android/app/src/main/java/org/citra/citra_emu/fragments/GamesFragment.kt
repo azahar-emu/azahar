@@ -35,6 +35,8 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
@@ -241,9 +243,12 @@ class GamesFragment : Fragment() {
         super.onResume()
 
         // Perform update check
-        if (!BuildUtil.isGooglePlayBuild && !homeViewModel.updatePromptShown) {
+        if (!BuildUtil.isGooglePlayBuild &&
+            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            !homeViewModel.updatePromptShown
+        ) {
             Thread({
-                val checkForPrereleaseUpdates = false
+                val checkForPrereleaseUpdates = (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
                 if (!latestReleaseTag.isNullOrEmpty() &&
                     latestReleaseTag != BuildConfig.GIT_VERSION

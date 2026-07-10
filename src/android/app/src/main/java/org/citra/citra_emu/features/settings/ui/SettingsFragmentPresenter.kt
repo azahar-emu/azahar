@@ -268,6 +268,27 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.CHECK_FOR_UPDATES,
+                    R.string.check_for_updates,
+                    R.string.check_for_updates_description,
+                    BooleanSetting.CHECK_FOR_UPDATES.key,
+                    BooleanSetting.CHECK_FOR_UPDATES.defaultValue
+                )
+            )
+            add(
+                SingleChoiceSetting(
+                    IntSetting.UPDATE_CHECK_CHANNEL,
+                    R.string.update_check_channel,
+                    R.string.update_check_channel_description,
+                    R.array.updateCheckChannels,
+                    R.array.updateCheckChannelsValues,
+                    IntSetting.UPDATE_CHECK_CHANNEL.key,
+                    IntSetting.UPDATE_CHECK_CHANNEL.defaultValue,
+                    isEnabled = BooleanSetting.CHECK_FOR_UPDATES.boolean
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.ANDROID_HIDE_IMAGES,
                     R.string.android_hide_images,
                     R.string.android_hide_images_description,
