@@ -15,10 +15,13 @@ import org.citra.citra_emu.R
 import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
 
-class UpdateAvailableNotificationFragment(checkForPrereleaseUpdatesOverride: Boolean) :
-    DialogFragment() {
+class UpdateAvailableNotificationFragment(
+    newVersionOverride: String,
+    checkForPrereleaseUpdatesOverride: Boolean
+) : DialogFragment() {
     private lateinit var mainActivity: MainActivity
 
+    private val newVersion = newVersionOverride
     private val checkForPrereleaseUpdates = checkForPrereleaseUpdatesOverride
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -27,14 +30,17 @@ class UpdateAvailableNotificationFragment(checkForPrereleaseUpdatesOverride: Boo
 
         isCancelable = false
 
+        val updateNotificationDescription =
+            getString(R.string.update_available_description, newVersion)
+
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.update_available)
-            .setMessage(R.string.update_available_description)
+            .setMessage(updateNotificationDescription)
             .setPositiveButton(android.R.string.ok) { _: DialogInterface, _: Int ->
                 val updateLink: String = if (checkForPrereleaseUpdates) {
                     getString(R.string.prerelease_channel_update_link)
                 } else {
-                    getString(R.string.stable_channel_update_link)
+                    getString(R.string.prerelease_channel_update_link)
                 }
                 val intent = Intent(
                     Intent.ACTION_VIEW,
@@ -48,9 +54,12 @@ class UpdateAvailableNotificationFragment(checkForPrereleaseUpdatesOverride: Boo
     companion object {
         const val TAG = "UpdateAvailableNotificationFragment"
 
-        fun newInstance(checkForPrereleaseUpdates: Boolean): UpdateAvailableNotificationFragment {
+        fun newInstance(
+            newVersion: String,
+            checkForPrereleaseUpdates: Boolean
+        ): UpdateAvailableNotificationFragment {
             BuildUtil.assertNotGooglePlay()
-            return UpdateAvailableNotificationFragment(checkForPrereleaseUpdates)
+            return UpdateAvailableNotificationFragment(newVersion, checkForPrereleaseUpdates)
         }
     }
 }

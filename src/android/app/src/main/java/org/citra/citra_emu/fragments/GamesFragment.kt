@@ -254,7 +254,10 @@ class GamesFragment : Fragment() {
                         currentMajorVersion != null &&
                         currentMajorVersion <= latestMajorVersion
                     ) {
-                        UpdateAvailableNotificationFragment.newInstance(checkForPrereleaseUpdates)
+                        UpdateAvailableNotificationFragment.newInstance(
+                            latestReleaseTag,
+                            checkForPrereleaseUpdates
+                        )
                             .show(
                                 requireActivity().supportFragmentManager,
                                 UpdateAvailableNotificationFragment.TAG
