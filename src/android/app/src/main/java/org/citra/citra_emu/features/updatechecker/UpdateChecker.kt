@@ -44,6 +44,13 @@ object UpdateChecker {
         }
     }
 
+    private fun String.stripQuotes(): String? {
+        if (this.first() != '"' || this.last() != '"') {
+            return null
+        }
+        return this.drop(1).dropLast(1)
+    }
+
     fun getLatestRelease(includePrereleases: Boolean): String? {
         val updateCheckUrl = "https://api.github.com"
         var updateCheckPath = "/repos/azahar-emu/azahar"
@@ -59,10 +66,19 @@ object UpdateChecker {
                 return null
             }
 
-            val latestTag = Json.decodeFromString<JsonArray>(
-                tagsResponse
-            )[0].jsonObject["name"].toString()
-                .drop(1).dropLast(1) // Remove quotation marks
+            var latestTag: String?
+            try {
+                latestTag = Json.decodeFromString<JsonArray>(
+                    tagsResponse
+                )[0].jsonObject["name"].toString().stripQuotes()
+            } catch (e: Exception) {
+                Log.error("[UpdateChecker] JSON decode failed: $e")
+                return null
+            }
+            if (latestTag.isNullOrEmpty()) {
+                Log.error("[UpdateChecker] Failed to strip quotes from tag or tag was blank")
+                return null
+            }
             val latestTagHasRelease = releasesResponse.contains("\"$latestTag\"")
             // If there is a newer tag, but that tag has no associated release, don't prompt the
             // user to update.
@@ -79,10 +95,19 @@ object UpdateChecker {
                 return null
             }
 
-            val latestTag = Json.decodeFromString<JsonElement>(
-                response
-            ).jsonObject["tag_name"].toString()
-                .drop(1).dropLast(1) // Remove quotation mark
+            var latestTag: String?
+            try {
+                latestTag = Json.decodeFromString<JsonElement>(
+                    response
+                ).jsonObject["tag_name"].toString().stripQuotes()
+            } catch (e: Exception) {
+                Log.error("[UpdateChecker] JSON decode failed: $e")
+                return null
+            }
+            if (latestTag.isNullOrEmpty()) {
+                Log.error("[UpdateChecker] Failed to strip quotes from tag or tag was blank")
+                return null
+            }
             return latestTag
         }
     }
