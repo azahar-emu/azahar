@@ -939,6 +939,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_reloadSettings([[maybe_unused]] JNI
         system.GetAppLoader().ReadProgramId(program_id);
     }
 
+    if (multiplayer) {
+        multiplayer->UpdateCredentials();
+    }
+
     system.ApplySettings();
 }
 

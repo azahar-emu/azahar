@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -22,4 +22,15 @@ struct WebResult {
     std::string result_string;
     std::string returned_data;
 };
+
+/**
+ * @brief Parsed URL components.
+ */
+struct URLInfo {
+    bool is_https;    ///< True if the URL uses HTTPS, false for HTTP.
+    std::string host; ///< Hostname or IP address.
+    int port;         ///< Network port.
+    std::string path; ///< Resource path.
+};
+URLInfo SplitUrl(const std::string& url);
 } // namespace Common

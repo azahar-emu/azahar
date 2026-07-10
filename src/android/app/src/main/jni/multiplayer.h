@@ -101,6 +101,8 @@ public:
 
     std::vector<std::string> NetPlayGetPublicRooms();
 
+    void UpdateCredentials();
+
 private:
     Core::System& system;
     static std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation);

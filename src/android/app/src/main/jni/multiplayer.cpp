@@ -370,3 +370,9 @@ std::vector<std::string> AndroidMultiplayer::NetPlayGetBanList() {
     }
     return ban_list;
 }
+
+void AndroidMultiplayer::UpdateCredentials() {
+    if (auto session = announce_multiplayer_session.lock()) {
+        session->UpdateCredentials(Service::CFG::GetUsername(Core::System::GetInstance()));
+    }
+}
