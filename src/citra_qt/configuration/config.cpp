@@ -16,7 +16,6 @@
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 
 QtConfig::QtConfig(const std::string& config_name, ConfigType config_type) : type{config_type} {
     global = config_type == ConfigType::GlobalConfig;
@@ -604,12 +603,9 @@ void QtConfig::ReadMiscellaneousValues() {
 void QtConfig::ReadMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    UISettings::values.nickname = ReadSetting(Settings::QKeys::nickname, QString{}).toString();
     UISettings::values.ip = ReadSetting(Settings::QKeys::ip, QString{}).toString();
     UISettings::values.port =
         ReadSetting(Settings::QKeys::port, Network::DefaultRoomPort).toString();
-    UISettings::values.room_nickname =
-        ReadSetting(Settings::QKeys::room_nickname, QString{}).toString();
     UISettings::values.room_name = ReadSetting(Settings::QKeys::room_name, QString{}).toString();
     UISettings::values.room_port =
         ReadSetting(Settings::QKeys::room_port, QStringLiteral("24872")).toString();
@@ -920,14 +916,8 @@ void QtConfig::ReadUILayoutValues() {
 void QtConfig::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    NetSettings::values.web_api_url =
-        ReadSetting(Settings::QKeys::web_api_url, QStringLiteral("https://api.citra-emu.org"))
-            .toString()
-            .toStdString();
-    NetSettings::values.citra_username =
-        ReadSetting(Settings::QKeys::citra_username).toString().toStdString();
-    NetSettings::values.citra_token =
-        ReadSetting(Settings::QKeys::citra_token).toString().toStdString();
+    ReadBasicSetting(Settings::values.web_api_url);
+    ReadBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }
@@ -1200,10 +1190,8 @@ void QtConfig::SaveMiscellaneousValues() {
 void QtConfig::SaveMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    WriteSetting(Settings::QKeys::nickname, UISettings::values.nickname, QString{});
     WriteSetting(Settings::QKeys::ip, UISettings::values.ip, QString{});
     WriteSetting(Settings::QKeys::port, UISettings::values.port, Network::DefaultRoomPort);
-    WriteSetting(Settings::QKeys::room_nickname, UISettings::values.room_nickname, QString{});
     WriteSetting(Settings::QKeys::room_name, UISettings::values.room_name, QString{});
     WriteSetting(Settings::QKeys::room_port, UISettings::values.room_port, QStringLiteral("24872"));
     WriteSetting(Settings::QKeys::host_type, UISettings::values.host_type, 0);
@@ -1459,13 +1447,8 @@ void QtConfig::SaveUILayoutValues() {
 void QtConfig::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(Settings::QKeys::web_api_url,
-                 QString::fromStdString(NetSettings::values.web_api_url),
-                 QStringLiteral("https://api.citra-emu.org"));
-    WriteSetting(Settings::QKeys::citra_username,
-                 QString::fromStdString(NetSettings::values.citra_username));
-    WriteSetting(Settings::QKeys::citra_token,
-                 QString::fromStdString(NetSettings::values.citra_token));
+    WriteBasicSetting(Settings::values.web_api_url);
+    WriteBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }

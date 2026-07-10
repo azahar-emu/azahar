@@ -24,7 +24,6 @@
 #include "jni/config.h"
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
-#include "network/network_settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -330,11 +329,8 @@ void Config::ReadValues() {
     }
 
     // Web Service
-    NetSettings::values.web_api_url =
-        android_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username =
-        android_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = android_config->GetString("WebService", "citra_token", "");
+    ReadSetting("WebService", Settings::values.web_api_url);
+    ReadSetting("WebService", Settings::values.network_token);
 }
 
 void Config::Reload() {

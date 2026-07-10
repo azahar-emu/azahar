@@ -15,7 +15,6 @@
 #include "citra_qt/uisettings.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 #include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
@@ -30,12 +29,7 @@ DirectConnectWindow::DirectConnectWindow(Core::System& system_, QWidget* parent)
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
 
-    ui->nickname->setValidator(validation.GetNickname());
-    ui->nickname->setText(UISettings::values.nickname);
-    if (ui->nickname->text().isEmpty() && !NetSettings::values.citra_username.empty()) {
-        // Use Citra Web Service user name as nickname by default
-        ui->nickname->setText(QString::fromStdString(NetSettings::values.citra_username));
-    }
+    ui->nickname->setReadOnly(true);
     ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
     ui->port->setValidator(validation.GetPort());
@@ -52,8 +46,16 @@ void DirectConnectWindow::RetranslateUi() {
     ui->retranslateUi(this);
 }
 
+void DirectConnectWindow::showEvent(QShowEvent* event) {
+    ui->nickname->setText(QString::fromStdString(Service::CFG::GetUsername(system)));
+    QDialog::showEvent(event);
+}
+
 void DirectConnectWindow::Connect() {
-    if (!ui->nickname->hasAcceptableInput()) {
+
+    int pos = 0;
+    QString nickname = ui->nickname->text();
+    if (validation.GetNickname()->validate(nickname, pos) != QValidator::Acceptable) {
         NetworkMessage::ErrorManager::ShowError(NetworkMessage::ErrorManager::USERNAME_NOT_VALID);
         return;
     }
@@ -78,7 +80,6 @@ void DirectConnectWindow::Connect() {
     }
 
     // Store settings
-    UISettings::values.nickname = ui->nickname->text();
     UISettings::values.ip = ui->ip->text();
     UISettings::values.port =
         !ui->port->text().isEmpty() ? ui->port->text() : UISettings::values.port;

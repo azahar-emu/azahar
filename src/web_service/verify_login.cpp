@@ -1,9 +1,9 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <json.hpp>
-#include "common/web_result.h"
+#include "common/web_util.h"
 #include "web_service/verify_login.h"
 #include "web_service/web_backend.h"
 

@@ -13,6 +13,7 @@ class StringInputSetting(
     setting: AbstractSetting?,
     titleId: Int,
     descriptionId: Int,
+    val key: String? = null,
     val defaultValue: String,
     val characterLimit: Int = 0,
     override var isEnabled: Boolean = true,

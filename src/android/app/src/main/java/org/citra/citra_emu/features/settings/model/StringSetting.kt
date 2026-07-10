@@ -25,7 +25,9 @@ enum class StringSetting(
         SettingKeys.camera_outer_right_config(),
         Settings.SECTION_CAMERA,
         "_back"
-    );
+    ),
+    WEB_API_URL(SettingKeys.web_api_url(), Settings.SECTION_NETWORK, ""),
+    NETWORK_TOKEN(SettingKeys.network_token(), Settings.SECTION_NETWORK, "");
 
     override var string: String = defaultValue
 

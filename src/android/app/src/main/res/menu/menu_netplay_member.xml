@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_kick"
+        android:title="@string/multiplayer_kick_member"
+        android:enabled="false" />
+
+    <item
+        android:id="@+id/action_ban"
+        android:title="@string/multiplayer_ban"
+        android:enabled="false" />
+
+</menu>

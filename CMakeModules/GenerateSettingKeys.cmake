@@ -147,8 +147,7 @@ foreach(KEY IN ITEMS
     "record_frame_times"
     "language" # FIXME: DUPLICATE KEY (libretro equivalent: language_value)
     "web_api_url"
-    "citra_username"
-    "citra_token"
+    "network_token"
     "check_for_update_on_start"
     "update_check_channel"
 )

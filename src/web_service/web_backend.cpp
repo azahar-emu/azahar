@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,7 @@
 #include <httplib.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/web_result.h"
+#include "common/web_util.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
@@ -20,15 +20,11 @@ constexpr std::array<const char, 1> API_VERSION{'1'};
 constexpr std::size_t TIMEOUT_SECONDS = 30;
 
 struct Client::Impl {
-    Impl(std::string host, std::string username, std::string token)
-        : host{std::move(host)}, username{std::move(username)}, token{std::move(token)} {
+    Impl(const std::string& host, std::string username, std::string token)
+        : host{Common::SplitUrl(host)}, username{std::move(username)}, token{std::move(token)} {
         std::lock_guard lock{jwt_cache.mutex};
         if (this->username == jwt_cache.username && this->token == jwt_cache.token) {
             jwt = jwt_cache.jwt;
-        }
-        // normalize host expression
-        if (!this->host.empty() && this->host.back() == '/') {
-            static_cast<void>(this->host.pop_back());
         }
     }
 
@@ -67,13 +63,13 @@ struct Client::Impl {
                                      const std::string& jwt = "", const std::string& username = "",
                                      const std::string& token = "") {
         if (cli == nullptr) {
-            cli = std::make_unique<httplib::Client>(host.c_str());
+            cli = std::make_unique<httplib::Client>(host.host, host.port);
             cli->set_connection_timeout(TIMEOUT_SECONDS);
             cli->set_read_timeout(TIMEOUT_SECONDS);
             cli->set_write_timeout(TIMEOUT_SECONDS);
         }
         if (!cli->is_valid()) {
-            LOG_ERROR(WebService, "Invalid URL {}", host + path);
+            LOG_ERROR(WebService, "Invalid URL {}", host.host + path);
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "Invalid URL"};
         }
 
@@ -104,15 +100,15 @@ struct Client::Impl {
         httplib::Result result = cli->send(request);
 
         if (!result) {
-            LOG_ERROR(WebService, "{} to {} returned null", method, host + path);
+            LOG_ERROR(WebService, "{} to {} returned null", method, host.host + path);
             return Common::WebResult{Common::WebResult::Code::LibError, "Null response"};
         }
 
         httplib::Response response = result.value();
 
         if (response.status >= 400) {
-            LOG_ERROR(WebService, "{} to {} returned error status code: {}", method, host + path,
-                      response.status);
+            LOG_ERROR(WebService, "{} to {} returned error status code: {}", method,
+                      host.host + path, response.status);
             return Common::WebResult{Common::WebResult::Code::HttpError,
                                      std::to_string(response.status)};
         }
@@ -120,12 +116,12 @@ struct Client::Impl {
         auto content_type = response.headers.find("content-type");
 
         if (content_type == response.headers.end()) {
-            LOG_ERROR(WebService, "{} to {} returned no content", method, host + path);
+            LOG_ERROR(WebService, "{} to {} returned no content", method, host.host + path);
             return Common::WebResult{Common::WebResult::Code::WrongContent, ""};
         }
 
         if (content_type->second.find(accept) == std::string::npos) {
-            LOG_ERROR(WebService, "{} to {} returned wrong content: {}", method, host + path,
+            LOG_ERROR(WebService, "{} to {} returned wrong content: {}", method, host.host + path,
                       content_type->second);
             return Common::WebResult{Common::WebResult::Code::WrongContent, "Wrong content"};
         }
@@ -149,7 +145,7 @@ struct Client::Impl {
         }
     }
 
-    std::string host;
+    Common::URLInfo host;
     std::string username;
     std::string token;
     std::string jwt;

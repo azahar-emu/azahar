@@ -97,7 +97,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     timer.h
     unique_function.h
     vector_math.h
-    web_result.h
+    web_util.cpp
+    web_util.h
     x64/cpu_detect.cpp
     x64/cpu_detect.h
     x64/xbyak_abi.h

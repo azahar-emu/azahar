@@ -55,8 +55,9 @@ class HomeSettingsFragment : Fragment() {
     private val homeViewModel: HomeViewModel by activityViewModels()
     private val driverViewModel: DriverViewModel by activityViewModels()
 
-    private val preferences get() =
-        PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
+    private val preferences
+        get() =
+            PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,6 +126,12 @@ class HomeSettingsFragment : Fragment() {
                             .show()
                     }
                 }
+            ),
+            HomeSetting(
+                R.string.multiplayer,
+                R.string.multiplayer_description,
+                R.drawable.ic_multiplayer,
+                { mainActivity.displayMultiplayerDialog() }
             ),
             HomeSetting(
                 R.string.install_game_content,
