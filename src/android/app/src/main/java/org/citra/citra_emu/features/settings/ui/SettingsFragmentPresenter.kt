@@ -14,6 +14,7 @@ import android.os.Build
 import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.display.ScreenLayout
@@ -46,6 +47,7 @@ import org.citra.citra_emu.features.settings.model.view.SwitchSetting
 import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.ResetSettingsDialogFragment
 import org.citra.citra_emu.utils.BirthdayMonth
+import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.utils.GraphicsUtil
 import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.SystemSaveGame
@@ -268,13 +270,37 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
-                    BooleanSetting.ANDROID_HIDE_IMAGES,
-                    R.string.android_hide_images,
-                    R.string.android_hide_images_description,
-                    BooleanSetting.ANDROID_HIDE_IMAGES.key,
-                    BooleanSetting.ANDROID_HIDE_IMAGES.defaultValue
+                    BooleanSetting.CHECK_FOR_UPDATES,
+                    R.string.check_for_updates,
+                    R.string.check_for_updates_description,
+                    BooleanSetting.CHECK_FOR_UPDATES.key,
+                    BooleanSetting.CHECK_FOR_UPDATES.defaultValue,
+                    isEnabled = !BuildConfig.DEBUG
                 )
             )
+            if (!BuildUtil.isGooglePlayBuild) {
+                add(
+                    SingleChoiceSetting(
+                        IntSetting.UPDATE_CHECK_CHANNEL,
+                        R.string.update_check_channel,
+                        R.string.update_check_channel_description,
+                        R.array.updateCheckChannels,
+                        R.array.updateCheckChannelsValues,
+                        IntSetting.UPDATE_CHECK_CHANNEL.key,
+                        IntSetting.UPDATE_CHECK_CHANNEL.defaultValue,
+                        isEnabled = (!BuildConfig.DEBUG && BooleanSetting.CHECK_FOR_UPDATES.boolean)
+                    )
+                )
+                add(
+                    SwitchSetting(
+                        BooleanSetting.ANDROID_HIDE_IMAGES,
+                        R.string.android_hide_images,
+                        R.string.android_hide_images_description,
+                        BooleanSetting.ANDROID_HIDE_IMAGES.key,
+                        BooleanSetting.ANDROID_HIDE_IMAGES.defaultValue
+                    )
+                )
+            }
         }
     }
 

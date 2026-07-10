@@ -29,12 +29,16 @@ import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.BuildConfig
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.adapters.GameAdapter
 import org.citra.citra_emu.databinding.FragmentGamesBinding
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.features.updatechecker.UpdateChecker
 import org.citra.citra_emu.model.Game
 import org.citra.citra_emu.utils.BuildUtil
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
@@ -231,6 +235,44 @@ class GamesFragment : Fragment() {
         }
 
         setInsets()
+    }
+
+    private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
+
+    override fun onResume() {
+        super.onResume()
+
+        // Perform update check
+        if (!BuildConfig.DEBUG &&
+            !BuildUtil.isGooglePlayBuild &&
+            BooleanSetting.CHECK_FOR_UPDATES.boolean &&
+            !homeViewModel.updatePromptShown
+        ) {
+            Thread({
+                val checkForPrereleaseUpdates = (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+                if (!latestReleaseTag.isNullOrEmpty() &&
+                    latestReleaseTag != BuildConfig.GIT_VERSION
+                ) {
+                    val latestMajorVersion = getMajorVersion(latestReleaseTag)
+                    val currentMajorVersion = getMajorVersion(BuildConfig.GIT_VERSION)
+                    if (latestMajorVersion != null &&
+                        currentMajorVersion != null &&
+                        currentMajorVersion <= latestMajorVersion
+                    ) {
+                        UpdateAvailableNotificationFragment.newInstance(
+                            latestReleaseTag,
+                            checkForPrereleaseUpdates
+                        )
+                            .show(
+                                requireActivity().supportFragmentManager,
+                                UpdateAvailableNotificationFragment.TAG
+                            )
+                    }
+                }
+            }).start()
+            homeViewModel.updatePromptShown = true
+        }
     }
 
     override fun onDestroyView() {

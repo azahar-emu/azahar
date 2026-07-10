@@ -82,6 +82,8 @@ class HomeViewModel : ViewModel() {
             _selectedGamesDirectory.value = value
         }
 
+    var updatePromptShown = false
+
     fun setNavigationVisibility(visible: Boolean, animated: Boolean) {
         if (_navigationVisible.value.first == visible) {
             return

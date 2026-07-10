@@ -127,6 +127,8 @@ object SettingKeys {
     external fun udp_input_port(): String
     external fun udp_pad_index(): String
     external fun record_frame_times(): String
+    external fun check_for_update_on_start(): String
+    external fun update_check_channel(): String
 
     // Android
     external fun expand_to_cutout_area(): String
