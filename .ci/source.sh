@@ -20,6 +20,11 @@ git archive-all --include "${COMPAT_LIST}" --include GIT-COMMIT --include GIT-TA
 
 cd artifacts/
 tarlz -v -9z "${REV_NAME}.tar"
-lziprecover -v -Fc "${REV_NAME}.tar.lz"
+lziprecover -v -Fc "${REV_NAME}.tar.lz" || fec_failed=1
+if [ ${fec_failed:-0} -eq 1 ]
+then
+ echo "fec file creation failed! this is likely due to lziprecover being out of date."
+fi
 sha256sum "${REV_NAME}.tar.lz" > "${REV_NAME}.tar.lz.sha256sum"
+touch "${REV_NAME}.tar.lz.fec" # THIS IS A TEST MAKE SURE TO REMOVE IT!!
 cd ..
