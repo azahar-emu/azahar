@@ -19,6 +19,7 @@ git describe --tags HEAD > GIT-TAG || echo 'unknown' > GIT-TAG
 git archive-all --include "${COMPAT_LIST}" --include GIT-COMMIT --include GIT-TAG --force-submodules artifacts/"${REV_NAME}.tar"
 
 cd artifacts/
-xz -T0 -9 "${REV_NAME}.tar"
-sha256sum "${REV_NAME}.tar.xz" > "${REV_NAME}.tar.xz.sha256sum"
+tarlz -v -9z "${REV_NAME}.tar"
+lziprecover -v -Fc "${REV_NAME}.tar.lz"
+sha256sum "${REV_NAME}.tar.lz" > "${REV_NAME}.tar.lz.sha256sum"
 cd ..
