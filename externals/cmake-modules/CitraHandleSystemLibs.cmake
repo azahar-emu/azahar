@@ -3,7 +3,7 @@ option(USE_SYSTEM_LIBS "Use system libraries over bundled ones" OFF)
 # System library options
 CMAKE_DEPENDENT_OPTION(USE_SYSTEM_QT "Use the system Qt lib (instead of the bundled one)" OFF "ENABLE_QT;MSVC OR APPLE" ON)
 CMAKE_DEPENDENT_OPTION(USE_SYSTEM_LIBUSB "Use the system libusb (instead of the bundled libusb)" OFF "NOT (BSD MATCHES \"FreeBSD\")" ON)
-option(USE_SYSTEM_MOLTENVK "Use the system MoltenVK lib (instead of the bundled one)" OFF "APPLE" OFF)
+option(USE_SYSTEM_MOLTENVK "Use the system MoltenVK lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OFF)
 option(USE_SYSTEM_BOOST "Use the system Boost libs (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_OPENSSL "Use the system OpenSSL libs (instead of the bundled LibreSSL)" OFF)
