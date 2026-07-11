@@ -21,7 +21,9 @@ jobs:
         with:
           submodules: recursive
       - name: Pack
-        run: ./.ci/source.sh
+        run: |
+          sudo apt install -y tarlz lziprecover
+          ./.ci/source.sh
       - name: Generate SBOM
         if: ${{ github.ref_type == 'tag' }}
         uses: anchore/sbom-action@v0
@@ -40,7 +42,7 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: |
-            artifacts/*.tar.xz
+            artifacts/*.tar.lz
           sbom-path: artifacts/source.spdx.json
 
   linux-x86_64:
