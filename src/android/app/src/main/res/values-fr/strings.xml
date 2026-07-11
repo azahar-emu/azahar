@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Ce logiciel permet d\'exécuter des applications pour la console de jeu portable Nintendo 3DS. Aucun titre de jeu n\'est inclus.\n\nAvant de commencer l\'émulation, veuillez sélectionner un dossier pour y stocker les données utilisateur d\'Azahar.\n\nC\'est quoi ?:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Données utilisateur et stockage Citra Android</a></string>
     <string name="app_notification_channel_description">Notifications de l\'émulateur 3DS Azahar</string>
     <string name="app_notification_running">Azahar est en cours d\'exécution</string>
     <string name="app_game_install_description">Ensuite, vous devrez sélectionner un dossier d\'applications. Azahar affichera toutes les ROMs 3DS à l\'intérieur du dossier sélectionné dans l\'application. Les ROMs CIA, les mises à jour et les DLCs devront être installés séparément en cliquant sur l\'icône du dossier et en sélectionnant Installer CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Passer</string>
     <string name="warning_cancel">Annuler</string>
     <string name="select_citra_user_folder">Sélectionnez le dossier utilisateur</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Sélectionnez le répertoire des <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">données utilisateur</a> avec le bouton ci-dessous.]]></string>
     <string name="select_which_user_directory_to_use">Il semble que vous ayez défini des répertoires utilisateur pour Lime3DS et Azahar. Cela est probablement dû au fait que vous avez effectué une mise à niveau vers Azahar et que, lorsque vous y avez été invité, vous avez choisi un répertoire utilisateur différent de celui utilisé pour Lime3DS. \n\nCela vous a peut-être donné l\'impression d\'avoir perdu vos sauvegardes ou d\'autres paramètres. Nous vous prions de nous en excuser si tel est le cas.\n\nSouhaitez-vous revenir à votre répertoire utilisateur Lime3DS d\'origine, restaurer les paramètres et les sauvegardes de Lime3DS, ou conserver votre répertoire utilisateur Azahar actuel ?\n\nQuel que soit votre choix, aucun des deux répertoires ne sera supprimé et vous pourrez passer librement de l\'un à l\'autre à l\'aide de l\'option « Sélectionner le dossier utilisateur ».</string>
     <string name="keep_current_azahar_directory">Conserver le répertoire Azahar actuel</string>
     <string name="use_prior_lime3ds_directory">Utiliser l\'ancien répertoire Lime3DS</string>
     <string name="select">Sélectionner</string>
     <string name="cannot_skip">Vous ne pouvez pas ignorer la configuration du dossier utilisateur</string>
     <string name="cannot_skip_directory_description">Cette étape est requise pour permettre à Azahar de fonctionner. Sélectionnez un répertoire et ensuite vous pourrez continuer.</string>
-    <string name="selecting_user_directory_without_write_permissions">Vous avez perdu les droits d\'écriture sur votre répertoire de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">données utilisateur</a>, où sont stockées les sauvegardes et autres informations. Cela peut se produire après certaines mises à jour d\'applications ou d\'Android. Veuillez resélectionner le répertoire pour récupérer les droits d\'accès afin de pouvoir continuer.</string>
     <string name="invalid_selection">Sélection Invalide</string>
     <string name="invalid_user_directory">La sélection du répertoire utilisateur était invalide.\nVeuillez re-sélectionner le répertoire utilisateur, en s\'assurant de le sélectionner depuis la racine du stockage de votre appareil.</string>
     <string name="filesystem_permission_lost">Azahar a perdu l\'autorisation de gérer les fichiers de cet appareil. Cela peut arriver suite à des mises à jour d\'applis ou d\'Android. Veuillez ré-accorder cette autorisation sur l\'écran suivant pour continuer d\'utiliser l\'appli.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed activé</string>
     <string name="turbo_disabled_toast">Turbo Speed désactivé</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Fichiers système</string>
     <string name="setup_system_files_description">Effectuer des opérations sur les fichiers système, telles que l\'installation de fichiers système ou le démarrage du menu Home.</string>
@@ -390,13 +386,14 @@
     <string name="reset_setting_confirmation">Voulez-vous réinitialiser ce paramètre à sa valeur par défaut ?</string>
     <string name="setting_not_editable">Vous ne pouvez pas modifier cela maintenant</string>
     <string name="setting_disabled">Paramètre désactivé</string>
+    <string name="setting_disabled_description_incompatible_setting">Ce paramètre est actuellement désactivé car un autre paramètre n\'a pas la valeur appropriée.</string>
+    <string name="setting_disabled_description_angle">Le moteur de rendu ne peut pas être changé car l\'appareil utilise ANGLE pour OpenGL, qui est actuellement incompatible avec Azahar. Vulkan sera utilisé.</string>
     <string name="setting_not_editable_description">Cette option ne peut pas être modifiée pendant qu\'un jeu est lancé.</string>
     <string name="auto_select">Sélection Automatique</string>
     <string name="start">Démarrer</string>
     <string name="cancelling">Annulation...</string>
     <string name="visibility">Visibilité</string>
     <string name="information">Information</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Choisir un répertoire de jeu</string>
 
@@ -478,6 +475,11 @@
     <string name="emulation_aspect_ratio">Rapport d\'aspect</string>
     <string name="emulation_switch_screen_layout">Disposition en mode paysage</string>
     <string name="emulation_switch_portrait_layout">Disposition en mode portait</string>
+    <string name="emulation_secondary_display_enable">Activer l\'écran secondaire</string>
+    <string name="emulation_secondary_display_enable_description">Si désactivé, Azahar laisse Android gérer les écrans connectés. Si cette option est activée et que plusieurs écrans sont connectés, vous pouvez sélectionner lequel Azahar utilisera dans le menu rapide d\'émulation.</string>
+    <string name="emulation_switch_secondary_layout">Disposition de l\'écran secondaire</string>
+    <string name="emulation_secondary_display_management">Écran secondaire</string>
+    <string name="emulation_select_secondary_display">Choisir l\'écran</string>
     <string name="emulation_switch_secondary_layout_description">La disposition utilisée par un écran secondaire connecté par câble ou sans fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Écran large</string>
     <string name="emulation_screen_layout_portrait">Mode portrait</string>
@@ -486,6 +488,7 @@
     <string name="emulation_screen_layout_hybrid">Écrans hybrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Défaut</string>
+    <string name="emulation_secondary_display_opposite">Écran opposé</string>
     <string name="emulation_screen_layout_custom">Disposition personnalisée</string>
     <string name="bg_color">Couleur de fond</string>
     <string name="bg_color_description">La couleur qui apparaît derrière les écrans pendant l\'émulation, représentée par une valeur RGB.</string>
@@ -960,4 +963,4 @@
     <string name="decompress_failed">Échec de la décompression.</string>
     <string name="compress_decompress_installed_app">Les applications déjà installées ne peuvent pas être compressées ou décompressées.</string>
 
-</resources>
+  </resources>

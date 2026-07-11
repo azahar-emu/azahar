@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Questo software eseguirà applicazioni per la console portatile Nintendo 3DS. Nessun titolo è incluso.\n\nPrima di iniziare con l\'emulazione, seleziona una cartella che conterrà i dati utente.\n\nCos\'è questo:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'> Wiki - Citra Android user data and storage</a></string>
     <string name="app_notification_channel_description">Notifiche emulatore Azahar 3DS</string>
     <string name="app_notification_running">Azahar è in esecuzione</string>
     <string name="app_game_install_description">Ora è necessario selezionare una cartella Applicazioni. Azahar mostrerà tutte le ROM 3DS all\'interno della cartella selezionata nell\'app. Le ROM CIA, gli aggiornamenti e DLC dovranno essere installati separatamente cliccando sulla cartella e selezionando installa CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Salta</string>
     <string name="warning_cancel">Annulla</string>
     <string name="select_citra_user_folder">Seleziona cartella utente</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">utente</a> usando il pulsante qui sotto.]]></string>
     <string name="select_which_user_directory_to_use">Sembra che tu abbia impostato cartelle utente sia per Lime3DS che per Azahar. Questo è probabilmente dovuto al fatto che hai eseguito l\'aggiornamento ad Azahar e, al momento della richiesta, hai scelto una cartella utente diversa da quella utilizzata per Lime3DS.\n\nQuesto potrebbe averti fatto pensare di aver perso salvataggi o altre impostazioni - ci scusiamo se è successo.\n\nDesideri tornare a utilizzare la tua cartella utente originale di Lime3DS, ripristinando impostazioni e salvataggi da Lime3DS, oppure preferisci mantenere la cartella utente attuale di Azahar?\n\nNessuna delle cartelle verrà eliminata, indipendentemente dalla tua scelta, e potrai passare liberamente da una all\'altra utilizzando l\'opzione \"Seleziona Cartella Utente\".</string>
     <string name="keep_current_azahar_directory">Mantieni la cartella di Azahar attuale</string>
     <string name="use_prior_lime3ds_directory">Usa la cartella precedente di Lime3DS</string>
     <string name="select">Seleziona</string>
     <string name="cannot_skip">Non puoi saltare la configurazione della cartella utente</string>
     <string name="cannot_skip_directory_description">Questo passaggio è necessario per consentire ad Azahar di funzionare. Seleziona una cartella per poter continuare.</string>
-    <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Seleziona nuovamente la cartella per ripristinare i permessi e continuare.</string>
     <string name="invalid_selection">Selezione non valida</string>
     <string name="invalid_user_directory">La cartella utente selezionata non è valida.\nSelezionala di nuovo assicurandoti di partire dalla memoria principale del dispositivo.</string>
     <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti dell\' app o di Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
@@ -141,11 +138,14 @@
     <string name="button_home">Home</string>
     <string name="button_swap">Inverti schermi</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Combo Button</string>
     <string name="input_message_analog_only">Questo comando dev\'essere assegnato alla levetta analogica di un gamepad o a un asse dei tasti direzionali!</string>
     <string name="input_message_button_only">Questo comando dev\'essere assegnato a un pulsante del gamepad!</string>
     <string name="turbo_limit_hotkey">Velocità Turbo</string>
     <string name="turbo_enabled_toast">Velocità Turbo abilitata</string>
     <string name="turbo_disabled_toast">Velocità Turbo disabilitata</string>
+    <string name="combo_button_settings">Configura Combo Button</string>
+    <string name="combo_button_settings_description">Seleziona quali pulsanti vengono attivati dal Combo Button.</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">File di sistema</string>
@@ -250,6 +250,8 @@
     <string name="advanced">Avanzato</string>
     <string name="texture_sampling_name">Campionamento texture</string>
     <string name="texture_sampling_description">Sovrascrive il filtro di campionamento utilizzato dai giochi. Questo può essere utile in alcuni casi con giochi che gestiscono male l\'upscaling. Se hai dubbi, imposta questa opzione su \"Gestito dal gioco\".</string>
+    <string name="use_skip_duplicate_frames">Salta fotogrammi duplicati</string>
+    <string name="use_skip_duplicate_frames_description">Rileva e salta la visualizzazione dei fotogrammi non univoci. Consente inoltre agli strumenti esterni di generazione dei fotogrammi di funzionare correttamente con i giochi a 30fps. Funziona sia in OpenGL che in Vulkan</string>
     <string name="shaders_accurate_mul">Moltiplicazione accurata</string>
     <string name="shaders_accurate_mul_description">Utilizza una moltiplicazione più accurata degli shader hardware, che potrebbe correggere alcuni bug grafici. Se l\'opzione è abilitata, le prestazioni saranno ridotte.</string>
     <string name="asynchronous_gpu">Abilita l\'emulazione GPU asincrona</string>
@@ -390,13 +392,14 @@
     <string name="reset_setting_confirmation">Vuoi reimpostare questa opzione al suo valore predefinito?</string>
     <string name="setting_not_editable">Non puoi modificare questo ora</string>
     <string name="setting_disabled">Impostazione disabilitata</string>
+    <string name="setting_disabled_description_incompatible_setting">Questa impostazione è disattivata perché un\'altra opzione non ha il valore richiesto.</string>
+    <string name="setting_disabled_description_angle">Non è possibile cambiare il motore di rendering perché il dispositivo usa ANGLE per OpenGL, che al momento non è compatibile con Azahar. Verrà utilizzato Vulkan.</string>
     <string name="setting_not_editable_description">Questa opzione non può essere modificata mentre un gioco è in esecuzione.</string>
     <string name="auto_select">Seleziona automaticamente</string>
     <string name="start">Avvia</string>
     <string name="cancelling">Annullamento in corso...</string>
     <string name="visibility">Visibilità</string>
     <string name="information">Informazione</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleziona cartella del gioco</string>
 
@@ -966,4 +969,4 @@
     <string name="decompress_failed">Decompressione fallita.</string>
     <string name="compress_decompress_installed_app">Le applicazioni già installate non possono essere compresse o decompresse.</string>
 
-</resources>
+  </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Aquest software executarà aplicacions per a la consola de jocs portàtil Nintendo 3DS. No s\'inclouen títols de jocs.\n\nAbans de començar a emular, selecciona una carpeta on emmagatzemar les dades d\'usuari d\'Azahar.\n\nQuè és això:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dades i emmagatzematge d\'usuari de Citra Android</a></string>
     <string name="app_notification_channel_description">Notificacions de l\'emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar s\'està executant</string>
     <string name="app_game_install_description">A continuació, haureu de seleccionar una carpeta d\'aplicacions. Azahar mostrarà totes les aplicacions de 3DS dins de la carpeta seleccionada a l\'aplicació.\n\nLes aplicacions, actualitzacions i DLC CIA s\'hauran d\'instal·lar per separat fent clic a la icona de la carpeta i seleccionant Instal·la CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancel·lar</string>
     <string name="select_citra_user_folder">Seleccionar carpeta d\'usuari.</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Selecciona el vostre directori de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dades d\'usuari</a> amb el següent botó.]]></string>
     <string name="select_which_user_directory_to_use">Sembla que tens directoris d\'usuari configurats tant per a Lime3DS com per a Azahar. Probablement es deu al fet que vas actualitzar a Azahar i, quan se\'t va demanar, vas triar un directori d\'usuari diferent del qual usaves per a Lime3DS.\n\nAixó pot haver-te fet pensar que vas perdre partides guardades o altres configuracions; et demanem disculpes si això va ocórrer.\n\nPreferixes tornar a usar el teu directori d\'usuari original de Lime3DS, restaurant la configuració i les partides guardades de Lime3DS, o conservar el teu directori d\'usuari actual d\'Azahar?\n\nCap dels directoris s\'eliminarà, independentment de la teua elecció, i pots canviar lliurement entre ells usant l\'opció \"Seleccionar carpeta d\'usuari\".</string>
     <string name="keep_current_azahar_directory">Mantindre el directori Azahar actual</string>
     <string name="use_prior_lime3ds_directory">Usar el directori de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No pots saltar la configuració de la carpeta d\'usuari</string>
     <string name="cannot_skip_directory_description">Aquest pas és necessari perquè Azahar funcione. Selecciona un directori i després podràs continuar.</string>
-    <string name="selecting_user_directory_without_write_permissions">Has perdut els permisos d\'escriptura en el teu  <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directori de dades d\'usuari</a>, on es guarden les partides guardades i altra informació. Això pot ocórrer després d\'algunes actualitzacions d\'aplicacions o d\'Android. Torna a seleccionar el directori per a recuperar els permisos i poder continuar.</string>
     <string name="invalid_selection">Selecció no vàlida</string>
     <string name="invalid_user_directory">La selecció del directori d\'usuari no és vàlida.\nTorna a seleccionar el directori d\'usuari, assegurant-te de navegar fins ell des de l\'arrel de l\'emmagatzematge del dispositiu.</string>
     <string name="filesystem_permission_lost">Azahar ha perdut el permís per a administrar fitxers en este dispositiu. Això pot ocórrer després d\'alguna actualització de l\'aplicació o d\'Android. Torna a concedir este permís en la següent pantalla per a continuar usant l\'aplicació.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Velocitat Turbo</string>
     <string name="turbo_enabled_toast">Velocitat Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocitat Turbo Desactivada</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Fitxers del sistema</string>
     <string name="setup_system_files_description">Realitzar operacions de fitxers del sistema, com instal·lar fitxers del sistema o obrir el menú HOME</string>
@@ -390,7 +386,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="cancelling">Cancel·lant</string>
     <string name="visibility">Visibilitat</string>
     <string name="information">Informació</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directori de Joc</string>
 
@@ -923,4 +918,4 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="decompress_failed">Va fallar la descompressió.</string>
     <string name="compress_decompress_installed_app">Les aplicacions ja instal·lades no es poden comprimir ni descomprimir.</string>
 
-</resources>
+  </resources>

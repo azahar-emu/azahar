@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">该软件运行任天堂 3DS 掌机的游戏。该软件不包含游戏\n\n在开始模拟之前，请选择一个文件夹来存储 Azahar 的用户数据。\n\n了解详情：\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>百科 - Citra Android 用户数据与存储</a></string>
     <string name="app_notification_channel_description">Azahar 3DS 模拟器通知</string>
     <string name="app_notification_running">Azahar 正在运行</string>
     <string name="app_game_install_description">接下来，您需要选择一个应用文件夹。Azahar 将显示所选文件夹中的所有 3DS ROM。\n\nCIA ROM、更新和 DLC 需要分别进行安装，具体为点击文件夹图标并选择“安装 CIA”。</string>
@@ -81,14 +80,12 @@
     <string name="warning_skip">跳过</string>
     <string name="warning_cancel">取消</string>
     <string name="select_citra_user_folder">选择用户文件夹</string>
-    <string name="select_citra_user_folder_description"><![CDATA[使用下面的按钮选择您的 <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">用户数据</a>目录。]]></string>
     <string name="select_which_user_directory_to_use">您似乎同时为 Lime3DS 和 Azahar 设置了用户目录。这可能是因为您升级到了 Azahar，并在系统提示时选择了与 Lime3DS 不同的用户目录。\n\n这可能导致您误以为丢失了存档或其他设置 - 如果发生这种情况，我们深表歉意。\n\n您想恢复原来的 Lime3DS 用户目录、Lime3DS 设置和游戏存档，还是保持当前的 ​​Azahar 用户目录？\n\n无论您选择哪种方式，这两个目录都不会被删除，您可以使用“选择用户文件夹”选项在它们之间自由切换。</string>
     <string name="keep_current_azahar_directory">保持当前的 Azahar 目录</string>
     <string name="use_prior_lime3ds_directory">使用先前的 Lime3DS 目录</string>
     <string name="select">选择</string>
     <string name="cannot_skip">您不能跳过设置用户文件夹</string>
     <string name="cannot_skip_directory_description">此步骤是 Azahar 正常运行所必需的。请选择一个目录，然后才可继续。</string>
-    <string name="selecting_user_directory_without_write_permissions">您已失去对<a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">用户数据</a>目录的写入权限，该目录用于存储存档和其他信息数据。某些应用或 Android 更新后可能会出现这种情况。请重新选择该目录以重新获得权限，才能继续操作。</string>
     <string name="set_up_theme_settings">主题设置</string>
     <string name="setup_theme_settings_description">配置您的 Azahar 主题偏好。</string>
     <string name="setup_set_theme">设置主题</string>
@@ -126,7 +123,6 @@
     <string name="turbo_limit_hotkey">加速</string>
     <string name="turbo_enabled_toast">加速已启用</string>
     <string name="turbo_disabled_toast">加速已禁用</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">系统文件</string>
     <string name="setup_system_files_description">执行系统文件操作，如安装系统文件或启动 HOME 菜单</string>
@@ -353,7 +349,6 @@
     <string name="cancelling">取消中…</string>
     <string name="visibility">可见度</string>
     <string name="information">信息</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">选择游戏目录</string>
 

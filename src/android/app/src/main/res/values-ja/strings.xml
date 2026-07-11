@@ -159,4 +159,5 @@
     <string name="emulation_quicksave">クイックセーブ</string>
     <string name="emulation_quickload">クイックロード</string>
     <string name="emulation_occupied_quicksave_slot">クイックセーブ-%1$tF%1$tR</string>
+    <string name="update_available"> アップデートがあります</string>
     </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Denne software kører applikationer til den håndholdte spillekonsol Nintendo 3DS. Ingen spiltitler er inkluderet.\n\nInden du kan begynde med at emulere, skal du vælge en mappe til at gemme Azahars brugerdata i.\n\nHvad er dette:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android-brugerdata og lagring</a></string>
     <string name="app_notification_channel_description">Azahar 3DS emulator meddelelser</string>
     <string name="app_notification_running">Azahar kører</string>
     <string name="app_game_install_description">Dernæst skal du vælge en applikationsmappe. Azahar vil vise alle 3DS ROM\'erne inde i den valgte mappe i appen.\n\nCIA ROM\'er, opdateringer og DLC ​​skal installeres separat ved at klikke på mappeikonet og vælge installer CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Spring over</string>
     <string name="warning_cancel">Annuller</string>
     <string name="select_citra_user_folder">Vælg brugermappe</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Vælg din <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">brugerdata</a> mappe med knappen nedenfor.]]></string>
     <string name="select_which_user_directory_to_use">Du ser ud til at have indstillet brugermapper til både Lime3DS og Azahar. Dette skyldes sandsynligvis, at du har opgraderet til Azahar, og da du bliver bedt om det, valgte du en anden brugermappe end den, der blev brugt til Lime3DS.\n\nDette kan have resulteret i, at du troede, at du havde mistet gemte tilstande eller andre indstillinger - vi beklager, hvis det skete.\n\nVil du gå tilbage til at bruge din oprindelige Lime3DS-brugermappe, gendanne indstillinger og gemte Lime3DS-spiltilstande, eller beholde dine nuværende Azahar brugermappe?\n\nIngen af ​​mapperne slettes, uanset dit valg, og du kan frit skifte mellem dem ved at bruge valgmuligheden Vælg brugermappe.</string>
     <string name="keep_current_azahar_directory">Behold den aktuelle Azahar-mappe</string>
     <string name="use_prior_lime3ds_directory">Brug tidligere Lime3DS mappe</string>
     <string name="select">Vælg</string>
     <string name="cannot_skip">Du kan ikke springe opsætningen af ​​brugermappen over </string>
     <string name="cannot_skip_directory_description">Dette trin er påkrævet for at Azahar kan fungere. Vælg en mappe og så kan du fortsætte.</string>
-    <string name="selecting_user_directory_without_write_permissions">Du har mistet skrivetilladelse i din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">brugerdata</a> mappe, hvor gemte tilstande og anden information er gemt. Dette kan ske efter en app- eller Android-opdatering. Vælg venligst mappen for at give tilladelse igen, så du kan fortsætte.</string>
     <string name="invalid_selection">Ugyldigt valg</string>
     <string name="invalid_user_directory">Valget af brugermappe var ugyldigt.\nVælg venligst brugermappen igen, og sørg for at navigere til den fra roden af ​​din enheds lager.</string>
     <string name="filesystem_permission_lost">Azahar har mistet tilladelsen til at administrere filer på denne enhed. Dette kan ske efter nogle app- eller Android-opdateringer. Giv venligst denne tilladelse igen på den næste skærm for at fortsætte med at bruge appen.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Turbohastighed</string>
     <string name="turbo_enabled_toast">Turbohastighed aktiveret</string>
     <string name="turbo_disabled_toast">Turbohastighed deaktiveret</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Systemfiler</string>
     <string name="setup_system_files_description">Udfør handlinger som installation af systemfiler eller opstart af startmenu</string>
@@ -396,7 +392,6 @@
     <string name="cancelling">Annullerer...</string>
     <string name="visibility">Sigtbarhed</string>
     <string name="information">Information</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Vælg spilmappe</string>
 
@@ -959,4 +954,4 @@
     <string name="decompress_failed">Dekomprimeringen mislykkedes.</string>
     <string name="compress_decompress_installed_app">Allerede installerede programmer kan ikke komprimeres eller dekomprimeres.</string>
 
-</resources>
+  </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">To oprogramowanie umożliwia uruchamianie aplikacje na konsolę przenośną Nintendo 3DS. Nie zawiera tytułów gier.\n\nPrzed rozpoczęciem emulacji należy wybrać folder do przechowywania danych użytkownika Azahar.\n\nCo to jest:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dane użytkownika i przechowywanie Azahar dla systemu Android</a></string>
     <string name="app_notification_channel_description">Powiadomienia o emulatorze Azahar</string>
     <string name="app_notification_running">Azahar jest uruchomiony</string>
     <string name="app_game_install_description">Następnie należy wybrać folder z aplikacjami. Azahar wyświetli wszystkie ROM-y 3DS w wybranym folderze w aplikacji.\n\nROMy CIA, aktualizacje i DLC będą musiały zostać zainstalowane oddzielnie, klikając ikonę folderu i wybierając opcję Zainstaluj CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Pomiń</string>
     <string name="warning_cancel">Anuluj</string>
     <string name="select_citra_user_folder">Wybierz folder użytkownika</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Wybierz katalog<a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">danych użytkownika</a>korzystając z przycisku poniżej.]]></string>
     <string name="select_which_user_directory_to_use">Wygląda na to, że masz ustawione katalogi użytkownika zarówno dla Lime3DS, jak i Azahar. Dzieje się tak prawdopodobnie dlatego, że zaktualizowałeś Azahar i po wyświetleniu monitu wybrałeś inny katalog użytkownika niż ten, który był używany w Lime3DS.\n\nMogło to spowodować utratę zapisów lub innych ustawień - przepraszamy, jeśli tak się stało.\n\nCzy chcesz powrócić do używania oryginalnego katalogu użytkownika Lime3DS, przywracając ustawienia i zapisując gry z Lime3DS, czy zachować obecny katalog użytkownika Azahar?\n\nŻaden z katalogów nie zostanie usunięty, niezależnie od dokonanego wyboru, a ty możesz swobodnie przełączać się między nimi za pomocą opcji Wybierz folder użytkownika.</string>
     <string name="keep_current_azahar_directory">Zachowaj aktualny katalog Azahar</string>
     <string name="use_prior_lime3ds_directory">Użyj wcześniejszego katalogu Lime3DS</string>
     <string name="select">Wybierz</string>
     <string name="cannot_skip">Nie można pominąć konfiguracji folderu użytkownika.</string>
     <string name="cannot_skip_directory_description">Ten krok jest wymagany, aby umożliwić działanie Azahar. Wybierz katalog, a następnie możesz kontynuować.</string>
-    <string name="selecting_user_directory_without_write_permissions">Utraciłeś uprawnienia do zapisu w katalogu <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">danych użytkownika</a>, w którym przechowywane są zapisy i inne informacje. Może się to zdarzyć po niektórych aktualizacjach aplikacji lub systemu Android. Wybierz ponownie katalog, aby odzyskać uprawnienia i móc kontynuować.</string>
     <string name="invalid_selection">Nieprawidłowy wybór</string>
     <string name="invalid_user_directory">Wybór katalogu użytkownika był nieprawidłowy.\nProszę ponownie wybrać katalog użytkownika, upewniając się, że przechodzisz do niego z katalogu głównego pamięci urządzenia.</string>
     <string name="filesystem_permission_lost">Azahar utracił uprawnienia do zarządzania plikami na tym urządzeniu. Może się to zdarzyć po aktualizacji niektórych aplikacji lub systemu Android. Aby kontynuować korzystanie z aplikacji, należy ponownie przyznać te uprawnienia na następnym ekranie.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Prędkość Turbo</string>
     <string name="turbo_enabled_toast">Prędkość Turbo włączona</string>
     <string name="turbo_disabled_toast">Prędkość Turbo wyłączona</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Pliki systemowe</string>
     <string name="setup_system_files_description">Wykonywanie operacji na plikach systemowych, takich jak instalowanie plików systemowych lub uruchamianie Home Menu</string>
@@ -394,7 +390,6 @@
     <string name="cancelling">Anulowanie...</string>
     <string name="visibility">Widoczność</string>
     <string name="information">Informacje</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Wybierz folder gry</string>
 
@@ -959,4 +954,4 @@
     <string name="decompress_failed">Dekompresja nie powiodła się.</string>
     <string name="compress_decompress_installed_app">Aplikacje, które są już zainstalowane, nie mogą być kompresowane ani dekompresowane.</string>
 
-</resources>
+  </resources>

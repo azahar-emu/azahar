@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Bu yazılım Nintendo 3DS el konsolu uygulamalarını çalıştırmak içindir. Hiçbir oyun dosyası içermez. \n\nEmülasyon yapmaya başlamadan önce lütfen Azahar kullanıcı verilerinin depolanması için bir dosya seçin. \n\nBu nedir?:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android Kullanıcı verileri ve depolama</a></string>
     <string name="app_notification_channel_description">Azahar 3DS emülatörü bildirimleri</string>
     <string name="app_notification_running">Azahar çalışıyor</string>
     <string name="app_game_install_description">Sırada, bir Uygulama Dosyası seçmelisiniz. Azahar seçili dosyadaki bütün 3DS ROM\'larını uygulamada gösterecektir.\n\nCİA ROM\'larının, güncellemelerin ve DLC\'lerin; dosya ikonuna tıklanıp \"CIA İndir\"i seçerek ayrı olarak indirilmesi gerekir.</string>
@@ -84,14 +83,12 @@
     <string name="warning_skip">Atla</string>
     <string name="warning_cancel">İptal et</string>
     <string name="select_citra_user_folder">Kullanıcı Dosyası Seç</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Aşağıdaki butonla <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">kullanıcı verileri</a>dizinini seçin.]]></string>
     <string name="select_which_user_directory_to_use">Hem Lime3DS hem de Azahar için ayarlanmış kullanıcı dizinleriniz var gibi görünüyor. Bunun nedeni muhtemelen Azahar\'a geçmiş olmanız ve sorulduğunda Lime3DS için kullanılandan farklı bir kullanıcı dizini seçmiş olmanızdır.\n\nBu, kayıtları veya diğer ayarları kaybettiğinizi düşünmenize neden olmuş olabilir - böyle bir şey olduysa özür dileriz. \n\nOrijinal Lime3DS kullanıcı dizininizi kullanmaya geri dönmek, Lime3DS\'deki ayarları ve oyun kayıtlarını geri yüklemek mi istersiniz; yoksa mevcut Azahar kullanıcı dizininizi korumak mı? \n\nSeçiminiz ne olursa olsun her iki dizin de silinmeyecektir ve Kullanıcı Klasörü Seç seçeneğini kullanarak aralarında serbestçe geçiş yapabilirsiniz.</string>
     <string name="keep_current_azahar_directory">Şimdiki Azahar Dizinini Koru</string>
     <string name="use_prior_lime3ds_directory">Eski Lime3DS Dizinini Kullan</string>
     <string name="select">Seç</string>
     <string name="cannot_skip">Kullanıcı klasörü ayarlamayı atlayamazsınız</string>
     <string name="cannot_skip_directory_description">Bu adım Azahar\'ın çalışması için gereklidir. Lütfen devam etmek için bir dizin seçin.</string>
-    <string name="selecting_user_directory_without_write_permissions">Kayıtların ve diğer bilgilerin depolandığı <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">kullanıcı verileri</a>dizininizdeki yazma izinlerini kaybettiniz. Bu durum bazı uygulama veya Android güncellemelerinden sonra meydana gelebilir. Devam edebilmeniz için lütfen izinleri yeniden kazanmak üzere dizini yeniden seçin.</string>
     <string name="invalid_selection">Geçersiz Seçim</string>
     <string name="set_up_theme_settings">Tema Ayarları</string>
     <string name="setup_theme_settings_description">Azahar için tema tercihlerinizi yapılandırın.</string>
@@ -132,7 +129,6 @@
     <string name="turbo_limit_hotkey">Turbo Hız</string>
     <string name="turbo_enabled_toast">Turbo Hız Aktif</string>
     <string name="turbo_disabled_toast">Turbo Hız Devre Dışı</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Sistem Dosyaları</string>
     <string name="setup_system_files_description">Sistem dosyaları yüklemek veya Home menüsünü başlatmak gibi sistem dosyası işlemlerini gerçekleştirin</string>
@@ -332,7 +328,6 @@
     <string name="cancelling">İptal ediliyor...</string>
     <string name="visibility">Görünürlük</string>
     <string name="information">Bilgi</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Oyun Dosyası Seç</string>
 
@@ -851,4 +846,4 @@
     <string name="decompress_failed">Dosya ayıklama işlemi başarısız.</string>
     <string name="compress_decompress_installed_app">Halihazırda kurulu olan uygulamalar sıkıştırılamaz veya ayıklanamaz.</string>
 
-</resources>
+  </resources>

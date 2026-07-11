@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Den här programvaran kommer att köra applikationer för den handhållna spelkonsolen Nintendo 3DS. Inga speltitlar ingår.\n\nFör att du ska kunna börja emulera måste du välja en mapp att lagra Azahars användardata i.\n\nVad är det här:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android användardata och lagring</a></string>
     <string name="app_notification_channel_description">Aviseringar för Azahar 3DS-emulator</string>
     <string name="app_notification_running">Azahar är igång</string>
     <string name="app_game_install_description">Näst måste du välja en applikationsmapp. Azahar kommer att visa alla 3DS ROM i den valda mappen i appen.\n\nCIA ROM, uppdateringar och DLC måste installeras separat genom att klicka på mappikonen och välja Installera CIA.</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Hoppa över</string>
     <string name="warning_cancel">Avbryt</string>
     <string name="select_citra_user_folder">Välj användarmapp</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Välj din <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">användardatakatalog</a> med knappen nedan.]]></string>
     <string name="select_which_user_directory_to_use">Du verkar ha användarkataloger inställda för både Lime3DS och Azahar. Detta beror troligen på att du uppgraderade till Azahar och när du blev ombedd att välja en annan användarkatalog än den som användes för Lime3DS. \n\nDetta kan ha lett till att du trodde att du förlorat sparade spel eller andra inställningar – vi ber om ursäkt om så är fallet. Vill du gå tillbaka till att använda din ursprungliga Lime3DS-användarkatalog och återställa inställningar och spara spel från Lime3DS, eller behålla din nuvarande Azahar-användarkatalog? Ingen av katalogerna kommer att raderas, oavsett vilket val du gör, och du kan fritt växla mellan dem med hjälp av alternativet Välj användarkatalog.</string>
     <string name="keep_current_azahar_directory">Behåll aktuell Azahar-katalog</string>
     <string name="use_prior_lime3ds_directory">Använd tidigare Lime3DS-katalog</string>
     <string name="select">Välj</string>
     <string name="cannot_skip">Du kan inte hoppa över konfiguration av användarmappen</string>
     <string name="cannot_skip_directory_description">Detta steg krävs för att Azahar ska fungera. Välj en katalog och sedan kan du fortsätta.</string>
-    <string name="selecting_user_directory_without_write_permissions">Du har förlorat skrivbehörighet till katalogen <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">user data</a>, där sparade filer och annan information lagras. Detta kan inträffa efter vissa app- eller Android-uppdateringar. Välj katalogen på nytt för att återfå behörigheten så att du kan fortsätta.</string>
     <string name="invalid_selection">Ogiltigt val</string>
     <string name="invalid_user_directory">Valet av användarkatalog var ogiltigt. Välj användarkatalogen igen och se till att du navigerar till den från roten av enhetens lagring.</string>
     <string name="filesystem_permission_lost">Azahar har förlorat behörigheten att hantera filer på den här enheten. Detta kan inträffa efter vissa app- eller Android-uppdateringar. Bevilja denna behörighet på nästa skärm för att fortsätta använda appen.</string>
@@ -146,7 +143,6 @@
     <string name="turbo_limit_hotkey">Turbohastighet</string>
     <string name="turbo_enabled_toast">Turbohastighet aktiverad</string>
     <string name="turbo_disabled_toast">Turbohastighet inaktiverad</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Systemfiler</string>
     <string name="setup_system_files_description">Utför systemfilsoperationer som att installera systemfiler eller starta upp startmenyn</string>
@@ -389,7 +385,6 @@
     <string name="cancelling">Avbryter...</string>
     <string name="visibility">Synlighet</string>
     <string name="information">Information</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Välj spelmapp</string>
 
@@ -932,4 +927,4 @@
     <string name="decompress_failed">Avkomprimering misslyckades.</string>
     <string name="compress_decompress_installed_app">Redan installerade applikationer kan inte komprimeras eller avkomprimeras.</string>
 
-</resources>
+  </resources>
