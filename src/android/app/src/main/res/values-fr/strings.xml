@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_disclaimer">Ce logiciel permet d\'exécuter des applications pour la console de jeu portable Nintendo 3DS. Aucun titre de jeu n\'est inclus.\n\nAvant de commencer l\'émulation, veuillez sélectionner un dossier pour y stocker les données utilisateur d\'Azahar.\n\nC\'est quoi ? :\n<a href='https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage'>Wiki - Données utilisateur et stockage Azahar Android</a></string>
     <string name="app_notification_channel_description">Notifications de l\'émulateur 3DS Azahar</string>
     <string name="app_notification_running">Azahar est en cours d\'exécution</string>
     <string name="app_game_install_description">Ensuite, vous devrez sélectionner un dossier d\'applications. Azahar affichera toutes les ROMs 3DS à l\'intérieur du dossier sélectionné dans l\'application. Les ROMs CIA, les mises à jour et les DLCs devront être installés séparément en cliquant sur l\'icône du dossier et en sélectionnant Installer CIA.</string>
@@ -31,6 +32,15 @@
     <string name="select_citra_user_folder_home_description">Modifie les fichiers utilisés par Azahar pour charger les applications</string>
     <string name="theme_and_color_description">Modifier l\'apparence de l\'application</string>
     <string name="install_cia_title">Installer un CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">Réseau</string>
+    <string name="web_api_url">URL de l\'API Web</string>
+    <string name="web_api_url_description">URL de l\'API Web pour la fonction des salons publics</string>
+    <string name="network_token">Token Réseau</string>
+    <string name="network_token_description">Token pour la fonction des salons publics</string>
+    <string name="username_uses_system">Cette propriété est liée au nom d\'utilisateur système 3DS.</string>
+    <string name="username_invalid">Le nom d\'utilisateur n\'est pas valide. Il doit contenir entre 4 et 20 caractères alphanumériques.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Sélectionner le pilote du GPU</string>
@@ -84,12 +94,14 @@
     <string name="warning_skip">Passer</string>
     <string name="warning_cancel">Annuler</string>
     <string name="select_citra_user_folder">Sélectionnez le dossier utilisateur</string>
+    <string name="select_citra_user_folder_description"><![CDATA[Sélectionnez le répertoire des <a href=\"https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage\">données utilisateur</a> avec le bouton ci-dessous.]]></string>
     <string name="select_which_user_directory_to_use">Il semble que vous ayez défini des répertoires utilisateur pour Lime3DS et Azahar. Cela est probablement dû au fait que vous avez effectué une mise à niveau vers Azahar et que, lorsque vous y avez été invité, vous avez choisi un répertoire utilisateur différent de celui utilisé pour Lime3DS. \n\nCela vous a peut-être donné l\'impression d\'avoir perdu vos sauvegardes ou d\'autres paramètres. Nous vous prions de nous en excuser si tel est le cas.\n\nSouhaitez-vous revenir à votre répertoire utilisateur Lime3DS d\'origine, restaurer les paramètres et les sauvegardes de Lime3DS, ou conserver votre répertoire utilisateur Azahar actuel ?\n\nQuel que soit votre choix, aucun des deux répertoires ne sera supprimé et vous pourrez passer librement de l\'un à l\'autre à l\'aide de l\'option « Sélectionner le dossier utilisateur ».</string>
     <string name="keep_current_azahar_directory">Conserver le répertoire Azahar actuel</string>
     <string name="use_prior_lime3ds_directory">Utiliser l\'ancien répertoire Lime3DS</string>
     <string name="select">Sélectionner</string>
     <string name="cannot_skip">Vous ne pouvez pas ignorer la configuration du dossier utilisateur</string>
     <string name="cannot_skip_directory_description">Cette étape est requise pour permettre à Azahar de fonctionner. Sélectionnez un répertoire et ensuite vous pourrez continuer.</string>
+    <string name="selecting_user_directory_without_write_permissions">Vous avez perdu les droits d\'écriture sur votre répertoire de <a href="https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage">données utilisateur</a>, où sont stockées les sauvegardes et autres informations. Cela peut se produire après certaines mises à jour d\'applications ou d\'Android. Veuillez re-sélectionner le répertoire pour récupérer les droits d\'accès afin de pouvoir continuer.</string>
     <string name="invalid_selection">Sélection Invalide</string>
     <string name="invalid_user_directory">La sélection du répertoire utilisateur était invalide.\nVeuillez re-sélectionner le répertoire utilisateur, en s\'assurant de le sélectionner depuis la racine du stockage de votre appareil.</string>
     <string name="filesystem_permission_lost">Azahar a perdu l\'autorisation de gérer les fichiers de cet appareil. Cela peut arriver suite à des mises à jour d\'applis ou d\'Android. Veuillez ré-accorder cette autorisation sur l\'écran suivant pour continuer d\'utiliser l\'appli.</string>
@@ -138,11 +150,15 @@
     <string name="button_home">HOME</string>
     <string name="button_swap">Permuter les écrans</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Bouton combo</string>
     <string name="input_message_analog_only">Cette commande doit être rattachée à un stick analogique de manette ou à un axe de la manette + !</string>
     <string name="input_message_button_only">Cette commande doit être rattachée à un bouton de la manette !</string>
     <string name="turbo_limit_hotkey">Turbo Speed</string>
     <string name="turbo_enabled_toast">Turbo Speed activé</string>
     <string name="turbo_disabled_toast">Turbo Speed désactivé</string>
+    <string name="combo_button_settings">Configurer le bouton combo</string>
+    <string name="combo_button_settings_description">Sélectionner quels boutons seront pressés par le bouton combo</string>
+
     <!-- System files strings -->
     <string name="setup_system_files">Fichiers système</string>
     <string name="setup_system_files_description">Effectuer des opérations sur les fichiers système, telles que l\'installation de fichiers système ou le démarrage du menu Home.</string>
@@ -246,6 +262,8 @@
     <string name="advanced">Avancé</string>
     <string name="texture_sampling_name">Échantillonnage de texture</string>
     <string name="texture_sampling_description">Remplace le filtre d\'échantillonnage utilisé par les jeux. Cela peut être utile dans certains cas où les jeux se comportent mal lors de la conversion ascendante. En cas de doute, réglez ce paramètre sur « Contrôlé par le jeu ».</string>
+    <string name="use_skip_duplicate_frames">Passer la présentation d\'images dupliquées</string>
+    <string name="use_skip_duplicate_frames_description">Détecte et passe la présentation d\'images qui ne sont pas uniques. Cela permet aussi aux outils externes de génération d\'image de fonctionner correctement avec les jeux 30 fps. </string>
     <string name="shaders_accurate_mul">Multiplication précise</string>
     <string name="shaders_accurate_mul_description">Utilise une multiplication plus précise dans les shaders hardware, ce qui peut corriger certains bugs graphiques. Lorsqu\'elle est activée, la performance sera réduite.</string>
     <string name="asynchronous_gpu">Activer l\'émulation asynchrone du GPU</string>
@@ -394,6 +412,8 @@
     <string name="cancelling">Annulation...</string>
     <string name="visibility">Visibilité</string>
     <string name="information">Information</string>
+    <string name="refresh">Actualiser</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Choisir un répertoire de jeu</string>
 
@@ -963,4 +983,50 @@
     <string name="decompress_failed">Échec de la décompression.</string>
     <string name="compress_decompress_installed_app">Les applications déjà installées ne peuvent pas être compressées ou décompressées.</string>
 
-  </resources>
+  <!-- Multiplayer -->
+    <string name="multiplayer">Multijoueur</string>
+    <string name="multiplayer_description">Héberger son propre salon de jeu ou en joindre un existant pour jouer en multijoueur</string>
+    <string name="multiplayer_room_title">Salon : %1$s</string>
+    <string name="multiplayer_console_id">ID de la console ：%1$s</string>
+    <string name="multiplayer_create_room">Créer</string>
+    <string name="multiplayer_join_room">Joindre</string>
+    <string name="multiplayer_public_room">Naviguer les salons publiques</string>
+    <string name="multiplayer_username">Nom d\'utilisateur</string>
+    <string name="multiplayer_ip_address">Adresse IP</string>
+    <string name="multiplayer_ip_port">Port</string>
+    <string name="multiplayer_create_room_success">Salon créé avec succès!</string>
+    <string name="multiplayer_join_room_success">Rejoint le salon avec succès!</string>
+    <string name="multiplayer_create_room_failed">Echec de la création du salon!</string>
+    <string name="multiplayer_port_invalid">Port invalide!</string>
+    <string name="multiplayer_exit_room">Quitter le salon</string>
+    <string name="multiplayer_network_error">Erreur réseau</string>
+    <string name="multiplayer_lost_connection">Connection perdue</string>
+    <string name="multiplayer_wrong_version">Mauvaise version</string>
+    <string name="multiplayer_wrong_password">Mot de passe incorrect</string>
+    <string name="multiplayer_room_is_full">Ce salon est plein</string>
+    <string name="multiplayer_host_banned">Hôte banni </string>
+    <string name="multiplayer_host_kicked">Hôte expulsé</string>
+    <string name="multiplayer_unknown_error">Erreur inconnue</string>
+    <string name="multiplayer_room_moderator">Modérateur du salon</string>
+    <string name="multiplayer_member_join">%1$s a rejoint</string>
+    <string name="multiplayer_member_leave">%1$s a quitté</string>
+    <string name="multiplayer_member_kicked">%1$s a été expulsé </string>
+    <string name="multiplayer_member_banned">%1$s a été banni</string>
+    <string name="multiplayer_address_unbanned">Adresse débannie</string>
+    <string name="multiplayer_password">Mot de passe</string>
+    <string name="original_button_text">Rejoindre</string>
+    <string name="multiplayer_room_name">Nom du salon</string>
+    <string name="multiplayer_room_name_invalid">Le nom du salon doit avoir entre 3 et 20 charactères</string>
+    <string name="multiplayer_room_browser">Salons publiques</string>
+    <string name="multiplayer_no_rooms_found">Pas de salons publiques trouvés</string>
+    <string name="multiplayer_hide_full_rooms">Cacher les salons pleins</string>
+    <string name="multiplayer_hide_empty_rooms">Cacher les salons vides</string>
+    <string name="update_available">Mise à jour disponible</string>
+    <string name="update_available_description">Une nouvelle version d\'Azahar est disponible (version %1$s).\nSouhaitez-vous la télécharger ?</string>
+    <string name="check_for_updates">Rechercher les mises à jour</string>
+    <string name="check_for_updates_description">Affiche une notification dans l\'application quand une mise à jour est disponible pour Azahar.</string>
+    <string name="update_check_channel">Canal de mises à jour</string>
+    <string name="update_check_channel_stable">Stable</string>
+    <string name="update_check_channel_prerelease">Préversion</string>
+
+</resources>

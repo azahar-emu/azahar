@@ -1035,7 +1035,7 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="62"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="195"/>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Réseau</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="63"/>
@@ -1789,7 +1789,7 @@ Souhaitez vous ignorer l&apos;erreur et poursuivre ?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="124"/>
         <source>Apply Game Controller Maps To:</source>
-        <translation type="unfinished"></translation>
+        <translation>Appliquer les assignations de manette de jeu à :</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="147"/>
@@ -4220,17 +4220,17 @@ Glissez les points pour modifier la position, ou double-cliquez les cellules pou
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="36"/>
         <source>Network / Room</source>
-        <translation type="unfinished"></translation>
+        <translation>Réseau / Salon</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="42"/>
         <source>Network Web API URL:</source>
-        <translation type="unfinished"></translation>
+        <translation>URL de l&apos;API réseau Web</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="52"/>
         <source>Network Token:</source>
-        <translation type="unfinished"></translation>
+        <translation>Token Réseau :</translation>
     </message>
 </context>
 <context>
@@ -4238,7 +4238,7 @@ Glissez les points pour modifier la position, ou double-cliquez les cellules pou
     <message>
         <location filename="../../src/citra_qt/util/sequence_dialog/controller_sequence_dialog.cpp" line="19"/>
         <source>Press then release one or two controller buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Appuyez puis relâchez un ou deux boutons de votre manette</translation>
     </message>
 </context>
 <context>
@@ -5204,7 +5204,7 @@ Pour afficher un guide sur l&apos;installation de FFmpeg, appuyez sur Aide.</tra
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3869"/>
         <source>%1 is missing. Please &lt;a href=&apos;https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files&apos;&gt;dump your system archives&lt;/a&gt;.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 est manquant. Merci de &lt;a href=&apos;https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files&apos;&gt;récupérer vos archives systèmes&lt;/a&gt;.&lt;br/&gt;Poursuivre l&apos;émulation peut entraîner des plantages et des bugs.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3876"/>
