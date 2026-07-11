@@ -239,18 +239,30 @@ class GamesFragment : Fragment() {
 
     private fun getMajorVersion(version: String): Int? = version.split('.')[0].toIntOrNull()
 
+    private fun isPrereleaseBuild(): Boolean {
+        val version = BuildConfig.GIT_VERSION
+        return (
+            version.contains("alpha") ||
+                version.contains("beta") ||
+                version.contains("rc")
+            )
+    }
+
     override fun onResume() {
         super.onResume()
 
         // Perform update check
+        @Suppress("SimplifyBooleanWithConstants", "RedundantSuppression")
         if (!BuildConfig.DEBUG &&
             !BuildUtil.isGooglePlayBuild &&
             BooleanSetting.CHECK_FOR_UPDATES.boolean &&
             !homeViewModel.updatePromptShown
         ) {
             Thread({
-                val checkForPrereleaseUpdates = (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
+                val checkForPrereleaseUpdates =
+                    isPrereleaseBuild() || (IntSetting.UPDATE_CHECK_CHANNEL.int == 1)
                 val latestReleaseTag = UpdateChecker.getLatestRelease(checkForPrereleaseUpdates)
+
                 if (!latestReleaseTag.isNullOrEmpty() &&
                     latestReleaseTag != BuildConfig.GIT_VERSION
                 ) {
