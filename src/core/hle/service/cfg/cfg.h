@@ -122,36 +122,36 @@ enum SystemLanguage {
 enum SoundOutputMode { SOUND_MONO = 0, SOUND_STEREO = 1, SOUND_SURROUND = 2 };
 
 struct EULAVersion {
-    u8 minor;
-    u8 major;
+    u8 minor{};
+    u8 major{};
     INSERT_PADDING_BYTES(2);
 };
 static_assert(sizeof(EULAVersion) == 4, "EULAVersion must be exactly 0x4 bytes");
 
 struct UsernameBlock {
     /// Exactly 20 bytes long, padded with zeros at the end if necessary
-    std::array<char16_t, 10> username;
-    u32 zero;
-    u32 ng_word;
+    std::array<char16_t, 10> username{};
+    u32 zero{};
+    u32 ng_word{};
 };
 static_assert(sizeof(UsernameBlock) == 0x1C, "UsernameBlock must be exactly 0x1C bytes");
 
 struct BirthdayBlock {
-    u8 month; ///< The month of the birthday
-    u8 day;   ///< The day of the birthday
+    u8 month{}; ///< The month of the birthday
+    u8 day{};   ///< The day of the birthday
 };
 static_assert(sizeof(BirthdayBlock) == 2, "BirthdayBlock must be exactly 2 bytes");
 
 struct ConsoleModelInfo {
-    u8 model;                  ///< The console model (3DS, 2DS, etc)
-    std::array<u8, 3> unknown; ///< Unknown data
+    u8 model{};                  ///< The console model (3DS, 2DS, etc)
+    std::array<u8, 3> unknown{}; ///< Unknown data
 };
 static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
 
 struct ConsoleCountryInfo {
-    std::array<u8, 2> unknown; ///< Unknown data
-    u8 state_code;             ///< The state or province code.
-    u8 country_code;           ///< The country code of the console
+    std::array<u8, 2> unknown{}; ///< Unknown data
+    u8 state_code{};             ///< The state or province code.
+    u8 country_code{};           ///< The country code of the console
 
     bool operator==(const ConsoleCountryInfo& other) const {
         return unknown == other.unknown && state_code == other.state_code &&
@@ -165,15 +165,15 @@ struct ConsoleCountryInfo {
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
 
 struct BacklightControls {
-    u8 power_saving_enabled; ///< Whether power saving mode is enabled.
-    u8 brightness_level;     ///< The configured brightness level.
+    u8 power_saving_enabled{}; ///< Whether power saving mode is enabled.
+    u8 brightness_level{};     ///< The configured brightness level.
 };
 static_assert(sizeof(BacklightControls) == 2, "BacklightControls must be exactly 2 bytes");
 
 struct New3dsBacklightControls {
-    std::array<u8, 4> unknown_1; ///< Unknown data
-    u8 auto_brightness_enabled;  ///< Whether auto brightness is enabled.
-    std::array<u8, 3> unknown_2; ///< Unknown data
+    std::array<u8, 4> unknown_1{}; ///< Unknown data
+    u8 auto_brightness_enabled{};  ///< Whether auto brightness is enabled.
+    std::array<u8, 3> unknown_2{}; ///< Unknown data
 };
 static_assert(sizeof(New3dsBacklightControls) == 8,
               "New3dsBacklightControls must be exactly 8 bytes");
@@ -658,6 +658,8 @@ private:
     bool preferred_region_chosen = false;
     MCUData mcu_data{};
     std::string mac_address{};
+
+    Result load_savegame_res{ResultSuccess};
 
     std::shared_ptr<Network::ArticBase::Client> artic_client = nullptr;
 
