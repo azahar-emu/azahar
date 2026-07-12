@@ -39,7 +39,7 @@ struct AppletTitleData {
     std::array<u64, NumRegions> n3ds_title_ids = {0, 0, 0, 0, 0, 0, 0};
 };
 
-static constexpr std::size_t NumApplets = 29;
+static constexpr std::size_t NumApplets = 30;
 static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     {{AppletId::HomeMenu, AppletId::None},
      {0x4003000008202, 0x4003000008F02, 0x4003000009802, 0x4003000008202, 0x400300000A102,
@@ -102,6 +102,9 @@ static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     {{AppletId::Memolib, AppletId::Memolib2},
      {0x400300000F602, 0x400300000F602, 0x400300000F602, 0x400300000F602, 0x400300000F602,
       0x400300000F602, 0x400300000F602}},
+    {{AppletId::Tiger, AppletId::None},
+     {0x4001000020900, 0x4001000021900, 0x4001000022900, 0x4001000020900, 0, 0x4001000027900,
+      0x4001000028900}},
     // TODO(Subv): Fill in the rest of the titleids
 }};
 
