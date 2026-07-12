@@ -39,8 +39,12 @@ import org.citra.citra_emu.utils.NetPlayManager
 
 class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
     private lateinit var adapter: NetPlayAdapter
-    private val gameNameList: MutableList<Array<String>> = mutableListOf()
-    private val gameIdList: MutableList<Array<Long>> = mutableListOf()
+
+    data class PreferredGame(val name: String, val id: Long) {
+        override fun toString(): String = name
+    }
+    private val preferredGameList: MutableList<PreferredGame> = mutableListOf()
+    private var selectedPreferredGame = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,15 +85,15 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 DialogMultiplayerConnectBinding.inflate(layoutInflater).apply {
                     setContentView(root)
                     // Prepare the game list in case a user tries to create a room
+
+                    preferredGameList.add(PreferredGame("%none%", -1))
+
                     for (game in GameHelper.cachedGameList) {
                         val gameName = game.title
-                        if (gameNameList.none { it[0] == gameName }) {
-                            gameNameList.add(arrayOf(gameName))
-                        }
-
                         val gameId = game.titleId
-                        if (gameIdList.none { it[0] == gameId }) {
-                            gameIdList.add((arrayOf(gameId)))
+
+                        if (preferredGameList.none { it.id == gameId }) {
+                            preferredGameList.add(PreferredGame(gameName, gameId))
                         }
                     }
 
@@ -334,8 +338,32 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
         binding.username.setText(NetPlayManager.getUsername())
 
         binding.dropdownPreferedGameName.apply {
-            setAdapter(ArrayAdapter(activity, R.layout.dropdown_item, gameNameList.map { it[0] }))
+            setAdapter(
+                ArrayAdapter(
+                    activity,
+                    R.layout.dropdown_item,
+                    preferredGameList.map {
+                        if (it.name == "%none%") {
+                            it.copy(name = context.getString(R.string.no_preference))
+                        } else {
+                            it
+                        }
+                    }
+                )
+            )
         }
+        binding.dropdownPreferedGameName.setOnItemClickListener { _, _, position, _ ->
+            selectedPreferredGame = position
+        }
+        selectedPreferredGame = 0
+        binding.dropdownPreferedGameName.setText(
+            (
+                binding.dropdownPreferedGameName.adapter.getItem(
+                    selectedPreferredGame
+                ) as PreferredGame
+                ).toString(),
+            false
+        )
 
         binding.preferedGameName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
         binding.roomName.visibility = if (isCreateRoom) View.VISIBLE else View.GONE
@@ -375,9 +403,7 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
             val ipAddress = binding.ipAddress.text.toString()
             val username = binding.username.text.toString()
             val portStr = binding.ipPort.text.toString()
-            val preferedGameName = binding.dropdownPreferedGameName.text.toString()
-            val preferedGameId =
-                gameIdList[gameNameList.indexOfFirst { it[0] == preferedGameName }][0]
+            val preferedGame = preferredGameList[selectedPreferredGame]
             val password = binding.password.text.toString()
             val port = portStr.toIntOrNull() ?: run {
                 Toast.makeText(activity, R.string.multiplayer_port_invalid, Toast.LENGTH_LONG)
@@ -397,17 +423,6 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                 return@setOnClickListener
             }
 
-            if (isCreateRoom && preferedGameName.isEmpty()) {
-                Toast.makeText(
-                    activity,
-                    R.string.multiplayer_prefered_game_name_invalid,
-                    Toast.LENGTH_LONG
-                ).show()
-                binding.btnConfirm.isEnabled = true
-                binding.btnConfirm.text = activity.getString(R.string.original_button_text)
-                return@setOnClickListener
-            }
-
             if (ipAddress.length < 7 || username.length < 5) {
                 Toast.makeText(activity, R.string.multiplayer_input_invalid, Toast.LENGTH_LONG)
                     .show()
@@ -420,8 +435,8 @@ class NetPlayDialog(context: Context) : BottomSheetDialog(context) {
                             ipAddress,
                             port,
                             username,
-                            preferedGameName,
-                            preferedGameId,
+                            preferedGame.name,
+                            preferedGame.id,
                             password,
                             roomName,
                             maxPlayers

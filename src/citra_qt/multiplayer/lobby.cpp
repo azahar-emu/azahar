@@ -237,11 +237,15 @@ void Lobby::OnRefreshLobby() {
         }
 
         auto first_item = new LobbyItem();
+
+        QString preferred_game = room.preferred_game == "%none%"
+                                     ? tr("No Preference")
+                                     : QString::fromStdString(room.preferred_game);
+
         auto row = QList<QStandardItem*>({
             first_item,
             new LobbyItemName(room.has_password, QString::fromStdString(room.name)),
-            new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
-                              smdh_icon),
+            new LobbyItemGame(room.preferred_game_id, preferred_game, smdh_icon),
             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
                               room.port, QString::fromStdString(room.verify_UID)),
             new LobbyItemMemberList(members, room.max_player),
