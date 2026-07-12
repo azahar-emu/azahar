@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <future>
+#include <limits>
 #include <QColor>
 #include <QImage>
 #include <QList>
@@ -19,6 +20,7 @@
 #include "citra_qt/uisettings.h"
 #include "common/logging/log.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/fs/archive.h"
 #include "network/announce_multiplayer_session.h"
 #include "ui_host_room.h"
 #ifdef ENABLE_WEB_SERVICE
@@ -69,6 +71,8 @@ HostRoomWindow::~HostRoomWindow() = default;
 
 void HostRoomWindow::UpdateGameList(QStandardItemModel* list) {
     game_list->clear();
+    game_list->appendRow(new GameListItemPath(tr("%none%"), {}, std::numeric_limits<u64>::max(), 0,
+                                              Service::FS::MediaType::NAND, false, false));
     for (int i = 0; i < list->rowCount(); i++) {
         auto parent = list->item(i, 0);
         for (int j = 0; j < parent->rowCount(); j++) {
@@ -133,7 +137,7 @@ void HostRoomWindow::Host() {
         }
         ui->host->setDisabled(true);
 
-        auto game_name = ui->game_list->currentData(Qt::DisplayRole).toString();
+        auto game_name = ui->game_list->currentData(GameListItemPath::FullPathRole).toString();
         auto game_id = ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();
         auto port = ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort;
         auto password = ui->password->text().toStdString();
@@ -215,6 +219,18 @@ void HostRoomWindow::Host() {
 }
 
 QVariant ComboBoxProxyModel::data(const QModelIndex& idx, int role) const {
+    std::string full_path;
+    // Special case for No Preference
+    if (role == GameListItemPath::FullPathRole) {
+        full_path = QSortFilterProxyModel::data(idx, GameListItemPath::FullPathRole)
+                        .toString()
+                        .toStdString();
+        if (full_path == "%none%") {
+            return QString::fromStdString("%none%");
+        }
+        // Else fallthrough using DisplayRole
+        role = Qt::DisplayRole;
+    }
     if (role != Qt::DisplayRole) {
         auto val = QSortFilterProxyModel::data(idx, role);
         // If its the icon, shrink it to 16x16
@@ -222,12 +238,16 @@ QVariant ComboBoxProxyModel::data(const QModelIndex& idx, int role) const {
             val = val.value<QImage>().scaled(16, 16, Qt::KeepAspectRatio);
         return val;
     }
-    std::string filename;
-    Common::SplitPath(
-        QSortFilterProxyModel::data(idx, GameListItemPath::FullPathRole).toString().toStdString(),
-        nullptr, &filename, nullptr);
-    QString title = QSortFilterProxyModel::data(idx, GameListItemPath::TitleRole).toString();
-    return title.isEmpty() ? QString::fromStdString(filename) : title;
+    full_path =
+        QSortFilterProxyModel::data(idx, GameListItemPath::FullPathRole).toString().toStdString();
+    if (full_path == "%none%") {
+        return tr("No Preference");
+    } else {
+        std::string filename;
+        Common::SplitPath(full_path, nullptr, &filename, nullptr);
+        QString title = QSortFilterProxyModel::data(idx, GameListItemPath::TitleRole).toString();
+        return title.isEmpty() ? QString::fromStdString(filename) : title;
+    }
 }
 
 bool ComboBoxProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const {
