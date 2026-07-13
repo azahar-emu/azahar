@@ -446,6 +446,10 @@ bool RasterizerVulkan::AccelerateDrawBatch(bool is_indexed) {
     // Vertex data setup might involve scheduler flushes so perform it
     // early to avoid invalidating our state in the middle of the draw.
     vertex_info = AnalyzeVertexArray(is_indexed, instance.GetMinVertexStrideAlignment());
+    if (vertex_info.Invalid()) {
+        // Do not draw anything if the vertex array is invalid.
+        return true;
+    }
     SetupVertexArray();
 
     if (!SetupVertexShader()) {
