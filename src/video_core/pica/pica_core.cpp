@@ -587,6 +587,11 @@ void PicaCore::LoadVertices(bool is_indexed) {
     // Locate index buffer.
     const auto& index_info = pipeline.index_array;
     const u8* index_address_8 = memory.GetPhysicalPointer(base_address + index_info.offset);
+    if (index_address_8 == nullptr) {
+        // Mario & Luigi: Superstar Saga sets an invalid base address
+        // for the vertex attributes. Return early if that is the case.
+        return;
+    }
     const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
     const bool index_u16 = index_info.format != 0;
 
