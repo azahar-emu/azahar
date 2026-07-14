@@ -145,6 +145,7 @@ static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_meth
 enum class ScalingMode : u32 {
     FitToScreen = 0,
     FitToScreenInteger = 1,
+    ScaleAccordingToInternalResolution = 2,
 };
 
 enum class TextureFilter : u32 {

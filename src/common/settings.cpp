@@ -47,6 +47,8 @@ std::string_view GetScalingModeName(ScalingMode mode) {
         return "Fit to Screen";
     case ScalingMode::FitToScreenInteger:
         return "Fit to Screen with Integer Scaling";
+    case ScalingMode::ScaleAccordingToInternalResolution:
+        return "Scale According to Internal Resolution";
     default:
         return "Invalid";
     }
