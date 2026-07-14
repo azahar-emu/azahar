@@ -32,7 +32,7 @@ target_link_libraries(tests PRIVATE citra_common citra_core video_core audio_cor
 target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers Threads::Threads)
 
 if (ENABLE_LIBRETRO)
-    target_link_libraries(tests PRIVATE $<TARGET_OBJECTS:azahar_libretro_common>)
+    target_link_libraries(tests PRIVATE $<TARGET_OBJECTS:citra_libretro_common>)
 endif()
 
 add_test(NAME tests COMMAND tests)
