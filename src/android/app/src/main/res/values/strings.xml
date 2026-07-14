@@ -314,6 +314,7 @@
     <string name="internal_resolution_setting_10x">10x Native (4000x2400)</string>
     <string name="fit_to_screen">Fit to Screen</string>
     <string name="fit_to_screen_integer">Fit to Screen with Integer Scaling</string>
+    <string name="pixel_by_pixel">Pixel by Pixel</string>
     <string name="performance_warning">Turning off this setting will significantly reduce emulation performance! For the best experience, it is recommended that you leave this setting enabled.</string>
     <string name="debug_warning">Warning: Modifying these settings will slow emulation</string>
     <string name="stereoscopy">Stereoscopy</string>

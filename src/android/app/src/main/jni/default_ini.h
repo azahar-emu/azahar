@@ -147,6 +147,7 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Which scaling mode should be used
 # 0 (default): Fit to Screen
 # 1: Fit to Screen with Integer Scaling
+# 2: Pixel by Pixel
 )") DECLARE_KEY(scaling_mode) BOOST_HANA_STRING(R"(
 
 # Turns on the frame limiter, which will limit frames output to the target game speed

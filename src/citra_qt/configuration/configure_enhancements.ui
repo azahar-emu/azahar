@@ -139,7 +139,8 @@
               &lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scaling mode&lt;/p&gt;&lt;p&gt;
               How to scale the screens of the emulated 3DS to the screen those are displayed on.&lt;/p&gt;&lt;p&gt;
               Fit to Screen: Scales the screens until those reach the borders of the window/screen.&lt;/p&gt;&lt;p&gt;
-              Fit to Screen with Integer Scaling: Scales the screens with an integer multiplier of the original 3DS screen to the largest fitting size. For layouts with two different screen sizes, the largest screen is integer-scaled.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+              Fit to Screen with Integer Scaling: Scales the screens with an integer multiplier of the original 3DS screen to the largest fitting size. For layouts with two different screen sizes, the largest screen is integer-scaled.&lt;/p&gt;&lt;p&gt;
+              Pixel by Pixel: Displays each pixel from the game/app on one pixel of the screen. If the game-views do not fit within the window/screen, the width and height of those will be halved until those do fit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
             </string>
            </property>
            <item>
@@ -150,6 +151,11 @@
            <item>
             <property name="text">
              <string>Fit to Screen with Integer Scaling</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Pixel by Pixel</string>
             </property>
            </item>
           </widget>

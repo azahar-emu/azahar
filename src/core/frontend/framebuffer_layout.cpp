@@ -37,7 +37,7 @@ static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> window_area,
 }
 
 // overload of the above that takes an inner rectangle instead of an aspect ratio, and can be
-// limited to integer scaling if desired
+// limited to integer scaling or pixel by pixel mapping if desired
 template <class T>
 static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> bounding_window,
                                          Common::Rectangle<T> inner_window,
@@ -45,9 +45,27 @@ static Common::Rectangle<T> MaxRectangle(Common::Rectangle<T> bounding_window,
     float scale =
         std::min(static_cast<float>(bounding_window.GetWidth()) / inner_window.GetWidth(),
                  static_cast<float>(bounding_window.GetHeight()) / inner_window.GetHeight());
+
+    if (scaling_mode == Settings::ScalingMode::PixelByPixel) {
+        if (Settings::values.resolution_factor.GetValue() != 0) {
+            const float resolution_factor = Settings::values.resolution_factor.GetValue();
+            u32 divisor = 1;
+            while (resolution_factor * inner_window.GetWidth() / divisor >
+                       bounding_window.GetWidth() ||
+                   resolution_factor * inner_window.GetHeight() / divisor >
+                       bounding_window.GetHeight()) {
+                divisor *= 2;
+            };
+            scale = resolution_factor / divisor;
+        } else if (scale >= 1.0) {
+            scale = std::floor(scale);
+        }
+    }
+
     if (scaling_mode == Settings::ScalingMode::FitToScreenInteger && scale >= 1.0) {
         scale = std::floor(scale);
     }
+
     return Common::Rectangle(bounding_window.left, bounding_window.top,
                              bounding_window.left + static_cast<T>(inner_window.GetWidth() * scale),
                              bounding_window.top +

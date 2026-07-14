@@ -117,6 +117,7 @@ enum class AudioEmulation : u32 {
 enum class ScalingMode : u32 {
     FitToScreen = 0,
     FitToScreenInteger = 1,
+    PixelByPixel = 2,
 };
 
 enum class TextureFilter : u32 {
