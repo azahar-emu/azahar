@@ -8,8 +8,8 @@
 #include <span>
 #include <thread>
 #include <unordered_map>
-#include <tsl/robin_map.h>
 #include <variant>
+#include <tsl/robin_map.h>
 #include "common/hash.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
