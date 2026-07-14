@@ -283,6 +283,14 @@ Aixó banejarà el seu nom d&apos;usuari de fòrum i la seua adreça IP.</transl
     </message>
 </context>
 <context>
+    <name>ComboBoxProxyModel</name>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="244"/>
+        <source>No Preference</source>
+        <translation type="unfinished"/>
+    </message>
+</context>
+<context>
     <name>ConfigureAudio</name>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="17"/>
@@ -6268,12 +6276,17 @@ Screen.</source>
 <context>
     <name>HostRoomWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="166"/>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="74"/>
+        <source>%none%</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="170"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="167"/>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="171"/>
         <source>Failed to announce the room to the public lobby.
 Debug Message: </source>
         <translation>Error en anunciar la sala al lobby públic.
@@ -6522,7 +6535,12 @@ Missatge de depuració:</translation>
         <translation>Actualitzant</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="264"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="242"/>
+        <source>No Preference</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="268"/>
         <source>Refresh List</source>
         <translation>Actualitzar Llista</translation>
     </message>

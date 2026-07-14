@@ -285,6 +285,14 @@ Questo bannerà sia il suo nome utente del forum che il suo indirizzo IP.</trans
     </message>
 </context>
 <context>
+    <name>ComboBoxProxyModel</name>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="244"/>
+        <source>No Preference</source>
+        <translation>Nessuna preferenza</translation>
+    </message>
+</context>
+<context>
     <name>ConfigureAudio</name>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="17"/>
@@ -693,57 +701,57 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="14"/>
         <source>Controller Hotkey Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Impostazioni tasti rapidi controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="22"/>
         <source>Double-click on a binding to change it. You can use two-button chords as well.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fai doppio clic su un comando per modificarlo. Puoi utilizzare anche combinazioni di due pulsanti.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="42"/>
         <source>Clear All</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimuovi tutto</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="74"/>
         <source>Some mappings cannot be applied to all controllers, such as back buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Alcune mappature non possono essere applicate a tutti i controller, come i pulsanti posteriori</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="77"/>
         <source>Apply Controller Hotkeys To:</source>
-        <translation type="unfinished"></translation>
+        <translation>Applica tasti rapidi controller a:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="100"/>
         <source>All controllers</source>
-        <translation type="unfinished"></translation>
+        <translation>Tutti i controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="105"/>
         <source>Controllers of the mapped type</source>
-        <translation type="unfinished"></translation>
+        <translation>Controller del tipo mappato</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.ui" line="110"/>
         <source>Only the mapped controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo il controller mappato</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.cpp" line="28"/>
         <source>Action</source>
-        <translation type="unfinished">Azione</translation>
+        <translation>Azione</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.cpp" line="28"/>
         <source>Controller Hotkey</source>
-        <translation type="unfinished"></translation>
+        <translation>Tasto rapido controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_hotkeys_controller.cpp" line="152"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Ripristina</translation>
     </message>
 </context>
 <context>
@@ -980,13 +988,13 @@ Desideri ignorare l&apos;errore e continuare?</translation>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="53"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="187"/>
         <source>Controller Hotkeys</source>
-        <translation type="unfinished"></translation>
+        <translation>Tasti rapidi controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="54"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="186"/>
         <source>Keyboard Hotkeys</source>
-        <translation type="unfinished"></translation>
+        <translation>Tasti rapidi tastiera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="55"/>
@@ -1035,7 +1043,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="62"/>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="195"/>
         <source>Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Rete</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_dialog.cpp" line="63"/>
@@ -1784,27 +1792,27 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="121"/>
         <source>Some mappings cannot be applied to all controllers, such as back buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Alcune mappature non possono essere applicate a tutti i controller, come i pulsanti posteriori</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="124"/>
         <source>Apply Game Controller Maps To:</source>
-        <translation type="unfinished"></translation>
+        <translation>Applica mappature del controller a:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="147"/>
         <source>All controllers</source>
-        <translation type="unfinished"></translation>
+        <translation>Tutti i controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="152"/>
         <source>Controllers of the mapped type</source>
-        <translation type="unfinished"></translation>
+        <translation>Controller del tipo mappato</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="157"/>
         <source>Only the mapped controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Solo il controller mappato</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="187"/>
@@ -2063,12 +2071,12 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="545"/>
         <source>Auto map Controller</source>
-        <translation type="unfinished"></translation>
+        <translation>Mappatura automatica controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="546"/>
         <source>After pressing OK, press the A (right) button on your gamepad</source>
-        <translation type="unfinished"></translation>
+        <translation>Dopo aver premuto OK, premi il pulsante A (destra) sul tuo controller</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="574"/>
@@ -2561,7 +2569,7 @@ Desideri ignorare l&apos;errore e continuare?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="102"/>
         <source>&lt;a href=&apos;https://wiki.cemu.info/wiki/Cemuhook&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn More&lt;/span&gt;&lt;/a&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;a href=&apos;https://wiki.cemu.info/wiki/Cemuhook&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Scopri di più&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_motion_touch.cpp" line="209"/>
@@ -4218,17 +4226,17 @@ Trascina i punti per cambiarne la posizione, o fai doppio clic sulla tabella per
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="36"/>
         <source>Network / Room</source>
-        <translation type="unfinished"></translation>
+        <translation>Rete / Stanza</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="42"/>
         <source>Network Web API URL:</source>
-        <translation type="unfinished"></translation>
+        <translation>URL API Web di rete:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_network.ui" line="52"/>
         <source>Network Token:</source>
-        <translation type="unfinished"></translation>
+        <translation>Token rete:</translation>
     </message>
 </context>
 <context>
@@ -4236,7 +4244,7 @@ Trascina i punti per cambiarne la posizione, o fai doppio clic sulla tabella per
     <message>
         <location filename="../../src/citra_qt/util/sequence_dialog/controller_sequence_dialog.cpp" line="19"/>
         <source>Press then release one or two controller buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Premi e poi rilascia uno o due pulsanti del controller</translation>
     </message>
 </context>
 <context>
@@ -4279,7 +4287,7 @@ Trascina i punti per cambiarne la posizione, o fai doppio clic sulla tabella per
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="104"/>
         <source>This property is linked to the 3DS system username.</source>
-        <translation type="unfinished"></translation>
+        <translation>Questa proprietà è collegata al nome utente del sistema 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="111"/>
@@ -5202,7 +5210,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3869"/>
         <source>%1 is missing. Please &lt;a href=&apos;https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files&apos;&gt;dump your system archives&lt;/a&gt;.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Manca %1. Esegui il &lt;a href=&apos;https://github.com/azahar-emu/azahar/wiki/Dumping-System-Files&apos;&gt;dump degli archivi di sistema&lt;/a&gt;.&lt;br/&gt;Continuare l&apos;emulazione potrebbe causare crash e bug.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3876"/>
@@ -5260,7 +5268,7 @@ Per istruzioni su come installare FFmpeg, clicca su Aiuto.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3907"/>
         <source>A fatal error occurred. Check the log for details.&lt;br/&gt;Continuing emulation may result in crashes and bugs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si è verificato un errore fatale. Controlla il log per dettagli.&lt;br/&gt;Continuare l&apos;emulazione potrebbe causare crash e bug.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3910"/>
@@ -6227,7 +6235,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="88"/>
         <source>This property is linked to the 3DS system username.</source>
-        <translation type="unfinished"></translation>
+        <translation>Questa proprietà è collegata al nome utente del sistema 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="95"/>
@@ -6278,12 +6286,17 @@ Screen.</source>
 <context>
     <name>HostRoomWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="166"/>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="74"/>
+        <source>%none%</source>
+        <translation>%none%</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="170"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="167"/>
+        <location filename="../../src/citra_qt/multiplayer/host_room.cpp" line="171"/>
         <source>Failed to announce the room to the public lobby.
 Debug Message: </source>
         <translation>Impossibile mostrare la stanza nella lobby pubblica.
@@ -6464,7 +6477,7 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="39"/>
         <source>This property is linked to the 3DS system username.</source>
-        <translation type="unfinished"></translation>
+        <translation>Questa proprietà è collegata al nome utente del sistema 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="59"/>
@@ -6532,7 +6545,12 @@ Messaggio di debug:</translation>
         <translation>Aggiornamento in corso</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="264"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="242"/>
+        <source>No Preference</source>
+        <translation>Nessuna preferenza</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="268"/>
         <source>Refresh List</source>
         <translation>Aggiorna lista</translation>
     </message>
@@ -6992,17 +7010,17 @@ Messaggio di debug:</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="755"/>
         <source>User Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Cartella utente</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="760"/>
         <source>NAND Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Cartella NAND</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="765"/>
         <source>SDMC Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Cartella SDMC</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="773"/>
