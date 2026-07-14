@@ -309,7 +309,7 @@ void QtConfig::ReadCameraValues() {
     qt_config->beginGroup(QStringLiteral("Camera"));
 
     Settings::values.camera_name[OuterRightCamera] =
-        ReadSetting(Settings::QKeys::camera_inner_flip, QStringLiteral("blank"))
+        ReadSetting(Settings::QKeys::camera_outer_right_name, QStringLiteral("blank"))
             .toString()
             .toStdString();
     Settings::values.camera_config[OuterRightCamera] =
