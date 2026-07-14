@@ -49,7 +49,7 @@ jobs:
         run: |
           export NDK_ROOT=${ANDROID_SDK_ROOT}/ndk/$ANDROID_NDK_VERSION
           ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake $CORE_ARGS -DANDROID_PLATFORM=android-$API_LEVEL -DCMAKE_TOOLCHAIN_FILE=$NDK_ROOT/build/cmake/android.toolchain.cmake -DANDROID_STL=c++_static -DANDROID_ABI=$ANDROID_ABI . -B $BUILD_DIR
-          ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target citra_libretro --config Release -j $(nproc)
+          ${ANDROID_SDK_ROOT}/cmake/3.30.3/bin/cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
