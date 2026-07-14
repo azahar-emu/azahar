@@ -22,7 +22,7 @@
 #pragma once
 
 #include <array>
-#include <unordered_map>
+#include <tsl/robin_map.h>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #ifdef ENABLE_GDBSTUB
@@ -262,7 +262,7 @@ public:
 
     // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
     // process for our purposes), not per ARMul_State (which tracks CPU core state).
-    std::unordered_map<u32, std::size_t> instruction_cache;
+    tsl::robin_map<u32, std::size_t> instruction_cache;
 
 private:
     void ResetMPCoreCP15Registers();

@@ -547,6 +547,7 @@ if ("x86_64" IN_LIST ARCHITECTURE OR "arm64" IN_LIST ARCHITECTURE)
         arm/dynarmic/arm_tick_counts.h
     )
     target_link_libraries(citra_core PRIVATE dynarmic)
+    target_link_libraries(citra_core PUBLIC tsl::robin_map)
 endif()
 
 if (CITRA_USE_PRECOMPILED_HEADERS)

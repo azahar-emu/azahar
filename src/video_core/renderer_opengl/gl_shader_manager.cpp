@@ -8,6 +8,7 @@
 #include <span>
 #include <thread>
 #include <unordered_map>
+#include <tsl/robin_map.h>
 #include <variant>
 #include "common/hash.h"
 #include "common/settings.h"
@@ -325,7 +326,7 @@ public:
     FixedGeometryShaders fixed_geometry_shaders;
 
     FragmentShaders fragment_shaders;
-    std::unordered_map<u64, OGLProgram> program_cache;
+    tsl::robin_map<u64, OGLProgram> program_cache;
     OGLPipeline pipeline;
     ShaderDiskCache disk_cache;
 

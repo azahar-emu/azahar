@@ -7,7 +7,8 @@
 #include <list>
 #include <span>
 #include <unordered_map>
-#include <unordered_set>
+#include <tsl/robin_map.h>
+#include <tsl/robin_set.h>
 #include "common/thread_worker.h"
 #include "video_core/custom_textures/material.h"
 #include "video_core/rasterizer_interface.h"
@@ -82,8 +83,8 @@ private:
 private:
     Core::System& system;
     Frontend::ImageInterface& image_interface;
-    std::unordered_set<u64> dumped_textures;
-    std::unordered_map<u64, std::unique_ptr<Material>> material_map;
+    tsl::robin_set<u64> dumped_textures;
+    tsl::robin_map<u64, std::unique_ptr<Material>> material_map;
     std::unordered_map<std::string, std::vector<u64>> path_to_hash_map;
     std::vector<std::unique_ptr<CustomTexture>> custom_textures;
     std::list<AsyncUpload> async_uploads;

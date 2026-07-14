@@ -38,7 +38,7 @@ void JitEngine::SetupBatch(ShaderSetup& setup, u32 entry_point) {
         auto shader = std::make_unique<JitShader>();
         shader->Compile(&setup.GetProgramCode(), &setup.GetSwizzleData());
         setup.cached_shader = shader.get();
-        cache.emplace_hint(iter, cache_key, std::move(shader));
+        cache.emplace(cache_key, std::move(shader));
     }
 }
 

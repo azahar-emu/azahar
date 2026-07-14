@@ -161,7 +161,7 @@ void RasterizerCache<T>::RemoveTextureCubeFace(SurfaceId surface_id) {
     }
 
     for (auto it = texture_cube_cache.begin(); it != texture_cube_cache.end();) {
-        TextureCube& cube = it->second;
+        TextureCube& cube = it.value();
         for (SurfaceId& face_id : cube.face_ids) {
             if (face_id == surface_id) {
                 face_id = SurfaceId{};
@@ -422,7 +422,7 @@ typename T::Sampler& RasterizerCache<T>::GetSampler(
 
     auto [it, is_new] = samplers.try_emplace(params);
     if (is_new) {
-        it->second = slot_samplers.insert(runtime, params);
+        it.value() = slot_samplers.insert(runtime, params);
     }
 
     return slot_samplers[it->second];
@@ -627,7 +627,7 @@ typename T::Surface& RasterizerCache<T>::GetTextureCube(const TextureCubeConfig&
     }
 
     auto [it, new_surface] = texture_cube_cache.try_emplace(config);
-    TextureCube& cube = it->second;
+    TextureCube& cube = it.value();
 
     const std::array addresses = {config.px, config.nx, config.py, config.ny, config.pz, config.nz};
 
@@ -791,7 +791,7 @@ FramebufferHelper<T> RasterizerCache<T>::GetFramebufferSurfaces(bool using_color
 
     auto [it, new_framebuffer] = framebuffers.try_emplace(fb_params);
     if (new_framebuffer) {
-        it->second = slot_framebuffers.insert(runtime, fb_params, color_surface, depth_surface);
+        it.value() = slot_framebuffers.insert(runtime, fb_params, color_surface, depth_surface);
     }
 
     return FramebufferHelper<T>{this, &slot_framebuffers[it->second],

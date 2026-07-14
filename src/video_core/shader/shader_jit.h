@@ -8,7 +8,7 @@
 #if CITRA_ARCH(x86_64) || CITRA_ARCH(arm64)
 
 #include <memory>
-#include <unordered_map>
+#include <tsl/robin_map.h>
 #include "common/common_types.h"
 #include "video_core/shader/shader.h"
 
@@ -25,7 +25,7 @@ public:
     void Run(const ShaderSetup& setup, ShaderUnit& state) const override;
 
 private:
-    std::unordered_map<u64, std::unique_ptr<JitShader>> cache;
+    tsl::robin_map<u64, std::unique_ptr<JitShader>> cache;
 };
 
 } // namespace Pica::Shader

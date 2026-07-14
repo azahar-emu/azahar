@@ -8,7 +8,6 @@
 #include <list>
 #include <optional>
 #include <span>
-#include <unordered_map>
 #include <vector>
 #include <boost/icl/interval_map.hpp>
 #include <tsl/robin_map.h>
@@ -216,10 +215,10 @@ private:
     Runtime& runtime;
     Pica::RegsInternal& regs;
     RendererBase& renderer;
-    std::unordered_map<TextureCubeConfig, TextureCube> texture_cube_cache;
+    tsl::robin_map<TextureCubeConfig, TextureCube> texture_cube_cache;
     tsl::robin_pg_map<u64, std::vector<SurfaceId>, Common::IdentityHash<u64>> page_table;
-    std::unordered_map<FramebufferParams, FramebufferId> framebuffers;
-    std::unordered_map<SamplerParams, SamplerId> samplers;
+    tsl::robin_map<FramebufferParams, FramebufferId> framebuffers;
+    tsl::robin_map<SamplerParams, SamplerId> samplers;
     std::list<std::pair<SurfaceId, u64>> sentenced;
     Common::SlotVector<Surface> slot_surfaces;
     Common::SlotVector<Sampler> slot_samplers;
