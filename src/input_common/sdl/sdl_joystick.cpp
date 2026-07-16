@@ -125,7 +125,10 @@ int SDLJoystick::GetPort() const {
 }
 
 std::tuple<float, float, float> SDLJoystick::GetTouch(int pad) const {
-    return state.touchpad.at(pad);
+    if (state.touchpad.contains(pad))
+        return state.touchpad.at(pad);
+    else
+        return std::tuple<float, float, float>(0.0f, 0.0f, 0.0f);
 }
 
 SDL_Joystick* SDLJoystick::GetSDLJoystick() const {
