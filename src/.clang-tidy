@@ -1,0 +1,56 @@
+---
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-reserved-identifier,
+  -bugprone-suspicious-include,
+  performance-*,
+  -performance-no-int-to-ptr,
+  readability-identifier-naming,
+  readability-braces-around-statements,
+  readability-redundant-string-cstr,
+  misc-unused-using-decls,
+  misc-redundant-expression,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-emplace,
+  modernize-loop-convert,
+  clang-analyzer-*,
+  -clang-analyzer-optin.core.PlatformApi,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: 'src/(core|video_core|audio_core|common)/.*'
+
+CheckOptions:
+  - key: bugprone-argument-comment.StrictMode
+    value: '0'
+  - key: bugprone-narrowing-conversions.WarnOnFloatingPointToIntegralConversion
+    value: '0'
+  - key: bugprone-narrowing-conversions.WarnOnIntegerSignChange
+    value: '0'
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.ClassMemberPrefix
+    value: ''
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key: readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+...
