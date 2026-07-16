@@ -249,8 +249,10 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                                vk::ShaderStageFlagBits::eVertex, device)},
       d24s8_to_rgba8_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_COMP,
                                   vk::ShaderStageFlagBits::eCompute, device)},
+#if !defined(__APPLE__)
       d24s8_to_rgba8_ms_comp{Compile(HostShaders::VULKAN_D24S8_TO_RGBA8_MS_COMP,
                                      vk::ShaderStageFlagBits::eCompute, device)},
+#endif
       depth_to_buffer_comp{Compile(HostShaders::VULKAN_DEPTH_TO_BUFFER_COMP,
                                    vk::ShaderStageFlagBits::eCompute, device)},
       blit_depth_stencil_frag{VK_NULL_HANDLE},
@@ -263,8 +265,10 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
       mmpx_frag{Compile(HostShaders::MMPX_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       refine_frag{Compile(HostShaders::REFINE_FRAG, vk::ShaderStageFlagBits::eFragment, device)},
       d24s8_to_rgba8_pipeline{MakeComputePipeline(d24s8_to_rgba8_comp, compute_pipeline_layout)},
+#if !defined(__APPLE__)
       d24s8_to_rgba8_ms_pipeline{
           MakeComputePipeline(d24s8_to_rgba8_ms_comp, compute_pipeline_layout)},
+#endif
       depth_to_buffer_pipeline{
           MakeComputePipeline(depth_to_buffer_comp, compute_buffer_pipeline_layout)},
       depth_blit_pipeline{VK_NULL_HANDLE},
@@ -289,13 +293,17 @@ BlitHelper::BlitHelper(const Instance& instance_, Scheduler& scheduler_,
                       "BlitHelper: three_textures_pipeline_layout");
         SetObjectName(device, full_screen_vert, "BlitHelper: full_screen_vert");
         SetObjectName(device, d24s8_to_rgba8_comp, "BlitHelper: d24s8_to_rgba8_comp");
+#if !defined(__APPLE__)
         SetObjectName(device, d24s8_to_rgba8_ms_comp, "BlitHelper: d24s8_to_rgba8_ms_comp");
+#endif
         SetObjectName(device, depth_to_buffer_comp, "BlitHelper: depth_to_buffer_comp");
         if (blit_depth_stencil_frag) {
             SetObjectName(device, blit_depth_stencil_frag, "BlitHelper: blit_depth_stencil_frag");
         }
         SetObjectName(device, d24s8_to_rgba8_pipeline, "BlitHelper: d24s8_to_rgba8_pipeline");
+#if !defined(__APPLE__)
         SetObjectName(device, d24s8_to_rgba8_ms_pipeline, "BlitHelper: d24s8_to_rgba8_ms_pipeline");
+#endif
         SetObjectName(device, depth_to_buffer_pipeline, "BlitHelper: depth_to_buffer_pipeline");
         if (depth_blit_pipeline) {
             SetObjectName(device, depth_blit_pipeline, "BlitHelper: depth_blit_pipeline");
@@ -317,7 +325,9 @@ BlitHelper::~BlitHelper() {
     device.destroyPipelineLayout(three_textures_pipeline_layout);
     device.destroyShaderModule(full_screen_vert);
     device.destroyShaderModule(d24s8_to_rgba8_comp);
+#if !defined(__APPLE__)
     device.destroyShaderModule(d24s8_to_rgba8_ms_comp);
+#endif
     device.destroyShaderModule(depth_to_buffer_comp);
     if (blit_depth_stencil_frag) {
         device.destroyShaderModule(blit_depth_stencil_frag);
@@ -330,7 +340,9 @@ BlitHelper::~BlitHelper() {
     device.destroyShaderModule(refine_frag);
     device.destroyPipeline(depth_to_buffer_pipeline);
     device.destroyPipeline(d24s8_to_rgba8_pipeline);
+#if !defined(__APPLE__)
     device.destroyPipeline(d24s8_to_rgba8_ms_pipeline);
+#endif
     device.destroyPipeline(depth_blit_pipeline);
     device.destroySampler(linear_sampler);
     device.destroySampler(nearest_sampler);
@@ -413,7 +425,11 @@ bool BlitHelper::ConvertDS24S8ToRGBA8(Surface& source, Surface& dest,
 
     const bool multisample = (source.sample_count > 1) && (dest.sample_count > 1);
     const Type src_type = multisample ? Type::MultiSampled : Type::Current;
+#if !defined(__APPLE__)
     const auto pipeline = multisample ? d24s8_to_rgba8_ms_pipeline : d24s8_to_rgba8_pipeline;
+#else
+    const auto pipeline = d24s8_to_rgba8_pipeline;
+#endif
 
     const auto descriptor_set = compute_provider.Commit();
     update_queue.AddImageSampler(descriptor_set, 0, 0, source.ImageView(ViewType::Depth, src_type),
