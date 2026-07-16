@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "video_core/shader/generator/pica_fs_config.h"
+#include "common/logging/log.h"
 
 namespace Pica::Shader {
 
@@ -16,6 +17,10 @@ FramebufferConfig::FramebufferConfig(const Pica::RegsInternal& regs) {
                                : Pica::FramebufferRegs::CompareFunc::Always);
 
     alphablend_enable.Assign(output_merger.alphablend_enable);
+    early_depth_enable.Assign(regs.rasterizer.early_depth_enable);
+    if (early_depth_enable) {
+        LOG_INFO(Render, "Early depth testing enabled - skipping fragment depth write");
+    }
     requested_logic_op = output_merger.logic_op;
 
     logic_op.Assign(Pica::FramebufferRegs::LogicOp::Copy);

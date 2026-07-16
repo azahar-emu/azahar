@@ -148,8 +148,7 @@ struct RasterizerRegs {
 
     INSERT_PADDING_WORDS(0x1);
 
-    // TODO: early depth
-    INSERT_PADDING_WORDS(0x1);
+    BitField<0, 1, u32> early_depth_enable;
 
     INSERT_PADDING_WORDS(0x2);
 

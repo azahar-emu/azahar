@@ -68,6 +68,7 @@ struct FramebufferConfig {
         BitField<6, 4, Pica::FramebufferRegs::LogicOp> logic_op;
         BitField<10, 1, u32> shadow_rendering;
         BitField<11, 1, u32> alphablend_enable;
+        BitField<12, 1, u32> early_depth_enable;
     };
     BlendConfig requested_rgb_blend{};
     BlendConfig requested_alpha_blend{};
@@ -89,6 +90,7 @@ struct FramebufferConfig {
             // fields
             FIELD_HASH(alpha_test_func), FIELD_HASH(scissor_test_mode), FIELD_HASH(depthmap_enable),
             FIELD_HASH(logic_op), FIELD_HASH(shadow_rendering), FIELD_HASH(alphablend_enable),
+            FIELD_HASH(early_depth_enable),
             FIELD_HASH(requested_rgb_blend), FIELD_HASH(requested_alpha_blend),
             FIELD_HASH(requested_logic_op),
 

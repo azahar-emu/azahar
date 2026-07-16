@@ -183,7 +183,9 @@ vec4 secondary_fragment_color = vec4(0.0);
     if (config.framebuffer.shadow_rendering) {
         WriteShadow();
     } else {
-        out += "gl_FragDepth = depth;\n";
+        if (!config.framebuffer.early_depth_enable) {
+            out += "gl_FragDepth = depth;\n";
+        }
         // Round the final fragment color to maintain the PICA's 8 bits of precision
         out += "combiner_output = byteround(combiner_output);\n";
         WriteBlending();

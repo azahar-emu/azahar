@@ -121,7 +121,9 @@ void FragmentModule::WriteDepth() {
             OpLoad(f32_id, OpAccessChain(input_pointer_id, gl_frag_coord_id, ConstU32(3u)))};
         depth = OpFDiv(f32_id, depth, gl_frag_coord_w);
     }
-    OpStore(gl_frag_depth_id, depth);
+    if (!config.framebuffer.early_depth_enable) {
+        OpStore(gl_frag_depth_id, depth);
+    }
 }
 
 void FragmentModule::WriteScissor() {
@@ -1515,15 +1517,20 @@ void FragmentModule::DefineEntryPoint() {
 
     boost::container::small_vector<Id, 11> interface_ids{
         primary_color_id, texcoord_id[0], texcoord_id[1], texcoord_id[2],   texcoord0_w_id,
-        normquat_id,      view_id,        color_id,       gl_frag_coord_id, gl_frag_depth_id,
+        normquat_id,      view_id,        color_id,       gl_frag_coord_id,
     };
+    if (!config.framebuffer.early_depth_enable) {
+        interface_ids.push_back(gl_frag_depth_id);
+    }
     if (use_fragment_shader_barycentric) {
         interface_ids.push_back(gl_bary_coord_id);
     }
 
     AddEntryPoint(spv::ExecutionModel::Fragment, main_func, "main", interface_ids);
     AddExecutionMode(main_func, spv::ExecutionMode::OriginUpperLeft);
-    AddExecutionMode(main_func, spv::ExecutionMode::DepthReplacing);
+    if (!config.framebuffer.early_depth_enable) {
+        AddExecutionMode(main_func, spv::ExecutionMode::DepthReplacing);
+    }
 }
 
 void FragmentModule::DefineUniformStructs() {
