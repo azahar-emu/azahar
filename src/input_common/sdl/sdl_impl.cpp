@@ -281,7 +281,7 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_
  */
 Common::ParamPackage SDLState::GetSDLControllerButtonBind(
     const Common::ParamPackage a_button_params, Settings::NativeButton::Values button) {
-    auto guid = a_button_params.Get("guid", 0);
+    auto guid = a_button_params.Get("guid", "0");
     auto port = a_button_params.Get("port", 0);
     auto a_button = a_button_params.Get("button", -1);
     auto api = a_button_params.Get("api", "joystick");
