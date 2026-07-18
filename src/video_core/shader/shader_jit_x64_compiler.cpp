@@ -352,10 +352,13 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
             movaps(SCRATCH, xword[STATE + dest_offset_disp]);
         }
 
+#if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
+#endif
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
                       ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             blendps(SCRATCH, src, mask);
+#if !defined(CITRA_HAS_SSE42)
         } else {
             movaps(SCRATCH2, src);
             unpckhps(SCRATCH2, SCRATCH); // Unpack X/Y components of source and destination
@@ -369,6 +372,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
                      ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6);
             shufps(SCRATCH, SCRATCH2, sel);
         }
+#endif
 
         // Store dest back to memory
         if (dest.GetRegisterType() == RegisterType::Output) {
@@ -519,15 +523,19 @@ void JitShader::Compile_DPH(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
+#if !defined(CITRA_HAS_SSE42)
     if (host_caps.has(Cpu::tSSE41)) {
+#endif
         // Set 4th component to 1.0
         blendps(SRC1, ONE, 0b1000);
+#if !defined(CITRA_HAS_SSE42)
     } else {
         // Set 4th component to 1.0
         movaps(SCRATCH, SRC1);
         unpckhps(SCRATCH, ONE);  // XYZW, 1111 -> Z1__
         unpcklpd(SRC1, SCRATCH); // XYZW, Z1__ -> XYZ1
     }
+#endif
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
@@ -591,12 +599,16 @@ void JitShader::Compile_SLT(Instruction instr) {
 void JitShader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
+#if !defined(CITRA_HAS_SSE42)
     if (host_caps.has(Cpu::tSSE41)) {
+#endif
         roundps(SRC1, SRC1, _MM_FROUND_FLOOR);
+#if !defined(CITRA_HAS_SSE42)
     } else {
         cvttps2dq(SRC1, SRC1);
         cvtdq2ps(SRC1, SRC1);
     }
+#endif
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -1255,13 +1267,17 @@ void JitShader::Compile_Exp2(Xbyak::Label subroutine) {
             subss(SCRATCH, xword[rip + half]);
         }
 
+#if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
+#endif
             roundss(SCRATCH, SCRATCH, _MM_FROUND_TRUNC);
             cvtss2si(eax, SCRATCH);
+#if !defined(CITRA_HAS_SSE42)
         } else {
             cvtss2si(eax, SCRATCH);
             cvtsi2ss(SCRATCH, eax);
         }
+#endif
         // SCRATCH now contains input rounded to the nearest integer.
         add(eax, 0x7f);
         subss(SRC1, SCRATCH);
