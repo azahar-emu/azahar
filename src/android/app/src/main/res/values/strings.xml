@@ -1017,7 +1017,7 @@
     <string name="multiplayer_ip_address">IP Address</string>
     <string name="multiplayer_ip_port">Port</string>
     <string name="multiplayer_create_room_success">Room created successfully!</string>
-    <string name="multiplayer_join_room_success">Join the room successfully!</string>
+    <string name="multiplayer_join_room_success">Joined the room successfully!</string>
     <string name="multiplayer_create_room_failed">Failed to create room!</string>
     <string name="multiplayer_join_room_failed">Failed to join room!</string>
     <string name="multiplayer_input_invalid">Invalid address or name is too short!</string>
