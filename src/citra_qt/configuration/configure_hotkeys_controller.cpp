@@ -93,8 +93,6 @@ void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
         for (int key_column_id = 0; key_column_id < parent->rowCount(); key_column_id++) {
             const QStandardItem* action = parent->child(key_column_id, name_column);
             const QStandardItem* controller_keyseq = parent->child(key_column_id, hotkey_column);
-            if (controller_keyseq->text().isEmpty())
-                continue;
             const QStringList sequences = controller_keyseq->text().split(QStringLiteral("||"));
             std::vector<Common::ParamPackage> params;
             std::transform(sequences.begin(), sequences.end(), std::back_inserter(params),
@@ -115,11 +113,15 @@ void ConfigureControllerHotkeys::ApplyConfiguration(HotkeyRegistry& registry) {
                     continue;
                 for (auto& [action_name, hotkey] : sub_actions) {
                     if (action_name == action->text()) {
-                        QStringList parts;
-                        for (const auto& param : params) {
-                            parts.append(QString::fromStdString(param.Serialize()));
+                        if (controller_keyseq->text().isEmpty()) {
+                            hotkey.controller_keyseq = QStringLiteral("");
+                        } else {
+                            QStringList parts;
+                            for (const auto& param : params) {
+                                parts.append(QString::fromStdString(param.Serialize()));
+                            }
+                            hotkey.controller_keyseq = parts.join(QStringLiteral("||"));
                         }
-                        hotkey.controller_keyseq = parts.join(QStringLiteral("||"));
                         registry.UpdateControllerHotkey(action_name, hotkey);
                         break;
                     }
