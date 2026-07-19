@@ -69,8 +69,10 @@ private:
     bool has_accel{false};
     std::unique_ptr<SDL_Joystick, void (*)(SDL_Joystick*)> sdl_joystick;
     std::unique_ptr<SDL_GameController, void (*)(SDL_GameController*)> sdl_controller;
+    std::unordered_map<int, int16_t> joystick_axis_centers;
     mutable std::mutex mutex;
     std::unordered_set<int> mapped_joystick_buttons;
     void CreateControllerButtonMap();
+    void CalibrateJoystickAxes();
 };
 } // namespace InputCommon::SDL
