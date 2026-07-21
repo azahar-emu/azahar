@@ -66,6 +66,7 @@ set_target_properties(citra_libretro PROPERTIES PREFIX "")
 target_compile_definitions(citra_libretro PRIVATE HAVE_LIBRETRO)
 
 if(ANDROID)
+  set_target_properties(citra_libretro PROPERTIES SUFFIX "_android.so")
   target_compile_definitions(citra_common PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(citra_core PRIVATE HAVE_LIBRETRO_VFS)
   target_compile_definitions(video_core PRIVATE HAVE_LIBRETRO_VFS)

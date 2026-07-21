@@ -10,4 +10,4 @@ if [ "$GITHUB_REF_TYPE" = "tag" ]; then
 fi
 
 # Create .zip
-zip -j -9 $REV_NAME.zip $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
+zip -j -9 $REV_NAME.zip $BUILD_DIR/$EXTRA_PATH/azahar_libretro*
