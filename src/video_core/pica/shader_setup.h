@@ -72,6 +72,13 @@ public:
 
     std::optional<u32> WriteUniformFloatReg(ShaderRegs& config, u32 value);
 
+    struct UniformWriteRange {
+        u32 first_index;
+        u32 count;
+    };
+    std::optional<UniformWriteRange> WriteUniformFloatRegRange(ShaderRegs& config,
+                                                               const u32* values, u32 count);
+
     u64 GetProgramCodeHash();
 
     u64 GetSwizzleDataHash();
@@ -94,6 +101,8 @@ public:
         }
     }
 
+    void UpdateProgramCodeRange(size_t offset, const u32* __restrict values, u32 count);
+
     void UpdateProgramCode(const ProgramCode& other, u32 other_size = MAX_PROGRAM_CODE_LENGTH) {
         program_code = other;
         biggest_program_size = std::max(biggest_program_size, other_size);
@@ -115,6 +124,8 @@ public:
             biggest_swizzle_size = offset + 1;
         }
     }
+
+    void UpdateSwizzleDataRange(size_t offset, const u32* __restrict values, u32 count);
 
     void UpdateSwizzleData(const SwizzleData& other, u32 other_size = MAX_SWIZZLE_DATA_LENGTH) {
         swizzle_data = other;
