@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <bit>
 #include <functional>
 #include <span>
 #include <boost/serialization/base_object.hpp>
@@ -41,16 +42,36 @@ struct ShaderUnit {
         return offsetof(ShaderUnit, output) + register_index * sizeof(Common::Vec4<f24>);
     }
 
+    static constexpr std::size_t OutputBankOffset() {
+        return offsetof(ShaderUnit, output_bank);
+    }
+
     static constexpr std::size_t TemporaryOffset(s32 register_index) {
         return offsetof(ShaderUnit, temporary) + register_index * sizeof(Common::Vec4<f24>);
     }
+
+    static constexpr std::size_t OutputBankSize = sizeof(std::array<Common::Vec4<f24>, 16>);
+    static_assert(std::has_single_bit(ShaderUnit::OutputBankSize));
 
 public:
     s32 address_registers[3] = {};
     bool conditional_code[2] = {};
     alignas(16) std::array<Common::Vec4<f24>, 16> input = {};
     alignas(16) std::array<Common::Vec4<f24>, 16> temporary = {};
-    alignas(16) std::array<Common::Vec4<f24>, 16> output = {};
+
+    // Programmers only have access to a single set of output registers (o0-o15),
+    // however there is a hardware quirk with output registers when
+    // used in geometry shaders.
+    // It appears that, when emitting a series of vertices with the emit instruction,
+    // if the output registers are not written between two consecutive emits, then the
+    // unmodified output registers take the values they had 2 emits ago.
+    // This behaviour may suggest the existance of 2 output register banks that the GPU
+    // switches between each emit. This has been verified on real HW.
+    // Fixes issues with M2 games such as 3D Thunderblade that have malformed shaders.
+    // (https://github.com/azahar-emu/azahar/blob/c711b0ab324d2ec116292b0db7c04a5733b8e559/src/video_core/pica/shader_setup.cpp#L105-L127)
+    alignas(16) std::array<std::array<Common::Vec4<f24>, 16>, 2> output = {};
+    bool output_bank = false;
+
     GeometryEmitter* emitter_ptr;
 
 private:
@@ -60,6 +81,7 @@ private:
         ar & input;
         ar & temporary;
         ar & output;
+        ar & output_bank;
         ar & conditional_code;
         ar & address_registers;
     }

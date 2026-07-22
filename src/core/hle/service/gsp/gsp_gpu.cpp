@@ -934,8 +934,8 @@ Result GSP_GPU::AcquireGpuRight(const Kernel::HLERequestContext& ctx,
     auto& gpu = system.GPU();
     gpu.ApplyPerProgramSettings(process->codeset->program_id);
     gpu.GetRightEyeDisabler().SetEnabled(right_eye_disable_allow);
-    gpu.PicaCore().vs_setup.requires_fixup = requires_shader_fixup;
-    gpu.PicaCore().gs_setup.requires_fixup = requires_shader_fixup;
+    gpu.PicaCore().vs_setup.SetRequiresShaderFixup(requires_shader_fixup);
+    gpu.PicaCore().gs_setup.SetRequiresShaderFixup(requires_shader_fixup);
 
     if (thread_id_with_rights == session_data->thread_id) {
         return {ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
