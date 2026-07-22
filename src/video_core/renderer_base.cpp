@@ -29,6 +29,10 @@ u32 RendererBase::GetResolutionScaleFactor() {
                              : render_window.GetFramebufferLayout().GetScalingRatio();
 }
 
+u8 RendererBase::GetSampleCount() const {
+    return Settings::GetAntiAliasingSampleCount(Settings::values.antialiasing.GetValue());
+}
+
 void RendererBase::UpdateCurrentFramebufferLayout(bool is_portrait_mode) {
     const auto update_layout = [is_portrait_mode](Frontend::EmuWindow& window) {
         const Layout::FramebufferLayout& layout = window.GetFramebufferLayout();

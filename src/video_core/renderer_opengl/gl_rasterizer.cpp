@@ -164,6 +164,10 @@ RasterizerOpenGL::RasterizerOpenGL(Memory::MemorySystem& memory, Pica::PicaCore&
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
 
     glEnable(GL_BLEND);
+
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_SAMPLE_SHADING);
+    glMinSampleShading(1.0f);
 }
 
 RasterizerOpenGL::~RasterizerOpenGL() = default;
@@ -655,6 +659,22 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     }
 
+    // Resolve after drawing, slow initial approach to ensure the MSAA and non-MSAA buffers are
+    // always in sync
+    if (framebuffer->color_id != VideoCore::SurfaceId{}) {
+        Surface& color_surface = res_cache.GetSurface(framebuffer->color_id);
+        if (color_surface.GetSampleCount() > 1) {
+            runtime.ResolveTexture(color_surface, framebuffer->color_level);
+        }
+    }
+
+    if (framebuffer->depth_id != VideoCore::SurfaceId{}) {
+        Surface& depth_surface = res_cache.GetSurface(framebuffer->depth_id);
+        if (depth_surface.GetSampleCount() > 1) {
+            runtime.ResolveTexture(depth_surface, framebuffer->depth_level);
+        }
+    }
+
     vertex_batch.clear();
 
     if (shadow_rendering) {
@@ -1018,7 +1038,8 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
 }
 
 void RasterizerOpenGL::UploadUniforms(bool accelerate_draw) {
-    // glBindBufferRange also changes the generic buffer binding point, so we sync the state first.
+    // glBindBufferRange also changes the generic buffer binding point, so we sync the state
+    // first.
     state.draw.uniform_buffer = uniform_buffer.GetHandle();
     state.Apply();
 
