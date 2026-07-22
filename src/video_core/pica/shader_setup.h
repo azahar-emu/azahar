@@ -54,8 +54,8 @@ struct ShaderSetup {
 private:
     void MakeProgramCodeDirty() {
         program_code_hash_dirty = true;
-        program_code_pending_fixup = true;
-        has_fixup = false;
+        // program_code_pending_fixup = true;
+        // has_fixup = false;
     }
 
     void MakeSwizzleDataDirty() {
@@ -123,7 +123,8 @@ public:
     }
 
     const ProgramCode& GetProgramCode() const {
-        return (has_fixup) ? program_code_fixup : program_code;
+        // return (has_fixup) ? program_code_fixup : program_code;
+        return program_code;
     }
 
     const SwizzleData& GetSwizzleData() const {
@@ -138,26 +139,32 @@ public:
         return biggest_swizzle_size;
     }
 
+    void SetRequiresShaderFixup(bool _requires_fixup) {
+        // requires_fixup = _requires_fixup;
+    }
+
 public:
     Uniforms uniforms;
     PackedAttribute uniform_queue;
     u32 entry_point{};
     const void* cached_shader{};
     bool uniforms_dirty = true;
-    bool requires_fixup = false;
-    bool has_fixup = false;
+
+    // bool requires_fixup = false;
+    // bool has_fixup = false;
 
 private:
     ProgramCode program_code{};
-    ProgramCode program_code_fixup{};
     SwizzleData swizzle_data{};
     bool program_code_hash_dirty{true};
     bool swizzle_data_hash_dirty{true};
-    bool program_code_pending_fixup{true};
     u32 biggest_program_size = 0;
     u32 biggest_swizzle_size = 0;
     u64 program_code_hash{0};
     u64 swizzle_data_hash{0};
+
+    // ProgramCode program_code_fixup{};
+    // bool program_code_pending_fixup{true};
 
     friend class boost::serialization::access;
     template <class Archive>
@@ -165,17 +172,18 @@ private:
         ar & uniforms;
         ar & uniform_queue;
         ar & program_code;
-        ar & program_code_fixup;
         ar & swizzle_data;
         ar & program_code_hash_dirty;
         ar & swizzle_data_hash_dirty;
-        ar & program_code_pending_fixup;
         ar & biggest_program_size;
         ar & biggest_swizzle_size;
         ar & program_code_hash;
         ar & swizzle_data_hash;
-        ar & requires_fixup;
-        ar & has_fixup;
+
+        // ar & program_code_fixup;
+        // ar & program_code_pending_fixup;
+        // ar & requires_fixup;
+        // ar & has_fixup;
         if (Archive::is_loading::value) {
             uniforms_dirty = true;
         }

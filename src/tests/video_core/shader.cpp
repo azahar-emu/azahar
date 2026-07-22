@@ -92,8 +92,10 @@ public:
     Common::Vec4f Run(std::span<const Common::Vec4f> inputs) {
         Pica::ShaderUnit shader_unit;
         RunShader(shader_unit, inputs);
-        return {shader_unit.output[0].x.ToFloat32(), shader_unit.output[0].y.ToFloat32(),
-                shader_unit.output[0].z.ToFloat32(), shader_unit.output[0].w.ToFloat32()};
+        return {shader_unit.output[shader_unit.output_bank][0].x.ToFloat32(),
+                shader_unit.output[shader_unit.output_bank][0].y.ToFloat32(),
+                shader_unit.output[shader_unit.output_bank][0].z.ToFloat32(),
+                shader_unit.output[shader_unit.output_bank][0].w.ToFloat32()};
     }
 
     Common::Vec4f Run(std::initializer_list<float> inputs) {
@@ -711,7 +713,8 @@ TEMPLATE_TEST_CASE("Nested Loop", "[video_core][shader]", ShaderJitTest) {
         shader_test.Run(shader_unit, input);
 
         REQUIRE(shader_unit.address_registers[2] == expected_aL);
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == Catch::Approx(expected_out));
+        REQUIRE(shader_unit.output[shader_unit.output_bank][0].x.ToFloat32() ==
+                Catch::Approx(expected_out));
     }
 }
 
@@ -760,7 +763,7 @@ SHADER_TEST_CASE("Conditional", "[video_core][shader]") {
         auto shader_test = TestType(std::move(shader_setup));
         shader_test.Run(shader_unit, 1.0f);
 
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+        REQUIRE(shader_unit.output[shader_unit.output_bank][0].x.ToFloat32() == result);
     }
 
     // JustY
@@ -773,7 +776,7 @@ SHADER_TEST_CASE("Conditional", "[video_core][shader]") {
         auto shader_test = TestType(std::move(shader_setup));
         shader_test.Run(shader_unit, 1.0f);
 
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+        REQUIRE(shader_unit.output[shader_unit.output_bank][0].x.ToFloat32() == result);
     }
 
     // OR
@@ -786,7 +789,7 @@ SHADER_TEST_CASE("Conditional", "[video_core][shader]") {
         auto shader_test = TestType(std::move(shader_setup));
         shader_test.Run(shader_unit, 1.0f);
 
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+        REQUIRE(shader_unit.output[shader_unit.output_bank][0].x.ToFloat32() == result);
     }
 
     // AND
@@ -799,7 +802,7 @@ SHADER_TEST_CASE("Conditional", "[video_core][shader]") {
         auto shader_test = TestType(std::move(shader_setup));
         shader_test.Run(shader_unit, 1.0f);
 
-        REQUIRE(shader_unit.output[0].x.ToFloat32() == result);
+        REQUIRE(shader_unit.output[shader_unit.output_bank][0].x.ToFloat32() == result);
     }
 }
 

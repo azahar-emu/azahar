@@ -24,7 +24,7 @@ void ShaderUnit::LoadInput(const ShaderRegs& config, const AttributeBuffer& buff
 void ShaderUnit::WriteOutput(const ShaderRegs& config, AttributeBuffer& buffer) {
     u32 output_index{};
     for (u32 reg : Common::BitSet<u32>(config.output_mask)) {
-        buffer[output_index++] = output[reg];
+        buffer[output_index++] = output[output_bank][reg];
     }
 }
 
