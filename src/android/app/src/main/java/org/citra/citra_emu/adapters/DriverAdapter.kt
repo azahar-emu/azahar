@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,9 +15,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.CardDriverOptionBinding
+import org.citra.citra_emu.utils.GpuDriverHelper
 import org.citra.citra_emu.utils.GpuDriverMetadata
 import org.citra.citra_emu.viewmodel.DriverViewModel
-import org.citra.citra_emu.utils.GpuDriverHelper
 
 class DriverAdapter(private val driverViewModel: DriverViewModel) :
     ListAdapter<Pair<Uri, GpuDriverMetadata>, DriverAdapter.DriverViewHolder>(
@@ -105,15 +105,11 @@ class DriverAdapter(private val driverViewModel: DriverViewModel) :
         override fun areItemsTheSame(
             oldItem: Pair<Uri, GpuDriverMetadata>,
             newItem: Pair<Uri, GpuDriverMetadata>
-        ): Boolean {
-            return oldItem.first == newItem.first
-        }
+        ): Boolean = oldItem.first == newItem.first
 
         override fun areContentsTheSame(
             oldItem: Pair<Uri, GpuDriverMetadata>,
             newItem: Pair<Uri, GpuDriverMetadata>
-        ): Boolean {
-            return oldItem.second == newItem.second
-        }
+        ): Boolean = oldItem.second == newItem.second
     }
 }

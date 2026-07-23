@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -57,9 +57,7 @@ class LicenseBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         const val LICENSE = "License"
 
-        fun newInstance(
-            license: License
-        ): LicenseBottomSheetDialogFragment {
+        fun newInstance(license: License): LicenseBottomSheetDialogFragment {
             val dialog = LicenseBottomSheetDialogFragment()
             val bundle = Bundle()
             bundle.putParcelable(LICENSE, license)

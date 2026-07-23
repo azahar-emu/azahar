@@ -100,9 +100,9 @@
          </item>
          <item>
           <widget class="QLineEdit" name="nickname">
-           <property name="maxLength">
-            <number>20</number>
-           </property>
+            <property name="toolTip">
+              <string>This property is linked to the 3DS system username.</string>
+            </property>
           </widget>
          </item>
          <item>

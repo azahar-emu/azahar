@@ -250,7 +250,14 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+       <item row="5" column="0">
+         <widget class="QCheckBox" name="toggle_pica_debugging">
+           <property name="text">
+             <string>Enable PICA200 debugging</string>
+           </property>
+         </widget>
+       </item>
+      <item row="6" column="0">
        <widget class="QCheckBox" name="toggle_dump_command_buffers">
         <property name="text">
          <string>Dump command buffers</string>

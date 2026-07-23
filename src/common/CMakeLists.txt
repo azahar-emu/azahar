@@ -97,7 +97,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     timer.h
     unique_function.h
     vector_math.h
-    web_result.h
+    web_util.cpp
+    web_util.h
     x64/cpu_detect.cpp
     x64/cpu_detect.h
     x64/xbyak_abi.h
@@ -130,8 +131,8 @@ endif()
 # Android storage is only used for non-libretro Android builds
 if (ANDROID AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PRIVATE
-    android_storage.cpp
-    android_storage.h
+    android_utils.cpp
+    android_utils.h
   )
 endif()
 

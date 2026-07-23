@@ -11,12 +11,12 @@ import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
-import org.citra.citra_emu.NativeLibrary
-import org.citra.citra_emu.utils.EmulationMenuSettings
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.utils.EmulationMenuSettings
 
 /**
  * Custom [BitmapDrawable] that is capable
@@ -93,7 +93,12 @@ class InputOverlayDrawableJoystick(
         currentStateBitmapDrawable.draw(canvas)
     }
 
-    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(
+        event: MotionEvent,
+        pointerIndex: Int,
+        hasActiveButtons: Boolean,
+        overlay: InputOverlay
+    ): Boolean {
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
         val pointerId = event.getPointerId(pointerIndex)
@@ -171,8 +176,11 @@ class InputOverlayDrawableJoystick(
             this.yAxis = sin(angle.toDouble()).toFloat() * radius
             setInnerBounds()
 
-            if (kotlin.math.abs(oldRadius - radius) > .34f
-                    || radius > .5f && kotlin.math.abs(oldAngle - angle) > kotlin.math.PI / 8) {
+            if ((
+                    (kotlin.math.abs(oldRadius - radius) > .34f) ||
+                        (radius > .5f)
+                    ) && (kotlin.math.abs(oldAngle - angle) > kotlin.math.PI / 8)
+            ) {
                 this.radius = radius
                 this.angle = angle
 
@@ -237,14 +245,22 @@ class InputOverlayDrawableJoystick(
     private fun setInnerBounds() {
         var x = virtBounds.centerX() + (xAxis * (virtBounds.width() / 2)).toInt()
         var y = virtBounds.centerY() + (yAxis * (virtBounds.height() / 2)).toInt()
-        if (x > virtBounds.centerX() + virtBounds.width() / 2) x =
-            virtBounds.centerX() + virtBounds.width() / 2
-        if (x < virtBounds.centerX() - virtBounds.width() / 2) x =
-            virtBounds.centerX() - virtBounds.width() / 2
-        if (y > virtBounds.centerY() + virtBounds.height() / 2) y =
-            virtBounds.centerY() + virtBounds.height() / 2
-        if (y < virtBounds.centerY() - virtBounds.height() / 2) y =
-            virtBounds.centerY() - virtBounds.height() / 2
+        if (x > virtBounds.centerX() + virtBounds.width() / 2) {
+            x =
+                virtBounds.centerX() + virtBounds.width() / 2
+        }
+        if (x < virtBounds.centerX() - virtBounds.width() / 2) {
+            x =
+                virtBounds.centerX() - virtBounds.width() / 2
+        }
+        if (y > virtBounds.centerY() + virtBounds.height() / 2) {
+            y =
+                virtBounds.centerY() + virtBounds.height() / 2
+        }
+        if (y < virtBounds.centerY() - virtBounds.height() / 2) {
+            y =
+                virtBounds.centerY() - virtBounds.height() / 2
+        }
         val width = pressedStateInnerBitmap.bounds.width() / 2
         val height = pressedStateInnerBitmap.bounds.height() / 2
         defaultStateInnerBitmap.setBounds(x - width, y - height, x + width, y + height)

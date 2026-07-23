@@ -5,17 +5,20 @@
 #include <QIcon>
 #include <QMessageBox>
 #include <QtConcurrent/QtConcurrentRun>
-#include "citra_qt/configuration/configure_web.h"
+#include "citra_qt/configuration/configure_network.h"
 #include "citra_qt/uisettings.h"
-#include "network/network_settings.h"
-#include "ui_configure_web.h"
+#include "ui_configure_network.h"
 
 ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureWeb>()) {
     ui->setupUi(this);
 
-#ifndef USE_DISCORD_PRESENCE
+#ifndef ENABLE_DISCORD_RPC
     ui->discord_group->setEnabled(false);
+#endif
+#ifndef ENABLE_WEB_SERVICE
+    ui->web_api_url_lineedit->setEnabled(false);
+    ui->token_lineedit->setEnabled(false);
 #endif
     SetConfiguration();
 }
@@ -23,15 +26,23 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
 ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::SetConfiguration() {
-#ifdef USE_DISCORD_PRESENCE
+
+    ui->web_api_url_lineedit->setText(
+        QString::fromStdString(Settings::values.web_api_url.GetValue()));
+    ui->token_lineedit->setText(QString::fromStdString(Settings::values.network_token.GetValue()));
+
+#ifdef ENABLE_DISCORD_RPC
     ui->toggle_discordrpc->setChecked(UISettings::values.enable_discord_presence.GetValue());
 #endif
 }
 
 void ConfigureWeb::ApplyConfiguration() {
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
     UISettings::values.enable_discord_presence = ui->toggle_discordrpc->isChecked();
 #endif
+
+    Settings::values.web_api_url = ui->web_api_url_lineedit->text().toStdString();
+    Settings::values.network_token = ui->token_lineedit->text().toStdString();
 }
 
 void ConfigureWeb::RetranslateUI() {

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/item_button_netplay_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
+
+    <Button
+        android:id="@+id/item_button_netplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/multiplayer_kick_member"/>
+
+    <ImageButton
+        android:id="@+id/item_button_more"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_more"/>
+</LinearLayout>

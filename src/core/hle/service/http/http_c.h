@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
+#include <boost/regex.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/string.hpp>
@@ -19,6 +20,7 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include <httplib.h>
 #include "common/thread.h"
+#include "common/web_util.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
@@ -55,6 +57,8 @@ enum class RequestState : u8 {
     ConnectingToServer = 0x5,
 
     /// Request in progress, sending HTTP request.
+    /// HTTPC stays in this state when there is POST
+    /// data pending.
     SendingRequest = 0x6,
 
     // Request in progress, receiving HTTP response and headers.
@@ -87,13 +91,6 @@ enum class PostDataType : u8 {
 
 enum class ClientCertID : u32 {
     Default = 0x40, // Default client cert
-};
-
-struct URLInfo {
-    bool is_https;
-    std::string host;
-    int port;
-    std::string path;
 };
 
 /// Represents a client certificate along with its private key, stored as a byte array of DER data.
@@ -158,6 +155,28 @@ struct ClCertAData {
     std::vector<u8> certificate;
     std::vector<u8> private_key;
     bool init = false;
+};
+
+class URLReplacer {
+private:
+    struct Rule {
+        boost::regex regex;
+
+        std::string pattern;
+        std::string replacement;
+    };
+
+    std::vector<Rule> rules;
+
+public:
+    URLReplacer();
+
+    bool HasRule(const std::string& pattern);
+    bool AddRule(const std::string& pattern, const std::string& replacement);
+    bool DeleteRule(const std::string& pattern);
+    std::string Apply(const std::string& url) const;
+
+    bool Save();
 };
 
 /// Represents an HTTP context.
@@ -274,6 +293,7 @@ public:
     u32 socket_buffer_size;
     std::vector<RequestHeader> headers;
     const ClCertAData* clcert_data;
+    const URLReplacer* url_replacer;
     bool post_data_added = false;
     bool post_pending_request = false;
     Params post_data;
@@ -296,9 +316,9 @@ public:
     void ParseAsciiPostData();
     std::string ParseMultipartFormData();
     void MakeRequest();
-    void MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestNonSSL(httplib::Request& request, const Common::URLInfo& url_info,
                            std::vector<Context::RequestHeader>& pending_headers);
-    void MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
+    void MakeRequestSSL(httplib::Request& request, const Common::URLInfo& url_info,
                         std::vector<Context::RequestHeader>& pending_headers);
     bool ContentProvider(size_t offset, size_t length, httplib::DataSink& sink);
     bool ChunkedContentProvider(size_t offset, httplib::DataSink& sink);
@@ -864,6 +884,10 @@ private:
      */
     void Finalize(Kernel::HLERequestContext& ctx);
 
+    void RegisterURLReplacement(Kernel::HLERequestContext& ctx);
+
+    void UnregisterURLReplacement(Kernel::HLERequestContext& ctx);
+
     [[nodiscard]] SessionData* EnsureSessionInitialized(Kernel::HLERequestContext& ctx,
                                                         IPC::RequestParser rp);
 
@@ -897,6 +921,8 @@ private:
     std::unordered_map<ClientCertContext::Handle, std::shared_ptr<ClientCertContext>> client_certs;
 
     ClCertAData ClCertA;
+
+    URLReplacer url_replacer;
 
 private:
     template <class Archive>

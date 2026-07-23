@@ -82,8 +82,14 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     });
 #endif
 
+    connect(ui->toggle_pica_debugging, &QCheckBox::clicked, this, [this](bool checked) {
+        QMessageBox::information(this, tr("Relaunch Required"),
+                                 tr("Please relaunch Azahar for this setting to take effect."));
+    });
+
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
+    ui->toggle_pica_debugging->setEnabled(!is_powered_on);
     ui->toggle_dump_command_buffers->setEnabled(!is_powered_on);
     ui->enable_rpc_server->setEnabled(!is_powered_on);
     ui->toggle_unique_data_console_type->setEnabled(!is_powered_on);
@@ -135,6 +141,7 @@ void ConfigureDebug::SetConfiguration() {
         Settings::values.break_on_unmapped_memory_access.GetValue());
 
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
+    ui->toggle_pica_debugging->setChecked(Settings::values.pica_debugging.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
@@ -181,6 +188,7 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.break_on_unmapped_memory_access =
         ui->break_on_unmapped_memory_access->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
+    Settings::values.pica_debugging = ui->toggle_pica_debugging->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
 

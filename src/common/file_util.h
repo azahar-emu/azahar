@@ -35,7 +35,7 @@
 #include "common/string_util.h"
 #endif
 #if defined(ANDROID) && !defined(HAVE_LIBRETRO_VFS)
-#include "android_storage.h"
+#include "android_utils.h"
 #endif
 
 #ifdef HAVE_LIBRETRO_VFS
@@ -428,6 +428,27 @@ public:
         return WriteImpl(data.data(), data.size(), sizeof(T));
     }
 
+    /**
+     * Reads the file line by line, returning true if data
+     * was read and false when reaching the end of file.
+     *
+     * @param line The output string to write the read data to
+     *
+     * @returns Whether the line was read or not
+     */
+    bool ReadLine(std::string& line);
+
+    /**
+     * Writes the specified line to the file
+     * automatically appending a newline
+     * character to it.
+     *
+     * @param line The input string to write
+     *
+     * @returns Count of bytes written, including the newline.
+     */
+    size_t WriteLine(const std::string_view line);
+
     [[nodiscard]] virtual bool IsOpen() const {
         return nullptr != m_file;
     }
@@ -443,7 +464,7 @@ public:
         return fileno(filestream_get_vfs_handle(m_file)->fp);
 #else
 #ifdef ANDROID
-        if (!AndroidStorage::CanUseRawFS()) {
+        if (!AndroidUtils::CanUseRawFS()) {
             return m_fd;
         }
 #endif // ANDROID

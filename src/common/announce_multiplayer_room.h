@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,7 +9,8 @@
 #include <string>
 #include <vector>
 #include "common/common_types.h"
-#include "common/web_result.h"
+#include "common/settings.h"
+#include "common/web_util.h"
 
 namespace AnnounceMultiplayerRoom {
 

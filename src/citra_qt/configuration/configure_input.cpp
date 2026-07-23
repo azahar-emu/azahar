@@ -70,88 +70,25 @@ static void SetAnalogButton(const Common::ParamPackage& input_param,
 }
 
 static QString ButtonToText(const Common::ParamPackage& param) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
-    }
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "keyboard") {
+    if (param.Get("engine", "") == "keyboard") {
         return GetKeyName(param.Get("code", 0));
+    } else {
+        return QString::fromStdString(InputCommon::ButtonToText(param));
     }
-
-    if (engine_str == "sdl") {
-        if (param.Has("hat")) {
-            const QString hat_str = QString::fromStdString(param.Get("hat", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Hat %1 %2").arg(hat_str, direction_str);
-        }
-
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("Axis %1%2").arg(axis_str, direction_str);
-        }
-
-        if (param.Has("button")) {
-            const QString button_str = QString::fromStdString(param.Get("button", ""));
-
-            return QObject::tr("Button %1").arg(button_str);
-        }
-
-        return {};
-    }
-
-    if (engine_str == "gcpad") {
-        if (param.Has("axis")) {
-            const QString axis_str = QString::fromStdString(param.Get("axis", ""));
-            const QString direction_str = QString::fromStdString(param.Get("direction", ""));
-
-            return QObject::tr("GC Axis %1%2").arg(axis_str, direction_str);
-        }
-        if (param.Has("button")) {
-            const QString button_str = QString::number(int(std::log2(param.Get("button", 0))));
-            return QObject::tr("GC Button %1").arg(button_str);
-        }
-        return GetKeyName(param.Get("code", 0));
-    }
-
-    return QObject::tr("[unknown]");
 }
 
 static QString AnalogToText(const Common::ParamPackage& param, const std::string& dir) {
-    if (!param.Has("engine")) {
-        return QObject::tr("[not set]");
+    // If this is an analog stick made from buttons, keyboards will need to be handled
+    // here at the frontend rather than at InputCommon
+    // It might be nice to move the GetKeyName code to input_common, but would need a non-QT way of
+    // doing it
+    if (param.Get("engine", "") == "analog_from_button") {
+        auto dirParam = Common::ParamPackage(param.Get(dir, ""));
+        if (dirParam.Get("engine", "") == "keyboard") {
+            return GetKeyName(dirParam.Get("code", 0));
+        }
     }
-
-    const auto engine_str = param.Get("engine", "");
-    if (engine_str == "analog_from_button") {
-        return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
-    }
-
-    const QString axis_x_str{QString::fromStdString(param.Get("axis_x", ""))};
-    const QString axis_y_str{QString::fromStdString(param.Get("axis_y", ""))};
-    static const QString plus_str{QString::fromStdString("+")};
-    static const QString minus_str{QString::fromStdString("-")};
-    if (engine_str == "sdl" || engine_str == "gcpad") {
-        if (dir == "modifier") {
-            return QObject::tr("[unused]");
-        }
-        if (dir == "left") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, minus_str);
-        }
-        if (dir == "right") {
-            return QObject::tr("Axis %1%2").arg(axis_x_str, plus_str);
-        }
-        if (dir == "up") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, plus_str);
-        }
-        if (dir == "down") {
-            return QObject::tr("Axis %1%2").arg(axis_y_str, minus_str);
-        }
-        return {};
-    }
-    return QObject::tr("[unknown]");
+    return QString::fromStdString(InputCommon::AnalogToText(param, dir));
 }
 
 ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
@@ -230,7 +167,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                     // If the user closes the dialog, the changes are reverted in
                     // `GMainWindow::OnConfigure()`
                     ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
                 },
                 InputCommon::Polling::DeviceType::Button);
         });
@@ -241,7 +177,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                         buttons_param[button_id].Clear();
                         button_map[button_id]->setText(tr("[not set]"));
                         ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.addAction(tr("Restore Default"), this, [&] {
                         buttons_param[button_id] =
@@ -249,7 +184,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                                 QtConfig::default_buttons[button_id])};
                         button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
                         ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.exec(button_map[button_id]->mapToGlobal(menu_location));
                 });
@@ -269,7 +203,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                                 SetAnalogButton(params, analogs_param[analog_id],
                                                 analog_sub_buttons[sub_button_id]);
                                 ApplyConfiguration();
-                                Settings::SaveProfile(ui->profile->currentIndex());
                             },
                             InputCommon::Polling::DeviceType::Button);
                     });
@@ -281,7 +214,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                             analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
                             ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         context_menu.addAction(tr("Restore Default"), this, [&] {
                             Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
@@ -291,7 +223,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                             analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
                                 analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
                             ApplyConfiguration();
-                            Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         context_menu.exec(analog_map_buttons[analog_id][sub_button_id]->mapToGlobal(
                             menu_location));
@@ -308,7 +239,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                     [this, analog_id](const Common::ParamPackage& params) {
                         analogs_param[analog_id] = params;
                         ApplyConfiguration();
-                        Settings::SaveProfile(ui->profile->currentIndex());
                     },
                     InputCommon::Polling::DeviceType::Analog);
             }
@@ -328,7 +258,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                         analogs_param[analog_id].Set("modifier_scale", slider_value / 100.0f);
                     }
                     ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
                 });
     }
 
@@ -343,7 +272,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                     SetAnalogButton(params, analogs_param[analog_id], "modifier");
                 }
                 ApplyConfiguration();
-                Settings::SaveProfile(ui->profile->currentIndex());
             },
             InputCommon::Polling::DeviceType::Button);
     });
@@ -357,7 +285,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                     }
                     ui->buttonCircleMod->setText(tr("[not set]"));
                     ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
                 });
 
                 context_menu.addAction(tr("Restore Default"), this, [&] {
@@ -371,7 +298,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
                             AnalogToText(analogs_param[analog_id], "modifier"));
                     }
                     ApplyConfiguration();
-                    Settings::SaveProfile(ui->profile->currentIndex());
                 });
                 context_menu.exec(ui->buttonCircleMod->mapToGlobal(menu_location));
             });
@@ -395,7 +321,6 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
 
     connect(ui->profile, qOverload<int>(&QComboBox::currentIndexChanged), this, [this](int i) {
         ApplyConfiguration();
-        Settings::SaveProfile(Settings::values.current_input_profile_index);
         Settings::LoadProfile(i);
         LoadConfiguration();
     });
@@ -407,7 +332,8 @@ ConfigureInput::ConfigureInput(Core::System& _system, QWidget* parent)
         Common::ParamPackage params;
         for (auto& poller : device_pollers) {
             params = poller->GetNextInput();
-            if (params.Has("engine")) {
+            // skip button downs and only process button ups to maintain former behavior
+            if (params.Has("engine") && !params.Has("down")) {
                 SetPollingResult(params, false);
                 return;
             }
@@ -423,12 +349,44 @@ void ConfigureInput::ApplyConfiguration() {
 
     Settings::values.use_artic_base_controller = ui->use_artic_controller->isChecked();
 
+    Settings::values.current_input_profile.maptype =
+        static_cast<Settings::InputMappingType>(ui->comboBoxMappingType->currentIndex());
+
     std::transform(buttons_param.begin(), buttons_param.end(),
                    Settings::values.current_input_profile.buttons.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [](Common::ParamPackage& param) {
+                       if (param.Get("engine", "keyboard") == "sdl") {
+                           if (Settings::values.current_input_profile.maptype ==
+                               Settings::InputMappingType::AllControllers)
+                               param.Set("maptype", "all");
+                           else if (Settings::values.current_input_profile.maptype ==
+                                    Settings::InputMappingType::Guid)
+                               param.Set("maptype", "guid");
+                           else
+                               param.Set("maptype", "guid+port");
+                       } else {
+                           param.Erase("maptype");
+                       }
+                       return param.Serialize();
+                   });
     std::transform(analogs_param.begin(), analogs_param.end(),
                    Settings::values.current_input_profile.analogs.begin(),
-                   [](const Common::ParamPackage& param) { return param.Serialize(); });
+                   [](Common::ParamPackage& param) {
+                       if (param.Get("engine", "keyboard") == "sdl") {
+                           if (Settings::values.current_input_profile.maptype ==
+                               Settings::InputMappingType::AllControllers)
+                               param.Set("maptype", "all");
+                           else if (Settings::values.current_input_profile.maptype ==
+                                    Settings::InputMappingType::Guid)
+                               param.Set("maptype", "guid");
+                           else
+                               param.Set("maptype", "guid+port");
+                       } else {
+                           param.Erase("maptype");
+                       }
+                       return param.Serialize();
+                   });
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::ApplyProfile() {
@@ -469,6 +427,8 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 void ConfigureInput::LoadConfiguration() {
 
     ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
+    ui->comboBoxMappingType->setCurrentIndex(
+        static_cast<int>(Settings::values.current_input_profile.maptype));
     ui->use_artic_controller->setEnabled(!system.IsPoweredOn());
 
     std::transform(Settings::values.current_input_profile.buttons.begin(),
@@ -495,7 +455,6 @@ void ConfigureInput::RestoreDefaults() {
     UpdateButtonLabels();
 
     ApplyConfiguration();
-    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::ClearAll() {
@@ -509,7 +468,6 @@ void ConfigureInput::ClearAll() {
     UpdateButtonLabels();
 
     ApplyConfiguration();
-    Settings::SaveProfile(Settings::values.current_input_profile_index);
 }
 
 void ConfigureInput::UpdateButtonLabels() {
@@ -583,16 +541,21 @@ void ConfigureInput::MapFromButton(const Common::ParamPackage& params) {
 
 void ConfigureInput::AutoMap() {
     ui->buttonAutoMap->setEnabled(false);
-    if (QMessageBox::information(this, tr("Information"),
-                                 tr("After pressing OK, press any button on your joystick"),
-                                 QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Cancel) {
+    QMessageBox box(this);
+    box.setWindowTitle(tr("Auto map Controller"));
+    box.setText(tr("After pressing OK, press the A (right) button on your gamepad"));
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    QPixmap pixmap(QStringLiteral(":/icons/default/256x256/automap_face_buttons.png"));
+    pixmap = pixmap.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    box.setIconPixmap(pixmap);
+    int result = box.exec();
+    if (result == QMessageBox::Cancel) {
         ui->buttonAutoMap->setEnabled(true);
         return;
     }
     input_setter = [this](const Common::ParamPackage& params) {
         MapFromButton(params);
         ApplyConfiguration();
-        Settings::SaveProfile(ui->profile->currentIndex());
     };
     device_pollers = InputCommon::Polling::GetPollers(InputCommon::Polling::DeviceType::Button);
     want_keyboard_keys = false;
@@ -690,7 +653,6 @@ void ConfigureInput::NewProfile() {
     }
 
     ApplyConfiguration();
-    Settings::SaveProfile(ui->profile->currentIndex());
     Settings::CreateProfile(name.toStdString());
     ui->profile->addItem(name);
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);

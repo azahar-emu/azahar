@@ -15,9 +15,11 @@ if (APPLE)
     set(DIST_DIR "../../dist/apple")
     set(APPLE_RESOURCES
         "${DIST_DIR}/azahar.icns"
-        "${DIST_DIR}/LaunchScreen.storyboard"
         "${DIST_DIR}/launch_logo.png"
     )
+    if (IOS)
+        list(APPEND APPLE_RESOURCES "${DIST_DIR}/LaunchScreen.storyboard")
+    endif()
     target_sources(citra_meta PRIVATE ${APPLE_RESOURCES})
 
     # Define app bundle metadata.
@@ -88,7 +90,7 @@ if (ENABLE_QT AND APPLE)
     target_link_libraries(citra_meta PRIVATE Qt6::GuiPrivate)
 endif()
 
-if (ENABLE_QT AND USE_DISCORD_PRESENCE)
+if (ENABLE_QT AND ENABLE_DISCORD_RPC)
     target_link_libraries(citra_meta PRIVATE discord-rpc)
 endif()
 

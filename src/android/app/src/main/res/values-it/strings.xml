@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Questo software eseguirà applicazioni per la console portatile Nintendo 3DS. Nessun titolo è incluso.\n\nPrima di iniziare con l\'emulazione, seleziona una cartella che conterrà i dati utente.\n\nCos\'è questo:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'> Wiki - Citra Android user data and storage</a></string>
+    <string name="app_disclaimer">Questo software permette di eseguire applicazioni rilasciate per la console portatile Nintendo 3DS. Non è incluso nessun titolo.\n\nPrima di cominciare con l\'emulazione, bisogna scegliere una cartella nella memoria interna che conterrà i dati utente.\n\nSpiegazione:\n<a href='https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage'>Wiki - User Data e Memoria Intena</a></string>
     <string name="app_notification_channel_description">Notifiche emulatore Azahar 3DS</string>
     <string name="app_notification_running">Azahar è in esecuzione</string>
     <string name="app_game_install_description">Ora è necessario selezionare una cartella Applicazioni. Azahar mostrerà tutte le ROM 3DS all\'interno della cartella selezionata nell\'app. Le ROM CIA, gli aggiornamenti e DLC dovranno essere installati separatamente cliccando sulla cartella e selezionando installa CIA.</string>
@@ -32,6 +32,15 @@
     <string name="select_citra_user_folder_home_description">Cambia i file che Azahar usa per caricare le applicazioni</string>
     <string name="theme_and_color_description">Modifica l\'aspetto dell\'app</string>
     <string name="install_cia_title">Installa CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">Rete</string>
+    <string name="web_api_url">URL API Web</string>
+    <string name="web_api_url_description">URL API Web per la funzionalità delle stanze pubbliche</string>
+    <string name="network_token">Token rete</string>
+    <string name="network_token_description">Token per la funzionalità delle stanze pubbliche</string>
+    <string name="username_uses_system">Questa proprietà è collegata al nome utente del sistema 3DS.</string>
+    <string name="username_invalid">Il nome utente non è valido. Dev\'essere compreso fra 4 e 20 caratteri e contenere solo lettere e numeri.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleziona il driver GPU</string>
@@ -85,14 +94,14 @@
     <string name="warning_skip">Salta</string>
     <string name="warning_cancel">Annulla</string>
     <string name="select_citra_user_folder">Seleziona cartella utente</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">utente</a> usando il pulsante qui sotto.]]></string>
+    <string name="select_citra_user_folder_description"><![CDATA[Seleziona la tua cartella <a href=\"https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage\">utente</a> usando il pulsante qui sotto.]]></string>
     <string name="select_which_user_directory_to_use">Sembra che tu abbia impostato cartelle utente sia per Lime3DS che per Azahar. Questo è probabilmente dovuto al fatto che hai eseguito l\'aggiornamento ad Azahar e, al momento della richiesta, hai scelto una cartella utente diversa da quella utilizzata per Lime3DS.\n\nQuesto potrebbe averti fatto pensare di aver perso salvataggi o altre impostazioni - ci scusiamo se è successo.\n\nDesideri tornare a utilizzare la tua cartella utente originale di Lime3DS, ripristinando impostazioni e salvataggi da Lime3DS, oppure preferisci mantenere la cartella utente attuale di Azahar?\n\nNessuna delle cartelle verrà eliminata, indipendentemente dalla tua scelta, e potrai passare liberamente da una all\'altra utilizzando l\'opzione \"Seleziona Cartella Utente\".</string>
     <string name="keep_current_azahar_directory">Mantieni la cartella di Azahar attuale</string>
     <string name="use_prior_lime3ds_directory">Usa la cartella precedente di Lime3DS</string>
     <string name="select">Seleziona</string>
     <string name="cannot_skip">Non puoi saltare la configurazione della cartella utente</string>
     <string name="cannot_skip_directory_description">Questo passaggio è necessario per consentire ad Azahar di funzionare. Seleziona una cartella per poter continuare.</string>
-    <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Seleziona nuovamente la cartella per ripristinare i permessi e continuare.</string>
+    <string name="selecting_user_directory_without_write_permissions">Hai perso i permessi di scrittura sulla tua <a href="https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage">cartella dei dati utente</a>, dove sono memorizzati i salvataggi e altre informazioni. Questo può accadere dopo alcuni aggiornamenti app o Android. Seleziona nuovamente la cartella per ripristinare i permessi e continuare.</string>
     <string name="invalid_selection">Selezione non valida</string>
     <string name="invalid_user_directory">La cartella utente selezionata non è valida.\nSelezionala di nuovo assicurandoti di partire dalla memoria principale del dispositivo.</string>
     <string name="filesystem_permission_lost">Azahar ha perso l\'autorizzazione a gestire i file su questo dispositivo. Ciò può accadere dopo alcuni aggiornamenti dell\' app o di Android. Si prega di concedere nuovamente questa autorizzazione nella schermata successiva per continuare a utilizzare l\'app.</string>
@@ -141,11 +150,14 @@
     <string name="button_home">Home</string>
     <string name="button_swap">Inverti schermi</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Combo Button</string>
     <string name="input_message_analog_only">Questo comando dev\'essere assegnato alla levetta analogica di un gamepad o a un asse dei tasti direzionali!</string>
     <string name="input_message_button_only">Questo comando dev\'essere assegnato a un pulsante del gamepad!</string>
     <string name="turbo_limit_hotkey">Velocità Turbo</string>
     <string name="turbo_enabled_toast">Velocità Turbo abilitata</string>
     <string name="turbo_disabled_toast">Velocità Turbo disabilitata</string>
+    <string name="combo_button_settings">Configura Combo Button</string>
+    <string name="combo_button_settings_description">Seleziona quali pulsanti vengono attivati dal Combo Button.</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">File di sistema</string>
@@ -250,6 +262,8 @@
     <string name="advanced">Avanzato</string>
     <string name="texture_sampling_name">Campionamento texture</string>
     <string name="texture_sampling_description">Sovrascrive il filtro di campionamento utilizzato dai giochi. Questo può essere utile in alcuni casi con giochi che gestiscono male l\'upscaling. Se hai dubbi, imposta questa opzione su \"Gestito dal gioco\".</string>
+    <string name="use_skip_duplicate_frames">Salta fotogrammi duplicati</string>
+    <string name="use_skip_duplicate_frames_description">Rileva e salta la visualizzazione dei fotogrammi non univoci. Consente inoltre agli strumenti esterni di generazione dei fotogrammi di funzionare correttamente con i giochi a 30fps. Funziona sia in OpenGL che in Vulkan</string>
     <string name="shaders_accurate_mul">Moltiplicazione accurata</string>
     <string name="shaders_accurate_mul_description">Utilizza una moltiplicazione più accurata degli shader hardware, che potrebbe correggere alcuni bug grafici. Se l\'opzione è abilitata, le prestazioni saranno ridotte.</string>
     <string name="asynchronous_gpu">Abilita l\'emulazione GPU asincrona</string>
@@ -390,13 +404,15 @@
     <string name="reset_setting_confirmation">Vuoi reimpostare questa opzione al suo valore predefinito?</string>
     <string name="setting_not_editable">Non puoi modificare questo ora</string>
     <string name="setting_disabled">Impostazione disabilitata</string>
-    <string name="setting_disabled_description">Questa impostazione è disattivata perché un\'altra opzione non ha il valore richiesto.</string>
+    <string name="setting_disabled_description_incompatible_setting">Questa impostazione è disattivata perché un\'altra opzione non ha il valore richiesto.</string>
+    <string name="setting_disabled_description_angle">Non è possibile cambiare il motore di rendering perché il dispositivo usa ANGLE per OpenGL, che al momento non è compatibile con Azahar. Verrà utilizzato Vulkan.</string>
     <string name="setting_not_editable_description">Questa opzione non può essere modificata mentre un gioco è in esecuzione.</string>
     <string name="auto_select">Seleziona automaticamente</string>
     <string name="start">Avvia</string>
     <string name="cancelling">Annullamento in corso...</string>
     <string name="visibility">Visibilità</string>
     <string name="information">Informazione</string>
+    <string name="refresh">Aggiorna</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleziona cartella del gioco</string>
@@ -479,7 +495,11 @@
     <string name="emulation_aspect_ratio">Proporzione</string>
     <string name="emulation_switch_screen_layout">Layout degli schermi in orizzontale</string>
     <string name="emulation_switch_portrait_layout">Layout degli schermi in verticale</string>
-    <string name="emulation_switch_secondary_layout">Layout degli schermi sullo schermo secondario</string>
+    <string name="emulation_secondary_display_enable">Abilita schermo secondario</string>
+    <string name="emulation_secondary_display_enable_description">Se disattivata, Azahar lascerà che sia Android a gestire gli schermi collegati. Se attivata e sono connessi più schermi, potrai selezionare quale utilizzare dal menu rapido di emulazione</string>
+    <string name="emulation_switch_secondary_layout">Layout schermo secondario</string>
+    <string name="emulation_secondary_display_management">Schermo secondario</string>
+    <string name="emulation_select_secondary_display">Scegli schermo</string>
     <string name="emulation_switch_secondary_layout_description">Il layout utilizzato da uno schermo secondario connesso, cablato o wireless (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Schermo grande</string>
     <string name="emulation_screen_layout_portrait">Verticale</string>
@@ -488,7 +508,7 @@
     <string name="emulation_screen_layout_hybrid">Schermi ibridi</string>
     <string name="emulation_screen_layout_original">Originale</string>
     <string name="emulation_portrait_layout_top_full">Standard</string>
-    <string name="emulation_secondary_display_default">Predefinito del sistema (specchio)</string>
+    <string name="emulation_secondary_display_opposite">Schermo opposto</string>
     <string name="emulation_screen_layout_custom">Layout personalizzato</string>
     <string name="bg_color">Colore dello sfondo</string>
     <string name="bg_color_description">Il colore che appare dietro gli schermi durante l\'emulazione, rappresentato come valore RGB.</string>
@@ -962,5 +982,98 @@
     <string name="decompress_not_compressed">Il file non è compresso.</string>
     <string name="decompress_failed">Decompressione fallita.</string>
     <string name="compress_decompress_installed_app">Le applicazioni già installate non possono essere compresse o decompresse.</string>
+
+  <!-- Multiplayer -->
+    <string name="multiplayer">Multigiocatore</string>
+    <string name="multiplayer_description">Ospita la tua stanza di gioco o unisciti a una già esistente per giocare con altre persone</string>
+    <string name="multiplayer_room_title">Stanza: %1$s</string>
+    <string name="multiplayer_console_id">ID console: %1$s</string>
+    <string name="multiplayer_create_room">Crea</string>
+    <string name="multiplayer_join_room">Partecipa</string>
+    <string name="multiplayer_public_room">Sfoglia stanze pubbliche</string>
+    <string name="multiplayer_username">Nome utente</string>
+    <string name="multiplayer_ip_address">Indirizzo IP</string>
+    <string name="multiplayer_ip_port">Porta</string>
+    <string name="multiplayer_create_room_success">Stanza creata con successo!</string>
+    <string name="multiplayer_join_room_success">Ingresso nella stanza riuscito!</string>
+    <string name="multiplayer_create_room_failed">Errore nella creazione della stanza!</string>
+    <string name="multiplayer_join_room_failed">Impossibile entrare nella stanza!</string>
+    <string name="multiplayer_input_invalid">Indirizzo non valido o nome troppo corto!</string>
+    <string name="multiplayer_port_invalid">Porta non valida!</string>
+    <string name="multiplayer_exit_room">Esci dalla stanza</string>
+    <string name="multiplayer_network_error">Errore di rete</string>
+    <string name="multiplayer_lost_connection">Connessione persa</string>
+    <string name="multiplayer_name_collision">Conflitto di nome</string>
+    <string name="multiplayer_mac_collision">Conflitto di MAC</string>
+    <string name="multiplayer_console_id_collision">Conflitto ID console</string>
+    <string name="multiplayer_wrong_version">Versione sbagliata</string>
+    <string name="multiplayer_wrong_password">Password sbagliata</string>
+    <string name="multiplayer_could_not_connect">Connessione fallita</string>
+    <string name="multiplayer_room_is_full">La stanza è piena</string>
+    <string name="multiplayer_host_banned">Host bannato</string>
+    <string name="multiplayer_permission_denied">Permesso negato</string>
+    <string name="multiplayer_no_such_user">Utente inesistente</string>
+    <string name="multiplayer_already_in_room">Già nella stanza</string>
+    <string name="multiplayer_create_room_error">Impossibile creare la stanza</string>
+    <string name="multiplayer_host_kicked">Host espulso</string>
+    <string name="multiplayer_unknown_error">Errore sconosciuto</string>
+    <string name="multiplayer_room_uninitialized">Stanza non inizializzata</string>
+    <string name="multiplayer_room_idle">Stanza inattiva</string>
+    <string name="multiplayer_room_joining">Accesso in corso</string>
+    <string name="multiplayer_room_joined">Entrato nella stanza</string>
+    <string name="multiplayer_room_moderator">Moderatore della stanza</string>
+    <string name="multiplayer_member_join">%1$s è entrato</string>
+    <string name="multiplayer_member_leave">%1$s è uscito</string>
+    <string name="multiplayer_member_kicked">%1$s espulso</string>
+    <string name="multiplayer_member_banned">%1$s bannato</string>
+    <string name="multiplayer_address_unbanned">Indirizzo sbannato</string>
+    <string name="multiplayer_kick_member">Espelli</string>
+    <string name="multiplayer_chat_input_hint">Invia messaggi...</string>
+    <string name="multiplayer_password">Password</string>
+    <string name="original_button_text">Unisciti</string>
+    <string name="disabled_button_text">Connessione in corso...</string>
+    <string name="multiplayer_room_name">Nome stanza</string>
+    <string name="multiplayer_room_name_invalid">Il nome della stanza deve contenere da 3 a 20 caratteri</string>
+    <string name="multiplayer_max_players">Giocatori massimi (16)</string>
+    <string name="multiplayer_max_players_value">Giocatori massimi: %d</string>
+    <string name="multiplayer_chat">Chat</string>
+    <string name="multiplayer_more_options">Altre opzioni</string>
+    <string name="multiplayer_ip_copied">Indirizzo IP copiato negli appunti</string>
+    <string name="multiplayer_server_address">Indirizzo server</string>
+    <string name="chat">Chat</string>
+    <string name="type_message">Scrivi messaggio...</string>
+    <string name="send">Invia</string>
+    <string name="send_message">Invia messaggio</string>
+    <string name="multiplayer_moderation">Moderazione</string>
+    <string name="multiplayer_moderation_title">Lista ban</string>
+    <string name="multiplayer_no_bans">Nessun utente bannato</string>
+    <string name="multiplayer_unban_title">Revoca ban giocatore</string>
+    <string name="multiplayer_unban">Revoca ban</string>
+    <string name="multiplayer_unban_message">Sei sicuro di voler revocare il ban a %1$s?</string>
+    <string name="multiplayer_ban">Banna giocatore</string>
+    <string name="multiplayer_room_browser">Stanze pubbliche</string>
+    <string name="multiplayer_no_rooms_found">Nessuna stanza pubblica trovata</string>
+    <string name="multiplayer_password_required">Paasword richiesta</string>
+    <string name="multiplayer_player_count">: %1$d/%2$d</string>
+    <string name="multiplayer_game">Gioco</string>
+    <string name="multiplayer_no_game_info">Qualunque gioco</string>
+    <string name="multiplayer_password_protected">Stanza protetta da password</string>
+    <string name="multiplayer_hide_full_rooms">Nascondi stanze piene</string>
+    <string name="multiplayer_hide_empty_rooms">Nascondi stanze vuote</string>
+    <string name="multiplayer_tap_refresh_to_check_again">Tocca Aggiorna per riprovare</string>
+    <string name="multiplayer_search_public_lobbies">Cerca stanze pubbliche...</string>
+    <string name="multiplayer_game_name">Giochi preferiti</string>
+    <string name="prefered_game_name">Gioco preferito</string>
+    <string name="multiplayer_no_game">Nessun gioco trovato</string>
+    <string name="no_preference">Nessuna preferenza</string>
+
+    <string name="update_available">Aggiornamento disponibile</string>
+    <string name="update_available_description">È disponibile una versione più recente di Azahar (versione %1$s).\nVuoi scaricarla?</string>
+    <string name="check_for_updates">Controlla aggiornamenti</string>
+    <string name="check_for_updates_description">Mostra una notifica in-app quando è disponibile un aggiornamento per Azahar.</string>
+    <string name="update_check_channel">Canale di aggiornamento</string>
+    <string name="update_check_channel_description">Quale canale di aggiornamento utilizzare per la ricerca degli aggiornamenti.</string>
+    <string name="update_check_channel_stable">Stabile</string>
+    <string name="update_check_channel_prerelease">Anteprima</string>
 
 </resources>

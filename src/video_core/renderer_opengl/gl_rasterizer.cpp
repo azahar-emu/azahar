@@ -488,10 +488,16 @@ bool RasterizerOpenGL::AccelerateDrawBatch(bool is_indexed) {
 
 bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
     const GLenum primitive_mode = MakePrimitiveMode(regs.pipeline.triangle_topology);
-    auto [vs_input_index_min, vs_input_index_max, vs_input_size] = AnalyzeVertexArray(is_indexed);
+    const auto vertex_array_info = AnalyzeVertexArray(is_indexed);
 
-    if (vs_input_size > VERTEX_BUFFER_SIZE) {
-        LOG_WARNING(Render_OpenGL, "Too large vertex input size {}", vs_input_size);
+    if (vertex_array_info.Invalid()) {
+        // Do not draw anything if the vertex array is invalid.
+        return true;
+    }
+
+    if (vertex_array_info.vs_input_size > VERTEX_BUFFER_SIZE) {
+        LOG_WARNING(Render_OpenGL, "Too large vertex input size {}",
+                    vertex_array_info.vs_input_size);
         return false;
     }
 
@@ -500,9 +506,11 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
 
     u8* buffer_ptr;
     GLintptr buffer_offset;
-    std::tie(buffer_ptr, buffer_offset, std::ignore) = vertex_buffer.Map(vs_input_size, 4);
-    SetupVertexArray(buffer_ptr, buffer_offset, vs_input_index_min, vs_input_index_max);
-    vertex_buffer.Unmap(vs_input_size);
+    std::tie(buffer_ptr, buffer_offset, std::ignore) =
+        vertex_buffer.Map(vertex_array_info.vs_input_size, 4);
+    SetupVertexArray(buffer_ptr, buffer_offset, vertex_array_info.vs_input_index_min,
+                     vertex_array_info.vs_input_index_max);
+    vertex_buffer.Unmap(vertex_array_info.vs_input_size);
 
     curr_shader_manager->ApplyTo(state, accurate_mul);
     state.Apply();
@@ -523,10 +531,12 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed) {
         std::memcpy(buffer_ptr, index_data, index_buffer_size);
         index_buffer.Unmap(index_buffer_size);
 
-        glDrawRangeElementsBaseVertex(
-            primitive_mode, vs_input_index_min, vs_input_index_max, regs.pipeline.num_vertices,
-            index_u16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE,
-            reinterpret_cast<const void*>(buffer_offset), -static_cast<GLint>(vs_input_index_min));
+        glDrawRangeElementsBaseVertex(primitive_mode, vertex_array_info.vs_input_index_min,
+                                      vertex_array_info.vs_input_index_max,
+                                      regs.pipeline.num_vertices,
+                                      index_u16 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_BYTE,
+                                      reinterpret_cast<const void*>(buffer_offset),
+                                      -static_cast<GLint>(vertex_array_info.vs_input_index_min));
     } else {
         glDrawArrays(primitive_mode, 0, regs.pipeline.num_vertices);
     }
@@ -541,6 +551,8 @@ void RasterizerOpenGL::DrawTriangles() {
 
 bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     MICROPROFILE_SCOPE(OpenGL_Drawing);
+    const DebugScope scope(runtime, Common::Vec4f{}, "RasterizerOpenGL::Draw");
+
     SyncDrawState();
 
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
@@ -715,6 +727,7 @@ void RasterizerOpenGL::SyncTextureUnits(const Framebuffer* framebuffer) {
         if (!IsFeedbackLoop(texture_index, framebuffer, surface)) {
             BindMaterial(texture_index, surface);
             state.texture_units[texture_index].texture_2d = surface.Handle();
+            state.texture_units[texture_index].target = GL_TEXTURE_2D;
         }
     }
 

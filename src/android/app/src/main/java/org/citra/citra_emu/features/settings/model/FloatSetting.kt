@@ -11,8 +11,12 @@ enum class FloatSetting(
     override val section: String,
     override val defaultValue: Float
 ) : AbstractFloatSetting {
-    LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(),Settings.SECTION_LAYOUT,2.25f),
-    SECOND_SCREEN_OPACITY(SettingKeys.custom_second_layer_opacity(), Settings.SECTION_RENDERER, 100f),
+    LARGE_SCREEN_PROPORTION(SettingKeys.large_screen_proportion(), Settings.SECTION_LAYOUT, 2.25f),
+    SECOND_SCREEN_OPACITY(
+        SettingKeys.custom_second_layer_opacity(),
+        Settings.SECTION_RENDERER,
+        100f
+    ),
     BACKGROUND_RED(SettingKeys.bg_red(), Settings.SECTION_RENDERER, 0f),
     BACKGROUND_BLUE(SettingKeys.bg_blue(), Settings.SECTION_RENDERER, 0f),
     BACKGROUND_GREEN(SettingKeys.bg_green(), Settings.SECTION_RENDERER, 0f);

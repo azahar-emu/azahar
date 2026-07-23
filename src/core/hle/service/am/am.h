@@ -444,6 +444,10 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
  */
 std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 
+Result GetTitleInfoFromList(Core::System& system, std::span<const u64> title_id_list,
+                            Service::FS::MediaType media_type,
+                            std::vector<TitleInfo>& title_info_out);
+
 /**
  * Uninstalls the specified title.
  * @param media_type the storage medium the title is installed to

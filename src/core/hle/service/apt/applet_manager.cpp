@@ -39,7 +39,7 @@ struct AppletTitleData {
     std::array<u64, NumRegions> n3ds_title_ids = {0, 0, 0, 0, 0, 0, 0};
 };
 
-static constexpr std::size_t NumApplets = 29;
+static constexpr std::size_t NumApplets = 30;
 static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     {{AppletId::HomeMenu, AppletId::None},
      {0x4003000008202, 0x4003000008F02, 0x4003000009802, 0x4003000008202, 0x400300000A102,
@@ -102,10 +102,13 @@ static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     {{AppletId::Memolib, AppletId::Memolib2},
      {0x400300000F602, 0x400300000F602, 0x400300000F602, 0x400300000F602, 0x400300000F602,
       0x400300000F602, 0x400300000F602}},
+    {{AppletId::Tiger, AppletId::None},
+     {0x4001000020900, 0x4001000021900, 0x4001000022900, 0x4001000020900, 0, 0x4001000027900,
+      0x4001000028900}},
     // TODO(Subv): Fill in the rest of the titleids
 }};
 
-static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
+u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
     ASSERT_MSG(id != AppletId::None, "Invalid applet id");
 
     auto itr = std::find_if(applet_titleids.begin(), applet_titleids.end(),
@@ -154,11 +157,13 @@ static u64 ConvertTitleID(Core::System& system, u64 base_title_id) {
 }
 
 static bool IsSystemAppletId(AppletId applet_id) {
-    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::AnySystemApplet)) != 0;
+    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::TypeMask)) ==
+           static_cast<u32>(AppletId::AnySystemApplet);
 }
 
 static bool IsApplicationAppletId(AppletId applet_id) {
-    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::Application)) != 0;
+    return (static_cast<u32>(applet_id) & static_cast<u32>(AppletId::TypeMask)) ==
+           static_cast<u32>(AppletId::Application);
 }
 
 AppletManager::AppletSlot AppletManager::GetAppletSlotFromId(AppletId id) {
@@ -272,8 +277,9 @@ void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
                       parameter.sender_id);
 
             if (parameter.buffer.size() >= sizeof(CaptureBufferInfo)) {
-                SetCaptureInfo(parameter.buffer);
+                SetCaptureInfoSuspendedApp(parameter.buffer);
                 CaptureFrameBuffers();
+                TransferCapturedFramebuffers();
             }
 
             next_parameter->sender_id = parameter.destination_id;
@@ -357,6 +363,15 @@ bool AppletManager::CancelParameter(bool check_sender, AppletId sender_appid, bo
         next_parameter = {};
 
     return cancellation_success;
+}
+
+void AppletManager::MapProgramIdForDebug(AppletId app_id, u64 title_id, FS::MediaType media_type) {
+    auto slot = GetAppletSlotFromId(app_id);
+    if (slot != AppletSlot::Error) {
+        auto applet_slot = GetAppletSlot(slot);
+        applet_slot->title_id = title_id;
+        applet_slot->media_type = media_type;
+    }
 }
 
 ResultVal<AppletManager::GetLockHandleResult> AppletManager::GetLockHandle(
@@ -605,8 +620,6 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     last_library_launcher_slot = active_slot;
     last_prepared_library_applet = applet_id;
 
-    capture_buffer_info.reset();
-
     if (Settings::values.lle_applets) {
         bool is_setup = system.GetAppLoader().DoingInitialSetup();
         auto cfg = Service::CFG::GetModule(system);
@@ -627,6 +640,8 @@ Result AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
         LOG_DEBUG(Service_APT, "Creating HLE applet {:03X} with parent {:03X}", applet_id, parent);
         return CreateHLEApplet(applet_id, parent, false);
     }
+
+    capture_info.reset();
 }
 
 Result AppletManager::PreloadLibraryApplet(AppletId applet_id) {
@@ -724,6 +739,14 @@ Result AppletManager::CloseLibraryApplet(std::shared_ptr<Kernel::Object> object,
         slot->Reset();
     } else {
         SendParameter(param);
+    }
+
+    // TODO: This doesn't work correctly when opening the
+    // theme shop and an error showwing, because for
+    // some reason the theme shop is an application.
+    if (last_library_launcher_slot == AppletSlot::SystemApplet &&
+        GetAppletSlotFromId(AppletId::Application) != AppletSlot::Error) {
+        TransferCapturedFramebuffers();
     }
 
     return ResultSuccess;
@@ -960,7 +983,7 @@ Result AppletManager::PrepareToJumpToHomeMenu() {
 
     last_jump_to_home_slot = active_slot;
 
-    capture_buffer_info.reset();
+    capture_info.reset();
 
     if (last_jump_to_home_slot == AppletSlot::Application) {
         EnsureHomeMenuLoaded();
@@ -1454,7 +1477,7 @@ Result AppletManager::PrepareToStartApplication(u64 title_id, FS::MediaType medi
     app_start_parameters->next_title_id = title_id;
     app_start_parameters->next_media_type = media_type;
 
-    capture_buffer_info.reset();
+    capture_info.reset();
 
     app_jump_parameters.Invalidate();
 
@@ -1621,8 +1644,8 @@ static u32 GetDisplayBufferModePixelSize(DisplayBufferMode mode) {
     }
 }
 
-static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr src, u32 height,
-                               DisplayBufferMode mode) {
+static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, std::span<u8> dst,
+                               VAddr src, u32 height, DisplayBufferMode mode) {
     const auto bpp = GetDisplayBufferModePixelSize(mode);
     if (bpp == 0) {
         return;
@@ -1631,15 +1654,8 @@ static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr s
     system.Memory().RasterizerFlushVirtualRegion(src, GSP::FRAMEBUFFER_WIDTH * height * bpp,
                                                  Memory::FlushMode::Flush);
 
-    // Address in VRAM that APT copies framebuffer captures to.
-    constexpr VAddr screen_capture_base_vaddr = Memory::VRAM_VADDR + 0x500000;
-    const auto dst_vaddr = screen_capture_base_vaddr + capture_offset;
-    auto dst_ptr = system.Memory().GetPointer(dst_vaddr);
-    if (!dst_ptr) {
-        LOG_ERROR(Service_APT,
-                  "Could not retrieve framebuffer capture destination buffer, skipping screen.");
-        return;
-    }
+    // APT captures the framebuffer to a copy on its own bss.
+    u8* dst_ptr = dst.data() + capture_offset;
 
     const auto src_ptr = system.Memory().GetPointer(src);
     if (!src_ptr) {
@@ -1653,26 +1669,38 @@ static void CaptureFrameBuffer(Core::System& system, u32 capture_offset, VAddr s
             const auto dst_offset = VideoCore::GetMortonOffset(x, y, bpp) +
                                     (y & ~7) * GSP::FRAMEBUFFER_WIDTH_POW2 * bpp;
             const auto src_offset = bpp * (GSP::FRAMEBUFFER_WIDTH * y + x);
+            ASSERT(capture_offset + dst_offset + bpp <= dst.size());
             std::memcpy(dst_ptr + dst_offset, src_ptr + src_offset, bpp);
         }
     }
-
-    system.Memory().RasterizerFlushVirtualRegion(
-        dst_vaddr, GSP::FRAMEBUFFER_WIDTH_POW2 * height * bpp, Memory::FlushMode::Invalidate);
 }
 
 void AppletManager::CaptureFrameBuffers() {
-    CaptureFrameBuffer(system, capture_info->bottom_screen_left_offset,
-                       GSP::FRAMEBUFFER_SAVE_AREA_BOTTOM, GSP::BOTTOM_FRAMEBUFFER_HEIGHT,
-                       capture_info->bottom_screen_format);
-    CaptureFrameBuffer(system, capture_info->top_screen_left_offset,
-                       GSP::FRAMEBUFFER_SAVE_AREA_TOP_LEFT, GSP::TOP_FRAMEBUFFER_HEIGHT,
-                       capture_info->top_screen_format);
-    if (capture_info->is_3d) {
-        CaptureFrameBuffer(system, capture_info->top_screen_right_offset,
-                           GSP::FRAMEBUFFER_SAVE_AREA_TOP_RIGHT, GSP::TOP_FRAMEBUFFER_HEIGHT,
-                           capture_info->top_screen_format);
+    CaptureFrameBuffer(system, capture_info_suspended_app->bottom_screen_left_offset,
+                       framebuffer_backup, GSP::FRAMEBUFFER_SAVE_AREA_BOTTOM,
+                       GSP::BOTTOM_FRAMEBUFFER_HEIGHT,
+                       capture_info_suspended_app->bottom_screen_format);
+    CaptureFrameBuffer(system, capture_info_suspended_app->top_screen_left_offset,
+                       framebuffer_backup, GSP::FRAMEBUFFER_SAVE_AREA_TOP_LEFT,
+                       GSP::TOP_FRAMEBUFFER_HEIGHT, capture_info_suspended_app->top_screen_format);
+    if (capture_info_suspended_app->is_3d) {
+        CaptureFrameBuffer(system, capture_info_suspended_app->top_screen_right_offset,
+                           framebuffer_backup, GSP::FRAMEBUFFER_SAVE_AREA_TOP_RIGHT,
+                           GSP::TOP_FRAMEBUFFER_HEIGHT,
+                           capture_info_suspended_app->top_screen_format);
     }
+}
+
+void AppletManager::TransferCapturedFramebuffers() {
+    constexpr u32 VRAM_TRANSFER_OFFSET = 0x500000;
+
+    const VAddr dst_vaddr = Memory::VRAM_VADDR + VRAM_TRANSFER_OFFSET;
+    auto dst_ptr = system.Memory().GetPointer(dst_vaddr);
+
+    memcpy(dst_ptr, framebuffer_backup.data(), framebuffer_backup.size());
+
+    system.Memory().RasterizerFlushVirtualRegion(dst_vaddr, framebuffer_backup.size(),
+                                                 Memory::FlushMode::Invalidate);
 }
 
 void AppletManager::LoadInputDevices() {

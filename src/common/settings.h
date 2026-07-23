@@ -49,6 +49,8 @@ enum class LayoutOption : u32 { // Shouldn't these have set numbers to prevent l
     CustomLayout,
 };
 
+enum class InputMappingType : u8 { AllControllers, Guid, GuidPort };
+
 /** Defines the layout option for mobile portrait */
 enum class PortraitLayoutOption : u32 {
     // formerly mobile portrait
@@ -57,7 +59,16 @@ enum class PortraitLayoutOption : u32 {
     PortraitOriginal
 };
 
-enum class SecondaryDisplayLayout : u32 { None, TopScreenOnly, BottomScreenOnly, SideBySide };
+enum class SecondaryDisplayLayout : u32 {
+    None,
+    TopScreenOnly,
+    BottomScreenOnly,
+    SideBySide,
+    OppositeScreenOnly,
+    Original,
+    Hybrid,
+    LargeScreen
+};
 /** Defines where the small screen will appear relative to the large screen
  * when in Large Screen mode
  */
@@ -449,6 +460,7 @@ struct InputProfile {
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+    InputMappingType maptype = Settings::InputMappingType::GuidPort;
 };
 
 struct TouchFromButtonMap {
@@ -518,6 +530,7 @@ struct Values {
     SwitchableSetting<u32> physical_device{0, Keys::physical_device};
     Setting<bool> use_gles{false, Keys::use_gles};
     Setting<bool> renderer_debug{false, Keys::renderer_debug};
+    Setting<bool> pica_debugging{false, Keys::pica_debugging};
     Setting<bool> dump_command_buffers{false, Keys::dump_command_buffers};
     SwitchableSetting<bool> spirv_shader_gen{true, Keys::spirv_shader_gen};
     SwitchableSetting<bool> disable_spirv_optimizer{true, Keys::disable_spirv_optimizer};
@@ -525,6 +538,7 @@ struct Values {
     SwitchableSetting<bool> async_presentation{true, Keys::async_presentation};
     SwitchableSetting<bool> use_hw_shader{true, Keys::use_hw_shader};
     SwitchableSetting<bool> use_disk_shader_cache{true, Keys::use_disk_shader_cache};
+    SwitchableSetting<bool> use_skip_duplicate_frames{true, Keys::use_skip_duplicate_frames};
     SwitchableSetting<bool> shaders_accurate_mul{true, Keys::shaders_accurate_mul};
 #ifdef ANDROID // TODO: Fuck this -OS
     SwitchableSetting<bool> use_vsync{false, Keys::use_vsync};
@@ -543,13 +557,13 @@ struct Values {
                                                         Keys::texture_sampling};
     SwitchableSetting<u16, true> delay_game_render_thread_us{0, 0, 65000,
                                                              Keys::delay_game_render_thread_us};
-    SwitchableSetting<bool> simulate_3ds_gpu_timings{true, Keys::simulate_3ds_gpu_timings};
+    SwitchableSetting<bool> simulate_3ds_gpu_timings{false, Keys::simulate_3ds_gpu_timings};
 
     SwitchableSetting<LayoutOption> layout_option{LayoutOption::Default, Keys::layout_option};
     SwitchableSetting<bool> swap_screen{false, Keys::swap_screen};
     SwitchableSetting<bool> upright_screen{false, Keys::upright_screen};
     SwitchableSetting<SecondaryDisplayLayout> secondary_display_layout{
-        SecondaryDisplayLayout::None, Keys::secondary_display_layout};
+        SecondaryDisplayLayout::OppositeScreenOnly, Keys::secondary_display_layout};
     SwitchableSetting<std::vector<LayoutOption>> layouts_to_cycle{
         {LayoutOption::Default, LayoutOption::SingleScreen, LayoutOption::LargeScreen,
          LayoutOption::SideScreen,
@@ -647,6 +661,10 @@ struct Values {
     Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
     Setting<bool> break_on_unmapped_memory_access{false, Keys::break_on_unmapped_memory_access};
 
+    // WebService
+    Setting<std::string> web_api_url{"", Keys::web_api_url};
+    Setting<std::string> network_token{"", Keys::network_token};
+
     // Miscellaneous
     Setting<std::string> log_filter{"*:Info", Keys::log_filter};
     Setting<std::string> log_regex_filter{"", Keys::log_regex_filter};
@@ -675,6 +693,9 @@ void LogSettings();
 
 // Restore the global state of all applicable settings in the Values struct
 void RestoreGlobalState(bool is_powered_on);
+
+/// Gets the graphics API that should be used; not necessarily one set in settings
+Settings::GraphicsAPI GetWorkingGraphicsAPI();
 
 // Input profiles
 void LoadProfile(int index);

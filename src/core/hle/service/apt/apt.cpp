@@ -574,6 +574,28 @@ void Module::APTInterface::CancelParameter(Kernel::HLERequestContext& ctx) {
                                                  receiver_appid));
 }
 
+void Module::APTInterface::MapProgramIdForDebug(Kernel::HLERequestContext& ctx) {
+    // This function got stubbed at some point and no longer
+    // does anything on real hardware. It is implemented here
+    // so that emulated applications can take advantage of it.
+
+    IPC::RequestParser rp(ctx);
+    const auto app_id = rp.PopEnum<AppletId>();
+    u64 title_id = rp.Pop<u64>();
+
+    // NOTE: Real hardware forces the media type to nand.
+    // To allow better control of this service call,
+    // treat the highest byte of the title ID as the
+    // media type instead.
+    FS::MediaType media_type = static_cast<FS::MediaType>(title_id >> 56);
+    title_id &= ~0xFF00000000000000ULL;
+
+    apt->applet_manager->MapProgramIdForDebug(app_id, title_id, media_type);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(ResultSuccess); // No error
+}
+
 void Module::APTInterface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     auto flags = rp.PopEnum<ApplicationJumpFlags>();
@@ -1101,7 +1123,7 @@ void Module::APTInterface::GetCaptureInfo(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_APT, "called");
 
-    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfo();
+    auto screen_capture_buffer = apt->applet_manager->GetCaptureInfoSuspendedApp();
     auto real_size = std::min(static_cast<u32>(screen_capture_buffer.size()), size);
     screen_capture_buffer.resize(size);
 
@@ -1408,6 +1430,58 @@ void Module::APTInterface::Reboot(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(ResultSuccess);
+}
+
+void Module::APTInterface::GetAppletProgramInfo(Kernel::HLERequestContext& ctx) {
+    union {
+        u32 raw;
+        BitField<0, 1, u32> mediatype_nand;
+        BitField<1, 1, u32> mediatype_sdmc;
+        BitField<2, 1, u32> mediatype_gamecard;
+        BitField<4, 1, u32> is_appid;
+        BitField<5, 1, u32> not_appid_must_set;
+        BitField<8, 1, u32> is_system_app;
+    } flags;
+
+    IPC::RequestParser rp(ctx);
+    u32 program_id = rp.Pop<u32>();
+    flags.raw = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    u64 title_id;
+    if (flags.is_appid) {
+        auto cfg = Service::CFG::GetModule(apt->system);
+        title_id =
+            GetTitleIdForApplet(static_cast<AppletId>(program_id), cfg->GetRegionValue(true));
+    } else {
+        if (!flags.not_appid_must_set) {
+            rb.Push(ResultUnknown); // TODO: Find proper error code
+            rb.Push(0);
+            return;
+        } else {
+            u32 tid_high = flags.is_system_app ? 0x00040010 : 0x00040000;
+            title_id = static_cast<u64>(tid_high) << 32 | program_id;
+        }
+    }
+
+    std::vector<Service::AM::TitleInfo> info;
+    Result res = ResultUnknown; // TODO: Find proper error code
+    if (res.IsError() && flags.mediatype_nand) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::NAND, info);
+    }
+    if (res.IsError() && flags.mediatype_sdmc) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::SDMC, info);
+    }
+    if (res.IsError() && flags.mediatype_gamecard) {
+        res = Service::AM::GetTitleInfoFromList(apt->system, std::span<u64>(&title_id, 1),
+                                                FS::MediaType::GameCard, info);
+    }
+
+    rb.Push(res);
+    rb.Push(res.IsSuccess() ? info[0].version : 0);
 }
 
 void Module::APTInterface::HardwareResetAsync(Kernel::HLERequestContext& ctx) {

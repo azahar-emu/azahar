@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -18,21 +18,16 @@ import coil.memory.MemoryCache
 import coil.request.ImageRequest
 import coil.request.Options
 import coil.transform.RoundedCornersTransformation
+import java.nio.IntBuffer
 import org.citra.citra_emu.R
 import org.citra.citra_emu.model.Game
-import java.nio.IntBuffer
 
-class GameIconFetcher(
-    private val game: Game,
-    private val options: Options
-) : Fetcher {
-    override suspend fun fetch(): FetchResult {
-        return DrawableResult(
-            drawable = getGameIcon(game.icon)!!.toDrawable(options.context.resources),
-            isSampled = false,
-            dataSource = DataSource.DISK
-        )
-    }
+class GameIconFetcher(private val game: Game, private val options: Options) : Fetcher {
+    override suspend fun fetch(): FetchResult = DrawableResult(
+        drawable = getGameIcon(game.icon)!!.toDrawable(options.context.resources),
+        isSampled = false,
+        dataSource = DataSource.DISK
+    )
 
     private fun getGameIcon(vector: IntArray?): Bitmap? {
         val bitmap = Bitmap.createBitmap(48, 48, Bitmap.Config.RGB_565)

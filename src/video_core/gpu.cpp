@@ -371,10 +371,6 @@ const Pica::PicaCore& GPU::PicaCore() const {
     return impl->pica;
 }
 
-Pica::DebugContext& GPU::DebugContext() {
-    return *Pica::g_debug_context;
-}
-
 GraphicsDebugger& GPU::Debugger() {
     return impl->gpu_debugger;
 }
@@ -490,12 +486,12 @@ void GPU::MemoryTransfer() {
 }
 
 void GPU::VBlankCallback(std::uintptr_t user_data, s64 cycles_late) {
-    // Present renderered frame.
-    impl->renderer->SwapBuffers();
-
     // Signal to GSP that GPU interrupt has occurred
     impl->signal_interrupt(Service::GSP::InterruptId::PDC0, 0);
     impl->signal_interrupt(Service::GSP::InterruptId::PDC1, 0);
+
+    // Present renderered frame.
+    impl->renderer->SwapBuffers();
 
     // Reschedule recurrent event
     impl->timing.ScheduleEvent(FRAME_TICKS - cycles_late, impl->vblank_event);

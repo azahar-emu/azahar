@@ -11,8 +11,10 @@
 #include <fmt/format.h>
 #include "common/archives.h"
 #include "common/assert.h"
+#include "common/file_util.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
+#include "common/web_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -110,53 +112,6 @@ constexpr Result ErrorInvalidPostDataEncoding = // 0xD8A0A035
 constexpr Result ErrorIncompatibleSendPostData = // 0xD8A0A036
     Result(ErrCodes::IncompatibleSendPostData, ErrorModule::HTTP, ErrorSummary::InvalidState,
            ErrorLevel::Permanent);
-
-// Splits URL into its components. Example: https://citra-emu.org:443/index.html
-// is_https: true; host: citra-emu.org; port: 443; path: /index.html
-static URLInfo SplitUrl(const std::string& url) {
-    const std::string prefix = "://";
-    constexpr int default_http_port = 80;
-    constexpr int default_https_port = 443;
-
-    std::string host;
-    int port = -1;
-    std::string path;
-
-    const auto scheme_end = url.find(prefix);
-    const auto prefix_end = scheme_end == std::string::npos ? 0 : scheme_end + prefix.length();
-    bool is_https = scheme_end != std::string::npos && url.starts_with("https");
-    const auto path_index = url.find("/", prefix_end);
-
-    if (path_index == std::string::npos) {
-        // If no path is specified after the host, set it to "/"
-        host = url.substr(prefix_end);
-        path = "/";
-    } else {
-        host = url.substr(prefix_end, path_index - prefix_end);
-        path = url.substr(path_index);
-    }
-
-    const auto port_start = host.find(":");
-    if (port_start != std::string::npos) {
-        std::string port_str = host.substr(port_start + 1);
-        host = host.substr(0, port_start);
-        char* p_end = nullptr;
-        port = std::strtol(port_str.c_str(), &p_end, 10);
-        if (*p_end) {
-            port = -1;
-        }
-    }
-
-    if (port == -1) {
-        port = is_https ? default_https_port : default_http_port;
-    }
-    return URLInfo{
-        .is_https = is_https,
-        .host = host,
-        .port = port,
-        .path = path,
-    };
-}
 
 static std::size_t WriteHeaders(httplib::Stream& stream,
                                 std::span<const Context::RequestHeader> headers) {
@@ -281,7 +236,7 @@ std::string Context::ParseMultipartFormData() {
 void Context::MakeRequest() {
     ASSERT(state == RequestState::NotStarted);
 
-    state = RequestState::ConnectingToServer;
+    state = RequestState::SendingRequest;
 
     static const std::unordered_map<RequestMethod, std::string> request_method_strings{
         {RequestMethod::Get, "GET"},       {RequestMethod::Post, "POST"},
@@ -290,12 +245,15 @@ void Context::MakeRequest() {
         {RequestMethod::PutEmpty, "PUT"},
     };
 
-    URLInfo url_info = SplitUrl(url);
+    Common::URLInfo url_info = Common::SplitUrl(url);
 
     httplib::Request request;
     std::vector<Context::RequestHeader> pending_headers;
     request.method = request_method_strings.at(method);
     request.path = url_info.path;
+
+    // Apply URL replacements if any
+    url_info.host = url_replacer->Apply(url_info.host);
 
     request.progress = [this](u64 current, u64 total) -> bool {
         // TODO(B3N30): Is there a state that shows response header are available
@@ -371,7 +329,7 @@ void Context::MakeRequest() {
     }
 }
 
-void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_info,
+void Context::MakeRequestNonSSL(httplib::Request& request, const Common::URLInfo& url_info,
                                 std::vector<Context::RequestHeader>& pending_headers) {
     httplib::Error error{-1};
     std::unique_ptr<httplib::Client> client =
@@ -391,7 +349,7 @@ void Context::MakeRequestNonSSL(httplib::Request& request, const URLInfo& url_in
     }
 }
 
-void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
+void Context::MakeRequestSSL(httplib::Request& request, const Common::URLInfo& url_info,
                              std::vector<Context::RequestHeader>& pending_headers) {
     httplib::Error error{-1};
     X509* cert = nullptr;
@@ -450,8 +408,6 @@ void Context::MakeRequestSSL(httplib::Request& request, const URLInfo& url_info,
 }
 
 bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
-
     if (!post_data_raw.empty()) {
         sink.write(post_data_raw.data() + offset, length);
     }
@@ -462,8 +418,6 @@ bool Context::ContentProvider(size_t offset, size_t length, httplib::DataSink& s
 }
 
 bool Context::ChunkedContentProvider(size_t offset, httplib::DataSink& sink) {
-    state = RequestState::SendingRequest;
-
     finish_post_data.Wait();
 
     switch (post_data_type) {
@@ -788,6 +742,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     contexts[context_counter].socket_buffer_size = 0;
     contexts[context_counter].handle = context_counter;
     contexts[context_counter].session_id = session_data->session_id;
+    contexts[context_counter].url_replacer = &url_replacer;
 
     session_data->num_http_contexts++;
 
@@ -858,13 +813,25 @@ void HTTP_C::GetRequestState(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    LOG_DEBUG(Service_HTTP, "called, context_handle={}", context_handle);
-
     Context& http_context = GetContext(context_handle);
+    RequestState state = http_context.state;
+
+    // When POST data is pending to be set, HTTPC stays in the SendingRequest
+    // state until NotifyFinishSendPostData is called. Most likely HTTPC
+    // already started the HTTP request at this point, has send the headers
+    // and is waiting for the client to set the post body to send.
+    // We cannot do that with httplib so instead fake the state to SendingRequest
+    // if post data is pending. TODO(PabloMK7): Fix if we get a more
+    // flexible HTTP library.
+    if (state == RequestState::NotStarted && http_context.post_pending_request) {
+        state = RequestState::SendingRequest;
+    }
+
+    LOG_DEBUG(Service_HTTP, "called, context_handle={} state={}", context_handle, state);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.PushEnum<RequestState>(http_context.state);
+    rb.PushEnum<RequestState>(state);
 }
 
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
@@ -1400,7 +1367,6 @@ void HTTP_C::NotifyFinishSendPostData(Kernel::HLERequestContext& ctx) {
     }
 
     http_context.finish_post_data.Set();
-    http_context.post_pending_request = false;
 
     http_context.current_copied_data = 0;
     http_context.request_future =
@@ -2003,6 +1969,61 @@ void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_HTTP, "(STUBBED) called");
 }
 
+void HTTP_C::RegisterURLReplacement(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 pattern_size = rp.Pop<u32>();
+    const u32 replacement_size = rp.Pop<u32>();
+
+    const std::vector<u8>& pattern_buf = rp.PopStaticBuffer();
+    const std::vector<u8>& replacement_buf = rp.PopStaticBuffer();
+
+    std::string pattern(reinterpret_cast<const char*>(pattern_buf.data()),
+                        std::min(static_cast<size_t>(pattern_size), pattern_buf.size()));
+    std::string replacement(
+        reinterpret_cast<const char*>(replacement_buf.data()),
+        std::min(static_cast<size_t>(replacement_size), replacement_buf.size()));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (url_replacer.HasRule(pattern)) {
+        rb.Push(Result{ErrorDescription::AlreadyExists, ErrorModule::HTTP,
+                       ErrorSummary::InvalidArgument, ErrorLevel::Status});
+        return;
+    }
+
+    Result res = url_replacer.AddRule(pattern, replacement)
+                     ? ResultSuccess
+                     : Result{ErrorDescription::InvalidCombination, ErrorModule::HTTP,
+                              ErrorSummary::InvalidArgument, ErrorLevel::Status};
+    if (res.IsSuccess()) {
+        res = url_replacer.Save() ? res
+                                  : Result{ErrorDescription::OutOfMemory, ErrorModule::HTTP,
+                                           ErrorSummary::Internal, ErrorLevel::Permanent};
+    }
+
+    rb.Push(res);
+}
+
+void HTTP_C::UnregisterURLReplacement(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    const u32 pattern_size = rp.Pop<u32>();
+
+    const std::vector<u8>& pattern_buf = rp.PopStaticBuffer();
+
+    std::string pattern(reinterpret_cast<const char*>(pattern_buf.data()),
+                        std::min(static_cast<size_t>(pattern_size), pattern_buf.size()));
+
+    bool deleted = url_replacer.DeleteRule(pattern);
+    Result res = deleted ? ResultSuccess
+                         : Result{ErrorDescription::NotFound, ErrorModule::HTTP,
+                                  ErrorSummary::NotFound, ErrorLevel::Info};
+    if (deleted) {
+        url_replacer.Save();
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(res);
+}
+
 void HTTP_C::GetDownloadSizeState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     const Context::Handle context_handle = rp.Pop<u32>();
@@ -2171,6 +2192,96 @@ void HTTP_C::DecryptClCertA() {
     ClCertA.init = true;
 }
 
+URLReplacer::URLReplacer() {
+    const std::string path{fmt::format("{}/http_hle_replace_rules.txt",
+                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+
+    FileUtil::IOFile f(path, "rb");
+    if (!f.IsOpen()) {
+        return;
+    }
+
+    std::string pattern;
+    std::string replacement;
+    while (f.ReadLine(pattern) && f.ReadLine(replacement)) {
+        try {
+            rules.push_back(Rule{
+                .regex = boost::regex(pattern),
+                .pattern = pattern,
+                .replacement = replacement,
+            });
+        } catch (const boost::regex_error& e) {
+            LOG_ERROR(Service_HTTP, "Failed to load HTTP HLE replacement pattern \"{}\": {}",
+                      pattern, e.what());
+        }
+    }
+}
+
+bool URLReplacer::HasRule(const std::string& pattern) {
+    for (const auto& rule : rules) {
+        if (rule.pattern == pattern) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool URLReplacer::AddRule(const std::string& pattern, const std::string& replacement) {
+    try {
+        rules.push_back(Rule{
+            .regex = boost::regex(pattern),
+            .pattern = pattern,
+            .replacement = replacement,
+        });
+    } catch (const boost::regex_error& e) {
+        return false;
+    }
+    return true;
+}
+
+bool URLReplacer::DeleteRule(const std::string& pattern) {
+    const auto old_size = rules.size();
+
+    std::erase_if(rules, [&](const Rule& rule) { return rule.pattern == pattern; });
+
+    return rules.size() != old_size;
+}
+
+std::string URLReplacer::Apply(const std::string& url) const {
+    std::string result = url;
+
+    for (const auto& rule : rules) {
+        if (boost::regex_search(result, rule.regex)) {
+            result = boost::regex_replace(result, rule.regex, rule.replacement,
+                                          boost::match_default | boost::format_all);
+            LOG_WARNING(Service_HTTP, "rule \"{}\" has replaced URL \"{}\" to \"{}\"", rule.pattern,
+                        url, result);
+            break;
+        }
+    }
+
+    return result;
+}
+
+bool URLReplacer::Save() {
+    const std::string path{fmt::format("{}/http_hle_replace_rules.txt",
+                                       FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir))};
+
+    FileUtil::IOFile f(path, "wb");
+
+    for (const auto& rule : rules) {
+        if ((f.WriteLine(rule.pattern) != rule.pattern.size() + 1) ||
+            (f.WriteLine(rule.replacement) != rule.replacement.size() + 1)) {
+            LOG_ERROR(Service_HTTP, "failed to write URL replacement rules");
+            f.Close();
+            FileUtil::Delete(path);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -2231,6 +2342,9 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x0037, &HTTP_C::SetKeepAlive, "SetKeepAlive"},
         {0x0038, &HTTP_C::SetPostDataTypeSize, "SetPostDataTypeSize"},
         {0x0039, &HTTP_C::Finalize, "Finalize"},
+        // Custom
+        {0x0C00, &HTTP_C::RegisterURLReplacement, "RegisterURLReplacement"},
+        {0x0C01, &HTTP_C::UnregisterURLReplacement, "UnregisterURLReplacement"},
         // clang-format on
     };
     RegisterHandlers(functions);

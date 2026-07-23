@@ -16,7 +16,6 @@
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
 #include "network/network.h"
-#include "network/network_settings.h"
 
 QtConfig::QtConfig(const std::string& config_name, ConfigType config_type) : type{config_type} {
     global = config_type == ConfigType::GlobalConfig;
@@ -57,51 +56,51 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 // This must be in alphabetical order according to action name as it must have the same order as
 // UISetting::values.shortcuts, which is alphabetically ordered.
 // clang-format off
-const std::array<UISettings::Shortcut, 43> QtConfig::default_hotkeys {{
-     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
-     {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), Qt::WindowShortcut}},
-     {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
-     {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
-     {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Debug Unschedule All"),     QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     Qt::WindowShortcut}},
-     {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      Qt::ApplicationShortcut}},
-     {QStringLiteral("Exit Azahar"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), Qt::WindowShortcut}},
-     {QStringLiteral("Exit Fullscreen"),          QStringLiteral("Main Window"), {QStringLiteral("Esc"),    Qt::WindowShortcut}},
-     {QStringLiteral("Fullscreen"),               QStringLiteral("Main Window"), {QStringLiteral("F11"),    Qt::WindowShortcut}},
-     {QStringLiteral("Increase 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl++"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      Qt::ApplicationShortcut}},
-     {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), Qt::WidgetWithChildrenShortcut}},
-     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), Qt::WindowShortcut}},
-     {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
-     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::WindowShortcut}},
-     {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     Qt::ApplicationShortcut}},
-     {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     Qt::WindowShortcut}},
-     {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     Qt::WindowShortcut}},
-     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), Qt::WindowShortcut}},
-     {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     Qt::WindowShortcut}},
-     {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     Qt::WindowShortcut}},
-     {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), Qt::WindowShortcut}},
-     {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    Qt::WindowShortcut}},
-     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), Qt::WindowShortcut}},
-     {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       Qt::ApplicationShortcut}},
-     {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      Qt::ApplicationShortcut}},
-    }};
+const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
+     {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Audio Mute/Unmute"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+M"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Audio Volume Down"),        QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Audio Volume Up"),          QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Capture Screenshot"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+P"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Unschedule All"),     QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Exit Azahar"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Exit Fullscreen"),          QStringLiteral("Main Window"), {QStringLiteral("Esc"),    QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Fullscreen"),               QStringLiteral("Main Window"), {QStringLiteral("F11"),    QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Increase 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl++"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Custom Textures"),   QStringLiteral("Main Window"), {QStringLiteral("F7"),     QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Filter Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+F"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Frame Advancing"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+A"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Per-Application Speed"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Z"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Screen Layout"),     QStringLiteral("Main Window"), {QStringLiteral("F10"),    QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      QStringLiteral(""), Qt::ApplicationShortcut}},
+    } };
 // clang-format on
 
 void QtConfig::Initialize(const std::string& config_name) {
@@ -310,7 +309,7 @@ void QtConfig::ReadCameraValues() {
     qt_config->beginGroup(QStringLiteral("Camera"));
 
     Settings::values.camera_name[OuterRightCamera] =
-        ReadSetting(Settings::QKeys::camera_inner_flip, QStringLiteral("blank"))
+        ReadSetting(Settings::QKeys::camera_outer_right_name, QStringLiteral("blank"))
             .toString()
             .toStdString();
     Settings::values.camera_config[OuterRightCamera] =
@@ -341,6 +340,11 @@ void QtConfig::ReadControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     ReadBasicSetting(Settings::values.use_artic_base_controller);
+
+    UISettings::values.controller_hotkey_maptype = static_cast<Settings::InputMappingType>(
+        ReadSetting(Settings::QKeys::controller_hotkey_maptype,
+                    static_cast<int>(Settings::InputMappingType::AllControllers))
+            .toInt());
 
     int num_touch_from_button_maps =
         qt_config->beginReadArray(Settings::QKeys::touch_from_button_maps);
@@ -380,6 +384,8 @@ void QtConfig::ReadControlValues() {
         Settings::InputProfile profile;
         profile.name =
             ReadSetting(Settings::QKeys::name, QStringLiteral("Default")).toString().toStdString();
+        profile.maptype = static_cast<Settings::InputMappingType>(
+            ReadSetting(Settings::QKeys::input_maptype, 2).toInt());
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             profile.buttons[i] = ReadSetting(QString::fromUtf8(Settings::NativeButton::mapping[i]),
@@ -513,6 +519,7 @@ void QtConfig::ReadDebuggingValues() {
     ReadBasicSetting(Settings::values.use_gdbstub);
     ReadBasicSetting(Settings::values.gdbstub_port);
     ReadBasicSetting(Settings::values.renderer_debug);
+    ReadBasicSetting(Settings::values.pica_debugging);
     ReadBasicSetting(Settings::values.dump_command_buffers);
     ReadBasicSetting(Settings::values.instant_debug_log);
     ReadBasicSetting(Settings::values.enable_rpc_server);
@@ -596,12 +603,9 @@ void QtConfig::ReadMiscellaneousValues() {
 void QtConfig::ReadMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    UISettings::values.nickname = ReadSetting(Settings::QKeys::nickname, QString{}).toString();
     UISettings::values.ip = ReadSetting(Settings::QKeys::ip, QString{}).toString();
     UISettings::values.port =
         ReadSetting(Settings::QKeys::port, Network::DefaultRoomPort).toString();
-    UISettings::values.room_nickname =
-        ReadSetting(Settings::QKeys::room_nickname, QString{}).toString();
     UISettings::values.room_name = ReadSetting(Settings::QKeys::room_name, QString{}).toString();
     UISettings::values.room_port =
         ReadSetting(Settings::QKeys::room_port, QStringLiteral("24872")).toString();
@@ -714,6 +718,7 @@ void QtConfig::ReadRendererValues() {
     ReadGlobalSetting(Settings::values.shaders_accurate_mul);
     ReadGlobalSetting(Settings::values.use_disk_shader_cache);
     ReadGlobalSetting(Settings::values.use_vsync);
+    ReadGlobalSetting(Settings::values.use_skip_duplicate_frames);
     ReadGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     ReadGlobalSetting(Settings::values.resolution_factor);
     ReadGlobalSetting(Settings::values.use_integer_scaling);
@@ -751,7 +756,10 @@ void QtConfig::ReadShortcutValues() {
         UISettings::values.shortcuts.push_back(
             {name,
              group,
-             {ReadSetting(Settings::QKeys::KeySeq, shortcut.keyseq).toString(), shortcut.context}});
+             {ReadSetting(Settings::QKeys::KeySeq, shortcut.keyseq).toString(),
+              ReadSetting(Settings::QKeys::controller_keyseq, shortcut.controller_keyseq)
+                  .toString(),
+              shortcut.context}});
         qt_config->endGroup();
         qt_config->endGroup();
     }
@@ -834,7 +842,7 @@ void QtConfig::ReadUIValues() {
         UISettings::values.theme =
             ReadSetting(Settings::QKeys::theme, QString::fromUtf8(UISettings::themes[0].second))
                 .toString();
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         ReadBasicSetting(UISettings::values.enable_discord_presence);
 #endif
         ReadBasicSetting(UISettings::values.screenshot_resolution_factor);
@@ -896,6 +904,8 @@ void QtConfig::ReadUILayoutValues() {
     UISettings::values.state = ReadSetting(Settings::QKeys::state).toByteArray();
     UISettings::values.renderwindow_geometry =
         ReadSetting(Settings::QKeys::geometryRenderWindow).toByteArray();
+    UISettings::values.secondarywindow_geometry =
+        ReadSetting(Settings::QKeys::geometrySecondaryWindow).toByteArray();
     UISettings::values.gamelist_header_state =
         ReadSetting(Settings::QKeys::gameListHeaderState).toByteArray();
     UISettings::values.microprofile_geometry =
@@ -908,14 +918,8 @@ void QtConfig::ReadUILayoutValues() {
 void QtConfig::ReadWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    NetSettings::values.web_api_url =
-        ReadSetting(Settings::QKeys::web_api_url, QStringLiteral("https://api.citra-emu.org"))
-            .toString()
-            .toStdString();
-    NetSettings::values.citra_username =
-        ReadSetting(Settings::QKeys::citra_username).toString().toStdString();
-    NetSettings::values.citra_token =
-        ReadSetting(Settings::QKeys::citra_token).toString().toStdString();
+    ReadBasicSetting(Settings::values.web_api_url);
+    ReadBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }
@@ -994,7 +998,9 @@ void QtConfig::SaveControlValues() {
     qt_config->beginGroup(QStringLiteral("Controls"));
 
     WriteBasicSetting(Settings::values.use_artic_base_controller);
-
+    WriteSetting(Settings::QKeys::controller_hotkey_maptype,
+                 static_cast<int>(UISettings::values.controller_hotkey_maptype.GetValue()),
+                 static_cast<int>(Settings::InputMappingType::GuidPort));
     WriteSetting(Settings::QKeys::profile, Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray(QStringLiteral("profiles"));
     for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
@@ -1002,6 +1008,8 @@ void QtConfig::SaveControlValues() {
         const auto& profile = Settings::values.input_profiles[p];
         WriteSetting(Settings::QKeys::name, QString::fromStdString(profile.name),
                      QStringLiteral("default"));
+        WriteSetting(Settings::QKeys::input_maptype, static_cast<int>(profile.maptype),
+                     static_cast<int>(Settings::InputMappingType::GuidPort));
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             WriteSetting(QString::fromStdString(Settings::NativeButton::mapping[i]),
@@ -1103,6 +1111,7 @@ void QtConfig::SaveDebuggingValues() {
     WriteBasicSetting(Settings::values.use_gdbstub);
     WriteBasicSetting(Settings::values.gdbstub_port);
     WriteBasicSetting(Settings::values.renderer_debug);
+    WriteBasicSetting(Settings::values.pica_debugging);
     WriteBasicSetting(Settings::values.instant_debug_log);
     WriteBasicSetting(Settings::values.enable_rpc_server);
     WriteBasicSetting(Settings::values.toggle_unique_data_console_type);
@@ -1183,10 +1192,8 @@ void QtConfig::SaveMiscellaneousValues() {
 void QtConfig::SaveMultiplayerValues() {
     qt_config->beginGroup(QStringLiteral("Multiplayer"));
 
-    WriteSetting(Settings::QKeys::nickname, UISettings::values.nickname, QString{});
     WriteSetting(Settings::QKeys::ip, UISettings::values.ip, QString{});
     WriteSetting(Settings::QKeys::port, UISettings::values.port, Network::DefaultRoomPort);
-    WriteSetting(Settings::QKeys::room_nickname, UISettings::values.room_nickname, QString{});
     WriteSetting(Settings::QKeys::room_name, UISettings::values.room_name, QString{});
     WriteSetting(Settings::QKeys::room_port, UISettings::values.room_port, QStringLiteral("24872"));
     WriteSetting(Settings::QKeys::host_type, UISettings::values.host_type, 0);
@@ -1263,6 +1270,7 @@ void QtConfig::SaveRendererValues() {
     WriteGlobalSetting(Settings::values.shaders_accurate_mul);
     WriteGlobalSetting(Settings::values.use_disk_shader_cache);
     WriteGlobalSetting(Settings::values.use_vsync);
+    WriteGlobalSetting(Settings::values.use_skip_duplicate_frames);
     WriteGlobalSetting(Settings::values.use_display_refresh_rate_detection);
     WriteGlobalSetting(Settings::values.resolution_factor);
     WriteGlobalSetting(Settings::values.use_integer_scaling);
@@ -1302,6 +1310,8 @@ void QtConfig::SaveShortcutValues() {
         qt_config->beginGroup(name);
         WriteSetting(Settings::QKeys::KeySeq, shortcut.keyseq, default_hotkey.keyseq);
         WriteSetting(Settings::QKeys::Context, shortcut.context, default_hotkey.context);
+        WriteSetting(Settings::QKeys::controller_keyseq, shortcut.controller_keyseq,
+                     default_hotkey.controller_keyseq);
         qt_config->endGroup();
         qt_config->endGroup();
     }
@@ -1367,7 +1377,7 @@ void QtConfig::SaveUIValues() {
     if (global) {
         WriteSetting(Settings::QKeys::theme, UISettings::values.theme,
                      QString::fromUtf8(UISettings::themes[0].second));
-#ifdef USE_DISCORD_PRESENCE
+#ifdef ENABLE_DISCORD_RPC
         WriteBasicSetting(UISettings::values.enable_discord_presence);
 #endif
         WriteBasicSetting(UISettings::values.screenshot_resolution_factor);
@@ -1428,6 +1438,8 @@ void QtConfig::SaveUILayoutValues() {
     WriteSetting(Settings::QKeys::geometry, UISettings::values.geometry);
     WriteSetting(Settings::QKeys::state, UISettings::values.state);
     WriteSetting(Settings::QKeys::geometryRenderWindow, UISettings::values.renderwindow_geometry);
+    WriteSetting(Settings::QKeys::geometrySecondaryWindow,
+                 UISettings::values.secondarywindow_geometry);
     WriteSetting(Settings::QKeys::gameListHeaderState, UISettings::values.gamelist_header_state);
     WriteSetting(Settings::QKeys::microProfileDialogGeometry,
                  UISettings::values.microprofile_geometry);
@@ -1439,13 +1451,8 @@ void QtConfig::SaveUILayoutValues() {
 void QtConfig::SaveWebServiceValues() {
     qt_config->beginGroup(QStringLiteral("WebService"));
 
-    WriteSetting(Settings::QKeys::web_api_url,
-                 QString::fromStdString(NetSettings::values.web_api_url),
-                 QStringLiteral("https://api.citra-emu.org"));
-    WriteSetting(Settings::QKeys::citra_username,
-                 QString::fromStdString(NetSettings::values.citra_username));
-    WriteSetting(Settings::QKeys::citra_token,
-                 QString::fromStdString(NetSettings::values.citra_token));
+    WriteBasicSetting(Settings::values.web_api_url);
+    WriteBasicSetting(Settings::values.network_token);
 
     qt_config->endGroup();
 }

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -128,7 +128,7 @@ class CheatListFragment : Fragment() {
                 left = leftInsets,
                 right = rightInsets,
                 bottom = barInsets.bottom +
-                        resources.getDimensionPixelSize(R.dimen.spacing_fab_list)
+                    resources.getDimensionPixelSize(R.dimen.spacing_fab_list)
             )
 
             val mlpFab = binding.fab.layoutParams as MarginLayoutParams

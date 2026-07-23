@@ -1,4 +1,4 @@
-// Copyright 2022 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -29,4 +29,13 @@ jstring ToJString(JNIEnv* env, std::string_view str) {
     const std::u16string converted_string = Common::UTF8ToUTF16(str);
     return env->NewString(reinterpret_cast<const jchar*>(converted_string.data()),
                           static_cast<jint>(converted_string.size()));
+}
+
+jobjectArray ToJStringArray(JNIEnv* env, const std::vector<std::string>& strs) {
+    jobjectArray array =
+        env->NewObjectArray(strs.size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
+    for (int i = 0; i < strs.size(); ++i) {
+        env->SetObjectArrayElement(array, i, ToJString(env, strs[i]));
+    }
+    return array;
 }

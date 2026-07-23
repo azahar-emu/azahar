@@ -121,7 +121,7 @@ option(USE_SYSTEM_SDL2 "Use the system SDL2 lib (instead of the bundled one)" OF
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
-option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" ON)
 option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
@@ -142,7 +142,7 @@ CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENA
 # NetBSD doesn't support Vulkan yet, remove this check when it does.
 CMAKE_DEPENDENT_OPTION(ENABLE_VULKAN "Enables the Vulkan renderer" ON "NOT (BSD MATCHES \"NetBSD\")" OFF)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+option(ENABLE_DISCORD_RPC "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 

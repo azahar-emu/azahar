@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Diese Software führt Anwendungen für die Handheld-Spielkonsole Nintendo 3DS aus. Es sind keine Spieletitel enthalten.\n\nBevor Sie mit der Emulation beginnen können, wählen Sie bitte einen Ordner aus, in dem Azahars Benutzerdaten gespeichert werden sollen.\n\nWas ist das:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android-Benutzerdaten und -Speicher</a></string>
     <string name="app_notification_channel_description">Azahar 3DS-Emulator-Benachrichtigungen</string>
     <string name="app_notification_running">Azahar läuft</string>
     <string name="app_game_install_description">Als Nächstes müssen Sie einen Anwendungsordner auswählen. Azahar zeigt alle 3DS-ROMs im ausgewählten Ordner in der App an.\n\nCIA-ROMs, Updates und DLC müssen separat installiert werden, indem Sie auf das Ordnersymbol klicken und CIA installieren auswählen</string>
@@ -82,14 +81,12 @@
     <string name="warning_skip">Überspringen</string>
     <string name="warning_cancel">Abbrechen</string>
     <string name="select_citra_user_folder">Wähle ein Nutzerverzeichnis aus</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Wähle dein <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">Nutzerdaten</a>verzeichnis, mit dem unteren Knopf.]]></string>
     <string name="select_which_user_directory_to_use">Es hat den Anschein, dass du Nutzerverzeichnisse für Lime3DS und Azahar eingerichtet hast. Das kann daran liegen, dass du von Lime3DS auf Azahar upgegradet hast und dabei ein neues Verzeichnis ausgewählt hast.\n\nEs kann sein, dass du dadurch gedacht hast, dass deine Speicherstände verloren gegangen sind - Wir entschuldigen und, sollte dies der Fall sein.\n\nMöchtest du wieder dein ursprüngliches Lime3DS-Verzeichnis nutzen, wodurch deine Einstellungen und Speicherstände von Lime3DS wiederhergestellt werden, oder das aktuelle Azahar-Nutzerverzeichnis nutzen?\n\nKeine der Verzeinisse werden dadurch gelöscht und du kannst das Verzeichnis jederzeit wechseln, indem du die „Wähle ein Nutzerverzeichnis aus“-Option auswählst.</string>
     <string name="keep_current_azahar_directory">Aktuelles Azahar-Verzeichnis behalten</string>
     <string name="use_prior_lime3ds_directory">Vorheriges Lime3DS-Verzeichnis nutzen</string>
     <string name="select">Auswählen</string>
     <string name="cannot_skip">Der Nutzer Ordner muss gesetzt sein</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
-    <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="invalid_selection">Ungültige Auswahl</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
     <string name="setup_theme_settings_description">Konfigurieren sie ihre Designeinstellungen für Azahar.</string>
@@ -129,7 +126,6 @@
     <string name="turbo_limit_hotkey">Turbogeschwindigkeit</string>
     <string name="turbo_enabled_toast">Turbogeschwindigkeit aktiviert</string>
     <string name="turbo_disabled_toast">Turbogeschwindigkeit deaktiviert</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Systemdateien</string>
     <string name="setup_system_files_description">Systemdateivorgänge wie die Installation von Systemdateien oder das Booten des HOME-Menüs durchführen</string>
@@ -347,14 +343,12 @@
     <string name="reset_setting_confirmation">Möchtest du diese Einstellung auf den Werkzustand zurücksetzen?</string>
     <string name="setting_not_editable">Du kannst das nicht bearbeiten</string>
     <string name="setting_disabled">Einstellungen deaktiviert</string>
-    <string name="setting_disabled_description">Diese Einstellung ist aktuell deaktiviert, da eine andere Einstellung nicht den geeigneten Wert hat. </string>
     <string name="setting_not_editable_description">Diese Einstellung kann nicht geändert werden, solange ein Spiel läuft.</string>
     <string name="auto_select">Automatisch auswählen</string>
     <string name="start">Start</string>
     <string name="cancelling">Wird abgebrochen...</string>
     <string name="visibility">Sichtbarkeit</string>
     <string name="information">Information</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 

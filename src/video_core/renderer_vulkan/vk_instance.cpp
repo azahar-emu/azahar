@@ -451,7 +451,8 @@ bool Instance::CreateDevice() {
     image_format_list = add_extension(VK_KHR_IMAGE_FORMAT_LIST_EXTENSION_NAME);
     shader_stencil_export = add_extension(VK_EXT_SHADER_STENCIL_EXPORT_EXTENSION_NAME);
     external_memory_host = add_extension(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
-    tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME);
+    tooling_info = add_extension(VK_EXT_TOOLING_INFO_EXTENSION_NAME, is_moltenvk,
+                                 "function pointer is not exposed by MoltenVK");
     const bool has_timeline_semaphores =
         add_extension(VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME, is_qualcomm || is_turnip,
                       "it is broken on Qualcomm drivers");

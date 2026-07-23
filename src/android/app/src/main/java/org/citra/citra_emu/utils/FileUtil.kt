@@ -4,7 +4,6 @@
 
 package org.citra.citra_emu.utils
 
-import okio.ByteString.Companion.readByteString
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
@@ -13,8 +12,6 @@ import android.system.Os
 import android.util.Pair
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import org.citra.citra_emu.CitraApplication
-import org.citra.citra_emu.model.CheapDocument
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -25,6 +22,9 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import okio.ByteString.Companion.readByteString
+import org.citra.citra_emu.CitraApplication
+import org.citra.citra_emu.model.CheapDocument
 
 object FileUtil {
     const val PATH_TREE = "tree"
@@ -228,7 +228,7 @@ object FileUtil {
 
             if (uri.scheme == "file") {
                 BuildUtil.assertNotGooglePlay()
-                val file = File(uri.path!!);
+                val file = File(uri.path!!)
                 return file.name
             }
 
@@ -289,11 +289,7 @@ object FileUtil {
     }
 
     @JvmStatic
-    fun copyFile(
-        sourceUri: Uri,
-        destinationUri: Uri,
-        destinationFilename: String
-    ): Boolean {
+    fun copyFile(sourceUri: Uri, destinationUri: Uri, destinationFilename: String): Boolean {
         try {
             val destinationParent =
                 DocumentFile.fromTreeUri(context, destinationUri) ?: return false
@@ -362,11 +358,7 @@ object FileUtil {
         return false
     }
 
-    fun copyDir(
-        sourcePath: String,
-        destinationPath: String,
-        listener: CopyDirListener?
-    ) {
+    fun copyDir(sourcePath: String, destinationPath: String, listener: CopyDirListener?) {
         try {
             val sourceUri = Uri.parse(sourcePath)
             val destinationUri = Uri.parse(destinationPath)
@@ -451,7 +443,12 @@ object FileUtil {
             val sourceFileUri = ("$sourceDirUriString%2F$filename").toUri()
             val sourceDirUri = sourceDirUriString.toUri()
             val destDirUri = destDirUriString.toUri()
-            DocumentsContract.moveDocument(context.contentResolver, sourceFileUri, sourceDirUri, destDirUri)
+            DocumentsContract.moveDocument(
+                context.contentResolver,
+                sourceFileUri,
+                sourceDirUri,
+                destDirUri
+            )
             return true
         } catch (e: Exception) {
             Log.error("[FileUtil]: Cannot move file, error: " + e.message)
@@ -529,10 +526,7 @@ object FileUtil {
         }
     }
 
-    fun copyToExternalStorage(
-        sourceFile: Uri,
-        destinationDir: DocumentFile
-    ): DocumentFile? {
+    fun copyToExternalStorage(sourceFile: Uri, destinationDir: DocumentFile): DocumentFile? {
         val filename = getFilename(sourceFile)
         val destinationFile = destinationDir.createFile("application/zip", filename)!!
         destinationFile.outputStream().use { os ->
@@ -555,21 +549,20 @@ object FileUtil {
             false
         }
 
-    fun getFreeSpace(context: Context, uri: Uri?): Double =
-        try {
-            val docTreeUri = DocumentsContract.buildDocumentUriUsingTree(
-                uri,
-                DocumentsContract.getTreeDocumentId(uri)
-            )
-            val pfd = context.contentResolver.openFileDescriptor(docTreeUri, "r")!!
-            val stats = Os.fstatvfs(pfd.fileDescriptor)
-            val spaceInGigaBytes = stats.f_bavail * stats.f_bsize / 1024.0 / 1024 / 1024
-            pfd.close()
-            spaceInGigaBytes
-        } catch (e: Exception) {
-            Log.error("[FileUtil] Cannot get storage size.")
-            0.0
-        }
+    fun getFreeSpace(context: Context, uri: Uri?): Double = try {
+        val docTreeUri = DocumentsContract.buildDocumentUriUsingTree(
+            uri,
+            DocumentsContract.getTreeDocumentId(uri)
+        )
+        val pfd = context.contentResolver.openFileDescriptor(docTreeUri, "r")!!
+        val stats = Os.fstatvfs(pfd.fileDescriptor)
+        val spaceInGigaBytes = stats.f_bavail * stats.f_bsize / 1024.0 / 1024 / 1024
+        pfd.close()
+        spaceInGigaBytes
+    } catch (e: Exception) {
+        Log.error("[FileUtil] Cannot get storage size.")
+        0.0
+    }
 
     fun closeQuietly(closeable: AutoCloseable?) {
         if (closeable != null) {
@@ -589,8 +582,7 @@ object FileUtil {
     }
 
     @Throws(IOException::class)
-    fun getStringFromFile(file: File): String =
-        String(file.readBytes(), StandardCharsets.UTF_8)
+    fun getStringFromFile(file: File): String = String(file.readBytes(), StandardCharsets.UTF_8)
 
     @Throws(IOException::class)
     fun getStringFromInputStream(stream: InputStream, length: Long = 0L): String =

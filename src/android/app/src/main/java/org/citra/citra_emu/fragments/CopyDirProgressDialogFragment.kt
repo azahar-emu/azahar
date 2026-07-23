@@ -32,7 +32,7 @@ import org.citra.citra_emu.utils.FileUtil
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.viewmodel.HomeViewModel
 
-class CopyDirProgressDialog : DialogFragment() {
+class CopyDirProgressDialogFragment : DialogFragment() {
     private var _binding: DialogCopyDirBinding? = null
     private val binding get() = _binding!!
 
@@ -52,9 +52,7 @@ class CopyDirProgressDialog : DialogFragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        return binding.root
-    }
+    ): View = binding.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -109,7 +107,7 @@ class CopyDirProgressDialog : DialogFragment() {
             previous: Uri,
             path: Uri,
             callback: SetupCallback? = null
-        ): CopyDirProgressDialog? {
+        ): CopyDirProgressDialogFragment? {
             val viewModel = ViewModelProvider(activity)[HomeViewModel::class.java]
             if (viewModel.copyInProgress) {
                 return null
@@ -144,10 +142,11 @@ class CopyDirProgressDialog : DialogFragment() {
                                 callback?.onStepCompleted(0, false)
                                 viewModel.setCopyComplete(true)
                             }
-                        })
+                        }
+                    )
                 }
             }
-            return CopyDirProgressDialog()
+            return CopyDirProgressDialogFragment()
         }
     }
 }

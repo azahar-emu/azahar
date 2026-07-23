@@ -152,6 +152,7 @@ class SetupFragment : Fragment() {
                                         pageButtonCallback = it
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                                             manageExternalStoragePermissionLauncher.launch(
+                                                @Suppress("ktlint:standard:max-line-length")
                                                 Intent(
                                                     android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
                                                     Uri.fromParts(
@@ -162,7 +163,9 @@ class SetupFragment : Fragment() {
                                                 )
                                             )
                                         } else {
-                                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                            permissionLauncher.launch(
+                                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                            )
                                         }
                                     },
                                     buttonState = {
@@ -187,7 +190,7 @@ class SetupFragment : Fragment() {
                                     isUnskippable = true,
                                     hasWarning = true,
                                     R.string.filesystem_permission_warning,
-                                    R.string.filesystem_permission_warning_description,
+                                    R.string.filesystem_permission_warning_description
                                 )
                             )
                         }
@@ -199,7 +202,9 @@ class SetupFragment : Fragment() {
                                     R.string.notifications_description,
                                     buttonAction = {
                                         pageButtonCallback = it
-                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                        permissionLauncher.launch(
+                                            Manifest.permission.POST_NOTIFICATIONS
+                                        )
                                     },
                                     buttonState = {
                                         if (NotificationManagerCompat.from(requireContext())
@@ -213,7 +218,7 @@ class SetupFragment : Fragment() {
                                     isUnskippable = false,
                                     hasWarning = true,
                                     R.string.notification_warning,
-                                    R.string.notification_warning_description,
+                                    R.string.notification_warning_description
                                 )
                             )
                         }
@@ -236,7 +241,7 @@ class SetupFragment : Fragment() {
                                     } else {
                                         ButtonState.BUTTON_ACTION_INCOMPLETE
                                     }
-                                },
+                                }
                             )
                         )
                         add(
@@ -258,10 +263,10 @@ class SetupFragment : Fragment() {
                                     } else {
                                         ButtonState.BUTTON_ACTION_INCOMPLETE
                                     }
-                                },
+                                }
                             )
                         )
-                    },
+                    }
                 ) {
                     var permissionsComplete =
                         // Microphone
@@ -269,14 +274,14 @@ class SetupFragment : Fragment() {
                             requireContext(),
                             Manifest.permission.RECORD_AUDIO
                         ) == PackageManager.PERMISSION_GRANTED &&
-                        // Camera
-                        ContextCompat.checkSelfPermission(
-                            requireContext(),
-                            Manifest.permission.CAMERA
-                        ) == PackageManager.PERMISSION_GRANTED &&
-                        // Notifications
-                        NotificationManagerCompat.from(requireContext())
-                            .areNotificationsEnabled()
+                            // Camera
+                            ContextCompat.checkSelfPermission(
+                                requireContext(),
+                                Manifest.permission.CAMERA
+                            ) == PackageManager.PERMISSION_GRANTED &&
+                            // Notifications
+                            NotificationManagerCompat.from(requireContext())
+                                .areNotificationsEnabled()
                     // External Storage
                     if (!BuildUtil.isGooglePlayBuild) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -284,10 +289,12 @@ class SetupFragment : Fragment() {
                                 (permissionsComplete && Environment.isExternalStorageManager())
                         } else {
                             permissionsComplete =
-                                (permissionsComplete && ContextCompat.checkSelfPermission(
-                                    requireContext(),
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                ) == PackageManager.PERMISSION_GRANTED)
+                                (
+                                    permissionsComplete && ContextCompat.checkSelfPermission(
+                                        requireContext(),
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    )
                         }
                     }
 
@@ -315,7 +322,9 @@ class SetupFragment : Fragment() {
                                 R.string.select_citra_user_folder_description,
                                 buttonAction = {
                                     pageButtonCallback = it
-                                    PermissionsHandler.compatibleSelectDirectory(mainActivity.setupOpenCitraDirectory)
+                                    PermissionsHandler.compatibleSelectDirectory(
+                                        mainActivity.setupOpenCitraDirectory
+                                    )
                                 },
                                 buttonState = {
                                     if (PermissionsHandler.hasWriteAccess(requireContext())) {
@@ -344,7 +353,11 @@ class SetupFragment : Fragment() {
                                     )
                                 },
                                 buttonState = {
-                                    if (preferences.getString(GameHelper.KEY_GAME_PATH, "")!!.isNotEmpty()) {
+                                    if (preferences.getString(
+                                            GameHelper.KEY_GAME_PATH,
+                                            ""
+                                        )!!.isNotEmpty()
+                                    ) {
                                         ButtonState.BUTTON_ACTION_COMPLETE
                                     } else {
                                         ButtonState.BUTTON_ACTION_INCOMPLETE
@@ -353,17 +366,16 @@ class SetupFragment : Fragment() {
                                 isUnskippable = false,
                                 hasWarning = true,
                                 R.string.add_games_warning,
-                                R.string.add_games_warning_description,
+                                R.string.add_games_warning_description
                             )
                         )
-                    },
+                    }
                 ) {
                     if (
                         PermissionsHandler.hasWriteAccess(requireContext()) &&
                         preferences.getString(GameHelper.KEY_GAME_PATH, "")!!.isNotEmpty()
                     ) {
                         PageState.PAGE_STEPS_COMPLETE
-
                     } else {
                         PageState.PAGE_STEPS_INCOMPLETE
                     }
@@ -483,7 +495,8 @@ class SetupFragment : Fragment() {
         if (savedInstanceState == null) {
             hasBeenWarned = BooleanArray(pages.size)
         } else {
-            hasBeenWarned = savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED) ?: BooleanArray(pages.size)
+            hasBeenWarned =
+                savedInstanceState.getBooleanArray(KEY_HAS_BEEN_WARNED) ?: BooleanArray(pages.size)
         }
 
         updateNavigationButtons(binding.viewPager2.currentItem)
@@ -590,8 +603,11 @@ class SetupFragment : Fragment() {
             }
         }
 
-        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(result,
-             null, checkForButtonState)
+        CitraDirectoryHelper(requireActivity(), true).showCitraDirectoryDialog(
+            result,
+            null,
+            checkForButtonState
+        )
     }
 
     private fun onGetGamesDirectory(result: Uri) {
@@ -632,33 +648,32 @@ class SetupFragment : Fragment() {
         hasBeenWarned[page] = true
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { _: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
 
-            val leftPadding = barInsets.left + cutoutInsets.left
-            val topPadding = barInsets.top + cutoutInsets.top
-            val rightPadding = barInsets.right + cutoutInsets.right
-            val bottomPadding = barInsets.bottom + cutoutInsets.bottom
+        val leftPadding = barInsets.left + cutoutInsets.left
+        val topPadding = barInsets.top + cutoutInsets.top
+        val rightPadding = barInsets.right + cutoutInsets.right
+        val bottomPadding = barInsets.bottom + cutoutInsets.bottom
 
-            if (resources.getBoolean(R.bool.small_layout)) {
-                binding.viewPager2
-                    .updatePadding(left = leftPadding, top = topPadding, right = rightPadding)
-                binding.constraintButtons
-                    .updatePadding(left = leftPadding, right = rightPadding, bottom = bottomPadding)
-            } else {
-                binding.viewPager2.updatePadding(top = topPadding, bottom = bottomPadding)
-                binding.constraintButtons
-                    .setPadding(
-                        leftPadding + rightPadding,
-                        topPadding,
-                        rightPadding + leftPadding,
-                        bottomPadding
-                    )
-            }
-            windowInsets
+        if (resources.getBoolean(R.bool.small_layout)) {
+            binding.viewPager2
+                .updatePadding(left = leftPadding, top = topPadding, right = rightPadding)
+            binding.constraintButtons
+                .updatePadding(left = leftPadding, right = rightPadding, bottom = bottomPadding)
+        } else {
+            binding.viewPager2.updatePadding(top = topPadding, bottom = bottomPadding)
+            binding.constraintButtons
+                .setPadding(
+                    leftPadding + rightPadding,
+                    topPadding,
+                    rightPadding + leftPadding,
+                    bottomPadding
+                )
         }
+        windowInsets
+    }
 }

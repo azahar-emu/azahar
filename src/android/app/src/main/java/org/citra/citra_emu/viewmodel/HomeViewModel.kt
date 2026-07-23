@@ -70,13 +70,19 @@ class HomeViewModel : ViewModel() {
     val selectedCitraDirectoryLiveData: LiveData<Uri?> = _selectedCitraDirectory
     var selectedCitraDirectory: Uri?
         get() = _selectedCitraDirectory.value
-        set(value) { _selectedCitraDirectory.value = value }
+        set(value) {
+            _selectedCitraDirectory.value = value
+        }
 
     private val _selectedGamesDirectory = MutableLiveData<Uri?>()
     val selectedGamesDirectoryLiveData: LiveData<Uri?> = _selectedGamesDirectory
     var selectedGamesDirectory: Uri?
         get() = _selectedGamesDirectory.value
-        set(value) { _selectedGamesDirectory.value = value }
+        set(value) {
+            _selectedGamesDirectory.value = value
+        }
+
+    var updatePromptShown = false
 
     fun setNavigationVisibility(visible: Boolean, animated: Boolean) {
         if (_navigationVisible.value.first == visible) {

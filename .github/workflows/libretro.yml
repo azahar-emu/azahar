@@ -17,13 +17,13 @@ permissions:
   attestations: write
 
 jobs:
-  android:
+  libretro-android:
     runs-on: ubuntu-22.04
     env:
       OS: android
       TARGET: arm64-v8a
       API_LEVEL: 21
-      ANDROID_NDK_VERSION: 26.2.11394342
+      ANDROID_NDK_VERSION: 27.3.13750724
       ANDROID_ABI: arm64-v8a
       BUILD_DIR: build/android-arm64-v8a
       EXTRA_PATH: bin/Release
@@ -76,7 +76,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-android.spdx.json
 
-  linux:
+  libretro-linux:
     runs-on: ubuntu-22.04
     env:
       OS: linux
@@ -95,7 +95,7 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc)
+          cmake --build $BUILD_DIR --target citra_libretro --config Release -j $(nproc)
           llvm-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
@@ -122,7 +122,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-linux.spdx.json
 
-  windows:
+  libretro-windows:
     runs-on: ubuntu-latest
     env:
       OS: windows
@@ -145,7 +145,7 @@ jobs:
               $IMAGE \
               bash -lc "\
                   ${CMAKE} $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR && \
-                  ${CMAKE} --build $BUILD_DIR --target azahar_libretro --config Release -j $(nproc) && \
+                  ${CMAKE} --build $BUILD_DIR --target citra_libretro --config Release -j $(nproc) && \
                   x86_64-w64-mingw32.static-strip -s $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*"
       - name: Pack
         run: ./.ci/libretro-pack.sh
@@ -171,7 +171,7 @@ jobs:
           subject-path: |
             ./*.zip
           sbom-path: libretro-windows.spdx.json
-  macos:
+  libretro-macos:
     runs-on: macos-26
     strategy:
       fail-fast: false
@@ -192,7 +192,7 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS -DCMAKE_OSX_ARCHITECTURES=$TARGET . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
@@ -219,7 +219,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-macos-${{ matrix.target }}.spdx.json
 
-  ios:
+  libretro-ios:
     runs-on: macos-26
     env:
       OS: ios
@@ -234,7 +234,7 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh
@@ -261,7 +261,7 @@ jobs:
             ./*.zip
           sbom-path: libretro-ios.spdx.json
 
-  tvos:
+  libretro-tvos:
     runs-on: macos-26
     env:
       OS: tvos
@@ -276,7 +276,7 @@ jobs:
       - name: Build
         run: |
           cmake $CORE_ARGS $EXTRA_CORE_ARGS . -B $BUILD_DIR
-          cmake --build $BUILD_DIR --target azahar_libretro --config Release
+          cmake --build $BUILD_DIR --target citra_libretro --config Release
           strip -x $BUILD_DIR/$EXTRA_PATH/azahar_libretro.*
       - name: Pack
         run: ./.ci/libretro-pack.sh

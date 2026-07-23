@@ -47,6 +47,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
     ar & cfg_config_file_buffer;
     ar & cfg_system_save_data_archive;
     ar & mac_address;
+    ar & load_savegame_res.raw;
     ar & preferred_region_code;
     ar & preferred_region_chosen;
 }
@@ -602,6 +603,43 @@ void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
     rb.Push(model != Service::CFG::NINTENDO_2DS);
 }
 
+void Module::Interface::TranslateCountryInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx);
+    ConsoleCountryInfo country_info = rp.PopRaw<ConsoleCountryInfo>();
+    u8 translate_direction = rp.Pop<u8>();
+
+    // Translation table, left is version A and right is version B.
+    static constexpr std::array<std::pair<ConsoleCountryInfo, ConsoleCountryInfo>, 5> translations =
+        {{
+            {{{0x00, 0x00}, 0x03, 0x6E}, {{0x00, 0x00}, 0x04, 0x6E}},
+            {{{0x00, 0x00}, 0x04, 0x6E}, {{0x00, 0x00}, 0x05, 0x6E}},
+            {{{0x00, 0x00}, 0x05, 0x6E}, {{0x00, 0x00}, 0x06, 0x6E}},
+            {{{0x00, 0x00}, 0x06, 0x6E}, {{0x00, 0x00}, 0x07, 0x6E}},
+            {{{0x00, 0x00}, 0x07, 0x6E}, {{0x00, 0x00}, 0x03, 0x6E}},
+        }};
+
+    ConsoleCountryInfo final_info = country_info;
+    if (translate_direction == 0) {
+        for (const auto& [vA, vB] : translations) {
+            if (country_info == vB) {
+                final_info = vA;
+                break;
+            }
+        }
+    } else if (translate_direction == 1) {
+        for (const auto& [vA, vB] : translations) {
+            if (country_info == vA) {
+                final_info = vB;
+                break;
+            }
+        }
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(ResultSuccess);
+    rb.PushRaw<ConsoleCountryInfo>(final_info);
+}
+
 void Module::Interface::GetConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx);
     u32 size = rp.Pop<u32>();
@@ -765,6 +803,10 @@ ResultVal<void*> Module::GetConfigBlockPointer(u32 block_id, u32 size, AccessFla
 }
 
 Result Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, void* output) {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     bool get_from_artic =
         block_id == ConsoleUniqueID2BlockID &&
         (static_cast<u16>(accesss_flag) & static_cast<u16>(AccessFlag::UserRead)) != 0;
@@ -804,6 +846,10 @@ Result Module::GetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, v
 }
 
 Result Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, const void* input) {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     void* pointer = nullptr;
     CASCADE_RESULT(pointer, GetConfigBlockPointer(block_id, size, accesss_flag));
     std::memcpy(pointer, input, size);
@@ -812,6 +858,10 @@ Result Module::SetConfigBlock(u32 block_id, u32 size, AccessFlag accesss_flag, c
 
 Result Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_flags,
                                  const void* data) {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
         return ResultUnknown; // TODO(Subv): Find the right error code
@@ -844,11 +894,19 @@ Result Module::CreateConfigBlock(u32 block_id, u16 size, AccessFlag access_flags
 }
 
 Result Module::DeleteConfigNANDSaveFile() {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     FileSys::Path path("/config");
     return cfg_system_save_data_archive->DeleteFile(path);
 }
 
 Result Module::UpdateConfigNANDSavegame() {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     LOG_DEBUG(Service_CFG, "Saving config file to NAND");
 
     FileSys::Mode mode = {};
@@ -867,6 +925,10 @@ Result Module::UpdateConfigNANDSavegame() {
 }
 
 Result Module::FormatConfig() {
+    if (load_savegame_res.IsError()) {
+        return load_savegame_res;
+    }
+
     Result res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
     if (!res.IsSuccess() && res != FileSys::ResultFileNotFound) {
@@ -905,6 +967,8 @@ Result Module::FormatConfig() {
 Result Module::LoadConfigNANDSaveFile() {
     LOG_DEBUG(Service_CFG, "Loading config file from NAND");
 
+    cfg_system_save_data_archive.reset();
+
     const std::string& nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
 
@@ -915,12 +979,29 @@ Result Module::LoadConfigNANDSaveFile() {
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ResultNotFound) {
         // Format the archive to create the directories
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0, 0, 0);
+        auto format_result =
+            systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0, 0, 0);
+
+        if (!format_result.IsSuccess()) {
+            LOG_ERROR(Service_CFG, "Could not format the CFG SystemSaveData archive!");
+            return format_result;
+        }
 
         // Open it again to get a valid archive now that the folder exists
-        cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path, 0).Unwrap();
+        auto new_archive_result = systemsavedata_factory.Open(archive_path, 0);
+
+        if (!new_archive_result.Succeeded()) {
+            LOG_ERROR(Service_CFG, "Could not open the CFG SystemSaveData archive!");
+            return archive_result.Code();
+        }
+
+        cfg_system_save_data_archive = std::move(new_archive_result).Unwrap();
+
     } else {
-        ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
+        if (!archive_result.Succeeded()) {
+            LOG_ERROR(Service_CFG, "Could not open the CFG SystemSaveData archive!");
+            return archive_result.Code();
+        }
 
         cfg_system_save_data_archive = std::move(archive_result).Unwrap();
     }
@@ -966,7 +1047,7 @@ void Module::SaveMCUConfig() {
 }
 
 Module::Module(Core::System& system_) : system(system_) {
-    LoadConfigNANDSaveFile();
+    load_savegame_res = LoadConfigNANDSaveFile();
     LoadMCUConfig();
     (void)GetMacAddress();
     // Check the config savegame EULA Version and update it to 0x7F7F if necessary
@@ -1095,7 +1176,7 @@ void Module::SetUsername(const std::u16string& name) {
 }
 
 std::u16string Module::GetUsername() {
-    UsernameBlock block;
+    UsernameBlock block{};
     GetConfigBlock(UsernameBlockID, sizeof(block), AccessFlag::SystemRead, &block);
 
     // the username string in the block isn't null-terminated,
@@ -1113,7 +1194,7 @@ void Module::SetBirthday(u8 month, u8 day) {
 }
 
 std::tuple<u8, u8> Module::GetBirthday() {
-    BirthdayBlock block;
+    BirthdayBlock block{};
     GetConfigBlock(BirthdayBlockID, sizeof(block), AccessFlag::SystemRead, &block);
     return std::make_tuple(block.month, block.day);
 }
@@ -1260,6 +1341,11 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
+}
+
+std::string GetUsername(Core::System& system) {
+    auto username = GetModule(system)->GetUsername();
+    return Common::UTF16ToUTF8(username);
 }
 
 std::string GetConsoleIdHash(Core::System& system) {

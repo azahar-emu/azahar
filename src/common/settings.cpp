@@ -5,6 +5,9 @@
 #include <string_view>
 #include <utility>
 #include "audio_core/dsp_interface.h"
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO)
+#include "common/android_utils.h"
+#endif
 #include "common/file_util.h"
 #include "common/settings.h"
 
@@ -93,6 +96,7 @@ void LogSettings() {
     log_setting("Renderer_SpirvShaderGen", values.spirv_shader_gen.GetValue());
     log_setting("Renderer_DisableSpirvOptimizer", values.disable_spirv_optimizer.GetValue());
     log_setting("Renderer_Debug", values.renderer_debug.GetValue());
+    log_setting("Renderer_PicaDebugging", values.pica_debugging.GetValue());
     log_setting("Renderer_UseHwShader", values.use_hw_shader.GetValue());
     log_setting("Renderer_ShadersAccurateMul", values.shaders_accurate_mul.GetValue());
     log_setting("Renderer_UseShaderJit", values.use_shader_jit.GetValue());
@@ -100,12 +104,13 @@ void LogSettings() {
     log_setting("Renderer_UseIntegerScaling", values.use_integer_scaling.GetValue());
     log_setting("Renderer_FrameLimit", values.frame_limit.GetValue());
     log_setting("Renderer_VSyncNew", values.use_vsync.GetValue());
+    log_setting("Renderer_SkipDuplicateFrames", values.use_skip_duplicate_frames.GetValue());
     log_setting("Renderer_PostProcessingShader", values.pp_shader_name.GetValue());
     log_setting("Renderer_FilterMode", values.filter_mode.GetValue());
     log_setting("Renderer_TextureFilter", GetTextureFilterName(values.texture_filter.GetValue()));
     log_setting("Renderer_TextureSampling",
                 GetTextureSamplingName(values.texture_sampling.GetValue()));
-    log_setting("Renderer_DelayGameRenderThreasUs", values.delay_game_render_thread_us.GetValue());
+    log_setting("Renderer_DelayGameRenderThreadUs", values.delay_game_render_thread_us.GetValue());
     log_setting("Renderer_Simulate3DSGPUTimings", values.simulate_3ds_gpu_timings.GetValue());
     log_setting("Renderer_DisableRightEyeRender", values.disable_right_eye_render.GetValue());
     log_setting("Stereoscopy_Render3d", values.render_3d.GetValue());
@@ -212,6 +217,7 @@ void RestoreGlobalState(bool is_powered_on) {
     values.use_disk_shader_cache.SetGlobal(true);
     values.shaders_accurate_mul.SetGlobal(true);
     values.use_vsync.SetGlobal(true);
+    values.use_skip_duplicate_frames.SetGlobal(true);
     values.resolution_factor.SetGlobal(true);
     values.use_integer_scaling.SetGlobal(true);
     values.frame_limit.SetGlobal(true);
@@ -241,6 +247,17 @@ void RestoreGlobalState(bool is_powered_on) {
     values.custom_textures.SetGlobal(true);
     values.preload_textures.SetGlobal(true);
     values.disable_right_eye_render.SetGlobal(true);
+}
+
+/// Gets the graphics API that should be used; not necessarily one set in settings
+Settings::GraphicsAPI GetWorkingGraphicsAPI() {
+    auto graphics_api = Settings::values.graphics_api.GetValue();
+#if defined(ANDROID) && !defined(HAVE_LIBRETRO)
+    if (AndroidUtils::IsUsingAngleForOpenGL()) {
+        graphics_api = Settings::GraphicsAPI::Vulkan;
+    }
+#endif
+    return graphics_api;
 }
 
 void LoadProfile(int index) {

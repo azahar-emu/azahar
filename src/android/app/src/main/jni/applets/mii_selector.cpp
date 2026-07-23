@@ -1,4 +1,4 @@
-// Copyright 2020 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -45,7 +45,7 @@ void AndroidMiiSelector::Setup(const Frontend::MiiSelectorConfig& config) {
         java_config,
         env->GetFieldID(s_mii_selector_config_class, "miiNames", "[Ljava/lang/String;"), array);
 
-    // Invoke backend Execute method
+    // Invoke backend execute method
     jobject data =
         env->CallStaticObjectMethod(s_mii_selector_class, s_mii_selector_execute, java_config);
 
@@ -73,7 +73,7 @@ void InitJNI(JNIEnv* env) {
         env->FindClass("org/citra/citra_emu/applets/MiiSelector$MiiSelectorData")));
 
     s_mii_selector_execute =
-        env->GetStaticMethodID(s_mii_selector_class, "Execute",
+        env->GetStaticMethodID(s_mii_selector_class, "execute",
                                "(Lorg/citra/citra_emu/applets/MiiSelector$MiiSelectorConfig;)Lorg/"
                                "citra/citra_emu/applets/MiiSelector$MiiSelectorData;");
 }

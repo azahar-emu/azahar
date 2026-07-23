@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,11 +14,11 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlin.math.abs
 import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.DialogInputBinding
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.utils.Log
-import kotlin.math.abs
 
 class MotionBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private var _binding: DialogInputBinding? = null

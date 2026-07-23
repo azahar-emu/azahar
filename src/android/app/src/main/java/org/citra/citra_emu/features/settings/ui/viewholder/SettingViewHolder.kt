@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,7 +10,9 @@ import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 
 abstract class SettingViewHolder(itemView: View, protected val adapter: SettingsAdapter) :
-    RecyclerView.ViewHolder(itemView), View.OnClickListener, View.OnLongClickListener {
+    RecyclerView.ViewHolder(itemView),
+    View.OnClickListener,
+    View.OnLongClickListener {
 
     init {
         itemView.setOnClickListener(this)

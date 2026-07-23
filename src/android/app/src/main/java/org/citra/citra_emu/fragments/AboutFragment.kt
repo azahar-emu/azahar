@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -96,28 +96,27 @@ class AboutFragment : Fragment() {
         startActivity(intent)
     }
 
-    private fun setInsets() =
-        ViewCompat.setOnApplyWindowInsetsListener(
-            binding.root
-        ) { _: View, windowInsets: WindowInsetsCompat ->
-            val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
+    private fun setInsets() = ViewCompat.setOnApplyWindowInsetsListener(
+        binding.root
+    ) { _: View, windowInsets: WindowInsetsCompat ->
+        val barInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        val cutoutInsets = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout())
 
-            val leftInsets = barInsets.left + cutoutInsets.left
-            val rightInsets = barInsets.right + cutoutInsets.right
+        val leftInsets = barInsets.left + cutoutInsets.left
+        val rightInsets = barInsets.right + cutoutInsets.right
 
-            val mlpAppBar = binding.toolbarAbout.layoutParams as MarginLayoutParams
-            mlpAppBar.leftMargin = leftInsets
-            mlpAppBar.rightMargin = rightInsets
-            binding.toolbarAbout.layoutParams = mlpAppBar
+        val mlpAppBar = binding.toolbarAbout.layoutParams as MarginLayoutParams
+        mlpAppBar.leftMargin = leftInsets
+        mlpAppBar.rightMargin = rightInsets
+        binding.toolbarAbout.layoutParams = mlpAppBar
 
-            val mlpScrollAbout = binding.scrollAbout.layoutParams as MarginLayoutParams
-            mlpScrollAbout.leftMargin = leftInsets
-            mlpScrollAbout.rightMargin = rightInsets
-            binding.scrollAbout.layoutParams = mlpScrollAbout
+        val mlpScrollAbout = binding.scrollAbout.layoutParams as MarginLayoutParams
+        mlpScrollAbout.leftMargin = leftInsets
+        mlpScrollAbout.rightMargin = rightInsets
+        binding.scrollAbout.layoutParams = mlpScrollAbout
 
-            binding.contentAbout.updatePadding(bottom = barInsets.bottom)
+        binding.contentAbout.updatePadding(bottom = barInsets.bottom)
 
-            windowInsets
-        }
+        windowInsets
+    }
 }

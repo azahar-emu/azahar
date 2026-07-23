@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Este software irá executar aplicativos feitos para o console portátil Nintendo 3DS. Nenhum jogo está incluído.\n\nAntes de começar a emulação, selecione uma pasta para armazenar os dados do usuário do Azahar.\n\nO que é isto:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dados e armazenamento do usuário do Azahar para Android</a></string>
     <string name="app_notification_channel_description">Notificações do emulador Azahar 3DS</string>
     <string name="app_notification_running">Azahar em Execução</string>
     <string name="app_game_install_description">Em seguida, você precisará selecionar uma pasta de Aplicativos. O Azahar exibirá todas as ROMs de 3DS dentro da pasta selecionada no aplicativo.\n\nROMs, atualizações e DLC no formato CIA precisarão ser instaladas separadamente clicando no ícone da pasta e selecionando Instalar CIA.</string>
@@ -64,7 +63,7 @@
     <string name="notifications">Notificações</string>
     <string name="notifications_description">Conceda a permissão de notificação com o botão abaixo.</string>
     <string name="give_permission">Conceder permissão</string>
-    <string name="notification_warning">Ignorar a solicitação de notificação?</string>
+    <string name="notification_warning">Ignorar solicitação de permissão de notificação?</string>
     <string name="notification_warning_description">O Azahar não poderá te notificar de informações importantes.</string>
     <string name="filesystem_permission_warning">Permissões Ausentes</string>
     <string name="filesystem_permission_warning_description">O Azahar requer permissão para gerenciar arquivos neste dispositivo a fim de armazenar e gerenciar seus dados.\n\nPor favor, conceda a permissão de \'Sistema de Arquivos\' antes de continuar.</string>
@@ -75,7 +74,7 @@
     <string name="filesystem_permission">Sistema de Arquivos</string>
     <string name="filesystem_permission_description">Conceda a permissão de arquivos abaixo para permitir que o Azahar armazene arquivos.</string>
     <string name="permission_denied">Permissão negada</string>
-    <string name="add_games_warning">Pular a seleção da pasta de aplicativos?</string>
+    <string name="add_games_warning">Pular seleção da pasta de aplicativos?</string>
     <string name="add_games_warning_description">Os softwares não serão exibidos na lista de Aplicativos se uma pasta não for selecionada.</string>
     <string name="permissions">Premissões</string>
     <string name="select_emulator_data_folders">Pastas de Dados</string>
@@ -85,14 +84,12 @@
     <string name="warning_skip">Pular</string>
     <string name="warning_cancel">Cancelar</string>
     <string name="select_citra_user_folder">Selecione a Pasta do Usuário</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Selecione o seu diretório de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dados de usuário</a>com o botão abaixo.]]></string>
     <string name="select_which_user_directory_to_use">Parece que você possui pastas de usuário configuradas tanto para o Lime3DS quanto para o Azahar. Isso provavelmente ocorreu porque você atualizou para o Azahar e, quando solicitado, escolheu uma pasta de usuário diferente da que era usada pelo Lime3DS.\n\nIsso pode ter feito você pensar que perdeu seus saves ou outras configurações — pedimos desculpas se isso aconteceu.\n\nVocê gostaria de voltar a usar sua pasta de usuário original do Lime3DS, restaurando as configurações e jogos salvos do Lime3DS, ou manter sua pasta de usuário atual do Azahar?\n\nNenhuma das pastas será excluída, independentemente da sua escolha, e você pode alternar livremente entre elas usando a opção Selecionar Pasta do Usuário.</string>
     <string name="keep_current_azahar_directory">Manter diretório atual do Azahar</string>
     <string name="use_prior_lime3ds_directory">Usar o diretório antigo do Lime3DS</string>
     <string name="select">Selecionar</string>
     <string name="cannot_skip">Você não pode pular a configuração da pasta do usuário.</string>
     <string name="cannot_skip_directory_description">Este passo é necessário para permitir que o Azahar funcione. Selecione um diretório para continuar.</string>
-    <string name="selecting_user_directory_without_write_permissions">Você perdeu suas permissões de escrita no seu diretório de <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">dados de usuário</a>, onde dados salvos e outras informações são guardadas.  Isso pode acontecer depois que algum app ou Android atualiza. Re-selecione o diretório para reobter as permissões para que você possa continuar.</string>
     <string name="invalid_selection">Seleção Inválida</string>
     <string name="invalid_user_directory">A seleção do diretório de usuário é inválida.\nPor favor, selecione novamente o diretório de usuário, certificando-se de navegar até ele a partir da raiz do armazenamento do seu dispositivo.</string>
     <string name="filesystem_permission_lost">O Azahar perdeu a permissão para gerenciar arquivos neste dispositivo. Isso pode acontecer após atualizações do aplicativo ou do Android. Por favor, conceda novamente esta permissão na próxima tela para continuar usando o app.</string>
@@ -141,11 +138,14 @@
     <string name="button_home">Menu Principal</string>
     <string name="button_swap">Trocar telas</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Botão de Combo</string>
     <string name="input_message_analog_only">Este controle deve ser mapeado para um analógico ou eixo do D-pad!</string>
     <string name="input_message_button_only">Este controle tem de ser mapeado a um botão do gamepad!</string>
     <string name="turbo_limit_hotkey">Velocidade Turbo</string>
     <string name="turbo_enabled_toast">Velocidade Turbo Ativada</string>
     <string name="turbo_disabled_toast">Velocidade Turbo Desativada</string>
+    <string name="combo_button_settings"> Configurar Botão de Combo</string>
+    <string name="combo_button_settings_description">Selecione quais botões são acionados pelo Botão de Combo.</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">Arquivos do Sistema</string>
@@ -250,6 +250,8 @@
     <string name="advanced">Avançado</string>
     <string name="texture_sampling_name">Amostragem de Texturas</string>
     <string name="texture_sampling_description">Substitui o filtro de amostragem usado pelos jogos. Isso pode ser útil em certos casos com jogos que se comportem mal durante o upscaling. Em caso de dúvidas, defina como Controlado pelo Jogo.</string>
+    <string name="use_skip_duplicate_frames">Ignorar Exibição de Quadros Duplicados</string>
+    <string name="use_skip_duplicate_frames_description">Ignora a exibição de quadros que não são únicos. Também permite que ferramentas externas de geração de quadros funcionem corretamente com jogos a 30 fps.</string>
     <string name="shaders_accurate_mul">Multiplicação precisa</string>
     <string name="shaders_accurate_mul_description">Utiliza uma multiplicação mais precisa de shaders no hardware, o que pode corrigir problemas visuais. Quando ativada, pode haver redução no desempenho.</string>
     <string name="asynchronous_gpu">Habilitar Emulação de GPU Assíncrona </string>
@@ -390,14 +392,14 @@
     <string name="reset_setting_confirmation">Você quer redefinir essa configuração para o valor padrão?</string>
     <string name="setting_not_editable">Você não pode editar isso agora</string>
     <string name="setting_disabled">Configuração desativada</string>
-    <string name="setting_disabled_description">Esta configuração está atualmente desativada porque outra configuração não está com o valor correto.</string>
+    <string name="setting_disabled_description_incompatible_setting">Esta configuração está desativada no momento porque outra configuração não está com o valor adequado.</string>
+    <string name="setting_disabled_description_angle">Não é possível alterar o renderizador porque o dispositivo está usando ANGLE para OpenGL, que no momento é incompatível com o Azahar. O Vulkan será utilizado.</string>
     <string name="setting_not_editable_description">Esta opção não pode ser alterada enquanto o jogo estiver em execução.</string>
     <string name="auto_select">Seleção Automática</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancelando...</string>
     <string name="visibility">Visibilidade</string>
     <string name="information">Informação</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Escolher pasta de jogos</string>
 
@@ -479,7 +481,11 @@
     <string name="emulation_aspect_ratio">Proporção da Tela</string>
     <string name="emulation_switch_screen_layout">Disposição de tela em paisagem</string>
     <string name="emulation_switch_portrait_layout">Disposição da tela em retrato</string>
-    <string name="emulation_switch_secondary_layout">Layout da Tela de Exibição Secundária</string>
+    <string name="emulation_secondary_display_enable">Ativar Tela Secundária</string>
+    <string name="emulation_secondary_display_enable_description">Se desativado, o Azahar deixará o Android gerenciar as telas conectadas. Se ativado e houver várias telas conectadas, você poderá selecionar qual o Azahar usará no Menu Rápido de Emulação.</string>
+    <string name="emulation_switch_secondary_layout">Layout da Tela Secundária</string>
+    <string name="emulation_secondary_display_management">Tela Secundária</string>
+    <string name="emulation_select_secondary_display">Escolher Tela</string>
     <string name="emulation_switch_secondary_layout_description">O layout usado por uma tela secundária conectada, com ou sem fio (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Tela Grande</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
@@ -488,7 +494,7 @@
     <string name="emulation_screen_layout_hybrid">Telas Híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Padrão</string>
-    <string name="emulation_secondary_display_default">Padrão do Sistema (espelhamento)</string>
+    <string name="emulation_secondary_display_opposite">Tela Oposta</string>
     <string name="emulation_screen_layout_custom">Disposição Personalizada</string>
     <string name="bg_color">Cor de Fundo</string>
     <string name="bg_color_description">A cor que aparece atrás das telas durante a emulação, representada por um valor RGB.</string>
@@ -963,4 +969,4 @@
     <string name="decompress_failed">A descompactação falhou.</string>
     <string name="compress_decompress_installed_app">Aplicativos já instalados não podem ser compactados ou descompactados.</string>
 
-</resources>
+  </resources>

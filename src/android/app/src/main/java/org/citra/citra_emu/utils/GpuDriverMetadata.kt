@@ -1,14 +1,14 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.utils
 
+import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.File
-import java.io.InputStream
 
 class GpuDriverMetadata {
     /**
@@ -76,12 +76,12 @@ class GpuDriverMetadata {
         }
 
         return other.name == name &&
-                other.description == description &&
-                other.author == author &&
-                other.vendor == vendor &&
-                other.version == version &&
-                other.minApi == minApi &&
-                other.libraryName == libraryName
+            other.description == description &&
+            other.author == author &&
+            other.vendor == vendor &&
+            other.version == version &&
+            other.minApi == minApi &&
+            other.libraryName == libraryName
     }
 
     override fun hashCode(): Int {

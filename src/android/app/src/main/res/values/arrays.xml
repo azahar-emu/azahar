@@ -36,10 +36,14 @@
     </string-array>
 
     <string-array name="secondaryLayouts">
-        <item>@string/emulation_secondary_display_default</item>
+        <item>@string/emulation_secondary_display_opposite</item>
         <item>@string/emulation_top_screen</item>
         <item>@string/emulation_bottom_screen</item>
         <item>@string/emulation_screen_layout_sidebyside</item>
+        <item>@string/emulation_screen_layout_original</item>
+        <item>@string/emulation_screen_layout_hybrid</item>
+        <item>@string/emulation_screen_layout_largescreen</item>
+
     </string-array>
 
     <integer-array name="portraitLayoutValues">
@@ -49,10 +53,13 @@
     </integer-array>
 
     <integer-array name="secondaryLayoutValues">
-        <item>0</item>
+        <item>4</item>
         <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
     </integer-array>
 
     <string-array name="smallScreenPositions">
@@ -181,7 +188,36 @@
         <item>@string/button_home</item>
         <item>@string/button_swap</item>
         <item>@string/button_turbo</item>
+        <item>@string/button_combo</item>
     </string-array>
+
+    <string-array name="comboOptions">
+        <item>@string/button_a</item>
+        <item>@string/button_b</item>
+        <item>@string/button_x</item>
+        <item>@string/button_y</item>
+        <item>@string/button_l</item>
+        <item>@string/button_r</item>
+        <item>@string/button_zl</item>
+        <item>@string/button_zr</item>
+        <item>@string/button_start</item>
+        <item>@string/button_select</item>
+    </string-array>
+
+    <!-- Ints refer to button values in NativeLibrary -->
+    <integer-array name="comboOptionValues">
+        <item>700</item>
+        <item>701</item>
+        <item>702</item>
+        <item>703</item>
+        <item>773</item>
+        <item>774</item>
+        <item>707</item>
+        <item>708</item>
+        <item>704</item>
+        <item>705</item>
+    </integer-array>
+
 
     <string-array name="cameraImageSourceNames">
         <item>@string/blank</item>
@@ -644,6 +680,15 @@
         <item>8</item>
         <item>1</item>
         <item>9</item>
+    </integer-array>
+
+    <string-array name="updateCheckChannels">
+        <item>@string/update_check_channel_stable</item>
+        <item>@string/update_check_channel_prerelease</item>
+    </string-array>
+    <integer-array name="updateCheckChannelsValues">
+        <item>0</item>
+        <item>1</item>
     </integer-array>
 
 </resources>

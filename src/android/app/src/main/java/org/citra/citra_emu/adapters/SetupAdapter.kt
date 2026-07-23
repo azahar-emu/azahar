@@ -8,18 +8,17 @@ import android.content.res.ColorStateList
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.PageSetupBinding
 import org.citra.citra_emu.model.ButtonState
 import org.citra.citra_emu.model.PageState
 import org.citra.citra_emu.model.SetupCallback
 import org.citra.citra_emu.model.SetupPage
-import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.ViewUtils
 
 class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) :
@@ -35,7 +34,8 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
         holder.bind(pages[position])
 
     inner class SetupPageViewHolder(val binding: PageSetupBinding) :
-        RecyclerView.ViewHolder(binding.root), SetupCallback {
+        RecyclerView.ViewHolder(binding.root),
+        SetupCallback {
         lateinit var page: SetupPage
 
         init {
@@ -49,7 +49,9 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
                 onStepCompleted(0, pageFullyCompleted = true)
             }
 
-            if (page.pageButtons != null && page.pageSteps.invoke() != PageState.PAGE_STEPS_COMPLETE) {
+            if (page.pageButtons != null &&
+                page.pageSteps.invoke() != PageState.PAGE_STEPS_COMPLETE
+            ) {
                 for (pageButton in page.pageButtons) {
                     val pageButtonView = LayoutInflater.from(activity)
                         .inflate(
@@ -108,9 +110,17 @@ class SetupAdapter(val activity: AppCompatActivity, val pages: List<SetupPage>) 
                     .alpha(0.38f)
                     .setDuration(200)
                     .start()
-                button.setTextColor(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+                button.setTextColor(
+                    button.context.getColor(
+                        com.google.android.material.R.color.material_on_surface_disabled
+                    )
+                )
                 button.iconTint =
-                    ColorStateList.valueOf(button.context.getColor(com.google.android.material.R.color.material_on_surface_disabled))
+                    ColorStateList.valueOf(
+                        button.context.getColor(
+                            com.google.android.material.R.color.material_on_surface_disabled
+                        )
+                    )
             }
         }
     }

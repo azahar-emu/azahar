@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/android_storage.h"
+#include "common/android_utils.h"
 #include "common/common_paths.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
@@ -13,6 +13,7 @@
 #include "jni/applets/swkbd.h"
 #include "jni/camera/still_image_camera.h"
 #include "jni/id_cache.h"
+#include "multiplayer.h"
 
 #include <jni.h>
 
@@ -31,6 +32,8 @@ static jmethodID s_portrait_screen_layout;
 static jmethodID s_exit_emulation_activity;
 static jmethodID s_request_camera_permission;
 static jmethodID s_request_mic_permission;
+static jmethodID s_add_netplay_message;
+static jmethodID s_clear_chat;
 
 static jclass s_cheat_class;
 static jfieldID s_cheat_pointer;
@@ -84,10 +87,6 @@ jmethodID GetOnCoreError() {
     return s_on_core_error;
 }
 
-jmethodID GetIsPortraitMode() {
-    return s_is_portrait_mode;
-}
-
 jmethodID GetLandscapeScreenLayout() {
     return s_landscape_screen_layout;
 }
@@ -106,6 +105,14 @@ jmethodID GetRequestCameraPermission() {
 
 jmethodID GetRequestMicPermission() {
     return s_request_mic_permission;
+}
+
+jmethodID GetAddNetPlayMessage() {
+    return s_add_netplay_message;
+}
+
+jmethodID ClearChat() {
+    return s_clear_chat;
 }
 
 jclass GetCheatClass() {
@@ -181,13 +188,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     s_on_core_error = env->GetStaticMethodID(
         s_native_library_class, "onCoreError",
         "(Lorg/citra/citra_emu/NativeLibrary$CoreError;Ljava/lang/String;)Z");
-    s_is_portrait_mode = env->GetStaticMethodID(s_native_library_class, "isPortraitMode", "()Z");
     s_exit_emulation_activity =
         env->GetStaticMethodID(s_native_library_class, "exitEmulationActivity", "(I)V");
     s_request_camera_permission =
         env->GetStaticMethodID(s_native_library_class, "requestCameraPermission", "()Z");
     s_request_mic_permission =
         env->GetStaticMethodID(s_native_library_class, "requestMicPermission", "()Z");
+    s_add_netplay_message = env->GetStaticMethodID(s_native_library_class, "addNetPlayMessage",
+                                                   "(ILjava/lang/String;)V");
+    s_clear_chat = env->GetStaticMethodID(s_native_library_class, "clearChat", "()V");
+
     env->DeleteLocalRef(native_library_class);
 
     // Initialize Cheat
@@ -264,7 +274,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     MiiSelector::InitJNI(env);
     SoftwareKeyboard::InitJNI(env);
     Camera::StillImage::InitJNI(env);
-    AndroidStorage::InitJNI(env, s_native_library_class);
+    AndroidUtils::InitJNI(env, s_native_library_class);
 
     return JNI_VERSION;
 }
@@ -290,10 +300,11 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
         env->DeleteGlobalRef(object);
     }
 
+    AndroidMultiplayer::NetworkShutdown();
     MiiSelector::CleanupJNI(env);
     SoftwareKeyboard::CleanupJNI(env);
     Camera::StillImage::CleanupJNI(env);
-    AndroidStorage::CleanupJNI();
+    AndroidUtils::CleanupJNI();
 }
 
 #ifdef __cplusplus

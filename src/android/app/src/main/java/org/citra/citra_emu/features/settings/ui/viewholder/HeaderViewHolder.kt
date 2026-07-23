@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -21,7 +21,7 @@ class HeaderViewHolder(val binding: ListItemSettingsHeaderBinding, adapter: Sett
         if (item.descriptionId != 0) {
             binding.textHeaderDescription.visibility = View.VISIBLE
             binding.textHeaderDescription.setText(item.descriptionId)
-        }else {
+        } else {
             binding.textHeaderDescription.visibility = View.GONE
         }
     }

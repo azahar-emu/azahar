@@ -1,20 +1,20 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.applets
 
 import androidx.annotation.Keep
+import java.io.Serializable
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.fragments.MiiSelectorDialogFragment
-import java.io.Serializable
 
 @Keep
 object MiiSelector {
     lateinit var data: MiiSelectorData
     val finishLock = Object()
 
-    private fun ExecuteImpl(config: MiiSelectorConfig) {
+    private fun executeImpl(config: MiiSelectorConfig) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         data = MiiSelectorData(0, 0)
         val fragment = MiiSelectorDialogFragment.newInstance(config)
@@ -22,8 +22,8 @@ object MiiSelector {
     }
 
     @JvmStatic
-    fun Execute(config: MiiSelectorConfig): MiiSelectorData {
-        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { ExecuteImpl(config) }
+    fun execute(config: MiiSelectorConfig): MiiSelectorData {
+        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { executeImpl(config) }
         synchronized(finishLock) {
             try {
                 finishLock.wait()
@@ -43,5 +43,5 @@ object MiiSelector {
         lateinit var miiNames: Array<String>
     }
 
-    class MiiSelectorData (var returnCode: Long, var index: Int)
+    class MiiSelectorData(var returnCode: Long, var index: Int)
 }
