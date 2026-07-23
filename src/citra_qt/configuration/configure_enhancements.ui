@@ -105,6 +105,36 @@
              <string>10x Native (4000x2400)</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>11x Native (4400x2640)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>12x Native (4800x2880)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>13x Native (5200x3120)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>14x Native (5600x3360)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>15x Native (6000x3600)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>16x Native (6400x3840)</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
