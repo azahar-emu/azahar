@@ -16,4 +16,12 @@ void QtClientObserver::OnLoginFailed(int result, const char* error_message) {
     emit LoginFailed(error_message);
 }
 
+void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
+    emit LoadGameSucceeded(game);
+}
+
+void QtClientObserver::OnLoadGameFailed(int result, const char* error_message) {
+    emit LoadGameFailed(error_message);
+}
+
 } // namespace RetroAchievements

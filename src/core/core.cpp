@@ -470,6 +470,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
         custom_tex_manager->FindCustomTextures();
     }
 
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    retro_achievements_client->LoadGame(filepath.c_str());
+#endif
+
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_secondary_window = secondary_window;

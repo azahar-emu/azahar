@@ -9,15 +9,23 @@
 #include "retro_achievements/client_observer.h"
 
 namespace RetroAchievements {
+
 class QtClientObserver : public QObject, public RetroAchievements::ClientObserver {
     Q_OBJECT
 
 public:
     void OnLoginSucceeded(const rc_client_user_t* user) override;
-    void OnLoginFailed(int result, const char* error_message);
+    void OnLoginFailed(int result, const char* error_message) override;
+
+    void OnLoadGameSucceeded(const rc_client_game_t* game) override;
+    void OnLoadGameFailed(int result, const char* error_message) override;
 
 signals:
     void LoginSucceeded(const rc_client_user_t* user);
     void LoginFailed(const char* error_message);
+
+    void LoadGameSucceeded(const rc_client_game_t* game);
+    void LoadGameFailed(const char* error_message);
 };
+
 } // namespace RetroAchievements

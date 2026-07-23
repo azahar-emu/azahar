@@ -10,6 +10,7 @@
 
 #include <httplib.h>
 #include <rc_client.h>
+#include <rc_consoles.h>
 
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
@@ -83,6 +84,12 @@ static void login_callback(int result, const char* error_message, rc_client_t* r
     client->OnLoginCallback(result, error_message);
 }
 
+static void load_game_callback(int result, const char* error_message, rc_client_t* rc_client,
+                               void* userdata) {
+    RetroAchievements::Client* client = static_cast<RetroAchievements::Client*>(userdata);
+    client->OnLoadGameCallback(result, error_message);
+}
+
 namespace RetroAchievements {
 
 Client::Client() {
@@ -120,6 +127,11 @@ void Client::LogOut() {
     m_user = nullptr;
 }
 
+void Client::LoadGame(const char* file_path) {
+    rc_client_begin_identify_and_load_game(m_rc_client, RC_CONSOLE_NINTENDO_3DS, file_path, NULL, 0,
+                                           load_game_callback, this);
+}
+
 void Client::FetchImage(const char* url, ImageCallback callback) const {
     const auto [base_url, path] = parse_url(url);
     httplib::Client http_client(base_url);
@@ -145,6 +157,19 @@ void Client::OnLoginCallback(int result, const char* error_message) {
     } else {
         for (ClientObserver* observer : m_observers) {
             observer->OnLoginFailed(result, error_message);
+        }
+    }
+}
+
+void Client::OnLoadGameCallback(int result, const char* error_message) {
+    if (result == 0) {
+        const rc_client_game_t* game = rc_client_get_game_info(m_rc_client);
+        for (ClientObserver* observer : m_observers) {
+            observer->OnLoadGameSucceeded(game);
+        }
+    } else {
+        for (ClientObserver* observer : m_observers) {
+            observer->OnLoadGameFailed(result, error_message);
         }
     }
 }
