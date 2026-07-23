@@ -12,8 +12,11 @@ class ClientObserver {
 public:
     virtual ~ClientObserver() = default;
 
-    virtual void OnLoginSucceeded(const rc_client_user_t* user) = 0;
-    virtual void OnLoginFailed(int result, const char* error_message) = 0;
+    virtual void OnLoginSucceeded(const rc_client_user_t* user) {}
+    virtual void OnLoginFailed(int result, const char* error_message) {}
+
+    virtual void OnLoadGameSucceeded(const rc_client_game_t* game) {}
+    virtual void OnLoadGameFailed(int result, const char* error_message) {}
 };
 
 } // namespace RetroAchievements

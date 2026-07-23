@@ -552,6 +552,13 @@ GMainWindow::GMainWindow(Core::System& system_)
     if (!game_path.isEmpty()) {
         BootGame(game_path);
     }
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoadGameSucceeded, this,
+            [this](const rc_client_game_t* game) {
+                LOG_DEBUG(RetroAchievements, "game.title = \"{}\"", game->title);
+            });
+#endif
 }
 
 GMainWindow::~GMainWindow() {

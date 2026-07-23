@@ -24,12 +24,15 @@ public:
     void AttemptLoginWithToken(const char* username, const char* token);
     void LogOut();
 
+    void LoadGame(const char* file_path);
+
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
     void FetchImage(const char* url, ImageCallback callback) const;
 
     const rc_client_user_t* GetUser() const;
 
     void OnLoginCallback(int result, const char* error_message);
+    void OnLoadGameCallback(int result, const char* error_message);
 
 private:
     rc_client_t* m_rc_client;
