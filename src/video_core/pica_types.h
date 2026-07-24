@@ -35,6 +35,14 @@ public:
         constexpr s32 bias = 127 - ((1 << (E - 1)) - 1);
 
         Float<M, E> res;
+
+#ifdef __FLT16_MANT_DIG__
+        if constexpr (M == 10 && E == 5) {
+            res.value = std::bit_cast<_Float16>(static_cast<u16>(hex));
+            return res;
+        }
+#endif
+
         s32 exponent = (hex >> M) & EXPONENT_MASK;
         u32 mantissa = hex & MANTISSA_MASK;
         const u32 fp32_sign = (hex >> (E + M)) << 31;
