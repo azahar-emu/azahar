@@ -335,6 +335,26 @@ elseif (UNIX)
     target_link_libraries(citra_qt PUBLIC Qt6::DBus gamemode)
 endif()
 
+# Network streaming (streams the bottom screen to the Azahar Viewer Android app over LAN).
+# Linux-only for now: relies on POSIX sockets directly and Avahi for mDNS/DNS-SD advertising.
+if (UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(AVAHI_CLIENT avahi-client)
+    if (AVAHI_CLIENT_FOUND)
+        target_sources(citra_qt PRIVATE
+            network_streaming/avahi_publisher.cpp
+            network_streaming/avahi_publisher.h
+            network_streaming/network_streamer.cpp
+            network_streaming/network_streamer.h
+        )
+        target_include_directories(citra_qt PRIVATE ${AVAHI_CLIENT_INCLUDE_DIRS})
+        target_link_libraries(citra_qt PRIVATE ${AVAHI_CLIENT_LIBRARIES})
+        target_compile_definitions(citra_qt PRIVATE -DENABLE_NETWORK_STREAMING)
+    else()
+        message(WARNING "avahi-client not found - network streaming feature will be disabled")
+    endif()
+endif()
+
 target_compile_definitions(citra_qt PRIVATE
     # Use QStringBuilder for string concatenation to reduce
     # the overall number of temporary strings created.
