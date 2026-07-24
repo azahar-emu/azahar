@@ -66,8 +66,12 @@ void AvahiPublisher::RegisterService() {
         return;
     }
     const std::string name = MakeServiceName();
+    // NetworkStreamer's TCP server only ever opens an AF_INET (IPv4) socket, but
+    // AVAHI_PROTO_UNSPEC advertises both A and AAAA records - a viewer that resolves and tries
+    // the IPv6 (link-local) address first gets ECONNREFUSED and has to retry until it happens
+    // to pick the IPv4 one. Advertise IPv4 only so what's advertised matches what's listening.
     const int ret =
-        avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC,
+        avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, AVAHI_PROTO_INET,
                                       static_cast<AvahiPublishFlags>(0), name.c_str(),
                                       service_type.c_str(), nullptr, nullptr, port, nullptr);
     if (ret < 0) {
