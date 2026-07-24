@@ -363,6 +363,26 @@ class EmulationFragment :
                     true
                 }
 
+                R.id.menu_network_stream -> {
+                    val streamer = emulationActivity.networkStreamer
+                    if (streamer.isRunning) {
+                        streamer.stop()
+                        it.title = resources.getString(R.string.emulation_network_stream_start)
+                    } else {
+                        streamer.start()
+                        it.title = resources.getString(R.string.emulation_network_stream_stop)
+                        Toast.makeText(
+                            context,
+                            resources.getString(
+                                R.string.emulation_network_stream_toast,
+                                Build.MODEL
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    true
+                }
+
                 R.id.menu_rotate_upright -> {
                     screenAdjustmentUtil.toggleScreenUpright()
                     true

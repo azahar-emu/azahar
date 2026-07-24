@@ -43,6 +43,11 @@
         android:title="@string/emulation_swap_screens" />
 
     <item
+        android:id="@+id/menu_network_stream"
+        android:icon="@drawable/ic_secondary_fit_screen"
+        android:title="@string/emulation_network_stream_start" />
+
+    <item
         android:id="@+id/menu_rotate_upright"
         android:icon="@drawable/ic_rotate_up_right"
         android:title="@string/emulation_rotate_upright" />
