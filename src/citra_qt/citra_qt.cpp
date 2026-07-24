@@ -3746,6 +3746,18 @@ void GMainWindow::StartNetworkStreaming() {
         return;
     }
 
+    // Video dumping (which network streaming is built on) only has a capture path implemented
+    // for the OpenGL renderer - Vulkan has no equivalent, so this would otherwise silently
+    // connect and never produce a single video frame.
+    if (Settings::values.graphics_api.GetValue() != Settings::GraphicsAPI::OpenGL) {
+        QMessageBox::warning(this, tr("Azahar"),
+                             tr("Network streaming currently requires the OpenGL renderer. "
+                                "Switch Graphics API to OpenGL in Emulation Settings and "
+                                "restart the game to use this feature."));
+        ui->action_Network_Streaming->setChecked(false);
+        return;
+    }
+
     auto& renderer = system.GPU().Renderer();
     const auto layout = Layout::SingleFrameLayout(NetworkStreaming::NetworkStreamer::Width,
                                                    NetworkStreaming::NetworkStreamer::Height,
