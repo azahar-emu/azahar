@@ -141,6 +141,7 @@ int SDLJoystick::GetPort() const {
 }
 
 std::tuple<float, float, float> SDLJoystick::GetTouch(int pad) const {
+    std::lock_guard lock{mutex};
     if (state.touchpad.contains(pad))
         return state.touchpad.at(pad);
     else
