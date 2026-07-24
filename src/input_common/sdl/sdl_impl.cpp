@@ -350,7 +350,6 @@ Common::ParamPackage SDLState::GetSDLControllerAnalogBindByGUID(
 void SDLState::InitJoystick(int joystick_index) {
     SDL_Joystick* sdl_joystick = nullptr;
     SDL_GameController* sdl_gamecontroller = nullptr;
-
     if (SDL_IsGameController(joystick_index)) {
         sdl_gamecontroller = SDL_GameControllerOpen(joystick_index);
         if (sdl_gamecontroller) {
@@ -359,7 +358,6 @@ void SDLState::InitJoystick(int joystick_index) {
     } else {
         sdl_joystick = SDL_JoystickOpen(joystick_index);
     }
-
     if (!sdl_joystick) {
         LOG_ERROR(Input, "failed to open joystick {}, with error: {}", joystick_index,
                   SDL_GetError());
@@ -370,7 +368,6 @@ void SDLState::InitJoystick(int joystick_index) {
     std::lock_guard lock{joystick_map_mutex};
     if (joystick_map.find(guid) == joystick_map.end()) {
         auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick, sdl_gamecontroller);
-        joystick->EnableMotion();
         auto vec = std::make_shared<std::vector<std::shared_ptr<SDLJoystick>>>();
         vec->emplace_back(joystick);
         joystick_map[guid] = vec;
@@ -383,13 +380,11 @@ void SDLState::InitJoystick(int joystick_index) {
                                  [](const auto& joystick) { return !joystick->GetSDLJoystick(); });
     if (it != joystick_guid_list->end()) {
         (*it)->SetSDLJoystick(sdl_joystick, sdl_gamecontroller);
-        (*it)->EnableMotion();
         joystick_vector->emplace_back(*it);
         return;
     }
     const int port = static_cast<int>(joystick_guid_list->size());
     auto joystick = std::make_shared<SDLJoystick>(guid, port, sdl_joystick, sdl_gamecontroller);
-    joystick->EnableMotion();
     joystick_guid_list->emplace_back(joystick);
     joystick_vector->emplace_back(joystick);
 }
