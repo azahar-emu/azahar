@@ -102,7 +102,10 @@ static void load_game_callback(int result, const char* error_message, rc_client_
 }
 
 static void event_handler(const rc_client_event_t* event, rc_client_t* client) {
-    LOG_DEBUG(RetroAchievements, "Event! ({})", event->type);
+    auto* ra_client = static_cast<RetroAchievements::Client*>(rc_client_get_userdata(client));
+    if (ra_client) {
+        ra_client->OnEvent(event);
+    }
 }
 
 namespace RetroAchievements {
@@ -112,6 +115,7 @@ Client::Client() {
 
     rc_client_enable_logging(m_rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
     rc_client_set_event_handler(m_rc_client, event_handler);
+    rc_client_set_userdata(m_rc_client, this);
     rc_client_set_hardcore_enabled(m_rc_client, 0);
 
 #ifdef USE_RETRO_ACHIEVEMENTS_DEV_SERVER
@@ -199,6 +203,13 @@ void Client::OnLoadGameCallback(int result, const char* error_message) {
         for (ClientObserver* observer : m_observers) {
             observer->OnLoadGameFailed(result, error_message);
         }
+    }
+}
+
+void Client::OnEvent(const rc_client_event_t* event) {
+    LOG_DEBUG(RetroAchievements, "Event! ({})", event->type);
+    for (ClientObserver* observer : m_observers) {
+        observer->OnEvent(event);
     }
 }
 

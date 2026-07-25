@@ -4,6 +4,8 @@
 
 #include "qt_client_observer.h"
 
+#include <QString>
+
 #include "common/logging/log.h"
 
 namespace RetroAchievements {
@@ -22,6 +24,55 @@ void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
 
 void QtClientObserver::OnLoadGameFailed(int result, const char* error_message) {
     emit LoadGameFailed(error_message);
+}
+
+void QtClientObserver::OnEvent(const rc_client_event_t* event) {
+    QString title, body, image_url;
+
+    switch (event->type) {
+    case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
+        title = QStringLiteral("Achievement Unlocked");
+        body = QString::fromUtf8(event->achievement->title);
+        image_url = QString::fromUtf8(event->achievement->badge_url);
+        break;
+    case RC_CLIENT_EVENT_LEADERBOARD_STARTED:
+        title = QStringLiteral("Leaderboard Started");
+        body = QString::fromUtf8(event->leaderboard->title);
+        break;
+    case RC_CLIENT_EVENT_LEADERBOARD_FAILED:
+        title = QStringLiteral("Leaderboard Failed");
+        body = QString::fromUtf8(event->leaderboard->title);
+        break;
+    case RC_CLIENT_EVENT_LEADERBOARD_SUBMITTED:
+        title = QStringLiteral("Leaderboard Submitted");
+        body = QString::fromUtf8(event->leaderboard->title);
+        break;
+    case RC_CLIENT_EVENT_GAME_COMPLETED:
+        title = QStringLiteral("Game Completed");
+        body = QStringLiteral("All achievements earned.");
+        break;
+    case RC_CLIENT_EVENT_SUBSET_COMPLETED:
+        title = QStringLiteral("Subset Completed");
+        body = QString::fromUtf8(event->subset->title);
+        image_url = QString::fromUtf8(event->subset->badge_url);
+        break;
+    case RC_CLIENT_EVENT_SERVER_ERROR:
+        title = QStringLiteral("RetroAchievements Error");
+        body = QString::fromUtf8(event->server_error->error_message);
+        break;
+    case RC_CLIENT_EVENT_DISCONNECTED:
+        title = QStringLiteral("RetroAchievements Disconnected");
+        body = QStringLiteral("Unlocks will be submitted when the connection is restored.");
+        break;
+    case RC_CLIENT_EVENT_RECONNECTED:
+        title = QStringLiteral("RetroAchievements Reconnected");
+        body = QStringLiteral("Pending unlocks submitted.");
+        break;
+    default:
+        return;
+    }
+
+    emit EventNotification(title, body, image_url);
 }
 
 } // namespace RetroAchievements

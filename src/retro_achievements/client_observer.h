@@ -17,6 +17,8 @@ public:
 
     virtual void OnLoadGameSucceeded(const rc_client_game_t* game) {}
     virtual void OnLoadGameFailed(int result, const char* error_message) {}
+
+    virtual void OnEvent(const rc_client_event_t* event) {}
 };
 
 } // namespace RetroAchievements

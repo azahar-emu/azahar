@@ -19,6 +19,7 @@ public:
 
     void OnLoadGameSucceeded(const rc_client_game_t* game) override;
     void OnLoadGameFailed(int result, const char* error_message) override;
+    void OnEvent(const rc_client_event_t* event) override;
 
 signals:
     void LoginSucceeded(const rc_client_user_t* user);
@@ -26,6 +27,8 @@ signals:
 
     void LoadGameSucceeded(const rc_client_game_t* game);
     void LoadGameFailed(const char* error_message);
+
+    void EventNotification(const QString& title, const QString& body, const QString& image_url);
 };
 
 } // namespace RetroAchievements
