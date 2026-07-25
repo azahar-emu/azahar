@@ -714,6 +714,10 @@ void System::Shutdown(bool is_deserializing) {
     // Shutdown emulation session
     is_powered_on = false;
 
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    retro_achievements_client->UnloadGame();
+#endif
+
     gpu.reset();
     if (!is_deserializing) {
         lle_modules.clear();
@@ -766,6 +770,10 @@ void System::Reset() {
     if (auto plg_ldr = Service::PLGLDR::GetService(*this)) {
         restore_plugin_context = plg_ldr->GetPluginLoaderContext();
     }
+
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+    retro_achievements_client->Reset();
+#endif
 
     restore_ipc_recorder = std::move(kernel->BackupIPCRecorder());
 

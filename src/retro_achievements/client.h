@@ -25,6 +25,8 @@ public:
     void LogOut();
 
     void LoadGame(const char* file_path);
+    void UnloadGame();
+    void Reset();
     void DoFrame();
 
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;

@@ -148,6 +148,14 @@ void Client::LoadGame(const char* file_path) {
                                            load_game_callback, this);
 }
 
+void Client::UnloadGame() {
+    rc_client_unload_game(m_rc_client);
+}
+
+void Client::Reset() {
+    rc_client_reset(m_rc_client);
+}
+
 void Client::DoFrame() {
     rc_client_do_frame(m_rc_client);
 }
