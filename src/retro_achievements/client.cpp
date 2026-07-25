@@ -14,6 +14,8 @@
 
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
+#include "core/core.h"
+#include "core/memory.h"
 
 #define USE_RETRO_ACHIEVEMENTS_DEV_SERVER
 
@@ -24,7 +26,16 @@ static const httplib::Headers headers = httplib::Headers({{"User-Agent", user_ag
 
 static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_bytes,
                             rc_client_t* rc_client) {
-    LOG_CRITICAL(RetroAchievements, "read_memory stub");
+    LOG_DEBUG(RetroAchievements, "Reading {} bytes from 0x{:x}", num_bytes, address);
+
+    Memory::MemorySystem& memory = Core::System::GetInstance().Memory();
+    const u8* memory_ptr = memory.GetPhysicalPointer(address);
+
+    if (memory_ptr == nullptr)
+        return 0;
+
+    std::memcpy(buffer, memory_ptr, num_bytes);
+    return num_bytes;
 }
 
 static std::pair<std::string, std::string> parse_url(const char* full_url_cstr) {
@@ -90,12 +101,17 @@ static void load_game_callback(int result, const char* error_message, rc_client_
     client->OnLoadGameCallback(result, error_message);
 }
 
+static void event_handler(const rc_client_event_t* event, rc_client_t* client) {
+    LOG_DEBUG(RetroAchievements, "Event! ({})", event->type);
+}
+
 namespace RetroAchievements {
 
 Client::Client() {
     m_rc_client = rc_client_create(read_memory, call_server);
 
     rc_client_enable_logging(m_rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
+    rc_client_set_event_handler(m_rc_client, event_handler);
     rc_client_set_hardcore_enabled(m_rc_client, 0);
 
 #ifdef USE_RETRO_ACHIEVEMENTS_DEV_SERVER
@@ -130,6 +146,10 @@ void Client::LogOut() {
 void Client::LoadGame(const char* file_path) {
     rc_client_begin_identify_and_load_game(m_rc_client, RC_CONSOLE_NINTENDO_3DS, file_path, NULL, 0,
                                            load_game_callback, this);
+}
+
+void Client::DoFrame() {
+    rc_client_do_frame(m_rc_client);
 }
 
 void Client::FetchImage(const char* url, ImageCallback callback) const {
