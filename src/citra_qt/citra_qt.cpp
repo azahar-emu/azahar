@@ -3502,7 +3502,8 @@ void GMainWindow::OnRetroAchievements() {
                 system.RetroAchievementsClient().AttemptLogin(username.toUtf8().constData(),
                                                               password.toUtf8().constData());
             });
-    connect(&dialog, &RetroAchievements::Dialog::LoggedOut, this, []() {
+    connect(&dialog, &RetroAchievements::Dialog::LoggedOut, this, [this]() {
+        system.RetroAchievementsClient().LogOut();
         Settings::values.retro_achievements_username.SetValue("");
         Settings::values.retro_achievements_token.SetValue("");
     });
