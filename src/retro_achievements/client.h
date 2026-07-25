@@ -36,6 +36,7 @@ public:
 
     void OnLoginCallback(int result, const char* error_message);
     void OnLoadGameCallback(int result, const char* error_message);
+    void OnEvent(const rc_client_event_t* event);
 
 private:
     rc_client_t* m_rc_client;

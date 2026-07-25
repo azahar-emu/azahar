@@ -569,6 +569,18 @@ GMainWindow::GMainWindow(Core::System& system_)
                         });
                 }
             });
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::EventNotification, this,
+            [this](const QString& title, const QString& body, const QString& image_url) {
+                ra_notification->Show(title, body);
+                if (!image_url.isEmpty()) {
+                    system.RetroAchievementsClient().FetchImage(
+                        image_url.toUtf8().constData(), [this](std::vector<u8> image_data) {
+                            QPixmap image;
+                            image.loadFromData(image_data.data(), image_data.size());
+                            ra_notification->SetImage(image);
+                        });
+                }
+            });
 #endif
 }
 
