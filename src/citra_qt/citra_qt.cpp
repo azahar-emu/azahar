@@ -76,6 +76,7 @@
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/qt_swizzle.h"
 #include "citra_qt/retro_achievements/dialog.h"
+#include "citra_qt/retro_achievements/notification.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
 #ifdef ENABLE_QT_UPDATE_CHECKER
@@ -554,9 +555,20 @@ GMainWindow::GMainWindow(Core::System& system_)
     }
 
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
+    ra_notification = std::make_unique<RetroAchievements::Notification>(render_window);
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoadGameSucceeded, this,
             [this](const rc_client_game_t* game) {
-                LOG_DEBUG(RetroAchievements, "game.title = \"{}\"", game->title);
+                ra_notification->Show(QStringLiteral("RetroAchievements"),
+                                      QStringLiteral("Loaded \"%1\".").arg(game->title));
+
+                if (game->badge_url) {
+                    system.RetroAchievementsClient().FetchImage(
+                        game->badge_url, [this](std::vector<u8> image_data) {
+                            QPixmap image;
+                            image.loadFromData(image_data.data(), image_data.size());
+                            ra_notification->SetImage(image);
+                        });
+                }
             });
 #endif
 }

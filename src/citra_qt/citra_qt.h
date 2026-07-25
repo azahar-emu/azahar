@@ -64,6 +64,9 @@ class QProgressBar;
 class QPushButton;
 class QSlider;
 class RegistersWidget;
+namespace RetroAchievements {
+class Notification;
+}
 class WaitTreeWidget;
 
 namespace Camera {
@@ -472,6 +475,7 @@ private:
 
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
     RetroAchievements::QtClientObserver ra_client_observer;
+    std::unique_ptr<RetroAchievements::Notification> ra_notification;
 #endif
 
 protected:
