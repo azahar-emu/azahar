@@ -518,7 +518,14 @@ public:
     bool GetStatus() const override {
         if (port >= 0 && joysticks && static_cast<int>(joysticks->size()) > port &&
             joysticks->at(port)) {
-            return joysticks->at(port)->GetAxis(axis, isController);
+
+            float axis_value = joysticks->at(port)->GetAxis(axis, isController);
+            if (trigger_if_greater && axis_value > threshold)
+                return true;
+            else if (!trigger_if_greater && axis_value < threshold)
+                return true;
+            else
+                return false;
         }
         for (const auto& joystick : *joysticks) {
             if (!joystick)
