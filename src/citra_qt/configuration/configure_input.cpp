@@ -381,6 +381,23 @@ void ConfigureInput::ApplyConfiguration() {
                                param.Set("maptype", "guid");
                            else
                                param.Set("maptype", "guid+port");
+                       } else if (param.Get("engine", "keyboard") == "analog_from_button") {
+                           for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM - 1;
+                                ++sub_button_id) {
+                               auto dir = param.Get(analog_sub_buttons[sub_button_id], "");
+                               if (dir != "") {
+                                   auto dirParam = Common::ParamPackage(param.Get(dir, ""));
+                                   if (Settings::values.current_input_profile.maptype ==
+                                       Settings::InputMappingType::AllControllers)
+                                       dirParam.Set("maptype", "all");
+                                   else if (Settings::values.current_input_profile.maptype ==
+                                            Settings::InputMappingType::Guid)
+                                       dirParam.Set("maptype", "guid");
+                                   else
+                                       dirParam.Set("maptype", "guid+port");
+                                   param.Set(dir, dirParam.Serialize());
+                               }
+                           }
                        } else {
                            param.Erase("maptype");
                        }
