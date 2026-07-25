@@ -4,11 +4,16 @@
 
 #pragma once
 
+// Must precede any other include in this header - see net_compat.h's comment on why
+// winsock2.h needs to come first on Windows.
+#include "citra_qt/network_streaming/net_compat.h"
+
 #include <atomic>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <vector>
+#include "citra_qt/network_streaming/service_publisher.h"
 #include "core/dumping/backend.h"
 #include "core/frontend/framebuffer_layout.h"
 
@@ -27,8 +32,6 @@ class RendererBase;
 }
 
 namespace NetworkStreaming {
-
-class AvahiPublisher;
 
 /**
  * Streams the emulated bottom screen to a network viewer over TCP.
@@ -63,8 +66,8 @@ private:
     bool InitEncoder();
     void FreeEncoder();
     void AcceptLoop();
-    void TouchLoop(int fd);
-    void SendChunk(int fd, const u8* data, int size, u32 flags);
+    void TouchLoop(SocketHandle fd);
+    void SendChunk(SocketHandle fd, const u8* data, int size, u32 flags);
     void EncodeAndSend(const VideoDumper::VideoFrame& frame);
     void InjectTouch(u8 action, float norm_x, float norm_y);
 
@@ -73,8 +76,8 @@ private:
     Layout::FramebufferLayout layout{};
 
     std::atomic_bool running{false};
-    int server_fd = -1;
-    std::atomic<int> client_fd{-1};
+    SocketHandle server_fd = InvalidSocketHandle;
+    std::atomic<SocketHandle> client_fd{InvalidSocketHandle};
     std::thread accept_thread;
     std::thread touch_thread;
     std::mutex send_mutex;
@@ -88,7 +91,7 @@ private:
     std::mutex codec_config_mutex;
     std::vector<u8> codec_config; ///< Cached SPS/PPS, replayed to every newly connected client.
 
-    std::unique_ptr<AvahiPublisher> avahi;
+    std::unique_ptr<ServicePublisher> avahi;
     bool previous_skip_duplicate_frames = false;
 };
 

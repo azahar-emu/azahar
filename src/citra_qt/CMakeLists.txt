@@ -336,16 +336,23 @@ elseif (UNIX)
 endif()
 
 # Network streaming (streams the bottom screen to the Azahar Viewer Android app over LAN).
-# Linux-only for now: relies on POSIX sockets directly and Avahi for mDNS/DNS-SD advertising.
-if (UNIX AND NOT APPLE)
+# Linux uses POSIX sockets directly plus Avahi for mDNS/DNS-SD advertising; Windows uses the
+# same POSIX-shaped NetworkStreamer (via net_compat.h's WinSock2 shim) plus a small hand-rolled
+# mDNS responder (mdns_publisher) since there is no Avahi/Bonjour equivalent to depend on there.
+# The streamer encodes frames through FFmpeg, so it requires ENABLE_FFMPEG.
+if (NOT ENABLE_FFMPEG)
+    # Network streaming disabled.
+elseif (UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(AVAHI_CLIENT avahi-client)
     if (AVAHI_CLIENT_FOUND)
         target_sources(citra_qt PRIVATE
             network_streaming/avahi_publisher.cpp
             network_streaming/avahi_publisher.h
+            network_streaming/net_compat.h
             network_streaming/network_streamer.cpp
             network_streaming/network_streamer.h
+            network_streaming/service_publisher.h
         )
         target_include_directories(citra_qt PRIVATE ${AVAHI_CLIENT_INCLUDE_DIRS})
         target_link_libraries(citra_qt PRIVATE ${AVAHI_CLIENT_LIBRARIES})
@@ -353,6 +360,18 @@ if (UNIX AND NOT APPLE)
     else()
         message(WARNING "avahi-client not found - network streaming feature will be disabled")
     endif()
+elseif (WIN32)
+    # No Bonjour SDK, no WinRT, no pkg-config probe needed - always enabled. ws2_32 is already
+    # part of PLATFORM_LIBRARIES and already linked into citra_qt (see top-level CMakeLists.txt).
+    target_sources(citra_qt PRIVATE
+        network_streaming/mdns_publisher.cpp
+        network_streaming/mdns_publisher.h
+        network_streaming/net_compat.h
+        network_streaming/network_streamer.cpp
+        network_streaming/network_streamer.h
+        network_streaming/service_publisher.h
+    )
+    target_compile_definitions(citra_qt PRIVATE -DENABLE_NETWORK_STREAMING)
 endif()
 
 target_compile_definitions(citra_qt PRIVATE

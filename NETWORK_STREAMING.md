@@ -26,6 +26,35 @@ https://github.com/Ufoex/azahar-viewer
 Toggle the same menu entry again ("Stop Streaming Bottom Screen") to turn it
 off.
 
+## Usage (Windows desktop sender)
+
+The Windows Qt build has the same **Tools → Stream Bottom Screen to Device**
+menu entry. Steps are identical to the Android flow above: start a game,
+toggle the menu entry, open Azahar Viewer on a phone on the same Wi-Fi, tap
+the discovered device.
+
+### Requirements
+
+- Windows 10 or 11, x64.
+- Nothing else to install - the release build bundles Qt, FFmpeg, and every
+  other runtime dependency it needs, unlike the Linux build below which
+  relies on system packages.
+- Windows Firewall may prompt the first time streaming is started (inbound
+  TCP 27500 and UDP 5353/mDNS) - allow it on your LAN/private network
+  profile.
+
+### How it works on Windows specifically
+
+Windows has no Avahi equivalent to depend on for mDNS/DNS-SD advertising, so
+this platform gets its own small, dependency-free mDNS responder
+(`src/citra_qt/network_streaming/mdns_publisher.cpp`) built directly on
+WinSock2 instead of reusing `avahi_publisher.cpp` - it answers PTR/SRV/TXT/A
+queries for just this one service (`_azahar._tcp.local`), same as Avahi
+does on Linux, so the existing, unmodified Azahar Viewer Android app works
+as the receiver without any changes. `network_streamer.cpp` itself is
+shared between Linux and Windows via a small socket-portability shim
+(`net_compat.h`); only the mDNS advertising is platform-specific.
+
 ## Usage (Linux desktop sender)
 
 The Linux Qt build has the same **Tools → Stream Bottom Screen to Device**

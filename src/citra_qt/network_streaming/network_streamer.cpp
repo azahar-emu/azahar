@@ -2,20 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+// Must precede any other include in this translation unit - see net_compat.h's comment on why
+// winsock2.h needs to come first on Windows.
+#include "citra_qt/network_streaming/net_compat.h"
+
 #include <cstring>
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include "citra_qt/network_streaming/avahi_publisher.h"
 #include "citra_qt/network_streaming/network_streamer.h"
 #include "common/dynamic_library/ffmpeg.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "core/frontend/emu_window.h"
+#include "network/socket_manager.h"
 #include "video_core/renderer_base.h"
 
 extern "C" {
@@ -36,11 +34,12 @@ constexpr u32 BUFFER_FLAG_CODEC_CONFIG = 2;
 
 // Writes all `size` bytes or throws away the connection - mirrors the Kotlin sender's
 // "single-client, best-effort delivery, no retry/backpressure handling" approach.
-bool WriteAll(int fd, const void* data, std::size_t size) {
+bool WriteAll(SocketHandle fd, const void* data, std::size_t size) {
     const u8* p = static_cast<const u8*>(data);
     std::size_t sent = 0;
     while (sent < size) {
-        const ssize_t n = send(fd, p + sent, size - sent, MSG_NOSIGNAL);
+        const auto n = send(NativeSocket(fd), reinterpret_cast<const char*>(p + sent),
+                            static_cast<int>(size - sent), kNoSignal);
         if (n <= 0) {
             return false;
         }
@@ -49,11 +48,12 @@ bool WriteAll(int fd, const void* data, std::size_t size) {
     return true;
 }
 
-bool ReadAll(int fd, void* data, std::size_t size) {
+bool ReadAll(SocketHandle fd, void* data, std::size_t size) {
     u8* p = static_cast<u8*>(data);
     std::size_t got = 0;
     while (got < size) {
-        const ssize_t n = recv(fd, p + got, size - got, 0);
+        const auto n = recv(NativeSocket(fd), reinterpret_cast<char*>(p + got),
+                            static_cast<int>(size - got), 0);
         if (n <= 0) {
             return false;
         }
@@ -190,30 +190,37 @@ bool NetworkStreamer::StartDumping(const std::string& /*path*/,
         return false;
     }
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0) {
+    Network::SocketManager::EnableSockets();
+
+    const SocketHandle new_server_fd =
+        static_cast<SocketHandle>(socket(AF_INET, SOCK_STREAM, 0));
+    if (new_server_fd == InvalidSocketHandle) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not create socket");
+        Network::SocketManager::DisableSockets();
         FreeEncoder();
         return false;
     }
+    server_fd = new_server_fd;
     const int reuse = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    setsockopt(NativeSocket(server_fd), SOL_SOCKET, SO_REUSEADDR,
+              reinterpret_cast<const char*>(&reuse), sizeof(reuse));
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(Port);
-    if (bind(server_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0 ||
-        listen(server_fd, 1) < 0) {
+    if (bind(NativeSocket(server_fd), reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0 ||
+        listen(NativeSocket(server_fd), 1) < 0) {
         LOG_ERROR(Frontend, "NetworkStreamer: could not bind/listen on port {}", Port);
-        close(server_fd);
-        server_fd = -1;
+        CloseSocketHandle(server_fd);
+        server_fd = InvalidSocketHandle;
+        Network::SocketManager::DisableSockets();
         FreeEncoder();
         return false;
     }
 
     running = true;
-    avahi = std::make_unique<AvahiPublisher>();
+    avahi = std::make_unique<ServicePublisher>();
     avahi->Start("_azahar._tcp", Port);
     accept_thread = std::thread(&NetworkStreamer::AcceptLoop, this);
 
@@ -249,15 +256,15 @@ void NetworkStreamer::StopDumping() {
         avahi.reset();
     }
 
-    if (server_fd >= 0) {
-        shutdown(server_fd, SHUT_RDWR);
-        close(server_fd);
-        server_fd = -1;
+    if (server_fd != InvalidSocketHandle) {
+        shutdown(NativeSocket(server_fd), kShutdownBoth);
+        CloseSocketHandle(server_fd);
+        server_fd = InvalidSocketHandle;
     }
-    const int fd = client_fd.exchange(-1);
-    if (fd >= 0) {
-        shutdown(fd, SHUT_RDWR);
-        close(fd);
+    const SocketHandle fd = client_fd.exchange(InvalidSocketHandle);
+    if (fd != InvalidSocketHandle) {
+        shutdown(NativeSocket(fd), kShutdownBoth);
+        CloseSocketHandle(fd);
     }
 
     if (accept_thread.joinable()) {
@@ -268,28 +275,53 @@ void NetworkStreamer::StopDumping() {
     }
 
     FreeEncoder();
+    Network::SocketManager::DisableSockets();
     LOG_INFO(Frontend, "NetworkStreamer: stopped");
 }
 
 void NetworkStreamer::AcceptLoop() {
+    // Polls with a short timeout instead of just blocking in accept() - on Windows, closing a
+    // socket from another thread does not reliably unblock a thread parked inside accept() the
+    // way it does on POSIX, so StopDumping() closing server_fd alone can't be relied on to wake
+    // this loop. A bounded select() lets us both accept promptly and recheck `running` promptly
+    // on either platform.
     while (running) {
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(NativeSocket(server_fd), &read_fds);
+        timeval tv{};
+        tv.tv_sec = 0;
+        tv.tv_usec = 200'000;
+#if defined(_WIN32)
+        const int ready = select(0, &read_fds, nullptr, nullptr, &tv);
+#else
+        const int ready =
+            select(NativeSocket(server_fd) + 1, &read_fds, nullptr, nullptr, &tv);
+#endif
+        if (ready <= 0) {
+            continue; // Timeout (expected) or a transient error - loop back and recheck running.
+        }
+
         sockaddr_in client_addr{};
-        socklen_t client_len = sizeof(client_addr);
-        const int fd =
-            accept(server_fd, reinterpret_cast<sockaddr*>(&client_addr), &client_len);
-        if (fd < 0) {
-            break; // Expected once StopDumping() closes server_fd.
+        SockLenT client_len = sizeof(client_addr);
+        const SocketHandle fd = static_cast<SocketHandle>(
+            accept(NativeSocket(server_fd), reinterpret_cast<sockaddr*>(&client_addr),
+                  &client_len));
+        if (fd == InvalidSocketHandle) {
+            continue; // Expected once StopDumping() closes server_fd concurrently.
         }
         const int nodelay = 1;
-        setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
+        setsockopt(NativeSocket(fd), IPPROTO_TCP, TCP_NODELAY,
+                  reinterpret_cast<const char*>(&nodelay), sizeof(nodelay));
 
-        LOG_INFO(Frontend, "NetworkStreamer: viewer connected from {}",
-                 inet_ntoa(client_addr.sin_addr));
+        char addr_str[INET_ADDRSTRLEN] = {};
+        inet_ntop(AF_INET, &client_addr.sin_addr, addr_str, sizeof(addr_str));
+        LOG_INFO(Frontend, "NetworkStreamer: viewer connected from {}", addr_str);
 
-        const int old_fd = client_fd.exchange(fd);
-        if (old_fd >= 0) {
-            shutdown(old_fd, SHUT_RDWR);
-            close(old_fd);
+        const SocketHandle old_fd = client_fd.exchange(fd);
+        if (old_fd != InvalidSocketHandle) {
+            shutdown(NativeSocket(old_fd), kShutdownBoth);
+            CloseSocketHandle(old_fd);
         }
         if (touch_thread.joinable()) {
             touch_thread.join();
@@ -306,7 +338,7 @@ void NetworkStreamer::AcceptLoop() {
     }
 }
 
-void NetworkStreamer::TouchLoop(int fd) {
+void NetworkStreamer::TouchLoop(SocketHandle fd) {
     while (running && client_fd == fd) {
         u8 action;
         if (!ReadAll(fd, &action, 1)) {
@@ -345,14 +377,14 @@ void NetworkStreamer::InjectTouch(u8 action, float norm_x, float norm_y) {
     }
 }
 
-void NetworkStreamer::SendChunk(int fd, const u8* data, int size, u32 flags) {
+void NetworkStreamer::SendChunk(SocketHandle fd, const u8* data, int size, u32 flags) {
     std::scoped_lock lock(send_mutex);
     const u32 size_be = htonl(static_cast<u32>(size));
     const u32 flags_be = htonl(flags);
     if (!WriteAll(fd, &size_be, 4) || !WriteAll(fd, &flags_be, 4) || !WriteAll(fd, data, size)) {
-        const int cur = client_fd.load();
+        const SocketHandle cur = client_fd.load();
         if (cur == fd) {
-            client_fd = -1;
+            client_fd = InvalidSocketHandle;
         }
     }
 }
@@ -370,8 +402,8 @@ void NetworkStreamer::AddVideoFrame(VideoDumper::VideoFrame frame) {
 }
 
 void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
-    const int fd = client_fd.load();
-    if (fd < 0) {
+    const SocketHandle fd = client_fd.load();
+    if (fd == InvalidSocketHandle) {
         return; // No viewer connected - skip encoding entirely.
     }
 
@@ -389,8 +421,8 @@ void NetworkStreamer::EncodeAndSend(const VideoDumper::VideoFrame& frame) {
             if (DynamicLibrary::FFmpeg::avcodec_send_frame(codec_context, filtered) >= 0) {
                 AVPacket* pkt = DynamicLibrary::FFmpeg::av_packet_alloc();
                 while (DynamicLibrary::FFmpeg::avcodec_receive_packet(codec_context, pkt) >= 0) {
-                    const int active_fd = client_fd.load();
-                    if (active_fd >= 0) {
+                    const SocketHandle active_fd = client_fd.load();
+                    if (active_fd != InvalidSocketHandle) {
                         const u32 flags = (pkt->flags & AV_PKT_FLAG_KEY) ? BUFFER_FLAG_KEY_FRAME : 0;
                         static u64 frames_sent = 0;
                         if (frames_sent < 5) {
