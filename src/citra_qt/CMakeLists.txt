@@ -361,6 +361,9 @@ if (ENABLE_RETRO_ACHIEVEMENTS)
         retro_achievements/dialog.cpp
         retro_achievements/dialog.h
         retro_achievements/dialog.ui
+        retro_achievements/notification.cpp
+        retro_achievements/notification.h
+        retro_achievements/notification.ui
         retro_achievements/qt_client_observer.cpp
         retro_achievements/qt_client_observer.h
     )
