@@ -26,7 +26,7 @@ public:
      * @param file FileUtil::IOFile open file
      * @return FileType found, or FileType::Error if this loader doesn't know it
      */
-    static FileType IdentifyType(FileUtil::IOFile* file);
+    static FileType IdentifyType(FileUtil::IOFileBase* file);
 
     FileType GetFileType() override {
         return IdentifyType(file.get());

@@ -4,6 +4,7 @@
 
 #include <cryptopp/sha.h>
 #include "common/common_paths.h"
+#include "common/file_derived.h"
 #include "common/logging/log.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/certificate.h"
@@ -283,13 +284,13 @@ void InvalidateSecureData() {
     movable.Invalidate();
 }
 
-std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
-                                                       const char openmode[], UniqueCryptoFileID id,
-                                                       int flags) {
+static bool GetUniqueCryptoFileKeyIV(std::vector<u8>& out_key, std::vector<u8>& out_iv,
+                                     UniqueCryptoFileID id) {
+
     LoadOTP();
 
     if (!ct_cert.IsValid() || !otp.Valid()) {
-        return std::make_unique<FileUtil::IOFile>();
+        return false;
     }
 
     struct {
@@ -305,10 +306,45 @@ std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filena
     u8 digest[CryptoPP::SHA256::DIGESTSIZE];
     hash.CalculateDigest(digest, reinterpret_cast<CryptoPP::byte*>(&hash_data), sizeof(hash_data));
 
+    out_key.resize(0x10);
+    out_iv.resize(0x10);
+    memcpy(out_key.data(), digest, 0x10);
+    memcpy(out_iv.data(), digest + 0x10, 12);
+    return true;
+}
+
+bool IsUniqueCryptoFile(FileUtil::IOFileBase* file, UniqueCryptoFileID id) {
+
     std::vector<u8> key(0x10);
     std::vector<u8> ctr(0x10);
-    memcpy(key.data(), digest, 0x10);
-    memcpy(ctr.data(), digest + 0x10, 12);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return false;
+    }
+
+    return FileUtil::CryptoIOFile::IsCryptoIOFile(file, key, ctr);
+}
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(
+    std::unique_ptr<FileUtil::IOFileBase>&& underlying_file, const char openmode[],
+    UniqueCryptoFileID id) {
+    std::vector<u8> key(0x10);
+    std::vector<u8> ctr(0x10);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
+
+    return std::make_unique<FileUtil::CryptoIOFile>(std::move(underlying_file), openmode, key, ctr);
+}
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(const std::string& filename,
+                                                           const char openmode[],
+                                                           UniqueCryptoFileID id, int flags) {
+
+    std::vector<u8> key(0x10);
+    std::vector<u8> ctr(0x10);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
 
     return std::make_unique<FileUtil::CryptoIOFile>(filename, openmode, key, ctr, flags);
 }

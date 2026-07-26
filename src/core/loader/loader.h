@@ -310,7 +310,7 @@ public:
 
 protected:
     Core::System& system;
-    std::unique_ptr<FileUtil::IOFile> file;
+    std::unique_ptr<FileUtil::IOFileBase> file;
     bool is_loaded = false;
     std::optional<Kernel::MemoryMode> memory_mode_override = std::nullopt;
 };

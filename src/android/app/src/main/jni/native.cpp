@@ -25,6 +25,7 @@
 
 #include "common/common_paths.h"
 #include "common/dynamic_library/dynamic_library.h"
+#include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -34,7 +35,6 @@
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/string_util.h"
-#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"

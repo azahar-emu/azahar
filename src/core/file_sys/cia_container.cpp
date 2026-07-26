@@ -70,7 +70,7 @@ Loader::ResultStatus CIAContainer::Load(const FileBackend& backend) {
     return Loader::ResultStatus::Success;
 }
 
-Loader::ResultStatus CIAContainer::Load(FileUtil::IOFile* file) {
+Loader::ResultStatus CIAContainer::Load(FileUtil::IOFileBase* file) {
     if (!file->IsOpen())
         return Loader::ResultStatus::Error;
 

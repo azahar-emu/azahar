@@ -7,12 +7,12 @@
 #include <memory>
 #include <vector>
 #include <fmt/format.h>
+#include "common/file_derived.h"
 #include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-#include "common/zstd_compression.h"
 #include "core/core.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
@@ -36,37 +36,12 @@ using namespace Common::Literals;
 static constexpr u64 UPDATE_TID_HIGH = 0x0004000e00000000;
 static constexpr u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
 
-FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile* file) {
+FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFileBase* in_file) {
     u32 magic{};
 
-    std::unique_ptr<FileUtil::IOFile> file_crypto = HW::UniqueData::OpenUniqueCryptoFile(
-        file->Filename(), "rb", HW::UniqueData::UniqueCryptoFileID::NCCH);
+    auto file = FileSys::NCCHContainer::AutoOpenNCCHNCSD(in_file);
 
-    // Check compressed NCCH file
-    std::optional<u32> magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file);
-    if (!magic_zstd.has_value()) {
-        // Handle compressed and crypto NCCH file
-        magic_zstd = FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file_crypto.get());
-    }
-    if (magic_zstd.has_value()) {
-        if (MakeMagic('N', 'C', 'S', 'D') == magic_zstd)
-            return FileType::CCI;
-
-        if (MakeMagic('N', 'C', 'C', 'H') == magic_zstd)
-            return FileType::CXI;
-    }
-
-    // Check normal NCCH file
-    if (file->Seek(0x100, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
-        if (MakeMagic('N', 'C', 'S', 'D') == magic)
-            return FileType::CCI;
-
-        if (MakeMagic('N', 'C', 'C', 'H') == magic)
-            return FileType::CXI;
-    }
-
-    // Check crypto NCCH file
-    if (file_crypto->Seek(0x100, SEEK_SET) && 1 == file_crypto->ReadArray<u32>(&magic, 1)) {
+    if (file->ReadAtArray<u32>(&magic, 1, 0x100)) {
         if (MakeMagic('N', 'C', 'S', 'D') == magic)
             return FileType::CCI;
 

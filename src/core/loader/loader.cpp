@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include "common/file_derived.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/zstd_compression.h"
