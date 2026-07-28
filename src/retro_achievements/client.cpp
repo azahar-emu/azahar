@@ -28,13 +28,9 @@ static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_byte
                             rc_client_t* rc_client) {
     LOG_DEBUG(RetroAchievements, "Reading {} bytes from 0x{:x}", num_bytes, address);
 
-    Memory::MemorySystem& memory = Core::System::GetInstance().Memory();
-    const u8* memory_ptr = memory.GetPhysicalPointer(address);
+    Core::System& system = Core::System::GetInstance();
+    system.Memory().ReadBlock(static_cast<VAddr>(address), buffer, num_bytes);
 
-    if (memory_ptr == nullptr)
-        return 0;
-
-    std::memcpy(buffer, memory_ptr, num_bytes);
     return num_bytes;
 }
 
@@ -116,6 +112,7 @@ Client::Client() {
     rc_client_enable_logging(m_rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
     rc_client_set_event_handler(m_rc_client, event_handler);
     rc_client_set_userdata(m_rc_client, this);
+    rc_client_set_allow_background_memory_reads(m_rc_client, 0);
     rc_client_set_hardcore_enabled(m_rc_client, 0);
 
 #ifdef USE_RETRO_ACHIEVEMENTS_DEV_SERVER
