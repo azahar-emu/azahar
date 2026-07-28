@@ -366,10 +366,6 @@ public:
 private:
     struct Z3DSReadIOFileImpl;
 
-    static constexpr u32 MakeMagic(char a, char b, char c, char d) {
-        return a | b << 8 | c << 16 | d << 24;
-    }
-
     bool Open() override;
 
     std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;

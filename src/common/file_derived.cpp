@@ -12,14 +12,11 @@
 #include "common/archives.h"
 #include "common/assert.h"
 #include "common/file_derived.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 
 namespace FileUtil {
-
-static constexpr u32 MakeMagic(char a, char b, char c, char d) {
-    return a | b << 8 | c << 16 | d << 24;
-}
 
 SubIOFile::SubIOFile() {
     Child() = std::make_unique<NullIOFile>();
@@ -302,7 +299,7 @@ struct CryptoIOFileImpl {
 
 bool CryptoIOFile::CryptoIOFileHeader::IsValid(std::span<const u8> key, std::span<const u8> iv,
                                                bool check_hash) {
-    bool valid = magic == MakeMagic('A', 'Z', 'C', 'R') && version == 0;
+    bool valid = magic == FileUtil::MakeMagic('A', 'Z', 'C', 'R') && version == 0;
     if (valid && check_hash) {
         std::array<CryptoPP::byte, 0x20> hash_data{};
         memcpy(hash_data.data(), key.data(), std::min(key.size(), size_t(0x10)));
@@ -334,9 +331,9 @@ bool CryptoIOFile::IsCryptoIOFile(IOFileBase* underlying_file, const std::vector
     u32 magic0x0, magic0x100;
     memcpy(&magic0x0, data.data(), sizeof(u32));
     memcpy(&magic0x100, data.data() + 0x100, sizeof(u32));
-    return magic0x0 == MakeMagic('Z', '3', 'D', 'S') ||
-           magic0x100 == MakeMagic('N', 'C', 'C', 'H') ||
-           magic0x100 == MakeMagic('N', 'C', 'S', 'D');
+    return magic0x0 == FileUtil::MakeMagic('Z', '3', 'D', 'S') ||
+           magic0x100 == FileUtil::MakeMagic('N', 'C', 'C', 'H') ||
+           magic0x100 == FileUtil::MakeMagic('N', 'C', 'S', 'D');
 }
 
 CryptoIOFile::CryptoIOFile() {
@@ -425,7 +422,7 @@ std::unique_ptr<IOFileBase> CryptoIOFile::OpenCopy() const {
 bool CryptoIOFile::Open() {
     impl = std::make_unique<CryptoIOFileImpl>(impl->key, impl->iv);
     if (openmode.find('w') != openmode.npos) {
-        impl->header.magic = MakeMagic('A', 'Z', 'C', 'R');
+        impl->header.magic = FileUtil::MakeMagic('A', 'Z', 'C', 'R');
         impl->header.version = 0;
         impl->header.header_size = sizeof(impl->header);
         impl->header.reserved = 0;
@@ -451,7 +448,7 @@ bool CryptoIOFile::Open() {
         if (!header_valid) {
 
             // Legacy mode. To be removed in a few years, only allow NCCH, NCSD or Z3DS.
-            impl->header.magic = MakeMagic('A', 'Z', 'C', 'R');
+            impl->header.magic = FileUtil::MakeMagic('A', 'Z', 'C', 'R');
             impl->header.version = 0;
             impl->header.header_size = 0;
             impl->header.reserved = 0;
@@ -462,9 +459,9 @@ bool CryptoIOFile::Open() {
                 Child()->Close();
                 return false;
             }
-            if (magic0x100 != MakeMagic('N', 'C', 'C', 'H') &&
-                magic0x100 != MakeMagic('N', 'C', 'S', 'D') &&
-                magic0x0 != MakeMagic('Z', '3', 'D', 'S')) {
+            if (magic0x100 != FileUtil::MakeMagic('N', 'C', 'C', 'H') &&
+                magic0x100 != FileUtil::MakeMagic('N', 'C', 'S', 'D') &&
+                magic0x0 != FileUtil::MakeMagic('Z', '3', 'D', 'S')) {
                 Child()->Close();
                 return false;
             }

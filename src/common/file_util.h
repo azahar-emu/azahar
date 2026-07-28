@@ -685,6 +685,11 @@ private:
 
 template <std::ios_base::openmode o, typename T>
 void OpenFStream(T& fstream, const std::string& filename);
+
+constexpr u32 MakeMagic(char a, char b, char c, char d) {
+    return a | b << 8 | c << 16 | d << 24;
+}
+
 } // namespace FileUtil
 
 // To deal with Windows being dumb at unicode:

@@ -128,7 +128,7 @@ void NCCHCryptoFile::Write(const u8* buffer, std::size_t length) {
     }
 
     if (!header_parsed && header_size == sizeof(NCCH_Header)) {
-        if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
+        if (FileUtil::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
             // Most likely DS contents, store without additional operations
             is_not_ncch = true;
             file->WriteBytes(&ncch_header, sizeof(ncch_header));
@@ -1164,7 +1164,7 @@ InstallStatus CheckCIAToInstall(const std::string& path, bool& is_compressed,
                 if (read != sizeof(ncch)) {
                     return InstallStatus::ErrorInvalid;
                 }
-                if (ncch.magic != Loader::MakeMagic('N', 'C', 'C', 'H')) {
+                if (ncch.magic != FileUtil::MakeMagic('N', 'C', 'C', 'H')) {
                     return InstallStatus::ErrorInvalid;
                 }
                 if (!ncch.no_crypto) {

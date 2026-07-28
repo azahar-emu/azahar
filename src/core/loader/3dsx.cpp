@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include "common/file_derived.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
@@ -265,10 +266,10 @@ FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFileBase* file) {
     u32 magic{};
 
     if (file->Seek(0, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
-        if (MakeMagic('3', 'D', 'S', 'X') == magic ||
-            (MakeMagic('Z', '3', 'D', 'S') == magic &&
+        if (FileUtil::MakeMagic('3', 'D', 'S', 'X') == magic ||
+            (FileUtil::MakeMagic('Z', '3', 'D', 'S') == magic &&
              FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) ==
-                 MakeMagic('3', 'D', 'S', 'X')))
+                 FileUtil::MakeMagic('3', 'D', 'S', 'X')))
             return FileType::THREEDSX;
     }
 

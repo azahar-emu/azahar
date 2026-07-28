@@ -112,10 +112,6 @@ static bool LZSS_Decompress(std::span<const u8> compressed, std::span<u8> decomp
     return true;
 }
 
-static constexpr u32 MakeMagic(char a, char b, char c, char d) {
-    return a | b << 8 | c << 16 | d << 24;
-}
-
 std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(const std::string& filepath) {
     std::unique_ptr<FileUtil::IOFileBase> file = std::make_unique<FileUtil::IOFile>(filepath, "rb");
     return AutoOpenNCCHNCSD(file.get());
@@ -126,7 +122,8 @@ std::unique_ptr<FileUtil::IOFileBase> NCCHContainer::AutoOpenNCCHNCSD(
     auto has_ncch_magic = [](FileUtil::IOFileBase* file) {
         u32 magic = 0;
         if (file->ReadAtArray<u32>(&magic, 1, 0x100) == sizeof(magic)) {
-            return MakeMagic('N', 'C', 'S', 'D') == magic || MakeMagic('N', 'C', 'C', 'H') == magic;
+            return FileUtil::MakeMagic('N', 'C', 'S', 'D') == magic ||
+                   FileUtil::MakeMagic('N', 'C', 'C', 'H') == magic;
         }
         return false;
     };
@@ -203,11 +200,11 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
         }
 
         // This is a NCSD file, open subfile as NCCH
-        if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
+        if (FileUtil::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
             is_ncsd = true;
             NCSD_Header ncsd_header;
             file->ReadAtBytes(&ncsd_header, sizeof(NCSD_Header), 0);
-            ASSERT(Loader::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
+            ASSERT(FileUtil::MakeMagic('N', 'C', 'S', 'D') == ncsd_header.magic);
             ASSERT(partition < 8);
 
             size_t ncch_offset = ncsd_header.partitions[partition].offset * kBlockSize;
@@ -219,7 +216,7 @@ Loader::ResultStatus NCCHContainer::LoadHeader() {
         }
 
         // Verify we are loading the correct file type...
-        if (Loader::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
+        if (FileUtil::MakeMagic('N', 'C', 'C', 'H') != ncch_header.magic) {
             return Loader::ResultStatus::ErrorInvalidFormat;
         }
     }

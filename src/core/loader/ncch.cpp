@@ -8,6 +8,7 @@
 #include <vector>
 #include <fmt/format.h>
 #include "common/file_derived.h"
+#include "common/file_util.h"
 #include "common/literals.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
@@ -42,10 +43,10 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFileBase* in_file) {
     auto file = FileSys::NCCHContainer::AutoOpenNCCHNCSD(in_file);
 
     if (file->ReadAtArray<u32>(&magic, 1, 0x100)) {
-        if (MakeMagic('N', 'C', 'S', 'D') == magic)
+        if (FileUtil::MakeMagic('N', 'C', 'S', 'D') == magic)
             return FileType::CCI;
 
-        if (MakeMagic('N', 'C', 'C', 'H') == magic)
+        if (FileUtil::MakeMagic('N', 'C', 'C', 'H') == magic)
             return FileType::CXI;
     }
 
@@ -280,7 +281,7 @@ bool AppLoader_NCCH::IsGbaVirtualConsole(std::span<const u8> code) {
 
     u32 gbaVcHeader[2];
     std::memcpy(gbaVcHeader, code.data() + code.size() - 0x10, sizeof(gbaVcHeader));
-    return gbaVcHeader[0] == MakeMagic('.', 'C', 'A', 'A') && gbaVcHeader[1] == 1;
+    return gbaVcHeader[0] == FileUtil::MakeMagic('.', 'C', 'A', 'A') && gbaVcHeader[1] == 1;
 }
 
 ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
