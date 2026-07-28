@@ -131,11 +131,19 @@ void Client::RegisterObserver(ClientObserver& observer) {
     m_observers.push_back(&observer);
 }
 
+void Client::SetEnabled(bool enabled) {
+    m_enabled = enabled;
+}
+
 void Client::AttemptLogin(const char* username, const char* password) {
+    if (!m_enabled)
+        return;
     rc_client_begin_login_with_password(m_rc_client, username, password, login_callback, this);
 }
 
 void Client::AttemptLoginWithToken(const char* username, const char* token) {
+    if (!m_enabled)
+        return;
     rc_client_begin_login_with_token(m_rc_client, username, token, login_callback, this);
 }
 
@@ -145,6 +153,8 @@ void Client::LogOut() {
 }
 
 void Client::LoadGame(const char* file_path) {
+    if (!m_enabled)
+        return;
     rc_client_begin_identify_and_load_game(m_rc_client, RC_CONSOLE_NINTENDO_3DS, file_path, NULL, 0,
                                            load_game_callback, this);
 }
@@ -158,6 +168,11 @@ void Client::Reset() {
 }
 
 void Client::DoFrame() {
+    if (!m_enabled) {
+        rc_client_unload_game(m_rc_client);
+        return;
+    }
+
     rc_client_do_frame(m_rc_client);
 }
 
@@ -178,6 +193,9 @@ const rc_client_user_t* Client::GetUser() const {
 }
 
 void Client::OnLoginCallback(int result, const char* error_message) {
+    if (!m_enabled)
+        return;
+
     if (result == 0) {
         m_user = rc_client_get_user_info(m_rc_client);
         for (ClientObserver* observer : m_observers) {
@@ -191,6 +209,9 @@ void Client::OnLoginCallback(int result, const char* error_message) {
 }
 
 void Client::OnLoadGameCallback(int result, const char* error_message) {
+    if (!m_enabled)
+        return;
+
     if (result == 0) {
         const rc_client_game_t* game = rc_client_get_game_info(m_rc_client);
         for (ClientObserver* observer : m_observers) {
@@ -204,6 +225,9 @@ void Client::OnLoadGameCallback(int result, const char* error_message) {
 }
 
 void Client::OnEvent(const rc_client_event_t* event) {
+    if (!m_enabled)
+        return;
+
     LOG_DEBUG(RetroAchievements, "Event! ({})", event->type);
     for (ClientObserver* observer : m_observers) {
         observer->OnEvent(event);

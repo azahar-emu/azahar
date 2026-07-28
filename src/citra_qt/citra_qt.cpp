@@ -435,13 +435,19 @@ GMainWindow::GMainWindow(Core::System& system_)
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
     system.RetroAchievementsClient().RegisterObserver(ra_client_observer);
 
-    QtConcurrent::run([this]() {
+    const bool retro_achievements_enabled = Settings::values.retro_achievements_enabled.GetValue();
+    system.RetroAchievementsClient().SetEnabled(retro_achievements_enabled);
+
+    if (retro_achievements_enabled) {
         std::string username = Settings::values.retro_achievements_username.GetValue(),
                     token = Settings::values.retro_achievements_token.GetValue();
         if (!username.empty() && !token.empty()) {
-            system.RetroAchievementsClient().AttemptLoginWithToken(username.c_str(), token.c_str());
+            QtConcurrent::run([this, username, token]() {
+                system.RetroAchievementsClient().AttemptLoginWithToken(username.c_str(),
+                                                                       token.c_str());
+            });
         }
-    });
+    }
 #else
     ui->action_RetroAchievements.setVisible(false);
 #endif
@@ -3538,8 +3544,10 @@ void GMainWindow::OnRetroAchievements() {
         Settings::values.retro_achievements_username.SetValue("");
         Settings::values.retro_achievements_token.SetValue("");
     });
-    connect(&dialog, &RetroAchievements::Dialog::EnabledToggled, this,
-            [](bool enabled) { Settings::values.retro_achievements_enabled.SetValue(enabled); });
+    connect(&dialog, &RetroAchievements::Dialog::EnabledToggled, this, [this](bool enabled) {
+        Settings::values.retro_achievements_enabled.SetValue(enabled);
+        system.RetroAchievementsClient().SetEnabled(enabled);
+    });
 
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,
             &RetroAchievements::Dialog::OnLoginSucceeded);

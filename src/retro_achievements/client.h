@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <vector>
 
@@ -19,6 +20,8 @@ public:
     ~Client();
 
     void RegisterObserver(ClientObserver& observer);
+
+    void SetEnabled(bool enabled);
 
     void AttemptLogin(const char* username, const char* password);
     void AttemptLoginWithToken(const char* username, const char* token);
@@ -41,6 +44,7 @@ public:
 private:
     rc_client_t* m_rc_client;
     const rc_client_user_t* m_user = nullptr;
+    std::atomic_bool m_enabled = false;
 
     std::vector<ClientObserver*> m_observers;
 };
