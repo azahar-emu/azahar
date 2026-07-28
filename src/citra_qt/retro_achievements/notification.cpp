@@ -20,6 +20,7 @@ Notification::Notification(QWidget* parent)
     ui->setupUi(this);
 
     setAttribute(Qt::WA_TransparentForMouseEvents);
+    setAttribute(Qt::WA_StyledBackground, true);
 
     display_timer.setSingleShot(true);
     connect(&display_timer, &QTimer::timeout, this, &Notification::hide);
