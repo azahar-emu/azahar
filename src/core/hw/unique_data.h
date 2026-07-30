@@ -167,9 +167,15 @@ enum class UniqueCryptoFileID {
 
 void InvalidateSecureData();
 
-std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
-                                                       const char openmode[], UniqueCryptoFileID id,
-                                                       int flags = 0);
+bool IsUniqueCryptoFile(FileUtil::IOFileBase* file, UniqueCryptoFileID id);
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(
+    std::unique_ptr<FileUtil::IOFileBase>&& underlying_file, const char openmode[],
+    UniqueCryptoFileID id);
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(const std::string& filename,
+                                                           const char openmode[],
+                                                           UniqueCryptoFileID id, int flags = 0);
 
 bool IsFullConsoleLinked();
 void UnlinkConsole();

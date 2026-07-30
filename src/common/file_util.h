@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -28,6 +29,7 @@
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/unique_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/wrapper.hpp>
 #include "common/common_types.h"
@@ -293,28 +295,127 @@ enum class DirectorySeparator {
     std::string_view path,
     DirectorySeparator directory_separator = DirectorySeparator::ForwardSlash);
 
-struct CryptoIOFileImpl;
+class IOFileBase;
 
-// simple wrapper for cstdlib file functions to
-// hopefully will make error checking easier
-// and make forgetting an fclose() harder
-class IOFile : public NonCopyable {
+class IOType {
 public:
-    IOFile();
+    enum class Type {
+        IOFile,
+        NullIOFile,
+        SubIOFile,
+        CryptoFile,
+        Z3DSWriteIOFile,
+        Z3DSReadIOFile,
 
-    // flags is used for windows specific file open mode flags, which
-    // allows citra to open the logs in shared write mode, so that the file
-    // isn't considered "locked" while citra is open and people can open the log file and view it
-    IOFile(const std::string& filename, const char openmode[], int flags = 0);
+        MAX,
+    };
 
-    virtual ~IOFile();
+    Type GetBaseType() const {
+        return types.front();
+    }
 
-    IOFile(IOFile&& other) noexcept;
-    IOFile& operator=(IOFile&& other) noexcept;
+    Type GetLastType() const {
+        return types.back();
+    }
 
-    void Swap(IOFile& other) noexcept;
+    bool HasType(Type t) const {
+        return std::find_if(types.begin(), types.end(), [t](Type curr) { return t == curr; }) !=
+               types.end();
+    }
 
-    virtual bool Close();
+    bool HasCompressedType() {
+        return HasType(Type::Z3DSReadIOFile) || HasType(Type::Z3DSWriteIOFile);
+    }
+
+    std::string to_string() const {
+        constexpr std::array<const char*, static_cast<u32>(Type::MAX)> names = {{
+            "IOFile",
+            "NullIOFile",
+            "SubIOFile",
+            "CryptoFile",
+            "Z3DSWriteIOFile",
+            "Z3DSReadIOFile",
+        }};
+
+        std::string ret;
+        bool first = true;
+        for (auto it = types.rbegin(); it != types.rend(); it++) {
+            if (!first) {
+                ret += " -> ";
+            }
+            first = false;
+            ret += names[static_cast<u32>(*it)];
+        }
+        return ret;
+    }
+
+private:
+    friend class IOFileBase;
+    std::vector<Type> types;
+};
+
+/**
+ * Base IOFile class that can be derived to implement files with abstracted properties
+ * to the programmer, such as compression or encryption. IOFileBase is modeled so that it
+ * holds a unique pointer to a child file, that way it's possible to have a chain of
+ * files with different properties (for example, a compressed file inside an encrypted file).
+ * The final chained file must always be a derived class that overrides all methods to
+ * prevent recursion or null dereferences.
+ */
+class IOFileBase : public NonCopyable {
+public:
+    virtual ~IOFileBase() = 0;
+
+    [[nodiscard]] explicit operator bool() const {
+        return IsGood();
+    }
+
+    virtual bool Open() {
+        return Forward(&IOFileBase::Open);
+    }
+
+    virtual std::unique_ptr<IOFileBase> OpenCopy() const = 0;
+
+    virtual bool Close() {
+        return Forward(&IOFileBase::Close);
+    }
+
+    virtual bool IsOpen() const {
+        return Forward(&IOFileBase::IsOpen);
+    }
+    virtual bool IsGood() const {
+        return Forward(&IOFileBase::IsGood);
+    }
+
+    virtual int GetFd() const {
+        return Forward(&IOFileBase::GetFd);
+    }
+
+    virtual u64 GetSize() const {
+        return Forward(&IOFileBase::GetSize);
+    }
+    virtual bool Resize(u64 size) {
+        return Forward(&IOFileBase::Resize, size);
+    }
+
+    virtual bool Flush() {
+        return Forward(&IOFileBase::Flush);
+    }
+
+    virtual void Clear() {
+        Forward(&IOFileBase::Clear);
+    }
+
+    virtual const std::string& Filename() const {
+        return Forward(&IOFileBase::Filename);
+    }
+
+    virtual bool Seek(s64 off, int origin) {
+        return Forward(&IOFileBase::Seek, off, origin);
+    }
+    virtual u64 Tell() const {
+        return Forward(&IOFileBase::Tell);
+    }
 
     /// Returns the amount of T items read
     template <typename T>
@@ -323,8 +424,6 @@ public:
                       "Given array does not consist of trivially copyable objects");
 
         std::size_t items_read = ReadImpl(data, length, sizeof(T));
-        if (items_read != length)
-            m_good = false;
 
         return items_read;
     }
@@ -337,8 +436,6 @@ public:
 
         const size_t bytes = length * sizeof(T);
         std::size_t size_read = ReadAtImpl(data, bytes, offset);
-        if (size_read != bytes)
-            m_good = false;
 
         return size_read;
     }
@@ -349,8 +446,6 @@ public:
                       "Given array does not consist of trivially copyable objects");
 
         std::size_t items_written = WriteImpl(data, length, sizeof(T));
-        if (items_written != length)
-            m_good = false;
 
         return items_written;
     }
@@ -449,78 +544,109 @@ public:
      */
     size_t WriteLine(const std::string_view line);
 
-    [[nodiscard]] virtual bool IsOpen() const {
-        return nullptr != m_file;
-    }
-
-    // m_good is set to false when a read, write or other function fails
-    [[nodiscard]] virtual bool IsGood() const {
-        return m_good;
-    }
-    [[nodiscard]] virtual int GetFd() const {
-#ifdef HAVE_LIBRETRO_VFS
-        if (m_file == nullptr)
-            return -1;
-        return fileno(filestream_get_vfs_handle(m_file)->fp);
-#else
-#ifdef ANDROID
-        if (!AndroidUtils::CanUseRawFS()) {
-            return m_fd;
+    // Returns the type of the file.
+    IOType GetType() const {
+        IOType ret;
+        const IOFileBase* curr = this;
+        while (curr) {
+            ret.types.push_back(curr->MyType());
+            curr = curr->Child().get();
         }
-#endif // ANDROID
-        if (m_file == nullptr)
-            return -1;
-        return fileno(m_file);
-#endif // HAVE_LIBRETRO_VFS
-    }
-    [[nodiscard]] explicit operator bool() const {
-        return IsGood();
-    }
-
-    bool Seek(s64 off, int origin) {
-        return SeekImpl(off, origin);
-    }
-    u64 Tell() const {
-        return TellImpl();
-    }
-    virtual u64 GetSize() const;
-    virtual bool Resize(u64 size);
-    virtual bool Flush();
-
-    // clear error state
-    virtual void Clear() {
-        m_good = true;
-
-#ifdef HAVE_LIBRETRO_VFS
-        filestream_rewind(m_file);
-#else
-        std::clearerr(m_file);
-#endif
-    }
-
-    virtual bool IsCrypto() {
-        return false;
-    }
-
-    virtual bool IsCompressed() {
-        return false;
-    }
-
-    virtual const std::string& Filename() const {
-        return filename;
+        return ret;
     }
 
 protected:
-    friend struct CryptoIOFileImpl;
+    std::unique_ptr<IOFileBase>& Child() {
+        return child_file;
+    }
 
-    virtual bool Open();
+    const std::unique_ptr<IOFileBase>& Child() const {
+        return child_file;
+    }
 
-    virtual std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size);
-    virtual std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset);
-    virtual std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size);
+    virtual std::size_t ReadImpl(void* data, std::size_t length, std::size_t elem_size) {
+        return Forward(&IOFileBase::ReadImpl, data, length, elem_size);
+    }
+    virtual std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) {
+        return Forward(&IOFileBase::ReadAtImpl, data, byte_count, offset);
+    }
+    virtual std::size_t WriteImpl(const void* data, std::size_t length, std::size_t elem_size) {
+        return Forward(&IOFileBase::WriteImpl, data, length, elem_size);
+    }
 
-    virtual bool SeekImpl(s64 off, int origin);
-    virtual u64 TellImpl() const;
+    virtual IOType::Type MyType() const = 0;
+
+private:
+    template <typename Ret, typename... Args>
+    Ret Forward(Ret (IOFileBase::*method)(Args...), Args... args) {
+        return (child_file.get()->*method)(args...);
+    }
+
+    template <typename Ret, typename... Args>
+    Ret Forward(Ret (IOFileBase::*method)(Args...) const, Args... args) const {
+        return (child_file.get()->*method)(args...);
+    }
+
+    std::unique_ptr<IOFileBase> child_file{};
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & child_file;
+    }
+    friend class boost::serialization::access;
+};
+inline IOFileBase::~IOFileBase() {}
+
+// File class that acts as a wrapper to cstdlib
+// file function. This function must override all base
+// methods.
+class IOFile : public IOFileBase {
+public:
+    IOFile();
+
+    // flags is used for windows specific file open mode flags, which
+    // allows citra to open the logs in shared write mode, so that the file
+    // isn't considered "locked" while citra is open and people can open the log file and view it
+    IOFile(const std::string& filename, const char openmode[], int flags = 0);
+
+    ~IOFile() override;
+
+    IOFile(IOFile&& other) noexcept;
+    IOFile& operator=(IOFile&& other) noexcept;
+
+    bool Close() override;
+
+    [[nodiscard]] bool IsOpen() const override;
+
+    // m_good is set to false when a read, write or other function fails
+    [[nodiscard]] bool IsGood() const override;
+    [[nodiscard]] int GetFd() const override;
+
+    bool Seek(s64 off, int origin) override;
+    u64 Tell() const override;
+    u64 GetSize() const override;
+    bool Resize(u64 size) override;
+    bool Flush() override;
+
+    // clear error state
+    void Clear() override;
+
+    const std::string& Filename() const override;
+
+    std::unique_ptr<IOFileBase> OpenCopy() const override;
+
+protected:
+    void Swap(IOFile& other) noexcept;
+
+    bool Open() override;
+
+    std::size_t ReadImpl(void* data, std::size_t length, std::size_t elem_size) override;
+    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
+    std::size_t WriteImpl(const void* data, std::size_t length, std::size_t elem_size) override;
+
+    IOType::Type MyType() const override {
+        return IOType::Type::IOFile;
+    }
 
 private:
     CORE_FILE* m_file = nullptr;
@@ -540,6 +666,7 @@ private:
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<IOFileBase>(*this);
         ar& Path::make(filename);
         ar & openmode;
         ar & flags;
@@ -556,38 +683,13 @@ private:
     friend class boost::serialization::access;
 };
 
-class CryptoIOFile : public IOFile {
-public:
-    CryptoIOFile();
-
-    // flags is used for windows specific file open mode flags, which
-    // allows citra to open the logs in shared write mode, so that the file
-    // isn't considered "locked" while citra is open and people can open the log file and view it
-    CryptoIOFile(const std::string& filename, const char openmode[], const std::vector<u8>& aes_key,
-                 const std::vector<u8>& aes_iv, int flags = 0);
-
-    bool IsCrypto() override {
-        return true;
-    }
-
-    ~CryptoIOFile() override;
-
-private:
-    std::unique_ptr<CryptoIOFileImpl> impl;
-
-    std::size_t ReadImpl(void* data, std::size_t length, std::size_t data_size) override;
-    std::size_t ReadAtImpl(void* data, std::size_t byte_count, std::size_t offset) override;
-    std::size_t WriteImpl(const void* data, std::size_t length, std::size_t data_size) override;
-
-    bool SeekImpl(s64 off, int origin) override;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-    friend class boost::serialization::access;
-};
-
 template <std::ios_base::openmode o, typename T>
 void OpenFStream(T& fstream, const std::string& filename);
+
+constexpr u32 MakeMagic(char a, char b, char c, char d) {
+    return a | b << 8 | c << 16 | d << 24;
+}
+
 } // namespace FileUtil
 
 // To deal with Windows being dumb at unicode:
@@ -601,4 +703,3 @@ void OpenFStream(T& fstream, const std::string& filename, std::ios_base::openmod
 }
 
 BOOST_CLASS_EXPORT_KEY(FileUtil::IOFile)
-BOOST_CLASS_EXPORT_KEY(FileUtil::CryptoIOFile)

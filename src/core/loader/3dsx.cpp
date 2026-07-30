@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <vector>
+#include "common/file_derived.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/zstd_compression.h"
 #include "core/core.h"
@@ -95,7 +97,7 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo* loadinfo, u32* offsets) 
 
 using Kernel::CodeSet;
 
-static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFile* file, u32 base_addr,
+static THREEDSX_Error Load3DSXFile(Core::System& system, FileUtil::IOFileBase* file, u32 base_addr,
                                    std::shared_ptr<CodeSet>* out_codeset) {
     if (!file->IsOpen())
         return ERROR_FILE;
@@ -260,14 +262,14 @@ AppLoader_THREEDSX::AppLoader_THREEDSX(Core::System& system_, FileUtil::IOFile&&
     }
 }
 
-FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile* file) {
+FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFileBase* file) {
     u32 magic{};
 
     if (file->Seek(0, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
-        if (MakeMagic('3', 'D', 'S', 'X') == magic ||
-            (MakeMagic('Z', '3', 'D', 'S') == magic &&
+        if (FileUtil::MakeMagic('3', 'D', 'S', 'X') == magic ||
+            (FileUtil::MakeMagic('Z', '3', 'D', 'S') == magic &&
              FileUtil::Z3DSReadIOFile::GetUnderlyingFileMagic(file) ==
-                 MakeMagic('3', 'D', 'S', 'X')))
+                 FileUtil::MakeMagic('3', 'D', 'S', 'X')))
             return FileType::THREEDSX;
     }
 
@@ -330,13 +332,13 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>
         LOG_DEBUG(Loader, "RomFS size:             {:#010X}", romfs_size);
 
         // We reopen the file, to allow its position to be independent from file's
-        std::unique_ptr<FileUtil::IOFile> romfs_file_inner =
-            std::make_unique<FileUtil::IOFile>(filepath, "rb");
+        std::unique_ptr<FileUtil::IOFileBase> romfs_file_inner = file->OpenCopy();
         if (!romfs_file_inner->IsOpen())
             return ResultStatus::Error;
 
-        romfs_file = std::make_shared<FileSys::DirectRomFSReader>(std::move(romfs_file_inner),
-                                                                  romfs_offset, romfs_size);
+        romfs_file =
+            std::make_shared<FileSys::DirectRomFSReader>(std::make_unique<FileUtil::SubIOFile>(
+                std::move(romfs_file_inner), romfs_offset, romfs_size));
 
         return ResultStatus::Success;
     }
@@ -350,12 +352,12 @@ AppLoader::CompressFileInfo AppLoader_THREEDSX::GetCompressFileInfo() {
     info.recommended_compressed_extension = "z3dsx";
     info.recommended_uncompressed_extension = "3dsx";
     info.underlying_magic = std::array<u8, 4>({'3', 'D', 'S', 'X'});
-    info.is_compressed = file->IsCompressed();
+    info.is_compressed = file->GetType().HasCompressedType();
     return info;
 }
 
 bool AppLoader_THREEDSX::IsFileCompressed() {
-    return file->IsCompressed();
+    return file->GetType().HasCompressedType();
 }
 
 ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {

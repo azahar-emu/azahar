@@ -32,6 +32,9 @@
     <string name="theme_and_color_description">Uygulamanın görünüşünü değiştir</string>
     <string name="install_cia_title">CIA Yükle</string>
 
+    <!-- Network Settings-->
+    <string name="preferences_network">Ağ</string>
+    <string name="web_api_url">Web API URL\'si</string>
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">GPU Sürücüsü seç</string>
     <string name="select_gpu_driver_title">Halihazırda var olan GPU sürücüsünü değiştirmek ister misiniz?</string>
@@ -328,6 +331,8 @@
     <string name="cancelling">İptal ediliyor...</string>
     <string name="visibility">Görünürlük</string>
     <string name="information">Bilgi</string>
+    <string name="refresh">Yenile</string>
+
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Oyun Dosyası Seç</string>
 
@@ -350,6 +355,10 @@
     <string name="loader_error_encrypted">ROM\'unuz Şifreli</string>
     <string name="loader_error_file_not_found">ROM dosyası mevcut değil</string>
     <string name="no_game_present">Başlatılabilir oyun yok!</string>
+
+    <string name="core_error_success">Başarılı</string>
+    <string name="core_error_loader_encrypted">Şifreli dosya</string>
+    <string name="core_error_unknown">Bilinmeyen hata</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Menüye erişmek için Geri\'ye basın</string>
@@ -846,4 +855,63 @@
     <string name="decompress_failed">Dosya ayıklama işlemi başarısız.</string>
     <string name="compress_decompress_installed_app">Halihazırda kurulu olan uygulamalar sıkıştırılamaz veya ayıklanamaz.</string>
 
-  </resources>
+  <string name="multiplayer_create_room">Oluştur</string>
+    <string name="multiplayer_join_room">Katıl</string>
+    <string name="multiplayer_public_room">Herkese Açık Odalara Göz At</string>
+    <string name="multiplayer_username">Kullanıcı adı</string>
+    <string name="multiplayer_ip_address">IP Adresi</string>
+    <string name="multiplayer_ip_port">Port</string>
+    <string name="multiplayer_create_room_success">Oda başarıyla oluşturuldu!</string>
+    <string name="multiplayer_create_room_failed">Oda oluşturulamadı!</string>
+    <string name="multiplayer_join_room_failed">Odaya katılınamadı!</string>
+    <string name="multiplayer_port_invalid">Geçersiz port!</string>
+    <string name="multiplayer_exit_room">Odadan Çık</string>
+    <string name="multiplayer_network_error">Ağ hatası</string>
+    <string name="multiplayer_could_not_connect">Bağlanılamadı</string>
+    <string name="multiplayer_room_is_full">Oda dolu</string>
+    <string name="multiplayer_create_room_error">Oda oluşturma hatası</string>
+    <string name="multiplayer_unknown_error">bilinmeyen hata</string>
+    <string name="multiplayer_room_moderator">Oda moderatörü</string>
+    <string name="multiplayer_member_join">%1$s katıldı</string>
+    <string name="multiplayer_member_leave">%1$s ayrıldı</string>
+    <string name="multiplayer_member_banned">%1$s yasaklandı</string>
+    <string name="multiplayer_address_unbanned">adresin yasağı kaldırıldı</string>
+    <string name="multiplayer_kick_member">At</string>
+    <string name="multiplayer_chat_input_hint">Mesaj gönder...</string>
+    <string name="multiplayer_password">Şifre</string>
+    <string name="original_button_text">Katıl</string>
+    <string name="multiplayer_room_name">Oda Adı</string>
+    <string name="multiplayer_chat">Sohbet</string>
+    <string name="multiplayer_server_address">Sunucu Adresi</string>
+    <string name="chat">Sohbet</string>
+    <string name="type_message">Mesaj yaz...</string>
+    <string name="send">Gönder</string>
+    <string name="send_message">Mesaj Gönder</string>
+    <string name="multiplayer_moderation">Moderasyon</string>
+    <string name="multiplayer_moderation_title">Yasak Listesi</string>
+    <string name="multiplayer_no_bans">Yasaklı oyuncu yok</string>
+    <string name="multiplayer_unban_title">Kullanıcının Yasağını Kaldır</string>
+    <string name="multiplayer_unban">Yasağı Kaldır</string>
+    <string name="multiplayer_unban_message">%1$s kullanıcısının yasağını kaldırmak istediğinize emin misiniz?</string>
+    <string name="multiplayer_ban">Kullanıcı Yasakla</string>
+    <string name="multiplayer_room_browser">Herkese Açık Odalar</string>
+    <string name="multiplayer_no_rooms_found">Herkese açık oda bulunamadı</string>
+    <string name="multiplayer_password_required">Şifre Gerekli</string>
+    <string name="multiplayer_player_count">: %1$d/%2$d</string>
+    <string name="multiplayer_game">Oyun</string>
+    <string name="multiplayer_no_game_info">Herhangi Bir Oyun</string>
+    <string name="multiplayer_password_protected">Şifre korumalı oda</string>
+    <string name="multiplayer_hide_full_rooms">Dolu Odaları Gizle</string>
+    <string name="multiplayer_hide_empty_rooms">Boş Odaları Gizle</string>
+    <string name="multiplayer_game_name">Tercih Edilen Oyunlar</string>
+    <string name="prefered_game_name">Tercih Edilen Oyun</string>
+    <string name="multiplayer_no_game">Oyun Bulunamadı</string>
+    <string name="no_preference">Tercih Yok</string>
+
+    <string name="update_available">Güncelleme Mevcut</string>
+    <string name="check_for_updates">Güncellemeleri Denetle</string>
+    <string name="update_check_channel">Güncelleme Kanalı</string>
+    <string name="update_check_channel_stable">Kararlı</string>
+    <string name="update_check_channel_prerelease">Ön sürüm</string>
+
+</resources>

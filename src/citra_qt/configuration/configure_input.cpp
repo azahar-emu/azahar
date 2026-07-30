@@ -83,9 +83,9 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
     // It might be nice to move the GetKeyName code to input_common, but would need a non-QT way of
     // doing it
     if (param.Get("engine", "") == "analog_from_button") {
-        auto dirParam = Common::ParamPackage(param.Get(dir, ""));
-        if (dirParam.Get("engine", "") == "keyboard") {
-            return GetKeyName(dirParam.Get("code", 0));
+        auto dir_param = Common::ParamPackage(param.Get(dir, ""));
+        if (dir_param.Get("engine", "") == "keyboard") {
+            return GetKeyName(dir_param.Get("code", 0));
         }
     }
     return QString::fromStdString(InputCommon::AnalogToText(param, dir));
@@ -374,13 +374,32 @@ void ConfigureInput::ApplyConfiguration() {
                    [](Common::ParamPackage& param) {
                        if (param.Get("engine", "keyboard") == "sdl") {
                            if (Settings::values.current_input_profile.maptype ==
-                               Settings::InputMappingType::AllControllers)
+                               Settings::InputMappingType::AllControllers) {
                                param.Set("maptype", "all");
-                           else if (Settings::values.current_input_profile.maptype ==
-                                    Settings::InputMappingType::Guid)
+                           } else if (Settings::values.current_input_profile.maptype ==
+                                      Settings::InputMappingType::Guid) {
                                param.Set("maptype", "guid");
-                           else
+                           } else {
                                param.Set("maptype", "guid+port");
+                           }
+                       } else if (param.Get("engine", "keyboard") == "analog_from_button") {
+                           for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM - 1;
+                                ++sub_button_id) {
+                               auto dir = param.Get(analog_sub_buttons[sub_button_id], "");
+                               if (dir != "") {
+                                   auto dir_param = Common::ParamPackage(param.Get(dir, ""));
+                                   if (Settings::values.current_input_profile.maptype ==
+                                       Settings::InputMappingType::AllControllers) {
+                                       dir_param.Set("maptype", "all");
+                                   } else if (Settings::values.current_input_profile.maptype ==
+                                              Settings::InputMappingType::Guid) {
+                                       dir_param.Set("maptype", "guid");
+                                   } else {
+                                       dir_param.Set("maptype", "guid+port");
+                                   }
+                                   param.Set(dir, dir_param.Serialize());
+                               }
+                           }
                        } else {
                            param.Erase("maptype");
                        }
@@ -425,7 +444,6 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
 }
 
 void ConfigureInput::LoadConfiguration() {
-
     ui->use_artic_controller->setChecked(Settings::values.use_artic_base_controller.GetValue());
     ui->comboBoxMappingType->setCurrentIndex(
         static_cast<int>(Settings::values.current_input_profile.maptype));

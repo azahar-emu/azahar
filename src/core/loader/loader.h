@@ -80,10 +80,6 @@ enum class ResultStatus {
     ErrorPatchesInvalidTitle,
 };
 
-constexpr u32 MakeMagic(char a, char b, char c, char d) {
-    return a | b << 8 | c << 16 | d << 24;
-}
-
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
@@ -310,7 +306,7 @@ public:
 
 protected:
     Core::System& system;
-    std::unique_ptr<FileUtil::IOFile> file;
+    std::unique_ptr<FileUtil::IOFileBase> file;
     bool is_loaded = false;
     std::optional<Kernel::MemoryMode> memory_mode_override = std::nullopt;
 };

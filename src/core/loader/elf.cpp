@@ -356,11 +356,11 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
 
 namespace Loader {
 
-FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile* file) {
+FileType AppLoader_ELF::IdentifyType(FileUtil::IOFileBase* file) {
     u32 magic{};
 
     if (file->Seek(0, SEEK_SET) && 1 == file->ReadArray<u32>(&magic, 1)) {
-        if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
+        if (FileUtil::MakeMagic('\x7f', 'E', 'L', 'F') == magic)
             return FileType::ELF;
     }
 

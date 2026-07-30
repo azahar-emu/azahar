@@ -45,14 +45,12 @@ private:
  */
 class DirectRomFSReader : public RomFSReader {
 public:
-    DirectRomFSReader(std::unique_ptr<FileUtil::IOFile>&& file, std::size_t file_offset,
-                      std::size_t data_size)
-        : file(std::move(file)), file_offset(file_offset), data_size(data_size) {}
+    DirectRomFSReader(std::unique_ptr<FileUtil::IOFileBase>&& file) : file(std::move(file)) {}
 
     ~DirectRomFSReader() override = default;
 
     std::size_t GetSize() const override {
-        return data_size;
+        return file->GetSize();
     }
 
     std::size_t ReadFile(std::size_t offset, std::size_t length, u8* buffer) override;
@@ -62,9 +60,7 @@ public:
     bool CacheReady(std::size_t file_offset, std::size_t length) override;
 
 private:
-    std::unique_ptr<FileUtil::IOFile> file;
-    u64 file_offset;
-    u64 data_size;
+    std::unique_ptr<FileUtil::IOFileBase> file;
 
     // Total cache size: 128KB
     static constexpr std::size_t cache_line_size = (1 << 13); // About 8KB
@@ -87,8 +83,6 @@ private:
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<RomFSReader>(*this);
         ar & file;
-        ar & file_offset;
-        ar & data_size;
     }
     friend class boost::serialization::access;
 };

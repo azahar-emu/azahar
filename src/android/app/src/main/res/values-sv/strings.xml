@@ -32,6 +32,8 @@
     <string name="theme_and_color_description">Modifiera utseendet på appen</string>
     <string name="install_cia_title">Installera CIA</string>
 
+    <!-- Network Settings-->
+    <string name="preferences_network">Nätverk</string>
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Välj GPU-drivrutin</string>
     <string name="select_gpu_driver_title">Vill du ersätta din nuvarande GPU-drivrutin?</string>
@@ -927,4 +929,11 @@
     <string name="decompress_failed">Avkomprimering misslyckades.</string>
     <string name="compress_decompress_installed_app">Redan installerade applikationer kan inte komprimeras eller avkomprimeras.</string>
 
-  </resources>
+  <string name="multiplayer_create_room">Skapa</string>
+    <string name="multiplayer_join_room">Gå med</string>
+    <string name="multiplayer_username">Användarnamn</string>
+    <string name="multiplayer_ip_address">IP-adress</string>
+    <string name="multiplayer_ip_port">Port</string>
+    <string name="multiplayer_network_error">Nätverksfel</string>
+    <string name="multiplayer_unknown_error">okänt fel</string>
+    </resources>

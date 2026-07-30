@@ -155,13 +155,13 @@ std::string AnalogToText(const Common::ParamPackage& param, const std::string& d
         }
         if (dir == "up") {
             if (name_y_str == "")
-                return "Axis " + axis_y_str + plus_str;
+                return "Axis " + axis_y_str + minus_str;
             else
-                return name_y_str + plus_str;
+                return name_y_str + minus_str;
         }
         if (dir == "down") {
             if (name_y_str == "")
-                return "Axis " + axis_y_str + minus_str;
+                return "Axis " + axis_y_str + plus_str;
             else
                 return name_y_str + plus_str;
         }
