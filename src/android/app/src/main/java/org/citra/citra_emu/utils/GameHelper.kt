@@ -62,6 +62,10 @@ object GameHelper {
         }
 
         files.forEach {
+            val filename = FileUtil.getFilename(it.uri)
+            if (filename.startsWith(".")) {
+                return@forEach
+            }
             if (it.isDirectory) {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
