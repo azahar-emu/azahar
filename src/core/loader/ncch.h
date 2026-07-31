@@ -10,6 +10,10 @@
 #include "core/file_sys/ncch_container.h"
 #include "core/loader/loader.h"
 
+namespace Service::AM {
+class BundleCIAHandler;
+}
+
 namespace Loader {
 
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
@@ -21,6 +25,8 @@ public:
         filetype = IdentifyType(this->file.get());
         this->file.reset();
     }
+
+    ~AppLoader_NCCH();
 
     /**
      * Returns the type of the file
@@ -56,7 +62,7 @@ public:
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
 
-    ResultStatus ReadIcon(std::vector<u8>& buffer) override;
+    ResultStatus ReadIcon(std::vector<u8>& buffer, bool prefer_update_icon) override;
 
     ResultStatus ReadBanner(std::vector<u8>& buffer) override;
 
@@ -74,15 +80,19 @@ public:
 
     ResultStatus DumpUpdateRomFS(const std::string& target_path) override;
 
-    ResultStatus ReadTitle(std::string& title) override;
+    ResultStatus ReadTitle(std::string& title, bool prefer_update_title) override;
 
     CompressFileInfo GetCompressFileInfo() override;
 
     bool IsFileCompressed() override;
 
+    bool IsFileBundle() override;
+
     std::string GetFilePath() override {
         return filepath;
     }
+
+    void LoadBundle() override;
 
 private:
     /**
@@ -100,9 +110,12 @@ private:
     /// Detects whether the NCCH contains GBA Virtual Console.
     bool IsGbaVirtualConsole(std::span<const u8> code);
 
+    ResultStatus OpenUpdateNCCH();
+
     FileSys::NCCHContainer base_ncch;
     FileSys::NCCHContainer update_ncch;
     FileSys::NCCHContainer* overlay_ncch;
+    std::unique_ptr<Service::AM::BundleCIAHandler> bundle_cia_handler;
 
     std::vector<u32> preferred_regions;
 

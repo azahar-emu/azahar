@@ -51,29 +51,29 @@ FileType GuessFromExtension(const std::string& extension_) {
     if (extension == ".elf" || extension == ".axf")
         return FileType::ELF;
 
-    if (extension == ".cci" || extension == ".zcci" || extension == ".3ds")
+    if (extension == ".cci" || extension == ".zcci" || extension == ".bcci" || extension == ".3ds")
         return FileType::CCI;
 
-    if (extension == ".cxi" || extension == ".app" || extension == ".zcxi")
+    if (extension == ".cxi" || extension == ".app" || extension == ".zcxi" || extension == ".bcxi")
         return FileType::CXI;
 
     if (extension == ".3dsx" || extension == ".z3dsx")
         return FileType::THREEDSX;
 
-    if (extension == ".cia" || extension == ".zcia")
+    if (extension == ".cia" || extension == ".zcia" || extension == ".bcia")
         return FileType::CIA;
 
     return FileType::Unknown;
 }
 
-const char* GetFileTypeString(FileType type, bool is_compressed) {
+const char* GetFileTypeString(FileType type, bool is_compressed, bool is_bundle) {
     switch (type) {
     case FileType::CCI:
-        return is_compressed ? "NCSD (Z)" : "NCSD";
+        return is_bundle ? "NCSD (B)" : (is_compressed ? "NCSD (Z)" : "NCSD");
     case FileType::CXI:
-        return is_compressed ? "NCCH (Z)" : "NCCH";
+        return is_bundle ? "NCCH (B)" : (is_compressed ? "NCCH (Z)" : "NCCH");
     case FileType::CIA:
-        return is_compressed ? "CIA (Z)" : "CIA";
+        return is_bundle ? "CIA (B)" : (is_compressed ? "CIA (Z)" : "CIA");
     case FileType::ELF:
         return "ELF";
     case FileType::THREEDSX:
