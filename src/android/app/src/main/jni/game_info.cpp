@@ -50,34 +50,13 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
 
     std::vector<u8> smdh = [program_id, &loader, &is_encrypted]() -> std::vector<u8> {
         std::vector<u8> original_smdh;
-        auto result = loader->ReadIcon(original_smdh);
+        auto result = loader->ReadIcon(original_smdh, true);
         if (result != Loader::ResultStatus::Success) {
             is_encrypted = result == Loader::ResultStatus::ErrorEncrypted;
             return {};
         }
 
-        if (program_id < 0x00040000'00000000 || program_id > 0x00040000'FFFFFFFF)
-            return original_smdh;
-
-        u64 update_tid = (program_id & 0xFFFFFFFFULL) | UPDATE_TID_HIGH;
-        std::string update_path =
-            Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, update_tid);
-
-        if (!FileUtil::Exists(update_path))
-            return original_smdh;
-
-        std::unique_ptr<Loader::AppLoader> update_loader = Loader::GetLoader(update_path);
-
-        if (!update_loader)
-            return original_smdh;
-
-        std::vector<u8> update_smdh;
-        result = update_loader->ReadIcon(update_smdh);
-        if (result != Loader::ResultStatus::Success) {
-            is_encrypted = result == Loader::ResultStatus::ErrorEncrypted;
-            return original_smdh;
-        }
-        return update_smdh;
+        return original_smdh;
     }();
 
     GameInfoData* gid = new GameInfoData();
@@ -89,7 +68,8 @@ GameInfoData* GetNewGameInfoData(const std::string& path) {
     gid->loaded = true;
     gid->is_encrypted = is_encrypted;
     gid->title_id = program_id;
-    gid->file_type = Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed());
+    gid->file_type = Loader::GetFileTypeString(loader->GetFileType(), loader->IsFileCompressed(),
+                                               loader->IsFileBundle());
     gid->is_insertable = loader->GetFileType() == Loader::FileType::CCI;
 
     return gid;

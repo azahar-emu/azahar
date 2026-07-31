@@ -136,7 +136,7 @@ Apploader_Artic::LoadNew3dsHwCapabilities() {
 
 bool Apploader_Artic::IsN3DSExclusive() {
     std::vector<u8> smdh_buffer;
-    if (ReadIcon(smdh_buffer) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
+    if (ReadIcon(smdh_buffer, false) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
         SMDH* smdh = reinterpret_cast<SMDH*>(smdh_buffer.data());
         return smdh->flags.n3ds_exclusive != 0;
     }
@@ -273,7 +273,8 @@ void Apploader_Artic::ParseRegionLockoutInfo(u64 program_id) {
     preferred_regions.clear();
 
     std::vector<u8> smdh_buffer;
-    if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
+    if (ReadIcon(smdh_buffer, false) == ResultStatus::Success &&
+        smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
         std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout = smdh.region_lockout;
@@ -403,7 +404,7 @@ ResultStatus Apploader_Artic::Load(std::shared_ptr<Kernel::Process>& process) {
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         Network::GameInfo game_info;
-        ReadTitle(game_info.name);
+        ReadTitle(game_info.name, true);
         game_info.id = ncch_program_id;
         room_member->SendGameInfo(game_info);
     }
@@ -662,7 +663,8 @@ ResultStatus Apploader_Artic::ReadCode(std::vector<u8>& buffer) {
     return ResultStatus::Success;
 }
 
-ResultStatus Apploader_Artic::ReadIcon(std::vector<u8>& buffer) {
+ResultStatus Apploader_Artic::ReadIcon(std::vector<u8>& buffer,
+                                       [[maybe_unused]] bool prefer_update_icon) {
     if (!cached_icon.empty()) {
         buffer = cached_icon;
         return ResultStatus::Success;
@@ -811,10 +813,10 @@ ResultStatus Apploader_Artic::DumpUpdateRomFS(const std::string& target_path) {
     return ResultStatus::ErrorNotImplemented;
 }
 
-ResultStatus Apploader_Artic::ReadTitle(std::string& title) {
+ResultStatus Apploader_Artic::ReadTitle(std::string& title, bool prefer_update_title) {
     std::vector<u8> data;
     Loader::SMDH smdh;
-    ResultStatus result = ReadIcon(data);
+    ResultStatus result = ReadIcon(data, prefer_update_title);
     if (result != ResultStatus::Success) {
         return result;
     }

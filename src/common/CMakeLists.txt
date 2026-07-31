@@ -88,6 +88,8 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     string_util.cpp
     string_util.h
     swap.h
+    tar_file.cpp
+    tar_file.h
     texture.cpp
     texture.h
     thread.cpp
@@ -108,7 +110,7 @@ add_library(citra_common STATIC EXCLUDE_FROM_ALL
     x64/xbyak_util.h
     zstd_compression.cpp
     zstd_compression.h
-)
+  )
 
 target_include_directories(citra_common PUBLIC ${CMAKE_BINARY_DIR}/src)
 
@@ -156,7 +158,7 @@ endif()
 create_target_directory_groups(citra_common)
 
 target_link_libraries(citra_common PUBLIC fmt library-headers microprofile Boost::boost Boost::serialization Boost::iostreams)
-target_link_libraries(citra_common PRIVATE cryptopp zstd)
+target_link_libraries(citra_common PRIVATE cryptopp microtar zstd)
 
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(citra_common PRIVATE xbyak)

@@ -9,6 +9,7 @@
 #include "bad_word_list.app.romfs.h"
 #include "common/archives.h"
 #include "common/common_types.h"
+#include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
@@ -87,7 +88,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
     NCCHFilePath openfile_path;
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
 
-    std::string file_path;
+    std::unique_ptr<FileUtil::IOFileBase> file = std::make_unique<FileUtil::NullIOFile>();
 
     if (media_type == Service::FS::MediaType::GameCard) {
         const auto& cartridge = Core::System::GetInstance().GetCartridge();
@@ -102,23 +103,24 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
             card_program_id != title_id) {
             return ResultNotFound;
         }
-        file_path = cartridge;
+
+        file = std::make_unique<FileUtil::IOFile>(cartridge, "rb");
     } else {
         if (Settings::values.is_new_3ds) {
             // Try the New 3DS specific variant first.
-            file_path = Service::AM::GetTitleContentPath(media_type, title_id | 0x20000000,
-                                                         openfile_path.content_index);
+            file = Service::AM::GetTitleContent(media_type, title_id | 0x20000000,
+                                                openfile_path.content_index);
         }
-        if (!Settings::values.is_new_3ds || !FileUtil::Exists(file_path)) {
-            file_path =
-                Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
+        if (!Settings::values.is_new_3ds || !file->IsOpen()) {
+            file = Service::AM::GetTitleContent(media_type, title_id, openfile_path.content_index);
         }
     }
 
-    auto ncch_container = NCCHContainer(file_path, 0, openfile_path.content_index);
+    auto ncch_container = NCCHContainer(file.get(), openfile_path.content_index);
+    file.reset();
 
     Loader::ResultStatus result;
-    std::unique_ptr<FileBackend> file;
+    std::unique_ptr<FileBackend> file_backend;
 
     // NCCH RomFS
     if (openfile_path.filepath_type == NCCHFilePathType::RomFS) {
@@ -126,7 +128,8 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
 
         result = ncch_container.ReadRomFS(romfs_file);
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<RomFSDelayGenerator>();
-        file = std::make_unique<IVFCFile>(std::move(romfs_file), std::move(delay_generator));
+        file_backend =
+            std::make_unique<IVFCFile>(std::move(romfs_file), std::move(delay_generator));
     } else if (openfile_path.filepath_type == NCCHFilePathType::Code ||
                openfile_path.filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;
@@ -143,7 +146,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
             smdh->region_lockout = REGION_LOCKOUT_REGION_FREE;
         }
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
-        file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
+        file_backend = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {
         LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!", openfile_path.filepath_type);
         result = Loader::ResultStatus::Error;
@@ -213,7 +216,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path, 
         return ResultNotFound;
     }
 
-    return file;
+    return file_backend;
 }
 
 Result NCCHArchive::DeleteFile(const Path& path) const {
