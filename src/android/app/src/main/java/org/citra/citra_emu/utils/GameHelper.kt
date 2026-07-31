@@ -65,7 +65,7 @@ object GameHelper {
             if (it.isDirectory) {
                 addGamesRecursive(games, FileUtil.listFiles(it.uri), depth - 1)
             } else {
-                if (Game.allExtensions.contains(FileUtil.getExtension(it.uri))) {
+                if (Game.extensions.contains(FileUtil.getExtension(it.uri))) {
                     games.add(
                         getGame(
                             it.uri,

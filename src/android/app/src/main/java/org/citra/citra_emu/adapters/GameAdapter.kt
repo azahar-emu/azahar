@@ -221,20 +221,10 @@ class GameAdapter(
                     View.VISIBLE
                 }
 
-            val backgroundColorId =
-                if (
-                    isValidGame(
-                        game.filename.substring(game.filename.lastIndexOf(".") + 1).lowercase()
-                    )
-                ) {
-                    R.attr.colorSurface
-                } else {
-                    R.attr.colorErrorContainer
-                }
             binding.cardContents.setBackgroundColor(
                 MaterialColors.getColor(
                     binding.cardContents,
-                    backgroundColorId
+                    R.attr.colorSurface
                 )
             )
 
@@ -737,9 +727,6 @@ class GameAdapter(
             dialogShortcutBinding!!.shortcutIcon.setImageBitmap(scaledBitmap)
         }
     }
-
-    private fun isValidGame(extension: String): Boolean = Game.badExtensions.stream()
-        .noneMatch { extension == it.lowercase() }
 
     private class DiffCallback : DiffUtil.ItemCallback<Game>() {
         override fun areItemsTheSame(oldItem: Game, newItem: Game): Boolean {
