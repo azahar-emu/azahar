@@ -11,8 +11,10 @@
 #include "common/arch.h"
 #include "common/logging/log.h"
 #include "common/settings.h"
+#include "common/tar_file.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/exclusive_monitor.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_user.h"
@@ -419,6 +421,22 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
     if (restore_ipc_recorder) {
         kernel->RestoreIPCRecorder(std::move(restore_ipc_recorder));
+    }
+
+    if (auto am = Service::AM::GetModule(*this)) {
+        bool bundle_registered = false;
+        if (!GetCartridge().empty()) {
+            auto tar = FileUtil::TarArchive::OpenTarArchive(GetCartridge());
+            if (tar) {
+                tar.reset();
+                am->GetBundleCIAHandler()->RegisterBundle(GetCartridge());
+                bundle_registered = true;
+            }
+        }
+        if (!bundle_registered) {
+            app_loader->LoadBundle();
+        }
+        am->ScanForAllTitles();
     }
 
     std::shared_ptr<Kernel::Process> process;

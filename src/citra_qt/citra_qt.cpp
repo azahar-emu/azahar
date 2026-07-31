@@ -1377,9 +1377,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
         QString invalid_format_description =
             tr("The application file format not supported.<br>Please make sure you are using one "
                "of the compatible file formats:<ul><li>Cartridge images: "
-               "<b>.cci/.zcci/.3ds</b></li><li>Installable archives: "
-               "<b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
-               "containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>");
+               "<b>.cci/.zcci/.bcci/.3ds</b></li><li>Installable archives: "
+               "<b>.cia/.zcia/.bcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH "
+               "containers: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>ELF files: "
+               "<b>.elf/.axf</b></li></ul>");
 
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
@@ -1449,7 +1450,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
     }
 
     std::string title;
-    system.GetAppLoader().ReadTitle(title);
+    system.GetAppLoader().ReadTitle(title, true);
     game_title = QString::fromStdString(title);
     UpdateWindowTitle();
 
@@ -2145,7 +2146,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
     // Get title from game file
     const auto loader = Loader::GetLoader(game_path);
     std::string game_title = fmt::format("{:016X}", program_id);
-    if (loader->ReadTitle(game_title) != Loader::ResultStatus::Success) {
+    if (loader->ReadTitle(game_title, false) != Loader::ResultStatus::Success) {
         game_title = fmt::format("{:016x}", program_id);
     }
 
@@ -2159,7 +2160,7 @@ void GMainWindow::OnGameListCreateShortcut(u64 program_id, const std::string& ga
 
     // Get icon from game file
     std::vector<u8> icon_image_file;
-    if (loader->ReadIcon(icon_image_file) != Loader::ResultStatus::Success) {
+    if (loader->ReadIcon(icon_image_file, false) != Loader::ResultStatus::Success) {
         LOG_WARNING(Frontend, "Could not read icon from {:s}", game_path);
     }
 
@@ -2413,9 +2414,10 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 }
 
 void GMainWindow::OnMenuInstallCIA() {
-    QStringList filepaths = QFileDialog::getOpenFileNames(
-        this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File (*.cia *.zcia)") + QStringLiteral(";;") + tr("All Files (*.*)"));
+    QStringList filepaths =
+        QFileDialog::getOpenFileNames(this, tr("Load Files"), UISettings::values.roms_path,
+                                      tr("3DS Installation File (*.cia *.zcia *.bcia)") +
+                                          QStringLiteral(";;") + tr("All Files (*.*)"));
 
     if (filepaths.isEmpty()) {
         return;
@@ -3991,8 +3993,9 @@ static bool IsSingleFileDropEvent(const QMimeData* mime) {
     return mime->hasUrls() && mime->urls().length() == 1;
 }
 
-static const std::array<std::string, 11> AcceptedExtensions = {
-    "cci", "cxi", "bin", "3dsx", "app", "elf", "axf", "zcci", "zcxi", "z3dsx", "3ds"};
+static const std::array<std::string, 13> AcceptedExtensions = {
+    "cci",  "cxi",  "bin",   "3dsx", "app",  "elf", "axf",
+    "zcci", "zcxi", "z3dsx", "3ds",  "bcci", "bcxi"};
 
 static bool IsCorrectFileExtension(const QMimeData* mime) {
     const QString& filename = mime->urls().at(0).toLocalFile();

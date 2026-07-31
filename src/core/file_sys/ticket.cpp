@@ -65,23 +65,28 @@ Loader::ResultStatus Ticket::DoTitlekeyFixup() {
 Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t offset) {
     std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     serialized_size = total_size;
-    if (total_size < sizeof(u32))
-        return Loader::ResultStatus::Error;
+    if (total_size < sizeof(u32)) {
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
+    }
 
     std::memcpy(&signature_type, &file_data[offset], sizeof(u32));
 
     // Signature lengths are variable, and the body follows the signature
     u32 signature_size = GetSignatureSize(signature_type);
     if (signature_size == 0) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
     }
 
     // The ticket body start position is rounded to the nearest 0x40 after the signature
     std::size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
     std::size_t body_end = body_start + sizeof(Body);
 
-    if (total_size < body_end)
-        return Loader::ResultStatus::Error;
+    if (total_size < body_end) {
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
+    }
 
     // Read signature + ticket body
     ticket_signature.resize(signature_size);
@@ -89,8 +94,10 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
     std::memcpy(&ticket_body, &file_data[offset + body_start], sizeof(Body));
 
     std::size_t content_index_start = body_end;
-    if (total_size < content_index_start + (2 * sizeof(u32)))
-        return Loader::ResultStatus::Error;
+    if (total_size < content_index_start + (2 * sizeof(u32))) {
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
+    }
 
     // Read content index size from the second u32 into it. Actual format is undocumented.
     const size_t content_index_size =
@@ -98,21 +105,25 @@ Loader::ResultStatus Ticket::Load(std::span<const u8> file_data, std::size_t off
             &file_data[offset + content_index_start + 1 * sizeof(u32)])));
     const size_t content_index_end = content_index_start + content_index_size;
 
-    if (total_size < content_index_end)
-        return Loader::ResultStatus::Error;
+    if (total_size < content_index_end) {
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
+    }
     std::vector<u8> content_index_vec;
     content_index_vec.resize(content_index_size);
     std::memcpy(content_index_vec.data(), &file_data[offset + content_index_start],
                 content_index_size);
     content_index.Load(this, content_index_vec);
 
-    return Loader::ResultStatus::Success;
+    load_result = Loader::ResultStatus::Success;
+    return load_result;
 }
 
 Loader::ResultStatus Ticket::Load(u64 title_id, u64 ticket_id) {
     FileUtil::IOFile f(Service::AM::GetTicketPath(title_id, ticket_id), "rb");
     if (!f.IsOpen()) {
-        return Loader::ResultStatus::Error;
+        load_result = Loader::ResultStatus::Error;
+        return load_result;
     }
 
     std::vector<u8> ticket_data(f.GetSize());
@@ -185,8 +196,8 @@ bool Ticket::IsPersonal() const {
     return ticket_body.console_id == otp.GetDeviceID();
 }
 
-void Ticket::ContentIndex::Initialize() {
-    if (!parent || initialized) {
+void Ticket::ContentIndex::Initialize(Ticket* parent) {
+    if (initialized) {
         return;
     }
 
@@ -231,9 +242,9 @@ void Ticket::ContentIndex::Initialize() {
     initialized = true;
 }
 
-bool Ticket::ContentIndex::HasRights(u16 content_index) {
+bool Ticket::ContentIndex::HasRights(Ticket* parent, u16 content_index) {
     if (!initialized) {
-        Initialize();
+        Initialize(parent);
         if (!initialized)
             return false;
     }

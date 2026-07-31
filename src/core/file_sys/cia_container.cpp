@@ -4,6 +4,7 @@
 
 #include <cryptopp/sha.h>
 #include "common/alignment.h"
+#include "common/file_derived.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/file_sys/cia_container.h"
@@ -128,6 +129,11 @@ Loader::ResultStatus CIAContainer::Load(FileUtil::IOFileBase* file) {
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus CIAContainer::Load(std::unique_ptr<FileUtil::IOFileBase>&& file) {
+    cia_io_file = std::move(file);
+    return Load(cia_io_file.get());
+}
+
 Loader::ResultStatus CIAContainer::Load(std::span<const u8> file_data) {
     Loader::ResultStatus result = LoadHeader(file_data);
     if (result != Loader::ResultStatus::Success)
@@ -215,6 +221,10 @@ Ticket& CIAContainer::GetTicket() {
     return cia_ticket;
 }
 
+const Ticket& CIAContainer::GetTicket() const {
+    return cia_ticket;
+}
+
 const TitleMetadata& CIAContainer::GetTitleMetadata() const {
     return cia_tmd;
 }
@@ -288,6 +298,24 @@ u64 CIAContainer::GetContentSize(std::size_t index) const {
     }
 
     return cia_tmd.GetContentSizeByIndex(index);
+}
+
+std::unique_ptr<FileUtil::IOFileBase> CIAContainer::GetContentFile(std::size_t index) const {
+    if (!cia_io_file) {
+        LOG_ERROR(Service_FS, "missing cia_io_file");
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
+    if (cia_tmd.HasEncryptedContent(&cia_header)) {
+        LOG_ERROR(Service_FS, "not supported for encrypted CIA files");
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
+    u64 size = GetContentSize(index);
+    u64 offset = GetContentOffset(index);
+    if (!size) {
+        LOG_ERROR(Service_FS, "index {} not found", index);
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
+    return std::make_unique<FileUtil::SubIOFile>(cia_io_file->OpenCopy(), offset, size);
 }
 
 void CIAContainer::Print() const {

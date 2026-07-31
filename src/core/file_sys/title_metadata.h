@@ -111,12 +111,16 @@ public:
     void AddContentChunk(const ContentChunk& chunk);
 
     void Print() const;
+    Loader::ResultStatus LoadResult() {
+        return load_result;
+    }
 
 private:
     Body tmd_body;
     u32_be signature_type;
     std::vector<u8> tmd_signature;
     std::vector<ContentChunk> tmd_chunks;
+    Loader::ResultStatus load_result;
 };
 
 } // namespace FileSys
