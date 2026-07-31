@@ -60,7 +60,7 @@ FileType GuessFromExtension(const std::string& extension);
 /**
  * Convert a FileType into a string which can be displayed to the user.
  */
-const char* GetFileTypeString(FileType type, bool is_compressed = false);
+const char* GetFileTypeString(FileType type, bool is_compressed = false, bool is_bundle = false);
 
 /// Return type for functions in Loader namespace
 enum class ResultStatus {
@@ -187,9 +187,11 @@ public:
     /**
      * Get the icon (typically icon section) of the application
      * @param buffer Reference to buffer to store data
+     * @param prefer_update_icon Prefer reading the update data icon if available
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadIcon([[maybe_unused]] std::vector<u8>& buffer) {
+    virtual ResultStatus ReadIcon([[maybe_unused]] std::vector<u8>& buffer,
+                                  [[maybe_unused]] bool prefer_update_icon) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -272,9 +274,11 @@ public:
     /**
      * Get the title of the application
      * @param title Reference to store the application title into
+     * @param prefer_update_title Prefer reading the update data title if available
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title) {
+    virtual ResultStatus ReadTitle([[maybe_unused]] std::string& title,
+                                   [[maybe_unused]] bool prefer_update_title) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -300,9 +304,15 @@ public:
         return false;
     }
 
+    virtual bool IsFileBundle() {
+        return false;
+    }
+
     virtual std::string GetFilePath() {
         return file ? file->Filename() : "";
     }
+
+    virtual void LoadBundle() {}
 
 protected:
     Core::System& system;

@@ -37,6 +37,8 @@ using namespace Common::Literals;
 static constexpr u64 UPDATE_TID_HIGH = 0x0004000e00000000;
 static constexpr u64 DLP_CHILD_TID_HIGH = 0x0004000100000000;
 
+AppLoader_NCCH::~AppLoader_NCCH() {}
+
 FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFileBase* in_file) {
     u32 magic{};
 
@@ -111,7 +113,7 @@ bool AppLoader_NCCH::IsN3DSExclusive() {
     }
 
     std::vector<u8> smdh_buffer;
-    if (ReadIcon(smdh_buffer) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
+    if (ReadIcon(smdh_buffer, false) == ResultStatus::Success && IsValidSMDH(smdh_buffer)) {
         SMDH* smdh = reinterpret_cast<SMDH*>(smdh_buffer.data());
         return smdh->flags.n3ds_exclusive != 0;
     }
@@ -255,7 +257,8 @@ void AppLoader_NCCH::ParseRegionLockoutInfo(u64 program_id) {
     preferred_regions.clear();
 
     std::vector<u8> smdh_buffer;
-    if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
+    if (ReadIcon(smdh_buffer, false) == ResultStatus::Success &&
+        smdh_buffer.size() >= sizeof(SMDH)) {
         SMDH smdh;
         std::memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
         u32 region_lockout = smdh.region_lockout;
@@ -284,6 +287,46 @@ bool AppLoader_NCCH::IsGbaVirtualConsole(std::span<const u8> code) {
     return gbaVcHeader[0] == FileUtil::MakeMagic('.', 'C', 'A', 'A') && gbaVcHeader[1] == 1;
 }
 
+ResultStatus AppLoader_NCCH::OpenUpdateNCCH() {
+    u64 program_id;
+    ReadProgramId(program_id);
+
+    bool is_dlp_child = (program_id & 0xFFFFFFFF00000000) == DLP_CHILD_TID_HIGH;
+    if (is_dlp_child) {
+        return ResultStatus::ErrorNotFound;
+    }
+
+    u64 update_tid = (program_id & 0xFFFFFFFFULL) | UPDATE_TID_HIGH;
+
+    Loader::ResultStatus result = Loader::ResultStatus::Success;
+
+    if (!update_ncch.IsLoaded()) {
+        auto open_update = [&](std::unique_ptr<FileUtil::IOFileBase>&& file) {
+            update_ncch = FileSys::NCCHContainer(file.get());
+            file.reset();
+            return update_ncch.Load();
+        };
+
+        result =
+            open_update(Service::AM::GetTitleContent(Service::FS::MediaType::SDMC, update_tid, 0));
+        if (result != ResultStatus::Success) {
+            // Try bundle, if this is the main loader AM may not be registered yet.
+            if (base_ncch.IsFileBundle()) {
+                if (!bundle_cia_handler) {
+                    bundle_cia_handler = std::make_unique<Service::AM::BundleCIAHandler>();
+                    bundle_cia_handler->RegisterBundle(base_ncch.GetFile()->Filename());
+                }
+                if (bundle_cia_handler->HasTitle(update_tid, Service::FS::MediaType::SDMC, 0)) {
+                    result = open_update(bundle_cia_handler->OpenContentFile(
+                        update_tid, Service::FS::MediaType::SDMC, 0));
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
     u64_le ncch_program_id;
 
@@ -299,21 +342,13 @@ ResultStatus AppLoader_NCCH::Load(std::shared_ptr<Kernel::Process>& process) {
 
     LOG_INFO(Loader, "Program ID: {}", program_id);
 
-    bool is_dlp_child = (ncch_program_id & 0xFFFFFFFF00000000) == DLP_CHILD_TID_HIGH;
-
-    if (!is_dlp_child) {
-        u64 update_tid = (ncch_program_id & 0xFFFFFFFFULL) | UPDATE_TID_HIGH;
-        update_ncch.OpenFile(
-            Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, update_tid));
-        result = update_ncch.Load();
-        if (result == ResultStatus::Success) {
-            overlay_ncch = &update_ncch;
-        }
+    if (OpenUpdateNCCH() == ResultStatus::Success) {
+        overlay_ncch = &update_ncch;
     }
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         Network::GameInfo game_info;
-        ReadTitle(game_info.name);
+        ReadTitle(game_info.name, false);
         game_info.id = ncch_program_id;
         room_member->SendGameInfo(game_info);
     }
@@ -344,8 +379,18 @@ ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) {
     return overlay_ncch->LoadSectionExeFS(".code", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer) {
-    return overlay_ncch->LoadSectionExeFS("icon", buffer);
+ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer, bool prefer_update_icon) {
+    if (prefer_update_icon) {
+        ResultStatus result = OpenUpdateNCCH();
+        if (result == Loader::ResultStatus::Success) {
+            result = update_ncch.LoadSectionExeFS("icon", buffer);
+            if (result == Loader::ResultStatus::Success) {
+                return result;
+            }
+        }
+    }
+
+    return base_ncch.LoadSectionExeFS("icon", buffer);
 }
 
 ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) {
@@ -390,18 +435,14 @@ ResultStatus AppLoader_NCCH::DumpRomFS(const std::string& target_path) {
 }
 
 ResultStatus AppLoader_NCCH::DumpUpdateRomFS(const std::string& target_path) {
-    u64 program_id;
-    ReadProgramId(program_id);
-    u64 update_tid = (program_id & 0xFFFFFFFFULL) | UPDATE_TID_HIGH;
-    update_ncch.OpenFile(
-        Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, update_tid));
-    return update_ncch.DumpRomFS(target_path);
+    Loader::ResultStatus result = OpenUpdateNCCH();
+    return result == ResultStatus::Success ? update_ncch.DumpRomFS(target_path) : result;
 }
 
-ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
+ResultStatus AppLoader_NCCH::ReadTitle(std::string& title, bool prefer_update_title) {
     std::vector<u8> data;
     Loader::SMDH smdh;
-    ReadIcon(data);
+    ReadIcon(data, prefer_update_title);
 
     if (!Loader::IsValidSMDH(data)) {
         return ResultStatus::ErrorInvalidFormat;
@@ -451,6 +492,21 @@ bool AppLoader_NCCH::IsFileCompressed() {
         return false;
     }
     return base_ncch.IsFileCompressed();
+}
+
+bool AppLoader_NCCH::IsFileBundle() {
+    if (base_ncch.LoadHeader() != ResultStatus::Success) {
+        return false;
+    }
+    return base_ncch.IsFileBundle();
+}
+
+void AppLoader_NCCH::LoadBundle() {
+    if (base_ncch.IsFileBundle()) {
+        if (auto am = Service::AM::GetModule(system)) {
+            am->GetBundleCIAHandler()->RegisterBundle(base_ncch.GetFile()->Filename());
+        }
+    }
 }
 
 } // namespace Loader

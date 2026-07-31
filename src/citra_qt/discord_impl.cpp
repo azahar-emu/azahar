@@ -43,7 +43,7 @@ void DiscordImpl::Update(bool is_powered_on) {
 
     std::string title;
     if (is_powered_on) {
-        system.GetAppLoader().ReadTitle(title);
+        system.GetAppLoader().ReadTitle(title, true);
         title = truncate("Playing: " + title);
     }
 

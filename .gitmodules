@@ -106,3 +106,6 @@
 [submodule "externals/cryptopp"]
 	path = externals/cryptopp
 	url = https://github.com/cryptopp-modern/cryptopp-modern.git
+[submodule "microtar"]
+	path = externals/microtar
+	url = https://github.com/azahar-emu/microtar
