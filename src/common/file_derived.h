@@ -52,7 +52,7 @@ public:
     }
     void Clear() override {}
     const std::string& Filename() const override {
-        return "";
+        return empty;
     }
     bool Seek(s64 off, int origin) override {
         return false;
@@ -76,6 +76,7 @@ protected:
     }
 
 private:
+    static inline std::string empty{};
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar& boost::serialization::base_object<IOFileBase>(*this);

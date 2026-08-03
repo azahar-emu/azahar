@@ -96,14 +96,8 @@ class Game(
     }
 
     companion object {
-        val allExtensions: Set<String> get() = extensions + badExtensions
-
         val extensions: Set<String> = HashSet(
             listOf("3dsx", "app", "axf", "cci", "cxi", "elf", "z3dsx", "zcci", "zcxi", "3ds")
-        )
-
-        val badExtensions: Set<String> = HashSet(
-            listOf("rar", "zip", "7z", "torrent", "tar", "gz")
         )
     }
 }
