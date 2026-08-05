@@ -278,7 +278,10 @@ Frame* PresentWindow::GetRenderFrame() {
 void PresentWindow::Present(Frame* frame) {
     if (!use_present_thread) {
         scheduler.WaitWorker();
-        CopyToSwapchain(frame);
+        {
+            std::scoped_lock lock{swapchain_mutex};
+            CopyToSwapchain(frame);
+        }
         free_queue.push(frame);
         return;
     }
@@ -342,7 +345,32 @@ void PresentWindow::NotifySurfaceChanged() {
     std::scoped_lock lock{recreate_surface_mutex};
     next_surface = CreateSurface(instance.GetInstance(), emu_window);
     recreate_surface_cv.notify_one();
+#else
+    std::scoped_lock lock{swapchain_mutex};
+    if (surface_ok) {
+        return;
+    }
+    surface = CreateSurface(instance.GetInstance(), emu_window);
+    next_surface = surface;
+    surface_ok = true;
+    swapchain_dirty = true;
 #endif
+}
+
+void PresentWindow::NotifySurfaceAboutToBeDestroyed() {
+    std::scoped_lock lock{swapchain_mutex};
+    if (!surface_ok) {
+        return;
+    }
+    {
+        std::scoped_lock submit_lock{scheduler.submit_mutex};
+        instance.GetDevice().waitIdle();
+    }
+    swapchain.OnSurfaceLost();
+    instance.GetInstance().destroySurfaceKHR(surface);
+    surface = VK_NULL_HANDLE;
+    next_surface = VK_NULL_HANDLE;
+    surface_ok = false;
 }
 
 void PresentWindow::CopyToSwapchain(Frame* frame) {
@@ -360,6 +388,14 @@ void PresentWindow::CopyToSwapchain(Frame* frame) {
     };
 
 #ifndef ANDROID
+    if (!surface_ok) {
+        return;
+    }
+    if (swapchain_dirty) [[unlikely]] {
+        vsync_enabled = Settings::values.use_vsync.GetValue();
+        recreate_swapchain();
+        swapchain_dirty = false;
+    }
     const bool use_vsync = Settings::values.use_vsync.GetValue();
     const bool size_changed =
         swapchain.GetWidth() != frame->width || swapchain.GetHeight() != frame->height;
