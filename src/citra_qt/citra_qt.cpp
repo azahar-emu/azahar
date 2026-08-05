@@ -3555,7 +3555,7 @@ void GMainWindow::OnRetroAchievements() {
             &RetroAchievements::Dialog::OnLoginFailed);
 
     auto update_user = [this, &dialog](const rc_client_user_t* user) {
-        Settings::values.retro_achievements_username.SetValue(user->display_name);
+        Settings::values.retro_achievements_username.SetValue(user->username);
         Settings::values.retro_achievements_token.SetValue(user->token);
 
         system.RetroAchievementsClient().FetchImage(
