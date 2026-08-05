@@ -319,7 +319,8 @@ private:
 #ifdef ENABLE_VULKAN
 class VulkanRenderWidget : public RenderWidget {
 public:
-    explicit VulkanRenderWidget(GRenderWindow* parent) : RenderWidget(parent) {
+    explicit VulkanRenderWidget(GRenderWindow* parent)
+        : RenderWidget(parent), render_window(parent) {
         setAttribute(Qt::WA_NativeWindow);
         setAttribute(Qt::WA_PaintOnScreen);
         if (GetWindowSystemType() == Frontend::WindowSystemType::Wayland) {
@@ -332,9 +333,26 @@ public:
 #endif
     }
 
+    bool event(QEvent* ev) override {
+        // The renderer presents from another thread, so it must release the native surface
+        // before the surface is destroyed.
+        if (ev->type() == QEvent::PlatformSurface) {
+            const auto type = static_cast<QPlatformSurfaceEvent*>(ev)->surfaceEventType();
+            if (type == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+                render_window->OnNativeSurfaceAboutToBeDestroyed();
+            } else if (type == QPlatformSurfaceEvent::SurfaceCreated) {
+                render_window->OnNativeSurfaceCreated();
+            }
+        }
+        return RenderWidget::event(ev);
+    }
+
     QPaintEngine* paintEngine() const override {
         return nullptr;
     }
+
+private:
+    GRenderWindow* render_window;
 };
 #endif
 
@@ -701,6 +719,21 @@ bool GRenderWindow::InitRenderTarget() {
     BackupGeometry();
 
     return true;
+}
+
+void GRenderWindow::OnNativeSurfaceAboutToBeDestroyed() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+    system.GPU().Renderer().NotifySurfaceAboutToBeDestroyed(is_secondary);
+}
+
+void GRenderWindow::OnNativeSurfaceCreated() {
+    if (!child_widget || !child_widget->windowHandle() || !system.IsPoweredOn()) {
+        return;
+    }
+    window_info = GetWindowSystemInfo(child_widget->windowHandle());
+    system.GPU().Renderer().NotifySurfaceChanged(is_secondary);
 }
 
 void GRenderWindow::ReleaseRenderTarget() {

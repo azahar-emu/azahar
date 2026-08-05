@@ -124,6 +124,10 @@ public:
     GRenderWindow(QWidget* parent, EmuThread* emu_thread, Core::System& system, bool is_secondary);
     ~GRenderWindow() override;
 
+    /// Native surface lifecycle notifications routed from the render widget.
+    void OnNativeSurfaceAboutToBeDestroyed();
+    void OnNativeSurfaceCreated();
+
     // EmuWindow implementation.
     void MakeCurrent() override;
     void DoneCurrent() override;

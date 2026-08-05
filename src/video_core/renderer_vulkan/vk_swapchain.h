@@ -23,6 +23,9 @@ public:
     /// Creates (or recreates) the swapchain with a given size.
     void Create(u32 width, u32 height, vk::SurfaceKHR surface, bool low_refresh_rate);
 
+    /// Destroys the swapchain and forgets the surface when the native window is going away.
+    void OnSurfaceLost();
+
     /// Acquires the next image in the swapchain.
     bool AcquireNextImage();
 
