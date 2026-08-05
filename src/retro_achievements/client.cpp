@@ -77,7 +77,15 @@ static void call_server(const rc_api_request_t* request, rc_client_server_callba
                                                     .http_status_code = result->status};
         callback(&server_response, callback_data);
     } else {
-        LOG_ERROR(RetroAchievements, "httplib error: {}", result.error());
+        const std::string error_message = httplib::to_string(result.error());
+        LOG_ERROR(RetroAchievements, "httplib error: {}", error_message);
+
+        rc_api_server_response_t server_response = {
+            .body = error_message.c_str(),
+            .body_length = error_message.length(),
+            .http_status_code = RC_API_SERVER_RESPONSE_CLIENT_ERROR,
+        };
+        callback(&server_response, callback_data);
     }
 }
 
