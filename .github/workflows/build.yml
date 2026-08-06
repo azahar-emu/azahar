@@ -284,7 +284,7 @@ jobs:
       - name: Generate installer (MXE)
         if: ${{ github.ref_type == 'tag' && matrix.target == 'mxe' }}
         run: |
-          export PATH="/mxe/usr/bin:${PATH}" # TODO: Why do we have to do this if it's in the image?
+          export PATH="/opt/mxe/usr/bin:${PATH}" # TODO: Why do we have to do this if it's in the image?
           cd src/installer
           x86_64-w64-mingw32.shared-makensis -DPRODUCT_VARIANT=${{ matrix.target }} -DPRODUCT_VERSION=${{ github.ref_name }} citra.nsi
           mkdir -p ../../artifacts
