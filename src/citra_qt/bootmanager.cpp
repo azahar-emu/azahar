@@ -676,6 +676,9 @@ bool GRenderWindow::InitRenderTarget() {
         const RenderWidget dummy_widget{this};
     }
 
+    // Create the top-level native window before the render child creates its own.
+    window()->winId();
+
     first_frame = false;
 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
