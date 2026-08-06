@@ -15,7 +15,7 @@ void QtClientObserver::OnLoginSucceeded(const rc_client_user_t* user) {
 }
 
 void QtClientObserver::OnLoginFailed(int result, const char* error_message) {
-    emit LoginFailed(error_message);
+    emit LoginFailed(QString::fromUtf8(error_message));
 }
 
 void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
@@ -23,7 +23,7 @@ void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
 }
 
 void QtClientObserver::OnLoadGameFailed(int result, const char* error_message) {
-    emit LoadGameFailed(error_message);
+    emit LoadGameFailed(QString::fromUtf8(error_message));
 }
 
 void QtClientObserver::OnEvent(const rc_client_event_t* event) {

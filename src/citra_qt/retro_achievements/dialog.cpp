@@ -38,7 +38,7 @@ void Dialog::OnAuthenticationButtonPressed() {
         QString password = ui->password_input->text();
 
         if (username.isEmpty() || password.isEmpty()) {
-            m_error_message = "Fields cannot be empty.";
+            m_error_message = QStringLiteral("Fields cannot be empty.");
         } else {
             emit LogInAttempted(username, password);
             return;
@@ -69,12 +69,12 @@ void Dialog::OnLoginSucceeded(const rc_client_user_t* user) {
               user->display_name, user->avatar_url);
 
     m_user = user;
-    m_error_message = nullptr;
+    m_error_message.clear();
 
     UpdateUI();
 }
 
-void Dialog::OnLoginFailed(const char* error_message) {
+void Dialog::OnLoginFailed(const QString& error_message) {
     LOG_DEBUG(Frontend, "Dialog::OnLoginFailed");
 
     m_error_message = error_message;
@@ -101,9 +101,9 @@ void Dialog::UpdateUI() {
         // The avatar image is set in `OnAvatarImageDownloaded`.
     }
 
-    ui->authentication_error_label->setVisible(m_error_message != nullptr);
-    if (m_error_message) {
-        ui->authentication_error_label->setText(QString::fromUtf8(m_error_message));
+    ui->authentication_error_label->setVisible(!m_error_message.isEmpty());
+    if (!m_error_message.isEmpty()) {
+        ui->authentication_error_label->setText(m_error_message);
     }
 
     ui->authentication_button->setEnabled(is_enabled);

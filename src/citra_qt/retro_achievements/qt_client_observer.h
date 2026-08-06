@@ -5,6 +5,7 @@
 #pragma once
 
 #include <QObject>
+#include <QString>
 
 #include "retro_achievements/client_observer.h"
 
@@ -23,10 +24,10 @@ public:
 
 signals:
     void LoginSucceeded(const rc_client_user_t* user);
-    void LoginFailed(const char* error_message);
+    void LoginFailed(const QString& error_message);
 
     void LoadGameSucceeded(const rc_client_game_t* game);
-    void LoadGameFailed(const char* error_message);
+    void LoadGameFailed(const QString& error_message);
 
     void EventNotification(const QString& title, const QString& body, const QString& image_url);
 };
