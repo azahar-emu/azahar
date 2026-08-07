@@ -244,7 +244,8 @@ class GamesFragment : Fragment() {
         return (
             version.contains("alpha") ||
                 version.contains("beta") ||
-                version.contains("rc")
+                version.contains("rc") ||
+                version.contains("test")
             )
     }
 

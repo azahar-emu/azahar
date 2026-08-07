@@ -234,7 +234,8 @@ void GMainWindow::ShowCommandOutput(std::string title, std::string message) {
 bool IsPrereleaseBuild() {
     return ((strstr(Common::g_build_fullname, "alpha") != NULL) ||
             (strstr(Common::g_build_fullname, "beta") != NULL) ||
-            (strstr(Common::g_build_fullname, "rc") != NULL));
+            (strstr(Common::g_build_fullname, "rc") != NULL) ||
+            (strstr(Common::g_build_fullname, "test") != NULL));
 }
 
 #ifdef ENABLE_QT_UPDATE_CHECKER
