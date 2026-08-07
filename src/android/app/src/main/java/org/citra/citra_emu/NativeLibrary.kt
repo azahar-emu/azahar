@@ -783,9 +783,9 @@ object NativeLibrary {
 
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
-        val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
 
         if (pathSegment.startsWith("primary:")) { // Path is located in primary storage
+            val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
             android.util.Log.v(
                 "NativeLibrary",
                 "Successfully resolved URI of type PRIMARY: $uri)"
@@ -813,11 +813,14 @@ object NativeLibrary {
                 )
                 return ""
             }
+            val downloadsPath = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            ).absolutePath
             android.util.Log.v(
                 "NativeLibrary",
                 "Successfully resolved URI of type DOWNLOAD with fileName '$fileName': $uri)"
             )
-            return primaryStoragePath + dirSep + "Download" + dirSep + fileName
+            return downloadsPath + dirSep + fileName
         } else { // Path is probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
             val removablePath = RemovableStorageHelper.getRemovableStoragePath(
