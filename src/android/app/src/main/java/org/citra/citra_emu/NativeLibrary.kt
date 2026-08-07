@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.OpenableColumns
 import android.text.Html
 import android.text.method.LinkMovementMethod
 import android.view.Surface
@@ -768,6 +769,7 @@ object NativeLibrary {
     fun getNativePath(uri: Uri): String {
         BuildUtil.assertNotGooglePlay()
 
+        val context = CitraApplication.appContext
         val dirSep = "/"
 
         val uriString = uri.toString()
@@ -781,11 +783,42 @@ object NativeLibrary {
 
         val pathSegment = uri.lastPathSegment ?: return ""
         val virtualPath = pathSegment.substringAfter(":")
+        val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
 
-        if (pathSegment.startsWith("primary:")) { // User directory is located in primary storage
-            val primaryStoragePath = Environment.getExternalStorageDirectory().absolutePath
+        if (pathSegment.startsWith("primary:")) { // Path is located in primary storage
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type PRIMARY: $uri)"
+            )
             return primaryStoragePath + dirSep + virtualPath
-        } else { // User directory probably located on a removable storage device
+        } else if (uriString // Path is likely located in the /Download folder
+                .startsWith("content://com.android.providers.downloads.documents/document/msf")
+        ) {
+            var fileName: String? = null
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    fileName = cursor.getString(0)
+                }
+            }
+            if (fileName == null) {
+                android.util.Log.e(
+                    "NativeLibrary",
+                    "Unable to resolve URI to real file (URI: $uri)"
+                )
+                return ""
+            }
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type DOWNLOAD with fileName '$fileName': $uri)"
+            )
+            return primaryStoragePath + dirSep + "Download" + dirSep + fileName
+        } else { // Path is probably located on a removable storage device
             val storageIdString = pathSegment.substringBefore(":")
             val removablePath = RemovableStorageHelper.getRemovableStoragePath(
                 CitraApplication.appContext,
@@ -799,6 +832,10 @@ object NativeLibrary {
                 )
                 return ""
             }
+            android.util.Log.v(
+                "NativeLibrary",
+                "Successfully resolved URI of type EXTERNAL: $uri)"
+            )
             return removablePath + dirSep + virtualPath
         }
     }
