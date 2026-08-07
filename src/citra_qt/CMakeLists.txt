@@ -356,6 +356,21 @@ if (ENABLE_DISCORD_RPC)
     target_compile_definitions(citra_qt PRIVATE -DENABLE_DISCORD_RPC)
 endif()
 
+if (ENABLE_RETRO_ACHIEVEMENTS)
+    target_sources(citra_qt PRIVATE
+        retro_achievements/dialog.cpp
+        retro_achievements/dialog.h
+        retro_achievements/dialog.ui
+        retro_achievements/notification.cpp
+        retro_achievements/notification.h
+        retro_achievements/notification.ui
+        retro_achievements/qt_client_observer.cpp
+        retro_achievements/qt_client_observer.h
+    )
+    target_link_libraries(citra_qt PUBLIC retro_achievements)
+    target_compile_definitions(citra_qt PUBLIC ENABLE_RETRO_ACHIEVEMENTS)
+endif()
+
 if (ENABLE_WEB_SERVICE)
     target_link_libraries(citra_qt PRIVATE web_service)
 endif()

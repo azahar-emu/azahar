@@ -180,4 +180,8 @@ if (SSE42_COMPILE_OPTION)
     target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
 endif()
 
+if (ENABLE_RETRO_ACHIEVEMENTS)
+    target_compile_definitions(citra_common PUBLIC ENABLE_RETRO_ACHIEVEMENTS)
+endif()
+
 target_link_libraries(citra_common PUBLIC xxHash::xxhash)
