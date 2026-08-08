@@ -12,3 +12,4 @@ Exec=azahar %f
 Categories=Game;Emulator;
 MimeType=application/x-ctr-3dsx;application/x-ctr-cci;application/x-ctr-cia;application/x-ctr-cxi;
 Keywords=3DS;Nintendo;
+StartupWMClass=org.azahar_emu.Azahar
