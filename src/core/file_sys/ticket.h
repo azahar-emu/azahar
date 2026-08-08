@@ -76,7 +76,11 @@ public:
     bool IsPersonal() const;
 
     bool HasRights(u16 index) {
-        return content_index.HasRights(index);
+        return content_index.HasRights(this, index);
+    }
+
+    Loader::ResultStatus LoadResult() {
+        return load_result;
     }
 
     class ContentIndex {
@@ -109,7 +113,6 @@ public:
         ContentIndex() {}
 
         void Load(Ticket* p, const std::vector<u8>& data) {
-            parent = p;
             content_index = data;
         }
 
@@ -117,15 +120,14 @@ public:
             return content_index;
         }
 
-        bool HasRights(u16 content_index);
+        bool HasRights(Ticket* parent, u16 content_index);
 
     private:
-        void Initialize();
+        void Initialize(Ticket* parent);
 
         bool initialized = false;
         std::vector<u8> content_index;
         std::vector<RightsField> rights;
-        Ticket* parent = nullptr;
     };
 
 private:
@@ -133,6 +135,7 @@ private:
     u32_be signature_type;
     std::vector<u8> ticket_signature;
     ContentIndex content_index;
+    Loader::ResultStatus load_result;
 
     size_t serialized_size = 0;
 };

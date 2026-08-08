@@ -457,7 +457,7 @@
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error loading application</string>
     <string name="loader_error_invalid_format">Invalid application format</string>
-    <string name="loader_error_invalid_format_description"><![CDATA[The application file format not supported.<br>Please make sure you are using one of the compatible file formats:<ul><li>Cartridge images: <b>.cci/.zcci/.3ds</b></li><li>Installable archives: <b>.cia/.zcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH containers: <b>.cxi/.zcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_format_description"><![CDATA[The application file format not supported.<br>Please make sure you are using one of the compatible file formats:<ul><li>Cartridge images: <b>.cci/.zcci/.bcci/.3ds</b></li><li>Installable archives: <b>.cia/.zcia/.bcia</b></li><li>Homebrew titles: <b>.3dsx/.z3dsx</b></li><li>NCCH containers: <b>.cxi/.zcxi/.bcxi/.app</b></li><li>ELF files: <b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Invalid system mode</string>
     <string name="loader_error_invalid_system_mode_description">New 3DS exclusive applications cannot be loaded without enabling the New 3DS mode.</string>
     <string name="loader_error_applying_patches">Error applying patches</string>
