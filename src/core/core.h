@@ -457,7 +457,7 @@ private:
     std::unique_ptr<AudioCore::DspInterface> dsp_core;
 
     /// When true, signals that a reschedule should happen
-    bool reschedule_pending{};
+    bool curr_core_reschedule_pending{};
 
     std::unique_ptr<VideoCore::GPU> gpu;
 
