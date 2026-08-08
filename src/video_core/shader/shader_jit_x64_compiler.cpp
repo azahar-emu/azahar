@@ -5,6 +5,7 @@
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
 
+#include <bit>
 #include <nihstro/shader_bytecode.h>
 #include <smmintrin.h>
 #include <xbyak/xbyak_util.h>
@@ -319,15 +320,37 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         break;
     }
 
+    constexpr int OutputBankShift = std::countr_zero(ShaderUnit::OutputBankSize);
+
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
-        // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], src);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            lea(rax, ptr[STATE + dest_offset_disp]);
 
+            movzx(ecx, byte[STATE + ShaderUnit::OutputBankOffset()]);
+            shl(rcx, OutputBankShift);
+            add(rax, rcx);
+
+            movaps(xword[rax], src);
+        } else {
+            // Store dest back to memory
+            movaps(xword[STATE + dest_offset_disp], src);
+        }
     } else {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
-        movaps(SCRATCH, xword[STATE + dest_offset_disp]);
+
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            lea(rax, ptr[STATE + dest_offset_disp]);
+
+            movzx(ecx, byte[STATE + ShaderUnit::OutputBankOffset()]);
+            shl(rcx, OutputBankShift);
+            add(rax, rcx);
+
+            movaps(SCRATCH, xword[rax]);
+        } else {
+            movaps(SCRATCH, xword[STATE + dest_offset_disp]);
+        }
 
         if (host_caps.has(Cpu::tSSE41)) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
@@ -348,7 +371,12 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         }
 
         // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], SCRATCH);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            movaps(xword[rax], SCRATCH);
+        } else {
+            // Store dest back to memory
+            movaps(xword[STATE + dest_offset_disp], SCRATCH);
+        }
     }
 }
 
@@ -868,8 +896,9 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GeometryEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
-    emitter->Emit(*output);
+static void Emit(GeometryEmitter* emitter, ShaderUnit* unit) {
+    emitter->Emit(unit->output[unit->output_bank]);
+    unit->output_bank = !unit->output_bank;
 }
 
 void JitShader::Compile_EMIT(Instruction instr) {
@@ -888,7 +917,6 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     mov(ABI_PARAM1, rax);
     mov(ABI_PARAM2, STATE);
-    add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(ShaderUnit, output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     L(end);

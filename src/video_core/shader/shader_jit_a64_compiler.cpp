@@ -6,6 +6,7 @@
 #if CITRA_ARCH(arm64)
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -328,15 +329,37 @@ void JitShader::Compile_DestEnable(Instruction instr, QReg src) {
         break;
     }
 
+    constexpr int OutputBankShift = std::countr_zero(ShaderUnit::OutputBankSize);
+
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
         // Store dest back to memory
-        STR(src, STATE, dest_offset_disp);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            ADD(XSCRATCH0, STATE, dest_offset_disp);
+
+            LDRB(XSCRATCH1.toW(), STATE, ShaderUnit::OutputBankOffset());
+            LSL(XSCRATCH1, XSCRATCH1, OutputBankShift);
+            ADD(XSCRATCH0, XSCRATCH0, XSCRATCH1);
+
+            STR(src, XSCRATCH0);
+        } else {
+            STR(src, STATE, dest_offset_disp);
+        }
 
     } else {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
-        LDR(VSCRATCH0, STATE, dest_offset_disp);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            ADD(XSCRATCH0, STATE, dest_offset_disp);
+
+            LDRB(XSCRATCH1.toW(), STATE, ShaderUnit::OutputBankOffset());
+            LSL(XSCRATCH1, XSCRATCH1, OutputBankShift);
+            ADD(XSCRATCH0, XSCRATCH0, XSCRATCH1);
+
+            LDR(VSCRATCH0, XSCRATCH0);
+        } else {
+            LDR(VSCRATCH0, STATE, dest_offset_disp);
+        }
 
         // MOVI encodes a 64-bit value into an 8-bit immidiate by replicating bits
         // The 8-bit immediate "a:b:c:d:e:f:g:h" maps to the 64-bit value:
@@ -371,7 +394,11 @@ void JitShader::Compile_DestEnable(Instruction instr, QReg src) {
         BSL(VSCRATCH2.B16(), src.B16(), VSCRATCH0.B16());
 
         // Store dest back to memory
-        STR(VSCRATCH2, STATE, dest_offset_disp);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            STR(VSCRATCH2, XSCRATCH0);
+        } else {
+            STR(VSCRATCH2, STATE, dest_offset_disp);
+        }
     }
 }
 
@@ -826,8 +853,9 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GeometryEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
-    emitter->Emit(*output);
+static void Emit(GeometryEmitter* emitter, ShaderUnit* unit) {
+    emitter->Emit(unit->output[unit->output_bank]);
+    unit->output_bank = !unit->output_bank;
 }
 
 void JitShader::Compile_EMIT(Instruction instr) {
@@ -846,7 +874,6 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PushRegisters(*this, PersistentCallerSavedRegs());
     MOV(ABI_PARAM1, XSCRATCH0);
     MOV(ABI_PARAM2, STATE);
-    ADD(ABI_PARAM2, ABI_PARAM2, u32(offsetof(ShaderUnit, output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegisters(*this, PersistentCallerSavedRegs());
     l(end);
