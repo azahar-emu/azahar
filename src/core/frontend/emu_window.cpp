@@ -224,8 +224,20 @@ void EmuWindow::UpdateCurrentFramebufferLayout(u32 width, u32 height, bool is_po
                               : Layout::GetMinimumSizeFromLayout(
                                     layout_option, Settings::values.upright_screen.GetValue());
 
+#ifdef ANDROID
+    // On Android, a secondary window's layout is always replaced by AndroidSecondaryLayout
+    // below, computed from its own actual Surface size. Clamping width/height to the
+    // *primary* layout's minimum size here (meant for the combined top+bottom window) would
+    // otherwise inflate them past the secondary Surface's real dimensions, offsetting
+    // bottom_screen and breaking touch-to-framebuffer coordinate mapping for that window.
+    if (!is_secondary) {
+        width = std::max(width, min_size.first);
+        height = std::max(height, min_size.second);
+    }
+#else
     width = std::max(width, min_size.first);
     height = std::max(height, min_size.second);
+#endif
     if (render_full_stereo) {
         width = width / 2;
     }

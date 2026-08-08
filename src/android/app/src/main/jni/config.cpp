@@ -337,7 +337,9 @@ void Config::Reload() {
     for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
-        if ((std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
+        const std::string_view key_view(*key);
+        if ((std::ranges::find(DefaultINI::android_config_omitted_keys, key_view,
+                                [](const char* omitted) { return std::string_view(omitted); }) ==
              std::end(DefaultINI::android_config_omitted_keys)) &&
             (std::string(DefaultINI::android_config_default_file_content)
                  .find(key_declaration_string) == std::string::npos)) {
