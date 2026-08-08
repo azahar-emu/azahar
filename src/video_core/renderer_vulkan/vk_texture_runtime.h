@@ -29,6 +29,7 @@ enum Type {
     Current = -1,
     Base = 0,
     Scaled,
+    MultiSampled,
     Custom,
     Copy,
     Num,
@@ -79,8 +80,9 @@ struct Handle {
     }
 
     void Create(u32 width, u32 height, u32 levels, VideoCore::TextureType type, vk::Format format,
-                vk::ImageUsageFlags usage, vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect,
-                bool need_format_list, std::string_view debug_name = {});
+                vk::SampleCountFlagBits samples, vk::ImageUsageFlags usage,
+                vk::ImageCreateFlags flags, vk::ImageAspectFlags aspect, bool need_format_list,
+                std::string_view debug_name = {});
 
     void Destroy();
 
@@ -252,8 +254,8 @@ public:
     void Download(const VideoCore::BufferTextureCopy& download,
                   const VideoCore::StagingData& staging);
 
-    /// Scales up the surface to match the new resolution scale.
-    void ScaleUp(u32 new_scale);
+    /// Scales up the surface to match the new resolution scale and sample-count.
+    void ScaleUp(u32 new_scale, u8 new_sample_count);
 
     /// Returns the bpp of the internal surface format
     u32 GetInternalBytesPerPixel() const;
@@ -306,7 +308,8 @@ public:
           formats(std::exchange(
               other.formats, {VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid})),
           width(std::exchange(other.width, 0)), height(std::exchange(other.height, 0)),
-          res_scale(std::exchange(other.res_scale, 1)) {}
+          res_scale(std::exchange(other.res_scale, 1)),
+          sample_count(std::exchange(other.sample_count, 1)) {}
 
     Framebuffer& operator=(Framebuffer&& other) noexcept {
         VideoCore::FramebufferParams::operator=(std::move(other));
@@ -321,6 +324,7 @@ public:
         width = std::exchange(other.width, 0);
         height = std::exchange(other.height, 0);
         res_scale = std::exchange(other.res_scale, 1);
+        sample_count = std::exchange(other.sample_count, 1);
 
         return *this;
     }
@@ -337,11 +341,11 @@ public:
         return framebuffer;
     }
 
-    [[nodiscard]] std::array<vk::Image, 2> Images() const noexcept {
+    [[nodiscard]] std::array<vk::Image, 4> Images() const noexcept {
         return images;
     }
 
-    [[nodiscard]] std::array<vk::ImageAspectFlags, 2> Aspects() const noexcept {
+    [[nodiscard]] std::array<vk::ImageAspectFlags, 4> Aspects() const noexcept {
         return aspects;
     }
 
@@ -353,19 +357,26 @@ public:
         return res_scale;
     }
 
+    u8 Samples() const noexcept {
+        return sample_count;
+    }
+
 private:
     const Instance& instance;
-    std::array<vk::Image, 2> images{};
-    std::array<vk::ImageView, 2> image_views{};
+    // Color, Depth, ColorMSAA, DepthMSAA
+    std::array<vk::Image, 4> images{};
+    std::array<vk::ImageView, 4> image_views{};
     vk::Framebuffer framebuffer{};
     vk::RenderPass render_pass{};
     std::vector<vk::UniqueImageView> framebuffer_views;
-    std::array<vk::ImageAspectFlags, 2> aspects{};
-    std::array<VideoCore::PixelFormat, 2> formats{VideoCore::PixelFormat::Invalid,
-                                                  VideoCore::PixelFormat::Invalid};
+    std::array<vk::ImageAspectFlags, 4> aspects{};
+    std::array<VideoCore::PixelFormat, 4> formats{
+        VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid,
+        VideoCore::PixelFormat::Invalid, VideoCore::PixelFormat::Invalid};
     u32 width{};
     u32 height{};
     u32 res_scale{1};
+    u8 sample_count{1};
 };
 
 class Sampler {
