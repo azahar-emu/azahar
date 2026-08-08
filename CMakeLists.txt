@@ -205,6 +205,8 @@ if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
     else()
         SET(SSE42_COMPILE_OPTION -msse4.1 -msse4.2)
     endif()
+    add_compile_options(${SSE42_COMPILE_OPTION})
+    add_compile_definitions(CITRA_HAS_SSE42)
 endif()
 
 include(CitraHandleSystemLibs)
