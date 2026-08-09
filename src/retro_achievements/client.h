@@ -8,6 +8,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <rc_client.h>
@@ -36,12 +37,12 @@ public:
     void DoFrame();
 
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
-    void FetchImage(const char* url, ImageCallback callback);
+    void FetchImage(std::string&& url, ImageCallback callback);
 
     const rc_client_user_t* GetUser() const;
 
-    void OnLoginCallback(int result, const char* error_message);
-    void OnLoadGameCallback(int result, const char* error_message);
+    void OnLoginCallback(int result, std::string_view error_message);
+    void OnLoadGameCallback(int result, std::string_view error_message);
     void OnEvent(const rc_client_event_t* event);
 
     struct HttpRequest {

@@ -14,16 +14,16 @@ void QtClientObserver::OnLoginSucceeded(const rc_client_user_t* user) {
     emit LoginSucceeded(user);
 }
 
-void QtClientObserver::OnLoginFailed(int result, const char* error_message) {
-    emit LoginFailed(QString::fromUtf8(error_message));
+void QtClientObserver::OnLoginFailed(int result, std::string_view error_message) {
+    emit LoginFailed(QString::fromUtf8(error_message.data(), error_message.size()));
 }
 
 void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
     emit LoadGameSucceeded(game);
 }
 
-void QtClientObserver::OnLoadGameFailed(int result, const char* error_message) {
-    emit LoadGameFailed(QString::fromUtf8(error_message));
+void QtClientObserver::OnLoadGameFailed(int result, std::string_view error_message) {
+    emit LoadGameFailed(QString::fromUtf8(error_message.data(), error_message.size()));
 }
 
 void QtClientObserver::OnEvent(const rc_client_event_t* event) {

@@ -56,13 +56,15 @@ static void log_message(const char* message, const rc_client_t* rc_client) {
 static void login_callback(int result, const char* error_message, rc_client_t* rc_client,
                            void* userdata) {
     RetroAchievements::Client* client = static_cast<RetroAchievements::Client*>(userdata);
-    client->OnLoginCallback(result, error_message);
+    client->OnLoginCallback(result,
+                            error_message ? std::string_view{error_message} : std::string_view{});
 }
 
 static void load_game_callback(int result, const char* error_message, rc_client_t* rc_client,
                                void* userdata) {
     RetroAchievements::Client* client = static_cast<RetroAchievements::Client*>(userdata);
-    client->OnLoadGameCallback(result, error_message);
+    client->OnLoadGameCallback(result, error_message ? std::string_view{error_message}
+                                                     : std::string_view{});
 }
 
 static void event_handler(const rc_client_event_t* event, rc_client_t* client) {
@@ -216,12 +218,12 @@ void Client::DoFrame() {
     rc_client_do_frame(m_rc_client);
 }
 
-void Client::FetchImage(const char* url, ImageCallback callback) {
+void Client::FetchImage(std::string&& url, ImageCallback callback) {
     if (!m_enabled)
         return;
 
     HttpRequest request = {
-        .url = url != nullptr ? url : "",
+        .url = url,
         .post_data = std::nullopt,
         .content_type = "",
     };
@@ -241,7 +243,7 @@ const rc_client_user_t* Client::GetUser() const {
     return m_user;
 }
 
-void Client::OnLoginCallback(int result, const char* error_message) {
+void Client::OnLoginCallback(int result, std::string_view error_message) {
     if (!m_enabled)
         return;
 
@@ -257,7 +259,7 @@ void Client::OnLoginCallback(int result, const char* error_message) {
     }
 }
 
-void Client::OnLoadGameCallback(int result, const char* error_message) {
+void Client::OnLoadGameCallback(int result, std::string_view error_message) {
     if (!m_enabled)
         return;
 

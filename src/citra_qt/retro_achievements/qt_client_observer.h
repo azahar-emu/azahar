@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include <QObject>
 #include <QString>
 
@@ -16,10 +18,10 @@ class QtClientObserver : public QObject, public RetroAchievements::ClientObserve
 
 public:
     void OnLoginSucceeded(const rc_client_user_t* user) override;
-    void OnLoginFailed(int result, const char* error_message) override;
+    void OnLoginFailed(int result, std::string_view error_message) override;
 
     void OnLoadGameSucceeded(const rc_client_game_t* game) override;
-    void OnLoadGameFailed(int result, const char* error_message) override;
+    void OnLoadGameFailed(int result, std::string_view error_message) override;
     void OnEvent(const rc_client_event_t* event) override;
 
 signals:
