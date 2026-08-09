@@ -6,6 +6,8 @@
 
 #include <atomic>
 #include <functional>
+#include <optional>
+#include <string>
 #include <vector>
 
 #include <rc_client.h>
@@ -34,7 +36,7 @@ public:
     void DoFrame();
 
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
-    void FetchImage(const char* url, ImageCallback callback) const;
+    void FetchImage(const char* url, ImageCallback callback);
 
     const rc_client_user_t* GetUser() const;
 
@@ -42,17 +44,29 @@ public:
     void OnLoadGameCallback(int result, const char* error_message);
     void OnEvent(const rc_client_event_t* event);
 
-private:
-    static void CallServer(const rc_api_request_t* request, rc_client_server_callback_t callback,
-                           void* callback_data, rc_client_t* rc_client);
+    struct HttpRequest {
+        std::string url;
+        std::optional<std::string> post_data;
+        std::string content_type;
+    };
 
+    struct HttpResponse {
+        std::string body;
+        int status;
+        bool success;
+    };
+
+    using HttpCallback = std::function<void(HttpResponse&& response)>;
+    void QueueHttpRequest(HttpRequest&& request, HttpCallback callback);
+
+private:
     rc_client_t* m_rc_client;
     const rc_client_user_t* m_user = nullptr;
     std::atomic_bool m_enabled = false;
 
     std::vector<ClientObserver*> m_observers;
 
-    mutable Common::ThreadWorker m_http_worker{1, "RetroAchievements_HTTP"};
+    Common::ThreadWorker m_http_worker{1, "RetroAchievements_HTTP"};
 };
 
 } // namespace RetroAchievements
