@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <httplib.h>
 #include <rc_client.h>
@@ -53,42 +54,6 @@ static std::pair<std::string, std::string> parse_url(const char* full_url_cstr) 
     }
 }
 
-static void call_server(const rc_api_request_t* request, rc_client_server_callback_t callback,
-                        void* callback_data, rc_client_t* rc_client) {
-    const auto [base_url, path] = parse_url(request->url);
-
-    httplib::Client http_client(base_url);
-
-    LOG_DEBUG(RetroAchievements, "Server request: {} {}", request->post_data ? "POST" : "GET",
-              request->url);
-
-    httplib::Result result =
-        request->post_data
-            ? http_client.Post(path, headers, request->post_data, std::strlen(request->post_data),
-                               request->content_type)
-            : http_client.Get(path, headers);
-
-    if (result) {
-        LOG_DEBUG(RetroAchievements, "Server response status: {}", result->status);
-        LOG_DEBUG(RetroAchievements, "Server response body: {}", result->body);
-
-        rc_api_server_response_t server_response = {.body = result->body.c_str(),
-                                                    .body_length = result->body.length(),
-                                                    .http_status_code = result->status};
-        callback(&server_response, callback_data);
-    } else {
-        const std::string error_message = httplib::to_string(result.error());
-        LOG_ERROR(RetroAchievements, "httplib error: {}", error_message);
-
-        rc_api_server_response_t server_response = {
-            .body = error_message.c_str(),
-            .body_length = error_message.length(),
-            .http_status_code = RC_API_SERVER_RESPONSE_CLIENT_ERROR,
-        };
-        callback(&server_response, callback_data);
-    }
-}
-
 static void log_message(const char* message, const rc_client_t* rc_client) {
     LOG_INFO(RetroAchievements, "rcheevos message: \"{}\"", message);
 }
@@ -115,7 +80,7 @@ static void event_handler(const rc_client_event_t* event, rc_client_t* client) {
 namespace RetroAchievements {
 
 Client::Client() {
-    m_rc_client = rc_client_create(read_memory, call_server);
+    m_rc_client = rc_client_create(read_memory, &Client::CallServer);
 
     rc_client_enable_logging(m_rc_client, RC_CLIENT_LOG_LEVEL_VERBOSE, log_message);
     rc_client_set_event_handler(m_rc_client, event_handler);
@@ -129,10 +94,61 @@ Client::Client() {
 }
 
 Client::~Client() {
+    m_enabled = false;
+    m_http_worker.WaitForRequests();
+
     if (m_rc_client) {
         rc_client_destroy(m_rc_client);
         m_rc_client = nullptr;
     }
+}
+
+void Client::CallServer(const rc_api_request_t* request, rc_client_server_callback_t callback,
+                        void* callback_data, rc_client_t* rc_client) {
+    auto* client = static_cast<Client*>(rc_client_get_userdata(rc_client));
+    if (!client) {
+        return;
+    }
+
+    const std::string url = request->url != nullptr ? request->url : "";
+
+    const bool is_post = request->post_data != nullptr;
+    const std::string post_data = is_post ? request->post_data : "";
+    const std::string content_type = request->content_type != nullptr ? request->content_type : "";
+
+    client->m_http_worker.QueueWork([url, is_post, post_data, content_type, callback,
+                                     callback_data]() {
+        const auto [base_url, path] = parse_url(url.c_str());
+        httplib::Client http_client(base_url);
+
+        LOG_DEBUG(RetroAchievements, "Server request: {} {}", is_post ? "POST" : "GET", url);
+
+        httplib::Result result = is_post ? http_client.Post(path, headers, post_data.data(),
+                                                            post_data.size(), content_type.c_str())
+                                         : http_client.Get(path, headers);
+
+        if (result) {
+            LOG_DEBUG(RetroAchievements, "Server response status: {}", result->status);
+            LOG_DEBUG(RetroAchievements, "Server response body: {}", result->body);
+
+            rc_api_server_response_t server_response = {
+                .body = result->body.c_str(),
+                .body_length = result->body.length(),
+                .http_status_code = result->status,
+            };
+            callback(&server_response, callback_data);
+        } else {
+            const std::string error_message = httplib::to_string(result.error());
+            LOG_ERROR(RetroAchievements, "httplib error: {}", error_message);
+
+            rc_api_server_response_t server_response = {
+                .body = error_message.c_str(),
+                .body_length = error_message.length(),
+                .http_status_code = RC_API_SERVER_RESPONSE_CLIENT_ERROR,
+            };
+            callback(&server_response, callback_data);
+        }
+    });
 }
 
 void Client::RegisterObserver(ClientObserver& observer) {
@@ -146,12 +162,14 @@ void Client::SetEnabled(bool enabled) {
 void Client::AttemptLogin(const char* username, const char* password) {
     if (!m_enabled)
         return;
+
     rc_client_begin_login_with_password(m_rc_client, username, password, login_callback, this);
 }
 
 void Client::AttemptLoginWithToken(const char* username, const char* token) {
     if (!m_enabled)
         return;
+
     rc_client_begin_login_with_token(m_rc_client, username, token, login_callback, this);
 }
 
@@ -163,6 +181,7 @@ void Client::LogOut() {
 void Client::LoadGame(const char* file_path) {
     if (!m_enabled)
         return;
+
     rc_client_begin_identify_and_load_game(m_rc_client, RC_CONSOLE_NINTENDO_3DS, file_path, NULL, 0,
                                            load_game_callback, this);
 }
@@ -185,15 +204,24 @@ void Client::DoFrame() {
 }
 
 void Client::FetchImage(const char* url, ImageCallback callback) const {
-    const auto [base_url, path] = parse_url(url);
-    httplib::Client http_client(base_url);
+    if (!m_enabled)
+        return;
 
-    if (auto result = http_client.Get(path, headers)) {
-        std::vector<uint8_t> image_data(result->body.begin(), result->body.end());
+    const std::string image_url = url ? url : "";
+    m_http_worker.QueueWork([image_url, callback]() {
+        const auto [base_url, path] = parse_url(image_url.c_str());
+        httplib::Client http_client(base_url);
+
+        std::vector<uint8_t> image_data;
+        if (auto result = http_client.Get(path, headers)) {
+            image_data.assign(result->body.begin(), result->body.end());
+        } else {
+            LOG_ERROR(RetroAchievements, "Image fetch failed: {}",
+                      httplib::to_string(result.error()));
+        }
+
         callback(std::move(image_data));
-    } else {
-        LOG_ERROR(RetroAchievements, "Image fetch failed: {}", result.error());
-    }
+    });
 }
 
 const rc_client_user_t* Client::GetUser() const {

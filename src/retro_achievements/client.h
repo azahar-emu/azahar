@@ -11,6 +11,7 @@
 #include <rc_client.h>
 
 #include "client_observer.h"
+#include "common/thread_worker.h"
 
 namespace RetroAchievements {
 
@@ -42,11 +43,16 @@ public:
     void OnEvent(const rc_client_event_t* event);
 
 private:
+    static void CallServer(const rc_api_request_t* request, rc_client_server_callback_t callback,
+                           void* callback_data, rc_client_t* rc_client);
+
     rc_client_t* m_rc_client;
     const rc_client_user_t* m_user = nullptr;
     std::atomic_bool m_enabled = false;
 
     std::vector<ClientObserver*> m_observers;
+
+    mutable Common::ThreadWorker m_http_worker{1, "RetroAchievements_HTTP"};
 };
 
 } // namespace RetroAchievements
