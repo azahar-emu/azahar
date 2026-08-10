@@ -250,6 +250,52 @@ const std::optional<Game>& Client::GetGame() const {
     return m_game;
 }
 
+std::vector<Achievement> Client::GetAchievementList() {
+    rc_client_achievement_list_t* rc_list = rc_client_create_achievement_list(
+        m_rc_client, RC_CLIENT_ACHIEVEMENT_CATEGORY_CORE_AND_UNOFFICIAL,
+        RC_CLIENT_ACHIEVEMENT_LIST_GROUPING_PROGRESS);
+
+    std::vector<Achievement> list;
+    if (!rc_list) {
+        return list;
+    }
+
+    for (uint32_t bucket_index = 0; bucket_index < rc_list->num_buckets; ++bucket_index) {
+        const rc_client_achievement_bucket_t& rc_bucket = rc_list->buckets[bucket_index];
+
+        for (uint32_t achievement_index = 0; achievement_index < rc_bucket.num_achievements;
+             ++achievement_index) {
+            const rc_client_achievement_t* rc_achievement =
+                rc_bucket.achievements[achievement_index];
+            if (!rc_achievement) {
+                continue;
+            }
+
+            list.emplace_back(Achievement{
+                .id = rc_achievement->id,
+                .title = rc_achievement->title,
+                .description = rc_achievement->description,
+                .points = rc_achievement->points,
+                .state = rc_achievement->state,
+                .category = rc_achievement->category,
+                .type = rc_achievement->type,
+                .bucket = rc_achievement->bucket,
+                .unlocked = rc_achievement->unlocked,
+                .measured_progress = rc_achievement->measured_progress,
+                .measured_percent = rc_achievement->measured_percent,
+                .rarity = rc_achievement->rarity,
+                .rarity_hardcore = rc_achievement->rarity_hardcore,
+                .badge_url = rc_achievement->badge_url,
+                .badge_locked_url = rc_achievement->badge_locked_url,
+            });
+        }
+    }
+
+    rc_client_destroy_achievement_list(rc_list);
+
+    return list;
+}
+
 void Client::OnLoginCallback(int result, std::string_view error_message) {
     if (!m_enabled)
         return;

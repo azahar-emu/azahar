@@ -43,6 +43,7 @@ public:
 
     const std::optional<User>& GetUser() const;
     const std::optional<Game>& GetGame() const;
+    std::vector<Achievement> GetAchievementList();
 
     void OnLoginCallback(int result, std::string_view error_message);
     void OnLoadGameCallback(int result, std::string_view error_message);
