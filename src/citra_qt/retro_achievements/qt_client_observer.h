@@ -6,6 +6,7 @@
 
 #include <string_view>
 
+#include <QMetaType>
 #include <QObject>
 #include <QString>
 
@@ -17,21 +18,24 @@ class QtClientObserver : public QObject, public RetroAchievements::ClientObserve
     Q_OBJECT
 
 public:
-    void OnLoginSucceeded(const rc_client_user_t* user) override;
+    void OnLoginSucceeded(const User& user) override;
     void OnLoginFailed(int result, std::string_view error_message) override;
 
-    void OnLoadGameSucceeded(const rc_client_game_t* game) override;
+    void OnLoadGameSucceeded(const Game& game) override;
     void OnLoadGameFailed(int result, std::string_view error_message) override;
     void OnEvent(const rc_client_event_t* event) override;
 
 signals:
-    void LoginSucceeded(const rc_client_user_t* user);
+    void LoginSucceeded(const User& user);
     void LoginFailed(const QString& error_message);
 
-    void LoadGameSucceeded(const rc_client_game_t* game);
+    void LoadGameSucceeded(const Game& game);
     void LoadGameFailed(const QString& error_message);
 
     void EventNotification(const QString& title, const QString& body, const QString& image_url);
 };
 
 } // namespace RetroAchievements
+
+Q_DECLARE_METATYPE(RetroAchievements::User)
+Q_DECLARE_METATYPE(RetroAchievements::Game)

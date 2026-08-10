@@ -10,7 +10,7 @@
 
 namespace RetroAchievements {
 
-void QtClientObserver::OnLoginSucceeded(const rc_client_user_t* user) {
+void QtClientObserver::OnLoginSucceeded(const User& user) {
     emit LoginSucceeded(user);
 }
 
@@ -18,7 +18,7 @@ void QtClientObserver::OnLoginFailed(int result, std::string_view error_message)
     emit LoginFailed(QString::fromUtf8(error_message.data(), error_message.size()));
 }
 
-void QtClientObserver::OnLoadGameSucceeded(const rc_client_game_t* game) {
+void QtClientObserver::OnLoadGameSucceeded(const Game& game) {
     emit LoadGameSucceeded(game);
 }
 

@@ -13,8 +13,10 @@
 
 #include <rc_client.h>
 
-#include "client_observer.h"
 #include "common/thread_worker.h"
+
+#include "client_observer.h"
+#include "models.h"
 
 namespace RetroAchievements {
 
@@ -37,9 +39,10 @@ public:
     void DoFrame();
 
     using ImageCallback = std::function<void(std::vector<uint8_t>&& image_data)>;
-    void FetchImage(std::string&& url, ImageCallback callback);
+    void FetchImage(std::string url, ImageCallback callback);
 
-    const rc_client_user_t* GetUser() const;
+    const std::optional<User>& GetUser() const;
+    const std::optional<Game>& GetGame() const;
 
     void OnLoginCallback(int result, std::string_view error_message);
     void OnLoadGameCallback(int result, std::string_view error_message);
@@ -62,8 +65,10 @@ public:
 
 private:
     rc_client_t* m_rc_client;
-    const rc_client_user_t* m_user = nullptr;
     std::atomic_bool m_enabled = false;
+
+    std::optional<User> m_user = std::nullopt;
+    std::optional<Game> m_game = std::nullopt;
 
     std::vector<ClientObserver*> m_observers;
 

@@ -4,10 +4,13 @@
 
 #pragma once
 
+#include <optional>
+
 #include <QDialog>
 #include <QPixmap>
 #include <QString>
-#include <rc_client.h>
+
+#include "retro_achievements/models.h"
 
 namespace Ui {
 class RetroAchievementsDialog;
@@ -19,7 +22,7 @@ class Dialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Dialog(const rc_client_user_t* user, bool enabled, QWidget* parent = 0);
+    explicit Dialog(const std::optional<User>& user, bool enabled, QWidget* parent = 0);
     ~Dialog() override;
 
 private slots:
@@ -27,7 +30,7 @@ private slots:
     void OnEnabledToggled(bool enabled);
 
 public slots:
-    void OnLoginSucceeded(const rc_client_user_t* user);
+    void OnLoginSucceeded(const User& user);
     void OnLoginFailed(const QString& error_message);
 
     void OnAvatarImageDownloaded(QPixmap image);
@@ -40,7 +43,7 @@ signals:
 private:
     std::unique_ptr<Ui::RetroAchievementsDialog> ui;
 
-    const rc_client_user_t* m_user = nullptr;
+    std::optional<User> m_user;
     QString m_error_message;
 
     void UpdateUI();

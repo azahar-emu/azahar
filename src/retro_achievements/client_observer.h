@@ -8,16 +8,18 @@
 
 #include <rc_client.h>
 
+#include "models.h"
+
 namespace RetroAchievements {
 
 class ClientObserver {
 public:
     virtual ~ClientObserver() = default;
 
-    virtual void OnLoginSucceeded(const rc_client_user_t* user) {}
+    virtual void OnLoginSucceeded(const User& user) {}
     virtual void OnLoginFailed(int result, std::string_view error_message) {}
 
-    virtual void OnLoadGameSucceeded(const rc_client_game_t* game) {}
+    virtual void OnLoadGameSucceeded(const Game& game) {}
     virtual void OnLoadGameFailed(int result, std::string_view error_message) {}
 
     virtual void OnEvent(const rc_client_event_t* event) {}

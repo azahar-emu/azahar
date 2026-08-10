@@ -574,12 +574,11 @@ GMainWindow::GMainWindow(Core::System& system_)
             Qt::QueuedConnection);
     };
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoadGameSucceeded, this,
-            [this, set_notification_image](const rc_client_game_t* game) {
+            [this, set_notification_image](const RetroAchievements::Game& game) {
                 ra_notification->Show(QStringLiteral("RetroAchievements"),
-                                      QStringLiteral("Loaded \"%1\".").arg(game->title));
-
-                if (game->badge_url) {
-                    system.RetroAchievementsClient().FetchImage(game->badge_url,
+                                      QStringLiteral("Loaded \"%1\".").arg(game.title));
+                if (!game.badge_url.empty()) {
+                    system.RetroAchievementsClient().FetchImage(game.badge_url,
                                                                 set_notification_image);
                 }
             });
@@ -588,7 +587,7 @@ GMainWindow::GMainWindow(Core::System& system_)
                                            const QString& image_url) {
                 ra_notification->Show(title, body);
                 if (!image_url.isEmpty()) {
-                    system.RetroAchievementsClient().FetchImage(image_url.toUtf8().constData(),
+                    system.RetroAchievementsClient().FetchImage(image_url.toStdString(),
                                                                 set_notification_image);
                 }
             });
@@ -3559,12 +3558,12 @@ void GMainWindow::OnRetroAchievements() {
             &RetroAchievements::Dialog::OnLoginFailed, Qt::QueuedConnection);
 
     QPointer<RetroAchievements::Dialog> dialog_ptr = &dialog;
-    auto update_user = [this, dialog_ptr](const rc_client_user_t* user) {
-        Settings::values.retro_achievements_username.SetValue(user->username);
-        Settings::values.retro_achievements_token.SetValue(user->token);
+    auto update_user = [this, dialog_ptr](const RetroAchievements::User& user) {
+        Settings::values.retro_achievements_username.SetValue(user.username);
+        Settings::values.retro_achievements_token.SetValue(user.token);
 
         system.RetroAchievementsClient().FetchImage(
-            user->avatar_url, [this, dialog_ptr](std::vector<u8>&& image_data) {
+            user.avatar_url, [this, dialog_ptr](std::vector<u8>&& image_data) {
                 QMetaObject::invokeMethod(
                     this,
                     [dialog_ptr, image_data]() {
@@ -3581,8 +3580,8 @@ void GMainWindow::OnRetroAchievements() {
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,
             update_user, Qt::QueuedConnection);
 
-    if (const rc_client_user_t* user = system.RetroAchievementsClient().GetUser()) {
-        update_user(user);
+    if (const auto& user = system.RetroAchievementsClient().GetUser()) {
+        update_user(*user);
     }
 
     auto result = dialog.exec();

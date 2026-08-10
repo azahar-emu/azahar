@@ -190,19 +190,22 @@ void Client::AttemptLoginWithToken(const char* username, const char* token) {
 
 void Client::LogOut() {
     rc_client_logout(m_rc_client);
-    m_user = nullptr;
+    m_user.reset();
+    m_game.reset();
 }
 
 void Client::LoadGame(const char* file_path) {
     if (!m_enabled)
         return;
 
+    m_game.reset();
     rc_client_begin_identify_and_load_game(m_rc_client, RC_CONSOLE_NINTENDO_3DS, file_path, NULL, 0,
                                            load_game_callback, this);
 }
 
 void Client::UnloadGame() {
     rc_client_unload_game(m_rc_client);
+    m_game.reset();
 }
 
 void Client::Reset() {
@@ -211,14 +214,14 @@ void Client::Reset() {
 
 void Client::DoFrame() {
     if (!m_enabled) {
-        rc_client_unload_game(m_rc_client);
+        UnloadGame();
         return;
     }
 
     rc_client_do_frame(m_rc_client);
 }
 
-void Client::FetchImage(std::string&& url, ImageCallback callback) {
+void Client::FetchImage(std::string url, ImageCallback callback) {
     if (!m_enabled)
         return;
 
@@ -239,8 +242,12 @@ void Client::FetchImage(std::string&& url, ImageCallback callback) {
     });
 }
 
-const rc_client_user_t* Client::GetUser() const {
+const std::optional<User>& Client::GetUser() const {
     return m_user;
+}
+
+const std::optional<Game>& Client::GetGame() const {
+    return m_game;
 }
 
 void Client::OnLoginCallback(int result, std::string_view error_message) {
@@ -248,9 +255,19 @@ void Client::OnLoginCallback(int result, std::string_view error_message) {
         return;
 
     if (result == 0) {
-        m_user = rc_client_get_user_info(m_rc_client);
+        const rc_client_user_t* rc_user = rc_client_get_user_info(m_rc_client);
+        User user = {
+            .display_name = rc_user->display_name,
+            .username = rc_user->username,
+            .token = rc_user->token,
+            .score = rc_user->score,
+            .avatar_url = rc_user->avatar_url,
+        };
+
+        m_user.emplace(user);
+
         for (ClientObserver* observer : m_observers) {
-            observer->OnLoginSucceeded(m_user);
+            observer->OnLoginSucceeded(user);
         }
     } else {
         for (ClientObserver* observer : m_observers) {
@@ -264,11 +281,19 @@ void Client::OnLoadGameCallback(int result, std::string_view error_message) {
         return;
 
     if (result == 0) {
-        const rc_client_game_t* game = rc_client_get_game_info(m_rc_client);
+        const rc_client_game_t* rc_game = rc_client_get_game_info(m_rc_client);
+        Game game = {
+            .title = rc_game->title,
+            .badge_url = rc_game->badge_url,
+        };
+
+        m_game.emplace(game);
+
         for (ClientObserver* observer : m_observers) {
             observer->OnLoadGameSucceeded(game);
         }
     } else {
+        m_game.reset();
         for (ClientObserver* observer : m_observers) {
             observer->OnLoadGameFailed(result, error_message);
         }

@@ -9,7 +9,7 @@
 
 namespace RetroAchievements {
 
-Dialog::Dialog(const rc_client_user_t* user, bool enabled, QWidget* parent)
+Dialog::Dialog(const std::optional<User>& user, bool enabled, QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
       ui(std::make_unique<Ui::RetroAchievementsDialog>()), m_user(user) {
     ui->setupUi(this);
@@ -29,7 +29,7 @@ void Dialog::OnAuthenticationButtonPressed() {
     LOG_DEBUG(Frontend, "Dialog::OnAuthenticationButtonPressed");
 
     if (m_user) {
-        m_user = nullptr;
+        m_user.reset();
         ui->password_input->clear();
 
         emit LoggedOut();
@@ -63,10 +63,10 @@ void Dialog::OnAvatarImageDownloaded(QPixmap image) {
         image.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
-void Dialog::OnLoginSucceeded(const rc_client_user_t* user) {
+void Dialog::OnLoginSucceeded(const User& user) {
     LOG_DEBUG(Frontend,
               "Dialog::OnLoginSucceeded(user[.display_name] = \"{}\", user[.avatar_url] = \"{}\")",
-              user->display_name, user->avatar_url);
+              user.display_name, user.avatar_url);
 
     m_user = user;
     m_error_message.clear();
@@ -84,7 +84,7 @@ void Dialog::OnLoginFailed(const QString& error_message) {
 
 void Dialog::UpdateUI() {
     bool is_enabled = ui->enabled_check_box->isChecked();
-    bool has_user = m_user != nullptr;
+    bool has_user = m_user.has_value();
 
     ui->user_display->setVisible(is_enabled && has_user);
 
@@ -94,9 +94,9 @@ void Dialog::UpdateUI() {
     ui->authentication_credentials->setEnabled(is_enabled && !has_user);
 
     if (m_user) {
-        ui->username_input->setText(QString::fromUtf8(m_user->username));
+        ui->username_input->setText(QString::fromStdString(m_user->username));
 
-        ui->user_display_name->setText(QString::fromUtf8(m_user->username));
+        ui->user_display_name->setText(QString::fromStdString(m_user->username));
         ui->user_display_points->setText(QStringLiteral("%1 points").arg(m_user->score));
         // The avatar image is set in `OnAvatarImageDownloaded`.
     }
