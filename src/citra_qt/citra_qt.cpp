@@ -447,7 +447,7 @@ GMainWindow::GMainWindow(Core::System& system_)
         }
     }
 #else
-    ui->action_RetroAchievements.setVisible(false);
+    ui->action_RetroAchievements->setVisible(false);
 #endif
 
     play_time_manager = std::make_unique<PlayTime::PlayTimeManager>();
