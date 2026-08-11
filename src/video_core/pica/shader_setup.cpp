@@ -155,22 +155,25 @@ static inline u32 ProcessBlockSSE42(u32* dst, const u32* values) {
     // 0xFFFFFFFF if words at X are equal or 0x0 if words at X differ.
     const __m128i eq = _mm_cmpeq_epi32(old_vals, new_vals);
 
-    // If eq is all F, old_vals and new_vals are equal, return.
-    if (_mm_testc_si128(eq, _mm_set1_epi32(-1))) {
+    // Load all 0xF values
+    const __m128i ones = _mm_set1_epi32(-1);
+
+    // If eq is all 0xF, old_vals and new_vals are equal, return.
+    if (_mm_testc_si128(eq, ones)) {
         return std::numeric_limits<u32>::max();
     }
 
     // Store the new values to the destination.
     _mm_storeu_si128(reinterpret_cast<__m128i*>(dst), new_vals);
 
-    // Reduce the four 0x0/0xFFFFFFFF words to 4 bits
-    // stored to the 4 LSB of eq_mask.
-    const u32 eq_mask = static_cast<u32>(_mm_movemask_ps(_mm_castsi128_ps(eq)));
-    // Negate the result to make 0 signify equality instead of 1.
-    const u32 neq_mask = (~eq_mask) & 0xFu;
+    // First negate the result to make 0 signify equality instead of 1
+    // (using a XOR of all F).
+    // Then reduce the four 0x0/0xFFFFFFFF words to 4 bits
+    // stored to the 4 LSB of res.
+    const u32 res = static_cast<u32>(_mm_movemask_ps(_mm_castsi128_ps(_mm_xor_si128(eq, ones))));
     // Return the index of the highest 1, which corresponds to the index of the
     // last new word that differs (taking into account endianness).
-    return HighestSetBitIndex(neq_mask);
+    return HighestSetBitIndex(res);
 }
 #endif
 
@@ -192,23 +195,14 @@ static inline u32 ProcessBlockNEON(u32* dst, const u32* values) {
     // Store the new values to the destination.
     vst1q_u32(dst, new_vals);
 
-    // Extract the value to an array and check which
-    // entry is the first that differs. Corresponds to
-    // the index of the last new word that differs
-    // (taking into account endianness).
-    // This needs to be done manually due to missing
-    // _mm_movemask_ps equivalent on NEON.
-    u32 neq_arr[4];
-    vst1q_u32(neq_arr, neq);
-    for (int i = 3; i >= 0; --i) {
-        if (neq_arr[i] != 0) {
-            return static_cast<u32>(i);
-        }
-    }
-
-    // Should never happen as otherwise we would have
-    // returned earlier.
-    UNREACHABLE();
+    // Extract the index of the highest value that was different.
+    // This is achieved by ANDing the neq array with (0,1,2,3).
+    // If word is equal, 0 is produced, otherwise the index
+    // is produced. Then the max index is selected from the
+    // result.
+    static constexpr u32 index_arr[4] = {0, 1, 2, 3};
+    const uint32x4_t indices = vld1q_u32(index_arr);
+    return vmaxvq_u32(vandq_u32(neq, indices));
 }
 #endif
 
