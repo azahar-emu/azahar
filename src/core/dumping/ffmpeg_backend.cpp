@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,6 +15,10 @@
 #include "core/dumping/ffmpeg_backend.h"
 #include "video_core/gpu.h"
 #include "video_core/renderer_base.h"
+
+#ifndef AV_OPT_TYPE_CHANNEL_LAYOUT
+#define AV_OPT_TYPE_CHANNEL_LAYOUT AV_OPT_TYPE_CHLAYOUT
+#endif
 
 using namespace DynamicLibrary;
 

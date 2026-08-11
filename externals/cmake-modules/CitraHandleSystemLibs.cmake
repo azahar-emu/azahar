@@ -28,6 +28,12 @@ option(USE_SYSTEM_VMA "Use the system VulkanMemoryAllocator (instead of the bund
 option(USE_SYSTEM_VULKAN_HEADERS "Use the system Vulkan headers (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_SPIRV_HEADERS "Use the system SPIRV headers (instead of the bundled ones)" OFF)
 option(USE_SYSTEM_CATCH2 "Use the system Catch2 (instead of the bundled one)" OFF)
+option(USE_SYSTEM_XXHASH "Use the system xxHash (instead of the bundled one)" OFF)
+option(USE_SYSTEM_SPIRV_TOOLS "Use system-installed SPIRV-Tools" OFF)
+option(USE_SYSTEM_FAAD2 "Use the system faad2 lib (instead of the bundled one)" OFF)
+option(USE_SYSTEM_FAAD "Use the system faad lib (instead of faad2 lib)" OFF)
+option(USE_SYSTEM_TEAKRA "Use system teakra lib (instead of the bundled one)" OFF)
+
 
 # Qt and MoltenVK are handled separately
 CMAKE_DEPENDENT_OPTION(DISABLE_SYSTEM_SDL2 "Disable system SDL2" OFF "USE_SYSTEM_LIBS" OFF)
