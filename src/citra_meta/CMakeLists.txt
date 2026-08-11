@@ -52,7 +52,7 @@ endif()
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
     # TODO: Do this for all executables, not just citra_meta
-    # TODO: Don't hardcode MXE directory to root?
+    # TODO: Don't hardcode MXE directory?
     set(dllwalker_command "${CMAKE_SOURCE_DIR}/externals/dllwalker/dllwalker.rb"
                           $<TARGET_FILE:citra_meta>
                           /opt/mxe/usr/x86_64-w64-mingw32.shared/bin/
