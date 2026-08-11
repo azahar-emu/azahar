@@ -31,6 +31,21 @@ void QtClientObserver::OnEvent(const rc_client_event_t* event) {
 
     switch (event->type) {
     case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_SHOW:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_UPDATE:
+    case RC_CLIENT_EVENT_ACHIEVEMENT_PROGRESS_INDICATOR_HIDE:
+    case RC_CLIENT_EVENT_DISCONNECTED:
+    case RC_CLIENT_EVENT_RECONNECTED:
+        emit AchievementListChanged();
+        break;
+    default:
+        break;
+    }
+
+    switch (event->type) {
+    case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
         title = QStringLiteral("Achievement Unlocked");
         body = QString::fromUtf8(event->achievement->title);
         image_url = QString::fromUtf8(event->achievement->badge_url);

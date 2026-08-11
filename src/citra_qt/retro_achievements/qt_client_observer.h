@@ -32,6 +32,8 @@ signals:
     void LoadGameSucceeded(const Game& game);
     void LoadGameFailed(const QString& error_message);
 
+    void AchievementListChanged();
+
     void EventNotification(const QString& title, const QString& body, const QString& image_url);
 };
 

@@ -5,9 +5,12 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
 #include <QDialog>
+#include <QHash>
 #include <QPixmap>
+#include <QSet>
 #include <QString>
 
 #include "retro_achievements/models.h"
@@ -22,7 +25,8 @@ class Dialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit Dialog(const std::optional<User>& user, bool enabled, QWidget* parent = 0);
+    explicit Dialog(const std::optional<User>& user, bool enabled, bool game_loaded,
+                    QWidget* parent = 0);
     ~Dialog() override;
 
 private slots:
@@ -34,17 +38,23 @@ public slots:
     void OnLoginFailed(const QString& error_message);
 
     void OnAvatarImageDownloaded(QPixmap image);
+    void OnAchievementsUpdated(const std::vector<Achievement>& achievements);
+    void OnAchievementImageDownloaded(const QString& url, QPixmap image);
 
 signals:
     void EnabledToggled(bool enabled);
     void LogInAttempted(const QString& username, const QString& password);
     void LoggedOut();
+    void AchievementListRefreshRequested();
+    void AchievementImageRequested(const QString& url);
 
 private:
     std::unique_ptr<Ui::RetroAchievementsDialog> ui;
 
     std::optional<User> m_user;
     QString m_error_message;
+    QHash<QString, QPixmap> m_achievement_images;
+    QSet<QString> m_pending_achievement_images;
 
     void UpdateUI();
 };
