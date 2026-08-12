@@ -260,7 +260,8 @@ void RasterizerOpenGL::SyncDrawState() {
     // SyncClipEnabled();
     state.clip_distance[1] = regs.rasterizer.clip_enable != 0;
     // SyncCullMode();
-    state.cull.enabled = regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll;
+    state.cull.enabled = regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll &&
+                         regs.rasterizer.cull_mode != Pica::RasterizerRegs::CullMode::KeepAll2;
     if (state.cull.enabled) {
         state.cull.front_face =
             regs.rasterizer.cull_mode == Pica::RasterizerRegs::CullMode::KeepClockWise ? GL_CW
