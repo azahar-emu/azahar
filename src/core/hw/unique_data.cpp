@@ -4,6 +4,7 @@
 
 #include <cryptopp/sha.h>
 #include "common/common_paths.h"
+#include "common/file_derived.h"
 #include "common/logging/log.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/certificate.h"
@@ -27,13 +28,17 @@ static MovableSedFull movable;
 static bool movable_signature_valid = false;
 
 bool SecureInfoA::VerifySignature() const {
-    return HW::RSA::GetSecureInfoSlot().Verify(
-        std::span<const u8>(reinterpret_cast<const u8*>(&body), sizeof(body)), signature);
+    auto sec_info_slot = HW::RSA::GetSecureInfoSlot();
+    return sec_info_slot &&
+           sec_info_slot.Verify(
+               std::span<const u8>(reinterpret_cast<const u8*>(&body), sizeof(body)), signature);
 }
 
 bool LocalFriendCodeSeedB::VerifySignature() const {
-    return HW::RSA::GetLocalFriendCodeSeedSlot().Verify(
-        std::span<const u8>(reinterpret_cast<const u8*>(&body), sizeof(body)), signature);
+    auto lfcs_slot = HW::RSA::GetLocalFriendCodeSeedSlot();
+    return lfcs_slot &&
+           HW::RSA::GetLocalFriendCodeSeedSlot().Verify(
+               std::span<const u8>(reinterpret_cast<const u8*>(&body), sizeof(body)), signature);
 }
 
 bool MovableSed::VerifySignature() const {
@@ -42,6 +47,9 @@ bool MovableSed::VerifySignature() const {
 
 SecureDataLoadStatus LoadSecureInfoA() {
     if (secure_info_a.IsValid()) {
+        if (!HW::RSA::GetSecureInfoSlot()) {
+            return SecureDataLoadStatus::CannotValidateSignature;
+        }
         return secure_info_a_signature_valid
                    ? SecureDataLoadStatus::Loaded
                    : (secure_info_a_region_changed ? SecureDataLoadStatus::RegionChanged
@@ -63,8 +71,11 @@ SecureDataLoadStatus LoadSecureInfoA() {
         return SecureDataLoadStatus::IOError;
     }
 
-    HW::AES::InitKeys();
     secure_info_a_region_changed = false;
+    HW::AES::InitKeys();
+    if (!HW::RSA::GetSecureInfoSlot()) {
+        return SecureDataLoadStatus::CannotValidateSignature;
+    }
     secure_info_a_signature_valid = secure_info_a.VerifySignature();
     if (!secure_info_a_signature_valid) {
         // Check if the file has been region changed
@@ -93,6 +104,9 @@ SecureDataLoadStatus LoadSecureInfoA() {
 
 SecureDataLoadStatus LoadLocalFriendCodeSeedB() {
     if (local_friend_code_seed_b.IsValid()) {
+        if (!HW::RSA::GetLocalFriendCodeSeedSlot()) {
+            return SecureDataLoadStatus::CannotValidateSignature;
+        }
         return local_friend_code_seed_b_signature_valid ? SecureDataLoadStatus::Loaded
                                                         : SecureDataLoadStatus::InvalidSignature;
     }
@@ -114,6 +128,9 @@ SecureDataLoadStatus LoadLocalFriendCodeSeedB() {
     }
 
     HW::AES::InitKeys();
+    if (!HW::RSA::GetLocalFriendCodeSeedSlot()) {
+        return SecureDataLoadStatus::CannotValidateSignature;
+    }
     local_friend_code_seed_b_signature_valid = local_friend_code_seed_b.VerifySignature();
     if (!local_friend_code_seed_b_signature_valid) {
         LOG_WARNING(HW, "LocalFriendCodeSeed_B signature check failed");
@@ -128,10 +145,17 @@ SecureDataLoadStatus LoadOTP() {
         return SecureDataLoadStatus::Loaded;
     }
 
+    auto is_all_zero = [](const auto& arr) {
+        return std::all_of(arr.begin(), arr.end(), [](auto x) { return x == 0; });
+    };
+
     const std::string filepath = GetOTPPath();
 
     HW::AES::InitKeys();
     auto otp_keyiv = HW::AES::GetOTPKeyIV();
+    if (is_all_zero(otp_keyiv.first) || is_all_zero(otp_keyiv.second)) {
+        return SecureDataLoadStatus::NoCryptoKeys;
+    }
 
     auto loader_status = otp.Load(filepath, otp_keyiv.first, otp_keyiv.second);
     if (loader_status != Loader::ResultStatus::Success) {
@@ -169,6 +193,9 @@ SecureDataLoadStatus LoadOTP() {
 
 SecureDataLoadStatus LoadMovable() {
     if (movable.IsValid()) {
+        if (!HW::RSA::GetLocalFriendCodeSeedSlot()) {
+            return SecureDataLoadStatus::CannotValidateSignature;
+        }
         return movable_signature_valid ? SecureDataLoadStatus::Loaded
                                        : SecureDataLoadStatus::InvalidSignature;
     }
@@ -193,6 +220,9 @@ SecureDataLoadStatus LoadMovable() {
     }
 
     HW::AES::InitKeys();
+    if (!HW::RSA::GetLocalFriendCodeSeedSlot()) {
+        return SecureDataLoadStatus::CannotValidateSignature;
+    }
     movable_signature_valid = movable.VerifySignature();
     if (!movable_signature_valid) {
         LOG_WARNING(HW, "movable.sed signature check failed");
@@ -254,13 +284,13 @@ void InvalidateSecureData() {
     movable.Invalidate();
 }
 
-std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filename,
-                                                       const char openmode[], UniqueCryptoFileID id,
-                                                       int flags) {
+static bool GetUniqueCryptoFileKeyIV(std::vector<u8>& out_key, std::vector<u8>& out_iv,
+                                     UniqueCryptoFileID id) {
+
     LoadOTP();
 
     if (!ct_cert.IsValid() || !otp.Valid()) {
-        return std::make_unique<FileUtil::IOFile>();
+        return false;
     }
 
     struct {
@@ -276,10 +306,45 @@ std::unique_ptr<FileUtil::IOFile> OpenUniqueCryptoFile(const std::string& filena
     u8 digest[CryptoPP::SHA256::DIGESTSIZE];
     hash.CalculateDigest(digest, reinterpret_cast<CryptoPP::byte*>(&hash_data), sizeof(hash_data));
 
+    out_key.resize(0x10);
+    out_iv.resize(0x10);
+    memcpy(out_key.data(), digest, 0x10);
+    memcpy(out_iv.data(), digest + 0x10, 12);
+    return true;
+}
+
+bool IsUniqueCryptoFile(FileUtil::IOFileBase* file, UniqueCryptoFileID id) {
+
     std::vector<u8> key(0x10);
     std::vector<u8> ctr(0x10);
-    memcpy(key.data(), digest, 0x10);
-    memcpy(ctr.data(), digest + 0x10, 12);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return false;
+    }
+
+    return FileUtil::CryptoIOFile::IsCryptoIOFile(file, key, ctr);
+}
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(
+    std::unique_ptr<FileUtil::IOFileBase>&& underlying_file, const char openmode[],
+    UniqueCryptoFileID id) {
+    std::vector<u8> key(0x10);
+    std::vector<u8> ctr(0x10);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
+
+    return std::make_unique<FileUtil::CryptoIOFile>(std::move(underlying_file), openmode, key, ctr);
+}
+
+std::unique_ptr<FileUtil::IOFileBase> OpenUniqueCryptoFile(const std::string& filename,
+                                                           const char openmode[],
+                                                           UniqueCryptoFileID id, int flags) {
+
+    std::vector<u8> key(0x10);
+    std::vector<u8> ctr(0x10);
+    if (!GetUniqueCryptoFileKeyIV(key, ctr, id)) {
+        return std::make_unique<FileUtil::NullIOFile>();
+    }
 
     return std::make_unique<FileUtil::CryptoIOFile>(filename, openmode, key, ctr, flags);
 }

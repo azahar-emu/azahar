@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -15,13 +15,14 @@ object ControllerMappingHelper {
     /**
      * Some controllers report extra button presses that can be ignored.
      */
-    fun shouldKeyBeIgnored(inputDevice: InputDevice, keyCode: Int): Boolean {
-        return if (isDualShock4(inputDevice)) {
+    fun shouldKeyBeIgnored(inputDevice: InputDevice, keyCode: Int): Boolean =
+        if (isDualShock4(inputDevice)) {
             // The two analog triggers generate analog motion events as well as a keycode.
             // We always prefer to use the analog values, so throw away the button press
             keyCode == KeyEvent.KEYCODE_BUTTON_L2 || keyCode == KeyEvent.KEYCODE_BUTTON_R2
-        } else false
-    }
+        } else {
+            false
+        }
 
     /**
      * Scale an axis to be zero-centered with a proper range.

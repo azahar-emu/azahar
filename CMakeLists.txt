@@ -13,6 +13,9 @@ cmake_policy(SET CMP0063 NEW)
 cmake_policy(SET CMP0127 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 
+# Prefer building bundled dependencies as static instead of shared
+set(BUILD_SHARED_LIBS OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
@@ -23,6 +26,15 @@ project(citra LANGUAGES C CXX ASM)
 include(FindPkgConfig)
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "iOS")
     enable_language(OBJC OBJCXX)
+endif()
+
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND MINGW)
+    string(TOLOWER ${LIBTYPE} LIBTYPE_LOWER)
+    set(CMAKE_AR x86_64-w64-mingw32.${LIBTYPE_LOWER}-gcc-ar)
+endif()
+
+if (BSD STREQUAL "OpenBSD")
+    add_link_options(-z wxneeded)
 endif()
 
 option(ENABLE_LIBRETRO "Build as a LibRetro core" OFF)
@@ -95,7 +107,7 @@ endif()
 
 # Track which options were explicitly set by the user (for libretro conflict detection)
 set(_LIBRETRO_INCOMPATIBLE_OPTIONS
-    ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING
+    ENABLE_SDL2 ENABLE_QT ENABLE_WEB_SERVICE ENABLE_SCRIPTING ENABLE_GDBSTUB
     ENABLE_OPENAL ENABLE_ROOM ENABLE_ROOM_STANDALONE ENABLE_CUBEB ENABLE_LIBUSB)
 set(_USER_SET_OPTIONS "")
 foreach(_opt IN LISTS _LIBRETRO_INCOMPATIBLE_OPTIONS)
@@ -112,7 +124,7 @@ option(USE_SYSTEM_XXHASH "Use the system xxHash lib (instead of the bundled one)
 
 # Set bundled qt as dependent options.
 option(ENABLE_QT "Enable the Qt frontend" ON)
-option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
+option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" ON)
 option(ENABLE_QT_UPDATE_CHECKER "Enable built-in update checker for the Qt frontend" OFF)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_TESTS "Enable generating tests executable" ON "NOT IOS" OFF)
@@ -121,6 +133,7 @@ CMAKE_DEPENDENT_OPTION(ENABLE_ROOM_STANDALONE "Enable generating a standalone de
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(ENABLE_SCRIPTING "Enable RPC server for scripting" ON)
+option(ENABLE_GDBSTUB "Enable GDB stub for emulated applications" ON)
 
 CMAKE_DEPENDENT_OPTION(ENABLE_CUBEB "Enables the cubeb audio backend" ON "NOT IOS" OFF)
 option(ENABLE_OPENAL "Enables the OpenAL audio backend" ON)
@@ -132,13 +145,15 @@ CMAKE_DEPENDENT_OPTION(ENABLE_OPENGL "Enables the OpenGL renderer" ${DEFAULT_ENA
 # NetBSD doesn't support Vulkan yet, remove this check when it does.
 CMAKE_DEPENDENT_OPTION(ENABLE_VULKAN "Enables the Vulkan renderer" ON "NOT (BSD MATCHES \"NetBSD\")" OFF)
 
-option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
+option(ENABLE_DISCORD_RPC "Enables Discord Rich Presence" OFF)
 
 option(ENABLE_MICROPROFILE "Enables microprofile capabilities" OFF)
 
 option(ENABLE_SSE42 "Enable SSE4.2 optimizations on x86_64" ON)
 
 option(ENABLE_DEVELOPER_OPTIONS "Enable functionality targeted at emulator developers" OFF)
+
+option(ENABLE_BUILTIN_KEYBLOB "Enable the inclusion of the default crypto keys blob" ON)
 
 # Compile options
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_DWARF "Add DWARF debugging information" ${IS_DEBUG_BUILD} "MINGW" OFF)
@@ -193,6 +208,8 @@ if(ENABLE_SSE42 AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64"))
     else()
         SET(SSE42_COMPILE_OPTION -msse4.1 -msse4.2)
     endif()
+    add_compile_options(${SSE42_COMPILE_OPTION})
+    add_compile_definitions(CITRA_HAS_SSE42)
 endif()
 
 include(CitraHandleSystemLibs)
@@ -399,13 +416,21 @@ if (APPLE)
     endif()
     find_library(AVFOUNDATION_LIBRARY AVFoundation REQUIRED)
     find_library(IOSURFACE_LIBRARY IOSurface REQUIRED)
-    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY} ${MOLTENVK_LIBRARY})
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${AVFOUNDATION_LIBRARY} ${IOSURFACE_LIBRARY})
 
     if (ENABLE_VULKAN AND NOT ENABLE_LIBRETRO)
-        if (NOT USE_SYSTEM_MOLTENVK)
+        if (USE_SYSTEM_MOLTENVK)
+            find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+        else()
             download_moltenvk()
+            if (IOS)
+                set(MOLTENVK_RELATIVE_LIBPATH "static/MoltenVK.xcframework/ios-arm64/libMoltenVK.a")
+            else()
+                set(MOLTENVK_RELATIVE_LIBPATH "dynamic/dylib/macOS/libMoltenVK.dylib")
+            endif()
+            set(MOLTENVK_LIBRARY "${CMAKE_BINARY_DIR}/externals/MoltenVK/MoltenVK/${MOLTENVK_RELATIVE_LIBPATH}")
         endif()
-        find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+
         message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
         set(PLATFORM_LIBRARIES ${PLATFORM_LIBRARIES} ${MOLTENVK_LIBRARY})
     endif()

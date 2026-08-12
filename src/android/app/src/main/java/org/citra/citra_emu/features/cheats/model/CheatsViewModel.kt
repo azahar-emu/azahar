@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -53,7 +53,7 @@ class CheatsViewModel : ViewModel() {
     private var selectedCheatPosition = -1
 
     fun initialize(titleId_: Long) {
-        titleId = titleId_;
+        titleId = titleId_
         load()
     }
 

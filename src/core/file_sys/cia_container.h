@@ -64,7 +64,7 @@ class CIAContainer {
 public:
     // Load whole CIAs outright
     Loader::ResultStatus Load(const FileBackend& backend);
-    Loader::ResultStatus Load(FileUtil::IOFile* file);
+    Loader::ResultStatus Load(FileUtil::IOFileBase* file);
     Loader::ResultStatus Load(std::span<const u8> header_data);
 
     // Load parts of CIAs (for CIAs streamed in)

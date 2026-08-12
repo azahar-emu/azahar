@@ -1,11 +1,11 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <system_error>
 #include <jwt/jwt.hpp>
 #include "common/logging/log.h"
-#include "common/web_result.h"
+#include "common/web_util.h"
 #include "web_service/verify_user_jwt.h"
 #include "web_service/web_backend.h"
 

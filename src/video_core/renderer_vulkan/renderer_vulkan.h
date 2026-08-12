@@ -134,7 +134,6 @@ private:
     DescriptorUpdateQueue update_queue;
     RasterizerVulkan rasterizer;
     std::unique_ptr<PresentWindow> secondary_present_window_ptr;
-
     DescriptorHeap present_heap;
     vk::UniquePipelineLayout present_pipeline_layout;
     std::array<vk::Pipeline, PRESENT_PIPELINES> present_pipelines;
@@ -151,6 +150,9 @@ private:
     vk::ShaderModule cursor_fragment_shader{};
     vk::Pipeline cursor_pipeline{};
     vk::UniquePipelineLayout cursor_pipeline_layout{};
+    bool isSecondaryWindow;
+    bool secondaryWindowEnabled;
+    bool screenRendered;
 };
 
 } // namespace Vulkan

@@ -8,6 +8,7 @@
 #include "audio_core/libretro_sink.h"
 #include "common/scm_rev.h"
 #include "core/3ds.h"
+#include "core_settings.h"
 #include "emu_window/libretro_window.h"
 #include "environment.h"
 
@@ -26,6 +27,7 @@ static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
+static retro_hw_get_current_framebuffer_t framebuffer_cb;
 
 } // namespace
 
@@ -231,6 +233,34 @@ bool CanUseJIT() {
     return environ_cb(RETRO_ENVIRONMENT_GET_JIT_CAPABLE, &can_jit) && can_jit;
 }
 #endif
+
+void OnConfigureEnvironment() {
+#ifdef HAVE_LIBRETRO_VFS
+    struct retro_vfs_interface_info vfs_iface_info{1, nullptr};
+    SetVFSCallback(&vfs_iface_info);
+#endif
+
+    RegisterCoreOptions();
+
+    static const struct retro_controller_description controllers[] = {
+        {"Nintendo 3DS", RETRO_DEVICE_JOYPAD},
+    };
+
+    static const struct retro_controller_info ports[] = {
+        {controllers, 1},
+        {nullptr, 0},
+    };
+
+    SetControllerInfo(ports);
+}
+
+void SetFramebufferCallback(retro_hw_get_current_framebuffer_t cb) {
+    framebuffer_cb = cb;
+}
+
+uintptr_t GetFramebuffer() {
+    return framebuffer_cb ? framebuffer_cb() : 0;
+}
 
 }; // namespace LibRetro
 

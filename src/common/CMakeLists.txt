@@ -1,6 +1,6 @@
 include(GenerateSCMRev)
 
-add_library(citra_common STATIC
+add_library(citra_common STATIC EXCLUDE_FROM_ALL
     aarch64/cpu_detect.cpp
     aarch64/cpu_detect.h
     aarch64/oaknut_abi.h
@@ -32,6 +32,8 @@ add_library(citra_common STATIC
     error.cpp
     error.h
     expected.h
+    file_derived.cpp
+    file_derived.h
     file_util.cpp
     file_util.h
     hash.h
@@ -59,6 +61,7 @@ add_library(citra_common STATIC
     microprofile.cpp
     microprofile.h
     microprofileui.h
+    optional_helper.h
     param_package.cpp
     param_package.h
     play_time_manager.cpp
@@ -96,7 +99,8 @@ add_library(citra_common STATIC
     timer.h
     unique_function.h
     vector_math.h
-    web_result.h
+    web_util.cpp
+    web_util.h
     x64/cpu_detect.cpp
     x64/cpu_detect.h
     x64/xbyak_abi.h
@@ -129,8 +133,8 @@ endif()
 # Android storage is only used for non-libretro Android builds
 if (ANDROID AND NOT ENABLE_LIBRETRO)
   target_sources(citra_common PRIVATE
-    android_storage.cpp
-    android_storage.h
+    android_utils.cpp
+    android_utils.h
   )
 endif()
 

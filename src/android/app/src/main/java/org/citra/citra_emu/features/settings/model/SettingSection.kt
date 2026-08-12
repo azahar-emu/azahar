@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -26,9 +26,7 @@ class SettingSection(val name: String) {
      * @param key Used to retrieve the Setting.
      * @return A Setting object (you should probably cast this before using)
      */
-    fun getSetting(key: String): AbstractSetting? {
-        return settings[key]
-    }
+    fun getSetting(key: String): AbstractSetting? = settings[key]
 
     fun mergeSection(settingSection: SettingSection) {
         for (setting in settingSection.settings.values) {

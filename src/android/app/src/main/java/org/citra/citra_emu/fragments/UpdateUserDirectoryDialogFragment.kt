@@ -37,8 +37,8 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
         isCancelable = false
         val preferences: SharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(CitraApplication.appContext)
-        val ld = preferences.getString("LIME3DS_DIRECTORY","")
-        val cd = preferences.getString("CITRA_DIRECTORY","")
+        val ld = preferences.getString("LIME3DS_DIRECTORY", "")
+        val cd = preferences.getString("CITRA_DIRECTORY", "")
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_select_which_directory, null)
 
@@ -97,7 +97,12 @@ class UpdateUserDirectoryDialogFragment : DialogFragment() {
                 }
 
                 ViewModelProvider(mainActivity)[HomeViewModel::class.java].setPickingUserDir(false)
-                ViewModelProvider(mainActivity)[HomeViewModel::class.java].setUserDir(this.requireActivity(),PermissionsHandler.citraDirectory.path!!)
+                ViewModelProvider(
+                    mainActivity
+                )[HomeViewModel::class.java].setUserDir(
+                    this.requireActivity(),
+                    PermissionsHandler.citraDirectory.path!!
+                )
             }
             .show()
     }

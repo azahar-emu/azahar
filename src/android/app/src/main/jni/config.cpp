@@ -24,7 +24,6 @@
 #include "jni/config.h"
 #include "jni/default_ini.h"
 #include "jni/input_manager.h"
-#include "network/network_settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -152,6 +151,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.resolution_factor);
     ReadSetting("Renderer", Settings::values.use_disk_shader_cache);
     ReadSetting("Renderer", Settings::values.use_vsync);
+    ReadSetting("Renderer", Settings::values.use_skip_duplicate_frames);
     ReadSetting("Renderer", Settings::values.texture_filter);
     ReadSetting("Renderer", Settings::values.texture_sampling);
     ReadSetting("Renderer", Settings::values.turbo_limit);
@@ -179,6 +179,7 @@ void Config::ReadValues() {
     ReadSetting("Renderer", Settings::values.bg_blue);
     ReadSetting("Renderer", Settings::values.custom_second_layer_opacity);
     ReadSetting("Renderer", Settings::values.delay_game_render_thread_us);
+    ReadSetting("Renderer", Settings::values.simulate_3ds_gpu_timings);
     ReadSetting("Renderer", Settings::values.disable_right_eye_render);
     ReadSetting("Renderer", Settings::values.swap_eyes_3d);
     ReadSetting("Renderer", Settings::values.render_3d_which_display);
@@ -231,6 +232,7 @@ void Config::ReadValues() {
 
     // Storage
     ReadSetting("Storage", Settings::values.compress_cia_installs);
+    ReadSetting("Storage", Settings::values.async_fs_operations);
 
     // Utility
     ReadSetting("Utility", Settings::values.dump_textures);
@@ -242,6 +244,7 @@ void Config::ReadValues() {
     ReadSetting("Audio", Settings::values.audio_emulation);
     ReadSetting("Audio", Settings::values.enable_audio_stretching);
     ReadSetting("Audio", Settings::values.enable_realtime_audio);
+    ReadSetting("Audio", Settings::values.simulate_headphones_plugged);
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);
     ReadSetting("Audio", Settings::values.output_device);
@@ -311,11 +314,13 @@ void Config::ReadValues() {
     Settings::values.record_frame_times =
         android_config->GetBoolean("Debugging", Settings::HKeys::record_frame_times.c_str(), false);
     ReadSetting("Debugging", Settings::values.renderer_debug);
+    ReadSetting("Debugging", Settings::values.pica_debugging);
     ReadSetting("Debugging", Settings::values.use_gdbstub);
     ReadSetting("Debugging", Settings::values.gdbstub_port);
     ReadSetting("Debugging", Settings::values.instant_debug_log);
     ReadSetting("Debugging", Settings::values.enable_rpc_server);
     ReadSetting("Debugging", Settings::values.toggle_unique_data_console_type);
+    ReadSetting("Debugging", Settings::values.break_on_unmapped_memory_access);
 
     for (const auto& service_module : Service::service_module_map) {
         bool use_lle =
@@ -324,25 +329,21 @@ void Config::ReadValues() {
     }
 
     // Web Service
-    NetSettings::values.web_api_url =
-        android_config->GetString("WebService", "web_api_url", "https://api.citra-emu.org");
-    NetSettings::values.citra_username =
-        android_config->GetString("WebService", "citra_username", "");
-    NetSettings::values.citra_token = android_config->GetString("WebService", "citra_token", "");
+    ReadSetting("WebService", Settings::values.web_api_url);
+    ReadSetting("WebService", Settings::values.network_token);
 }
 
 void Config::Reload() {
     for (auto key = Settings::Keys::keys_array.begin(); key != Settings::Keys::keys_array.end();
          ++key) {
         const auto key_declaration_string = std::string(*key) + " =";
-        // FIXME: This code looks so ass when formatted by clang-format -OS
-        if (std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
-                std::end(DefaultINI::android_config_omitted_keys) &&
-            std::string(DefaultINI::android_config_default_file_content)
-                    .find(key_declaration_string) == std::string::npos) {
+        if ((std::ranges::find(DefaultINI::android_config_omitted_keys, *key) ==
+             std::end(DefaultINI::android_config_omitted_keys)) &&
+            (std::string(DefaultINI::android_config_default_file_content)
+                 .find(key_declaration_string) == std::string::npos)) {
             ASSERT_MSG(false,
-                       "Validation of default content config failed: Missing or malformed key "
-                       "declaration {}",
+                       "Validation of default config content (jni/default_ini.h) failed: Missing "
+                       "declaration for key '{}'",
                        *key);
         }
     }

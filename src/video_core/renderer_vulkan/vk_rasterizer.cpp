@@ -140,6 +140,7 @@ RasterizerVulkan::RasterizerVulkan(Memory::MemorySystem& memory, Pica::PicaCore&
 RasterizerVulkan::~RasterizerVulkan() = default;
 
 void RasterizerVulkan::TickFrame() {
+    scheduler.WaitWorker();
     res_cache.TickFrame();
 }
 
@@ -445,6 +446,10 @@ bool RasterizerVulkan::AccelerateDrawBatch(bool is_indexed) {
     // Vertex data setup might involve scheduler flushes so perform it
     // early to avoid invalidating our state in the middle of the draw.
     vertex_info = AnalyzeVertexArray(is_indexed, instance.GetMinVertexStrideAlignment());
+    if (vertex_info.Invalid()) {
+        // Do not draw anything if the vertex array is invalid.
+        return true;
+    }
     SetupVertexArray();
 
     if (!SetupVertexShader()) {
@@ -647,7 +652,7 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
             case TextureType::Shadow2D: {
                 Surface& surface = res_cache.GetTextureSurface(texture);
                 Sampler& sampler = res_cache.GetSampler(texture.config);
-                surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+                surface.flags |= VideoCore::SurfaceFlagBits::ShadowSource;
                 update_queue.AddImageSampler(texture_set, texture_index, 0, surface.StorageView(),
                                              sampler.Handle());
                 continue;
@@ -703,7 +708,7 @@ void RasterizerVulkan::BindShadowCube(const Pica::TexturingRegs::FullTextureConf
 
         const VideoCore::SurfaceId surface_id = res_cache.GetTextureSurface(info);
         Surface& surface = res_cache.GetSurface(surface_id);
-        surface.flags |= VideoCore::SurfaceFlagBits::ShadowMap;
+        surface.flags |= VideoCore::SurfaceFlagBits::ShadowSource;
         update_queue.AddImageSampler(texture_set, 0, binding, surface.StorageView(),
                                      sampler.Handle());
     }

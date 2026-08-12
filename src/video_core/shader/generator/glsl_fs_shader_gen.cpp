@@ -895,7 +895,11 @@ void FragmentModule::WriteLogicOp() {
 }
 
 void FragmentModule::WriteBlending() {
-    if (!config.EmulateBlend() || profile.is_vulkan) [[likely]] {
+    bool requires_rgb_minmax_emulation =
+        config.framebuffer.requested_rgb_blend.RequiresMinMaxEmulation();
+    bool requires_alpha_minmax_emulation =
+        config.framebuffer.requested_alpha_blend.RequiresMinMaxEmulation();
+    if (!requires_rgb_minmax_emulation && !requires_alpha_minmax_emulation) [[likely]] {
         return;
     }
 
@@ -937,23 +941,25 @@ void FragmentModule::WriteBlending() {
             return "vec4(1.f)";
         }
     };
+
+    // At this point, the blend equation can only be min or max.
     const auto get_func = [](Pica::FramebufferRegs::BlendEquation eq) {
         return eq == Pica::FramebufferRegs::BlendEquation::Min ? "min" : "max";
     };
 
-    if (config.framebuffer.rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Add) {
+    if (requires_rgb_minmax_emulation) {
         out += fmt::format(
             "combiner_output.rgb = {}(source_color.rgb * ({}).rgb, dest_color.rgb * ({}).rgb);\n",
-            get_func(config.framebuffer.rgb_blend.eq),
-            get_factor(config.framebuffer.rgb_blend.src_factor),
-            get_factor(config.framebuffer.rgb_blend.dst_factor));
+            get_func(config.framebuffer.requested_rgb_blend.eq),
+            get_factor(config.framebuffer.requested_rgb_blend.src_factor),
+            get_factor(config.framebuffer.requested_rgb_blend.dst_factor));
     }
-    if (config.framebuffer.alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Add) {
+    if (requires_alpha_minmax_emulation) {
         out +=
             fmt::format("combiner_output.a = {}(source_color.a * ({}).a, dest_color.a * ({}).a);\n",
-                        get_func(config.framebuffer.alpha_blend.eq),
-                        get_factor(config.framebuffer.alpha_blend.src_factor),
-                        get_factor(config.framebuffer.alpha_blend.dst_factor));
+                        get_func(config.framebuffer.requested_alpha_blend.eq),
+                        get_factor(config.framebuffer.requested_alpha_blend.src_factor),
+                        get_factor(config.framebuffer.requested_alpha_blend.dst_factor));
     }
 }
 
@@ -1239,7 +1245,8 @@ void FragmentModule::DefineExtensions() {
             use_fragment_shader_barycentric = false;
         }
     }
-    if (config.EmulateBlend() && !profile.is_vulkan) {
+    if (config.framebuffer.requested_rgb_blend.RequiresMinMaxEmulation() ||
+        config.framebuffer.requested_alpha_blend.RequiresMinMaxEmulation()) [[unlikely]] {
         if (profile.has_gl_ext_framebuffer_fetch) {
             out += "#extension GL_EXT_shader_framebuffer_fetch : enable\n";
             out += "#define destFactor color\n";
@@ -1338,7 +1345,7 @@ void FragmentModule::DefineBindingsGL() {
         out += "layout(binding = 6) uniform sampler2D tex_normal;\n";
     }
     if (use_blend_fallback) {
-        out += "layout(location = 7) uniform sampler2D tex_color;\n";
+        out += "layout(binding = 7) uniform sampler2D tex_color;\n";
     }
 
     // Shadow textures

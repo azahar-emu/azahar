@@ -133,7 +133,7 @@ public:
 
 private:
     friend class CIAFile;
-    std::unique_ptr<FileUtil::IOFile> file;
+    std::unique_ptr<FileUtil::IOFileBase> file;
     bool is_error = false;
     bool is_not_ncch = false;
     bool decryption_authorized = false;
@@ -443,6 +443,10 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
  * @returns string path to the folder
  */
 std::string GetMediaTitlePath(Service::FS::MediaType media_type);
+
+Result GetTitleInfoFromList(Core::System& system, std::span<const u64> title_id_list,
+                            Service::FS::MediaType media_type,
+                            std::vector<TitleInfo>& title_info_out);
 
 /**
  * Uninstalls the specified title.

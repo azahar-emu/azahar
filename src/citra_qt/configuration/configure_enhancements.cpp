@@ -18,7 +18,7 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     SetupPerGameUI();
     SetConfiguration();
 
-    const auto graphics_api = Settings::values.graphics_api.GetValue();
+    const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     const bool res_scale_enabled = graphics_api != Settings::GraphicsAPI::Software;
     ui->resolution_factor_combobox->setEnabled(res_scale_enabled);
 

@@ -25,9 +25,8 @@ cmake .. -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-    -DENABLE_QT_TRANSLATION=ON \
     -DENABLE_ROOM_STANDALONE=OFF \
-    -DUSE_DISCORD_PRESENCE=ON \
+    -DENABLE_DISCORD_RPC=ON \
     "${EXTRA_CMAKE_FLAGS[@]}"
 ninja
 strip -s bin/Release/*

@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -10,6 +10,7 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
+#include "core/memory.h"
 
 namespace Pica {
 
@@ -85,6 +86,11 @@ struct MemoryFillConfig {
         return DecodeAddressRegister(address_end);
     }
 
+    bool IsVRAM() const {
+        u32 addr = GetStartAddress();
+        return !(addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR_END);
+    }
+
     inline std::string DebugName() const {
         return fmt::format("from {:#X} to {:#X} with {}-bit value {:#X}", GetStartAddress(),
                            GetEndAddress(), fill_32bit ? "32" : (fill_24bit ? "24" : "16"),
@@ -153,6 +159,16 @@ struct DisplayTransferConfig {
                            GetPhysicalInputAddress(), GetPhysicalOutputAddress(),
                            scaling == NoScale ? "no" : (scaling == ScaleX ? "X" : "XY"),
                            input_width.Value(), output_width.Value());
+    }
+
+    bool IsInputVRAM() {
+        u32 addr = GetPhysicalInputAddress();
+        return !(addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR_END);
+    }
+
+    bool IsOutputVRAM() {
+        u32 addr = GetPhysicalOutputAddress();
+        return !(addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR_END);
     }
 
     union {

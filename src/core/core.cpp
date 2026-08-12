@@ -26,7 +26,9 @@
 #include "core/dumping/backend.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/frontend/image_interface.h"
+#ifdef ENABLE_GDBSTUB
 #include "core/gdbstub/gdbstub.h"
+#endif
 #include "core/global.h"
 #include "core/hle/kernel/ipc_debugger/recorder.h"
 #include "core/hle/kernel/kernel.h"
@@ -83,23 +85,17 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         return ResultStatus::ErrorNotInitialized;
     }
 
+#ifdef ENABLE_GDBSTUB
     if (GDBStub::IsServerEnabled()) {
-        Kernel::Thread* thread = kernel->GetCurrentThreadManager().GetCurrentThread();
-        if (thread && running_core) {
-            running_core->SaveContext(thread->context);
+        // The break flag is only set if GDB is connected,
+        // we can do clearing here safely. If it is ever
+        // used outside, move the clearing outside the if.
+        for (auto& cpu_core : cpu_cores) {
+            cpu_core->ClearBreakFlag();
         }
         GDBStub::HandlePacket(*this);
-
-        // If the loop is halted and we want to step, use a tiny (1) number of instructions to
-        // execute. Otherwise, get out of the loop function.
-        if (GDBStub::GetCpuHaltFlag()) {
-            if (GDBStub::GetCpuStepFlag()) {
-                tight_loop = false;
-            } else {
-                return ResultStatus::Success;
-            }
-        }
     }
+#endif
 
     Signal signal{Signal::None};
     u32 param{};
@@ -232,6 +228,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 current_core_to_execute->Step();
             }
         }
+        Reschedule();
     } else {
         // Now all cores are at the same global time. So we will run them one after the other
         // with a max slice that is the minimum of all max slices of all cores
@@ -259,6 +256,8 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 cpu_core->GetTimer().Idle();
                 PrepareReschedule();
             } else {
+                // In the rare case the break flag is set (due to exception thrown)
+                // there is probably no need to adjust the timer accordingly.
                 if (tight_loop) {
                     cpu_core->Run();
                 } else {
@@ -266,14 +265,9 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
                 }
             }
             max_slice = cpu_core->GetTimer().GetTicks() - start_ticks;
+            Reschedule();
         }
     }
-
-    if (GDBStub::IsServerEnabled()) {
-        GDBStub::SetCpuStepFlag(false);
-    }
-
-    Reschedule();
 
     return status;
 }
@@ -440,6 +434,10 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
             return ResultStatus::ErrorLoader_ErrorInvalidFormat;
         case Loader::ResultStatus::ErrorGbaTitle:
             return ResultStatus::ErrorLoader_ErrorGbaTitle;
+        case Loader::ResultStatus::ErrorPatches:
+            return ResultStatus::ErrorLoader_ErrorPatches;
+        case Loader::ResultStatus::ErrorPatchesInvalidTitle:
+            return ResultStatus::ErrorLoader_ErrorPatchesInvalidTitle;
         case Loader::ResultStatus::ErrorArtic:
             return ResultStatus::ErrorArticDisconnected;
         default:
@@ -478,7 +476,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
 
 void System::PrepareReschedule() {
     running_core->PrepareReschedule();
-    reschedule_pending = true;
+    curr_core_reschedule_pending = true;
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
@@ -495,15 +493,12 @@ double System::GetStableFrameTimeScale() {
 }
 
 void System::Reschedule() {
-    if (!reschedule_pending) {
+    if (!curr_core_reschedule_pending) {
         return;
     }
 
-    reschedule_pending = false;
-    for (const auto& core : cpu_cores) {
-        LOG_TRACE(Core_ARM11, "Reschedule core {}", core->GetID());
-        kernel->GetThreadManager(core->GetID()).Reschedule();
-    }
+    curr_core_reschedule_pending = false;
+    kernel->GetThreadManager(running_core->GetID()).Reschedule();
 }
 
 System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
@@ -571,7 +566,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
     app_loader->ReadProgramId(loading_title_id);
     HW::AES::InitKeys();
     Service::Init(*this, loading_title_id, lle_modules, !app_loader->DoingInitialSetup());
+#ifdef ENABLE_GDBSTUB
     GDBStub::DeferStart();
+#endif
 
     if (!registered_image_interface) {
         registered_image_interface = std::make_shared<Frontend::ImageInterface>();
@@ -581,8 +578,9 @@ System::ResultStatus System::Init(Frontend::EmuWindow& emu_window,
 
     auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
     gpu = std::make_unique<VideoCore::GPU>(*this, emu_window, secondary_window);
-    gpu->SetInterruptHandler(
-        [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+    gpu->SetInterruptHandler([gsp](Service::GSP::InterruptId interrupt_id, u64 wait_delay_ns) {
+        gsp->SignalInterrupt(interrupt_id, wait_delay_ns);
+    });
 
     auto plg_ldr = Service::PLGLDR::GetService(*this);
     if (plg_ldr) {
@@ -695,7 +693,9 @@ void System::Shutdown(bool is_deserializing) {
     gpu.reset();
     if (!is_deserializing) {
         lle_modules.clear();
+#ifdef ENABLE_GDBSTUB
         GDBStub::Shutdown();
+#endif
         perf_stats.reset();
         app_loader.reset();
     }
@@ -758,8 +758,15 @@ void System::Reset() {
 }
 
 void System::ApplySettings() {
-    GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
-    GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+#ifdef ENABLE_GDBSTUB
+    if (override_gdb_port != -1) {
+        GDBStub::SetServerPort(override_gdb_port);
+        GDBStub::ToggleServer(true);
+    } else {
+        GDBStub::SetServerPort(Settings::values.gdbstub_port.GetValue());
+        GDBStub::ToggleServer(Settings::values.use_gdbstub.GetValue());
+    }
+#endif
 
     if (gpu) {
 #ifndef ANDROID
@@ -826,6 +833,19 @@ void System::EjectCartridge() {
 
 bool System::IsInitialSetup() {
     return app_loader && app_loader->DoingInitialSetup();
+}
+
+void System::DebugUnscheduleAllThreadsFromFrontend(bool unschedule) {
+    if (!is_powered_on)
+        return;
+
+    for (auto proc : kernel->GetProcessList()) {
+        if (unschedule) {
+            proc->SetUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        } else {
+            proc->ClearUnscheduleMode(Kernel::UnscheduleMode::FRONTEND);
+        }
+    }
 }
 
 template <class Archive>
@@ -902,8 +922,9 @@ void System::serialize(Archive& ar, const unsigned int file_version) {
         // Re-register gpu callback, because gsp service changed after service_manager got
         // serialized
         auto gsp = service_manager->GetService<Service::GSP::GSP_GPU>("gsp::Gpu");
-        gpu->SetInterruptHandler(
-            [gsp](Service::GSP::InterruptId interrupt_id) { gsp->SignalInterrupt(interrupt_id); });
+        gpu->SetInterruptHandler([gsp](Service::GSP::InterruptId interrupt_id, u64 wait_delay_ns) {
+            gsp->SignalInterrupt(interrupt_id, wait_delay_ns);
+        });
 
         // Apply per program settings and switch the shader cache to the title running when the
         // savestate was created.

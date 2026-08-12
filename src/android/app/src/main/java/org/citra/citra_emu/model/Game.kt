@@ -4,9 +4,9 @@
 
 package org.citra.citra_emu.model
 
-import android.os.Parcelable
 import android.content.Intent
 import android.net.Uri
+import android.os.Parcelable
 import androidx.core.net.toUri
 import java.io.File
 import java.io.IOException
@@ -36,7 +36,7 @@ class Game(
     val icon: IntArray? = null,
     val fileType: String = "",
     val isCompressed: Boolean = false,
-    val filename: String,
+    val filename: String
 ) : Parcelable {
     val keyAddedToLibraryTime get() = "${filename}_AddedToLibraryTime"
     val keyLastPlayedTime get() = "${filename}_LastPlayed"
@@ -51,7 +51,9 @@ class Game(
                     val nativePath = NativeLibrary.getUserDirectory() + "/" + path
                     val nativeFile = File(nativePath)
                     if (!nativeFile.exists()) {
-                        throw IOException("Attempting to create shortcut for an executable that doesn't exist: $nativePath")
+                        throw IOException(
+                            "Attempting to create shortcut for an executable that doesn't exist: $nativePath"
+                        )
                     }
                     appUri = Uri.fromFile(nativeFile)
                 }
@@ -89,21 +91,13 @@ class Game(
         GAME_CARD(2);
 
         companion object {
-            fun fromInt(value: Int): MediaType? {
-                return MediaType.entries.find { it.value == value }
-            }
+            fun fromInt(value: Int): MediaType? = MediaType.entries.find { it.value == value }
         }
     }
 
     companion object {
-        val allExtensions: Set<String> get() = extensions + badExtensions
-
         val extensions: Set<String> = HashSet(
             listOf("3dsx", "app", "axf", "cci", "cxi", "elf", "z3dsx", "zcci", "zcxi", "3ds")
-        )
-
-        val badExtensions: Set<String> = HashSet(
-            listOf("rar", "zip", "7z", "torrent", "tar", "gz")
         )
     }
 }

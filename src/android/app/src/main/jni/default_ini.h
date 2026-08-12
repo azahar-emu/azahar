@@ -7,35 +7,36 @@
 #include <boost/hana/string.hpp>
 #include "common/setting_keys.h"
 
-namespace Keys = Settings::Keys;
-
 namespace DefaultINI {
 
 // All of these setting keys are either not currently used by Android or are too niche to bother
 // documenting (people can contribute documentation if they care), or some other explained reason
 constexpr std::array android_config_omitted_keys = {
-    Keys::enable_gamemode,
-    Keys::use_custom_storage,
-    Keys::init_time_offset,
-    Keys::physical_device,
-    Keys::use_gles, // Niche
-    Keys::dump_command_buffers,
-    Keys::use_display_refresh_rate_detection,
-    Keys::screen_top_stretch,
-    Keys::screen_top_leftright_padding,
-    Keys::screen_top_topbottom_padding,
-    Keys::screen_bottom_stretch,
-    Keys::screen_bottom_leftright_padding,
-    Keys::screen_bottom_topbottom_padding,
-    Keys::mono_render_option,
-    Keys::log_regex_filter, // Niche
-    Keys::video_encoder,
-    Keys::video_encoder_options,
-    Keys::video_bitrate,
-    Keys::audio_encoder,
-    Keys::audio_encoder_options,
-    Keys::audio_bitrate,
-    Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Settings::Keys::enable_gamemode,
+    Settings::Keys::use_custom_storage,
+    Settings::Keys::init_time_offset,
+    Settings::Keys::physical_device,
+    Settings::Keys::use_gles, // Niche
+    Settings::Keys::dump_command_buffers,
+    Settings::Keys::use_display_refresh_rate_detection,
+    Settings::Keys::screen_top_stretch,
+    Settings::Keys::screen_top_leftright_padding,
+    Settings::Keys::screen_top_topbottom_padding,
+    Settings::Keys::screen_bottom_stretch,
+    Settings::Keys::screen_bottom_leftright_padding,
+    Settings::Keys::screen_bottom_topbottom_padding,
+    Settings::Keys::mono_render_option,
+    Settings::Keys::log_regex_filter, // Niche
+    Settings::Keys::video_encoder,
+    Settings::Keys::video_encoder_options,
+    Settings::Keys::video_bitrate,
+    Settings::Keys::audio_encoder,
+    Settings::Keys::audio_encoder_options,
+    Settings::Keys::audio_bitrate,
+    Settings::Keys::last_artic_base_addr, // On Android, this value is stored as a "preference"
+    Settings::Keys::break_on_unmapped_memory_access, // Does nothing as the error is ignored
+    Settings::Keys::use_gdbstub, // GDB functionality disabled by deafult on Android
+    Settings::Keys::gdbstub_port,
 };
 
 // clang-format off
@@ -76,6 +77,9 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 
 # Use Artic Controller when connected to Artic Base Server. (Default 0)
 )") DECLARE_KEY(use_artic_base_controller) BOOST_HANA_STRING(R"(
+
+# List of buttons which will be triggered by the combo button. (Default [] or empty)
+)") DECLARE_KEY(combo_button_buttons) BOOST_HANA_STRING(R"(
 
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
@@ -126,6 +130,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # if you have screen tearing, which is unusual on Android
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(use_vsync) BOOST_HANA_STRING(R"(
+
+# Skips display of duplicated frames in 30 fps games
+# 0: Off, 1 (default): On
+)") DECLARE_KEY(use_skip_duplicate_frames) BOOST_HANA_STRING(R"(
 
 # Reduce stuttering by storing and loading generated shaders to disk
 # 0: Off, 1 (default. On)
@@ -195,6 +203,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Delays the game render thread by the specified amount of microseconds
 # Set to 0 for no delay, only useful in dynamic-fps games to simulate GPU delay.
 )") DECLARE_KEY(delay_game_render_thread_us) BOOST_HANA_STRING(R"(
+
+# Delays GPU completion events based on measurements taken from real hardware
+# 0: No delay, 1 (default): Enable delay
+)") DECLARE_KEY(simulate_3ds_gpu_timings) BOOST_HANA_STRING(R"(
 
 # Disables rendering the right eye image
 # Greatly improves performance in some games, but can cause flickering in others.
@@ -271,6 +283,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Do not compress, 1: Compress
 )") DECLARE_KEY(compress_cia_installs) BOOST_HANA_STRING(R"(
 
+# Whether to enable async filesystem operations
+# 0: Disabled, 1 (default): Enabled
+)") DECLARE_KEY(async_fs_operations) BOOST_HANA_STRING(R"(
+
 # Position of the performance overlay
 # 0: Top Left
 # 1: Center Top
@@ -343,6 +359,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(expand_to_cutout_area) BOOST_HANA_STRING(R"(
 
+# Allows Azahar to use externally connected displays
+# 0: Off, 1: On (default)
+)") DECLARE_KEY(enable_secondary_display) BOOST_HANA_STRING(R"(
+
 # Secondary Display Layout
 # What the game should do if a secondary display is connected physically or using
 # Miracast / Chromecast screen mirroring
@@ -403,6 +423,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # Scales audio playback speed to account for drops in emulation framerate
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(enable_realtime_audio) BOOST_HANA_STRING(R"(
+
+# Simulates whether headphones are plugged in to the emulated 3DS system
+# 0 (default): No, 1: Yes
+)") DECLARE_KEY(simulate_headphones_plugged) BOOST_HANA_STRING(R"(
 
 # Output volume.
 # 1.0 (default): 100%, 0.0; mute
@@ -519,6 +543,14 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): No, 1: Yes
 )") DECLARE_KEY(android_hide_images) BOOST_HANA_STRING(R"(
 
+# Whether or not an in-app notification should be displayed when an update is available for Azahar
+# 0: No, 1 (default): Yes
+)") DECLARE_KEY(check_for_update_on_start) BOOST_HANA_STRING(R"(
+
+# Which update channel should be used by the update checker
+# 0 (default): Stable, 1: Prerelease
+)") DECLARE_KEY(update_check_channel) BOOST_HANA_STRING(R"(
+
 [Debugging]
 # Record frame time data, can be found in the log directory. Boolean value
 )") DECLARE_KEY(record_frame_times) BOOST_HANA_STRING(R"(
@@ -527,9 +559,9 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 # 0 (default): Off, 1: On
 )") DECLARE_KEY(renderer_debug) BOOST_HANA_STRING(R"(
 
-# Port for listening to GDB connections.
-)") DECLARE_KEY(use_gdbstub) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(gdbstub_port) BOOST_HANA_STRING(R"(
+# Whether to enable PICA200 debugging (does nothing on Android)
+# 0 (default): Off, 1: On
+)") DECLARE_KEY(pica_debugging) BOOST_HANA_STRING(R"(
 
 # Flush log output on every message
 # Immediately commits the debug log to file. Use this if Azahar crashes and the log output is being cut.
@@ -557,9 +589,10 @@ static const char* android_config_default_file_content = (BOOST_HANA_STRING(R"(
 [WebService]
 # URL for Web API
 )") DECLARE_KEY(web_api_url) BOOST_HANA_STRING(R"(
-# Username and token for Citra Web Service
-)") DECLARE_KEY(citra_username) BOOST_HANA_STRING(R"(
-)") DECLARE_KEY(citra_token) BOOST_HANA_STRING("\n")).c_str();
+# Token for Web Service
+)") DECLARE_KEY(network_token) BOOST_HANA_STRING("\n")
+
+).c_str();
 
 // clang-format on
 

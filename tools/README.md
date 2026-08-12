@@ -7,7 +7,16 @@ The scripts in this directory assume that your current working directory is the 
 ## Pre-release checklist
 
 - [ ] Update compatibility list
-- [ ] If this is a major release (2123.1 -> major.minor), update translations
+- [ ] Update translations if either of the following apply:
+    - This is a major release (e.g. 2125.x --> 2126.0)
+    - This is a minor release, but the release branch hasn't yet diverged from master
+
+## Post-release checklist
+
+- [ ] Publish to Google Play Store
+- [ ] Publish files to the official Internet Archive account (incl. changelog as .md file)
+- [ ] Publish to Flathub
+- [ ] Force-push tagged commit to retroarch-live branch
 
 ### Note:
 

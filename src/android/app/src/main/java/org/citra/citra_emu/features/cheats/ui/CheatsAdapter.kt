@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -41,7 +41,8 @@ class CheatsAdapter(
     }
 
     inner class CheatViewHolder(private val binding: ListItemCheatBinding) :
-        RecyclerView.ViewHolder(binding.root), View.OnClickListener,
+        RecyclerView.ViewHolder(binding.root),
+        View.OnClickListener,
         CompoundButton.OnCheckedChangeListener {
         private lateinit var viewModel: CheatsViewModel
         private lateinit var cheat: Cheat

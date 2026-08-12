@@ -83,7 +83,11 @@
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
         <item row="0" column="1">
-         <widget class="QLineEdit" name="username"/>
+          <widget class="QLineEdit" name="username">
+            <property name="toolTip">
+              <string>This property is linked to the 3DS system username.</string>
+            </property>
+          </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">

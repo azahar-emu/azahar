@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Lime3DS Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,15 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.preference.PreferenceManager
+import kotlin.math.roundToInt
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.ui.main.ThemeProvider
-import kotlin.math.roundToInt
 
 object ThemeUtil {
     const val SYSTEM_BAR_ALPHA = 0.9f
@@ -75,18 +72,19 @@ object ThemeUtil {
                 false -> setLightModeSystemBars(windowController)
                 true -> setDarkModeSystemBars(windowController)
             }
+
             AppCompatDelegate.MODE_NIGHT_NO -> setLightModeSystemBars(windowController)
+
             AppCompatDelegate.MODE_NIGHT_YES -> setDarkModeSystemBars(windowController)
         }
     }
 
-    private fun isNightMode(activity: AppCompatActivity): Boolean {
-        return when (activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+    private fun isNightMode(activity: AppCompatActivity): Boolean =
+        when (activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
             Configuration.UI_MODE_NIGHT_NO -> false
             Configuration.UI_MODE_NIGHT_YES -> true
             else -> false
         }
-    }
 
     private fun setLightModeSystemBars(windowController: WindowInsetsControllerCompat) {
         windowController.isAppearanceLightStatusBars = true
@@ -107,21 +105,24 @@ object ThemeUtil {
     }
 
     @ColorInt
-    fun getColorWithOpacity(@ColorInt color: Int, alphaFactor: Float): Int {
-        return Color.argb(
-            (alphaFactor * Color.alpha(color)).roundToInt(),
-            Color.red(color),
-            Color.green(color),
-            Color.blue(color)
-        )
-    }
+    fun getColorWithOpacity(@ColorInt color: Int, alphaFactor: Float): Int = Color.argb(
+        (alphaFactor * Color.alpha(color)).roundToInt(),
+        Color.red(color),
+        Color.green(color),
+        Color.blue(color)
+    )
 
     // Listener that detects if the theme keys are being changed from the setting menu and recreates the activity
     private var listener: SharedPreferences.OnSharedPreferenceChangeListener? = null
 
-    fun ThemeChangeListener(activity: AppCompatActivity) {
+    fun themeChangeListener(activity: AppCompatActivity) {
         listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            val relevantKeys = listOf(Settings.PREF_STATIC_THEME_COLOR, Settings.PREF_MATERIAL_YOU, Settings.PREF_BLACK_BACKGROUNDS)
+            val relevantKeys =
+                listOf(
+                    Settings.PREF_STATIC_THEME_COLOR,
+                    Settings.PREF_MATERIAL_YOU,
+                    Settings.PREF_BLACK_BACKGROUNDS
+                )
             if (key in relevantKeys) {
                 activity.recreate()
             }

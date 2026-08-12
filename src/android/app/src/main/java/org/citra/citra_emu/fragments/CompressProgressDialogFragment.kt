@@ -9,16 +9,16 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.Lifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.viewmodel.CompressProgressDialogViewModel
-import org.citra.citra_emu.NativeLibrary
 
 class CompressProgressDialogFragment : DialogFragment() {
     private lateinit var progressBar: ProgressBar
@@ -37,14 +37,27 @@ class CompressProgressDialogFragment : DialogFragment() {
         val view = layoutInflater.inflate(R.layout.dialog_compress_progress, null)
         progressBar = view.findViewById(R.id.compress_progress)
         val label = view.findViewById<android.widget.TextView>(R.id.compress_label)
-        label.text = if (isCompressing) getString(R.string.compressing) else getString(R.string.decompressing)
+        label.text =
+            if (isCompressing) {
+                getString(
+                    R.string.compressing
+                )
+            } else {
+                getString(R.string.decompressing)
+            }
 
         isCancelable = false
         progressBar.isIndeterminate = true
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(CompressProgressDialogViewModel.total, CompressProgressDialogViewModel.progress) { total, progress ->
+                combine(
+                    CompressProgressDialogViewModel.total,
+                    CompressProgressDialogViewModel.progress
+                ) {
+                        total,
+                        progress
+                    ->
                     total to progress
                 }.collectLatest { (total, progress) ->
                     if (total <= 0) {
@@ -63,7 +76,10 @@ class CompressProgressDialogFragment : DialogFragment() {
         val builder = MaterialAlertDialogBuilder(requireContext())
             .setView(view)
             .setCancelable(false)
-            .setNegativeButton(android.R.string.cancel) { _: android.content.DialogInterface, _: Int ->
+            .setNegativeButton(android.R.string.cancel) {
+                    _: android.content.DialogInterface,
+                    _: Int
+                ->
                 outputPath?.let { path ->
                     NativeLibrary.deleteDocument(path)
                 }
@@ -77,7 +93,10 @@ class CompressProgressDialogFragment : DialogFragment() {
         private const val ARG_IS_COMPRESSING = "isCompressing"
         private const val ARG_OUTPUT_PATH = "outputPath"
 
-        fun newInstance(isCompressing: Boolean, outputPath: String?): CompressProgressDialogFragment {
+        fun newInstance(
+            isCompressing: Boolean,
+            outputPath: String?
+        ): CompressProgressDialogFragment {
             val frag = CompressProgressDialogFragment()
             val args = Bundle()
             args.putBoolean(ARG_IS_COMPRESSING, isCompressing)

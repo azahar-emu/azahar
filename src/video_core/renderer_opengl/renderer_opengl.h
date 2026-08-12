@@ -112,6 +112,8 @@ private:
     GLuint attrib_tex_coord;
 
     FrameDumperOpenGL frame_dumper;
+    bool isSecondaryWindow;
+    bool secondaryWindowEnabled;
 };
 
 } // namespace OpenGL

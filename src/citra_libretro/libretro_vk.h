@@ -126,6 +126,10 @@ public:
         return static_cast<u32>(frame_pool.size());
     }
 
+    vk::Format GetSurfaceFormat() const noexcept {
+        return output_format;
+    }
+
 private:
     /// Creates the render pass for LibRetro output
     vk::RenderPass CreateRenderpass();

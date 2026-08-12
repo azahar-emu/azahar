@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -186,6 +186,13 @@ public:
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
 
+    /**
+     * Whether the backend allows to break with single instruction accuracy
+     * when Run() is used. If false is returned, the user should expect
+     * innaccuracies with memory watchpoints access exceptions.
+     */
+    virtual bool HasSingleInstructionBreakAccuracy() = 0;
+
     Core::Timing::Timer& GetTimer() {
         return *timer;
     }
@@ -198,11 +205,27 @@ public:
         return id;
     }
 
+    /**
+     * Sets the core to not being runnable until its break condition is handled.
+     */
+    void SetBreakFlag() {
+        break_flag = true;
+    }
+
+    /*
+     * Sets the core being runnable after its break condition was handled.
+     */
+    void ClearBreakFlag() {
+        break_flag = false;
+    }
+
 protected:
     // This us used for serialization. Returning nullptr is valid if page tables are not used.
     virtual std::shared_ptr<Memory::PageTable> GetPageTable() const = 0;
 
     std::shared_ptr<Core::Timing::Timer> timer;
+
+    bool break_flag{};
 
 private:
     u32 id;
@@ -213,6 +236,7 @@ private:
     void save(Archive& ar, const unsigned int file_version) const {
         ar << timer;
         ar << id;
+        ar << break_flag;
         const auto page_table = GetPageTable();
         ar << page_table;
         for (int i = 0; i < 15; i++) {
@@ -258,6 +282,7 @@ private:
         ClearInstructionCache();
         ar >> timer;
         ar >> id;
+        ar >> break_flag;
         std::shared_ptr<Memory::PageTable> page_table{};
         ar >> page_table;
         SetPageTable(page_table);

@@ -10,6 +10,8 @@ namespace Common {
 
 constexpr char help_string[] =
     "Usage: {} [options] <file path>\n"
+    "-c  [path]                  Z3DS compress a ROM located at the given path\n"
+    "                              (optionally provide '-o [path]' for output directory)\n"
     "-d, --dump-video [path]     Dump video recording of emulator playback to the given file path\n"
     "-f, --fullscreen            Start in fullscreen mode\n"
     "-g, --gdbport [port]        Enable gdb stub on the given port\n"
@@ -24,6 +26,8 @@ constexpr char help_string[] =
     "the old citra-room executable)\n"
 #endif
     "-v, --version               Output version information and exit\n"
-    "-w, --windowed              Start in windowed mode";
+    "-w, --windowed              Start in windowed mode\n"
+    "-x  [path]                  Decompress a Z3DS compressed ROM located at the given path\n"
+    "                              (optionally provide '-o [path]' for output directory)";
 
 } // namespace Common

@@ -8,19 +8,27 @@ import android.app.Presentation
 import android.content.Context
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.os.Build
 import android.os.Bundle
 import android.view.Display
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
-import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.NativeLibrary
+import org.citra.citra_emu.features.settings.model.BooleanSetting
+import org.citra.citra_emu.features.settings.model.IntSetting
+import org.citra.citra_emu.utils.Log
 
 class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     private var pres: SecondaryDisplayPresentation? = null
     private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     private val vd: VirtualDisplay
+    var preferredDisplayId = -1
+    var currentDisplayId = -1
+
+    val availableDisplays: List<Display>
+        get() = getSecondaryDisplays()
 
     init {
         vd = displayManager.createVirtualDisplay(
@@ -35,31 +43,40 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 
     fun updateSurface() {
-        NativeLibrary.secondarySurfaceChanged(pres!!.getSurfaceHolder().surface)
+        val surface = pres?.getSurfaceHolder()?.surface
+        if (surface != null && surface.isValid) {
+            NativeLibrary.secondarySurfaceChanged(surface)
+        } else {
+            Log.warning("SecondaryDisplay Attempted to update null or invalid surface")
+        }
     }
 
     fun destroySurface() {
         NativeLibrary.secondarySurfaceDestroyed()
     }
 
-    private fun getExternalDisplay(context: Context): Display? {
+    private fun getSecondaryDisplays(): List<Display> {
         val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-        val currentDisplayId = context.display.displayId
-        val displays = dm.displays
-        val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION);
-        val extDisplays = displays.filter {
-            val isPresentable = presDisplays.any { pd -> pd.displayId == it.displayId }
-            val isNotDefaultOrPresentable = it.displayId != Display.DEFAULT_DISPLAY || isPresentable
-            isNotDefaultOrPresentable &&
-                    it.displayId != currentDisplayId &&
-                    it.name != "HiddenDisplay" &&
-                    it.state != Display.STATE_OFF &&
-                    it.isValid
+        val currentDisplayId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display.displayId
+        } else {
+            @Suppress("DEPRECATION")
+            (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+                .defaultDisplay.displayId
         }
-        // if there is a display called Built-In Display or Built-In Screen, prioritize the OTHER screen
-        val selected = extDisplays.firstOrNull { ! it.name.contains("Built",true) }
-            ?: extDisplays.firstOrNull()
-        return selected
+        val displays = dm.displays
+        val presDisplays = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+        return displays.filter {
+            val isPresentable = presDisplays.any { pd -> pd.displayId == it.displayId }
+            val isNotDefaultOrPresentable =
+                (it != null && it.displayId != Display.DEFAULT_DISPLAY) || isPresentable
+
+            isNotDefaultOrPresentable &&
+                it.displayId != currentDisplayId &&
+                it.name != "HiddenDisplay" &&
+                it.state != Display.STATE_OFF &&
+                it.isValid
+        }
     }
 
     fun updateDisplay() {
@@ -68,21 +85,40 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
             return
         }
 
-        // decide if we are going to the external display or the internal one
-        var display = getExternalDisplay(context)
-        if (display == null ||
-            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int) {
-            display = vd.display
+        val displayToUse = if (availableDisplays.isEmpty() ||
+            // Theoretically, the NONE option is no longer selectable, but
+            // I am leaving this in for backwards compatibility
+            IntSetting.SECONDARY_DISPLAY_LAYOUT.int == SecondaryDisplayLayout.NONE.int ||
+            !BooleanSetting.ENABLE_SECONDARY_DISPLAY.boolean
+        ) {
+            currentDisplayId = -1
+            vd.display
+        } else if (preferredDisplayId >= 0 &&
+            availableDisplays.any { it.displayId == preferredDisplayId }
+        ) {
+            currentDisplayId = preferredDisplayId
+            availableDisplays.first { it.displayId == preferredDisplayId }
+        } else {
+            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+            val default = dm.displays.first { it.displayId == Display.DEFAULT_DISPLAY }
+            // prioritize displays that have a different name from the default display, as
+            // some devices such as the Odin 2 create a permanent virtual display with the same
+            // name as the default display that should be skipped in most cases
+            currentDisplayId = availableDisplays.firstOrNull {
+                it.name != default.name && !it.name.contains("Built", true)
+            }?.displayId
+                ?: availableDisplays[0].displayId
+            availableDisplays.first { it.displayId == currentDisplayId }
         }
 
         // if our presentation is already on the right display, ignore
-        if (pres?.display == display) return
+        if (pres?.display == displayToUse) return
 
         // otherwise, make a new presentation
         releasePresentation()
 
         try {
-            pres = SecondaryDisplayPresentation(context, display!!, this)
+            pres = SecondaryDisplayPresentation(context, displayToUse!!, this)
             pres?.show()
         }
         // catch BadTokenException and InvalidDisplayException,
@@ -119,7 +155,9 @@ class SecondaryDisplay(val context: Context) : DisplayManager.DisplayListener {
     }
 }
 class SecondaryDisplayPresentation(
-    context: Context, display: Display, val parent: SecondaryDisplay
+    context: Context,
+    display: Display,
+    val parent: SecondaryDisplay
 ) : Presentation(context, display) {
     private lateinit var surfaceView: SurfaceView
     private var touchscreenPointerId = -1
@@ -137,16 +175,21 @@ class SecondaryDisplayPresentation(
         surfaceView = SurfaceView(context)
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-
+                Log.debug("SecondaryDisplay Surface created")
             }
 
             override fun surfaceChanged(
-                holder: SurfaceHolder, format: Int, width: Int, height: Int
+                holder: SurfaceHolder,
+                format: Int,
+                width: Int,
+                height: Int
             ) {
+                Log.debug("SecondaryDisplay Surface changed: ${width}x$height")
                 parent.updateSurface()
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
+                Log.debug("SecondaryDisplay Surface destroyed")
                 parent.destroySurface()
             }
         })
@@ -191,7 +234,5 @@ class SecondaryDisplayPresentation(
     }
 
     // Publicly accessible method to get the SurfaceHolder
-    fun getSurfaceHolder(): SurfaceHolder {
-        return surfaceView.holder
-    }
+    fun getSurfaceHolder(): SurfaceHolder = surfaceView.holder
 }

@@ -275,18 +275,19 @@ FramebufferLayout HybridScreenLayout(u32 width, u32 height, bool swapped, bool u
         std::swap(width, height);
     }
 
-    // Split the window into two parts. Give 2.25x width to the main screen,
-    // and make a bar on the right side with 1x width top screen and 1.25x width bottom screen
-    // To do that, find the total emulation box and maximize that based on window size
+    // use Large Screen layout with these specific ratios to get two of the pieces
     const float scale_factor = swapped ? 2.25 : 1.8;
     const Settings::SmallScreenPosition pos = swapped ? Settings::SmallScreenPosition::TopRight
                                                       : Settings::SmallScreenPosition::BottomRight;
-    FramebufferLayout res = LargeFrameLayout(width, height, swapped, upright, scale_factor, pos);
+    // always pass false as the upright value here, as it is being handled here not there
+    FramebufferLayout res = LargeFrameLayout(width, height, swapped, false, scale_factor, pos);
     const Common::Rectangle<u32> main = swapped ? res.bottom_screen : res.top_screen;
     const Common::Rectangle<u32> small = swapped ? res.top_screen : res.bottom_screen;
     res.additional_screen = Common::Rectangle<u32>{small.left, swapped ? small.bottom : main.top,
                                                    small.right, swapped ? main.bottom : small.top};
+    res.additional_screen_is_bottom = swapped;
     res.additional_screen_enabled = true;
+    res.is_rotated = !upright;
     if (upright) {
         return reverseLayout(res);
     } else {
@@ -305,17 +306,30 @@ FramebufferLayout AndroidSecondaryLayout(u32 width, u32 height) {
     const Settings::SecondaryDisplayLayout layout =
         Settings::values.secondary_display_layout.GetValue();
     switch (layout) {
+    case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
 
     case Settings::SecondaryDisplayLayout::BottomScreenOnly:
         return SingleFrameLayout(width, height, true, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::SideBySide:
         return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
                                 1.0f, Settings::SmallScreenPosition::MiddleRight);
+    case Settings::SecondaryDisplayLayout::LargeScreen:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                Settings::values.large_screen_proportion.GetValue(),
+                                Settings::values.small_screen_position.GetValue());
+    case Settings::SecondaryDisplayLayout::Original:
+        return LargeFrameLayout(width, height, false, Settings::values.upright_screen.GetValue(),
+                                1.0f, Settings::SmallScreenPosition::BelowLarge);
+    case Settings::SecondaryDisplayLayout::Hybrid:
+        return HybridScreenLayout(width, height, false, Settings::values.upright_screen.GetValue());
     case Settings::SecondaryDisplayLayout::None:
-        // this should never happen, but if it does, somehow, send the top screen
-    case Settings::SecondaryDisplayLayout::TopScreenOnly:
+        // this should never happen - if "none" is set this method shouldn't run - but if it does,
+        // somehow, use OppositeScreenOnly
+    case Settings::SecondaryDisplayLayout::OppositeScreenOnly:
     default:
-        return SingleFrameLayout(width, height, false, Settings::values.upright_screen.GetValue());
+        return SingleFrameLayout(width, height, !Settings::values.swap_screen.GetValue(),
+                                 Settings::values.upright_screen.GetValue());
     }
 }
 

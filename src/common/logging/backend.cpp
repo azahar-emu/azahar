@@ -573,7 +573,9 @@ void Start() {
 }
 
 void Stop() {
-    Impl::Stop();
+    if (logging_initialized) {
+        Impl::Stop();
+    }
 }
 
 void DisableLoggingInTests() {
@@ -595,7 +597,7 @@ void SetColorConsoleBackendEnabled(bool enabled) {
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
                        unsigned int line_num, const char* function, fmt::string_view format,
                        const fmt::format_args& args) {
-    if (initialization_in_progress_suppress_logging) [[unlikely]] {
+    if (initialization_in_progress_suppress_logging && log_level < Level::Critical) [[unlikely]] {
         return;
     }
 

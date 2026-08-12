@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,7 +25,7 @@ class Path;
 namespace Service::BOSS {
 
 constexpr u32 BOSS_PAYLOAD_HEADER_LENGTH = 0x28;
-constexpr u32 BOSS_MAGIC = Loader::MakeMagic('b', 'o', 's', 's');
+constexpr u32 BOSS_MAGIC = FileUtil::MakeMagic('b', 'o', 's', 's');
 constexpr u32 BOSS_PAYLOAD_MAGIC = 0x10001;
 constexpr u64 NEWS_PROG_ID = 0x0004013000003502;
 

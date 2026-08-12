@@ -76,11 +76,9 @@ enum class ResultStatus {
     ErrorGbaTitle,
     ErrorArtic,
     ErrorNotFound,
+    ErrorPatches,
+    ErrorPatchesInvalidTitle,
 };
-
-constexpr u32 MakeMagic(char a, char b, char c, char d) {
-    return a | b << 8 | c << 16 | d << 24;
-}
 
 /// Interface for loading an application
 class AppLoader : NonCopyable {
@@ -308,7 +306,7 @@ public:
 
 protected:
     Core::System& system;
-    std::unique_ptr<FileUtil::IOFile> file;
+    std::unique_ptr<FileUtil::IOFileBase> file;
     bool is_loaded = false;
     std::optional<Kernel::MemoryMode> memory_mode_override = std::nullopt;
 };
@@ -319,5 +317,8 @@ protected:
  * @return best loader for this file
  */
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
+
+std::optional<std::pair<Loader::AppLoader::CompressFileInfo, size_t>> GetCompressFileInfo(
+    const std::string& filepath, bool compress);
 
 } // namespace Loader

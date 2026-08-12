@@ -43,6 +43,17 @@ struct BlendConfig {
                                    // fields
                                    FIELD_HASH(eq), FIELD_HASH(src_factor), FIELD_HASH(dst_factor));
     }
+
+    void SetMinMaxEmulationDisabled() {
+        // If we don't need min/max emulation, set the blend equation
+        // to "-1" as a clear marker that this config is disabled.
+        eq = static_cast<Pica::FramebufferRegs::BlendEquation>(UINT32_MAX);
+    }
+
+    bool RequiresMinMaxEmulation() {
+        return eq == Pica::FramebufferRegs::BlendEquation::Min ||
+               eq == Pica::FramebufferRegs::BlendEquation::Max;
+    }
 };
 static_assert(std::has_unique_object_representations_v<BlendConfig>);
 
@@ -58,8 +69,8 @@ struct FramebufferConfig {
         BitField<10, 1, u32> shadow_rendering;
         BitField<11, 1, u32> alphablend_enable;
     };
-    BlendConfig rgb_blend{};
-    BlendConfig alpha_blend{};
+    BlendConfig requested_rgb_blend{};
+    BlendConfig requested_alpha_blend{};
 
     Pica::FramebufferRegs::LogicOp requested_logic_op{};
 
@@ -78,7 +89,8 @@ struct FramebufferConfig {
             // fields
             FIELD_HASH(alpha_test_func), FIELD_HASH(scissor_test_mode), FIELD_HASH(depthmap_enable),
             FIELD_HASH(logic_op), FIELD_HASH(shadow_rendering), FIELD_HASH(alphablend_enable),
-            FIELD_HASH(rgb_blend), FIELD_HASH(alpha_blend), FIELD_HASH(requested_logic_op),
+            FIELD_HASH(requested_rgb_blend), FIELD_HASH(requested_alpha_blend),
+            FIELD_HASH(requested_logic_op),
 
             // nested layout
             BlendConfig::StructHash());
@@ -385,11 +397,6 @@ struct FSConfig {
 
     [[nodiscard]] bool TevStageUpdatesCombinerBufferAlpha(u32 stage_index) const {
         return (stage_index < 4) && ((texture.combiner_buffer_input >> 4) & (1 << stage_index));
-    }
-
-    [[nodiscard]] bool EmulateBlend() const {
-        return framebuffer.rgb_blend.eq != Pica::FramebufferRegs::BlendEquation::Add ||
-               framebuffer.alpha_blend.eq != Pica::FramebufferRegs::BlendEquation::Add;
     }
 
     [[nodiscard]] bool UsesSpirvIncompatibleConfig() const {

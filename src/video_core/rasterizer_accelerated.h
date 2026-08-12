@@ -51,6 +51,10 @@ protected:
         u32 vs_input_index_min;
         u32 vs_input_index_max;
         u32 vs_input_size;
+
+        bool Invalid() const {
+            return vs_input_index_min == 0 && vs_input_index_max == 0 && vs_input_size == 0;
+        }
     };
 
     /// Retrieve the range and the size of the input vertex

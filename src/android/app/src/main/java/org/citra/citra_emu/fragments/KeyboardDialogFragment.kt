@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -40,7 +40,7 @@ class KeyboardDialogFragment : DialogFragment() {
         isCancelable = false
 
         when (config.buttonConfig) {
-            SoftwareKeyboard.ButtonConfig.Triple -> {
+            SoftwareKeyboard.ButtonConfig.TRIPLE -> {
                 val negativeText =
                     config.buttonText[0].ifEmpty { getString(android.R.string.cancel) }
                 val neutralText = config.buttonText[1].ifEmpty { getString(R.string.i_forgot) }
@@ -50,7 +50,7 @@ class KeyboardDialogFragment : DialogFragment() {
                     .setPositiveButton(positiveText, null)
             }
 
-            SoftwareKeyboard.ButtonConfig.Dual -> {
+            SoftwareKeyboard.ButtonConfig.DUAL -> {
                 val negativeText =
                     config.buttonText[0].ifEmpty { getString(android.R.string.cancel) }
                 val positiveText = config.buttonText[2].ifEmpty { getString(android.R.string.ok) }
@@ -58,7 +58,7 @@ class KeyboardDialogFragment : DialogFragment() {
                     .setPositiveButton(positiveText, null)
             }
 
-            SoftwareKeyboard.ButtonConfig.Single -> {
+            SoftwareKeyboard.ButtonConfig.SINGLE -> {
                 val positiveText = config.buttonText[2].ifEmpty { getString(android.R.string.ok) }
                 builder.setPositiveButton(positiveText, null)
             }
@@ -74,25 +74,31 @@ class KeyboardDialogFragment : DialogFragment() {
                 SoftwareKeyboard.data.text = binding.editTextInput.text.toString()
                 val error = SoftwareKeyboard.ValidateInput(SoftwareKeyboard.data.text)
                 if (error != SoftwareKeyboard.ValidationError.None) {
-                    SoftwareKeyboard.HandleValidationError(config, error)
+                    SoftwareKeyboard.handleValidationError(config, error)
                     return@setOnClickListener
                 }
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
         if (alertDialog.getButton(DialogInterface.BUTTON_NEUTRAL) != null) {
             alertDialog.getButton(DialogInterface.BUTTON_NEUTRAL).setOnClickListener {
                 SoftwareKeyboard.data.button = 1
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
         if (alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE) != null) {
             alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener {
                 SoftwareKeyboard.data.button = 0
                 dismiss()
-                synchronized(SoftwareKeyboard.finishLock) { SoftwareKeyboard.finishLock.notifyAll() }
+                synchronized(SoftwareKeyboard.finishLock) {
+                    SoftwareKeyboard.finishLock.notifyAll()
+                }
             }
         }
 

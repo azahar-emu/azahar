@@ -1,4 +1,4 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -67,6 +67,8 @@ void ConfigureAudio::SetConfiguration() {
 
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching.GetValue());
     ui->toggle_realtime_audio->setChecked(Settings::values.enable_realtime_audio.GetValue());
+    ui->simulate_headphones_plugged->setChecked(
+        Settings::values.simulate_headphones_plugged.GetValue());
     SetHleFeaturesEnabled();
 
     const s32 volume =
@@ -175,6 +177,9 @@ void ConfigureAudio::ApplyConfiguration() {
         &Settings::values.volume, ui->volume_combo_box, [this](s32) {
             return static_cast<float>(ui->volume_slider->value()) / ui->volume_slider->maximum();
         });
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.simulate_headphones_plugged,
+                                             ui->simulate_headphones_plugged,
+                                             simulate_headphones_plugged);
 
     if (Settings::IsConfiguringGlobal()) {
         Settings::values.output_type =
@@ -252,4 +257,7 @@ void ConfigureAudio::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredTristate(ui->toggle_realtime_audio,
                                             Settings::values.enable_realtime_audio, realtime_audio);
+    ConfigurationShared::SetColoredTristate(ui->simulate_headphones_plugged,
+                                            Settings::values.simulate_headphones_plugged,
+                                            simulate_headphones_plugged);
 }

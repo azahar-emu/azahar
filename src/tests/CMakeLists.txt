@@ -13,6 +13,7 @@ add_executable(tests
     audio_core/lle/lle.cpp
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
+    video_core/pica_types.cpp
     video_core/shader.cpp
     audio_core/merryhime_3ds_audio/merry_audio/merry_audio.cpp
     audio_core/merryhime_3ds_audio/merry_audio/merry_audio.h
@@ -32,11 +33,11 @@ target_link_libraries(tests PRIVATE citra_common citra_core video_core audio_cor
 target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch2 nihstro-headers Threads::Threads)
 
 if (ENABLE_LIBRETRO)
-    target_link_libraries(tests PRIVATE $<TARGET_OBJECTS:azahar_libretro_common>)
+    target_link_libraries(tests PRIVATE $<TARGET_OBJECTS:citra_libretro_common>)
 endif()
 
 add_test(NAME tests COMMAND tests)
-if(NOT ANDROID)
+if(NOT ANDROID AND (CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME))
     catch_discover_tests(tests)
 endif()
 

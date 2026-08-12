@@ -19,11 +19,11 @@ bool IsValidSMDH(std::span<const u8> smdh_data) {
     u32 magic;
     std::memcpy(&magic, smdh_data.data(), sizeof(u32));
 
-    return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
+    return FileUtil::MakeMagic('S', 'M', 'D', 'H') == magic;
 }
 
 bool SMDH::IsValid() const {
-    return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
+    return FileUtil::MakeMagic('S', 'M', 'D', 'H') == magic;
 }
 
 std::vector<u16> SMDH::GetIcon(bool large) const {

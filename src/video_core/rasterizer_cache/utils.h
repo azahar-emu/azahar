@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -30,6 +30,7 @@ union ClearValue {
 
 struct TextureClear {
     u32 texture_level;
+    u32 texture_layer;
     Common::Rectangle<u32> texture_rect;
     ClearValue value;
 };

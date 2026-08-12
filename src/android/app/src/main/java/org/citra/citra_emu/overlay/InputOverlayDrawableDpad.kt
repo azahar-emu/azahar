@@ -63,7 +63,13 @@ class InputOverlayDrawableDpad(
         trackId = -1
     }
 
-    fun updateStatus(event: MotionEvent, pointerIndex: Int, hasActiveButtons: Boolean, dpadSlide: Boolean, overlay: InputOverlay): Boolean {
+    fun updateStatus(
+        event: MotionEvent,
+        pointerIndex: Int,
+        hasActiveButtons: Boolean,
+        dpadSlide: Boolean,
+        overlay: InputOverlay
+    ): Boolean {
         var isDown = false
         val xPosition = event.getX(pointerIndex).toInt()
         val yPosition = event.getY(pointerIndex).toInt()
@@ -125,12 +131,16 @@ class InputOverlayDrawableDpad(
             leftButtonState = xAxis < -VIRT_AXIS_DEADZONE
             rightButtonState = xAxis > VIRT_AXIS_DEADZONE
 
-            val stateChanged = upState != upButtonState || downState != downButtonState || leftState != leftButtonState || rightState != rightButtonState
+            val stateChanged =
+                upState != upButtonState || downState != downButtonState ||
+                    leftState != leftButtonState ||
+                    rightState != rightButtonState
 
-            if(stateChanged)
+            if (stateChanged) {
                 overlay.hapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-            else if(isDown)
+            } else if (isDown) {
                 overlay.hapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
 
             return stateChanged
         }
@@ -259,7 +269,9 @@ class InputOverlayDrawableDpad(
                 controlPositionX += fingerPositionX - previousTouchX
                 controlPositionY += fingerPositionY - previousTouchY
                 setBounds(
-                    controlPositionX, controlPositionY, width + controlPositionX,
+                    controlPositionX,
+                    controlPositionY,
+                    width + controlPositionX,
                     height + controlPositionY
                 )
                 previousTouchX = fingerPositionX

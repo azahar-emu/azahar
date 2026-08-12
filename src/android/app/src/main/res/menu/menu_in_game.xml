@@ -33,6 +33,11 @@
         android:title="@string/emulation_switch_portrait_layout" />
 
     <item
+        android:id="@+id/menu_secondary_screen_layout"
+        android:icon="@drawable/ic_secondary_fit_screen"
+        android:title="@string/emulation_secondary_display_management" />
+
+    <item
         android:id="@+id/menu_swap_screens"
         android:icon="@drawable/ic_splitscreen"
         android:title="@string/emulation_swap_screens" />
@@ -56,6 +61,11 @@
         android:id="@+id/menu_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/preferences_settings" />
+
+    <item
+        android:id="@+id/menu_multiplayer"
+        android:icon="@drawable/ic_network"
+        android:title="@string/multiplayer" />
 
     <item
         android:id="@+id/menu_exit"

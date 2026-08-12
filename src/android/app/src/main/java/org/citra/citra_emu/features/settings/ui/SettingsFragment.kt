@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,12 +14,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.divider.MaterialDividerItemDecoration
 import org.citra.citra_emu.databinding.FragmentSettingsBinding
 import org.citra.citra_emu.features.settings.model.AbstractSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 
-class SettingsFragment : Fragment(), SettingsFragmentView {
+class SettingsFragment :
+    Fragment(),
+    SettingsFragmentView {
     override var activityView: SettingsActivityView? = null
 
     private val fragmentPresenter = SettingsFragmentPresenter(this)

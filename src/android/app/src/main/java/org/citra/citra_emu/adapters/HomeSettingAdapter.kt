@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,27 +9,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import org.citra.citra_emu.R
 import org.citra.citra_emu.databinding.CardHomeOptionBinding
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.HomeSetting
-import org.citra.citra_emu.viewmodel.GamesViewModel
 
 class HomeSettingAdapter(
     private val activity: AppCompatActivity,
     private val viewLifecycle: LifecycleOwner,
     var options: List<HomeSetting>
-) : RecyclerView.Adapter<HomeSettingAdapter.HomeOptionViewHolder>(), View.OnClickListener {
+) : RecyclerView.Adapter<HomeSettingAdapter.HomeOptionViewHolder>(),
+    View.OnClickListener {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HomeOptionViewHolder {
         val binding =
             CardHomeOptionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,9 +34,7 @@ class HomeSettingAdapter(
         return HomeOptionViewHolder(binding)
     }
 
-    override fun getItemCount(): Int {
-        return options.size
-    }
+    override fun getItemCount(): Int = options.size
 
     override fun onBindViewHolder(holder: HomeOptionViewHolder, position: Int) {
         holder.bind(options[position])

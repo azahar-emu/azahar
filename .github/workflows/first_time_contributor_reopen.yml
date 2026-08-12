@@ -14,7 +14,7 @@ jobs:
     if: github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'needs verification')
     steps:
       - name: Verify and reopen PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;

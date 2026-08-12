@@ -84,9 +84,6 @@ public:
     /// Returns an immutable reference to the PICA GPU.
     [[nodiscard]] const Pica::PicaCore& PicaCore() const;
 
-    /// Returns a mutable reference to the pica debugging context.
-    [[nodiscard]] Pica::DebugContext& DebugContext();
-
     /// Returns a mutable reference to the GSP command debugger.
     [[nodiscard]] GraphicsDebugger& Debugger();
 

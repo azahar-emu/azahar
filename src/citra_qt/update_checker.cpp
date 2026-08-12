@@ -10,7 +10,7 @@
 #include "common/logging/log.h"
 #include "update_checker.h"
 
-std::optional<std::string> GetResponse(std::string url, std::string path) {
+static std::optional<std::string> GetResponse(std::string url, std::string path) {
     constexpr std::size_t timeout_seconds = 15;
 
     std::unique_ptr<httplib::Client> client = std::make_unique<httplib::Client>(url);
@@ -77,7 +77,7 @@ std::optional<std::string> UpdateChecker::GetLatestRelease(bool include_prerelea
                 return {};
 
             return latest_tag;
-        } else { // This is a stable release, only check for other stable releases.
+        } else { // Stable releases only
             update_check_path += "/releases/latest";
             const auto response = GetResponse(update_check_url, update_check_path);
 

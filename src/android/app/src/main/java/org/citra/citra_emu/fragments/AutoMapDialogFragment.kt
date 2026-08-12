@@ -90,7 +90,9 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
         // Nintendo layout: east position sends KEYCODE_BUTTON_A (96)
         val isNintendoLayout = when (keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> true
+
             KeyEvent.KEYCODE_BUTTON_B -> false
+
             else -> {
                 // Unrecognized button - ignore and wait for a valid press
                 Log.warning("[AutoMap] Ignoring unrecognized keycode $keyCode, waiting for A or B")
@@ -117,9 +119,7 @@ class AutoMapDialogFragment : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "AutoMapDialogFragment"
 
-        fun newInstance(
-            onComplete: () -> Unit
-        ): AutoMapDialogFragment {
+        fun newInstance(onComplete: () -> Unit): AutoMapDialogFragment {
             val dialog = AutoMapDialogFragment()
             dialog.onComplete = onComplete
             return dialog

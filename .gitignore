@@ -17,7 +17,8 @@ src/common/scm_rev.cpp
 *.swp
 *.kdev4
 .markdown-preview.html
-.idea/
+.idea/*
+!.idea/inspectionProfiles
 .vs/
 .vscode/
 .cache/
@@ -60,3 +61,6 @@ VULKAN_SDK/
 # Version info files
 GIT-COMMIT
 GIT-TAG
+
+# verify-release.sh downloads
+verify/

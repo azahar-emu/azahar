@@ -1,0 +1,20 @@
+root = true
+
+[*.{kt,kts}]
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ktlint_code_style = android_studio
+
+# Disable wildcard imports
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+
+# Style configuration
+indent_size = 4
+indent_style = space
+ktlint_standard_comment-wrapping = disabled
+ktlint_standard_no-unused-imports = enabled
+# ^- Reportedly finicky, use for now but maybe delete later if there are issues.
+#     See https://github.com/ktlint/ktlint/issues/3038
+ktlint_standard_package-name = disabled
+max_line_length = 100

@@ -53,7 +53,7 @@ QColor LedWidget::blendLedColor(int r, int g, int b) const {
     // are not linear.
     constexpr float gamma = 2.4f;
     float pwm = max_c / 255.0;
-    float t = std::powf(pwm, 1.f / gamma);
+    float t = std::pow(pwm, 1.f / gamma);
 
     return lerpColor(off_color, lit_color, t * 0.8f);
 }

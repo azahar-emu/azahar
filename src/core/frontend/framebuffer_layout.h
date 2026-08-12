@@ -32,13 +32,14 @@ struct FramebufferLayout {
     bool bottom_screen_enabled;
     Common::Rectangle<u32> top_screen;
     Common::Rectangle<u32> bottom_screen;
+    // is_rotated is true when the screen is in landscape mode - not sure why!
     bool is_rotated = true;
-    bool is_portrait = false;
-    bool additional_screen_enabled;
+    bool additional_screen_enabled = false;
+    // top_opacity is currently not used but could be used in the future
     float top_opacity = 1.0f;
     float bottom_opacity = 1.0f;
+    bool additional_screen_is_bottom = false;
     Common::Rectangle<u32> additional_screen;
-
     CardboardSettings cardboard;
 
     /**

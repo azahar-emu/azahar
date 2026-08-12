@@ -1,4 +1,4 @@
-add_library(input_common STATIC
+add_library(input_common STATIC EXCLUDE_FROM_ALL
     analog_from_button.cpp
     analog_from_button.h
     keyboard.cpp
@@ -23,6 +23,7 @@ add_library(input_common STATIC
 if(ENABLE_SDL2)
     target_sources(input_common PRIVATE
         sdl/sdl_impl.cpp
+        sdl/sdl_joystick.cpp
         sdl/sdl_impl.h
     )
     target_link_libraries(input_common PRIVATE SDL2::SDL2)

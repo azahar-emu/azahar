@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -14,21 +14,21 @@
 
 namespace FileSys::Patch {
 
-bool ApplyIpsPatch(const std::vector<u8>& ips, std::vector<u8>& buffer) {
+Loader::ResultStatus ApplyIpsPatch(const std::vector<u8>& ips, std::vector<u8>& buffer) {
     std::size_t cursor = 5;
     std::size_t patch_length = ips.size() - 3;
     std::string ips_header(ips.begin(), ips.begin() + 5);
 
     if (ips_header != "PATCH") {
         LOG_INFO(Service_FS, "Attempted to load invalid IPS");
-        return false;
+        return Loader::ResultStatus::ErrorPatches;
     }
 
     while (cursor < patch_length) {
         std::string eof_check(ips.begin() + cursor, ips.begin() + cursor + 3);
 
         if (eof_check == "EOF")
-            return false;
+            break;
 
         std::size_t offset = ips[cursor] << 16 | ips[cursor + 1] << 8 | ips[cursor + 2];
         std::size_t length = ips[cursor + 3] << 8 | ips[cursor + 4];
@@ -38,7 +38,7 @@ bool ApplyIpsPatch(const std::vector<u8>& ips, std::vector<u8>& buffer) {
             length = ips[cursor + 5] << 8 | ips[cursor + 6];
 
             if (buffer.size() < offset + length)
-                return false;
+                return Loader::ResultStatus::ErrorPatches;
 
             for (u32 i = 0; i < length; ++i)
                 buffer[offset + i] = ips[cursor + 7];
@@ -49,12 +49,12 @@ bool ApplyIpsPatch(const std::vector<u8>& ips, std::vector<u8>& buffer) {
         }
 
         if (buffer.size() < offset + length)
-            return false;
+            return Loader::ResultStatus::ErrorPatches;
 
         std::memcpy(&buffer[offset], &ips[cursor + 5], length);
         cursor += length + 5;
     }
-    return true;
+    return Loader::ResultStatus::Success;
 }
 
 namespace Bps {
@@ -149,11 +149,11 @@ public:
     PatchApplier(Stream<const u8> source, Stream<u8> target, Stream<const u8> patch)
         : m_source{source}, m_target{target}, m_patch{patch} {}
 
-    bool Apply() {
+    Loader::ResultStatus Apply() {
         const auto magic = *m_patch.Read<std::array<char, MagicSize>>();
         if (std::string_view(magic.data(), magic.size()) != "BPS1") {
             LOG_ERROR(Service_FS, "Invalid BPS magic");
-            return false;
+            return Loader::ResultStatus::ErrorPatches;
         }
 
         const Bps::Number source_size = m_patch.ReadNumber();
@@ -161,7 +161,7 @@ public:
         const Bps::Number metadata_size = m_patch.ReadNumber();
         if (source_size > m_source.size() || target_size > m_target.size() || metadata_size != 0) {
             LOG_ERROR(Service_FS, "Invalid sizes");
-            return false;
+            return Loader::ResultStatus::ErrorPatches;
         }
 
         const std::size_t command_start_offset = m_patch.Tell();
@@ -173,22 +173,22 @@ public:
 
         if (crc32(m_source.data(), source_size) != source_crc32) {
             LOG_ERROR(Service_FS, "Unexpected source hash");
-            return false;
+            return Loader::ResultStatus::ErrorPatchesInvalidTitle;
         }
 
         // Process all patch commands.
         std::memset(m_target.data(), 0, m_target.size());
         while (m_patch.Tell() < command_end_offset) {
             if (!HandleCommand())
-                return false;
+                return Loader::ResultStatus::ErrorPatches;
         }
 
         if (crc32(m_target.data(), target_size) != target_crc32) {
             LOG_ERROR(Service_FS, "Unexpected target hash");
-            return false;
+            return Loader::ResultStatus::ErrorPatches;
         }
 
-        return true;
+        return Loader::ResultStatus::Success;
     }
 
 private:
@@ -257,7 +257,7 @@ private:
 
 } // namespace Bps
 
-bool ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer) {
+Loader::ResultStatus ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer) {
     Bps::Stream patch_stream{patch.data(), patch.size()};
 
     // Move the offset past the file format marker (i.e. "BPS1")

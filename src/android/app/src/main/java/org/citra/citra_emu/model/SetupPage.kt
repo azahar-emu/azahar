@@ -12,7 +12,7 @@ data class SetupPage(
     val leftAlignedIcon: Boolean,
     val buttonTextId: Int,
     val pageButtons: List<PageButton>? = null,
-    val pageSteps: () -> PageState = { PageState.PAGE_STEPS_UNDEFINED },
+    val pageSteps: () -> PageState = { PageState.PAGE_STEPS_UNDEFINED }
 )
 
 data class PageButton(
@@ -29,7 +29,7 @@ data class PageButton(
 )
 
 interface SetupCallback {
-    fun onStepCompleted(pageButtonId : Int, pageFullyCompleted: Boolean)
+    fun onStepCompleted(pageButtonId: Int, pageFullyCompleted: Boolean)
 }
 
 enum class PageState {

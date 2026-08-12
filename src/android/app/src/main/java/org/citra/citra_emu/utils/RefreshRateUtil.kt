@@ -5,7 +5,6 @@
 package org.citra.citra_emu.utils
 import android.app.Activity
 import android.os.Build
-import androidx.annotation.RequiresApi
 
 object RefreshRateUtil {
     // Since Android 15, the OS automatically runs apps categorized as games with a

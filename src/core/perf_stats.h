@@ -120,6 +120,8 @@ public:
             artic_events.Set(event, set);
         }
     }
+    /// Boolean representing whether game_frames has been updated since last time it was presented
+    static bool game_frames_updated;
 
 private:
     mutable std::mutex object_mutex;

@@ -211,11 +211,12 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
                 src2[3] = -src2[3];
             }
 
-            f24* dest = (instr.common.dest.Value() < 0x10)
-                            ? &state.output[instr.common.dest.Value().GetIndex()][0]
-                        : (instr.common.dest.Value() < 0x20)
-                            ? &state.temporary[instr.common.dest.Value().GetIndex()][0]
-                            : dummy_vec4_float24_zeros;
+            f24* dest =
+                (instr.common.dest.Value() < 0x10)
+                    ? &state.output[state.output_bank][instr.common.dest.Value().GetIndex()][0]
+                : (instr.common.dest.Value() < 0x20)
+                    ? &state.temporary[instr.common.dest.Value().GetIndex()][0]
+                    : dummy_vec4_float24_zeros;
 
             debug_data.max_opdesc_id =
                 std::max<u32>(debug_data.max_opdesc_id, 1 + instr.common.operand_desc_id);
@@ -546,11 +547,12 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
                     src3[3] = -src3[3];
                 }
 
-                f24* dest = (instr.mad.dest.Value() < 0x10)
-                                ? &state.output[instr.mad.dest.Value().GetIndex()][0]
-                            : (instr.mad.dest.Value() < 0x20)
-                                ? &state.temporary[instr.mad.dest.Value().GetIndex()][0]
-                                : dummy_vec4_float24_zeros;
+                f24* dest =
+                    (instr.mad.dest.Value() < 0x10)
+                        ? &state.output[state.output_bank][instr.mad.dest.Value().GetIndex()][0]
+                    : (instr.mad.dest.Value() < 0x20)
+                        ? &state.temporary[instr.mad.dest.Value().GetIndex()][0]
+                        : dummy_vec4_float24_zeros;
 
                 Record<DebugDataRecord::SRC1>(debug_data, iteration, src1);
                 Record<DebugDataRecord::SRC2>(debug_data, iteration, src2);
@@ -663,14 +665,15 @@ static void RunInterpreter(const ShaderSetup& setup, ShaderUnit& state,
 
             case OpCode::Id::EMIT: {
                 auto* emitter = state.emitter_ptr;
-                ASSERT_MSG(emitter, "Execute EMIT on VS");
-                emitter->Emit(state.output);
+                ASSERT_MSG(emitter, "execute EMIT on VS");
+                emitter->Emit(state.output[state.output_bank]);
+                state.output_bank = !state.output_bank;
                 break;
             }
 
             case OpCode::Id::SETEMIT: {
                 auto* emitter = state.emitter_ptr;
-                ASSERT_MSG(emitter, "Execute SETEMIT on VS");
+                ASSERT_MSG(emitter, "execute SETEMIT on VS");
                 emitter->emit_state.vertex_id = instr.setemit.vertex_id;
                 emitter->emit_state.prim_emit = instr.setemit.prim_emit != 0;
                 emitter->emit_state.winding = instr.setemit.winding != 0;

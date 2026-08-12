@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,27 +7,27 @@ package org.citra.citra_emu.applets
 import android.text.InputFilter
 import android.text.Spanned
 import androidx.annotation.Keep
+import java.io.Serializable
 import org.citra.citra_emu.CitraApplication.Companion.appContext
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.fragments.KeyboardDialogFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.utils.Log
-import java.io.Serializable
 
 @Keep
 object SoftwareKeyboard {
     lateinit var data: KeyboardData
     val finishLock = Object()
 
-    private fun ExecuteImpl(config: KeyboardConfig) {
+    private fun executeImpl(config: KeyboardConfig) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()
         data = KeyboardData(0, "")
         KeyboardDialogFragment.newInstance(config)
             .show(emulationActivity!!.supportFragmentManager, KeyboardDialogFragment.TAG)
     }
 
-    fun HandleValidationError(config: KeyboardConfig, error: ValidationError) {
+    fun handleValidationError(config: KeyboardConfig, error: ValidationError) {
         val emulationActivity = NativeLibrary.sEmulationActivity.get()!!
         val message: String = when (error) {
             ValidationError.FixedLengthRequired -> emulationActivity.getString(
@@ -54,12 +54,12 @@ object SoftwareKeyboard {
     }
 
     @JvmStatic
-    fun Execute(config: KeyboardConfig): KeyboardData {
-        if (config.buttonConfig == ButtonConfig.None) {
+    fun execute(config: KeyboardConfig): KeyboardData {
+        if (config.buttonConfig == ButtonConfig.NONE) {
             Log.error("Unexpected button config None")
             return KeyboardData(0, "")
         }
-        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { ExecuteImpl(config) }
+        NativeLibrary.sEmulationActivity.get()!!.runOnUiThread { executeImpl(config) }
         synchronized(finishLock) {
             try {
                 finishLock.wait()
@@ -69,8 +69,9 @@ object SoftwareKeyboard {
         return data
     }
 
+    @Suppress("unused")
     @JvmStatic
-    fun ShowError(error: String) {
+    fun showError(error: String) {
         NativeLibrary.displayAlertMsg(
             appContext.resources.getString(R.string.software_keyboard),
             error,
@@ -78,20 +79,23 @@ object SoftwareKeyboard {
         )
     }
 
+    @Suppress("FunctionName")
     private external fun ValidateFilters(text: String): ValidationError
+
+    @Suppress("FunctionName")
     external fun ValidateInput(text: String): ValidationError
 
-    /// Corresponds to Frontend::ButtonConfig
+    // / Corresponds to Frontend::ButtonConfig
     interface ButtonConfig {
         companion object {
-            const val Single = 0 /// Ok button
-            const val Dual = 1 /// Cancel | Ok buttons
-            const val Triple = 2 /// Cancel | I Forgot | Ok buttons
-            const val None = 3 /// No button (returned by swkbdInputText in special cases)
+            const val SINGLE = 0 // / Ok button
+            const val DUAL = 1 // / Cancel | Ok buttons
+            const val TRIPLE = 2 // / Cancel | I Forgot | Ok buttons
+            const val NONE = 3 // / No button (returned by swkbdInputText in special cases)
         }
     }
 
-    /// Corresponds to Frontend::ValidationError
+    // / Corresponds to Frontend::ValidationError
     enum class ValidationError {
         None,
 
@@ -128,7 +132,7 @@ object SoftwareKeyboard {
         lateinit var buttonText: Array<String>
     }
 
-    /// Corresponds to Frontend::KeyboardData
+    // / Corresponds to Frontend::KeyboardData
     class KeyboardData(var button: Int, var text: String)
     class Filter : InputFilter {
         override fun filter(

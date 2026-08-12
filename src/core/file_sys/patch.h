@@ -1,4 +1,4 @@
-// Copyright 2019 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,11 +7,12 @@
 #include <vector>
 
 #include "common/common_types.h"
+#include "core/loader/loader.h"
 
 namespace FileSys::Patch {
 
-bool ApplyIpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
+Loader::ResultStatus ApplyIpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
 
-bool ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
+Loader::ResultStatus ApplyBpsPatch(const std::vector<u8>& patch, std::vector<u8>& buffer);
 
 } // namespace FileSys::Patch

@@ -6,9 +6,9 @@ package org.citra.citra_emu.utils
 
 import android.app.NotificationManager
 import android.content.Context
-import android.net.Uri
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.ForegroundInfo
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -16,17 +16,13 @@ import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.NativeLibrary.InstallStatus
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.FileUtil.getFilename
-import androidx.core.net.toUri
 
-class CiaInstallWorker(
-    val context: Context,
-    params: WorkerParameters
-) : Worker(context, params) {
-    private val GROUP_KEY_CIA_INSTALL_STATUS = "org.citra.citra_emu.CIA_INSTALL_STATUS"
+class CiaInstallWorker(val context: Context, params: WorkerParameters) : Worker(context, params) {
+    private val groupKeyCiaInstallStatus = "org.citra.citra_emu.CIA_INSTALL_STATUS"
     private var lastNotifiedTime: Long = 0
-    private val SUMMARY_NOTIFICATION_ID = 0xC1A0000
-    private val PROGRESS_NOTIFICATION_ID = SUMMARY_NOTIFICATION_ID + 1
-    private var statusNotificationId = SUMMARY_NOTIFICATION_ID + 2
+    private val summaryNotificationId = 0xC1A0000
+    private val progressNotificationId = summaryNotificationId + 1
+    private var statusNotificationId = summaryNotificationId + 2
 
     private val notificationManager = context.getSystemService(NotificationManager::class.java)
     private val installProgressBuilder = NotificationCompat.Builder(
@@ -41,14 +37,14 @@ class CiaInstallWorker(
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
         .setSmallIcon(R.drawable.ic_stat_notification_logo)
-        .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
+        .setGroup(groupKeyCiaInstallStatus)
     private val summaryNotification = NotificationCompat.Builder(
         context,
         context.getString(R.string.cia_install_notification_channel_id)
     )
         .setContentTitle(context.getString(R.string.install_cia_title))
         .setSmallIcon(R.drawable.ic_stat_notification_logo)
-        .setGroup(GROUP_KEY_CIA_INSTALL_STATUS)
+        .setGroup(groupKeyCiaInstallStatus)
         .setGroupSummary(true)
         .build()
 
@@ -115,7 +111,7 @@ class CiaInstallWorker(
 
         // Even if newer versions of Android don't show the group summary text that you design,
         // you always need to manually set a summary to enable grouped notifications.
-        notificationManager.notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
+        notificationManager.notify(summaryNotificationId, summaryNotification)
         notificationManager.notify(statusNotificationId++, installStatusBuilder.build())
     }
 
@@ -123,7 +119,8 @@ class CiaInstallWorker(
         val selectedFiles = inputData.getStringArray("CIA_FILES")!!
         val toastText: CharSequence = context.resources.getQuantityString(
             R.plurals.cia_install_toast,
-            selectedFiles.size, selectedFiles.size
+            selectedFiles.size,
+            selectedFiles.size
         )
         context.mainExecutor.execute {
             Toast.makeText(context, toastText, Toast.LENGTH_LONG).show()
@@ -151,7 +148,7 @@ class CiaInstallWorker(
             val res = installCIA(fileFinal)
             notifyInstallStatus(filename, res)
         }
-        notificationManager.cancel(PROGRESS_NOTIFICATION_ID)
+        notificationManager.cancel(progressNotificationId)
         return Result.success()
     }
 
@@ -166,11 +163,11 @@ class CiaInstallWorker(
         }
         lastNotifiedTime = currentTime
         installProgressBuilder.setProgress(max, progress, false)
-        notificationManager.notify(PROGRESS_NOTIFICATION_ID, installProgressBuilder.build())
+        notificationManager.notify(progressNotificationId, installProgressBuilder.build())
     }
 
     override fun getForegroundInfo(): ForegroundInfo =
-        ForegroundInfo(PROGRESS_NOTIFICATION_ID, installProgressBuilder.build())
+        ForegroundInfo(progressNotificationId, installProgressBuilder.build())
 
     private external fun installCIA(path: String): InstallStatus
 }

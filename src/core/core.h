@@ -99,12 +99,16 @@ public:
                                         /// invalid format
         ErrorLoader_ErrorGbaTitle, ///< Error loading the specified application as it is GBA Virtual
                                    ///< Console
-        ErrorSystemFiles,          ///< Error in finding system files
-        ErrorSavestate,            ///< Error saving or loading
-        ErrorArticDisconnected,    ///< Error when artic base disconnects
-        ErrorN3DSApplication,      ///< Error launching New 3DS application in Old 3DS mode
-        ShutdownRequested,         ///< Emulated program requested a system shutdown
-        ErrorUnknown               ///< Any other error
+        ErrorLoader_ErrorPatches,  ///< Generic error while loading patches for an application
+        ErrorLoader_ErrorPatchesInvalidTitle, ///< A patch was loaded for the incorrect application
+        ErrorSystemFiles,                     ///< Error in finding system files
+        ErrorSavestate,                       ///< Error saving or loading
+        ErrorArticDisconnected,               ///< Error when artic base disconnects
+        ErrorN3DSApplication,       ///< Error launching New 3DS application in Old 3DS mode
+        ErrorCoreExceptionRaised,   ///< The CPU emulation raised an exception
+        ErrorMemoryExceptionRaised, ///< Unmmaped memory was accessed
+        ShutdownRequested,          ///< Emulated program requested a system shutdown
+        ErrorUnknown                ///< Any other error
     };
 
     explicit System();
@@ -403,6 +407,24 @@ public:
         info_led_color_changed = func;
     }
 
+    void SetDebugNextProcessFlag() {
+        debug_next_process = true;
+    }
+
+    bool GetDebugNextProcessFlag() {
+        return debug_next_process;
+    }
+
+    void ClearDebugNextProcessFlag() {
+        debug_next_process = false;
+    }
+
+    void DebugUnscheduleAllThreadsFromFrontend(bool unschedule);
+
+    void SetGDBPortOverride(int port) {
+        override_gdb_port = port;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -435,7 +457,7 @@ private:
     std::unique_ptr<AudioCore::DspInterface> dsp_core;
 
     /// When true, signals that a reschedule should happen
-    bool reschedule_pending{};
+    bool curr_core_reschedule_pending{};
 
     std::unique_ptr<VideoCore::GPU> gpu;
 
@@ -511,6 +533,9 @@ private:
 
     Common::Vec3<u8> info_led_color;
     std::function<void()> info_led_color_changed;
+
+    bool debug_next_process;
+    int override_gdb_port = -1;
 
     friend class boost::serialization::access;
     template <typename Archive>

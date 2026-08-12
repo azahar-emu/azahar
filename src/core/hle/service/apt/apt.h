@@ -376,6 +376,8 @@ public:
          */
         void CancelParameter(Kernel::HLERequestContext& ctx);
 
+        void MapProgramIdForDebug(Kernel::HLERequestContext& ctx);
+
         /**
          * APT::PrepareToStartApplication service function. When the input title-info programID is
          * zero, NS will load the actual program ID via AMNet:GetTitleIDList. After doing some
@@ -1006,6 +1008,8 @@ public:
          *     1 : Result of function, 0 on success, otherwise error code
          */
         void Reboot(Kernel::HLERequestContext& ctx);
+
+        void GetAppletProgramInfo(Kernel::HLERequestContext& ctx);
 
         /**
          * APT::HardwareResetAsync service function.

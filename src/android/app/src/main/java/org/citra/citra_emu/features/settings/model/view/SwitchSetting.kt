@@ -4,9 +4,9 @@
 
 package org.citra.citra_emu.features.settings.model.view
 
+import androidx.annotation.StringRes
+import org.citra.citra_emu.R
 import org.citra.citra_emu.features.settings.model.AbstractBooleanSetting
-import org.citra.citra_emu.features.settings.model.AbstractIntSetting
-import org.citra.citra_emu.features.settings.model.AbstractSetting
 
 class SwitchSetting(
     setting: AbstractBooleanSetting,
@@ -14,7 +14,9 @@ class SwitchSetting(
     descriptionId: Int,
     val key: String? = null,
     val defaultValue: Boolean = false,
-    override var isEnabled: Boolean = true
+    override var isEnabled: Boolean = true,
+    @StringRes override var disabledMessage: Int =
+        R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_SWITCH
 

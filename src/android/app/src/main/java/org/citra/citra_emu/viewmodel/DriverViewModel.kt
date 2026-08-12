@@ -1,4 +1,4 @@
-// Copyright 2023 Citra Emulator Project
+// Copyright Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -16,8 +16,8 @@ import kotlinx.coroutines.withContext
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.R
 import org.citra.citra_emu.utils.FileUtil.asDocumentFile
-import org.citra.citra_emu.utils.GpuDriverMetadata
 import org.citra.citra_emu.utils.GpuDriverHelper
+import org.citra.citra_emu.utils.GpuDriverMetadata
 
 class DriverViewModel : ViewModel() {
     val areDriversLoading get() = _areDriversLoading.asStateFlow()

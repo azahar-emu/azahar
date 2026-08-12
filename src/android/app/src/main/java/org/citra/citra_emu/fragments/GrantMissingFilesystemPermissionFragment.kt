@@ -44,8 +44,6 @@ class GrantMissingFilesystemPermissionFragment : DialogFragment() {
                 { permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) }
             }
 
-
-
         return MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.filesystem_permission_warning)
             .setMessage(R.string.filesystem_permission_lost)

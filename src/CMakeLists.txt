@@ -183,6 +183,9 @@ endif()
 if(ENABLE_DEVELOPER_OPTIONS)
     add_compile_definitions(ENABLE_DEVELOPER_OPTIONS)
 endif()
+if(ENABLE_BUILTIN_KEYBLOB)
+    add_compile_definitions(ENABLE_BUILTIN_KEYBLOB)
+endif()
 
 add_subdirectory(common)
 add_subdirectory(core)
@@ -200,6 +203,7 @@ if (ENABLE_QT)
 endif()
 
 if (ENABLE_QT) # Or any other hypothetical future frontends
+    add_subdirectory(citra_cli)
     add_subdirectory(citra_meta)
 endif()
 

@@ -60,7 +60,9 @@ class CitraDirectoryDialogFragment : DialogFragment() {
             }
             .setNegativeButton(android.R.string.cancel) { _: DialogInterface?, _: Int ->
                 if (!PermissionsHandler.hasWriteAccess(requireContext())) {
-                    PermissionsHandler.compatibleSelectDirectory((requireActivity() as MainActivity).openCitraDirectory)
+                    PermissionsHandler.compatibleSelectDirectory(
+                        (requireActivity() as MainActivity).openCitraDirectory
+                    )
                 }
             }
             .show()

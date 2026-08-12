@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Aquest software executarà aplicacions per a la consola de jocs portàtil Nintendo 3DS. No s\'inclouen títols de jocs.\n\nAbans de començar a emular, selecciona una carpeta on emmagatzemar les dades d\'usuari d\'Azahar.\n\nQuè és això:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Dades i emmagatzematge d\'usuari de Citra Android</a></string>
+    <string name="app_disclaimer">Aquest software executarà aplicacions per a la consola de jocs portàtil Nintendo 3DS. No s\'inclouen títols de jocs.\n\nAbans de començar a emular, selecciona una carpeta on emmagatzemar les dades d\'usuari d\'Azahar.\n\nQuè és això:\n<a href='https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage'>Wiki - Dades i emmagatzematge d\'usuari d\'Azahar Android</a></string>
     <string name="app_notification_channel_description">Notificacions de l\'emulador 3DS Azahar</string>
     <string name="app_notification_running">Azahar s\'està executant</string>
     <string name="app_game_install_description">A continuació, haureu de seleccionar una carpeta d\'aplicacions. Azahar mostrarà totes les aplicacions de 3DS dins de la carpeta seleccionada a l\'aplicació.\n\nLes aplicacions, actualitzacions i DLC CIA s\'hauran d\'instal·lar per separat fent clic a la icona de la carpeta i seleccionant Instal·la CIA.</string>
@@ -32,6 +32,15 @@
     <string name="select_citra_user_folder_home_description">Canvia els fitxers que Azahar utilitza per a carregar aplicacions</string>
     <string name="theme_and_color_description">Modifica l\'aspecte de l\'app</string>
     <string name="install_cia_title">Instal·lar CIA</string>
+
+    <!-- Network Settings-->
+    <string name="preferences_network">Xarxa</string>
+    <string name="web_api_url">URL d\'API Web</string>
+    <string name="web_api_url_description">URL d\'API Web per a la funcionalitat de sales multijugador públiques</string>
+    <string name="network_token">Token de Xarxa</string>
+    <string name="network_token_description">Token de Xarxa per a la funcionalitat de sales multijugador públiques</string>
+    <string name="username_uses_system">Este camp està enllaçat al nom d\'usuari del sistema 3DS.</string>
+    <string name="username_invalid">El nom d\'usuari no és vàlid. Ha de tindre entre 4 i 20 caràcters alfanumèrics.</string>
 
     <!-- GPU driver installation -->
     <string name="select_gpu_driver">Seleccionar driver de GPU</string>
@@ -85,14 +94,14 @@
     <string name="warning_skip">Saltar</string>
     <string name="warning_cancel">Cancel·lar</string>
     <string name="select_citra_user_folder">Seleccionar carpeta d\'usuari.</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Selecciona el vostre directori de <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">dades d\'usuari</a> amb el següent botó.]]></string>
+    <string name="select_citra_user_folder_description"><![CDATA[Selecciona el directori de <a href=\"https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage\">dades d\'usuari</a>amb el següent botó.]]></string>
     <string name="select_which_user_directory_to_use">Sembla que tens directoris d\'usuari configurats tant per a Lime3DS com per a Azahar. Probablement es deu al fet que vas actualitzar a Azahar i, quan se\'t va demanar, vas triar un directori d\'usuari diferent del qual usaves per a Lime3DS.\n\nAixó pot haver-te fet pensar que vas perdre partides guardades o altres configuracions; et demanem disculpes si això va ocórrer.\n\nPreferixes tornar a usar el teu directori d\'usuari original de Lime3DS, restaurant la configuració i les partides guardades de Lime3DS, o conservar el teu directori d\'usuari actual d\'Azahar?\n\nCap dels directoris s\'eliminarà, independentment de la teua elecció, i pots canviar lliurement entre ells usant l\'opció \"Seleccionar carpeta d\'usuari\".</string>
     <string name="keep_current_azahar_directory">Mantindre el directori Azahar actual</string>
     <string name="use_prior_lime3ds_directory">Usar el directori de Lime3DS anterior</string>
     <string name="select">Seleccionar</string>
     <string name="cannot_skip">No pots saltar la configuració de la carpeta d\'usuari</string>
     <string name="cannot_skip_directory_description">Aquest pas és necessari perquè Azahar funcione. Selecciona un directori i després podràs continuar.</string>
-    <string name="selecting_user_directory_without_write_permissions">Has perdut els permisos d\'escriptura en el teu  <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">directori de dades d\'usuari</a>, on es guarden les partides guardades i altra informació. Això pot ocórrer després d\'algunes actualitzacions d\'aplicacions o d\'Android. Torna a seleccionar el directori per a recuperar els permisos i poder continuar.</string>
+    <string name="selecting_user_directory_without_write_permissions">Has perdut els permisos d\'escriptura en el teu <a href="https://github.com/azahar-emu/azahar/wiki/Android-User-Data-and-Storage">directori de dades d\'usuari</a> , on es guarden les partides guardades i altra informació. Això pot ocórrer després d\'algunes actualitzacions d\'aplicacions o d\'Android. Torna a seleccionar el directori per a recuperar els permisos i poder continuar.</string>
     <string name="invalid_selection">Selecció no vàlida</string>
     <string name="invalid_user_directory">La selecció del directori d\'usuari no és vàlida.\nTorna a seleccionar el directori d\'usuari, assegurant-te de navegar fins ell des de l\'arrel de l\'emmagatzematge del dispositiu.</string>
     <string name="filesystem_permission_lost">Azahar ha perdut el permís per a administrar fitxers en este dispositiu. Això pot ocórrer després d\'alguna actualització de l\'aplicació o d\'Android. Torna a concedir este permís en la següent pantalla per a continuar usant l\'aplicació.</string>
@@ -141,11 +150,14 @@
     <string name="button_home">HOME</string>
     <string name="button_swap">Intercanviar Pantalles</string>
     <string name="button_turbo">Turbo</string>
+    <string name="button_combo">Botó Combo</string>
     <string name="input_message_analog_only">Aquest control s\'ha d\'assignar a un estic analògic del comandament o a un eix del Pad de Control!</string>
     <string name="input_message_button_only">Aquest control s\'ha d\'assignar a un botó del comandament!</string>
     <string name="turbo_limit_hotkey">Velocitat Turbo</string>
     <string name="turbo_enabled_toast">Velocitat Turbo Activada</string>
     <string name="turbo_disabled_toast">Velocitat Turbo Desactivada</string>
+    <string name="combo_button_settings">Configurar Botó Combo</string>
+    <string name="combo_button_settings_description">Selecciona quins botons s\'activen pel Botó Combo.</string>
 
     <!-- System files strings -->
     <string name="setup_system_files">Fitxers del sistema</string>
@@ -212,6 +224,8 @@
     <string name="storage">Emmagatzematge</string>
     <string name="compress_cia_installs">Comprimir el contingut de CIAs instal·lats</string>
     <string name="compress_cia_installs_description">Comprimix el contingut de fitxers CIA quan són instal·lats a la SD emulada. Només afecta contingut CIA instal·lat amb esta opció activada.</string>
+    <string name="async_fs_operations">Operacions de sistema de fitxers asíncrones</string>
+    <string name="async_fs_operations_description">Permet que els accessos al sistema de fitxers emulat siguen asíncrons. Millora considerablement l\'estabilitat relacionada amb el sistema de fitxers, però pot augmentar lleugerament els temps de càrrega.</string>
 
     <!-- Camera settings strings -->
     <string name="inner_camera">Càmera interior</string>
@@ -244,9 +258,13 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="texture_filter_description">Millora l\'aspecte visual de les aplicacions aplicant un filtre a les textures. Els filtres compatibles són Anime4K, Ultrafast, Bicubic, ScaleForce, xBRZ Freescale i MMPX.</string>
     <string name="delay_render_thread">Endarrerir fil de renderitzat del joc</string>
     <string name="delay_render_thread_description">Retarda el fil de renderitzat del joc en enviar dades a la GPU. Ajuda a solucionar problemes de rendiment en les (poques) aplicacions amb velocitats de fotogrames dinàmiques.</string>
+    <string name="simulate_3ds_gpu_timings">Simular Temps de GPU de 3DS</string>
+    <string name="simulate_3ds_gpu_timings_description">Retarda els esdeveniments de finalització de la GPU segons els mesuraments presos del maquinari real, perquè els jocs tinguen mesuraments de temps de GPU més realistes. Ajuda a estabilitzar els jocs de FPS dinàmics. Deshabilitar esta funció pot millorar el rendiment en alguns casos excepcionals, però a costa de l\'estabilitat.</string>
     <string name="advanced">Avançat</string>
     <string name="texture_sampling_name">Mostreig de Textures</string>
     <string name="texture_sampling_description">Sobreescriu el filtre de mostreig usat en jocs. Pot ser útil en uns certs casos de jocs amb baix rendiment en pujar la resolució. Si no estàs segur, possa\'l en Controlat per Joc.</string>
+    <string name="use_skip_duplicate_frames">Ometre Fotogrames Duplicats</string>
+    <string name="use_skip_duplicate_frames_description">Detecta i omet la presentació de fotogrames que no són únics. A més, permet que les ferramentes externes de generació de fotogrames funcionen correctament amb jocs a 30 fps.</string>
     <string name="shaders_accurate_mul">Multiplicació Precisa</string>
     <string name="shaders_accurate_mul_description">Usa multiplicacions més precises en els ombrejos de Hardware, que podrien arreglar uns certs problemes gràfics. Quan s\'active, el rendiment es reduirà.</string>
     <string name="asynchronous_gpu">Activar Emulació Asíncrona de la GPU</string>
@@ -316,6 +334,8 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="audio_stretch_description">Estén l\'àudio per a reduir les aturades. Quan s\'active, la latència d\'àudio s\'incrementarà i reduirà un poc el rendiment.</string>
     <string name="realtime_audio">Activar àudio en temps real</string>
     <string name="realtime_audio_description">Ajusta la velocitat de reproducció d\'àudio per a compensar les caigudes en la velocitat d\'emulació de quadres. Això significa que l\'àudio es reproduirà a velocitat completa fins i tot quan la velocitat de quadres del joc siga baixa. Pot causar problemes de desincronització d\'àudio.</string>
+    <string name="simulate_headphones_plugged">Simular auriculars connectats</string>
+    <string name="simulate_headphones_plugged_description">Simula si els auriculars estan connectats en el sistema 3DS emulat.</string>
     <string name="audio_input_type">Dispositiu d\'entrada d\'àudio</string>
     <string name="sound_output_mode">Mode d\'eixida de l\'àudio</string>
 
@@ -371,7 +391,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="learn_more">Més Informació</string>
     <string name="close">Tancar</string>
     <string name="reset_to_default">Restablir valors de fàbrica</string>
-    <string name="redump_games"><![CDATA[Per favor, seguix les guies per a bolcar els teus <a href=\"https://web.archive.org/web/20240304210021/https://citra-emu.org/wiki/dumping-game-cartridges/\">cartutxos de joc</a> i/o <a href=\"https://web.archive.org/web/20240304210011/https://citra-emu.org/wiki/dumping-installed-titles/\">títols instal·lats</a>.]]></string>
     <string name="option_default">Per omissió</string>
     <string name="none">Cap</string>
     <string name="auto">Auto</string>
@@ -386,13 +405,15 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="reset_setting_confirmation">Vols reiniciar esta configuració al seu valor per defecte?</string>
     <string name="setting_not_editable">No pots editar-ho ara</string>
     <string name="setting_disabled">Configuració deshabilitada</string>
-    <string name="setting_disabled_description">Esta configuració està actualment deshabilitada perquè una altra configuració no té el valor apropiat.</string>
+    <string name="setting_disabled_description_incompatible_setting">Esta configuració està actualment deshabilitada perquè una altra configuració no té el valor apropiat.</string>
+    <string name="setting_disabled_description_angle">No es pot canviar el renderitzador perquè el dispositiu està utilitzant ANGLE per a OpenGL, que actualment és incompatible amb Azahar. S\'utilitzarà Vulkan.</string>
     <string name="setting_not_editable_description">Esta opció no pot canviar-se mentres s\'està executant un joc.</string>
     <string name="auto_select">Auto-elegir</string>
     <string name="start">Iniciar</string>
     <string name="cancelling">Cancel·lant</string>
     <string name="visibility">Visibilitat</string>
     <string name="information">Informació</string>
+    <string name="refresh">Actualitzar</string>
 
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Seleccionar Directori de Joc</string>
@@ -414,10 +435,38 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="preferences_layout">Estil</string>
 
     <!-- ROM loading errors -->
+    <string name="loader_error_generic_title">Error en carregar l\'aplicació!</string>
+    <string name="loader_error_invalid_format">Format d\'aplicació invàlid</string>
+    <string name="loader_error_invalid_format_description"><![CDATA[El format de l\'aplicació no està suportat.<br>Per favor assegura\'t d\'usar un dels formats compatibles:<ul><li>Imatges de cartutx:<b>.cci/.zcci/.3ds</b></li><li>Fitxers instal·lables:<b>.cia/.zcia</b></li><li>Títols Homebrew:<b>.3dsx/.z3dsx</b></li><li>Contenedors NCCH:<b>.cxi/.zcxi/.app</b></li><li>Fitxers ELF:<b>.elf/.axf</b></li></ul>]]></string>
+    <string name="loader_error_invalid_system_mode">Mode de sistema no vàlid</string>
+    <string name="loader_error_invalid_system_mode_description">Les aplicacions exclusives de New 3DS no es poden carregar sense activar el mode New 3DS.</string>
+    <string name="loader_error_applying_patches">Error en aplicar pegats</string>
+    <string name="loader_error_applying_patches_description">Un error genèric ha ocorregut en intentar aplicar un pegat a l\'aplicació. Per favor comprova el log per a més detalls.</string>
+    <string name="loader_error_patch_wrong_application">No es va poder aplicar un pegat perquè està dissenyat per a una altra aplicació. Per favor comprova que estigues usant pegats per a l\'aplicació correcta, incloent-hi regió i versió.</string>
     <string name="loader_error_encrypted">La teua ROM està encriptada</string>
-    <string name="loader_error_invalid_format">Format de ROM no vàlid</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar no admet aplicacions xifrades. Llig la nostra <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">entrada del blog</a> per a obtindre més informació.]]></string>
     <string name="loader_error_file_not_found">El fitxer ROM no existix</string>
     <string name="no_game_present">No hi ha cap joc iniciable!</string>
+
+    <string name="loader_error_generic">Es va produir un error en carregar el ROM: \"%s (%d)\"</string>
+    <string name="core_error_success">Éxit</string>
+    <string name="core_error_not_initialized">No inicialitzat</string>
+    <string name="core_error_get_loader">El carregador no s\'ha trobat, tipus de fitxer incompatible</string>
+    <string name="core_error_system_mode">Error en analitzar el fitxer</string>
+    <string name="core_error_loader">Error de carregador genèric</string>
+    <string name="core_error_loader_encrypted">Fitxer xifrat</string>
+    <string name="core_error_loader_invalid_format">Fitxer corrupte</string>
+    <string name="core_error_loader_gba_title">Fitxer es un títol de GBA</string>
+    <string name="core_error_loader_error_patches">Error en aplicar pegats</string>
+    <string name="core_error_loader_patches_invalid_title">Els pegats son per altra aplicació</string>
+    <string name="core_error_system_files">Falten fitxers del sistema</string>
+    <string name="core_error_savestate">Guardat d\'estat va fallar</string>
+    <string name="core_error_artic_disconnected">Artic Base s\'ha desconnectat</string>
+    <string name="core_error_n3ds_application">El fitxer es una aplicació de New 3DS</string>
+    <string name="core_error_core_exception_raised">Es va produir una exepció en el nucli</string>
+    <string name="core_error_memory_exception_raised">Es va produir una excepció de memòria</string>
+    <string name="core_error_shutdown_requested">Es va sol·licitar el tancament</string>
+    <string name="core_error_unknown">Error desconegut</string>
 
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Polsa Arrere per a accedir al menú.</string>
@@ -447,7 +496,11 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_aspect_ratio">Relació d\'Aspecte</string>
     <string name="emulation_switch_screen_layout">Estil de Pantalla Apaïsada</string>
     <string name="emulation_switch_portrait_layout">Estil de Pantalla de Perfil</string>
+    <string name="emulation_secondary_display_enable">Activar la pantalla secundària</string>
+    <string name="emulation_secondary_display_enable_description">Si està desactivat, Azahar permetrà que Android gestione les pantalles connectades. Si està activat i hi ha diverses pantalles connectades, pot seleccionar quina utilitzarà Azahar en el menú ràpid.</string>
     <string name="emulation_switch_secondary_layout">Estil de Pantalla Secundària</string>
+    <string name="emulation_secondary_display_management">Pantalla Secundària</string>
+    <string name="emulation_select_secondary_display">Tria Pantalla</string>
     <string name="emulation_switch_secondary_layout_description">La disposició de la pantalla secundària connectada, amb cable o sense fil (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Vertical</string>
@@ -456,7 +509,7 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="emulation_screen_layout_hybrid">Pantalles híbrides</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Per omissió</string>
-    <string name="emulation_secondary_display_default">Per defecte del sistema (espill)</string>
+    <string name="emulation_secondary_display_opposite">Pantalla Oposada</string>
     <string name="emulation_screen_layout_custom">Estil Personalitzat</string>
     <string name="bg_color">Color de fons</string>
     <string name="bg_color_description">El color que apareix darrere de les pantalles durant l\'emulació, representat com un valor RGB.</string>
@@ -566,6 +619,10 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparant ombrejadors</string>
     <string name="building_shaders">Construint%s</string>
+    <string name="delete_shader_cache">Eliminar cache d\'ombrejadors</string>
+    <string name="delete_cache_select_backend">Selecciona l\'API gràfica per a eliminar la cache d\'ombrejadors</string>
+    <string name="deleting_shader_cache">Eliminant la caché d\'ombrejadors, per favor espere…</string>
+    <string name="shader_cache_deleted">Caché d\'ombrejadors eliminada</string>
 
     <!-- About Game Dialog -->
     <string name="play">Jugar</string>
@@ -925,5 +982,98 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="decompress_not_compressed">Este fitxer no està comprimit.</string>
     <string name="decompress_failed">Va fallar la descompressió.</string>
     <string name="compress_decompress_installed_app">Les aplicacions ja instal·lades no es poden comprimir ni descomprimir.</string>
+
+  <!-- Multiplayer -->
+    <string name="multiplayer">Multijugador</string>
+    <string name="multiplayer_description">Organitza la teua pròpia sala o uneix-te a una ja existent per a jugar amb altres persones.</string>
+    <string name="multiplayer_room_title">Sala: %1$s</string>
+    <string name="multiplayer_console_id">ID de Consola:  %1$s</string>
+    <string name="multiplayer_create_room">Crear</string>
+    <string name="multiplayer_join_room">Unir-se</string>
+    <string name="multiplayer_public_room">Buscar Salas Públiques</string>
+    <string name="multiplayer_username">Nom d\'usuari</string>
+    <string name="multiplayer_ip_address">Adreça IP</string>
+    <string name="multiplayer_ip_port">Port</string>
+    <string name="multiplayer_create_room_success">Sala creada correctament!</string>
+    <string name="multiplayer_join_room_success">Unit a la sala correctament!</string>
+    <string name="multiplayer_create_room_failed">Fallada en crear un sala!</string>
+    <string name="multiplayer_join_room_failed">Va fallar l\'entrada a la sala</string>
+    <string name="multiplayer_input_invalid">Adreça invàlida o el nom és massa curt</string>
+    <string name="multiplayer_port_invalid">Port no vàlid!</string>
+    <string name="multiplayer_exit_room">Eixir de la sala</string>
+    <string name="multiplayer_network_error">Error de Xarxa</string>
+    <string name="multiplayer_lost_connection">Connexió perduda</string>
+    <string name="multiplayer_name_collision">Col·lisió de nom</string>
+    <string name="multiplayer_mac_collision">Col·lisió de MAC</string>
+    <string name="multiplayer_console_id_collision">Col·lisió de ID de consola</string>
+    <string name="multiplayer_wrong_version">Versió incorrecta</string>
+    <string name="multiplayer_wrong_password">Contrasenya incorrecta</string>
+    <string name="multiplayer_could_not_connect">No es va poder connectar</string>
+    <string name="multiplayer_room_is_full">La sala está plena</string>
+    <string name="multiplayer_host_banned">El host t\'ha bandejat</string>
+    <string name="multiplayer_permission_denied">Permís denegat</string>
+    <string name="multiplayer_no_such_user">No existix l\'usuari</string>
+    <string name="multiplayer_already_in_room">Ja unit a la sala</string>
+    <string name="multiplayer_create_room_error">Error al crear una sala</string>
+    <string name="multiplayer_host_kicked">El host t\'ha expulsat</string>
+    <string name="multiplayer_unknown_error">Error desconegut</string>
+    <string name="multiplayer_room_uninitialized">Sala no inicialitzada</string>
+    <string name="multiplayer_room_idle">Sala en espera</string>
+    <string name="multiplayer_room_joining">Entrant a la sala</string>
+    <string name="multiplayer_room_joined">Unit a la sala</string>
+    <string name="multiplayer_room_moderator">Moderador de la sala</string>
+    <string name="multiplayer_member_join">%1$s s\'ha unit</string>
+    <string name="multiplayer_member_leave">%1$s s\'ha anat</string>
+    <string name="multiplayer_member_kicked">%1$s expulsat</string>
+    <string name="multiplayer_member_banned">%1$s bandejat</string>
+    <string name="multiplayer_address_unbanned">Adreça desbandejada</string>
+    <string name="multiplayer_kick_member">Tirar</string>
+    <string name="multiplayer_chat_input_hint">Enviar missatges...</string>
+    <string name="multiplayer_password">Contrasenya</string>
+    <string name="original_button_text">Entrar</string>
+    <string name="disabled_button_text">Entrant...</string>
+    <string name="multiplayer_room_name">Nom de la Sala</string>
+    <string name="multiplayer_room_name_invalid">El nom de la sala ha de tindre entre 3 i 20 caràcters</string>
+    <string name="multiplayer_max_players">Jugadors Màxims (16)</string>
+    <string name="multiplayer_max_players_value">Jugadors Màxims: %d</string>
+    <string name="multiplayer_chat">Xat</string>
+    <string name="multiplayer_more_options">Més Opcions</string>
+    <string name="multiplayer_ip_copied">Adreça IP copiada al portapapers</string>
+    <string name="multiplayer_server_address">Adreça del servidor</string>
+    <string name="chat">Xat</string>
+    <string name="type_message">Escriu un missatge...</string>
+    <string name="send">Enviar</string>
+    <string name="send_message">Enviar Missatge</string>
+    <string name="multiplayer_moderation">Moderació</string>
+    <string name="multiplayer_moderation_title">Llista de Bandejos</string>
+    <string name="multiplayer_no_bans">No hi ha usuaris bandejats</string>
+    <string name="multiplayer_unban_title">Desbandejar Usuari</string>
+    <string name="multiplayer_unban">Desbandejar</string>
+    <string name="multiplayer_unban_message">Estàs segur de voler desbandejar a %1$s?</string>
+    <string name="multiplayer_ban">Bandejar Usuari</string>
+    <string name="multiplayer_room_browser">Sales Públiques</string>
+    <string name="multiplayer_no_rooms_found">No s\'han trobat sales públiques</string>
+    <string name="multiplayer_password_required">Contrasenya Requerida</string>
+    <string name="multiplayer_player_count">: %1$d/%2$d</string>
+    <string name="multiplayer_game">Joc</string>
+    <string name="multiplayer_no_game_info">Cualsevol Joc</string>
+    <string name="multiplayer_password_protected">Sala protegida per contrasenya</string>
+    <string name="multiplayer_hide_full_rooms">Ocultar Salas Plenes</string>
+    <string name="multiplayer_hide_empty_rooms">Ocultar Salas Buides</string>
+    <string name="multiplayer_tap_refresh_to_check_again">Polsa refrescar per a comprovar de nou</string>
+    <string name="multiplayer_search_public_lobbies">Buscar Sales Públiques...</string>
+    <string name="multiplayer_game_name">Jocs Preferits</string>
+    <string name="prefered_game_name">Joc Preferit</string>
+    <string name="multiplayer_no_game">No s\'han trobat jocs</string>
+    <string name="no_preference">Sense Preferència</string>
+
+    <string name="update_available">Actualització disponible</string>
+    <string name="update_available_description">Hi ha una nova versió d\'Azahar disponible (versió %1$s).\nVols descarregar-la?</string>
+    <string name="check_for_updates">Buscar actualitzacions</string>
+    <string name="check_for_updates_description">Mostrar una notificació quan hi haja una actualització disponible per a Azahar.</string>
+    <string name="update_check_channel">Canal d\'actualització</string>
+    <string name="update_check_channel_description">Canal a usar per a comprovar actualitzacions.</string>
+    <string name="update_check_channel_stable">Estable</string>
+    <string name="update_check_channel_prerelease">Prellançament</string>
 
 </resources>

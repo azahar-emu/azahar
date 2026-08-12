@@ -17,7 +17,7 @@ struct InfoLedPattern {
         u8 ticks_per_index{};   // Amount of ticks to stay in the current index (1 tick == 1/512 s)
         u8 ticks_to_progress{}; // Amount of ticks to go from the previous value to the current
                                 // index value. Normally, this only makes sense to be set to 0 to
-                                // disable interpolation, or equal to "ticks_to_progress" for linear
+                                // disable interpolation, or equal to "ticks_per_index" for linear
                                 // interpolation. Any other value breaks the interpolation math.
         u8 last_index_repeat_times{}; // Amount of times to repeat the last index, as if the color
                                       // array had "last_index_repeat_times" more elements equal to
