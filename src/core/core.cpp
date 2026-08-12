@@ -48,6 +48,7 @@
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
+#include "core/savestate.h"
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/server.h"
 #endif
@@ -123,6 +124,20 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
             LOG_ERROR(Core, "A pending save state operation has not finished yet");
             status_details = "A pending save state operation has not finished yet";
             return ResultStatus::ErrorSavestate;
+        }
+        u64 title_id{};
+        if (app_loader) {
+            app_loader->ReadProgramId(title_id);
+        }
+        auto info = GetSaveStateInfo(title_id, movie.GetCurrentMovieID(), param);
+        if (info.slot == std::numeric_limits<u32>::max()) {
+            // Should not happen
+            status_details = "Failed to load savestate";
+            return ResultStatus::ErrorSavestate;
+        }
+        if (info.status == Core::SaveStateInfo::ValidationStatus::BuildMismatch) {
+            status_details = info.build_name;
+            return ResultStatus::ErrorSavestateBuildMismatch;
         }
         save_state_slot = param;
         save_state_request_time = std::chrono::steady_clock::now();

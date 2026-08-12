@@ -117,6 +117,9 @@ static jobject ToJavaCoreError(Core::System::ResultStatus result) {
         {Core::System::ResultStatus::ErrorSavestate, "ErrorSavestate"},
         {Core::System::ResultStatus::ErrorArticDisconnected, "ErrorArticDisconnected"},
         {Core::System::ResultStatus::ErrorN3DSApplication, "ErrorN3DSApplication"},
+        {Core::System::ResultStatus::ErrorCoreExceptionRaised, "ErrorCoreExceptionRaised"},
+        {Core::System::ResultStatus::ErrorMemoryExceptionRaised, "ErrorMemoryExceptionRaised"},
+        {Core::System::ResultStatus::ErrorSavestateBuildMismatch, "ErrorSavestateBuildMismatch"},
         {Core::System::ResultStatus::ErrorUnknown, "ErrorUnknown"},
     };
 
@@ -307,12 +310,8 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
                     handler->DisableSensors();
                 }
                 if (!HandleCoreError(result, system.GetStatusDetails())) {
-                    // Frontend requests us to abort
-                    // If the error was an Artic disconnect, return shutdown request.
-                    if (result == Core::System::ResultStatus::ErrorArticDisconnected) {
-                        return Core::System::ResultStatus::ShutdownRequested;
-                    }
-                    return result;
+                    // Frontend requests us to abort, return a shutdown request.
+                    return Core::System::ResultStatus::ShutdownRequested;
                 }
                 handler = InputManager::NDKMotionHandler();
                 if (handler) {
@@ -786,7 +785,10 @@ void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNI
 
 void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
                                                            [[maybe_unused]] jobject obj) {
-    stop_run = true;
+    if (stop_run.exchange(true)) {
+        // stop_run was already true
+        return;
+    }
     pause_emulation = false;
     window->StopPresenting();
     if (secondary_window) {
