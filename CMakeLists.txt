@@ -158,6 +158,7 @@ option(ENABLE_LTO "Enable link time optimization" ${DEFAULT_ENABLE_LTO})
 option(ENABLE_NATIVE_OPTIMIZATION "Enables processor-specific optimizations via -march=native" OFF)
 option(CITRA_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
 option(CITRA_WARNINGS_AS_ERRORS "Enable warnings as errors" ON)
+option(CITRA_ADDRESS_SANITIZE "Enable address sanitizer" OFF)
 
 # Handle incompatible options for libretro builds
 if(ENABLE_LIBRETRO)
@@ -249,6 +250,17 @@ if (ENABLE_LTO)
     endif()
 else()
     message(STATUS "LTO disabled")
+endif()
+
+# Address sanitizer
+# =======================================================================
+if (CITRA_ADDRESS_SANITIZE)
+    if (MSVC)
+        add_compile_options(/fsanitize=address)
+    else()
+        add_compile_options(-fsanitize=address)
+        add_link_options(-fsanitize=address)
+    endif()
 endif()
 
 # Check for march=native support
