@@ -87,7 +87,7 @@ private:
 
     void MotionEmuThread() {
         auto update_time = std::chrono::steady_clock::now();
-        Common::Quaternion<float> q = Common::MakeQuaternion(Common::MakeVec(90, 0, 0), 90);
+        Common::Quaternion<float> q = Common::MakeQuaternion(Common::MakeVec(-1.0f, 0.0f, 0.0f), 90.0f);
         Common::Quaternion<float> old_q;
 
         while (!shutdown_event.WaitUntil(update_time)) {
@@ -98,10 +98,7 @@ private:
                 std::lock_guard guard{tilt_mutex};
 
                 // Find the quaternion describing current 3DS tilting
-                q = Common::MakeQuaternion(
-                    Common::MakeVec(90, 0, 0), 90);
-                q += Common::MakeQuaternion(
-                    Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
+                q = Common::MakeQuaternion(Common::MakeVec(-1.0f, 0.0f, 0.0f), 90.0f) + Common::MakeQuaternion(Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
             }
 
             auto inv_q = q.Inverse();
