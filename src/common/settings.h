@@ -124,6 +124,7 @@ enum class AntiAliasingMethod : u32 {
     MSAAx2 = 1,
     MSAAx4 = 2,
     MSAAx8 = 3,
+    MSAAx16 = 4,
 };
 
 static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_method) {
@@ -134,6 +135,8 @@ static inline u8 GetAntiAliasingSampleCount(AntiAliasingMethod antialiasing_meth
         return 4;
     case AntiAliasingMethod::MSAAx8:
         return 8;
+    case AntiAliasingMethod::MSAAx16:
+        return 16;
     default:
         return 1;
     }
