@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QColorDialog>
+#include <QListView>
 #include "citra_qt/configuration/configuration_shared.h"
 #include "citra_qt/configuration/configure_enhancements.h"
 #include "common/settings.h"
@@ -22,6 +23,19 @@ ConfigureEnhancements::ConfigureEnhancements(QWidget* parent)
     const bool hardware_graphics = graphics_api != Settings::GraphicsAPI::Software;
     ui->resolution_factor_combobox->setEnabled(hardware_graphics);
     ui->antialiasing_combobox->setEnabled(hardware_graphics);
+
+    // TODO(wunk): OpenGL and Vulkan mandate up to MSAAx4 is supported, anything further must be
+    // conditionally detected. Disable these for now.
+    const auto DisableComboboxItem = [](QComboBox& combobox, int item_index) {
+        if (QListView* combobox_view = qobject_cast<QListView*>(combobox.view())) {
+            combobox_view->setRowHidden(item_index, true);
+        }
+        combobox.setItemData(item_index, 0, Qt::UserRole - 1);
+    };
+    DisableComboboxItem(*ui->antialiasing_combobox,
+                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx8));
+    DisableComboboxItem(*ui->antialiasing_combobox,
+                        static_cast<int>(Settings::AntiAliasingMethod::MSAAx16));
 
     connect(ui->render_3d_combobox, qOverload<int>(&QComboBox::currentIndexChanged), this,
             [this](int currentIndex) {
