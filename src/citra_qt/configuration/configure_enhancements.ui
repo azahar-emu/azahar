@@ -194,6 +194,11 @@
              <string>MSAAx8</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>MSAAx16</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

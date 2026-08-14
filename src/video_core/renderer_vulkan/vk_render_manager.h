@@ -38,7 +38,7 @@ struct RenderPass {
 class RenderManager {
     static constexpr u32 NumColorFormats = static_cast<u32>(VideoCore::PixelFormat::NumColorFormat);
     static constexpr u32 NumDepthFormats = static_cast<u32>(VideoCore::PixelFormat::NumDepthFormat);
-    static constexpr size_t MaxSamples = 8;
+    static constexpr size_t MaxSamples = 16;
     static_assert(std::has_single_bit(MaxSamples));
 
 public:
