@@ -639,10 +639,23 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
 
         // If the texture unit is disabled bind a null surface to it
         if (!texture.enabled) {
-            Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
-            const Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SAMPLER_ID);
-            update_queue.AddImageSampler(texture_set, texture_index, 0, null_surface.ImageView(),
-                                         null_sampler.Handle());
+            switch (texture.config.type.Value()) {
+            case TextureType::TextureCube:
+            case TextureType::ShadowCube: {
+                Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_CUBE_ID);
+                const Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SURFACE_CUBE_ID);
+                update_queue.AddImageSampler(texture_set, texture_index, 0,
+                                             null_surface.ImageView(), null_sampler.Handle());
+                break;
+            }
+            default: {
+                Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
+                const Sampler& null_sampler = res_cache.GetSampler(VideoCore::NULL_SURFACE_ID);
+                update_queue.AddImageSampler(texture_set, texture_index, 0,
+                                             null_surface.ImageView(), null_sampler.Handle());
+                break;
+            }
+            }
             continue;
         }
 
