@@ -25,17 +25,39 @@ SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
     return GetCurrentStatus();
 }
 
-void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const {
-    if (!state.enabled)
-        return;
-
+void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) {
     const std::array<float, 4>& gains = state.gain.at(intermediate_mix_id);
+    if (!state.enabled) {
+        state.gain_ramp_start.at(intermediate_mix_id) = gains;
+        state.gain_ramp_active.at(intermediate_mix_id) = false;
+        return;
+    }
+
+    const bool ramp_active = state.gain_ramp_active.at(intermediate_mix_id);
+    const std::array<float, 4>& ramp_start = state.gain_ramp_start.at(intermediate_mix_id);
+    constexpr float ramp_scale = 1.0f / static_cast<float>(samples_per_frame - 1);
+
     for (std::size_t samplei = 0; samplei < samples_per_frame; samplei++) {
+        const float progress = static_cast<float>(samplei) * ramp_scale;
+        const float gain0 =
+            ramp_active ? ramp_start[0] + (gains[0] - ramp_start[0]) * progress : gains[0];
+        const float gain1 =
+            ramp_active ? ramp_start[1] + (gains[1] - ramp_start[1]) * progress : gains[1];
+        const float gain2 =
+            ramp_active ? ramp_start[2] + (gains[2] - ramp_start[2]) * progress : gains[2];
+        const float gain3 =
+            ramp_active ? ramp_start[3] + (gains[3] - ramp_start[3]) * progress : gains[3];
+
         // Conversion from stereo (current_frame) to quadraphonic (dest) occurs here.
-        dest[samplei][0] += static_cast<s32>(gains[0] * current_frame[samplei][0]);
-        dest[samplei][1] += static_cast<s32>(gains[1] * current_frame[samplei][1]);
-        dest[samplei][2] += static_cast<s32>(gains[2] * current_frame[samplei][0]);
-        dest[samplei][3] += static_cast<s32>(gains[3] * current_frame[samplei][1]);
+        dest[samplei][0] += static_cast<s32>(gain0 * current_frame[samplei][0]);
+        dest[samplei][1] += static_cast<s32>(gain1 * current_frame[samplei][1]);
+        dest[samplei][2] += static_cast<s32>(gain2 * current_frame[samplei][0]);
+        dest[samplei][3] += static_cast<s32>(gain3 * current_frame[samplei][1]);
+    }
+
+    if (ramp_active) {
+        state.gain_ramp_start.at(intermediate_mix_id) = gains;
+        state.gain_ramp_active.at(intermediate_mix_id) = false;
     }
 }
 
@@ -113,6 +135,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_0_dirty) {
         config.gain_0_dirty.Assign(0);
+        state.gain_ramp_start[0] = state.gain[0];
+        state.gain_ramp_active[0] = true;
         std::transform(config.gain[0], config.gain[0] + state.gain[0].size(), state.gain[0].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 0 update", source_id);
@@ -120,6 +144,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_1_dirty) {
         config.gain_1_dirty.Assign(0);
+        state.gain_ramp_start[1] = state.gain[1];
+        state.gain_ramp_active[1] = true;
         std::transform(config.gain[1], config.gain[1] + state.gain[1].size(), state.gain[1].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 1 update", source_id);
@@ -127,6 +153,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_2_dirty) {
         config.gain_2_dirty.Assign(0);
+        state.gain_ramp_start[2] = state.gain[2];
+        state.gain_ramp_active[2] = true;
         std::transform(config.gain[2], config.gain[2] + state.gain[2].size(), state.gain[2].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 2 update", source_id);
