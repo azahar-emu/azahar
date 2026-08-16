@@ -20,7 +20,7 @@ struct RasterizerRegs {
         KeepAll = 0,
         KeepClockWise = 1,
         KeepCounterClockWise = 2,
-        // TODO: What does the third value imply?
+        KeepAll2 = 3,
     };
 
     union {

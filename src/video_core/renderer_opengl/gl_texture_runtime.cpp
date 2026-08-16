@@ -114,7 +114,7 @@ static constexpr std::array<FormatTuple, 8> CUSTOM_TUPLES = {{
 } // Anonymous namespace
 
 TextureRuntime::TextureRuntime(const Driver& driver_, VideoCore::RendererBase& renderer)
-    : driver{driver_}, blit_helper{driver} {
+    : driver{driver_}, current_resource_tick{0}, blit_helper{driver} {
     for (std::size_t i = 0; i < draw_fbos.size(); ++i) {
         draw_fbos[i].Create();
         read_fbos[i].Create();
@@ -123,8 +123,12 @@ TextureRuntime::TextureRuntime(const Driver& driver_, VideoCore::RendererBase& r
 
 TextureRuntime::~TextureRuntime() = default;
 
-u32 TextureRuntime::RemoveThreshold() {
-    return SWAP_CHAIN_SIZE;
+u64 TextureRuntime::GetResourceTick() {
+    return current_resource_tick;
+}
+
+void TextureRuntime::Finish() {
+    current_resource_tick++;
 }
 
 bool TextureRuntime::NeedsConversion(const Surface& surface) const {

@@ -42,11 +42,12 @@ public:
     explicit TextureRuntime(const Driver& driver, VideoCore::RendererBase& renderer);
     ~TextureRuntime();
 
-    /// Returns the removal threshold ticks for the garbage collector
-    u32 RemoveThreshold();
+    /// Gets an opaque tick-value used to indicate to the garbage collector when a surface was made.
+    /// Incrementing this variable indicates that all previous resource ticks can be safely deleted
+    u64 GetResourceTick();
 
     /// Submits and waits for current GPU work.
-    void Finish() {}
+    void Finish();
 
     /// Returns true if the provided pixel format cannot be used natively by the runtime.
     bool NeedsConversion(const Surface& surface) const;
@@ -89,6 +90,7 @@ private:
 
 private:
     const Driver& driver;
+    u64 current_resource_tick;
     BlitHelper blit_helper;
     std::vector<u8> staging_buffer;
     std::array<OGLFramebuffer, 3> draw_fbos;

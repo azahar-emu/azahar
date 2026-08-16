@@ -16,21 +16,22 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/savestate.h"
-#include "core/savestate_data.h"
 #include "network/network.h"
 
 namespace Core {
 
 #pragma pack(push, 1)
 struct CSTHeader {
-    std::array<u8, 4> filetype;    /// Unique Identifier to check the file type (always "CST"0x1B)
-    u64_le program_id;             /// ID of the ROM being executed. Also called title_id
-    std::array<u8, 20> revision;   /// Git hash of the revision this savestate was created with
-    u64_le time;                   /// The time when this save state was created
-    std::array<u8, 20> build_name; /// The build name (Canary/Nightly) with the version number
-    u32_le zero = 0;               /// Should be zero, just in case.
+    std::array<u8, 4> filetype{};    /// Unique Identifier to check the file type (always "CST"0x1B)
+    u64_le program_id{};             /// ID of the ROM being executed. Also called title_id
+    std::array<u8, 20> revision{};   /// Git hash of the revision this savestate was created with
+    u64_le time{};                   /// The time when this save state was created
+    std::array<u8, 20> build_name{}; /// The build name (Canary/Nightly) with the version number
+    u32_le zero{};                   /// Should be zero, just in case.
+    std::array<u8, 20> build_version{}; /// Latest build version, used as compatibility.
+    u32_le zero_2{};                    /// Should be zero, just in case.
 
-    std::array<u8, 192> reserved{}; /// Make heading 256 bytes so it has consistent size
+    std::array<u8, 168> reserved{}; /// Make heading 256 bytes so it has consistent size
 };
 static_assert(sizeof(CSTHeader) == 256, "CSTHeader should be 256 bytes");
 #pragma pack(pop)
@@ -64,25 +65,18 @@ static bool ValidateSaveState(const CSTHeader& header, SaveStateInfo& info, u64 
     const std::string revision = fmt::format("{:02x}", fmt::join(header.revision, ""));
     const std::string build_name =
         header.zero == 0 ? reinterpret_cast<const char*>(header.build_name.data()) : "";
+    const std::string build_version =
+        header.zero_2 == 0 ? reinterpret_cast<const char*>(header.build_version.data()) : "";
 
     if (revision == Common::g_scm_rev) {
         info.status = SaveStateInfo::ValidationStatus::OK;
     } else {
-        if (!build_name.empty()) {
-            info.build_name = build_name;
-        } else if (hash_to_version.find(revision) != hash_to_version.end()) {
-            info.build_name = hash_to_version.at(revision);
-        }
-        if (info.build_name.empty()) {
-            LOG_WARNING(Core, "Save state file {} created from a different revision {}", path,
-                        revision);
-        } else {
-            LOG_WARNING(Core,
-                        "Save state file {} created from a different build {} with revision {}",
-                        path, info.build_name, revision);
-        }
+        info.build_name = build_name;
+        info.build_version = build_version;
 
-        info.status = SaveStateInfo::ValidationStatus::RevisionDismatch;
+        info.status = Common::g_build_version == info.build_version
+                          ? SaveStateInfo::ValidationStatus::RevisionMismatch
+                          : SaveStateInfo::ValidationStatus::BuildMismatch;
     }
     return true;
 }
@@ -120,6 +114,35 @@ std::vector<SaveStateInfo> ListSaveStates(u64 program_id, u64 movie_id) {
         result.emplace_back(std::move(info));
     }
     return result;
+}
+
+SaveStateInfo GetSaveStateInfo(u64 program_id, u64 movie_id, u32 slot) {
+    SaveStateInfo info{};
+    info.slot = std::numeric_limits<u32>::max();
+
+    const auto path = GetSaveStatePath(program_id, movie_id, slot);
+    if (!FileUtil::Exists(path)) {
+        return info;
+    }
+
+    FileUtil::IOFile file(path, "rb");
+    if (!file) {
+        LOG_ERROR(Core, "Could not open file {}", path);
+        return info;
+    }
+    CSTHeader header;
+    if (file.GetSize() < sizeof(header)) {
+        LOG_ERROR(Core, "File too small {}", path);
+        return info;
+    }
+    if (file.ReadBytes(&header, sizeof(header)) != sizeof(header)) {
+        LOG_ERROR(Core, "Could not read from file {}", path);
+        return info;
+    }
+    if (ValidateSaveState(header, info, program_id, movie_id)) {
+        info.slot = slot;
+    }
+    return info;
 }
 
 void System::SaveState(u32 slot) const {
@@ -198,7 +221,8 @@ void System::LoadState(u32 slot) {
         // validate header
         SaveStateInfo info;
         info.slot = slot;
-        if (!ValidateSaveState(header, info, title_id, movie_id)) {
+        if (!ValidateSaveState(header, info, title_id, movie_id) ||
+            info.status == SaveStateInfo::ValidationStatus::BuildMismatch) {
             throw std::runtime_error("Invalid savestate");
         }
 
@@ -241,6 +265,11 @@ std::vector<u8> System::SaveStateBuffer() const {
     std::memset(header.build_name.data(), 0, sizeof(header.build_name));
     std::memcpy(header.build_name.data(), build_fullname.c_str(),
                 std::min(build_fullname.length(), sizeof(header.build_name) - 1));
+
+    const std::string build_version = Common::g_build_version;
+    std::memset(header.build_version.data(), 0, sizeof(header.build_version));
+    std::memcpy(header.build_version.data(), build_version.c_str(),
+                std::min(build_version.length(), sizeof(header.build_version) - 1));
 
     std::vector<u8> result((u8*)&header, (u8*)&header + sizeof(header));
     std::copy(buffer.begin(), buffer.end(), std::back_inserter(result));

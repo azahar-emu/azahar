@@ -303,8 +303,8 @@ VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
     };
 }
 
-u32 TextureRuntime::RemoveThreshold() {
-    return num_swapchain_images;
+u64 TextureRuntime::GetResourceTick() {
+    return scheduler.GetMasterSemaphore()->KnownGpuTick();
 }
 
 void TextureRuntime::Finish() {
