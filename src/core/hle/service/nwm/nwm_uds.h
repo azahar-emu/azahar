@@ -18,6 +18,7 @@
 #include <boost/serialization/export.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "common/threadsafe_queue.h"
 #include "core/hle/service/nwm/uds_common.h"
 #include "core/hle/service/service.h"
 #include "network/network.h"
@@ -626,6 +627,12 @@ private:
 
     // Event that will generate and send the 802.11 beacon frames.
     Core::TimingEventType* beacon_broadcast_event;
+
+    // Event for handling wifi packets
+    Core::TimingEventType* handle_wifi_packet_event;
+
+    // Queue holding the pending packets
+    Common::SPSCQueue<Network::WifiPacket> pending_packets;
 
     // Callback identifier for the OnWifiPacketReceived event.
     Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;

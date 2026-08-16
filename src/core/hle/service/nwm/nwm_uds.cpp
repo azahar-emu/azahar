@@ -40,6 +40,8 @@ void NWM_UDS::serialize(Archive& ar, const unsigned int) {
     ar & connection_event;
     ar & received_beacons;
     // wifi_packet_received set in constructor
+    // pending packet queue is lost, but that's fine as it doesn't make sense to save state during
+    // an active multiplayer session as it will mess up everything anyways.
 }
 
 namespace ErrCodes {
@@ -1703,13 +1705,22 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
             BeaconBroadcastCallback(user_data, cycles_late);
         });
 
+    handle_wifi_packet_event = system.CoreTiming().RegisterEvent(
+        "UDS::OnWifiPacketReceived",
+        [this]([[maybe_unused]] std::uintptr_t user_data, s64 cycles_late) {
+            Network::WifiPacket packet;
+            if (pending_packets.Pop(packet)) {
+                OnWifiPacketReceived(packet);
+            }
+        });
+
     system.Kernel().GetSharedPageHandler().SetMacAddress(GetMacAddress());
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         wifi_packet_received =
             room_member->BindOnWifiPacketReceived([this](const Network::WifiPacket& packet) {
-                std::scoped_lock lock{this->system.Kernel().GetHLELock()};
-                OnWifiPacketReceived(packet);
+                pending_packets.Push(packet);
+                this->system.CoreTiming().ScheduleEvent(0, handle_wifi_packet_event, 0, 1, true);
             });
     } else {
         LOG_ERROR(Service_NWM, "Network isn't initalized");
