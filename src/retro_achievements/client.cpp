@@ -44,9 +44,8 @@ static uint32_t read_memory(uint32_t address, uint8_t* buffer, uint32_t num_byte
     LOG_DEBUG(RetroAchievements, "Reading {} bytes from 0x{:x}", num_bytes, address);
 
     Core::System& system = Core::System::GetInstance();
-    system.Memory().ReadBlock(static_cast<VAddr>(address), buffer, num_bytes);
-
-    return num_bytes;
+    return system.Memory().ReadBlock(static_cast<VAddr>(address), buffer, num_bytes) ? num_bytes
+                                                                                     : 0;
 }
 
 static void log_message(const char* message, const rc_client_t* rc_client) {
