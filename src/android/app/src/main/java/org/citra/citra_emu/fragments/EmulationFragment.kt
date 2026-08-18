@@ -1652,8 +1652,8 @@ class EmulationFragment :
             windowInsets
         ->
         val cutout = windowInsets.displayCutout
-        val mlp = v.layoutParams as ViewGroup.MarginLayoutParams
-        mlp.setMargins(
+        val mlp = v.layoutParams as ViewGroup.MarginLayoutParams?
+        mlp?.setMargins(
             cutout?.safeInsetLeft ?: 0,
             cutout?.safeInsetTop ?: 0,
             cutout?.safeInsetRight ?: 0,
