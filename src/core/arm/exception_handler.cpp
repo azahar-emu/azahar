@@ -58,9 +58,7 @@ static std::string DumpRegisters(const ARM_Interface& core) {
     return out;
 }
 
-static std::string DumpStack(const ARM_Interface& core) {
-    auto& memory = system.Memory();
-
+static std::string DumpStack(const ARM_Interface& core, Memory::MemorySystem& memory) {
     std::string out;
     constexpr u32 stack_dump_size = 256;
     const u32 sp = core.GetReg(13);
@@ -106,6 +104,7 @@ static const char* ExceptionTypeToString(ExceptionType type) {
 
 void LogException(System& system, ExceptionType type, u32 fault_address, const std::string& description) {
     auto& core = system.GetRunningCore();
+    auto& memory = system.Memory();
 
     std::string report;
 
