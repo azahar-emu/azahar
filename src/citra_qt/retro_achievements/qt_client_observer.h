@@ -34,6 +34,10 @@ signals:
 
     void AchievementListChanged();
 
+    void LeaderboardTrackerShown(quint32 id, const QString& display);
+    void LeaderboardTrackerUpdated(quint32 id, const QString& display);
+    void LeaderboardTrackerHidden(quint32 id);
+
     void EventNotification(const QString& title, const QString& body, const QString& image_url);
 };
 

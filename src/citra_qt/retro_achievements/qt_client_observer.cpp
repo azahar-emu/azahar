@@ -30,6 +30,22 @@ void QtClientObserver::OnEvent(const rc_client_event_t* event) {
     QString title, body, image_url;
 
     switch (event->type) {
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_SHOW:
+        emit LeaderboardTrackerShown(event->leaderboard_tracker->id,
+                                     QString::fromUtf8(event->leaderboard_tracker->display));
+        return;
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_UPDATE:
+        emit LeaderboardTrackerUpdated(event->leaderboard_tracker->id,
+                                       QString::fromUtf8(event->leaderboard_tracker->display));
+        return;
+    case RC_CLIENT_EVENT_LEADERBOARD_TRACKER_HIDE:
+        emit LeaderboardTrackerHidden(event->leaderboard_tracker->id);
+        return;
+    default:
+        break;
+    }
+
+    switch (event->type) {
     case RC_CLIENT_EVENT_ACHIEVEMENT_TRIGGERED:
     case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_SHOW:
     case RC_CLIENT_EVENT_ACHIEVEMENT_CHALLENGE_INDICATOR_HIDE:

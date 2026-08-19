@@ -77,6 +77,7 @@
 #include "citra_qt/qt_image_interface.h"
 #include "citra_qt/qt_swizzle.h"
 #include "citra_qt/retro_achievements/dialog.h"
+#include "citra_qt/retro_achievements/leaderboard_tracker_overlay.h"
 #include "citra_qt/retro_achievements/notification.h"
 #include "citra_qt/uisettings.h"
 #include "common/play_time_manager.h"
@@ -554,12 +555,20 @@ GMainWindow::GMainWindow(Core::System& system_)
     physical_devices = GetVulkanPhysicalDevices();
 #endif
 
-    if (!game_path.isEmpty()) {
-        BootGame(game_path);
-    }
-
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
+    ra_leaderboard_tracker_overlay =
+        std::make_unique<RetroAchievements::LeaderboardTrackerOverlay>(render_window);
     ra_notification = std::make_unique<RetroAchievements::Notification>(render_window);
+
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LeaderboardTrackerShown,
+            ra_leaderboard_tracker_overlay.get(),
+            &RetroAchievements::LeaderboardTrackerOverlay::ShowTracker, Qt::QueuedConnection);
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LeaderboardTrackerUpdated,
+            ra_leaderboard_tracker_overlay.get(),
+            &RetroAchievements::LeaderboardTrackerOverlay::UpdateTracker, Qt::QueuedConnection);
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LeaderboardTrackerHidden,
+            ra_leaderboard_tracker_overlay.get(),
+            &RetroAchievements::LeaderboardTrackerOverlay::HideTracker, Qt::QueuedConnection);
 
     auto set_notification_image = [this](std::vector<u8>&& image_data) {
         QMetaObject::invokeMethod(
@@ -582,6 +591,9 @@ GMainWindow::GMainWindow(Core::System& system_)
                                                                 set_notification_image);
                 }
             });
+    connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoadGameFailed,
+            ra_leaderboard_tracker_overlay.get(),
+            &RetroAchievements::LeaderboardTrackerOverlay::Clear, Qt::QueuedConnection);
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::EventNotification, this,
             [this, set_notification_image](const QString& title, const QString& body,
                                            const QString& image_url) {
@@ -592,6 +604,10 @@ GMainWindow::GMainWindow(Core::System& system_)
                 }
             });
 #endif
+
+    if (!game_path.isEmpty()) {
+        BootGame(game_path);
+    }
 }
 
 GMainWindow::~GMainWindow() {
@@ -1596,6 +1612,9 @@ void GMainWindow::BootGame(const QString& filename) {
     config->Save();
 
     if (!LoadROM(filename)) {
+#ifdef ENABLE_RETRO_ACHIEVEMENTS
+        ra_leaderboard_tracker_overlay->Clear();
+#endif
         render_window->ReleaseRenderTarget();
         secondary_window->ReleaseRenderTarget();
         return;
@@ -3546,12 +3565,16 @@ void GMainWindow::OnRetroAchievements() {
             });
     connect(&dialog, &RetroAchievements::Dialog::LoggedOut, this, [this]() {
         system.RetroAchievementsClient().LogOut();
+        ra_leaderboard_tracker_overlay->Clear();
         Settings::values.retro_achievements_username.SetValue("");
         Settings::values.retro_achievements_token.SetValue("");
     });
     connect(&dialog, &RetroAchievements::Dialog::EnabledToggled, this, [this](bool enabled) {
         Settings::values.retro_achievements_enabled.SetValue(enabled);
         system.RetroAchievementsClient().SetEnabled(enabled);
+        if (!enabled) {
+            ra_leaderboard_tracker_overlay->Clear();
+        }
     });
 
     connect(&ra_client_observer, &RetroAchievements::QtClientObserver::LoginSucceeded, &dialog,

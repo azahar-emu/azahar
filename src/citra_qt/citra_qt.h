@@ -65,8 +65,9 @@ class QPushButton;
 class QSlider;
 class RegistersWidget;
 namespace RetroAchievements {
+class LeaderboardTrackerOverlay;
 class Notification;
-}
+} // namespace RetroAchievements
 class WaitTreeWidget;
 
 namespace Camera {
@@ -475,6 +476,7 @@ private:
 
 #ifdef ENABLE_RETRO_ACHIEVEMENTS
     RetroAchievements::QtClientObserver ra_client_observer;
+    std::unique_ptr<RetroAchievements::LeaderboardTrackerOverlay> ra_leaderboard_tracker_overlay;
     std::unique_ptr<RetroAchievements::Notification> ra_notification;
 #endif
 
