@@ -659,7 +659,7 @@ struct Values {
     Setting<bool> instant_debug_log{false, Keys::instant_debug_log};
     Setting<bool> enable_rpc_server{false, Keys::enable_rpc_server};
     Setting<bool> toggle_unique_data_console_type{false, Keys::toggle_unique_data_console_type};
-    Setting<bool> break_on_unmapped_memory_access{false, Keys::break_on_unmapped_memory_access};
+    Setting<bool> enable_exception_handler{true, Keys::enable_exception_handler};
 
     // WebService
     Setting<std::string> web_api_url{"", Keys::web_api_url};

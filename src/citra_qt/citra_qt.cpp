@@ -99,6 +99,7 @@
 #include "common/settings.h"
 #include "common/string_util.h"
 #include "common/zstd_compression.h"
+#include "core/arm/exception_handler.h"
 #include "core/core.h"
 #include "core/dumping/backend.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -3854,8 +3855,79 @@ void GMainWindow::showEvent([[maybe_unused]] QShowEvent* event) {
     game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
+bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result, const std::string& details) {
+    QDialog dialog(this);
+    dialog.setWindowTitle(result == Core::System::ResultStatus::ErrorCoreExceptionRaised
+            ? tr("An exception occurred")
+            : tr("An invalid memory access occurred")
+    );
+
+    dialog.setMinimumSize(600, 500);
+
+    auto* layout = new QVBoxLayout(&dialog);
+
+    auto* label = new QLabel(
+        result == Core::System::ResultStatus::ErrorCoreExceptionRaised
+            ? tr("An exception occurred while executing the emulated application.")
+            : tr("An invalid memory access occurred while executing the emulated application.")
+    );
+
+    layout->addWidget(label);
+
+    auto* textEdit = new QPlainTextEdit();
+    textEdit->setPlainText(QString::fromStdString(details));
+    textEdit->setReadOnly(true);
+    QFont monoFont(QStringLiteral("Monospace"));
+    monoFont.setStyleHint(QFont::TypeWriter);
+    monoFont.setPointSize(10);
+    textEdit->setFont(monoFont);
+    textEdit->setLineWrapMode(QPlainTextEdit::NoWrap);
+    layout->addWidget(textEdit);
+
+    auto* buttonLayout = new QHBoxLayout();
+
+    auto* ignoreButton = new QPushButton(tr("Ignore for this Session"));
+
+    QObject::connect(ignoreButton, &QPushButton::clicked, []() {
+        Core::SetIgnoreExceptionsForSession(true);
+    });
+
+    buttonLayout->addWidget(ignoreButton);
+    buttonLayout->addStretch();
+
+    auto* continueButton = new QPushButton(tr("Continue"));
+    QObject::connect(continueButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+    buttonLayout->addWidget(continueButton);
+
+    auto* stopButton = new QPushButton(tr("Stop Emulation"));
+    QObject::connect(stopButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    buttonLayout->addWidget(stopButton);
+
+    layout->addLayout(buttonLayout);
+
+    return dialog.exec() == QDialog::Accepted;
+}
+
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
     QString status_message;
+
+    // Handle exception dialogs separately
+    if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised ||
+        result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
+        if (ShowExceptionDialog(result, details)) {
+            if (emu_thread) {
+                ShutdownGame();
+                return;
+            }
+        }
+
+        if (emu_thread) {
+            emu_thread->SetRunning(true);
+            message_label->setText(status_message);
+            message_label_used_for_movie = false;
+        }
+        return;
+    }
 
     QString title, message;
     QMessageBox::Icon error_severity_icon;
@@ -3886,18 +3958,6 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                    .c_str());
         error_severity_icon = QMessageBox::Icon::Critical;
         can_continue = false;
-    } else if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
-        title = tr("An exception occurred");
-        message = tr("An exception occurred while executing the emulated application.\n\n");
-        message += QString::fromStdString(details);
-        error_severity_icon = QMessageBox::Icon::Critical;
-        can_continue = false;
-    } else if (result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
-        title = tr("An invalid memory access occurred");
-        message =
-            tr("An invalid memory access occurred while executing the emulated application.\n\n");
-        message += QString::fromStdString(details);
-        error_severity_icon = QMessageBox::Icon::Critical;
     } else if (result == Core::System::ResultStatus::ErrorSavestateBuildMismatch) {
         title = tr("Savestate version mismatch");
         message = tr("Could not load savestate because it was created on a different Azahar "
