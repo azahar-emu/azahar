@@ -1707,8 +1707,6 @@ class EmulationFragment :
                 state = State.PAUSED
                 Log.debug("[EmulationFragment] Pausing emulation.")
 
-                // Release the surface before pausing, since emulation has to be running for that.
-                NativeLibrary.surfaceDestroyed()
                 NativeLibrary.pauseEmulation()
                 NativeLibrary.playTimeManagerStop()
             } else {
@@ -1768,6 +1766,7 @@ class EmulationFragment :
                     }
 
                     State.PAUSED -> {
+                        NativeLibrary.surfaceDestroyed()
                         Log.warning("[EmulationFragment] Surface cleared while emulation paused.")
                     }
 

@@ -344,9 +344,14 @@ public:
     }
 
     /// Function for checking OS microphone permissions.
-
     void RegisterMicPermissionCheck(const std::function<bool()>& permission_func) {
         mic_permission_func = permission_func;
+    }
+
+    /// Fires the callback when System::Init() is called. Called with
+    /// true when initialization starts, and with false once its done.
+    void RegisterOnInitCallback(const std::function<void(bool)>& init_callback) {
+        on_init_callback = init_callback;
     }
 
     [[nodiscard]] bool HasMicPermission() {
@@ -523,6 +528,8 @@ private:
 
     std::function<bool()> mic_permission_func;
     bool mic_permission_granted = false;
+
+    std::function<void(bool)> on_init_callback;
 
     boost::optional<Service::APT::DeliverArg> restore_deliver_arg;
     boost::optional<Service::APT::SysMenuArg> restore_sys_menu_arg;

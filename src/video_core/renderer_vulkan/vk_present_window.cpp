@@ -1,4 +1,4 @@
-// Copyright 2023-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -155,6 +155,13 @@ PresentWindow::PresentWindow(Frontend::EmuWindow& emu_window_, const Instance& i
 PresentWindow::~PresentWindow() {
     scheduler.Finish();
     const vk::Device device = instance.GetDevice();
+    // If the window is destroyed before the next_surface is
+    // consumed, make sure to destroy it here to prevent a
+    // resource leak.
+    if (next_surface && next_surface != surface) {
+        instance.GetInstance().destroySurfaceKHR(next_surface);
+        next_surface = vk::SurfaceKHR{};
+    }
     device.destroyCommandPool(command_pool);
     device.destroyRenderPass(present_renderpass);
     for (auto& frame : swap_chain) {
@@ -340,6 +347,24 @@ void PresentWindow::PresentThread(std::stop_token token) {
 void PresentWindow::NotifySurfaceChanged() {
 #ifdef ANDROID
     std::scoped_lock lock{recreate_surface_mutex};
+
+    // surfaceChanged() may notify us that a surface has changed
+    // for the same surface multiple times. If that is the case
+    // skip creating the surface again as that would cause a
+    // vulkan ErrorNativeWindowInUseKHR.
+    void* const render_surface = emu_window.GetWindowInfo().render_surface;
+    if (render_surface == last_render_surface) {
+        return;
+    }
+    last_render_surface = render_surface;
+
+    // If an earlier notification produced a surface that CopyToSwapchain() has not consumed yet,
+    // release it rather than just overwritting its handle and causing a leak.
+    if (next_surface && next_surface != surface) {
+        instance.GetInstance().destroySurfaceKHR(next_surface);
+        next_surface = vk::SurfaceKHR{};
+    }
+
     next_surface = CreateSurface(instance.GetInstance(), emu_window);
     recreate_surface_cv.notify_one();
 #endif
