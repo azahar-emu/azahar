@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -82,7 +82,6 @@ private:
 
     struct FunctionInfoBase {
         u32 command_id;
-        bool implemented;
         HandlerFnP<ServiceFrameworkBase> handler_callback;
         const char* name;
     };
@@ -96,8 +95,6 @@ private:
 
     void RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n);
     void ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info);
-
-    void Empty(Kernel::HLERequestContext& ctx) {}
 
     /// Identifier string used to connect to the service.
     std::string service_name;
@@ -135,13 +132,24 @@ protected:
          *     the request
          * @param name human-friendly name for the request. Used mostly for logging purposes.
          */
-        constexpr FunctionInfo(u32 command_id, HandlerFnP<Self> handler_callback, const char* name)
+#ifdef _MSC_VER
+        // This is the ifdef of shame.
+        // Microslop is apparenly unable to have a properly working compiler, so we need to disable
+        // constexpr evaulation of the FunctionInfo constructor.
+        //
+        // When pointer-to-member callbacks are passed through a constexpr, it can cause the
+        // resulting array to have elements of different size:
+        // https://developercommunity.visualstudio.com/t/Incorrect-struct-array-memory-layout/11011322
+        // or to have invalid `this` delta information:
+        // https://developercommunity.visualstudio.com/t/MSVC-vmg-sets-invalid-pointer-to-member/11136987
+#else
+        constexpr
+#endif
+        FunctionInfo(u32 command_id, HandlerFnP<Self> handler_callback, const char* name)
             : FunctionInfoBase{
-                  command_id, handler_callback != nullptr,
+                  command_id,
                   // Type-erase member function pointer by casting it down to the base class.
-                  handler_callback ? static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback)
-                                   : &ServiceFrameworkBase::Empty,
-                  name} {}
+                  static_cast<HandlerFnP<ServiceFrameworkBase>>(handler_callback), name} {}
     };
 
     /**
