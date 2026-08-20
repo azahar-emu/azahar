@@ -441,7 +441,6 @@
     <string name="core_error_artic_disconnected">Arktisk base afkoblet</string>
     <string name="core_error_n3ds_application">Filen er en ny 3DS-applikation</string>
     <string name="core_error_core_exception_raised">Kerneundtagelse hævet</string>
-    <string name="core_error_memory_exception_raised">Hukommelsesundtagelse opstået</string>
     <string name="core_error_shutdown_requested">Nedlukning anmodet</string>
     <string name="core_error_unknown">Ukendt fejl</string>
 

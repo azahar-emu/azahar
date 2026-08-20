@@ -463,7 +463,6 @@
     <string name="core_error_artic_disconnected">Artic Base déconnecté</string>
     <string name="core_error_n3ds_application">Le fichier est une application New 3DS</string>
     <string name="core_error_core_exception_raised">Une erreur du cœur s\'est produite</string>
-    <string name="core_error_memory_exception_raised">Une erreur de mémoire s\'est produite</string>
     <string name="core_error_shutdown_requested">Arrêt demandé</string>
     <string name="core_error_unknown">Erreur inconnue</string>
 

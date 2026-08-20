@@ -3853,12 +3853,12 @@ void GMainWindow::showEvent([[maybe_unused]] QShowEvent* event) {
     game_list->PopulateAsync(UISettings::values.game_dirs);
 }
 
-bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result, const std::string& details) {
+bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result,
+                                      const std::string& details) {
     QDialog dialog(this);
     dialog.setWindowTitle(result == Core::System::ResultStatus::ErrorCoreExceptionRaised
-            ? tr("An exception occurred")
-            : tr("An invalid memory access occurred")
-    );
+                              ? tr("An exception occurred")
+                              : tr("An invalid memory access occurred"));
 
     dialog.setMinimumSize(600, 500);
 
@@ -3867,8 +3867,7 @@ bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result, const s
     auto* label = new QLabel(
         result == Core::System::ResultStatus::ErrorCoreExceptionRaised
             ? tr("An exception occurred while executing the emulated application.")
-            : tr("An invalid memory access occurred while executing the emulated application.")
-    );
+            : tr("An invalid memory access occurred while executing the emulated application."));
 
     layout->addWidget(label);
 
@@ -3886,9 +3885,8 @@ bool GMainWindow::ShowExceptionDialog(Core::System::ResultStatus result, const s
 
     auto* ignoreButton = new QPushButton(tr("Ignore for this Session"));
 
-    QObject::connect(ignoreButton, &QPushButton::clicked, []() {
-        Core::SetIgnoreExceptionsForSession(true);
-    });
+    QObject::connect(ignoreButton, &QPushButton::clicked,
+                     []() { Core::SetIgnoreExceptionsForSession(true); });
 
     buttonLayout->addWidget(ignoreButton);
     buttonLayout->addStretch();
@@ -3910,8 +3908,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     QString status_message;
 
     // Handle exception dialogs separately
-    if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised ||
-        result == Core::System::ResultStatus::ErrorMemoryExceptionRaised) {
+    if (result == Core::System::ResultStatus::ErrorCoreExceptionRaised) {
         if (ShowExceptionDialog(result, details)) {
             if (emu_thread) {
                 ShutdownGame();
