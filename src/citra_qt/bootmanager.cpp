@@ -211,7 +211,14 @@ public:
             LOG_ERROR(Frontend, "Unable to create shared OpenGL context");
         }
 
-        surface = main_surface;
+        if (main_surface != nullptr) {
+            surface = main_surface;
+        } else {
+            offscreen_surface = std::make_unique<QOffscreenSurface>(nullptr);
+            offscreen_surface->setFormat(context->format());
+            offscreen_surface->create();
+            surface = offscreen_surface.get();
+        }
     }
 
     ~OpenGLSharedContext() {
@@ -261,12 +268,35 @@ class DummyContext : public Frontend::GraphicsContext {};
 
 class RenderWidget : public QWidget {
 public:
-    RenderWidget(GRenderWindow* parent) : QWidget(parent) {
+    RenderWidget(GRenderWindow* parent) : QWidget(parent), render_window(parent) {
         setMouseTracking(true);
         update();
     }
 
     virtual ~RenderWidget() = default;
+
+    bool event(QEvent* ev) override {
+        if (ev->type() == QEvent::PlatformSurface) {
+            const auto type = static_cast<QPlatformSurfaceEvent*>(ev)->surfaceEventType();
+            if (type == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+                native_surface_valid = false;
+                render_window->OnNativeSurfaceAboutToBeDestroyed();
+            } else if (type == QPlatformSurfaceEvent::SurfaceCreated) {
+                native_surface_valid = true;
+                render_window->OnNativeSurfaceCreated();
+            }
+        }
+        return QWidget::event(ev);
+    }
+
+protected:
+    bool IsNativeSurfaceValid() const {
+        return native_surface_valid;
+    }
+
+private:
+    GRenderWindow* render_window;
+    bool native_surface_valid = true;
 };
 
 #ifdef ENABLE_OPENGL
@@ -287,7 +317,7 @@ public:
     }
 
     void Present() {
-        if (!isVisible()) {
+        if (!isVisible() || !IsNativeSurfaceValid()) {
             return;
         }
         if (!system.IsPoweredOn()) {
@@ -646,6 +676,9 @@ bool GRenderWindow::InitRenderTarget() {
         const RenderWidget dummy_widget{this};
     }
 
+    // Create the top-level native window before the render child creates its own.
+    window()->winId();
+
     first_frame = false;
 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
@@ -703,6 +736,21 @@ bool GRenderWindow::InitRenderTarget() {
     return true;
 }
 
+void GRenderWindow::OnNativeSurfaceAboutToBeDestroyed() {
+    if (!system.IsPoweredOn()) {
+        return;
+    }
+    system.GPU().Renderer().NotifySurfaceAboutToBeDestroyed(is_secondary);
+}
+
+void GRenderWindow::OnNativeSurfaceCreated() {
+    if (!child_widget || !child_widget->windowHandle() || !system.IsPoweredOn()) {
+        return;
+    }
+    window_info = GetWindowSystemInfo(child_widget->windowHandle());
+    system.GPU().Renderer().NotifySurfaceChanged(is_secondary);
+}
+
 void GRenderWindow::ReleaseRenderTarget() {
     if (child_widget) {
         layout()->removeWidget(child_widget);
@@ -755,8 +803,11 @@ bool GRenderWindow::InitializeOpenGL() {
         main_context = std::make_unique<OpenGLSharedContext>();
     }
 
-    auto child_context = CreateSharedContext();
-    child->SetContext(std::move(child_context));
+    // The presentation context is only used from the GUI thread, which owns the native
+    // window, so it is the one context allowed to bind it.
+    auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());
+    child->SetContext(std::make_unique<OpenGLSharedContext>(gl_context->GetShareContext(),
+                                                            child_widget->windowHandle()));
 
     auto format = child_widget->windowHandle()->format();
     format.setSwapInterval(Settings::values.use_vsync.GetValue());
@@ -838,10 +889,10 @@ std::unique_ptr<Frontend::GraphicsContext> GRenderWindow::CreateSharedContext() 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     if (graphics_api == Settings::GraphicsAPI::OpenGL) {
         auto gl_context = static_cast<OpenGLSharedContext*>(main_context.get());
-        // Bind the shared contexts to the main surface in case the backend wants to take over
-        // presentation
-        return std::make_unique<OpenGLSharedContext>(gl_context->GetShareContext(),
-                                                     child_widget->windowHandle());
+        // Shared contexts are used from other threads (async shader compilation, frame
+        // dumping), so they render to their own offscreen surface instead of the native
+        // window, whose surface can be destroyed at any time.
+        return std::make_unique<OpenGLSharedContext>(gl_context->GetShareContext(), nullptr);
     }
 #endif
     return std::make_unique<DummyContext>();

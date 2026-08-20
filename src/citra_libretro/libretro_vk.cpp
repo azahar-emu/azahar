@@ -742,6 +742,11 @@ void PresentWindow::NotifySurfaceChanged() {
     LOG_DEBUG(Render_Vulkan, "Surface change notification ignored in LibRetro mode");
 }
 
+void PresentWindow::NotifySurfaceAboutToBeDestroyed() {
+    // LibRetro doesn't use surfaces
+    LOG_DEBUG(Render_Vulkan, "Surface destruction notification ignored in LibRetro mode");
+}
+
 // ============================================================================
 // MasterSemaphoreLibRetro Implementation
 // ============================================================================

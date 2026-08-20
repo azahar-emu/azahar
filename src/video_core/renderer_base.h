@@ -64,6 +64,10 @@ public:
     // if second == true then it is the second screen
     virtual void NotifySurfaceChanged(bool second) {}
 
+    /// This is called to notify the rendering backend that the native surface is about to be
+    /// destroyed and must no longer be presented.
+    virtual void NotifySurfaceAboutToBeDestroyed(bool second) {}
+
     /// Returns the resolution scale factor relative to the native 3DS screen resolution
     u32 GetResolutionScaleFactor();
 

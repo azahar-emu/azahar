@@ -118,6 +118,9 @@ public:
     /// This is called to notify the rendering backend of a surface change
     void NotifySurfaceChanged();
 
+    /// Called right before the native surface is destroyed.
+    void NotifySurfaceAboutToBeDestroyed();
+
     [[nodiscard]] vk::RenderPass Renderpass() const noexcept {
         return present_renderpass;
     }

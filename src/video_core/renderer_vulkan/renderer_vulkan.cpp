@@ -1492,4 +1492,14 @@ void RendererVulkan::NotifySurfaceChanged(bool is_second_window) {
     }
 }
 
+void RendererVulkan::NotifySurfaceAboutToBeDestroyed(bool is_second_window) {
+    if (is_second_window) {
+        if (secondary_present_window_ptr) {
+            secondary_present_window_ptr->NotifySurfaceAboutToBeDestroyed();
+        }
+    } else {
+        main_present_window.NotifySurfaceAboutToBeDestroyed();
+    }
+}
+
 } // namespace Vulkan

@@ -55,6 +55,9 @@ public:
     /// This is called to notify the rendering backend of a surface change
     void NotifySurfaceChanged();
 
+    /// Called from the UI thread right before the native surface is destroyed.
+    void NotifySurfaceAboutToBeDestroyed();
+
     [[nodiscard]] vk::RenderPass Renderpass() const noexcept {
         return present_renderpass;
     }
@@ -100,6 +103,9 @@ private:
     bool blit_supported;
     bool use_present_thread{true};
     void* last_render_surface{};
+    // Guarded by swapchain_mutex
+    bool surface_ok{true};
+    bool swapchain_dirty{};
 };
 
 } // namespace Vulkan
