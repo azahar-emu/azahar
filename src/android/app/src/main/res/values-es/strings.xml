@@ -614,7 +614,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>

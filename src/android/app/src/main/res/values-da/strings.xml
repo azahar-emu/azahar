@@ -585,7 +585,6 @@
     <string name="unsupported_encrypted">Ikke understøttet krypteret applikation</string>
     <string name="invalid_system_mode">Ugyldig systemtilstand</string>
     <string name="invalid_system_mode_message">Nye 3DS-eksklusive applikationer kan ikke indlæses uden at aktivere den nye 3DS-tilstand.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Forberedelse af shaders</string>
     <string name="building_shaders">Bygger %s</string>

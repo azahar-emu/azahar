@@ -487,7 +487,6 @@
     <string name="unsupported_encrypted">Desteklenmeyen şifreli uygulama</string>
     <string name="invalid_system_mode">Sistem modu geçersiz</string>
     <string name="invalid_system_mode_message">New 3DS için yapılmış için uygulamalar, New 3DS modunu aktive etmeden başlatılamaz.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Gölgelendiriciler Hazırlanıyor</string>
     <string name="building_shaders">Shaderlar Derleniyor: %s</string>

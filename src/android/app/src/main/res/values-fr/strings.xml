@@ -613,7 +613,6 @@
     <string name="unsupported_encrypted">Application encryptée non supportée</string>
     <string name="invalid_system_mode">Mode système invalide</string>
     <string name="invalid_system_mode_message">Les applications exclusives à la New 3DS ne peuvent pas être chargées sans activer le mode New 3DS.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Préparation des shaders</string>
     <string name="building_shaders">Construction %s</string>
