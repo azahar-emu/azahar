@@ -471,7 +471,6 @@
     <string name="core_error_artic_disconnected">Artic Base desconectado</string>
     <string name="core_error_n3ds_application">O arquivo é um aplicativo do New 3DS</string>
     <string name="core_error_core_exception_raised">Exceção de núcleo disparada</string>
-    <string name="core_error_memory_exception_raised">Exceção de memória disparada</string>
     <string name="core_error_savestate_build_mismatch">Versão do savestate incompatível</string>
     <string name="core_error_shutdown_requested">Desligamento solicitado</string>
     <string name="core_error_unknown">Erro desconhecido</string>
