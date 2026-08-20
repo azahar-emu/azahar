@@ -62,6 +62,8 @@
     <string>This app requires camera access to emulate the 3DS&apos;s cameras.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>This app requires microphone access to emulate the 3DS&apos;s microphone.</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>This app requires access to the local network to connect to Artic Base servers and perform system file setup using a real 3DS.</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundlePackageType</key>
