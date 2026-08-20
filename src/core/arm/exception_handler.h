@@ -24,10 +24,8 @@ enum class ExceptionType : u32 {
  *
  * @param system          The emulator system instance.
  * @param type            The type of exception that occurred.
- * @param fault_address   The address that caused the fault.
- * @param description     Optional human-readable description of the exception.
  */
-void LogException(System& system, ExceptionType type, u32 fault_address = 0, const std::string& description = "");
+void LogException(System& system, ExceptionType type);
 
 /**
  * Configures whether exceptions should be ignored for the current session.

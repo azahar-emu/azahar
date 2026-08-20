@@ -38,11 +38,11 @@ static std::string DumpRegisters(const ARM_Interface& core) {
 
     // SP, LR, PC
     out += fmt::format("    SP    0x{:08X}     LR    0x{:08X}     PC    0x{:08X}\n",
-        core.GetReg(13), core.GetReg(14), core.GetReg(15));
+                       core.GetReg(13), core.GetReg(14), core.GetReg(15));
 
     // CPSR, FPEXC, FPSCR
-    out += fmt::format("    CPSR  0x{:08X}     FPEXC 0x{:08X}     FPSCR 0x{:08X}\n",
-        core.GetCPSR(), core.GetVFPSystemReg(VFP_FPEXC), core.GetVFPSystemReg(VFP_FPSCR));
+    out += fmt::format("    CPSR  0x{:08X}     FPEXC 0x{:08X}     FPSCR 0x{:08X}\n", core.GetCPSR(),
+                       core.GetVFPSystemReg(VFP_FPEXC), core.GetVFPSystemReg(VFP_FPSCR));
 
     // VFP single-precision registers S0-S31
     out += '\n';
@@ -70,9 +70,8 @@ static std::string DumpStack(const ARM_Interface& core, Memory::MemorySystem& me
         for (u32 byte_offset = 0; byte_offset < 16; byte_offset += 4) {
             auto word = memory.Read32OrNullopt(addr + byte_offset);
             if (word) {
-                out += fmt::format("{:02X} {:02X} {:02X} {:02X}  ",
-                    (*word >> 0) & 0xFF, (*word >> 8) & 0xFF,
-                    (*word >> 16) & 0xFF, (*word >> 24) & 0xFF);
+                out += fmt::format("{:02X} {:02X} {:02X} {:02X}  ", (*word >> 0) & 0xFF,
+                                   (*word >> 8) & 0xFF, (*word >> 16) & 0xFF, (*word >> 24) & 0xFF);
             } else {
                 out += "?? ?? ?? ??  ";
             }
@@ -102,7 +101,11 @@ static const char* ExceptionTypeToString(ExceptionType type) {
     }
 }
 
-void LogException(System& system, ExceptionType type, u32 fault_address, const std::string& description) {
+void LogException(System& system, ExceptionType type) {
+    if (g_ignore_exceptions_for_session) {
+        return;
+    }
+
     auto& core = system.GetRunningCore();
     auto& memory = system.Memory();
 
@@ -112,7 +115,8 @@ void LogException(System& system, ExceptionType type, u32 fault_address, const s
         auto& kernel = system.Kernel();
         auto thread = kernel.GetCurrentThreadManager().GetCurrentThread();
         if (thread) {
-            report += fmt::format("Thread: {} (ID: {})\n", thread->GetName(), thread->GetThreadId());
+            report +=
+                fmt::format("Thread: {} (ID: {})\n", thread->GetName(), thread->GetThreadId());
             auto process = thread->owner_process.lock();
             if (process) {
                 report += fmt::format("Process: {}\n", process->GetName());
@@ -130,10 +134,6 @@ void LogException(System& system, ExceptionType type, u32 fault_address, const s
     report += DumpStack(core, memory);
 
     LOG_CRITICAL(Core, "\n{}", report);
-
-    if (g_ignore_exceptions_for_session) {
-        return;
-    }
 
     system.SetStatus(System::ResultStatus::ErrorCoreExceptionRaised, report.c_str());
 }

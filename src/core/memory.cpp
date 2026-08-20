@@ -578,11 +578,8 @@ void MemorySystem::UnmappedAccess(const VAddr vaddr, const T value, bool read) {
 #endif
     LOG_ERROR(HW_Memory, "{}", message);
     if (Settings::values.enable_exception_handler) {
-        Core::LogException(impl->system, read ?
-            Core::ExceptionType::UnmappedRead :
-            Core::ExceptionType::UnmappedWrite,
-            vaddr, message
-        );
+        Core::LogException(impl->system, read ? Core::ExceptionType::UnmappedRead
+                                              : Core::ExceptionType::UnmappedWrite);
     }
 }
 

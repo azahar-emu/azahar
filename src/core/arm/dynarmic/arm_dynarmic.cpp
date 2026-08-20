@@ -156,7 +156,7 @@ public:
                 exc_type = Core::ExceptionType::UndefinedInstruction;
                 break;
             }
-            Core::LogException(parent.system, exc_type, pc, ExceptionToString(exception));
+            Core::LogException(parent.system, exc_type);
         }
     }
 
