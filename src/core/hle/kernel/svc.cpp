@@ -1161,8 +1161,7 @@ void SVC::Break(u8 break_reason) {
         break;
     }
     LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution! Reason: {}", reason_str);
-    Core::LogException(system, Core::ExceptionType::Break, 0,
-                       fmt::format("SVC Break - Reason: {}", reason_str));
+    Core::LogException(system, Core::ExceptionType::Break);
 }
 
 /// Used to output a message on a debug hardware unit, or for the GDB file I/O
