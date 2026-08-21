@@ -1661,8 +1661,10 @@ Network::MacAddress NWM_UDS::GetMacAddress() {
 }
 
 void NWM_UDS::SignalEventAsync(std::shared_ptr<Kernel::Event> event) {
-    // TODO: check if this is being called on the core loop thread
-    // and signal the event directly
+    if (system.GetCoreLoopThreadId() == std::this_thread::get_id()) {
+        event->Signal();
+        return;
+    }
     pending_async_event_signals.Push(event);
     system.CoreTiming().ScheduleEvent(0, handle_async_event_signals_event, -1, true);
 }

@@ -83,6 +83,7 @@ System::~System() = default;
 
 System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
+
     if (!IsPoweredOn()) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -98,6 +99,8 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
         GDBStub::HandlePacket(*this);
     }
 #endif
+
+    core_loop_thread_id = std::this_thread::get_id();
 
     Signal signal{Signal::None};
     u32 param{};
