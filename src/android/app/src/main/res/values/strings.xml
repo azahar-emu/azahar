@@ -492,7 +492,6 @@
     <string name="core_error_artic_disconnected">Artic Base disconnected</string>
     <string name="core_error_n3ds_application">File is New 3DS application</string>
     <string name="core_error_core_exception_raised">Core exception raised</string>
-    <string name="core_error_memory_exception_raised">Memory exception raised</string>
     <string name="core_error_savestate_build_mismatch">Savestate version mismatch</string>
     <string name="core_error_shutdown_requested">Shutdown requested</string>
     <string name="core_error_unknown">Unknown error</string>

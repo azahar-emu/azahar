@@ -134,7 +134,6 @@ static jobject ToJavaCoreError(Core::System::ResultStatus result) {
         {Core::System::ResultStatus::ErrorArticDisconnected, "ErrorArticDisconnected"},
         {Core::System::ResultStatus::ErrorN3DSApplication, "ErrorN3DSApplication"},
         {Core::System::ResultStatus::ErrorCoreExceptionRaised, "ErrorCoreExceptionRaised"},
-        {Core::System::ResultStatus::ErrorMemoryExceptionRaised, "ErrorMemoryExceptionRaised"},
         {Core::System::ResultStatus::ErrorSavestateBuildMismatch, "ErrorSavestateBuildMismatch"},
         {Core::System::ResultStatus::ErrorUnknown, "ErrorUnknown"},
     };

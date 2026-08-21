@@ -464,7 +464,6 @@ S\'esperen errors gràfics temporals quan estigue activat.</string>
     <string name="core_error_artic_disconnected">Artic Base s\'ha desconnectat</string>
     <string name="core_error_n3ds_application">El fitxer es una aplicació de New 3DS</string>
     <string name="core_error_core_exception_raised">Es va produir una exepció en el nucli</string>
-    <string name="core_error_memory_exception_raised">Es va produir una excepció de memòria</string>
     <string name="core_error_shutdown_requested">Es va sol·licitar el tancament</string>
     <string name="core_error_unknown">Error desconegut</string>
 

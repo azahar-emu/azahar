@@ -439,7 +439,6 @@
     <string name="core_error_artic_disconnected">Odłączono Artic Base</string>
     <string name="core_error_n3ds_application">Aplikacja jest dostępna wyłącznie na konsolę New 3DS</string>
     <string name="core_error_core_exception_raised">Wystąpił błąd rdzenia</string>
-    <string name="core_error_memory_exception_raised">Wystąpił błąd pamięci</string>
     <string name="core_error_shutdown_requested">Prośba o zamknięcie</string>
     <string name="core_error_unknown">Nieznany błąd</string>
 

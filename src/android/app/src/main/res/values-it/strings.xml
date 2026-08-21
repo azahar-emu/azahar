@@ -471,7 +471,6 @@
     <string name="core_error_artic_disconnected">Artic Base disconnesso</string>
     <string name="core_error_n3ds_application">Il file è un\'applicazione New 3DS</string>
     <string name="core_error_core_exception_raised">Rilevata eccezione del core</string>
-    <string name="core_error_memory_exception_raised">Rilevata eccezione della memoria</string>
     <string name="core_error_savestate_build_mismatch">Versione savestate incompatibile</string>
     <string name="core_error_shutdown_requested">Spegnimento richiesto</string>
     <string name="core_error_unknown">Errore sconosciuto</string>
