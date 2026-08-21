@@ -73,7 +73,7 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
     // Determine if we should stretch based on the current emulation speed.
     const auto perf_stats = system.GetLastPerfStats();
-    const auto should_stretch = enable_time_stretching && perf_stats.emulation_speed <= 95;
+    const auto should_stretch = enable_time_stretching && perf_stats.emulation_speed <= 0.95;
     if (performing_time_stretching && !should_stretch) {
         // If we just stopped stretching, flush the stretcher before returning to normal output.
         flushing_time_stretcher = true;
