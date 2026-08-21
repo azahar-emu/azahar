@@ -600,7 +600,7 @@ void NWM_UDS::ShutdownHLE() {
     initialized = false;
 
     for (auto& bind_node : channel_data) {
-        bind_node.second.event->Signal();
+        SignalEventAsync(bind_node.second.event);
     }
     channel_data.clear();
     node_map.clear();
@@ -909,7 +909,7 @@ void NWM_UDS::UnbindHLE(u32 bind_node_id) {
 
     if (itr != channel_data.end()) {
         // TODO(B3N30): Check out what Unbind does if the bind_node_id wasn't in the map
-        itr->second.event->Signal();
+        SignalEventAsync(itr->second.event);
         channel_data.erase(itr);
     }
 }
@@ -989,7 +989,7 @@ Result NWM_UDS::BeginHostingNetwork(std::span<const u8> network_info_buffer,
             network_info.channel = DefaultNetworkChannel;
     }
 
-    connection_status_event->Signal();
+    SignalEventAsync(connection_status_event);
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
@@ -1128,10 +1128,10 @@ Result NWM_UDS::DestroyNetworkHLE() {
     connection_status.status = NetworkStatus::NotConnected;
     connection_status.network_node_id = tmp_node_id;
     node_map.clear();
-    connection_status_event->Signal();
+    SignalEventAsync(connection_status_event);
 
     for (auto& bind_node : channel_data) {
-        bind_node.second.event->Signal();
+        SignalEventAsync(bind_node.second.event);
     }
     channel_data.clear();
 
@@ -1464,7 +1464,7 @@ ResultStatus NWM_UDS::DisconnectNetworkHLE() {
         connection_status.status = NetworkStatus::NotConnected;
         connection_status.network_node_id = tmp_node_id;
         node_map.clear();
-        connection_status_event->Signal();
+        SignalEventAsync(connection_status_event);
 
         deauth.channel = network_channel;
         // TODO(B3N30): Add disconnect reason
@@ -1476,7 +1476,7 @@ ResultStatus NWM_UDS::DisconnectNetworkHLE() {
     SendPacket(deauth);
 
     for (auto& bind_node : channel_data) {
-        bind_node.second.event->Signal();
+        SignalEventAsync(bind_node.second.event);
     }
     channel_data.clear();
 
@@ -1661,6 +1661,8 @@ Network::MacAddress NWM_UDS::GetMacAddress() {
 }
 
 void NWM_UDS::SignalEventAsync(std::shared_ptr<Kernel::Event> event) {
+    // TODO: check if this is being called on the core loop thread
+    // and signal the event directly
     pending_async_event_signals.Push(event);
     system.CoreTiming().ScheduleEvent(0, handle_async_event_signals_event, -1, true);
 }
