@@ -562,6 +562,7 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
 
     pipeline_info.state.attachments.color = framebuffer->Format(SurfaceType::Color);
     pipeline_info.state.attachments.depth = framebuffer->Format(SurfaceType::Depth);
+    pipeline_info.state.attachments.sample_count = framebuffer->Samples();
 
     // Update scissor uniforms
     const auto [scissor_x1, scissor_y2, scissor_x2, scissor_y1] = fb_helper.Scissor();
