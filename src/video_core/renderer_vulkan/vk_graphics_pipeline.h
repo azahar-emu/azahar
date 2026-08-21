@@ -120,23 +120,26 @@ struct BlendingState {
         BitField<11, 4, Pica::FramebufferRegs::BlendFactor> src_alpha_blend_factor;
         BitField<15, 4, Pica::FramebufferRegs::BlendFactor> dst_alpha_blend_factor;
         BitField<19, 3, Pica::FramebufferRegs::BlendEquation> alpha_blend_eq;
+        BitField<22, 1, u32> rgb_blend_emulation;
+        BitField<23, 1, u32> alpha_blend_emulation;
     };
 
     static consteval u64 StructHash() {
         constexpr u64 STRUCT_VERSION = 0;
 
         using T = BlendingState;
-        return Common::HashCombine(STRUCT_VERSION,
+        return Common::HashCombine(
+            STRUCT_VERSION,
 
-                                   // layout
-                                   LAYOUT_HASH,
+            // layout
+            LAYOUT_HASH,
 
-                                   // fields
-                                   FIELD_HASH(blend_enable), FIELD_HASH(color_write_mask),
-                                   FIELD_HASH(logic_op), FIELD_HASH(src_color_blend_factor),
-                                   FIELD_HASH(dst_color_blend_factor), FIELD_HASH(color_blend_eq),
-                                   FIELD_HASH(src_alpha_blend_factor),
-                                   FIELD_HASH(dst_alpha_blend_factor), FIELD_HASH(alpha_blend_eq));
+            // fields
+            FIELD_HASH(blend_enable), FIELD_HASH(color_write_mask), FIELD_HASH(logic_op),
+            FIELD_HASH(src_color_blend_factor), FIELD_HASH(dst_color_blend_factor),
+            FIELD_HASH(color_blend_eq), FIELD_HASH(src_alpha_blend_factor),
+            FIELD_HASH(dst_alpha_blend_factor), FIELD_HASH(alpha_blend_eq),
+            FIELD_HASH(rgb_blend_emulation), FIELD_HASH(alpha_blend_emulation));
     }
 };
 static_assert(std::is_trivial_v<BlendingState>);
