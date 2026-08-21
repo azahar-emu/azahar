@@ -2408,7 +2408,8 @@ void GMainWindow::OnMenuSetUpSystemFiles() {
 void GMainWindow::OnMenuInstallCIA() {
     QStringList filepaths = QFileDialog::getOpenFileNames(
         this, tr("Load Files"), UISettings::values.roms_path,
-        tr("3DS Installation File (*.cia *.zcia)") + QStringLiteral(";;") + tr("All Files (*.*)"));
+        tr("3DS Installation File") + QStringLiteral(" (*.cia *.zcia);;") + tr("All Files") +
+            QStringLiteral(" (*.*)"));
 
     if (filepaths.isEmpty()) {
         return;
@@ -3052,7 +3053,8 @@ void GMainWindow::OnLoadAmiibo() {
     }
 
     const QString extensions{QStringLiteral("*.bin")};
-    const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
+    const QString file_filter = tr("Amiibo File") + QStringLiteral(" (%1);;").arg(extensions) +
+                                tr("All Files") + QStringLiteral(" (*.*)");
     const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), {}, file_filter);
 
     if (filename.isEmpty()) {
@@ -3289,10 +3291,10 @@ void GMainWindow::OnCompressFile() {
     //
     // This is enforced using the loaders as they already return an error on encryption.
 
-    QStringList filepaths =
-        QFileDialog::getOpenFileNames(this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
-                                      tr("3DS ROM Files (*.cia *.cci *.3dsx *.cxi *.3ds)") +
-                                          QStringLiteral(";;") + tr("All Files (*.*)"));
+    QStringList filepaths = QFileDialog::getOpenFileNames(
+        this, tr("Load 3DS ROM Files"), UISettings::values.roms_path,
+        tr("3DS ROM Files") + QStringLiteral(" (*.cia *.cci *.3dsx *.cxi *.3ds);;") +
+            tr("All Files") + QStringLiteral(" (*.*)"));
 
     QString out_path;
 
