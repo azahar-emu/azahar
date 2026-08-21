@@ -1666,7 +1666,7 @@ void NWM_UDS::SignalEventAsync(std::shared_ptr<Kernel::Event> event) {
         return;
     }
     pending_async_event_signals.Push(event);
-    system.CoreTiming().ScheduleEvent(0, handle_async_event_signals_event, -1, true);
+    system.CoreTiming().ScheduleEvent(0, handle_async_event_signals_event, 0, 1, true);
 }
 
 void NWM_UDS::DispatchQueuedAsyncEventSignals() {

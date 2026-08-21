@@ -635,7 +635,7 @@ private:
     Core::TimingEventType* handle_async_event_signals_event;
 
     // Queue holding the async event shared pointers
-    Common::SPSCQueue<std::shared_ptr<Kernel::Event>> pending_async_event_signals;
+    Common::MPSCQueue<std::shared_ptr<Kernel::Event>> pending_async_event_signals;
 
     // Callback identifier for the OnWifiPacketReceived event.
     Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
