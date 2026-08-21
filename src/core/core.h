@@ -431,6 +431,14 @@ public:
         override_gdb_port = port;
     }
 
+    void RegisterCoreLoopThreadId() {
+        core_loop_thread_id = std::this_thread::get_id();
+    }
+
+    std::thread::id GetCoreLoopThreadId() {
+        return core_loop_thread_id;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -544,6 +552,8 @@ private:
 
     bool debug_next_process;
     int override_gdb_port = -1;
+
+    std::thread::id core_loop_thread_id{};
 
     friend class boost::serialization::access;
     template <typename Archive>
