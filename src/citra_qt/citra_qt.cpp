@@ -1425,7 +1425,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
         case Core::System::ResultStatus::ErrorLoader:
             QMessageBox::critical(this, tr("Generic load error"),
-                                  tr("An generic load error occurred while loading the "
+                                  tr("A generic load error occurred while loading the "
                                      "application.<br/>Please check the log for more details."));
             break;
         case Core::System::ResultStatus::ErrorLoader_ErrorPatches:

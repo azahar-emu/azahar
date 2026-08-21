@@ -194,7 +194,7 @@
       <item row="2" column="2">
        <widget class="QLabel">
         <property name="text">
-         <string>bps</string>
+         <string notr="true">bps</string>
         </property>
        </widget>
       </item>
