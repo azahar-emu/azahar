@@ -2293,10 +2293,8 @@ void GMainWindow::OnGameListOpenPerGameProperties(const QString& file) {
 void GMainWindow::OnMenuLoadFile() {
     const QString extensions = QStringLiteral("*.").append(
         GameList::supported_file_extensions.join(QStringLiteral(" *.")));
-    const QString file_filter = tr("3DS Executable (%1)"
-                                   "%1 is an identifier for the 3DS executable file extensions.") +
-                                QStringLiteral(";;") + tr("All Files") +
-                                QStringLiteral(" (*.*)").arg(extensions);
+    const QString file_filter = tr("3DS Executable") + QStringLiteral(" (%1)").arg(extensions) +
+                                QStringLiteral(";;") + tr("All Files") + QStringLiteral(" (*.*)");
     const QString filename = QFileDialog::getOpenFileName(
         this, tr("Load File"), UISettings::values.roms_path, file_filter);
 
