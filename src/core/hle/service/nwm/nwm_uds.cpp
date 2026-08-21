@@ -40,8 +40,6 @@ void NWM_UDS::serialize(Archive& ar, const unsigned int) {
     ar & connection_event;
     ar & received_beacons;
     // wifi_packet_received set in constructor
-    // pending packet queue is lost, but that's fine as it doesn't make sense to save state during
-    // an active multiplayer session as it will mess up everything anyways.
 }
 
 namespace ErrCodes {
@@ -275,7 +273,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         SendPacket(eapol_logoff);
 
-        connection_status_event->Signal();
+        SignalEventAsync(connection_status_event);
     } else if (connection_status.status == NetworkStatus::Connecting) {
         auto logoff = ParseEAPoLLogoffFrame(packet.data);
 
@@ -315,8 +313,8 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         // Some games require ConnectToNetwork to block, for now it doesn't
         // If blocking is implemented this lock needs to be changed,
         // otherwise it might cause deadlocks
-        connection_status_event->Signal();
-        connection_event->Signal();
+        SignalEventAsync(connection_status_event);
+        SignalEventAsync(connection_event);
     } else if (connection_status.status == NetworkStatus::ConnectedAsClient ||
                connection_status.status == NetworkStatus::ConnectedAsSpectator) {
         // TODO(B3N30): Remove that section and send/receive a proper connection_status packet
@@ -347,7 +345,7 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
         }
         connection_status.changed_nodes = old_bitmask ^ connection_status.node_bitmask;
 
-        connection_status_event->Signal();
+        SignalEventAsync(connection_status_event);
     }
 }
 
@@ -410,8 +408,8 @@ void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     // Add the received packet to the data queue.
     channel_info->second.received_packets.emplace_back(packet.data);
 
-    // Signal the data event. We can do this directly because we locked hle_lock
-    channel_info->second.event->Signal();
+    // Signal the data event. We can do this directly because we use SignalEventAsync
+    SignalEventAsync(channel_info->second.event);
 }
 
 void NWM_UDS::StartConnectionSequence(const MacAddress& server) {
@@ -500,6 +498,7 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
 
 void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     LOG_DEBUG(Service_NWM, "called");
+    std::scoped_lock lock{connection_status_mutex};
 
     if (connection_status.status != NetworkStatus::ConnectedAsHost) {
         LOG_ERROR(Service_NWM, "Got deauthentication frame but we are not the host");
@@ -536,7 +535,7 @@ void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
         // TODO(B3N30): broadcast new connection_status to clients
     }
     node_it->Reset();
-    connection_status_event->Signal();
+    SignalEventAsync(connection_status_event);
 }
 
 void NWM_UDS::HandleDataFrame(const Network::WifiPacket& packet) {
@@ -1661,6 +1660,21 @@ Network::MacAddress NWM_UDS::GetMacAddress() {
     return mac;
 }
 
+void NWM_UDS::SignalEventAsync(std::shared_ptr<Kernel::Event> event) {
+    pending_async_event_signals.Push(event);
+    system.CoreTiming().ScheduleEvent(0, handle_async_event_signals_event, -1, true);
+}
+
+void NWM_UDS::DispatchQueuedAsyncEventSignals() {
+    std::shared_ptr<Kernel::Event> event;
+    pending_async_event_signals.Pop(event);
+    if (!event) {
+        LOG_WARNING(Service_NWM, "Tried to signal async event, but event was null");
+        return;
+    }
+    event->Signal();
+}
+
 NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -1705,23 +1719,17 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
             BeaconBroadcastCallback(user_data, cycles_late);
         });
 
-    handle_wifi_packet_event = system.CoreTiming().RegisterEvent(
-        "UDS::OnWifiPacketReceived",
-        [this]([[maybe_unused]] std::uintptr_t user_data, s64 cycles_late) {
-            Network::WifiPacket packet;
-            if (pending_packets.Pop(packet)) {
-                OnWifiPacketReceived(packet);
-            }
+    handle_async_event_signals_event = system.CoreTiming().RegisterEvent(
+        "UDS::handle_async_event_signals_event",
+        [this]([[maybe_unused]] std::uintptr_t user_data, [[maybe_unused]] s64 cycles_late) {
+            DispatchQueuedAsyncEventSignals();
         });
 
     system.Kernel().GetSharedPageHandler().SetMacAddress(GetMacAddress());
 
     if (auto room_member = Network::GetRoomMember().lock()) {
-        wifi_packet_received =
-            room_member->BindOnWifiPacketReceived([this](const Network::WifiPacket& packet) {
-                pending_packets.Push(packet);
-                this->system.CoreTiming().ScheduleEvent(0, handle_wifi_packet_event, 0, 1, true);
-            });
+        wifi_packet_received = room_member->BindOnWifiPacketReceived(
+            [this](const Network::WifiPacket& packet) { OnWifiPacketReceived(packet); });
     } else {
         LOG_ERROR(Service_NWM, "Network isn't initalized");
     }
