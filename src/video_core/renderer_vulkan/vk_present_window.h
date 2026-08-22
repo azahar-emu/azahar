@@ -80,7 +80,10 @@ private:
     Scheduler& scheduler;
     bool low_refresh_rate;
     vk::SurfaceKHR surface;
-    vk::SurfaceKHR next_surface{};
+    // Written by the UI thread on a window change, read lock-free by the present thread's
+    // per-frame fast path in CopyToSwapchain. Surface data is still accessed under
+    // recreate_surface_mutex.
+    std::atomic<vk::SurfaceKHR> next_surface{};
     Swapchain swapchain;
     vk::CommandPool command_pool;
     vk::Queue graphics_queue;
@@ -99,7 +102,10 @@ private:
     bool vsync_enabled{};
     bool blit_supported;
     bool use_present_thread{true};
-    void* last_render_surface{};
+    const void* last_render_surface{};
+    // Set when the current window was resized in place (e.g. rotation) so the present thread
+    // recreates the swapchain even though the VkSurface is unchanged. Read lock-free per frame.
+    std::atomic<bool> recreate_requested{false};
 };
 
 } // namespace Vulkan

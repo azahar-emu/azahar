@@ -86,6 +86,17 @@
             android:exported="false"
             android:theme="@style/Theme.Citra.Main"
             android:label="@string/cheats"/>
+
+        <!-- Hosts the secondary 3DS screen on displays that cannot use Presentation
+             (e.g. LG G8X Dual Screen); launched onto the target display at runtime. -->
+        <activity
+            android:name="org.citra.citra_emu.display.SecondaryDisplayActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Citra.Main"
+            android:resizeableActivity="true"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|uiMode" />
     </application>
 
 </manifest>

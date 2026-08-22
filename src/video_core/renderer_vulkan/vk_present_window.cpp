@@ -158,9 +158,9 @@ PresentWindow::~PresentWindow() {
     // If the window is destroyed before the next_surface is
     // consumed, make sure to destroy it here to prevent a
     // resource leak.
-    if (next_surface && next_surface != surface) {
-        instance.GetInstance().destroySurfaceKHR(next_surface);
-        next_surface = vk::SurfaceKHR{};
+    if (next_surface.load() && next_surface.load() != surface) {
+        instance.GetInstance().destroySurfaceKHR(next_surface.load());
+        next_surface.store(vk::SurfaceKHR{});
     }
     device.destroyCommandPool(command_pool);
     device.destroyRenderPass(present_renderpass);
@@ -347,41 +347,53 @@ void PresentWindow::PresentThread(std::stop_token token) {
 void PresentWindow::NotifySurfaceChanged() {
 #ifdef ANDROID
     std::scoped_lock lock{recreate_surface_mutex};
+    const void* current_surface = emu_window.GetWindowInfo().render_surface;
+    if (current_surface != last_render_surface) {
+        // Window replaced: build the new VkSurface but keep the old one until the present
+        // thread has recreated its swapchain (a native window binds to one VkSurface at a time).
+        // If an earlier notification produced a surface that CopyToSwapchain() has not consumed yet,
+        // release it rather than just overwritting its handle and causing a leak.
+        if (next_surface.load() && next_surface.load() != surface) {
+            instance.GetInstance().destroySurfaceKHR(next_surface.load());
+            next_surface.store(vk::SurfaceKHR{});
+        }
 
-    // surfaceChanged() may notify us that a surface has changed
-    // for the same surface multiple times. If that is the case
-    // skip creating the surface again as that would cause a
-    // vulkan ErrorNativeWindowInUseKHR.
-    void* const render_surface = emu_window.GetWindowInfo().render_surface;
-    if (render_surface == last_render_surface) {
-        return;
+        last_render_surface = current_surface;
+        next_surface.store(CreateSurface(instance.GetInstance(), emu_window));
+    } else {
+        // Same window resized in place (e.g. rotation): the VkSurface stays valid, only the
+        // swapchain needs recreating at the new extent.
+        recreate_requested = true;
     }
-    last_render_surface = render_surface;
-
-    // If an earlier notification produced a surface that CopyToSwapchain() has not consumed yet,
-    // release it rather than just overwritting its handle and causing a leak.
-    if (next_surface && next_surface != surface) {
-        instance.GetInstance().destroySurfaceKHR(next_surface);
-        next_surface = vk::SurfaceKHR{};
-    }
-
-    next_surface = CreateSurface(instance.GetInstance(), emu_window);
     recreate_surface_cv.notify_one();
 #endif
 }
 
 void PresentWindow::CopyToSwapchain(Frame* frame) {
     const auto recreate_swapchain = [&] {
+        vk::SurfaceKHR old_surface{};
 #ifdef ANDROID
         {
             std::unique_lock lock{recreate_surface_mutex};
-            recreate_surface_cv.wait(lock, [this]() { return surface != next_surface; });
-            surface = next_surface;
+            recreate_surface_cv.wait(lock, [this]() {
+                return surface != next_surface.load() || recreate_requested.load();
+            });
+            if (next_surface.load() != surface) {
+                old_surface = surface;
+                surface = next_surface.load();
+            }
+            recreate_requested.store(false);
         }
 #endif
         std::scoped_lock submit_lock{scheduler.submit_mutex};
         graphics_queue.waitIdle();
         swapchain.Create(frame->width, frame->height, surface, low_refresh_rate);
+#ifdef ANDROID
+        // The old swapchain is gone, so the replaced VkSurface can now be destroyed.
+        if (old_surface != VK_NULL_HANDLE && old_surface != surface) {
+            instance.GetInstance().destroySurfaceKHR(old_surface);
+        }
+#endif
     };
 
 #ifndef ANDROID
@@ -391,6 +403,14 @@ void PresentWindow::CopyToSwapchain(Frame* frame) {
     const bool vsync_changed = vsync_enabled != use_vsync;
     if (vsync_changed || size_changed) [[unlikely]] {
         vsync_enabled = use_vsync;
+        recreate_swapchain();
+    }
+#endif
+
+#ifdef ANDROID
+    // Recreate on a window change or in-place resize; the lock-free atomic check
+    // keeps the steady-state frame free of any mutex.
+    if (recreate_requested.load() || surface != next_surface.load()) [[unlikely]] {
         recreate_swapchain();
     }
 #endif

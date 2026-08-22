@@ -113,11 +113,15 @@ std::condition_variable running_cv;
 // due to the locking pattern used in RunCitra().
 std::recursive_mutex surface_mutex;
 
-// Signalled by surfaceChanged() whenever s_surface goes from null to non-null. Used by the
-// System::Init() callback to block the renderer (re)creation (initial boot or a
-// savestate load) until a surface actually exists, instead of giving
-// VideoCore a null ANativeWindow.
+// Signalled by surfaceChanged() whenever s_surface goes from null to non-null, and by the
+// secondary surface callbacks when s_secondary_surface changes. Used by the System::Init()
+// callback to block the renderer (re)creation (initial boot or a savestate load) until a
+// surface actually exists, instead of giving VideoCore a null ANativeWindow.
 std::condition_variable_any surface_cv;
+
+// True while a secondary display host is expected to provide a surface, so game start waits
+// briefly for a late-arriving second screen (e.g. the LG G8X cover activity) before starting.
+std::atomic<bool> s_secondary_host_expected{false};
 
 std::string inserted_cartridge;
 
@@ -249,20 +253,37 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 
     const auto graphics_api = Settings::GetWorkingGraphicsAPI();
     EGLContext* shared_context;
+
+    // Wait briefly for the secondary surface when a host is expected but its asynchronous
+    // surface has not arrived yet, so an activity-hosted second screen is not missed.
+    if (!s_secondary_surface && s_secondary_host_expected.load()) {
+        LOG_INFO(Frontend, "Waiting for secondary surface before starting...");
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
+        surface_cv.wait_until(surface_lock, deadline, [] {
+            return s_secondary_surface != nullptr || !s_secondary_host_expected.load();
+        });
+    }
+    ANativeWindow* const secondary_surface_ptr = s_secondary_surface;
+    const bool has_secondary_surface = secondary_surface_ptr != nullptr;
     switch (graphics_api) {
 #ifdef ENABLE_OPENGL
     case Settings::GraphicsAPI::OpenGL:
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
         shared_context = window->GetEGLContext();
-        secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
-                                                                      true, shared_context);
+        if (has_secondary_surface) {
+            secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
+                                                                          secondary_surface_ptr, true,
+                                                                          shared_context);
+        }
         break;
 #endif
 #ifdef ENABLE_VULKAN
     case Settings::GraphicsAPI::Vulkan:
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library, false);
-        secondary_window =
-            std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
+        if (has_secondary_surface) {
+            secondary_window =
+                std::make_unique<EmuWindow_Android_Vulkan>(secondary_surface_ptr, vulkan_library, true);
+        }
         break;
 #endif
     default:
@@ -272,13 +293,18 @@ static Core::System::ResultStatus RunCitra(const std::string& filepath) {
 #ifdef ENABLE_OPENGL
         window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_surface, false);
         shared_context = window->GetEGLContext();
-        secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system, s_secondary_surface,
-                                                                      true, shared_context);
+        if (has_secondary_surface) {
+            secondary_window = std::make_unique<EmuWindow_Android_OpenGL>(system,
+                                                                          secondary_surface_ptr, true,
+                                                                          shared_context);
+        }
 
 #elif ENABLE_VULKAN
         window = std::make_unique<EmuWindow_Android_Vulkan>(s_surface, vulkan_library, false);
-        secondary_window =
-            std::make_unique<EmuWindow_Android_Vulkan>(s_secondary_surface, vulkan_library, true);
+        if (has_secondary_surface) {
+            secondary_window =
+                std::make_unique<EmuWindow_Android_Vulkan>(secondary_surface_ptr, vulkan_library, true);
+        }
 #else
         // TODO: Add a null renderer backend for this, perhaps.
 #error "At least one renderer must be enabled."
@@ -451,53 +477,54 @@ void Java_org_citra_citra_1emu_NativeLibrary_surfaceChanged(JNIEnv* env,
     LOG_INFO(Frontend, "Surface changed");
 }
 
+void Java_org_citra_citra_1emu_NativeLibrary_setSecondaryHostExpected(JNIEnv* env,
+                                                                      [[maybe_unused]] jobject obj,
+                                                                      jboolean expected) {
+    {
+        std::scoped_lock lock(surface_mutex);
+        s_secondary_host_expected.store(expected != 0);
+    }
+    surface_cv.notify_all();
+    LOG_INFO(Frontend, "Secondary host expected: {}", expected != 0);
+}
+
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceChanged(JNIEnv* env,
                                                                      [[maybe_unused]] jobject obj,
                                                                      jobject surf) {
     std::scoped_lock lock(surface_mutex);
 
-    auto& system = Core::System::GetInstance();
-
     if (s_secondary_surface) {
         ANativeWindow_release(s_secondary_surface);
         s_secondary_surface = nullptr;
     }
-    s_secondary_surface = ANativeWindow_fromSurface(env, surf);
-    if (!s_secondary_surface) {
+    if (surf) {
+        s_secondary_surface = ANativeWindow_fromSurface(env, surf);
+    }
+    surface_cv.notify_all();
+
+    if (!s_secondary_surface || !secondary_window) {
+        // With no window yet, RunCitra's wait gate or the next game launch picks up the surface.
         return;
     }
 
-    bool notify = false;
-    if (secondary_window) {
-        // Second window already created, so update it
-        notify = secondary_window->OnSurfaceChanged(s_secondary_surface);
-
-        // Log the dimensions for debugging
-        int32_t width = ANativeWindow_getWidth(s_secondary_surface);
-        int32_t height = ANativeWindow_getHeight(s_secondary_surface);
-        LOG_INFO(Frontend, "Secondary Surface changed to {}x{}", width, height);
-    } else {
-        LOG_WARNING(Frontend,
-                    "Second Window does not exist in native.cpp but surface changed. Ignoring.");
+    if (secondary_window->OnSurfaceChanged(s_secondary_surface)) {
+        auto& system = Core::System::GetInstance();
+        if (system.IsPoweredOn()) {
+            system.GPU().Renderer().NotifySurfaceChanged(true);
+        }
     }
-
-    if (notify && system.IsPoweredOn()) {
-        system.GPU().Renderer().NotifySurfaceChanged(true);
-    }
-
-    LOG_INFO(Frontend, "Secondary Surface changed");
+    LOG_INFO(Frontend, "Secondary surface changed");
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_secondarySurfaceDestroyed(
     JNIEnv* env, [[maybe_unused]] jobject obj) {
     std::scoped_lock lock(surface_mutex);
-
     if (s_secondary_surface != nullptr) {
         ANativeWindow_release(s_secondary_surface);
         s_secondary_surface = nullptr;
     }
-
-    LOG_INFO(Frontend, "Secondary Surface Destroyed");
+    surface_cv.notify_all();
+    LOG_INFO(Frontend, "Secondary surface destroyed");
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_surfaceDestroyed([[maybe_unused]] JNIEnv* env,

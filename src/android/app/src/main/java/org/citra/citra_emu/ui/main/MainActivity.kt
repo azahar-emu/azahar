@@ -43,6 +43,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 import kotlinx.coroutines.launch
 import org.citra.citra_emu.BuildConfig
+import org.citra.citra_emu.activities.EmulationActivity
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.contracts.OpenFileResultContract
@@ -62,6 +63,7 @@ import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.InsetsHelper
+import org.citra.citra_emu.utils.Log
 import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
@@ -84,6 +86,18 @@ class MainActivity :
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // When a game is already running, reveal it instead of building a new game list on top.
+        // super.onCreate() must run before finish(); the normal path below calls it late (after
+        // the splash screen), so it cannot be hoisted to the top.
+        if (savedInstanceState == null && tryResumeRunningGame()) {
+            super.onCreate(savedInstanceState)
+            // EmulationActivity sits below this activity in the same task, so finishing reveals
+            // and resumes it via onRestart/onResume. Starting it instead would trigger its
+            // onNewIntent handler, which stops the running emulation.
+            finish()
+            return
+        }
+
         RefreshRateUtil.enforceRefreshRate(this)
 
         val splashScreen = installSplashScreen()
@@ -211,6 +225,20 @@ class MainActivity :
 
         ThemeUtil.setCorrectTheme(this)
         super.onResume()
+    }
+
+    /** True when a game is running and this launch should finish to reveal it. */
+    private fun tryResumeRunningGame(): Boolean {
+        if (!EmulationActivity.isRunning()) {
+            return false
+        }
+        // Only react to a real relaunch (launcher icon or an external view intent).
+        val action = intent?.action
+        if (action != Intent.ACTION_MAIN && action != Intent.ACTION_VIEW) {
+            return false
+        }
+        Log.info("Revealing the running game instead of showing the game list")
+        return true
     }
 
     override fun onDestroy() {

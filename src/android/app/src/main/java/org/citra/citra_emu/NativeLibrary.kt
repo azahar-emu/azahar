@@ -184,6 +184,12 @@ object NativeLibrary {
     external fun secondarySurfaceDestroyed()
 
     /**
+     * Tells the native layer whether a secondary display host is expected to provide a surface,
+     * so game start waits briefly for a late-arriving second screen instead of starting without it.
+     */
+    external fun setSecondaryHostExpected(expected: Boolean)
+
+    /**
      * Unpauses emulation from a paused state.
      */
     external fun unPauseEmulation()

@@ -184,6 +184,10 @@ vk::SurfaceKHR CreateSurface(vk::Instance instance, const Frontend::EmuWindow& e
     }
 #elif defined(VK_USE_PLATFORM_ANDROID_KHR)
     if (window_info.type == Frontend::WindowSystemType::Android) {
+        if (!window_info.render_surface) {
+            LOG_CRITICAL(Render_Vulkan, "Android surface requested without a native window");
+            UNREACHABLE();
+        }
         vk::AndroidSurfaceCreateInfoKHR android_ci = {
             .window = reinterpret_cast<ANativeWindow*>(window_info.render_surface),
         };
