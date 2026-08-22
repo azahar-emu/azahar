@@ -467,7 +467,8 @@ void PresentWindow::CopyToSwapchain(Frame* frame) {
         cmdbuf.blitImage(frame->image, vk::ImageLayout::eTransferSrcOptimal, swapchain_image,
                          vk::ImageLayout::eTransferDstOptimal,
                          MakeImageBlit(frame->width, frame->height, extent.width, extent.height),
-                         vk::Filter::eLinear);
+                         Settings::values.filter_mode.GetValue() ? vk::Filter::eLinear
+                                                                 : vk::Filter::eNearest);
     } else {
         cmdbuf.copyImage(frame->image, vk::ImageLayout::eTransferSrcOptimal, swapchain_image,
                          vk::ImageLayout::eTransferDstOptimal,
