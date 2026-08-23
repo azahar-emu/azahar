@@ -1663,7 +1663,14 @@ class EmulationFragment :
     }
 
     private fun setInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.coordinatorLayout, applyCutoutInsets)
+        if (!BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+            ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceEmulation, applyCutoutInsets)
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(binding.surfaceInputOverlay, applyCutoutInsets)
+        ViewCompat.setOnApplyWindowInsetsListener(
+            binding.performanceOverlayShowText,
+            applyCutoutInsets
+        )
         ViewCompat.setOnApplyWindowInsetsListener(binding.inGameMenu, applyCutoutInsets)
     }
 
