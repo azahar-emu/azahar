@@ -385,10 +385,8 @@ void Source::GenerateFrame() {
         const u8* const memory = memory_system->GetPhysicalPointer(physical_address);
 
         if (memory) {
-            const u32 remaining_samples =
-                state.current_buffer_length - state.current_sample_number;
-            state.current_buffer =
-                Codec::DecodePCM16(num_channels, memory, remaining_samples);
+            const u32 remaining_samples = state.current_buffer_length - state.current_sample_number;
+            state.current_buffer = Codec::DecodePCM16(num_channels, memory, remaining_samples);
         }
     }
 
@@ -436,8 +434,7 @@ void Source::GenerateFrame() {
 
         const std::size_t input_size_after = state.current_buffer.size();
         ASSERT(input_size_after <= input_size_before);
-        state.current_sample_number +=
-            static_cast<u32>(input_size_before - input_size_after);
+        state.current_sample_number += static_cast<u32>(input_size_before - input_size_after);
     }
 
     state.filters.ProcessFrame(current_frame);
