@@ -56,6 +56,9 @@ public:
     SDL_GameController* GetSDLGameController() const;
 
     void SetSDLJoystick(SDL_Joystick* joystick, SDL_GameController* controller);
+    // tracks which if any hat button is currently pressed down, so a release can be correctly
+    // detected
+    std::string current_hat_down = "";
 
 private:
     struct State {

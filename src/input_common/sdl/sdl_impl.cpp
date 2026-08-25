@@ -908,18 +908,24 @@ Common::ParamPackage SDLEventToButtonParamPackage(SDLState& state, const SDL_Eve
         switch (event.jhat.value) {
         case SDL_HAT_UP:
             params.Set("direction", "up");
+            joystick->current_hat_down = "up";
             break;
         case SDL_HAT_DOWN:
             params.Set("direction", "down");
+            joystick->current_hat_down = "down";
             break;
         case SDL_HAT_LEFT:
             params.Set("direction", "left");
+            joystick->current_hat_down = "left";
             break;
         case SDL_HAT_RIGHT:
             params.Set("direction", "right");
+            joystick->current_hat_down = "right";
             break;
         case SDL_HAT_CENTERED:
-            params.Set("direction", "centered");
+            // register as release of whichever hat button was pressed
+            params.Set("direction", joystick->current_hat_down);
+            joystick->current_hat_down = "";
             break;
         default:
             return {};
