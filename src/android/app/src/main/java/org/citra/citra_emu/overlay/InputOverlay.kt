@@ -20,6 +20,7 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.View.OnTouchListener
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import androidx.preference.PreferenceManager
 import java.lang.NullPointerException
 import kotlin.math.min
@@ -682,8 +683,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
         val display = (context as Activity).windowManager.defaultDisplay
         val outMetrics = DisplayMetrics()
         display.getMetrics(outMetrics)
-        var maxX = outMetrics.heightPixels.toFloat()
-        var maxY = outMetrics.widthPixels.toFloat()
+        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+        val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+        var maxX = outMetrics.widthPixels.toFloat() - marginsX
+        var maxY = outMetrics.heightPixels.toFloat() - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY > maxX) {
             val tmp = maxX
@@ -838,8 +842,11 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
         val display = (context as Activity).windowManager.defaultDisplay
         val outMetrics = DisplayMetrics()
         display.getMetrics(outMetrics)
-        var maxX = outMetrics.heightPixels.toFloat()
-        var maxY = outMetrics.widthPixels.toFloat()
+        val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+        val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+        val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+        var maxX = outMetrics.widthPixels.toFloat() - marginsX
+        var maxY = outMetrics.heightPixels.toFloat() - marginsY
         // Height and width changes depending on orientation. Use the larger value for height.
         if (maxY < maxX) {
             val tmp = maxX
