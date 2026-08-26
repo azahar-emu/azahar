@@ -500,8 +500,11 @@ class GameAdapter(
                     else -> "${seconds}s"
                 }
 
-                append("Playtime: ")
-                append(readablePlayTime)
+                append(
+                    context.getString(R.string.game_context_playtime) +
+                        " " +
+                        readablePlayTime
+                )
             }
 
         bottomSheetView.findViewById<MaterialButton>(R.id.game_shortcut).setOnClickListener {
