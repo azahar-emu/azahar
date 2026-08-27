@@ -67,9 +67,9 @@ import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.fragments.MotionBottomSheetDialogFragment
 import org.citra.citra_emu.utils.SystemSaveGame
 
-class SettingsAdapter(val fragmentView: SettingsFragmentView,
-    val context: Context
-) : RecyclerView.Adapter<SettingViewHolder<SettingsItem>?>(), DialogInterface.OnClickListener,
+class SettingsAdapter(val fragmentView: SettingsFragmentView, val context: Context) :
+    RecyclerView.Adapter<SettingViewHolder<SettingsItem>?>(),
+    DialogInterface.OnClickListener,
     DialogInterface.OnMultiChoiceClickListener {
     private var settings: ArrayList<SettingsItem>? = null
     private var clickedItem: SettingsItem? = null
@@ -414,7 +414,7 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView,
                     is Int -> (item.setting!!.defaultValue as Int).toFloat()
                     else -> 0f
                 }
-                    onClick(dialog, which)
+                onClick(dialog, which)
             }
             .show()
     }
@@ -491,7 +491,10 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView,
                     if (sliderval != it.selectedFloat) fragmentView.onSettingChanged()
                     val s = it.setting
                     when {
-                        it.setting?.defaultValue  is Int -> it.setSelectedValue(sliderProgress.roundToInt())
+                        it.setting?.defaultValue is Int -> it.setSelectedValue(
+                            sliderProgress.roundToInt()
+                        )
+
                         else -> it.setSelectedValue(sliderProgress)
                     }
                     fragmentView.loadSettingsList()
@@ -522,7 +525,16 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView,
         mcsetting?.let {
             val value = getValueForMultiChoiceSelection(it, which)
             if (it.selectedValues.contains(value) != isChecked) {
-                it.setSelectedValue((if (isChecked) it.selectedValues + value else it.selectedValues - value).sorted())
+                it.setSelectedValue(
+                    (
+                        if (isChecked) {
+                            it.selectedValues + value
+                        } else {
+                            it.selectedValues -
+                                value
+                        }
+                        ).sorted()
+                )
                 fragmentView.onSettingChanged()
             }
             fragmentView.loadSettingsList()
@@ -542,7 +554,7 @@ class SettingsAdapter(val fragmentView: SettingsFragmentView,
     }
 
     fun <T> resetSettingToDefault(setting: AbstractSetting<T>, position: Int) {
-        fragmentView.activityView?.settings?.set(setting,setting.defaultValue)
+        fragmentView.activityView?.settings?.set(setting, setting.defaultValue)
         notifyItemChanged(position)
         fragmentView.onSettingChanged()
         fragmentView.loadSettingsList()

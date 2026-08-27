@@ -19,8 +19,8 @@ class SingleChoiceSetting(
     val key: String? = null,
     val defaultValue: Int? = null,
     override var isEnabled: Boolean = true,
-    private val getValue: (()->Int)? = null,
-    private val setValue: ((Int)-> Unit)? = null,
+    private val getValue: (() -> Int)? = null,
+    private val setValue: ((Int) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
@@ -43,7 +43,7 @@ class SingleChoiceSetting(
     fun setSelectedValue(selection: Int) {
         if (setValue != null) {
             setValue(selection)
-        }else {
+        } else {
             @Suppress("UNCHECKED_CAST")
             val backSetting = setting as AbstractSetting<Int>
             settings.set(backSetting, selection)

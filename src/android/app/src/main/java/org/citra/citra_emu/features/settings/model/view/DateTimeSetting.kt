@@ -17,10 +17,10 @@ class DateTimeSetting(
     val key: String? = null,
     private val defaultValue: String? = null,
     override var isEnabled: Boolean = true,
-    private val getValue: (()->String)? = null,
-    private val setValue: ((String)-> Unit)? = null,
+    private val getValue: (() -> String)? = null,
+    private val setValue: ((String) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
-    R.string.setting_disabled_description_incompatible_setting
+        R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
     override val type = TYPE_DATETIME_SETTING
 
@@ -37,7 +37,7 @@ class DateTimeSetting(
     fun setSelectedValue(datetime: String) {
         if (setValue != null) {
             setValue(datetime)
-        }else {
+        } else {
             val stringSetting = setting as AbstractSetting<String>
             settings.set(stringSetting, datetime)
         }

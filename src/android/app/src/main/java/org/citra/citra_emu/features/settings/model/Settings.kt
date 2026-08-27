@@ -16,9 +16,11 @@ class Settings {
 
     fun <T> get(setting: AbstractSetting<T>): T {
         @Suppress("UNCHECKED_CAST")
-        return (perGameOverrides[setting.key]
-            ?: globalValues[setting.key]
-            ?: setting.defaultValue) as T
+        return (
+            perGameOverrides[setting.key]
+                ?: globalValues[setting.key]
+                ?: setting.defaultValue
+            ) as T
     }
 
     fun <T> getGlobal(setting: AbstractSetting<T>): T {
@@ -51,14 +53,14 @@ class Settings {
 
     /** Merge the globals from other into the current settings. Merge per-game if game id is the same. */
     fun mergeSettings(other: Settings) {
-        other.globalValues.forEach{ (key, value) ->
+        other.globalValues.forEach { (key, value) ->
             globalValues[key] = value
         }
 
         if (gameId != other.gameId) return
 
         perGameOverrides.clear()
-        other.perGameOverrides.forEach{ (key, value) ->
+        other.perGameOverrides.forEach { (key, value) ->
             perGameOverrides[key] = value
         }
     }
@@ -67,9 +69,8 @@ class Settings {
         perGameOverrides.remove(setting.key)
     }
 
-    fun hasOverride(setting: AbstractSetting<*>): Boolean {
-        return perGameOverrides.containsKey(setting.key)
-    }
+    fun hasOverride(setting: AbstractSetting<*>): Boolean =
+        perGameOverrides.containsKey(setting.key)
 
     fun getAllOverrides(): Map<String, Any> = perGameOverrides.toMap()
 
@@ -88,7 +89,6 @@ class Settings {
         clearOverrides()
         gameId = null
     }
-
 
     companion object {
 

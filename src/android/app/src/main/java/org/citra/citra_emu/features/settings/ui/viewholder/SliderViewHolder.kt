@@ -6,7 +6,6 @@ package org.citra.citra_emu.features.settings.ui.viewholder
 
 import android.view.View
 import org.citra.citra_emu.databinding.ListItemSettingBinding
-import org.citra.citra_emu.features.settings.model.FloatSetting
 import org.citra.citra_emu.features.settings.model.view.SettingsItem
 import org.citra.citra_emu.features.settings.model.view.SliderSetting
 import org.citra.citra_emu.features.settings.ui.SettingsAdapter

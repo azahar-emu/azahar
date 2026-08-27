@@ -42,6 +42,7 @@ import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.features.settings.model.IntSetting
 import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
+import org.citra.citra_emu.features.settings.utils.SettingsFile
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.Game
@@ -59,7 +60,6 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
-import org.citra.citra_emu.features.settings.utils.SettingsFile
 
 class EmulationActivity : AppCompatActivity() {
     private val preferences: SharedPreferences
@@ -137,8 +137,6 @@ class EmulationActivity : AppCompatActivity() {
         secondaryDisplayManager.updateDisplay()
 
         NativeLibrary.initMultiplayer()
-
-
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this, Settings.settings)
