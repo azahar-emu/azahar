@@ -108,4 +108,6 @@ inline void TruncateString(std::string& str) {
 
 #define HANA_TO_STD_STRING(hana_string) std::string(hana_string.c_str())
 
+std::string BytesToHex(std::span<const u8> data, u32 group_each = 0);
+
 } // namespace Common
