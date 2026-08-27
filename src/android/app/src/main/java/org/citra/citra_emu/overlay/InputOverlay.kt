@@ -28,6 +28,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
+import org.citra.citra_emu.features.settings.model.Settings
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
@@ -49,7 +50,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
     private var buttonBeingConfigured: InputOverlayDrawableButton? = null
     private var dpadBeingConfigured: InputOverlayDrawableDpad? = null
     private var joystickBeingConfigured: InputOverlayDrawableJoystick? = null
-    private val settingsViewModel = NativeLibrary.sEmulationActivity.get()!!.settingsViewModel
+    private lateinit var settings: Settings
 
     // Stores the ID of the pointer that interacted with the 3DS touchscreen.
     private var touchscreenPointerId = -1
@@ -73,6 +74,10 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
 
         // Request focus for the overlay so it has priority on presses.
         requestFocus()
+    }
+
+    fun initializeSettings(settings: Settings) {
+        this.settings = settings
     }
 
     override fun draw(canvas: Canvas) {
@@ -186,7 +191,7 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
                     } else if (button.id == NativeLibrary.ButtonType.BUTTON_TURBO &&
                         button.status == NativeLibrary.ButtonState.PRESSED
                     ) {
-                        TurboHelper.toggleTurbo(true)
+                        TurboHelper.toggleTurbo(true, settings)
                     } else if (button.id == Hotkey.COMBO_BUTTON.button) {
                         ComboHelper.comboActivate(button.status)
                     }
