@@ -28,6 +28,7 @@ import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
 import org.citra.citra_emu.features.hotkeys.Hotkey
+import org.citra.citra_emu.features.settings.model.BooleanSetting
 import org.citra.citra_emu.utils.ComboHelper
 import org.citra.citra_emu.utils.EmulationMenuSettings
 import org.citra.citra_emu.utils.TurboHelper
@@ -121,8 +122,16 @@ class InputOverlay(context: Context?, attrs: AttributeSet?) :
         for (pointerIndex in pointerList) {
             val pointerId = event.getPointerId(pointerIndex)
 
-            val xPosition = event.getX(pointerIndex).toInt()
-            val yPosition = event.getY(pointerIndex).toInt()
+            var xPosition = event.getX(pointerIndex).toInt()
+            var yPosition = event.getY(pointerIndex).toInt()
+
+            if (BooleanSetting.EXPAND_TO_CUTOUT_AREA.boolean) {
+                val cutout = ViewCompat.getRootWindowInsets(this)?.displayCutout
+                val marginsX = (cutout?.safeInsetLeft?.plus(cutout.safeInsetRight)) ?: 0
+                val marginsY = (cutout?.safeInsetTop?.plus(cutout.safeInsetBottom)) ?: 0
+                xPosition += marginsX
+                yPosition += marginsY
+            }
 
             var hasActiveButtons = false
             for (button in overlayButtons) {
