@@ -19,8 +19,8 @@ class MultiChoiceSetting(
     val key: String? = null,
     val defaultValue: List<Int>? = null,
     override var isEnabled: Boolean = true,
-    private val getValue: (()->List<Int>)? = null,
-    private val setValue: ((List<Int>)-> Unit)? = null,
+    private val getValue: (() -> List<Int>)? = null,
+    private val setValue: ((List<Int>) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
@@ -51,7 +51,7 @@ class MultiChoiceSetting(
     fun setSelectedValue(selection: List<Int>) {
         if (setValue != null) {
             setValue(selection)
-        }else {
+        } else {
             val intSetting = setting as IntListSetting
             settings.set(intSetting, selection)
         }

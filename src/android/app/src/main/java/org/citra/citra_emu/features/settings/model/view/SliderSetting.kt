@@ -5,13 +5,12 @@
 package org.citra.citra_emu.features.settings.model.view
 
 import androidx.annotation.StringRes
-import org.citra.citra_emu.R
-import org.citra.citra_emu.features.settings.model.AbstractSetting
-import org.citra.citra_emu.features.settings.model.FloatSetting
-import org.citra.citra_emu.features.settings.model.Settings
-import org.citra.citra_emu.utils.Log
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import org.citra.citra_emu.R
+import org.citra.citra_emu.features.settings.model.AbstractSetting
+import org.citra.citra_emu.features.settings.model.Settings
+import org.citra.citra_emu.utils.Log
 
 class SliderSetting(
     val settings: Settings,
@@ -25,8 +24,8 @@ class SliderSetting(
     val defaultValue: Float? = null,
     val rounding: Int = 2,
     override var isEnabled: Boolean = true,
-    private val getValue: (()->Float)? = null,
-    private val setValue: ((Float)-> Unit)? = null,
+    private val getValue: (() -> Float)? = null,
+    private val setValue: ((Float) -> Unit)? = null,
     @StringRes override var disabledMessage: Int =
         R.string.setting_disabled_description_incompatible_setting
 ) : SettingsItem(setting, titleId, descriptionId) {
@@ -92,7 +91,7 @@ class SliderSetting(
     fun setSelectedValue(selection: Float) {
         if (setValue != null) {
             setValue(selection)
-        }else {
+        } else {
             @Suppress("UNCHECKED_CAST")
             val floatSetting = setting as AbstractSetting<Float>
             settings.set(floatSetting, selection)

@@ -132,12 +132,10 @@ enum class BooleanSetting(
     ),
     CHECK_FOR_UPDATES(SettingKeys.check_for_update_on_start(), Settings.SECTION_MISC, true);
 
-    override fun valueFromString(string: String): Boolean? {
-        return when (string.trim().lowercase()) {
-            "1", "true" -> true
-            "0", "false" -> false
-            else -> null
-        }
+    override fun valueFromString(string: String): Boolean? = when (string.trim().lowercase()) {
+        "1", "true" -> true
+        "0", "false" -> false
+        else -> null
     }
 
     override val isRuntimeEditable: Boolean
@@ -177,5 +175,5 @@ enum class BooleanSetting(
 
         fun from(key: String): BooleanSetting? =
             BooleanSetting.values().firstOrNull { it.key == key }
-      }
+    }
 }

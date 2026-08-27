@@ -32,11 +32,9 @@ enum class IntListSetting(
 
     override fun valueToString(value: List<Int>): String = value.joinToString()
 
-    override fun valueFromString(string: String): List<Int>? {
-        return string.split(",")
-            .mapNotNull { it.trim().toIntOrNull() }
-            .takeIf { canBeEmpty || it.isNotEmpty() }
-    }
+    override fun valueFromString(string: String): List<Int>? = string.split(",")
+        .mapNotNull { it.trim().toIntOrNull() }
+        .takeIf { canBeEmpty || it.isNotEmpty() }
     override val isRuntimeEditable: Boolean
         get() {
             for (setting in NOT_RUNTIME_EDITABLE) {
@@ -50,7 +48,6 @@ enum class IntListSetting(
     companion object {
         private val NOT_RUNTIME_EDITABLE: List<IntListSetting> = emptyList()
 
-        fun from(key: String): IntListSetting? =
-            values().firstOrNull { it.key == key }
+        fun from(key: String): IntListSetting? = values().firstOrNull { it.key == key }
     }
 }

@@ -43,7 +43,7 @@ class SwitchSetting(
     fun setChecked(checked: Boolean) {
         if (setValue != null) {
             setValue(checked)
-        }else {
+        } else {
             @Suppress("UNCHECKED_CAST")
             val setting = setting as AbstractSetting<Boolean>
             settings.set(setting, checked)

@@ -6,7 +6,6 @@ package org.citra.citra_emu.features.settings.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import androidx.documentfile.provider.DocumentFile
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
@@ -21,7 +20,10 @@ import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.SystemSaveGame
 import org.citra.citra_emu.utils.TurboHelper
 
-class SettingsActivityPresenter(private val activityView: SettingsActivityView, private val viewModel: SettingsViewModel) {
+class SettingsActivityPresenter(
+    private val activityView: SettingsActivityView,
+    private val viewModel: SettingsViewModel
+) {
     val settings: Settings get() = viewModel.settings
 
     private var shouldSave = false
@@ -97,9 +99,9 @@ class SettingsActivityPresenter(private val activityView: SettingsActivityView, 
         if (finishing && shouldSave) {
             Log.debug("[SettingsActivity] Settings activity stopping. Saving settings to INI...")
             if (settings.isPerGame()) {
-               SettingsFile.saveCustomFile(settings,activityView)
-            }else{
-               SettingsFile.saveGlobalFile(settings,activityView)
+                SettingsFile.saveCustomFile(settings, activityView)
+            } else {
+                SettingsFile.saveGlobalFile(settings, activityView)
             }
             // merge the edited settings back into the active settings
             Settings.settings.mergeSettings(settings)

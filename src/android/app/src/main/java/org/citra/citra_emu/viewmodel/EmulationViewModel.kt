@@ -11,6 +11,7 @@ import org.citra.citra_emu.features.settings.model.Settings
 
 class EmulationViewModel : ViewModel() {
     val emulationStarted get() = _emulationStarted.asStateFlow()
+
     // convenience shortcut for
     val settings = Settings.settings
 
@@ -24,7 +25,6 @@ class EmulationViewModel : ViewModel() {
 
     val shaderMessage get() = _shaderMessage.asStateFlow()
     private val _shaderMessage = MutableStateFlow("")
-
 
     fun setShaderProgress(progress: Int) {
         _shaderProgress.value = progress

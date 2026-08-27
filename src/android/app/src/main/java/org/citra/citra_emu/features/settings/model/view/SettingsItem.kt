@@ -39,8 +39,6 @@ abstract class SettingsItem(
             return this.isEditable && this.isEnabled
         }
 
-
-
     companion object {
         const val TYPE_HEADER = 0
         const val TYPE_SWITCH = 1

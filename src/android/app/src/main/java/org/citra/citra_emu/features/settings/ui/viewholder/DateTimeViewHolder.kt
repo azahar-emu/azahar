@@ -20,6 +20,7 @@ import org.citra.citra_emu.features.settings.ui.SettingsAdapter
 class DateTimeViewHolder(val binding: ListItemSettingBinding, adapter: SettingsAdapter) :
     SettingViewHolder<DateTimeSetting>(binding.root, adapter) {
     override lateinit var setting: DateTimeSetting
+
     @SuppressLint("SimpleDateFormat")
     override fun bind(item: SettingsItem) {
         setting = item as? DateTimeSetting ?: return
