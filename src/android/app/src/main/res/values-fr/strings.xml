@@ -654,6 +654,7 @@
     <string name="game_context_id">ID :</string>
     <string name="game_context_file">Fichier :</string>
     <string name="game_context_type">Type :</string>
+    <string name="game_context_playtime">Temps de jeu :</string>
     <string name="game_context_insert">Insérer Cartouche</string>
     <string name="game_context_eject">Éjecter Cartouche</string>
 

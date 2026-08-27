@@ -654,6 +654,7 @@
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">File:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_playtime">Tempo di gioco:</string>
     <string name="game_context_insert">Inserisci schedina</string>
     <string name="game_context_eject">Rimuovi schedina</string>
 
