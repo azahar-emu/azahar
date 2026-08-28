@@ -1,4 +1,4 @@
-// Copyright 2017-2024 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -24,6 +24,7 @@
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
+#include "core/savestate.h"
 
 namespace Core {
 
@@ -549,6 +550,9 @@ void Movie::StartPlayback(const std::string& movie_file) {
             program_id = header.program_id;
 
             LOG_INFO(Movie, "Loaded Movie, ID: {:016X}", id);
+
+            // Savestates are keyed on the movie id, which is only known now.
+            InitCurrentSlot(GetBootedTitleId(), id);
         }
     } else {
         LOG_ERROR(Movie, "Failed to playback movie: Unable to open '{}'", movie_file);
@@ -570,6 +574,9 @@ void Movie::StartRecording(const std::string& movie_file, const std::string& aut
     system.GetAppLoader().ReadProgramId(program_id);
 
     LOG_INFO(Movie, "Enabling Movie recording, ID: {:016X}", id);
+
+    // Savestates are keyed on the movie id, which is only known now.
+    InitCurrentSlot(program_id, id);
 }
 
 void Movie::SetReadOnly(bool read_only_) {
@@ -662,6 +669,15 @@ Movie::MovieMetadata Movie::GetMovieMetadata(const std::string& movie_file) cons
             header->input_count};
 }
 
+u64 Movie::GetBootedTitleId() const {
+    u64 title_id = 0;
+    // Not GetAppLoader(): it dereferences without a null check.
+    if (auto* app_loader = system.GetAppLoaderOrNull()) {
+        app_loader->ReadProgramId(title_id);
+    }
+    return title_id;
+}
+
 void Movie::Shutdown() {
     if (play_mode == PlayMode::Recording) {
         SaveMovie();
@@ -675,6 +691,10 @@ void Movie::Shutdown() {
     init_time = 0;
     base_ticks = -1;
     id = 0;
+    program_id = 0;
+
+    // The savestate set changes back to the non-movie one here.
+    InitCurrentSlot(GetBootedTitleId(), id);
 }
 
 template <typename... Targs>
