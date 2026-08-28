@@ -13,8 +13,8 @@ namespace AudioCore::HLE {
 
 static s32 ClampToS32(float value) {
     // Clamp to valid S32 range.
-    constexpr float min = std::numeric_limits<s32>::min();
-    constexpr float max = std::numeric_limits<s32>::max();
+    constexpr float min = -2147483648.0f;
+    constexpr float max = 2147483520.0f;
     return static_cast<s32>(std::clamp(value, min, max));
 }
 
