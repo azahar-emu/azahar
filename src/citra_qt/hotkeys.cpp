@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <vector>
 #include <QAction>
+#include <QCollator>
 #include <QShortcut>
 #include <QtGlobal>
 #include "citra_qt/hotkeys.h"
@@ -103,4 +106,58 @@ QString HotkeyRegistry::SequenceToString(QString controller_keyseq) {
         output.append(QString::fromStdString(InputCommon::ButtonToText(p1)));
     }
     return output;
+}
+
+static int HotkeyDisplayRank(const QString& group, const QString& action_name) {
+    // Unlisted actions sort last, so a hotkey added later still appears.
+    if (group != QStringLiteral("Savestates")) {
+        return 1000;
+    }
+
+    static const QStringList ordered = {
+        QStringLiteral("Quick Save"),
+        QStringLiteral("Quick Load"),
+        QStringLiteral("Next Save Slot"),
+        QStringLiteral("Previous Save Slot"),
+        QStringLiteral("Save to Current Slot"),
+        QStringLiteral("Load from Current Slot"),
+        QStringLiteral("Save to Oldest Non-Quicksave Slot"),
+        QStringLiteral("Load from Newest Non-Quicksave Slot"),
+    };
+
+    const int index = ordered.indexOf(action_name);
+    if (index >= 0) {
+        return index;
+    }
+    // Two blocks of ten. Equal ranks are broken numerically by the caller, giving 1..10.
+    if (action_name.startsWith(QStringLiteral("Save to Slot "))) {
+        return 100;
+    }
+    if (action_name.startsWith(QStringLiteral("Load from Slot "))) {
+        return 200;
+    }
+    return 1000;
+}
+
+std::vector<QString> HotkeyDisplayOrder(const QString& group,
+                                        const std::map<QString, Hotkey>& hotkeys) {
+    std::vector<QString> names;
+    names.reserve(hotkeys.size());
+    for (const auto& [name, hotkey] : hotkeys) {
+        names.push_back(name);
+    }
+
+    QCollator collator;
+    collator.setNumericMode(true);
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+
+    std::sort(names.begin(), names.end(), [&](const QString& lhs, const QString& rhs) {
+        const int lrank = HotkeyDisplayRank(group, lhs);
+        const int rrank = HotkeyDisplayRank(group, rhs);
+        if (lrank != rrank) {
+            return lrank < rrank;
+        }
+        return collator.compare(lhs, rhs) < 0;
+    });
+    return names;
 }

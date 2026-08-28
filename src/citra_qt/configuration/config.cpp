@@ -10,6 +10,7 @@
 #include <QVector>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/setting_qkeys.h"
+#include "common/assert.h"
 #include "common/file_util.h"
 #include "common/settings.h"
 #include "core/hle/service/service.h"
@@ -53,8 +54,11 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> QtConfi
 
 // This shouldn't have anything except static initializers (no functions). So
 // QKeySequence(...).toString() is NOT ALLOWED HERE.
-// This must be in alphabetical order according to action name as it must have the same order as
-// UISetting::values.shortcuts, which is alphabetically ordered.
+// This must be ordered by GROUP first, then by action name within each group, because it must
+// match the iteration order of HotkeyRegistry::hotkey_groups -- a std::map<group, map<name>> --
+// which SaveHotkeys walks to build UISettings::values.shortcuts. SaveShortcutValues then pairs
+// shortcuts[i] with default_hotkeys[i] BY INDEX, so a row out of place writes one hotkey's value
+// against another's default. "Main Window" sorts before "Savestates".
 // clang-format off
 const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
      {QStringLiteral("Advance Frame"),            QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
@@ -65,9 +69,9 @@ const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
      {QStringLiteral("Continue/Pause Emulation"), QStringLiteral("Main Window"), {QStringLiteral("F4"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Debug Pause"),              QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Debug Resume"),             QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Debug Step"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Debug Unschedule All"),     QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Debug Schedule All"),       QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Decrease 3D Factor"),       QStringLiteral("Main Window"), {QStringLiteral("Ctrl+-"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Decrease Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("-"),      QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Exit Azahar"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Q"), QStringLiteral(""), Qt::ApplicationShortcut}},
@@ -77,18 +81,14 @@ const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
      {QStringLiteral("Increase Speed Limit"),     QStringLiteral("Main Window"), {QStringLiteral("+"),      QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Load Amiibo"),              QStringLiteral("Main Window"), {QStringLiteral("F2"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Load File"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+O"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+V"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Browse Public Rooms"),      QStringLiteral("Main Window"), {QStringLiteral("Ctrl+B"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Create Room"),              QStringLiteral("Main Window"), {QStringLiteral("Ctrl+N"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Direct Connect to Room"),   QStringLiteral("Main Window"), {QStringLiteral("Ctrl+Shift"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Leave Room"),               QStringLiteral("Main Window"), {QStringLiteral("Ctrl+L"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Multiplayer Show Current Room"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+R"), QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Quick Save"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Quick Load"),               QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Remove Amiibo"),            QStringLiteral("Main Window"), {QStringLiteral("F3"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Restart Emulation"),        QStringLiteral("Main Window"), {QStringLiteral("F6"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Rotate Screens Upright"),   QStringLiteral("Main Window"), {QStringLiteral("F8"),     QStringLiteral(""), Qt::ApplicationShortcut}},
-     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Main Window"), {QStringLiteral("Ctrl+C"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Stop Emulation"),           QStringLiteral("Main Window"), {QStringLiteral("F5"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Swap Screens"),             QStringLiteral("Main Window"), {QStringLiteral("F9"),     QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle 3D"),                QStringLiteral("Main Window"), {QStringLiteral("Ctrl+3"), QStringLiteral(""), Qt::ApplicationShortcut}},
@@ -100,6 +100,34 @@ const std::vector<UISettings::Shortcut> QtConfig::default_hotkeys{ {
      {QStringLiteral("Toggle Status Bar"),        QStringLiteral("Main Window"), {QStringLiteral("Ctrl+S"), QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Texture Dumping"),   QStringLiteral("Main Window"), {QStringLiteral(""),       QStringLiteral(""), Qt::ApplicationShortcut}},
      {QStringLiteral("Toggle Turbo Mode"),        QStringLiteral("Main Window"), {QStringLiteral(""),      QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Current Slot"),   QStringLiteral("Savestates"), {QStringLiteral("Shift+F2"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Newest Non-Quicksave Slot"),  QStringLiteral("Savestates"), {QStringLiteral("Ctrl+V"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 1"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 10"),        QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 2"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 3"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 4"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 5"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 6"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 7"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 8"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Load from Slot 9"),         QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Next Save Slot"),           QStringLiteral("Savestates"), {QStringLiteral("Shift+F3"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Previous Save Slot"),       QStringLiteral("Savestates"), {QStringLiteral("Shift+F4"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Quick Load"),               QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Quick Save"),               QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Current Slot"),     QStringLiteral("Savestates"), {QStringLiteral("Shift+F1"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Oldest Non-Quicksave Slot"),  QStringLiteral("Savestates"), {QStringLiteral("Ctrl+C"),  QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 1"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 10"),          QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 2"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 3"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 4"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 5"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 6"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 7"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 8"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
+     {QStringLiteral("Save to Slot 9"),           QStringLiteral("Savestates"), {QStringLiteral(""),        QStringLiteral(""), Qt::ApplicationShortcut}},
     } };
 // clang-format on
 
@@ -1300,8 +1328,11 @@ void QtConfig::SaveRendererValues() {
 void QtConfig::SaveShortcutValues() {
     qt_config->beginGroup(QStringLiteral("Shortcuts"));
 
-    // Lengths of UISettings::values.shortcuts & default_hotkeys are same.
-    // However, their ordering must also be the same.
+    // shortcuts and default_hotkeys are the same length and the same order.
+    DEBUG_ASSERT_MSG(UISettings::values.shortcuts.size() == default_hotkeys.size(),
+                     "Hotkey count mismatch: {} registered vs {} defaults",
+                     UISettings::values.shortcuts.size(), default_hotkeys.size());
+
     for (std::size_t i = 0; i < default_hotkeys.size(); i++) {
         const auto& [name, group, shortcut] = UISettings::values.shortcuts[i];
         const auto& default_hotkey = default_hotkeys[i].shortcut;
