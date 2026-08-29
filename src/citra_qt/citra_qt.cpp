@@ -18,6 +18,9 @@
 #include <QMessageBox>
 #include <QPalette>
 #include <QSocketNotifier>
+#ifdef _WIN32
+#include <QSessionManager>
+#endif
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
@@ -503,6 +506,9 @@ GMainWindow::GMainWindow(Core::System& system_)
 
 #if defined(__unix__) || defined(__APPLE__)
     SetupUnixSignalHandlers();
+#endif
+#ifdef _WIN32
+    SetupWindowsSessionHandler();
 #endif
 
     show();
@@ -1720,6 +1726,34 @@ void GMainWindow::OnUnixTerminationSignal() {
 }
 #endif
 
+#ifdef _WIN32
+/// Windows kills us a few seconds into a session end, so the guest gets less than usual.
+static constexpr int SESSION_END_SHUTDOWN_TIMEOUT_MS = 1500;
+
+void GMainWindow::SetupWindowsSessionHandler() {
+    // Windows has no POSIX signals; shutdown and logoff arrive as WM_QUERYENDSESSION.
+    connect(qApp, &QGuiApplication::commitDataRequest, this, &GMainWindow::OnWindowsSessionEnd,
+            Qt::DirectConnection);
+}
+
+void GMainWindow::OnWindowsSessionEnd(QSessionManager& manager) {
+    manager.setRestartHint(QSessionManager::RestartNever);
+
+    LOG_INFO(Frontend, "Session ending, shutting the guest down cleanly");
+    // Only the query phase is exposed, so a veto elsewhere still costs the running game.
+    force_close = true;
+
+    // What closeEvent() does, minus closing the windows: Qt forbids close() from a session end.
+    PersistUISettings();
+    if (emulation_running) {
+        ShutdownGame(SESSION_END_SHUTDOWN_TIMEOUT_MS);
+    }
+    config->Save();
+    // A room that is never told we are leaving sees a dead peer instead of a clean departure.
+    ReleaseExternalResources();
+}
+#endif
+
 /// Upper bound on the wait for the guest to save and exit before we force a stop.
 static constexpr int GUEST_SHUTDOWN_TIMEOUT_MS = 3000;
 /// How often that wait comes up for air to deliver events the guest may be blocked on.
@@ -1727,7 +1761,7 @@ static constexpr int GUEST_SHUTDOWN_POLL_MS = 50;
 /// Upper bound on the wait for an in-flight SVC to give the HLE lock back.
 static constexpr int HLE_LOCK_TIMEOUT_MS = 250;
 
-void GMainWindow::RequestGuestShutdown() {
+void GMainWindow::RequestGuestShutdown(int timeout_ms) {
     // The guest exiting calls us again once the core is gone, hence IsPoweredOn().
     if (!emulation_running || !emu_thread || guest_shutdown_requested || !system.IsPoweredOn()) {
         return;
@@ -1764,8 +1798,8 @@ void GMainWindow::RequestGuestShutdown() {
     // (software keyboard, Mii selector, camera), which deadlocks against a GUI thread parked in
     // wait(). User input stays queued, so nothing re-enters ShutdownGame() while we are in here.
     bool clean = false;
-    const auto deadline = std::chrono::steady_clock::now() +
-                          std::chrono::milliseconds(GUEST_SHUTDOWN_TIMEOUT_MS);
+    const auto deadline =
+        std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
     do {
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
         clean = emu_thread->wait(GUEST_SHUTDOWN_POLL_MS);
@@ -1775,6 +1809,10 @@ void GMainWindow::RequestGuestShutdown() {
 }
 
 void GMainWindow::ShutdownGame() {
+    ShutdownGame(GUEST_SHUTDOWN_TIMEOUT_MS);
+}
+
+void GMainWindow::ShutdownGame(int guest_timeout_ms) {
     // RequestGuestShutdown() pumps events, so the guest exiting can re-enter us via OnCoreError().
     if (!emulation_running || shutting_down) {
         return;
@@ -1799,8 +1837,7 @@ void GMainWindow::ShutdownGame() {
 
     shutting_down = true;
 
-    // Virtual Console titles flush their SRAM on a long timer; stopping outright loses it.
-    RequestGuestShutdown();
+    RequestGuestShutdown(guest_timeout_ms);
 
     emu_thread->RequestStop();
 
@@ -4193,15 +4230,24 @@ bool GMainWindow::ConfirmClose() {
     return answer != QMessageBox::No;
 }
 
+void GMainWindow::PersistUISettings() {
+    UpdateUISettings();
+    game_list->SaveInterfaceLayout();
+    hotkey_registry.SaveHotkeys();
+}
+
+void GMainWindow::ReleaseExternalResources() {
+    multiplayer_state->Close();
+    InputCommon::Shutdown();
+}
+
 void GMainWindow::closeEvent(QCloseEvent* event) {
     if (!ConfirmClose()) {
         event->ignore();
         return;
     }
 
-    UpdateUISettings();
-    game_list->SaveInterfaceLayout();
-    hotkey_registry.SaveHotkeys();
+    PersistUISettings();
 
     // Shutdown session if the emu thread is active...
     if (emu_thread) {
@@ -4213,8 +4259,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 
     render_window->close();
     secondary_window->close();
-    multiplayer_state->Close();
-    InputCommon::Shutdown();
+    ReleaseExternalResources();
     QWidget::closeEvent(event);
 }
 

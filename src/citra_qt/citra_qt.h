@@ -59,6 +59,9 @@ class QFutureWatcher;
 class QLabel;
 class QProgressBar;
 class QPushButton;
+#ifdef _WIN32
+class QSessionManager;
+#endif
 #if defined(__unix__) || defined(__APPLE__)
 class QSocketNotifier;
 #endif
@@ -177,10 +180,21 @@ private:
     bool LoadROM(const QString& filename);
     void BootGame(const QString& filename);
     void ShutdownGame();
+    /// Same, with an explicit budget for the guest; the argumentless form uses the interactive
+    /// one.
+    void ShutdownGame(int guest_timeout_ms);
     /// Asks the running application to save and exit, as a real system power-off does.
-    void RequestGuestShutdown();
+    void RequestGuestShutdown(int timeout_ms);
+    /// Writes out everything the UI persists on the way out. Shared by closeEvent() and the
+    /// session-end path, which must not drift from it.
+    void PersistUISettings();
+    /// Lets go of what outlives the window: the multiplayer room and the input backend.
+    void ReleaseExternalResources();
 #if defined(__unix__) || defined(__APPLE__)
     void SetupUnixSignalHandlers();
+#endif
+#ifdef _WIN32
+    void SetupWindowsSessionHandler();
 #endif
 
 #ifdef ENABLE_DISCORD_RPC
@@ -247,6 +261,9 @@ private slots:
     void OnStopGame();
 #if defined(__unix__) || defined(__APPLE__)
     void OnUnixTerminationSignal();
+#endif
+#ifdef _WIN32
+    void OnWindowsSessionEnd(QSessionManager& manager);
 #endif
     void OnSaveState();
     void OnLoadState();
