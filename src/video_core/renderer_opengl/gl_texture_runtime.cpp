@@ -364,7 +364,7 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
 
 Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceBase& surface,
                  const VideoCore::Material* mat)
-    : SurfaceBase{surface, {}}, driver{&runtime_.GetDriver()}, runtime{&runtime_},
+    : SurfaceBase{surface}, driver{&runtime_.GetDriver()}, runtime{&runtime_},
       tuple{runtime_.GetFormatTuple(mat->format)} {
     if (mat && !driver->IsCustomFormatSupported(mat->format)) {
         return;
