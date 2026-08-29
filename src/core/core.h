@@ -173,6 +173,12 @@ public:
         return is_powered_on;
     }
 
+    /// Serializes Shutdown() against threads that inspect the running session. Hold it across an
+    /// IsPoweredOn() check and whatever it guards, or the emulation thread frees it in between.
+    [[nodiscard]] std::recursive_mutex& GetSessionLock() {
+        return session_lock;
+    }
+
     /// Prepare the core emulation for a reschedule
     void PrepareReschedule();
 
@@ -513,6 +519,7 @@ private:
     static System s_instance;
 
     std::atomic_bool is_powered_on{};
+    std::recursive_mutex session_lock;
 
     SaveStateStatus save_state_status = SaveStateStatus::NONE;
     SaveStateStatus save_state_request_status = SaveStateStatus::NONE;

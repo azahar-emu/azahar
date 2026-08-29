@@ -713,6 +713,7 @@ void System::RegisterImageInterface(std::shared_ptr<Frontend::ImageInterface> im
 }
 
 void System::Shutdown(bool is_deserializing) {
+    std::scoped_lock session_guard{session_lock};
 
     // Shutdown emulation session
     is_powered_on = false;

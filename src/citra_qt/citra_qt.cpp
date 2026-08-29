@@ -2,18 +2,22 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <chrono>
 #include <clocale>
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <thread>
 #include <unordered_map>
+#include <QCoreApplication>
+#include <QEventLoop>
 #include <QFileDialog>
 #include <QFutureWatcher>
 #include <QIcon>
 #include <QLabel>
 #include <QMessageBox>
 #include <QPalette>
+#include <QSocketNotifier>
 #include <QSysInfo>
 #include <QtConcurrent/QtConcurrentMap>
 #include <QtConcurrent/QtConcurrentRun>
@@ -22,6 +26,12 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#if defined(__unix__) || defined(__APPLE__)
+#include <errno.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
 #ifdef __APPLE__
 #include <unistd.h> // for chdir
 #endif
@@ -98,6 +108,7 @@
 #endif
 #include "common/settings.h"
 #include "common/string_util.h"
+#include "common/thread.h"
 #include "common/zstd_compression.h"
 #include "core/arm/exception_handler.h"
 #include "core/core.h"
@@ -105,7 +116,10 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/am/am.h"
+#include "core/hle/service/apt/applet_manager.h"
+#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
@@ -486,6 +500,10 @@ GMainWindow::GMainWindow(Core::System& system_)
     QIcon azahar_icon = QIcon(QString::fromStdString(":/icons/default/256x256/azahar.png"));
     render_window->setWindowIcon(azahar_icon);
     secondary_window->setWindowIcon(azahar_icon);
+
+#if defined(__unix__) || defined(__APPLE__)
+    SetupUnixSignalHandlers();
+#endif
 
     show();
 
@@ -1355,6 +1373,12 @@ void GMainWindow::AllowOSSleep() {
 }
 
 bool GMainWindow::LoadROM(const QString& filename) {
+    // ShutdownGame() refuses to re-enter itself, so it may not have ended the previous session.
+    if (shutting_down) {
+        LOG_WARNING(Frontend, "Ignoring load request while a shutdown is in progress");
+        return false;
+    }
+
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread) {
         ShutdownGame();
@@ -1465,6 +1489,12 @@ bool GMainWindow::LoadROM(const QString& filename) {
 }
 
 void GMainWindow::BootGame(const QString& filename) {
+    // As in LoadROM(): booting over a live EmuThread double-initializes the core.
+    if (shutting_down) {
+        LOG_WARNING(Frontend, "Ignoring boot request while a shutdown is in progress");
+        return;
+    }
+
     if (emu_thread) {
         ShutdownGame();
     }
@@ -1613,6 +1643,7 @@ void GMainWindow::BootGame(const QString& filename) {
     loading_screen->Prepare(system.GetAppLoader());
     loading_screen->show();
 
+    guest_shutdown_requested = false;
     emulation_running = true;
     if (ui->action_Fullscreen->isChecked()) {
         ShowFullscreen();
@@ -1621,8 +1652,131 @@ void GMainWindow::BootGame(const QString& filename) {
     OnResumeGame(true);
 }
 
+#if defined(__unix__) || defined(__APPLE__)
+namespace {
+int g_signal_fd[2] = {-1, -1};
+
+void UnixTerminationHandler(int) {
+    // Only async-signal-safe calls belong here; the notifier does the real work.
+    const int saved_errno = errno;
+    const char byte = 1;
+    [[maybe_unused]] const auto ignored = ::write(g_signal_fd[0], &byte, sizeof(byte));
+    errno = saved_errno;
+}
+} // namespace
+
+void GMainWindow::SetupUnixSignalHandlers() {
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, g_signal_fd) != 0) {
+        LOG_ERROR(Frontend, "Could not create socketpair for signal handling");
+        return;
+    }
+
+    struct sigaction sa{};
+    sa.sa_handler = UnixTerminationHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (::sigaction(SIGTERM, &sa, nullptr) != 0 || ::sigaction(SIGINT, &sa, nullptr) != 0) {
+        LOG_ERROR(Frontend, "Could not install termination signal handlers");
+        // One may have installed; undo both so nothing writes into a socket nobody reads.
+        ::signal(SIGTERM, SIG_DFL);
+        ::signal(SIGINT, SIG_DFL);
+        ::close(g_signal_fd[0]);
+        ::close(g_signal_fd[1]);
+        g_signal_fd[0] = g_signal_fd[1] = -1;
+        return;
+    }
+
+    unix_signal_notifier = new QSocketNotifier(g_signal_fd[1], QSocketNotifier::Read, this);
+    connect(unix_signal_notifier, &QSocketNotifier::activated, this,
+            &GMainWindow::OnUnixTerminationSignal);
+}
+
+void GMainWindow::OnUnixTerminationSignal() {
+    unix_signal_notifier->setEnabled(false);
+    char byte{};
+    [[maybe_unused]] const auto ignored = ::read(g_signal_fd[1], &byte, sizeof(byte));
+
+    // A second signal, or a logout's follow-up SIGTERM, has to be able to kill us.
+    ::signal(SIGTERM, SIG_DFL);
+    ::signal(SIGINT, SIG_DFL);
+
+    LOG_INFO(Frontend, "Termination signal received, shutting the guest down cleanly");
+    // BootGame() sets emu_thread before emulation_running, so a signal mid-boot could raise a
+    // modal nobody can answer.
+    force_close = true;
+
+    // QSocketNotifier activations survive ExcludeUserInputEvents, so this can arrive from inside
+    // RequestGuestShutdown()'s pump, where closeEvent() would tear the window down under the
+    // wait() further up the stack. Let the shutdown in progress close us as it unwinds.
+    if (shutting_down) {
+        close_when_shutdown_finishes = true;
+        return;
+    }
+
+    if (emulation_running) {
+        ShutdownGame();
+    }
+    close();
+}
+#endif
+
+/// Upper bound on the wait for the guest to save and exit before we force a stop.
+static constexpr int GUEST_SHUTDOWN_TIMEOUT_MS = 3000;
+/// How often that wait comes up for air to deliver events the guest may be blocked on.
+static constexpr int GUEST_SHUTDOWN_POLL_MS = 50;
+/// Upper bound on the wait for an in-flight SVC to give the HLE lock back.
+static constexpr int HLE_LOCK_TIMEOUT_MS = 250;
+
+void GMainWindow::RequestGuestShutdown() {
+    // The guest exiting calls us again once the core is gone, hence IsPoweredOn().
+    if (!emulation_running || !emu_thread || guest_shutdown_requested || !system.IsPoweredOn()) {
+        return;
+    }
+    guest_shutdown_requested = true;
+
+    // Pausing parks the emulation thread in the frame limiter, so both have to be undone.
+    system.frame_limiter.SetFrameAdvancing(false);
+    emu_thread->SetRunning(true);
+
+    {
+        // Held across the IsPoweredOn() check. Both locks and the reference go before the wait:
+        // System::Shutdown() runs on the emu thread and frees what they guard.
+        std::scoped_lock session_guard{system.GetSessionLock()};
+        if (!system.IsPoweredOn()) {
+            return;
+        }
+
+        // An applet dialog holds the HLE lock while blocking on us, so never wait on it forever.
+        std::unique_lock hle_guard{system.Kernel().GetHLELock(), std::defer_lock};
+        if (!Common::TryLockFor(hle_guard, HLE_LOCK_TIMEOUT_MS)) {
+            LOG_WARNING(Frontend, "HLE lock still held, stopping without notifying the guest");
+            return;
+        }
+
+        auto apt = Service::APT::GetModule(system);
+        if (!apt) {
+            return;
+        }
+        apt->GetAppletManager()->SendNotificationToAll(Service::APT::Notification::Shutdown);
+    }
+
+    // The guest runs on through this wait and can post a Qt::BlockingQueuedConnection metacall
+    // (software keyboard, Mii selector, camera), which deadlocks against a GUI thread parked in
+    // wait(). User input stays queued, so nothing re-enters ShutdownGame() while we are in here.
+    bool clean = false;
+    const auto deadline = std::chrono::steady_clock::now() +
+                          std::chrono::milliseconds(GUEST_SHUTDOWN_TIMEOUT_MS);
+    do {
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        clean = emu_thread->wait(GUEST_SHUTDOWN_POLL_MS);
+    } while (!clean && std::chrono::steady_clock::now() < deadline);
+    LOG_INFO(Frontend, "Guest shutdown {} after notification",
+             clean ? "completed cleanly" : "timed out; forcing stop");
+}
+
 void GMainWindow::ShutdownGame() {
-    if (!emulation_running) {
+    // RequestGuestShutdown() pumps events, so the guest exiting can re-enter us via OnCoreError().
+    if (!emulation_running || shutting_down) {
         return;
     }
 
@@ -1642,6 +1796,11 @@ void GMainWindow::ShutdownGame() {
 #ifdef ENABLE_DISCORD_RPC
     discord_rpc->Pause();
 #endif
+
+    shutting_down = true;
+
+    // Virtual Console titles flush their SRAM on a long timer; stopping outright loses it.
+    RequestGuestShutdown();
 
     emu_thread->RequestStop();
 
@@ -1711,6 +1870,7 @@ void GMainWindow::ShutdownGame() {
     UpdateSaveStates();
 
     emulation_running = false;
+    shutting_down = false;
 
     game_title.clear();
     UpdateWindowTitle();
@@ -1724,6 +1884,13 @@ void GMainWindow::ShutdownGame() {
     // When closing the game, destroy the GLWindow to clear the context after the game is closed
     render_window->ReleaseRenderTarget();
     secondary_window->ReleaseRenderTarget();
+
+    // A termination signal deferred its close to us. Last of all, so closeEvent() cannot pull the
+    // render windows out from under the cleanup above.
+    if (close_when_shutdown_finishes) {
+        close_when_shutdown_finishes = false;
+        close();
+    }
 }
 
 #ifdef ENABLE_DEVELOPER_OPTIONS
@@ -4016,7 +4183,7 @@ void GMainWindow::OnMenuAboutCitra() {
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (!emu_thread || !UISettings::values.confirm_before_closing) {
+    if (!emu_thread || force_close || !UISettings::values.confirm_before_closing) {
         return true;
     }
 
