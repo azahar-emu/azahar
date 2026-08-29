@@ -119,6 +119,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
+#include "core/guest_shutdown.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
@@ -1728,7 +1729,8 @@ void GMainWindow::OnUnixTerminationSignal() {
 
 #ifdef _WIN32
 /// Windows kills us a few seconds into a session end, so the guest gets less than usual.
-static constexpr int SESSION_END_SHUTDOWN_TIMEOUT_MS = 1500;
+static constexpr Core::GuestShutdownTimeouts SESSION_END_SHUTDOWN_TIMEOUTS{
+    std::chrono::milliseconds(1500), std::chrono::milliseconds(3500)};
 
 void GMainWindow::SetupWindowsSessionHandler() {
     // Windows has no POSIX signals; shutdown and logoff arrive as WM_QUERYENDSESSION.
@@ -1746,7 +1748,7 @@ void GMainWindow::OnWindowsSessionEnd(QSessionManager& manager) {
     // What closeEvent() does, minus closing the windows: Qt forbids close() from a session end.
     PersistUISettings();
     if (emulation_running) {
-        ShutdownGame(SESSION_END_SHUTDOWN_TIMEOUT_MS);
+        ShutdownGame(SESSION_END_SHUTDOWN_TIMEOUTS);
     }
     config->Save();
     // A room that is never told we are leaving sees a dead peer instead of a clean departure.
@@ -1754,65 +1756,44 @@ void GMainWindow::OnWindowsSessionEnd(QSessionManager& manager) {
 }
 #endif
 
-/// Upper bound on the wait for the guest to save and exit before we force a stop.
-static constexpr int GUEST_SHUTDOWN_TIMEOUT_MS = 3000;
-/// How often that wait comes up for air to deliver events the guest may be blocked on.
-static constexpr int GUEST_SHUTDOWN_POLL_MS = 50;
-/// Upper bound on the wait for an in-flight SVC to give the HLE lock back.
-static constexpr int HLE_LOCK_TIMEOUT_MS = 250;
+/// How long the guest gets to save and exit, and the same again while it is still writing.
+static constexpr Core::GuestShutdownTimeouts GUEST_SHUTDOWN_TIMEOUTS{
+    std::chrono::milliseconds(3000), std::chrono::milliseconds(10000)};
 
-void GMainWindow::RequestGuestShutdown(int timeout_ms) {
+void GMainWindow::RequestGuestShutdown(Core::GuestShutdownTimeouts timeouts) {
     // The guest exiting calls us again once the core is gone, hence IsPoweredOn().
     if (!emulation_running || !emu_thread || guest_shutdown_requested || !system.IsPoweredOn()) {
         return;
     }
+    // IsPoweredOn() does not cover a guest-initiated exit: EmuThread::run() in
+    // src/citra_qt/bootmanager.cpp emits ErrorThrown before System::Shutdown(), so the queued
+    // OnCoreError() runs while the session still reports powered on.
+    if (emu_thread->IsGuestExiting()) {
+        return;
+    }
     guest_shutdown_requested = true;
 
-    // Pausing parks the emulation thread in the frame limiter, so both have to be undone.
-    system.frame_limiter.SetFrameAdvancing(false);
-    emu_thread->SetRunning(true);
-
-    {
-        // Held across the IsPoweredOn() check. Both locks and the reference go before the wait:
-        // System::Shutdown() runs on the emu thread and frees what they guard.
-        std::scoped_lock session_guard{system.GetSessionLock()};
-        if (!system.IsPoweredOn()) {
-            return;
-        }
-
-        // An applet dialog holds the HLE lock while blocking on us, so never wait on it forever.
-        std::unique_lock hle_guard{system.Kernel().GetHLELock(), std::defer_lock};
-        if (!Common::TryLockFor(hle_guard, HLE_LOCK_TIMEOUT_MS)) {
-            LOG_WARNING(Frontend, "HLE lock still held, stopping without notifying the guest");
-            return;
-        }
-
-        auto apt = Service::APT::GetModule(system);
-        if (!apt) {
-            return;
-        }
-        apt->GetAppletManager()->SendNotificationToAll(Service::APT::Notification::Shutdown);
-    }
-
-    // The guest runs on through this wait and can post a Qt::BlockingQueuedConnection metacall
-    // (software keyboard, Mii selector, camera), which deadlocks against a GUI thread parked in
-    // wait(). User input stays queued, so nothing re-enters ShutdownGame() while we are in here.
-    bool clean = false;
-    const auto deadline =
-        std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
-    do {
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        clean = emu_thread->wait(GUEST_SHUTDOWN_POLL_MS);
-    } while (!clean && std::chrono::steady_clock::now() < deadline);
-    LOG_INFO(Frontend, "Guest shutdown {} after notification",
-             clean ? "completed cleanly" : "timed out; forcing stop");
+    Core::PerformGuestShutdown(
+        system, timeouts,
+        [this](std::chrono::milliseconds slice) {
+            // The guest can post a Qt::BlockingQueuedConnection metacall (swkbd, Mii, camera)
+            // that deadlocks against a GUI thread parked in wait(). User input stays queued.
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            return emu_thread->wait(static_cast<unsigned long>(slice.count()));
+        },
+        [this] {
+            // Pausing parks the emulation thread in the frame limiter; both have to be undone
+            // before it can see the notification.
+            system.frame_limiter.SetFrameAdvancing(false);
+            emu_thread->SetRunning(true);
+        });
 }
 
 void GMainWindow::ShutdownGame() {
-    ShutdownGame(GUEST_SHUTDOWN_TIMEOUT_MS);
+    ShutdownGame(GUEST_SHUTDOWN_TIMEOUTS);
 }
 
-void GMainWindow::ShutdownGame(int guest_timeout_ms) {
+void GMainWindow::ShutdownGame(Core::GuestShutdownTimeouts guest_timeouts) {
     // RequestGuestShutdown() pumps events, so the guest exiting can re-enter us via OnCoreError().
     if (!emulation_running || shutting_down) {
         return;
@@ -1837,7 +1818,8 @@ void GMainWindow::ShutdownGame(int guest_timeout_ms) {
 
     shutting_down = true;
 
-    RequestGuestShutdown(guest_timeout_ms);
+    // Virtual Console titles flush their SRAM on a long timer; stopping outright loses it.
+    RequestGuestShutdown(guest_timeouts);
 
     emu_thread->RequestStop();
 

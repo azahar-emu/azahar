@@ -24,6 +24,7 @@
 #include "citra_qt/notification_led.h"
 #include "citra_qt/user_data_migration.h"
 #include "core/core.h"
+#include "core/guest_shutdown.h"
 #include "core/savestate.h"
 #include "video_core/rasterizer_interface.h"
 
@@ -182,9 +183,9 @@ private:
     void ShutdownGame();
     /// Same, with an explicit budget for the guest; the argumentless form uses the interactive
     /// one.
-    void ShutdownGame(int guest_timeout_ms);
+    void ShutdownGame(Core::GuestShutdownTimeouts guest_timeouts);
     /// Asks the running application to save and exit, as a real system power-off does.
-    void RequestGuestShutdown(int timeout_ms);
+    void RequestGuestShutdown(Core::GuestShutdownTimeouts timeouts);
     /// Writes out everything the UI persists on the way out. Shared by closeEvent() and the
     /// session-end path, which must not drift from it.
     void PersistUISettings();

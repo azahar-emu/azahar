@@ -40,6 +40,7 @@
 #include "core/core.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/frontend/camera/factory.h"
+#include "core/guest_shutdown.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
@@ -867,50 +868,39 @@ void Java_org_citra_citra_1emu_NativeLibrary_pauseEmulation([[maybe_unused]] JNI
     }
 }
 
-// stopEmulation() runs on the UI thread, so this is a freeze budget, not a save budget.
-constexpr int GUEST_SHUTDOWN_TIMEOUT_MS = 1000;
-constexpr int HLE_LOCK_TIMEOUT_MS = 250;
+// stopEmulation() runs on the UI thread, so this is a freeze budget, not a save budget. It also
+// caps the save data copy, which is otherwise as large as the title's save directory.
+constexpr auto GUEST_SHUTDOWN_TIMEOUT = std::chrono::milliseconds(1000);
+// Android kills an app that stops answering input for 5s. The copy is charged against this, so
+// the whole call returns within the ceiling however long the copy takes.
+constexpr auto GUEST_SHUTDOWN_MID_SAVE_CEILING = std::chrono::milliseconds(2500);
 
-/// Android port of GMainWindow::RequestGuestShutdown().
+/// Android side of Core::PerformGuestShutdown(); only the wait differs from
+/// GMainWindow::RequestGuestShutdown() in src/citra_qt/citra_qt.cpp.
 static void RequestGuestShutdown() {
     Core::System& system{Core::System::GetInstance()};
     if (stop_run || !system.IsPoweredOn()) {
         return;
     }
 
-    // A paused loop never sees the notification; paused_mutex keeps the wakeup from being missed.
-    {
-        std::scoped_lock pause_guard{paused_mutex};
-        pause_emulation = false;
-    }
-    running_cv.notify_all();
-
-    {
-        // Ordering rules as in GMainWindow::RequestGuestShutdown(), src/citra_qt/citra_qt.cpp.
-        std::scoped_lock session_guard{system.GetSessionLock()};
-        if (!system.IsPoweredOn()) {
-            return;
-        }
-
-        std::unique_lock hle_guard{system.Kernel().GetHLELock(), std::defer_lock};
-        if (!Common::TryLockFor(hle_guard, HLE_LOCK_TIMEOUT_MS)) {
-            LOG_WARNING(Frontend, "HLE lock still held, stopping without notifying the guest");
-            return;
-        }
-
-        auto apt = Service::APT::GetModule(system);
-        if (!apt) {
-            return;
-        }
-        apt->GetAppletManager()->SendNotificationToAll(Service::APT::Notification::Shutdown);
-    }
-
-    std::unique_lock lock{emulation_finished_mutex};
-    const bool clean =
-        emulation_finished_cv.wait_for(lock, std::chrono::milliseconds(GUEST_SHUTDOWN_TIMEOUT_MS),
-                                       [] { return emulation_finished.load(); });
-    LOG_INFO(Frontend, "Guest shutdown {} after notification",
-             clean ? "completed cleanly" : "timed out; forcing stop");
+    const Core::GuestShutdownTimeouts timeouts{GUEST_SHUTDOWN_TIMEOUT,
+                                               GUEST_SHUTDOWN_MID_SAVE_CEILING};
+    Core::PerformGuestShutdown(
+        system, timeouts,
+        [](std::chrono::milliseconds slice) {
+            std::unique_lock lock{emulation_finished_mutex};
+            return emulation_finished_cv.wait_for(lock, slice,
+                                                  [] { return emulation_finished.load(); });
+        },
+        [] {
+            // A paused loop never sees the notification; paused_mutex keeps the wakeup from being
+            // missed.
+            {
+                std::scoped_lock pause_guard{paused_mutex};
+                pause_emulation = false;
+            }
+            running_cv.notify_all();
+        });
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_stopEmulation([[maybe_unused]] JNIEnv* env,
