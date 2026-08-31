@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/settings.h"
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
@@ -252,6 +253,12 @@ void SaveDataSnapshot::Discard() {
 GuestShutdownResult PerformGuestShutdown(System& system, GuestShutdownTimeouts timeouts,
                                          const GuestShutdownWaitSlice& wait_slice,
                                          const std::function<void()>& on_session_confirmed) {
+    // Off by default: a title that reads the notification and then ignores it still costs the
+    // whole budget, and most do. Worth turning on per game for the ones that buffer their save.
+    if (!Settings::values.notify_guest_on_shutdown.GetValue()) {
+        return GuestShutdownResult::NotDelivered;
+    }
+
     const auto started = std::chrono::steady_clock::now();
 
     SaveDataSnapshot snapshot;
