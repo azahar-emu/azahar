@@ -304,6 +304,9 @@ VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
 }
 
 u64 TextureRuntime::GetResourceTick() {
+    // Ensure we are getting the latest GpuTick value to reduce garbage-collection latency and
+    // allows the deletion of resources immediately when they are done being used.
+    scheduler.GetMasterSemaphore()->Refresh();
     return scheduler.GetMasterSemaphore()->KnownGpuTick();
 }
 

@@ -128,13 +128,14 @@ void RasterizerCache<T>::TickFrame() {
 
 template <class T>
 void RasterizerCache<T>::RunGarbageCollector() {
-    const u64 remove_tick = runtime.GetResourceTick();
+    const u64 current_resource_tick = runtime.GetResourceTick();
     for (auto it = sentenced.begin(); it != sentenced.end();) {
-        const auto [surface_id, resource_tick] = *it;
-        // Anything older(lower tick-value) than the resource-free tick-value is done being used
-        // and is ready to be deleted
-        if (remove_tick >= resource_tick) {
-            // Resource is still possibly in-use, skip
+        const auto [surface_id, resource_last_used_tick] = *it;
+        // Tick-values less than or equal to the current resource-tick are possibly still in-use.
+        // Tick-values larger than the current resource-tick are not being utilized anymore and can
+        // be safely deleted.
+        if (current_resource_tick <= resource_last_used_tick) {
+            // Resource is still in-use, skip deletion
             it++;
             continue;
         }
