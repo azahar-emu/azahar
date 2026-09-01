@@ -3512,7 +3512,11 @@ void GMainWindow::OnOpenFFmpeg() {
                                    const std::string& virtual_name) -> bool {
         auto file_path = directory + DIR_SEP + virtual_name;
         if (file_path.ends_with(".dll")) {
-            auto destination_path = FileUtil::GetExeDirectory() + DIR_SEP + virtual_name;
+            const auto destination_dir = FileUtil::GetUserPath(FileUtil::UserPath::LibrariesDir);
+            const auto destination_path = destination_dir + virtual_name;
+            if (!FileUtil::IsDirectory(destination_dir)) {
+                FileUtil::CreateDir(destination_dir);
+            }
             if (!FileUtil::Copy(file_path, destination_path)) {
                 success.store(false);
                 return false;
