@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -25,17 +25,39 @@ SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
     return GetCurrentStatus();
 }
 
-void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const {
-    if (!state.enabled)
-        return;
-
+void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) {
     const std::array<float, 4>& gains = state.gain.at(intermediate_mix_id);
+    if (!state.enabled) {
+        state.gain_ramp_start.at(intermediate_mix_id) = gains;
+        state.gain_ramp_active.at(intermediate_mix_id) = false;
+        return;
+    }
+
+    const bool ramp_active = state.gain_ramp_active.at(intermediate_mix_id);
+    const std::array<float, 4>& ramp_start = state.gain_ramp_start.at(intermediate_mix_id);
+    constexpr float ramp_scale = 1.0f / static_cast<float>(samples_per_frame - 1);
+
     for (std::size_t samplei = 0; samplei < samples_per_frame; samplei++) {
+        const float progress = static_cast<float>(samplei) * ramp_scale;
+        const float gain0 =
+            ramp_active ? ramp_start[0] + (gains[0] - ramp_start[0]) * progress : gains[0];
+        const float gain1 =
+            ramp_active ? ramp_start[1] + (gains[1] - ramp_start[1]) * progress : gains[1];
+        const float gain2 =
+            ramp_active ? ramp_start[2] + (gains[2] - ramp_start[2]) * progress : gains[2];
+        const float gain3 =
+            ramp_active ? ramp_start[3] + (gains[3] - ramp_start[3]) * progress : gains[3];
+
         // Conversion from stereo (current_frame) to quadraphonic (dest) occurs here.
-        dest[samplei][0] += static_cast<s32>(gains[0] * current_frame[samplei][0]);
-        dest[samplei][1] += static_cast<s32>(gains[1] * current_frame[samplei][1]);
-        dest[samplei][2] += static_cast<s32>(gains[2] * current_frame[samplei][0]);
-        dest[samplei][3] += static_cast<s32>(gains[3] * current_frame[samplei][1]);
+        dest[samplei][0] += static_cast<s32>(gain0 * current_frame[samplei][0]);
+        dest[samplei][1] += static_cast<s32>(gain1 * current_frame[samplei][1]);
+        dest[samplei][2] += static_cast<s32>(gain2 * current_frame[samplei][0]);
+        dest[samplei][3] += static_cast<s32>(gain3 * current_frame[samplei][1]);
+    }
+
+    if (ramp_active) {
+        state.gain_ramp_start.at(intermediate_mix_id) = gains;
+        state.gain_ramp_active.at(intermediate_mix_id) = false;
     }
 }
 
@@ -113,6 +135,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_0_dirty) {
         config.gain_0_dirty.Assign(0);
+        state.gain_ramp_start[0] = state.gain[0];
+        state.gain_ramp_active[0] = true;
         std::transform(config.gain[0], config.gain[0] + state.gain[0].size(), state.gain[0].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 0 update", source_id);
@@ -120,6 +144,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_1_dirty) {
         config.gain_1_dirty.Assign(0);
+        state.gain_ramp_start[1] = state.gain[1];
+        state.gain_ramp_active[1] = true;
         std::transform(config.gain[1], config.gain[1] + state.gain[1].size(), state.gain[1].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 1 update", source_id);
@@ -127,6 +153,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.gain_2_dirty) {
         config.gain_2_dirty.Assign(0);
+        state.gain_ramp_start[2] = state.gain[2];
+        state.gain_ramp_active[2] = true;
         std::transform(config.gain[2], config.gain[2] + state.gain[2].size(), state.gain[2].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id={} gain 2 update", source_id);
@@ -209,6 +237,10 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                 break;
             case Format::PCM16:
                 state.current_buffer = Codec::DecodePCM16(num_channels, memory, config.length);
+                state.current_buffer_length = config.length;
+                state.current_buffer_mono_or_stereo = state.mono_or_stereo;
+                state.current_buffer_format = state.format;
+                state.current_buffer_is_looping = config.is_looping != 0;
                 valid = true;
                 break;
             case Format::ADPCM:
@@ -334,6 +366,30 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 void Source::GenerateFrame() {
     current_frame.fill({});
 
+    // A looping PCM buffer can be updated by the application while the DSP is
+    // playing it. Refresh only the not-yet-consumed part from emulated RAM.
+    //
+    // current_sample_number is maintained below from the exact amount of input
+    // removed by AudioInterp, so the memory offset and current_buffer stay in sync.
+    if (!state.current_buffer.empty() && state.current_buffer_is_looping &&
+        state.current_buffer_format == Format::PCM16 &&
+        state.current_buffer_physical_address != 0 &&
+        state.current_sample_number < state.current_buffer_length) {
+        const unsigned num_channels =
+            state.current_buffer_mono_or_stereo == MonoOrStereo::Stereo ? 2 : 1;
+
+        const u32 byte_offset =
+            state.current_sample_number * num_channels * static_cast<u32>(sizeof(s16));
+        const PAddr physical_address =
+            (state.current_buffer_physical_address & 0xFFFFFFFC) + byte_offset;
+        const u8* const memory = memory_system->GetPhysicalPointer(physical_address);
+
+        if (memory) {
+            const u32 remaining_samples = state.current_buffer_length - state.current_sample_number;
+            state.current_buffer = Codec::DecodePCM16(num_channels, memory, remaining_samples);
+        }
+    }
+
     if (state.current_buffer.empty()) {
         // TODO(SachinV): Should dequeue happen at the end of the frame generation?
         if (DequeueBuffer()) {
@@ -351,6 +407,11 @@ void Source::GenerateFrame() {
         if (state.current_buffer.empty() && !DequeueBuffer()) {
             break;
         }
+
+        // AudioInterp consumes samples from current_buffer and already preserves
+        // its own fractional phase/history. Use what it actually consumed instead
+        // of reconstructing the source position with a truncated float product.
+        const std::size_t input_size_before = state.current_buffer.size();
 
         switch (state.interpolation_mode) {
         case InterpolationMode::None:
@@ -370,10 +431,11 @@ void Source::GenerateFrame() {
             UNIMPLEMENTED();
             break;
         }
+
+        const std::size_t input_size_after = state.current_buffer.size();
+        ASSERT(input_size_after <= input_size_before);
+        state.current_sample_number += static_cast<u32>(input_size_before - input_size_after);
     }
-    // TODO(jroweboy): Keep track of frame_position independently so that it doesn't lose precision
-    // over time
-    state.current_sample_number += static_cast<u32>(frame_position * state.rate_multiplier);
 
     state.filters.ProcessFrame(current_frame);
 }
@@ -425,6 +487,10 @@ bool Source::DequeueBuffer() {
     // the first playthrough starts at play_position, loops start at the beginning of the buffer
     state.current_sample_number = (!buf.has_played) ? buf.play_position : 0;
     state.current_buffer_physical_address = buf.physical_address;
+    state.current_buffer_length = buf.length;
+    state.current_buffer_mono_or_stereo = buf.mono_or_stereo;
+    state.current_buffer_format = buf.format;
+    state.current_buffer_is_looping = buf.is_looping;
     state.current_buffer_id = buf.buffer_id;
     state.last_buffer_id = 0;
     state.buffer_update = buf.from_queue && !buf.has_played;

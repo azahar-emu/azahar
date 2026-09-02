@@ -14,6 +14,41 @@
     <string name="gpu_driver_manager">GPUドライバーマネージャー</string>
     <string name="install_gpu_driver">GPUドライバーをインストール</string>
     <string name="driver_already_installed">ドライバーはもうインストールしています</string>
+    <string name="install_cia_title">CIAをインストール</string>
+
+    <!-- GPU driver installation -->
+    <string name="select_gpu_driver">GPUドライバーを選択</string>
+    <string name="select_gpu_driver_install">インストール</string>
+    <string name="select_gpu_driver_default">デフォルト</string>
+    <string name="select_gpu_driver_install_success">%sをインストールしました</string>
+    <string name="installing_driver">ドライバーをインストール中…</string>
+
+    <string name="contributors">貢献者</string>
+    <string name="licenses">ライセンス</string>
+    <!-- Setup strings -->
+    <string name="welcome">ようこそ！</string>
+    <string name="warning_help">ヘルプ</string>
+    <string name="warning_skip">スキップ</string>
+    <string name="warning_cancel">キャンセル</string>
+    <string name="select_citra_user_folder">ユーザーフォルダーを選択</string>
+    <string name="set_up_theme_settings">テーマ設定</string>
+    <string name="controller_circlepad">スライドパッド</string>
+    <string name="controller_c">Cスティック</string>
+    <string name="controller_dpad">十字ボタン</string>
+    <string name="controller_dpad_axis">十字ボタン（軸）</string>
+    <string name="controller_dpad_axis_description">コントローラーによっては軸操作に割り当てられない場合もあります。その場合、十字ボタン（ボタン）を使ってください。</string>
+    <string name="controller_dpad_button">十字ボタン（ボタン）</string>
+    <string name="controller_dpad_button_description">十字ボタン（軸）にうまく割り当てられない場合のみ使ってください。</string>
+    <string name="controller_axis_vertical">縦軸</string>
+    <string name="controller_axis_horizontal">横軸</string>
+    <string name="direction_up">上</string>
+    <string name="direction_down">下</string>
+    <string name="direction_left">左</string>
+    <string name="direction_right">右</string>
+    <string name="button_home">ホームボタン</string>
+    <string name="button_swap">画面切り替え</string>
+    <string name="button_turbo">ボタン連射</string>
+    <string name="button_combo">ボタンコンボ</string>
     <!-- System settings strings -->
     <string name="emulation_settings">エミュレーション設定</string>
     <string name="enable_required_online_lle_modules">オンラインに必要なLLEモジュールを有効にする（インストール済みの場合）</string>
@@ -23,11 +58,34 @@
     <string name="regenerate_mac_address">MACアドレスを再生成</string>
     <string name="regenerate_mac_address_description">これを行うと、今のMACアドレスを新しいもので置き換えます。セットアップツールで実機からMACアドレスを吸い出した場合、これをするのは推奨しません。続行しますか？</string>
     <string name="delay_render_thread_description">GPUにデータを送信する間、ゲームの描写スレッドを遅延します。動的フレームレートである（ほんの一部の）アプリケーションでのパフォーマンスが向上します。</string>
+    <!-- Audio settings strings -->
+    <string name="audio_volume">音量</string>
     <string name="instant_debug_log_description">デバッグログを即座にファイルに書き込みます。Azaharがクラッシュしてログが途切れるときに有効にしてください。</string>
+    <!-- Layout settings strings -->
+    <string name="layout_screen_orientation">画面の向き</string>
+    <string name="layout_screen_orientation_auto_sensor">自動回転</string>
+    <string name="layout_screen_orientation_landscape">横画面</string>
+    <string name="layout_screen_orientation_landscape_reverse">横画面（逆）</string>
+    <string name="layout_screen_orientation_portrait">縦画面</string>
+    <string name="layout_screen_orientation_portrait_reverse">縦画面（逆）</string>
+    <string name="saving">セーブ中…</string>
+    <string name="loading">ロード中…</string>
+    <string name="next">進む</string>
+    <string name="back">戻る</string>
+    <string name="learn_more">詳細</string>
+    <string name="close">閉じる</string>
+    <string name="reset_to_default">初期化する</string>
+    <string name="option_default">デフォルト</string>
+    <string name="none">なし</string>
+    <string name="auto">自動</string>
+    <string name="off">オフ</string>
+    <string name="install">インストール</string>
+    <string name="delete">削除</string>
+    <string name="emulation_aspect_ratio">アスペクト比</string>
     <string name="miscellaneous">その他</string>
     <!-- Countries -->
     <string name="japan">日本</string>
-    <string name="anguilla">アンゴラ</string>
+    <string name="anguilla">アンギラ</string>
     <string name="antigua_and_barbuda">アンティグア・バーブーダ</string>
     <string name="argentina">アルゼンチン</string>
     <string name="aruba">アルバ</string>
@@ -73,7 +131,7 @@
     <string name="us_virgin_islands">米領ヴァージン諸島</string>
     <string name="venezuela">ベネズエラ</string>
     <string name="albania">アルバニア</string>
-    <string name="australia">Australia</string>
+    <string name="australia">オーストラリア</string>
     <string name="austria">オーストリア</string>
     <string name="belgium">ベルギー</string>
     <string name="bosnia_and_herzegovnia">ボスニア・ヘルツェゴビナ</string>

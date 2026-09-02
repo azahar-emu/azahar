@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -99,6 +99,8 @@ void EmuThread::run() {
         emit HideLoadingScreen();
         system.frame_limiter.WaitOnce();
     }
+
+    system.RegisterCoreLoopThreadId();
 
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the

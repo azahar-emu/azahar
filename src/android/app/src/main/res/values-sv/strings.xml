@@ -566,7 +566,6 @@
     <string name="unsupported_encrypted">Krypterad applikation som inte stöds</string>
     <string name="invalid_system_mode">Ogiltigt systemläge</string>
     <string name="invalid_system_mode_message">Nya 3DS-exklusiva applikationer kan inte läsas in utan att aktivera Ny 3DS-läget.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Förbereder shaders</string>
     <string name="building_shaders">Bygger %s</string>

@@ -2,7 +2,7 @@
 
 # TODO: Why doesn't the CI environment use the PATH set in the Dockerimage?
 #       It works fine when using the image locally.
-export PATH="/mxe/usr/bin:${PATH}"
+export PATH="/opt/mxe/usr/bin:${PATH}"
 
 mkdir build && cd build
 
@@ -14,9 +14,11 @@ x86_64-w64-mingw32.shared-cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER_AR=x86_64-w64-mingw32.shared-ar \
+    -DCMAKE_CXX_COMPILER_RANLIB=x86_64-w64-mingw32.shared-ranlib \
     -DENABLE_DISCORD_RPC=ON \
-    -DUSE_SYSTEM_BOOST=ON \
-    -DUSE_SYSTEM_CRYPTOPP=ON \
 	"${EXTRA_CMAKE_FLAGS[@]}"
 x86_64-w64-mingw32.shared-cmake --build . -- -j$(nproc)
 x86_64-w64-mingw32.shared-strip -s bin/Release/*.exe

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -303,8 +303,8 @@ VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
     };
 }
 
-u32 TextureRuntime::RemoveThreshold() {
-    return num_swapchain_images;
+u64 TextureRuntime::GetResourceTick() {
+    return scheduler.GetMasterSemaphore()->KnownGpuTick();
 }
 
 void TextureRuntime::Finish() {
@@ -1531,6 +1531,14 @@ Sampler::Sampler(TextureRuntime& runtime, const VideoCore::SamplerParams& params
     const float lod_min = static_cast<float>(params.lod_min);
     const float lod_max = static_cast<float>(params.lod_max);
 
+    // Do not apply anisotropic filtering if nearest filtering is used at all, as drivers
+    // are only recommended (not enforced) to follow the mag/min filter in such cases.
+    // Adreno drivers are an example of this, as they force linear filtering when using
+    // anisotropic filtering.
+    const bool use_anisotropy = instance.IsAnisotropicFilteringSupported() &&
+                                mag_filter == vk::Filter::eLinear &&
+                                min_filter == vk::Filter::eLinear;
+
     const vk::SamplerCreateInfo sampler_info = {
         .pNext = use_border_color ? &border_color_info : nullptr,
         .magFilter = mag_filter,
@@ -1539,8 +1547,8 @@ Sampler::Sampler(TextureRuntime& runtime, const VideoCore::SamplerParams& params
         .addressModeU = wrap_u,
         .addressModeV = wrap_v,
         .mipLodBias = 0,
-        .anisotropyEnable = instance.IsAnisotropicFilteringSupported(),
-        .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
+        .anisotropyEnable = use_anisotropy,
+        .maxAnisotropy = use_anisotropy ? properties.limits.maxSamplerAnisotropy : 1.0f,
         .compareEnable = false,
         .compareOp = vk::CompareOp::eAlways,
         .minLod = lod_min,

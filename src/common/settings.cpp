@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -171,8 +171,7 @@ void LogSettings() {
     log_setting("Debugging_InstantDebugLog", values.instant_debug_log.GetValue());
     log_setting("Debugging_ToggleUniqueDataConsoleType",
                 values.toggle_unique_data_console_type.GetValue());
-    log_setting("Debugging_BreakOnUnmappedMemoryAccess",
-                values.break_on_unmapped_memory_access.GetValue());
+    log_setting("Debugging_EnableExceptionHandler", values.enable_exception_handler.GetValue());
 }
 
 bool IsConfiguringGlobal() {

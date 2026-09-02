@@ -436,22 +436,37 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_generic_title">Error cargando la aplicación</string>
-    <string name="loader_error_invalid_format">Formato de aplicación inválida</string>
+    <string name="loader_error_invalid_format">Formato de aplicación inválido</string>
     <string name="loader_error_invalid_format_description"><![CDATA[El formato de la aplicación no está soportado.<br>Por favor asegúrate de usar uno de los formatos compatibles:<ul><li>Imagenes de cartucho:<b>.cci/.zcci/.3ds</b></li><li>Archivos instalables:<b>.cia/.zcia</b></li><li>Títulos Homebrew:<b>.3dsx/.z3dsx</b></li><li>Contenedores NCCH:<b>.cxi/.zcxi/.app</b></li><li>Archivos ELF:<b>.elf/.axf</b></li></ul>]]></string>
     <string name="loader_error_invalid_system_mode">Modo de sistema no válido</string>
     <string name="loader_error_invalid_system_mode_description">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
     <string name="loader_error_applying_patches">Error al aplicar parches</string>
     <string name="loader_error_applying_patches_description">Un error genérico ha ocurrido al intentar aplicar un parche a la aplicación. Por favor comprueba el log para más detalles.</string>
     <string name="loader_error_patch_wrong_application">No se pudo aplicar un parche porque está diseñado para otra aplicación. Por favor comprueba que estés usando parches para la aplicación correcta, incluyendo región y versión.</string>
-    <string name="loader_error_encrypted">Tu ROM está encriptada</string>
-    <string name="loader_error_encrypted_description"><![CDATA[Azahar no admite aplicaciones encriptadas. Lee nuestra <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">entrada del blog</a> para obtener más información.]]></string>
+    <string name="loader_error_encrypted">Tu ROM está cifrada</string>
+    <string name="loader_error_encrypted_description"><![CDATA[Azahar no admite aplicaciones cifradas. Lee nuestra <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">entrada del blog</a> para obtener más información.]]></string>
     <string name="loader_error_file_not_found">El archivo ROM no existe</string>
     <string name="no_game_present">¡No hay ningún juego iniciable!</string>
 
+    <string name="loader_error_generic">Se produjo un error al cargar el ROM: \"%s (%d)\"</string>
     <string name="core_error_success">Éxito</string>
+    <string name="core_error_not_initialized">No inicializado</string>
+    <string name="core_error_get_loader">El cargador no se ha encontrado, tipo de archivo incompatible</string>
+    <string name="core_error_system_mode">Error al analizar el archivo</string>
     <string name="core_error_loader">Fallo de cargador genérico </string>
+    <string name="core_error_loader_encrypted">Archivo cifrado</string>
+    <string name="core_error_loader_invalid_format">Archivo corrupto</string>
+    <string name="core_error_loader_gba_title">Archivo es un título de GBA</string>
     <string name="core_error_loader_error_patches">Error al aplicar parches</string>
+    <string name="core_error_loader_patches_invalid_title">Los parches son para otra aplicación</string>
     <string name="core_error_system_files">Faltan Archivos de Sistema</string>
+    <string name="core_error_savestate">Guardado de estado falló</string>
+    <string name="core_error_artic_disconnected">Artic Base se desconectó</string>
+    <string name="core_error_n3ds_application">El archivo es una aplicación de New 3DS</string>
+    <string name="core_error_core_exception_raised">Se produjo una excepción en el núcleo</string>
+    <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
+    <string name="core_error_unknown">Error desconocido</string>
+
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Pulsa Atrás para acceder al menú.</string>
     <string name="emulation_save_state">Guardar Estado</string>
@@ -480,8 +495,11 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_aspect_ratio">Relación de Aspecto</string>
     <string name="emulation_switch_screen_layout">Estilo de Pantalla Apaisada</string>
     <string name="emulation_switch_portrait_layout">Estilo de Pantalla de Perfil</string>
-    <string name="emulation_secondary_display_enable">Activar el pantalla secundaria</string>
+    <string name="emulation_secondary_display_enable">Activar la pantalla secundaria</string>
+    <string name="emulation_secondary_display_enable_description">Si está desactivado, Azahar permitirá que Android gestione las pantallas conectadas. Si está activado y hay varias pantallas conectadas, puede seleccionar cuál utilizará Azahar en el menú rápido.</string>
+    <string name="emulation_switch_secondary_layout">Estilo de Pantalla Secundaria</string>
     <string name="emulation_secondary_display_management">Pantalla Secundaria</string>
+    <string name="emulation_select_secondary_display">Elige Pantalla</string>
     <string name="emulation_switch_secondary_layout_description">El estilo de la pantalla secundaria conectada, con cable o inalámbrica (Chromecast, Miracast)</string>
     <string name="emulation_screen_layout_largescreen">Pantalla amplia</string>
     <string name="emulation_screen_layout_portrait">Retrato</string>
@@ -490,6 +508,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="emulation_screen_layout_hybrid">Pantallas híbridas</string>
     <string name="emulation_screen_layout_original">Original</string>
     <string name="emulation_portrait_layout_top_full">Por defecto</string>
+    <string name="emulation_secondary_display_opposite">Pantalla Opuesta</string>
     <string name="emulation_screen_layout_custom">Estilo personalizado</string>
     <string name="bg_color">Color de fondo</string>
     <string name="bg_color_description">El color que aparece detrás de las pantallas durante la emulación, representado como un valor RGB.</string>
@@ -592,10 +611,9 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="save_load_error">Error de guardado/carga</string>
     <string name="fatal_error">Error Fatal</string>
     <string name="fatal_error_message">Ha ocurrido un error fatal. Mira el registro para más detalles.\nSeguir con la emulación podría resultar en diversos cuelgues y bugs.</string>
-    <string name="unsupported_encrypted">Aplicación encriptada no soportada</string>
+    <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
-
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>
@@ -684,7 +702,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="cia_install_success">\"%s\" se ha instalado con éxito</string>
     <string name="cia_install_error_aborted">La instalación de \"%s\" ha sido abortada.\n Por favor, mira el log para más información.</string>
     <string name="cia_install_error_invalid">\"%s\" no es un CIA válido.</string>
-    <string name="cia_install_error_encrypted">\"%s\" debe ser desencriptado antes de ser usado en Azahar. Se necesita una 3DS real.</string>
+    <string name="cia_install_error_encrypted">\"%s\" debe ser descifrado antes de ser usado en Azahar. Se necesita una 3DS real.</string>
     <string name="cia_install_error_unknown">Ha ocurrido un error desconocido mientras se instalaba \"%s\".\n Por favor, mira el log para más detalles.</string>
 
     <!-- Memory Sizes -->
@@ -966,54 +984,94 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
 
   <!-- Multiplayer -->
     <string name="multiplayer">Multijugador</string>
+    <string name="multiplayer_description">Organiza tu propia sala o únete a una ya existente para jugar con otras personas.</string>
     <string name="multiplayer_room_title">Sala: %1$s</string>
     <string name="multiplayer_console_id">ID de Consola:  %1$s</string>
     <string name="multiplayer_create_room">Crear</string>
-    <string name="multiplayer_public_room">Buscar salas públicas</string>
+    <string name="multiplayer_join_room">Unirse</string>
+    <string name="multiplayer_public_room">Buscar Salas Públicas</string>
     <string name="multiplayer_username">Nombre de usuario</string>
     <string name="multiplayer_ip_address">Dirección IP</string>
     <string name="multiplayer_ip_port">Puerto</string>
+    <string name="multiplayer_create_room_success">¡Sala creada correctamente!</string>
+    <string name="multiplayer_join_room_success">¡Unido a la sala correctamente!</string>
     <string name="multiplayer_create_room_failed">¡Fallo al crear un sala!</string>
+    <string name="multiplayer_join_room_failed">Falló la entrada a la sala</string>
+    <string name="multiplayer_input_invalid">Dirección inválida o el nombre es demasiado corto</string>
     <string name="multiplayer_port_invalid">¡Puerto no válido!</string>
+    <string name="multiplayer_exit_room">Salir de la sala</string>
+    <string name="multiplayer_network_error">Error de red</string>
+    <string name="multiplayer_lost_connection">Conexión perdida</string>
+    <string name="multiplayer_name_collision">Colisión de nombre</string>
+    <string name="multiplayer_mac_collision">Colisión de MAC</string>
+    <string name="multiplayer_console_id_collision">Colisión de ID de consola</string>
+    <string name="multiplayer_wrong_version">Versión incorrecta</string>
+    <string name="multiplayer_wrong_password">Contraseña incorrecta</string>
+    <string name="multiplayer_could_not_connect">No se pudo conectar</string>
+    <string name="multiplayer_room_is_full">La sala está llena</string>
+    <string name="multiplayer_host_banned">El host te ha baneado</string>
     <string name="multiplayer_permission_denied">Permiso denegado</string>
-    <string name="multiplayer_create_room_error">Fallo de crear un sala</string>
-    <string name="multiplayer_unknown_error">Fallo desconocido</string>
-    <string name="multiplayer_member_join">%1$s unido</string>
+    <string name="multiplayer_no_such_user">No existe el usuario</string>
+    <string name="multiplayer_already_in_room">Ya unido en la sala</string>
+    <string name="multiplayer_create_room_error">Fallo al crear una sala</string>
+    <string name="multiplayer_host_kicked">El host te ha expulsado</string>
+    <string name="multiplayer_unknown_error">Error desconocido</string>
+    <string name="multiplayer_room_uninitialized">Sala no inicializada</string>
+    <string name="multiplayer_room_idle">Sala en espera</string>
+    <string name="multiplayer_room_joining">Entrando en la sala</string>
+    <string name="multiplayer_room_joined">Unido a la sala</string>
+    <string name="multiplayer_room_moderator">Moderador de la sala</string>
+    <string name="multiplayer_member_join">%1$s se ha unido</string>
     <string name="multiplayer_member_leave">%1$s se ha ido</string>
     <string name="multiplayer_member_kicked">%1$s expulsado</string>
     <string name="multiplayer_member_banned">%1$s baneado</string>
+    <string name="multiplayer_address_unbanned">Dirección desbaneada</string>
+    <string name="multiplayer_kick_member">Echar</string>
     <string name="multiplayer_chat_input_hint">Enviar mensajes……</string>
     <string name="multiplayer_password">Contraseña</string>
+    <string name="original_button_text">Entrar</string>
+    <string name="disabled_button_text">Entrando...</string>
     <string name="multiplayer_room_name">Nombre de Sala</string>
     <string name="multiplayer_room_name_invalid">El nombre de la sala debe tener entre 3 y 20 caracteres</string>
-    <string name="multiplayer_max_players">Máxima Capacidad (16)</string>
-    <string name="multiplayer_max_players_value">Máxima Capacidad: %d</string>
-    <string name="multiplayer_more_options">Mas Opciones</string>
-    <string name="multiplayer_ip_copied">Dirección IP copiado al portapapeles</string>
+    <string name="multiplayer_max_players">Jugadores Máximos (16)</string>
+    <string name="multiplayer_max_players_value">Jugadores Máximos: %d</string>
+    <string name="multiplayer_chat">Chat</string>
+    <string name="multiplayer_more_options">Más Opciones</string>
+    <string name="multiplayer_ip_copied">Dirección IP copiada al portapapeles</string>
     <string name="multiplayer_server_address">Dirección del servidor</string>
+    <string name="chat">Chat</string>
     <string name="type_message">Escribe un mensaje……</string>
     <string name="send">Enviar</string>
     <string name="send_message">Enviar Mensaje</string>
     <string name="multiplayer_moderation">Moderación</string>
     <string name="multiplayer_moderation_title">Lista de Baneos</string>
-    <string name="multiplayer_unban_title">Desbanear usuario</string>
+    <string name="multiplayer_no_bans">No hay usuarios baneados</string>
+    <string name="multiplayer_unban_title">Desbanear Usuario</string>
     <string name="multiplayer_unban">Desbanear</string>
-    <string name="multiplayer_unban_message">¿Estás seguro de querer desbanear %1$s?</string>
-    <string name="multiplayer_ban">Banear usuario</string>
-    <string name="multiplayer_room_browser">Salas públicas</string>
-    <string name="multiplayer_password_required">Contraseña Requerido</string>
+    <string name="multiplayer_unban_message">¿Estás seguro de querer desbanear a %1$s?</string>
+    <string name="multiplayer_ban">Banear Usuario</string>
+    <string name="multiplayer_room_browser">Salas Públicas</string>
+    <string name="multiplayer_no_rooms_found">No se han encontrado salas públicas</string>
+    <string name="multiplayer_password_required">Contraseña Requerida</string>
     <string name="multiplayer_player_count">: %1$d/%2$d</string>
     <string name="multiplayer_game">Juego</string>
+    <string name="multiplayer_no_game_info">Cualquier juego</string>
+    <string name="multiplayer_password_protected">Sala protegida por contraseña</string>
     <string name="multiplayer_hide_full_rooms">Ocultar Salas Llenas</string>
     <string name="multiplayer_hide_empty_rooms">Ocultar Salas Vacías</string>
-    <string name="multiplayer_game_name">Preferida Juegos</string>
-    <string name="prefered_game_name">Preferida Juego</string>
+    <string name="multiplayer_tap_refresh_to_check_again">Pulsa refrescar para comprobar de nuevo</string>
+    <string name="multiplayer_search_public_lobbies">Buscar Salas Públicas...</string>
+    <string name="multiplayer_game_name">Juegos Preferidos</string>
+    <string name="prefered_game_name">Juego Preferido</string>
+    <string name="multiplayer_no_game">No se han encontrado juegos</string>
     <string name="no_preference">Sin Preferencia</string>
 
-    <string name="update_available">Actualización disponible</string>
+    <string name="update_available">Actualización Disponible</string>
     <string name="update_available_description">Hay una nueva versión de Azahar disponible (versión %1$s).\n¿Quieres descargarla?</string>
-    <string name="check_for_updates">Buscar actualizaciones</string>
-    <string name="update_check_channel">Canal de actualización</string>
+    <string name="check_for_updates">Buscar Actualizaciones</string>
+    <string name="check_for_updates_description">Mostrar una notificación cuando haya una actualización disponible para Azahar.</string>
+    <string name="update_check_channel">Canal de Actualización</string>
+    <string name="update_check_channel_description">Canal a usar para comprobar actualizaciones.</string>
     <string name="update_check_channel_stable">Estable</string>
     <string name="update_check_channel_prerelease">Prelanzamiento</string>
 

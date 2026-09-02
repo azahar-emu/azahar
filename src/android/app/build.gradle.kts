@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -65,7 +65,7 @@ android {
         // the Play Store listing, which was originally set up for Lime3DS, to still be used.
         applicationId = "org.azahar_emu.azahar"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 37
         versionCode = autoVersion
         versionName = getGitVersion()
 

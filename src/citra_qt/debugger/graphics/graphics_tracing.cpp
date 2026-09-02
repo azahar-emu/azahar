@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -113,8 +113,9 @@ void GraphicsTracingWidget::StopRecording() {
     if (!context)
         return;
 
-    QString filename = QFileDialog::getSaveFileName(
-        this, tr("Save CiTrace"), QStringLiteral("citrace.ctf"), tr("CiTrace File (*.ctf)"));
+    QString filename =
+        QFileDialog::getSaveFileName(this, tr("Save CiTrace"), QStringLiteral("citrace.ctf"),
+                                     tr("CiTrace File") + QStringLiteral(" (*.ctf)"));
 
     if (filename.isEmpty()) {
         // If the user canceled the dialog, keep recording

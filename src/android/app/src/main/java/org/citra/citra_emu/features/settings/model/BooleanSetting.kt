@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -168,7 +168,8 @@ enum class BooleanSetting(
             ASYNC_FS_OPERATIONS,
             ANDROID_HIDE_IMAGES,
             PERF_OVERLAY_ENABLE, // Works in overlay options, but not from the settings menu
-            APPLY_REGION_FREE_PATCH
+            APPLY_REGION_FREE_PATCH,
+            EXPAND_TO_CUTOUT_AREA
         )
 
         fun from(key: String): BooleanSetting? =
