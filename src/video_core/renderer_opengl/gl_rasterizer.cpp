@@ -584,6 +584,8 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     // Bind the framebuffer surfaces
     if (shadow_rendering) {
         state.image_shadow_buffer = framebuffer->Attachment(SurfaceType::Color);
+    } else {
+        state.image_shadow_buffer = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID).Handle();
     }
     state.draw.draw_framebuffer = framebuffer->Handle();
 
