@@ -696,12 +696,13 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
 
 void RasterizerVulkan::SyncUtilityTextures(const Framebuffer* framebuffer) {
     const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
-    if (!shadow_rendering) {
-        return;
-    }
-
     const auto utility_set = pipeline_cache.Acquire(DescriptorHeapType::Utility);
-    update_queue.AddStorageImage(utility_set, 0, framebuffer->ImageView(SurfaceType::Color));
+    if (shadow_rendering) {
+        update_queue.AddStorageImage(utility_set, 0, framebuffer->ImageView(SurfaceType::Color));
+    } else {
+        Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
+        update_queue.AddStorageImage(utility_set, 0, null_surface.StorageView());
+    }
 }
 
 void RasterizerVulkan::BindShadowCube(const Pica::TexturingRegs::FullTextureConfig& texture,
