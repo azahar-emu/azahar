@@ -175,4 +175,13 @@ if (BACKTRACE_LIBRARY AND ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND CMAKE_CXX_CO
     target_compile_definitions(citra_common PRIVATE CITRA_LINUX_GCC_BACKTRACE)
 endif()
 
-target_link_libraries(citra_common PUBLIC xxHash::xxhash)
+if (SSE42_COMPILE_OPTION)
+    target_compile_definitions(citra_common PRIVATE CITRA_HAS_SSE42)
+    target_compile_options(citra_common PRIVATE ${SSE42_COMPILE_OPTION})
+endif()
+
+if (USE_SYSTEM_XXHASH)
+    target_link_libraries(citra_common PUBLIC xxhash)
+else()
+    target_link_libraries(citra_common PUBLIC xxHash::xxhash)
+endif()
