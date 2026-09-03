@@ -695,10 +695,20 @@ void RasterizerVulkan::SyncTextureUnits(const Framebuffer* framebuffer) {
 }
 
 void RasterizerVulkan::SyncUtilityTextures(const Framebuffer* framebuffer) {
-    const bool shadow_rendering = regs.framebuffer.IsShadowRendering();
+    const bool shadow_writing = regs.framebuffer.IsShadowRendering();
+    const bool shadow_reading = regs.lighting.config0.enable_shadow;
     const auto utility_set = pipeline_cache.Acquire(DescriptorHeapType::Utility);
-    if (shadow_rendering) {
+
+    // Reading and writing are mutually exclusive
+    assert(!(shadow_writing && shadow_reading));
+
+    if (shadow_writing) {
         update_queue.AddStorageImage(utility_set, 0, framebuffer->ImageView(SurfaceType::Color));
+    } else if (shadow_reading) {
+        const u32 shadow_texture_unit = regs.lighting.config0.shadow_selector.Value();
+        const auto shadow_texture = regs.texturing.GetTextures()[shadow_texture_unit];
+        Surface& shadow_surface = res_cache.GetTextureSurface(shadow_texture);
+        update_queue.AddStorageImage(utility_set, 0, shadow_surface.StorageView());
     } else {
         Surface& null_surface = res_cache.GetSurface(VideoCore::NULL_SURFACE_ID);
         update_queue.AddStorageImage(utility_set, 0, null_surface.StorageView());

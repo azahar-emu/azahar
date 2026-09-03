@@ -775,6 +775,11 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
     if (is_color) {
         usage |= vk::ImageUsageFlagBits::eColorAttachment;
     }
+    if (traits.native == vk::Format::eR8G8B8A8Unorm && traits.storage_support) {
+        // Add Storage-usage support when available in case it is found out later that this is a
+        // shadow-source texture that will get used in the utility descriptor-set
+        usage |= vk::ImageUsageFlagBits::eStorage;
+    }
 
     const bool need_format_list = is_mutable && instance.IsImageFormatListSupported();
     handles[Type::Base].Create(width, height, levels, texture_type, format, usage, flags,
