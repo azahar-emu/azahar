@@ -672,6 +672,7 @@
     <string name="create_shortcut">Create Shortcut</string>
     <string name="shortcut_name_empty">Shortcut name cannot be empty</string>
     <string name="shortcut_image_stretch_toggle">Stretch to fit image</string>
+    <string name="game_context_region">Region:</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">File:</string>
     <string name="game_context_type">Type:</string>
@@ -767,7 +768,7 @@
     <string name="use_black_backgrounds">Black Backgrounds</string>
     <string name="use_black_backgrounds_description">When using the dark theme, apply black backgrounds.</string>
 
-    <!-- Region names -->
+    <!-- Region codes -->
     <string name="system_region_jpn" translatable="false">JPN</string>
     <string name="system_region_usa" translatable="false">USA</string>
     <string name="system_region_eur" translatable="false">EUR</string>
@@ -971,6 +972,14 @@
     <string name="san_marino">San Marino</string>
     <string name="vatican_city">Vatican City</string>
     <string name="bermuda">Bermuda</string>
+
+    <!-- Regions (Japan, Australia, China and Taiwan are above) -->
+    <string name="north_america">North America</string>
+    <string name="europe">Europe</string>
+    <string name="korea">Korea</string>
+    <string name="region_free">Region free</string>
+    <string name="invalid_region">Invalid region</string>
+    <string name="region_get_error">ERROR PLEASE REPORT</string>
 
     <!-- Months -->
     <string name="january">January</string>
