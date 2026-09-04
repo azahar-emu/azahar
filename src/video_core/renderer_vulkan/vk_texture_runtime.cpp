@@ -167,6 +167,9 @@ void Handle::Create(u32 width, u32 height, u32 levels, TextureType type, vk::For
                     vk::ImageUsageFlags usage, vk::ImageCreateFlags flags,
                     vk::ImageAspectFlags aspect, bool need_format_list,
                     std::string_view debug_name) {
+
+    Destroy();
+
     const bool is_cube_map = type == TextureType::CubeMap && instance.IsLayeredRenderingSupported();
     if (!is_cube_map) {
         flags &= ~vk::ImageCreateFlagBits::eCubeCompatible;
