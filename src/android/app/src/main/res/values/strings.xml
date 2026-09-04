@@ -768,13 +768,13 @@
     <string name="use_black_backgrounds_description">When using the dark theme, apply black backgrounds.</string>
 
     <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
+    <string name="system_region_jpn" translatable="false">JPN</string>
+    <string name="system_region_usa" translatable="false">USA</string>
+    <string name="system_region_eur" translatable="false">EUR</string>
+    <string name="system_region_aus" translatable="false">AUS</string>
+    <string name="system_region_chn" translatable="false">CHN</string>
+    <string name="system_region_kor" translatable="false">KOR</string>
+    <string name="system_region_twn" translatable="false">TWN</string>
 
     <!-- Language names -->
     <string name="language_japanese">Japanese (日本語)</string>
