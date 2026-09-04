@@ -1386,6 +1386,8 @@ SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params,
     }();
     Surface& surface = slot_surfaces[surface_id];
     if (params.res_scale > surface.res_scale) {
+        // Texture is going to be upscaled, remove any previous framebuffer references
+        RemoveFramebuffers(surface_id);
         surface.ScaleUp(params.res_scale);
     }
     surface.MarkInvalid(surface.GetInterval());
