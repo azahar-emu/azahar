@@ -1366,15 +1366,20 @@ template <class T>
 SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params,
                                             const SurfaceFlagBits& initial_flags) {
     const SurfaceId surface_id = [&] {
+        const u64 resource_free_tick = runtime.GetResourceFreeTick();
+        // Try to find a matching texture in the deletion queue
         const auto it = std::find_if(sentenced.begin(), sentenced.end(), [&](const auto& pair) {
-            return slot_surfaces[pair.first] == params;
+            return (slot_surfaces[pair.first] == params) &&
+                   // Only recycle the texture if the texture runtime is completely done with it
+                   (resource_free_tick > pair.second);
         });
-        if (it == sentenced.end()) {
-            return slot_surfaces.insert(runtime, params, initial_flags);
+        // If a matching texture was found in the deletion queue, recycle it.
+        if (it != sentenced.end()) {
+            const SurfaceId surface_id = it->first;
+            sentenced.erase(it);
+            return surface_id;
         }
-        const SurfaceId surface_id = it->first;
-        sentenced.erase(it);
-        return surface_id;
+        return slot_surfaces.insert(runtime, params, initial_flags);
     }();
     Surface& surface = slot_surfaces[surface_id];
     if (params.res_scale > surface.res_scale) {
