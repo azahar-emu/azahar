@@ -339,15 +339,6 @@
     <string name="use_black_backgrounds">Чёрный фон</string>
     <string name="use_black_backgrounds_description">Применять чёрный фон для тёмной темы.</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">Япония</string>
-    <string name="system_region_usa">США</string>
-    <string name="system_region_eur">Европа</string>
-    <string name="system_region_aus">Австралия</string>
-    <string name="system_region_chn">Китай</string>
-    <string name="system_region_kor">Корея</string>
-    <string name="system_region_twn">Тайвань</string>
-
     <!-- Language names -->
     <string name="language_japanese">Японский (日本語)</string>
     <string name="language_english">Английский</string>

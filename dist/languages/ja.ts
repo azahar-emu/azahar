@@ -1059,42 +1059,42 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="107"/>
         <source>11x Native (4400x2640)</source>
-        <translation type="unfinished"></translation>
+        <translation>11x ネーティブ (4400x2640)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="112"/>
         <source>12x Native (4800x2880)</source>
-        <translation type="unfinished"></translation>
+        <translation>12x ネーティブ (4800x2880)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="117"/>
         <source>13x Native (5200x3120)</source>
-        <translation type="unfinished"></translation>
+        <translation>13x ネーティブ (5200x3120)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="122"/>
         <source>14x Native (5600x3360)</source>
-        <translation type="unfinished"></translation>
+        <translation>14x ネーティブ (5600x3360)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="127"/>
         <source>15x Native (6000x3600)</source>
-        <translation type="unfinished"></translation>
+        <translation>15x ネーティブ (6000x3600)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="132"/>
         <source>16x Native (6400x3840)</source>
-        <translation type="unfinished"></translation>
+        <translation>16x ネーティブ (6400x3840)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="137"/>
         <source>17x Native (6800x4080)</source>
-        <translation type="unfinished"></translation>
+        <translation>17x ネーティブ (6800x4080)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="142"/>
         <source>18x Native (7200x4320)</source>
-        <translation type="unfinished"></translation>
+        <translation>18x ネーティブ (7200x4320)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="153"/>
@@ -2215,12 +2215,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="105"/>
         <source>Single Screen</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">単一画面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="115"/>
         <source>Large Screen</source>
-        <translation type="unfinished">大画面</translation>
+        <translation>大画面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="125"/>
@@ -4057,7 +4057,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="14"/>
         <source>Dump Video</source>
-        <translation type="unfinished">ビデオをダンプ</translation>
+        <translation>ビデオをダンプ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="20"/>
@@ -4084,7 +4084,7 @@ Drag points to change position, or double-click table cells to edit values.</sou
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="73"/>
         <source>Video</source>
-        <translation type="unfinished"></translation>
+        <translation>ビデオ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/dumping/dumping_dialog.ui" line="79"/>
@@ -4627,7 +4627,7 @@ Reinstall the files anyway?</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2962"/>
         <source>Savestates</source>
-        <translation>ステートセーブ</translation>
+        <translation>セーブステート</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2963"/>
@@ -4908,7 +4908,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3900"/>
         <source>Stop Emulation</source>
-        <translation type="unfinished"></translation>
+        <translation>エミュレーションを停止</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3934"/>
@@ -4938,7 +4938,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3959"/>
         <source>Savestate version mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>セーブステート・バージョンのミスマッチ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3960"/>
@@ -4958,7 +4958,7 @@ To view a guide on how to install FFmpeg, press Help.</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3974"/>
         <source>Fatal Error encountered</source>
-        <translation>致命的なエラーが発生しました</translation>
+        <translation>致命的エラーが発生しました</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3987"/>
@@ -6293,7 +6293,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="353"/>
         <source>About Azahar</source>
-        <translation type="unfinished">Azaharについて</translation>
+        <translation>Azaharについて</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="364"/>
@@ -6468,7 +6468,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="601"/>
         <source>Single Screen</source>
-        <translation>Single Screen</translation>
+        <translation type="unfinished">単一画面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="609"/>

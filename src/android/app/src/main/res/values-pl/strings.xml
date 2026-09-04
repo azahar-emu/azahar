@@ -704,15 +704,6 @@
     <string name="use_black_backgrounds">Czarne tło</string>
     <string name="use_black_backgrounds_description">W przypadku korzystania z ciemnego motywu należy stosować czarne tło.</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
-
     <!-- Language names -->
     <string name="language_japanese">Japoński (日本語)</string>
     <string name="language_english">Angielski (English)</string>

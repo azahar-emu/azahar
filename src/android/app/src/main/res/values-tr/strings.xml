@@ -606,15 +606,6 @@
     <string name="use_black_backgrounds">Siyah Arkaplanlar</string>
     <string name="use_black_backgrounds_description">Koyu temayı kullanırken siyah arka plan uygulayın.</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">ABD</string>
-    <string name="system_region_eur">AVR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
-
     <!-- Language names -->
     <string name="language_japanese">Japonca (日本語)</string>
     <string name="language_english">İngilizce</string>

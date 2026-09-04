@@ -744,15 +744,6 @@
     <string name="use_black_backgrounds">Fundos Pretos</string>
     <string name="use_black_backgrounds_description">Ao usar o tema escuro, aplique fundos pretos.</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
-
     <!-- Language names -->
     <string name="language_japanese">Japonês (日本語)</string>
     <string name="language_english">Inglês</string>

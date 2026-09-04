@@ -734,15 +734,6 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="use_black_backgrounds">Fondos Oscuros</string>
     <string name="use_black_backgrounds_description">Cuando uses el tema oscuro, se aplicarán fondos oscuros.</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
-
     <!-- Language names -->
     <string name="language_japanese">Japonés (日本語)</string>
     <string name="language_english">Inglés (English)</string>

@@ -624,15 +624,6 @@
     <string name="use_black_backgrounds">黑色背景</string>
     <string name="use_black_backgrounds_description">使用深色主题时，套用黑色背景。</string>
 
-    <!-- Region names -->
-    <string name="system_region_jpn">日本（JPN）</string>
-    <string name="system_region_usa">北美（USA）</string>
-    <string name="system_region_eur">欧洲（EUR）</string>
-    <string name="system_region_aus">澳大利亚（AUS）</string>
-    <string name="system_region_chn">中国大陆（CHN）</string>
-    <string name="system_region_kor">韩国（KOR）</string>
-    <string name="system_region_twn">港台（TWN）</string>
-
     <!-- Language names -->
     <string name="language_japanese">日语（日本語）</string>
     <string name="language_english">英语（English）</string>
