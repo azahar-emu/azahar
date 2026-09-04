@@ -1134,6 +1134,8 @@ void Surface::ScaleUp(u32 new_scale) {
                                  DebugName(true));
     current = Type::Scaled;
 
+    handles[Type::Copy].Destroy();
+
     runtime.renderpass_cache.EndRendering();
     scheduler.Record(
         [raw_images = std::array{Image()}, aspect = traits.aspect](vk::CommandBuffer cmdbuf) {
