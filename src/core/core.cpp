@@ -471,6 +471,7 @@ System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::st
     cheat_engine.LoadCheatFile(title_id);
     cheat_engine.Connect(process->process_id);
 
+    InitCurrentSlot(title_id, movie.GetCurrentMovieID());
     perf_stats = std::make_unique<PerfStats>(title_id);
 
     if (Settings::values.dump_textures) {

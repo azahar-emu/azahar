@@ -7,6 +7,7 @@ add_executable(tests
     core/hle/kernel/hle_ipc.cpp
     core/memory/memory.cpp
     core/memory/vm_manager.cpp
+    core/savestate_slot.cpp
     precompiled_headers.h
     audio_core/hle/hle.cpp
     audio_core/hle/source.cpp

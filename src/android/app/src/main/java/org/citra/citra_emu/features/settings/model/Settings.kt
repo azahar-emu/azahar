@@ -144,6 +144,10 @@ class Settings {
         const val HOTKEY_QUICKLOAD = "hotkey_quickpause"
         const val HOTKEY_TURBO_LIMIT = "hotkey_turbo_limit"
         const val HOTKEY_BUTTON_COMBO = "hotkey_button_combo"
+        const val HOTKEY_SAVE_CURRENT_SLOT = "hotkey_save_current_slot"
+        const val HOTKEY_LOAD_CURRENT_SLOT = "hotkey_load_current_slot"
+        const val HOTKEY_NEXT_SAVE_SLOT = "hotkey_next_save_slot"
+        const val HOTKEY_PREV_SAVE_SLOT = "hotkey_prev_save_slot"
 
         val buttonKeys = listOf(
             KEY_BUTTON_A,
@@ -211,6 +215,10 @@ class Settings {
             HOTKEY_PAUSE_OR_RESUME,
             HOTKEY_QUICKSAVE,
             HOTKEY_QUICKLOAD,
+            HOTKEY_SAVE_CURRENT_SLOT,
+            HOTKEY_LOAD_CURRENT_SLOT,
+            HOTKEY_NEXT_SAVE_SLOT,
+            HOTKEY_PREV_SAVE_SLOT,
             HOTKEY_TURBO_LIMIT,
             HOTKEY_BUTTON_COMBO
         )
@@ -222,6 +230,10 @@ class Settings {
             R.string.emulation_toggle_pause,
             R.string.emulation_quicksave,
             R.string.emulation_quickload,
+            R.string.emulation_save_current_slot,
+            R.string.emulation_load_current_slot,
+            R.string.emulation_next_save_slot,
+            R.string.emulation_prev_save_slot,
             R.string.turbo_limit_hotkey,
             R.string.button_combo
         )

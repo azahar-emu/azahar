@@ -201,6 +201,9 @@ private:
     void UpdateRecentFiles();
 
     void UpdateSaveStates();
+    void ShowSlotMessage(u32 slot);
+    void SaveToSlot(u32 slot);
+    void LoadFromSlot(u32 slot);
 
     /**
      * If the emulation is running,

@@ -1230,12 +1230,35 @@ jobjectArray Java_org_citra_citra_1emu_NativeLibrary_getSavestateInfo(
 
 void Java_org_citra_citra_1emu_NativeLibrary_saveState([[maybe_unused]] JNIEnv* env,
                                                        [[maybe_unused]] jobject obj, jint slot) {
+    if (slot != static_cast<jint>(Core::QuicksaveSlot)) {
+        Core::SetCurrentSlot(static_cast<u32>(slot));
+    }
     Core::System::GetInstance().SendSignal(Core::System::Signal::Save, slot);
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_loadState([[maybe_unused]] JNIEnv* env,
                                                        [[maybe_unused]] jobject obj, jint slot) {
+    if (slot != static_cast<jint>(Core::QuicksaveSlot)) {
+        Core::SetCurrentSlot(static_cast<u32>(slot));
+    }
     Core::System::GetInstance().SendSignal(Core::System::Signal::Load, slot);
+}
+
+jint Java_org_citra_citra_1emu_NativeLibrary_getCurrentSaveSlot([[maybe_unused]] JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj) {
+    return static_cast<jint>(Core::GetCurrentSlot());
+}
+
+void Java_org_citra_citra_1emu_NativeLibrary_setCurrentSaveSlot([[maybe_unused]] JNIEnv* env,
+                                                                [[maybe_unused]] jobject obj,
+                                                                jint slot) {
+    Core::SetCurrentSlot(static_cast<u32>(slot));
+}
+
+jint Java_org_citra_citra_1emu_NativeLibrary_advanceSaveSlot([[maybe_unused]] JNIEnv* env,
+                                                             [[maybe_unused]] jobject obj,
+                                                             jint delta) {
+    return static_cast<jint>(Core::AdvanceSlot(static_cast<int>(delta)));
 }
 
 void Java_org_citra_citra_1emu_NativeLibrary_logDeviceInfo([[maybe_unused]] JNIEnv* env,

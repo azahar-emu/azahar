@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <sstream>
 #include <cryptopp/hex.h>
@@ -143,6 +145,53 @@ SaveStateInfo GetSaveStateInfo(u64 program_id, u64 movie_id, u32 slot) {
         info.slot = slot;
     }
     return info;
+}
+
+namespace {
+std::atomic<u32> g_current_slot{FirstUserSlot};
+}
+
+u32 GetCurrentSlot() {
+    return g_current_slot.load(std::memory_order_relaxed);
+}
+
+void SetCurrentSlot(u32 slot) {
+    g_current_slot.store(std::clamp(slot, FirstUserSlot, LastUserSlot), std::memory_order_relaxed);
+}
+
+u32 AdvanceSlot(int delta) {
+    constexpr int range = static_cast<int>(LastUserSlot - FirstUserSlot + 1);
+    delta %= range;
+    u32 current = g_current_slot.load(std::memory_order_relaxed);
+    u32 slot;
+    do {
+        const int current_offset = static_cast<int>(current - FirstUserSlot);
+        int next = (current_offset + delta) % range;
+        if (next < 0) {
+            next += range;
+        }
+        slot = static_cast<u32>(next) + FirstUserSlot;
+    } while (!g_current_slot.compare_exchange_weak(current, slot, std::memory_order_relaxed));
+    return slot;
+}
+
+u32 PickInitialSlot(const std::vector<SaveStateInfo>& states) {
+    u32 best_slot = FirstUserSlot;
+    u64 best_time = 0;
+    for (const auto& state : states) {
+        if (state.slot < FirstUserSlot || state.slot > LastUserSlot) {
+            continue;
+        }
+        if (state.time > best_time) {
+            best_time = state.time;
+            best_slot = state.slot;
+        }
+    }
+    return best_slot;
+}
+
+void InitCurrentSlot(u64 program_id, u64 movie_id) {
+    SetCurrentSlot(PickInitialSlot(ListSaveStates(program_id, movie_id)));
 }
 
 void System::SaveState(u32 slot) const {
