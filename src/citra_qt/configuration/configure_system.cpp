@@ -235,6 +235,8 @@ ConfigureSystem::ConfigureSystem(Core::System& system_, QWidget* parent)
             &ConfigureSystem::UpdateInitTime);
     connect(ui->combo_init_ticks_type, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureSystem::UpdateInitTicks);
+    connect(ui->combo_battery_level_source, qOverload<int>(&QComboBox::currentIndexChanged), this,
+            &ConfigureSystem::UpdateBatteryLevel);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::RefreshConsoleID);
     connect(ui->button_regenerate_mac, &QPushButton::clicked, this, &ConfigureSystem::RefreshMAC);
@@ -337,6 +339,9 @@ void ConfigureSystem::SetConfiguration() {
         static_cast<u8>(Settings::values.init_ticks_type.GetValue()));
     ui->edit_init_ticks_value->setText(
         QString::number(Settings::values.init_ticks_override.GetValue()));
+    ui->combo_battery_level_source->setCurrentIndex(
+        static_cast<u32>(Settings::values.battery_level_source.GetValue()));
+    ui->battery_level->setCurrentIndex(static_cast<u32>(Settings::values.battery_level.GetValue()));
 
     ui->spinBox_steps_per_hour->setValue(Settings::values.steps_per_hour.GetValue());
 
@@ -480,6 +485,9 @@ void ConfigureSystem::ApplyConfiguration() {
             static_cast<Settings::InitTicks>(ui->combo_init_ticks_type->currentIndex());
         Settings::values.init_ticks_override =
             static_cast<s64>(ui->edit_init_ticks_value->text().toLongLong());
+        Settings::values.battery_level_source = static_cast<Settings::BatteryLevelSource>(
+            ui->combo_battery_level_source->currentIndex());
+        Settings::values.battery_level = static_cast<u8>(ui->battery_level->currentIndex());
 
         Settings::values.steps_per_hour = static_cast<u16>(ui->spinBox_steps_per_hour->value());
 
@@ -562,6 +570,15 @@ void ConfigureSystem::UpdateInitTicks(int init_ticks_type) {
 
     ui->label_init_ticks_value->setVisible(is_fixed && is_global);
     ui->edit_init_ticks_value->setVisible(is_fixed && is_global);
+}
+
+void ConfigureSystem::UpdateBatteryLevel(int battery_level) {
+    const bool is_global = Settings::IsConfiguringGlobal();
+    const bool is_fixed = static_cast<Settings::BatteryLevelSource>(battery_level) ==
+                          Settings::BatteryLevelSource::Fixed;
+
+    ui->label_battery_level->setVisible(is_fixed && is_global);
+    ui->battery_level->setVisible(is_fixed && is_global);
 }
 
 void ConfigureSystem::RefreshConsoleID() {
@@ -739,6 +756,10 @@ void ConfigureSystem::SetupPerGameUI() {
     ui->edit_username->setVisible(false);
     ui->spinBox_play_coins->setVisible(false);
     ui->spinBox_steps_per_hour->setVisible(false);
+    ui->label_battery_level_source->setVisible(false);
+    ui->combo_battery_level_source->setVisible(false);
+    ui->label_battery_level->setVisible(false);
+    ui->battery_level->setVisible(false);
     ui->combo_birthday->setVisible(false);
     ui->combo_birthmonth->setVisible(false);
     ui->combo_init_clock->setVisible(false);
