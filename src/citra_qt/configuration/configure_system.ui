@@ -485,6 +485,69 @@ installed applications.</string>
              </widget>
             </item>
             <item row="17" column="0">
+              <widget class="QLabel" name="label_battery_level_source">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How the system's battery level is determined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                  <string>Battery Level Source</string>
+                </property>
+              </widget>
+            </item>
+            <item row="17" column="1">
+             <widget class="QComboBox" name="combo_battery_level_source">
+              <item>
+               <property name="text">
+                <string>System</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Fixed</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="18" column="0">
+              <widget class="QLabel" name="label_battery_level">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Battery level used by the system. Range from 0 to 5.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="text">
+                  <string>Battery Level</string>
+                </property>
+              </widget>
+            </item>
+            <item row="18" column="1">
+              <widget class="QComboBox" name="battery_level">
+                <item>
+                  <property name="text">
+                    <string>Critical</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string>25%</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string>50%</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string>75%</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string>100%</string>
+                  </property>
+                </item>
+              </widget>
+            </item>
+            <item row="19" column="0">
               <widget class="QLabel" name="label_steps_per_hour">
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of steps per hour reported by the pedometer. Range from 0 to 65,535.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -494,28 +557,28 @@ installed applications.</string>
                 </property>
               </widget>
             </item>
-            <item row="17" column="1">
+            <item row="19" column="1">
               <widget class="QSpinBox" name="spinBox_steps_per_hour">
                 <property name="maximum">
                   <number>9999</number>
                 </property>
               </widget>
             </item>
-            <item row="18" column="1">
+            <item row="20" column="1">
              <widget class="QCheckBox" name="toggle_system_setup">
               <property name="text">
                <string>Run System Setup when Home Menu is launched</string>
               </property>
              </widget>
             </item>
-            <item row="19" column="0">
+            <item row="21" column="0">
              <widget class="QLabel" name="label_console_id">
               <property name="text">
                <string>Console ID:</string>
               </property>
              </widget>
             </item>
-            <item row="19" column="1">
+            <item row="21" column="1">
              <widget class="QPushButton" name="button_regenerate_console_id">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -531,14 +594,14 @@ installed applications.</string>
               </property>
              </widget>
             </item>
-            <item row="20" column="0">
+            <item row="22" column="0">
               <widget class="QLabel" name="label_mac">
                 <property name="text">
                   <string>MAC:</string>
                 </property>
               </widget>
             </item>
-            <item row="20" column="1">
+            <item row="22" column="1">
               <widget class="QPushButton" name="button_regenerate_mac">
                 <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -554,21 +617,21 @@ installed applications.</string>
                 </property>
               </widget>
             </item>
-            <item row="21" column="0">
+            <item row="23" column="0">
              <widget class="QLabel" name="label_plugin_loader">
               <property name="text">
                <string>3GX Plugin Loader</string>
               </property>
              </widget>
             </item>
-            <item row="21" column="1">
+            <item row="23" column="1">
              <widget class="QCheckBox" name="plugin_loader">
               <property name="text">
                <string>Enable 3GX plugin loader</string>
               </property>
              </widget>
             </item>
-            <item row="22" column="1">
+            <item row="24" column="1">
              <widget class="QCheckBox" name="allow_plugin_loader">
               <property name="text">
                <string>Allow applications to change plugin loader state</string>
@@ -808,6 +871,8 @@ installed applications.</string>
   <tabstop>combo_init_clock</tabstop>
   <tabstop>edit_init_time</tabstop>
   <tabstop>spinBox_play_coins</tabstop>
+  <tabstop>combo_battery_level_source</tabstop>
+  <tabstop>battery_level</tabstop>
   <tabstop>spinBox_steps_per_hour</tabstop>
   <tabstop>button_regenerate_console_id</tabstop>
   <tabstop>button_regenerate_mac</tabstop>
