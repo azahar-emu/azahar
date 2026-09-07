@@ -44,6 +44,9 @@ public:
     /// Get all DevicePoller that use the SDL backend for a specific device type
     Pollers GetPollers(Polling::DeviceType type) override;
 
+    float GetSystemBatteryLevel() override;
+    bool GetSystemBatteryChargeState() override;
+
     /// Used by the Pollers during config
     std::atomic<bool> polling = false;
     Common::SPSCQueue<SDL_Event> event_queue;
