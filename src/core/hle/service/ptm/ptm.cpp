@@ -51,7 +51,7 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(static_cast<u32>(ChargeLevels::CompletelyFull)); // Set to a completely full battery
+    rb.Push(static_cast<u32>(ptm->charge_level));
 
     LOG_DEBUG(Service_PTM, "(STUBBED) called");
 }
@@ -274,6 +274,7 @@ void Module::serialize(Archive& ar, const unsigned int) {
     DEBUG_SERIALIZATION_POINT;
     ar & shell_open;
     ar & battery_is_charging;
+    ar & charge_level;
     ar & pedometer_is_counting;
 }
 SERIALIZE_IMPL(Module)
