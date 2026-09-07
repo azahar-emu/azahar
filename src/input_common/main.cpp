@@ -237,20 +237,13 @@ void ReloadInputDevices() {
     udp->ReloadUDPClient();
 }
 
-float GetSystemBatteryLevel() {
+BatteryState GetSystemBatteryState() {
 #ifdef HAVE_SDL2
-    return sdl->GetSystemBatteryLevel();
+    BatteryState new_state{};
+    sdl->GetSystemBatteryState(new_state.percentage, new_state.charging);
+    return new_state;
 #else
-    return 1.0;
-#endif
-}
-
-bool GetSystemBatteryChargeState()
-{
-#ifdef HAVE_SDL2
-    return sdl->GetSystemBatteryChargeState();
-#else
-    return true
+    return BatteryState{};
 #endif
 }
 

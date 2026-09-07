@@ -55,7 +55,8 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 
     switch (Settings::values.battery_level_source.GetValue()) {
     case Settings::BatteryLevelSource::System: {
-        ptm->charge_level = static_cast<ChargeLevels>(InputCommon::GetSystemBatteryLevel() * 4 + 1);
+        ptm->charge_level =
+            static_cast<ChargeLevels>(InputCommon::GetSystemBatteryState().percentage * 4 + 1);
         break;
     }
     case Settings::BatteryLevelSource::Fixed: {
@@ -76,7 +77,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 
     switch (Settings::values.battery_level_source.GetValue()) {
     case Settings::BatteryLevelSource::System: {
-        ptm->battery_is_charging = InputCommon::GetSystemBatteryChargeState();
+        ptm->battery_is_charging = InputCommon::GetSystemBatteryState().charging;
         break;
     }
     case Settings::BatteryLevelSource::Fixed: {
