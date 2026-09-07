@@ -19,6 +19,7 @@
 #include "core/hle/service/ptm/ptm_sets.h"
 #include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm_u.h"
+#include "input_common/main.h"
 
 SERIALIZE_EXPORT_IMPL(Service::PTM::Module)
 SERVICE_CONSTRUCT_IMPL(Service::PTM::Module)
@@ -51,9 +52,20 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(static_cast<u32>(ptm->charge_level));
 
-    LOG_DEBUG(Service_PTM, "(STUBBED) called");
+    switch (Settings::values.battery_level_source.GetValue()) {
+    case Settings::BatteryLevelSource::System: {
+        ptm->charge_level = static_cast<ChargeLevels>(InputCommon::GetSystemBatteryLevel() * 4 + 1);
+        break;
+    }
+    case Settings::BatteryLevelSource::Fixed: {
+        ptm->charge_level =
+            static_cast<ChargeLevels>(Settings::values.battery_level.GetValue() + 1);
+        break;
+    }
+    }
+
+    rb.Push(static_cast<u32>(ptm->charge_level));
 }
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
@@ -61,9 +73,19 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(ResultSuccess);
-    rb.Push(ptm->battery_is_charging);
 
-    LOG_DEBUG(Service_PTM, "(STUBBED) called");
+    switch (Settings::values.battery_level_source.GetValue()) {
+    case Settings::BatteryLevelSource::System: {
+        ptm->battery_is_charging = InputCommon::GetSystemBatteryChargeState();
+        break;
+    }
+    case Settings::BatteryLevelSource::Fixed: {
+        ptm->battery_is_charging = false;
+        break;
+    }
+    }
+
+    rb.Push(ptm->battery_is_charging);
 }
 
 void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
