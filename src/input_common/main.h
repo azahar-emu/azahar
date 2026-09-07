@@ -46,6 +46,13 @@ Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params
 /// Reloads the input devices
 void ReloadInputDevices();
 
+/// Get the host system's battery level from 0.0 to 1.0. Returns 1.0 when not available
+float GetSystemBatteryLevel();
+
+/// Returns true if the host system is considered to be plugged in and charging. Returns true when
+/// unable to determine.
+bool GetSystemBatteryChargeState();
+
 namespace Polling {
 
 enum class DeviceType { Button, Analog, Touchpad };
