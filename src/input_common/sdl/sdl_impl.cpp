@@ -1222,5 +1222,23 @@ SDLState::Pollers SDLState::GetPollers(InputCommon::Polling::DeviceType type) {
     return pollers;
 }
 
+float SDLState::GetSystemBatteryLevel() {
+    int battery_percent;
+    SDL_GetPowerInfo(nullptr, &battery_percent);
+    if (battery_percent >= 0) {
+        return static_cast<float>(battery_percent) / 100.0f;
+    } else {
+        return 1.0;
+    }
+}
+
+bool SDLState::GetSystemBatteryChargeState() {
+    if (SDL_GetPowerInfo(nullptr, nullptr) == SDL_POWERSTATE_ON_BATTERY) {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace SDL
 } // namespace InputCommon
