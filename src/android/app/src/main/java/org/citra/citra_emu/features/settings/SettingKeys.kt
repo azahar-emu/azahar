@@ -24,6 +24,8 @@ object SettingKeys {
     external fun init_time(): String
     external fun init_ticks_type(): String
     external fun init_ticks_override(): String
+    external fun battery_level_source(): String
+    external fun battery_level(): String
     external fun plugin_loader(): String
     external fun allow_plugin_loader(): String
     external fun steps_per_hour(): String

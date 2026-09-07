@@ -24,6 +24,8 @@ foreach(KEY IN ITEMS
     "init_time_offset"
     "init_ticks_type"
     "init_ticks_override"
+    "battery_level_source"
+    "battery_level"
     "plugin_loader"
     "allow_plugin_loader"
     "steps_per_hour"
