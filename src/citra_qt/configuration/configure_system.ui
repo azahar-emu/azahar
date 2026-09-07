@@ -485,17 +485,17 @@ installed applications.</string>
              </widget>
             </item>
             <item row="17" column="0">
-              <widget class="QLabel" name="label_battery_level_source">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How the system's battery level is determined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                  <string>Battery Level Source</string>
-                </property>
-              </widget>
+             <widget class="QLabel" name="label_battery_state_source">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;How the system's battery state is determined.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Battery State Source</string>
+              </property>
+             </widget>
             </item>
             <item row="17" column="1">
-             <widget class="QComboBox" name="combo_battery_level_source">
+             <widget class="QComboBox" name="combo_battery_state_source">
               <item>
                <property name="text">
                 <string>System</string>
@@ -509,43 +509,54 @@ installed applications.</string>
              </widget>
             </item>
             <item row="18" column="0">
-              <widget class="QLabel" name="label_battery_level">
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Battery level used by the system. Range from 0 to 5.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="text">
-                  <string>Battery Level</string>
-                </property>
-              </widget>
+             <widget class="QLabel" name="label_battery_state">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Battery state used by the system.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Battery State</string>
+              </property>
+             </widget>
             </item>
             <item row="18" column="1">
-              <widget class="QComboBox" name="battery_level">
+             <layout class="QGridLayout" name="battery_state_grid">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="battery_charging">
+                <property name="text">
+                 <string>Charging</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="battery_level">
                 <item>
-                  <property name="text">
-                    <string>Critical</string>
-                  </property>
+                 <property name="text">
+                  <string>Critical</string>
+                 </property>
                 </item>
                 <item>
-                  <property name="text">
-                    <string>25%</string>
-                  </property>
+                 <property name="text">
+                  <string>25%</string>
+                 </property>
                 </item>
                 <item>
-                  <property name="text">
-                    <string>50%</string>
-                  </property>
+                 <property name="text">
+                  <string>50%</string>
+                 </property>
                 </item>
                 <item>
-                  <property name="text">
-                    <string>75%</string>
-                  </property>
+                 <property name="text">
+                  <string>75%</string>
+                 </property>
                 </item>
                 <item>
-                  <property name="text">
-                    <string>100%</string>
-                  </property>
+                 <property name="text">
+                  <string>100%</string>
+                 </property>
                 </item>
-              </widget>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item row="19" column="0">
               <widget class="QLabel" name="label_steps_per_hour">
@@ -871,7 +882,8 @@ installed applications.</string>
   <tabstop>combo_init_clock</tabstop>
   <tabstop>edit_init_time</tabstop>
   <tabstop>spinBox_play_coins</tabstop>
-  <tabstop>combo_battery_level_source</tabstop>
+  <tabstop>combo_battery_state_source</tabstop>
+  <tabstop>battery_charging</tabstop>
   <tabstop>battery_level</tabstop>
   <tabstop>spinBox_steps_per_hour</tabstop>
   <tabstop>button_regenerate_console_id</tabstop>
