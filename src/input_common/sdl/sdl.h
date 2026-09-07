@@ -31,8 +31,7 @@ public:
 
     virtual Pollers GetPollers(Polling::DeviceType type) = 0;
 
-    virtual float GetSystemBatteryLevel() = 0;
-    virtual bool GetSystemBatteryChargeState() = 0;
+    virtual void GetSystemBatteryState(float& percentage, bool& charging) = 0;
 };
 
 class NullState : public State {
@@ -41,12 +40,9 @@ public:
         return {};
     }
 
-    virtual float GetSystemBatteryLevel() {
-        return 1.0;
-    }
-
-    virtual bool GetSystemBatteryChargeState() {
-        return true;
+    void GetSystemBatteryState(float& percentage, bool& charging) override {
+        percentage = 1.0f;
+        charging = true;
     }
 };
 
