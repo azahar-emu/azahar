@@ -49,7 +49,7 @@ public:
     /// safely deleted.
     u64 GetResourceFreeTick() {
         return GetResourceTick();
-    };
+    }
 
     /// Submits and waits for current GPU work.
     void Finish();
@@ -95,7 +95,7 @@ private:
 
 private:
     const Driver& driver;
-    u64 current_resource_tick;
+    const VideoCore::RendererBase& renderer;
     BlitHelper blit_helper;
     std::vector<u8> staging_buffer;
     std::array<OGLFramebuffer, 3> draw_fbos;
