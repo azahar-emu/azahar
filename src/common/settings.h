@@ -510,8 +510,9 @@ struct Values {
     Setting<s64> init_time_offset{0, Keys::init_time_offset};
     Setting<InitTicks> init_ticks_type{InitTicks::Random, Keys::init_ticks_type};
     Setting<s64> init_ticks_override{0, Keys::init_ticks_override};
-    Setting<BatteryLevelSource> battery_level_source{BatteryLevelSource::System,
-                                                     Keys::battery_level_source};
+    Setting<BatteryLevelSource> battery_state_source{BatteryLevelSource::System,
+                                                     Keys::battery_state_source};
+    Setting<bool> battery_charging{true, Keys::battery_charging};
     SwitchableSetting<u8, true> battery_level{0, 0, 4, Keys::battery_level};
     Setting<bool> plugin_loader_enabled{false, Keys::plugin_loader};
     Setting<bool> allow_plugin_loader{true, Keys::allow_plugin_loader};
