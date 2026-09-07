@@ -30,12 +30,23 @@ public:
     virtual ~State() = default;
 
     virtual Pollers GetPollers(Polling::DeviceType type) = 0;
+
+    virtual float GetSystemBatteryLevel() = 0;
+    virtual bool GetSystemBatteryChargeState() = 0;
 };
 
 class NullState : public State {
 public:
     Pollers GetPollers(Polling::DeviceType type) override {
         return {};
+    }
+
+    virtual float GetSystemBatteryLevel() {
+        return 1.0;
+    }
+
+    virtual bool GetSystemBatteryChargeState() {
+        return true;
     }
 };
 
