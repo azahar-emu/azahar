@@ -82,7 +82,9 @@ void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
 
     std::size_t frames_written = 0;
     if (performing_time_stretching) {
-        const std::vector<s16> in{fifo.Pop()};
+        // Not a bare Pop(): that value-inits a vector to the FIFO's whole capacity every
+        // callback. Sized to Size() instead, so a racing push just waits for the next one.
+        const std::vector<s16> in{fifo.Pop(fifo.Size())};
         const std::size_t num_in{in.size() / 2};
         frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);
     } else {
