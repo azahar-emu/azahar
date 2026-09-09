@@ -519,7 +519,7 @@ Aixó bandejarà el seu nom d&apos;usuari de fòrum i la seua adreça IP.</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="310"/>
         <source>Resolution: 512x384</source>
-        <translation type="unfinished"/>
+        <translation>Resolució: 512x384</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="320"/>
@@ -529,7 +529,7 @@ Aixó bandejarà el seu nom d&apos;usuari de fòrum i la seua adreça IP.</trans
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="197"/>
         <source>Resolution: %1x%2</source>
-        <translation type="unfinished"/>
+        <translation>Resolució: %1x%2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="289"/>
@@ -844,12 +844,12 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="316"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enables the exception handler. When an exception occurs a detailed crash report will be shown.&lt;/p&gt;&lt;p&gt;Note: When using CPU JIT, register values in the crash report may not be fully accurate because the JIT may have advanced past the fault. For more accurate reports, consider disabling CPU JIT.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activa el manejador d&apos;excepcions. Quan es produïsca una excepció, es mostrarà un informe detallat de la fallada.&lt;/p&gt;&lt;p&gt;Nota: En utilitzar JIT de CPU, és possible que els valors dels registres en l&apos;informe no siguen totalment precisos, ja que el JIT podria haver avançat més enllà del punt de la fallada. Per a obtindre informes més precisos, considera desactivar el JIT de CPU.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="319"/>
         <source>Enable exception handler</source>
-        <translation type="unfinished"/>
+        <translation>Activar manejador d&apos;excepcions</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.cpp" line="60"/>
@@ -1057,42 +1057,42 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="107"/>
         <source>11x Native (4400x2640)</source>
-        <translation type="unfinished"/>
+        <translation>11x Nativa (4400x2640)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="112"/>
         <source>12x Native (4800x2880)</source>
-        <translation type="unfinished"/>
+        <translation>12x Nativa (4800x2880)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="117"/>
         <source>13x Native (5200x3120)</source>
-        <translation type="unfinished"/>
+        <translation>13x Nativa (5200x3120)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="122"/>
         <source>14x Native (5600x3360)</source>
-        <translation type="unfinished"/>
+        <translation>14x Nativa (5600x3360)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="127"/>
         <source>15x Native (6000x3600)</source>
-        <translation type="unfinished"/>
+        <translation>15x Nativa (6000x3600)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="132"/>
         <source>16x Native (6400x3840)</source>
-        <translation type="unfinished"/>
+        <translation>16x Nativa (6400x3840)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="137"/>
         <source>17x Native (6800x4080)</source>
-        <translation type="unfinished"/>
+        <translation>17x Nativa (6800x4080)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="142"/>
         <source>18x Native (7200x4320)</source>
-        <translation type="unfinished"/>
+        <translation>18x Nativa (7200x4320)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_enhancements.ui" line="153"/>
@@ -1442,7 +1442,7 @@ Desitja ignorar l&apos;error i continuar?</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="198"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some applications require this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most applications.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maneja correctament tots els casos extrems en la multiplicació dins de les shaders.&lt;/p&gt;&lt;p&gt;Algunes aplicacions necessiten aixó activat en el renderitzador de hardware perquè s&apos;interpreten correctament.&lt;/p&gt;&lt;p&gt;No obstant això, podria reduir el rendiment en diverses aplicacions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="201"/>
@@ -2964,7 +2964,7 @@ a les aplicacions instal·lades.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="772"/>
         <source>System settings are unavailable when a 3DS application is running.</source>
-        <translation type="unfinished"/>
+        <translation>La configuració del sistema no està disponible mentres s&apos;executa una aplicació de 3DS.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="41"/>
@@ -3642,7 +3642,7 @@ a les aplicacions instal·lades.</translation>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="277"/>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="286"/>
         <source>All Files</source>
-        <translation type="unfinished"/>
+        <translation>Tots els fitxers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="264"/>
@@ -3657,7 +3657,7 @@ a les aplicacions instal·lades.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="276"/>
         <source>Binary file</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer binari</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="284"/>
@@ -3667,7 +3667,7 @@ a les aplicacions instal·lades.</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="285"/>
         <source>Sed file</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer Sed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="393"/>
@@ -4200,7 +4200,7 @@ Es recomana executar Azahar amb el comando `*open`, per exemple: `*open ./Azahar
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1263"/>
         <source>Pause</source>
-        <translation type="unfinished"/>
+        <translation>Pausa</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1306"/>
@@ -4262,7 +4262,7 @@ Es recomana executar Azahar amb el comando `*open`, per exemple: `*open ./Azahar
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1429"/>
         <source>A generic load error occurred while loading the application.&lt;br/&gt;Please check the log for more details.</source>
-        <translation type="unfinished"/>
+        <translation>S&apos;ha donat una fallada de càrrega genèrica durant la càrrega de l&apos;aplicació.&lt;br/&gt;Per favor comprova el log per a més detalls.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1433"/>
@@ -4329,7 +4329,7 @@ Es recomana executar Azahar amb el comando `*open`, per exemple: `*open ./Azahar
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1816"/>
         <source>Slot %1 - %2</source>
-        <translation type="unfinished"/>
+        <translation>Ranura %1 - %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="1921"/>
@@ -4431,7 +4431,7 @@ Comprove el registre per a més detalls.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2297"/>
         <source>3DS Executable</source>
-        <translation type="unfinished"/>
+        <translation>Executable de 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2298"/>
@@ -4440,7 +4440,7 @@ Comprove el registre per a més detalls.</translation>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3298"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3391"/>
         <source>All Files</source>
-        <translation type="unfinished"/>
+        <translation>Tots els fitxers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2300"/>
@@ -4466,7 +4466,7 @@ Comprove el registre per a més detalls.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2343"/>
         <source>Choose setup mode:</source>
-        <translation type="unfinished"/>
+        <translation>Tria mode de configuració:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2350"/>
@@ -4510,7 +4510,7 @@ Vols reinstal·lar els arxius de totes maneres?</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2412"/>
         <source>3DS Installation File</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer d&apos;Instal·lació de 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2425"/>
@@ -4664,7 +4664,7 @@ Usa&apos;ls sota el teu propi risc!</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3057"/>
         <source>Amiibo File</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer d&apos;Amiibo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3059"/>
@@ -4744,12 +4744,12 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3297"/>
         <source>3DS ROM Files</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM de 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3321"/>
         <source>3DS Compressed ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM de 3DS comprimit</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3324"/>
@@ -4769,12 +4769,12 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3390"/>
         <source>3DS Compressed ROM Files</source>
-        <translation type="unfinished"/>
+        <translation>Fitxers ROM de 3DS comprimits</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3414"/>
         <source>3DS ROM File</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer ROM de 3DS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3418"/>
@@ -4905,22 +4905,22 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3871"/>
         <source>An exception occurred while executing the emulated application.</source>
-        <translation type="unfinished"/>
+        <translation>Una excepció ha ocorregut durant l&apos;execució de l&apos;aplicació emulada.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3872"/>
         <source>An invalid memory access occurred while executing the emulated application.</source>
-        <translation type="unfinished"/>
+        <translation>Un accés de memòria invàlid ha ocorregut durant l&apos;execució de l&apos;aplicació emulada.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3888"/>
         <source>Ignore for this Session</source>
-        <translation type="unfinished"/>
+        <translation>Ignorar en esta sessió</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3900"/>
         <source>Stop Emulation</source>
-        <translation type="unfinished"/>
+        <translation>Detindre Emulació</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3934"/>
@@ -4950,12 +4950,12 @@ Per a veure una guia sobre com instal·lar FFmpeg, polsa Ajuda.</translation>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3959"/>
         <source>Savestate version mismatch</source>
-        <translation type="unfinished"/>
+        <translation>Incompatibilitat de versió d&apos;estat desat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3960"/>
         <source>Could not load savestate because it was created on a different Azahar version:&lt;br/&gt;&lt;b&gt;Azahar %1&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;Please read our blog entry &lt;a href=&apos;https://azahar-emu.org/blog/understanding-save-states/&apos;&gt;understanding savestates&lt;/a&gt; for more information.&lt;br/&gt;&lt;br/&gt;To recover your progress, downgrade to &lt;b&gt;Azahar %1&lt;/b&gt;, load this savestate and use the application&apos;s built-in save functionality.</source>
-        <translation type="unfinished"/>
+        <translation>No s&apos;ha pogut carregar l&apos;estat desat perquè es va crear amb una versió diferent d&apos;Azahar:&lt;br/&gt;&lt;b&gt;Azahar %1&lt;/b&gt;.&lt;br/&gt;&lt;br/&gt;Per favor llig el nostre blog &lt;a href=&apos;https://azahar-emu.org/blog/understanding-save-states/&apos;&gt;entenent estats desats&lt;/a&gt;per a més informació.&lt;br/&gt;&lt;br/&gt;Per a recuperar el teu progrés, torna a la versió &lt;b&gt;Azahar %1&lt;/b&gt;, carrega este estat desat i utilitza la funció de desat integrada de l&apos;aplicatiu emulat.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3970"/>
@@ -5378,7 +5378,7 @@ Aixó eliminarà l&apos;aplicació si està instal·lada, així com també les a
         <location filename="../../src/citra_qt/game_list_p.h" line="270"/>
         <source>App functions flawlessly with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
-        <translation type="unfinished"/>
+        <translation>L&apos;aplicació funciona impecablement, sense falles d&apos;àudio ni gràfiques; totes les funcions provades funcionen com s&apos;espera, sense necessitat de solucions alternatives.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="271"/>
@@ -5648,12 +5648,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="653"/>
         <source>Portable Network Graphic</source>
-        <translation type="unfinished"/>
+        <translation>Portable Network Graphic</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="654"/>
         <source>Binary data</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer binari</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="658"/>
@@ -5715,7 +5715,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="118"/>
         <source>CiTrace File</source>
-        <translation type="unfinished"/>
+        <translation>Fitxer CiTrace</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="167"/>
@@ -5756,7 +5756,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="348"/>
         <source>Shader Binary</source>
-        <translation type="unfinished"/>
+        <translation>Binari d&apos;Ombrejador</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="362"/>
@@ -5831,7 +5831,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="624"/>
         <source>(last instruction)</source>
-        <translation type="unfinished"/>
+        <translation>(última instrucció)</translation>
     </message>
 </context>
 <context>
@@ -6026,7 +6026,7 @@ Missatge de depuració:</translation>
     <message>
         <location filename="../../src/citra_qt/loading_screen.ui" line="111"/>
         <source>Loading Shaders 0 out of 0</source>
-        <translation type="unfinished"/>
+        <translation>Carregant ombrejadors 0 de 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/loading_screen.ui" line="148"/>
@@ -6036,7 +6036,7 @@ Missatge de depuració:</translation>
     <message>
         <location filename="../../src/citra_qt/loading_screen.ui" line="162"/>
         <source>Estimated Time 00:00</source>
-        <translation type="unfinished"/>
+        <translation>Temps Estimat 00:00</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/loading_screen.cpp" line="66"/>
@@ -6710,7 +6710,7 @@ Missatge de depuració:</translation>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="54"/>
         <source>Citra TAS Movie</source>
-        <translation type="unfinished"/>
+        <translation>Azahar TAS Movie</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="76"/>
@@ -6782,7 +6782,7 @@ Missatge de depuració:</translation>
     <message>
         <location filename="../../src/citra_qt/movie/movie_record_dialog.cpp" line="50"/>
         <source>Citra TAS Movie</source>
-        <translation type="unfinished"/>
+        <translation>Azahar TAS Movie</translation>
     </message>
 </context>
 <context>
@@ -6821,7 +6821,8 @@ Missatge de depuració:</translation>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="187"/>
         <source>Failed to update the room information. Please check your internet connection and try hosting the room again.
 Debug Message: </source>
-        <translation type="unfinished"/>
+        <translation>No es va poder publicar la informació de la sala. Per favor, revisa la teua connexió a Internet i intenta allotjar la sala de nou.
+Missatge de depuració:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="259"/>

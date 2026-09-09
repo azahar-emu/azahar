@@ -454,6 +454,7 @@
     <string name="loader_error_encrypted_description"><![CDATA[Azahar stöder inte krypterade program. Läs vårt <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">blogginlägg</a> för mer information.]]></string>
     <string name="loader_error_file_not_found">ROM-filen finns inte</string>
     <string name="no_game_present">Inget startbart spel närvarande!</string>
+    <string name="invalid_rom">Ogiltig ROM</string>
     <string name="loader_error_generic">Ett fel uppstod vid inläsning av ROM: ”%s (%d)”</string>
     <string name="core_error_success">Lyckades</string>
     <string name="core_error_not_initialized">Inte initierad</string>

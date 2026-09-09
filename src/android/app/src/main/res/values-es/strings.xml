@@ -455,6 +455,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="loader_error_encrypted_description"><![CDATA[Azahar no admite aplicaciones cifradas. Lee nuestra <a href=\"https://azahar-emu.org/blog/game-loading-changes/\">entrada del blog</a> para obtener más información.]]></string>
     <string name="loader_error_file_not_found">El archivo ROM no existe</string>
     <string name="no_game_present">¡No hay ningún juego iniciable!</string>
+    <string name="invalid_rom">ROM no válido</string>
     <string name="loader_error_generic">Se produjo un error al cargar el ROM: \"%s (%d)\"</string>
     <string name="core_error_success">Éxito</string>
     <string name="core_error_not_initialized">No inicializado</string>
@@ -471,6 +472,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="core_error_artic_disconnected">Artic Base se desconectó</string>
     <string name="core_error_n3ds_application">El archivo es una aplicación de New 3DS</string>
     <string name="core_error_core_exception_raised">Se produjo una excepción en el núcleo</string>
+    <string name="core_error_savestate_build_mismatch">Incompatibilidad de versión del estado guardado</string>
     <string name="core_error_shutdown_requested">Se solicitó el cierre</string>
     <string name="core_error_unknown">Error desconocido</string>
 
@@ -621,6 +623,8 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="unsupported_encrypted">Aplicación cifrada no soportada</string>
     <string name="invalid_system_mode">Modo de sistema no válido</string>
     <string name="invalid_system_mode_message">Las aplicaciones exclusivas de New 3DS no se pueden cargar sin activar el modo New 3DS.</string>
+    <string name="savestate_build_mismatch_message"><![CDATA[No se pudo cargar el estado guardado porque se creó con una versión diferente de Azahar:<br/><b>Azahar %1$s</b>.<br/><br/>Por favor lee nuestro blog <a href=\"https://azahar-emu.org/blog/understanding-save-states/\">entendiendo estados guardados</a> para más información.<br/><br/>Para recuperar tu progreso, vuelve a la versión <b>Azahar %1$s</b>, carga este estado guardado y utiliza la función de guardado integrada de la aplicación emulada.]]></string>
+
     <!-- Disk Shader Cache -->
     <string name="preparing_shaders">Preparando shaders</string>
     <string name="building_shaders">Construyendo%s</string>
@@ -652,6 +656,7 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="game_context_id">ID:</string>
     <string name="game_context_file">Archivo:</string>
     <string name="game_context_type">Tipo:</string>
+    <string name="game_context_playtime">Tiempo de juego:</string>
     <string name="game_context_insert">Insertar Cartucho</string>
     <string name="game_context_eject">Expulsar Cartucho</string>
 
@@ -926,10 +931,10 @@ Se esperan fallos gráficos temporales cuando ésta esté activado.</string>
     <string name="bermuda">Bermudas</string>
 
     <!-- Regions (Japan, Australia, China and Taiwan are above) -->
-    <string name="north_america">América del Norte:</string>
-    <string name="europe">Europa:</string>
-    <string name="korea">Korea:</string>
-    <string name="region_free">Region free</string>
+    <string name="north_america">América del Norte</string>
+    <string name="europe">Europa</string>
+    <string name="korea">Korea</string>
+    <string name="region_free">Sin bloqueo de región</string>
     <string name="invalid_region">Región no válida</string>
     <string name="region_get_error">ERROR POR FAVOR REPORTE</string>
 

@@ -139,6 +139,7 @@
     <string name="emulation_load_state">ステートロードする</string>
     <string name="emulation_aspect_ratio">アスペクト比</string>
     <string name="emulation_screen_layout_largescreen">大画面</string>
+    <string name="emulation_screen_layout_single">シングル画面</string>
     <string name="emulation_screen_layout_hybrid">ハイブリッド画面</string>
     <string name="emulation_top_screen">上画面</string>
     <string name="emulation_bottom_screen">下画面</string>

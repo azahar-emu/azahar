@@ -1272,12 +1272,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="40"/>
         <source>Stable</source>
-        <translation type="unfinished"></translation>
+        <translation>ステーブル</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="45"/>
         <source>Prerelease</source>
-        <translation type="unfinished"></translation>
+        <translation>プレリリス</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="56"/>
@@ -1317,17 +1317,17 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="122"/>
         <source>Use global emulation speed</source>
-        <translation type="unfinished"></translation>
+        <translation>グローバルエミュレーション速度設定</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="127"/>
         <source>Set emulation speed</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムエミュレーション速度</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="135"/>
         <source>Emulation Speed</source>
-        <translation type="unfinished"></translation>
+        <translation>エミュレーション速度</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="195"/>
@@ -1554,12 +1554,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="356"/>
         <source>Use global</source>
-        <translation>グローバルを使用します</translation>
+        <translation>グローバル設定</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="361"/>
         <source>Use per-application</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタム</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="369"/>
@@ -2215,7 +2215,7 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="105"/>
         <source>Single Screen</source>
-        <translation type="unfinished">単一画面</translation>
+        <translation>シングル画面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_layout_cycle.ui" line="115"/>
@@ -2454,12 +2454,12 @@ Would you like to ignore the error and continue?</source>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="31"/>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>情報</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="74"/>
         <source>Size</source>
-        <translation type="unfinished">サイズ</translation>
+        <translation>サイズ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_per_game.ui" line="97"/>
@@ -3642,7 +3642,7 @@ installed applications.</source>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="277"/>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="286"/>
         <source>All Files</source>
-        <translation type="unfinished"></translation>
+        <translation>全ファイル</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="264"/>
@@ -4435,7 +4435,7 @@ Refer to the log for details.</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3298"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3391"/>
         <source>All Files</source>
-        <translation type="unfinished"></translation>
+        <translation>全ファイル</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2300"/>
@@ -4577,7 +4577,7 @@ Reinstall the files anyway?</source>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2514"/>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2517"/>
         <source>Z3DS Compression</source>
-        <translation type="unfinished"></translation>
+        <translation>Z3DS圧縮</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="2507"/>
@@ -4656,7 +4656,7 @@ Use at your own risk!</source>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3057"/>
         <source>Amiibo File</source>
-        <translation type="unfinished"></translation>
+        <translation>amiiboファイル</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/citra_qt.cpp" line="3059"/>
@@ -5128,7 +5128,7 @@ Would you like to download it?</source>
         <location filename="../../src/citra_qt/game_list.cpp" line="569"/>
         <location filename="../../src/citra_qt/game_list.cpp" line="1055"/>
         <source>File type</source>
-        <translation>ファイルの種類</translation>
+        <translation>ファイル種類</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="570"/>
@@ -6153,7 +6153,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="53"/>
         <source>File</source>
-        <translation type="unfinished">ファイル</translation>
+        <translation>ファイル</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="57"/>
@@ -6463,7 +6463,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="601"/>
         <source>Single Screen</source>
-        <translation type="unfinished">単一画面</translation>
+        <translation>シングル画面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="609"/>
@@ -6654,7 +6654,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="48"/>
         <source>Info</source>
-        <translation type="unfinished"></translation>
+        <translation>情報</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.ui" line="57"/>
@@ -6722,7 +6722,7 @@ Debug Message: </source>
     <message>
         <location filename="../../src/citra_qt/movie/movie_play_dialog.cpp" line="124"/>
         <source>(&gt;1 day)</source>
-        <translation type="unfinished"></translation>
+        <translation>(1日以上)</translation>
     </message>
 </context>
 <context>
