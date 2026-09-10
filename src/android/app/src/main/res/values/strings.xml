@@ -362,6 +362,8 @@
     <string name="audio_stretch_description">Stretches audio to cover slowdowns when emulation cannot hold full speed, and fast-forward, so neither becomes stutter. Adds audio latency only while engaged; at full speed audio passes straight through.</string>
     <string name="audio_ramp">Fade Audio Instead Of Cutting It</string>
     <string name="audio_ramp_description">Fades audio out and back in when emulation pauses, loads a state or resets, and conceals brief dropouts by repeating the last of the waveform rather than holding a single sample, which is heard as a thump. Turn this off for hard cuts at those points.</string>
+    <string name="speedup_lowpass">Fast-Forward Low-Pass</string>
+    <string name="speedup_lowpass_description">Softens harsh fast-forward audio: the cutoff is this value divided by the current speed, so faster playback is dulled more. Only applies above normal speed. The maximum turns the filter off.</string>
     <string name="realtime_audio">Enable Realtime Audio</string>
     <string name="realtime_audio_description">Scales audio playback speed to account for drops in emulation framerate. This means that audio will play at full speed even while the game framerate is low. May cause audio desync issues.</string>
     <string name="simulate_headphones_plugged">Simulate Headphones Plugged In</string>

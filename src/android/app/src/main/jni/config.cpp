@@ -246,6 +246,7 @@ void Config::ReadValues() {
     ReadSetting("Audio", Settings::values.enable_audio_stretching);
     ReadSetting("Audio", Settings::values.enable_realtime_audio);
     ReadSetting("Audio", Settings::values.enable_audio_ramp);
+    ReadSetting("Audio", Settings::values.speedup_lowpass);
     ReadSetting("Audio", Settings::values.simulate_headphones_plugged);
     ReadSetting("Audio", Settings::values.volume);
     ReadSetting("Audio", Settings::values.output_type);

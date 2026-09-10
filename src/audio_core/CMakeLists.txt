@@ -36,6 +36,7 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     sink.h
     sink_details.cpp
     sink_details.h
+    speedup_lowpass.h
     static_input.cpp
     static_input.h
     stream_ramp.h

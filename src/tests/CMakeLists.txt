@@ -17,6 +17,7 @@ add_executable(tests
     audio_core/output_pipeline.cpp
     audio_core/period_finder.cpp
     audio_core/period_splicer.cpp
+    audio_core/speedup_lowpass.cpp
     audio_core/stream_ramp.cpp
     audio_core/stretch_gate.cpp
     audio_core/time_stretch.cpp

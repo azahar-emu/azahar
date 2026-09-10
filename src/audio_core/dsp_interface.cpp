@@ -43,6 +43,10 @@ void DspInterface::SetAudioRamp(bool enable) {
     pipeline.SetRamp(enable);
 }
 
+void DspInterface::SetSpeedupLowPass(u16 reference) {
+    pipeline.SetSpeedupLowPass(reference);
+}
+
 void DspInterface::StreamEnd() {
     pipeline.StreamEnd();
 }

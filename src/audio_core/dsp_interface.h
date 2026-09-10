@@ -104,6 +104,9 @@ public:
     void EnableStretching(bool enable);
     /// Enable/Disable ending the stream on a ramp; off, its edges are hard cuts.
     void SetAudioRamp(bool enable);
+    /// Reference cutoff in Hz for the fast-forward low-pass; the applied cutoff is this over
+    /// the speed reached. The top of the setting's range, and zero, mean no filtering.
+    void SetSpeedupLowPass(u16 reference);
     /// The core has stopped producing audio on purpose: end the stream on a ramp rather than
     /// wherever the waveform happens to be, and discard whatever it had already produced.
     /// Any thread.

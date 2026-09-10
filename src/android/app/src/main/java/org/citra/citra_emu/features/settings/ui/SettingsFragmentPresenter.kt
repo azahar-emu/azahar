@@ -1845,6 +1845,23 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
                 )
             )
             add(
+                SliderSetting(
+                    IntSetting.SPEEDUP_LOWPASS,
+                    R.string.speedup_lowpass,
+                    R.string.speedup_lowpass_description,
+                    // The maximum is AudioCore::kSpeedupLowPassOff, the "do not filter" sentinel
+                    // in audio_core/speedup_lowpass.h. Mirrored by speedup_lowpass_spinbox in
+                    // citra_qt/configuration/configure_audio.ui.
+                    1000,
+                    48000,
+                    " Hz",
+                    IntSetting.SPEEDUP_LOWPASS.key,
+                    IntSetting.SPEEDUP_LOWPASS.defaultValue.toFloat(),
+                    // As the spin box does. 47000 divides evenly by it, which Slider requires.
+                    stepSize = 500f
+                )
+            )
+            add(
                 SwitchSetting(
                     BooleanSetting.ENABLE_REALTIME_AUDIO,
                     R.string.realtime_audio,

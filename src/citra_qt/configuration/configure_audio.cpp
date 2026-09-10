@@ -68,6 +68,7 @@ void ConfigureAudio::SetConfiguration() {
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching.GetValue());
     ui->toggle_realtime_audio->setChecked(Settings::values.enable_realtime_audio.GetValue());
     ui->toggle_audio_ramp->setChecked(Settings::values.enable_audio_ramp.GetValue());
+    ui->speedup_lowpass_spinbox->setValue(Settings::values.speedup_lowpass.GetValue());
     ui->simulate_headphones_plugged->setChecked(
         Settings::values.simulate_headphones_plugged.GetValue());
     SetHleFeaturesEnabled();
@@ -174,6 +175,9 @@ void ConfigureAudio::ApplyConfiguration() {
                                              ui->toggle_realtime_audio, realtime_audio);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_audio_ramp,
                                              ui->toggle_audio_ramp, audio_ramp);
+    if (Settings::IsConfiguringGlobal()) {
+        Settings::values.speedup_lowpass = static_cast<u16>(ui->speedup_lowpass_spinbox->value());
+    }
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.audio_emulation,
                                              ui->emulation_combo_box);
     ConfigurationShared::ApplyPerGameSetting(
@@ -245,6 +249,8 @@ void ConfigureAudio::SetupPerGameUI() {
     ui->input_device_label->setVisible(false);
     ui->input_device_combo_box->setVisible(false);
     ui->input_layout->setVisible(false);
+    ui->speedup_lowpass_label->setVisible(false);
+    ui->speedup_lowpass_spinbox->setVisible(false);
 
     connect(ui->volume_combo_box, qOverload<int>(&QComboBox::activated), this, [this](int index) {
         ui->volume_slider->setEnabled(index == 1);

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <functional>
@@ -363,6 +364,19 @@ double Creep(double) {
     return 1.001;
 }
 
+/// RMS over the last `frames` frames of a run, both channels.
+double TailRms(const std::vector<s16>& out, std::size_t frames) {
+    const std::size_t samples = std::min(out.size(), frames * 2);
+    if (samples == 0) {
+        return 0.0;
+    }
+    double sumsq = 0.0;
+    for (std::size_t i = out.size() - samples; i < out.size(); i++) {
+        sumsq += static_cast<double>(out[i]) * out[i];
+    }
+    return std::sqrt(sumsq / static_cast<double>(samples));
+}
+
 /// On the heap: the pipeline carries its buffers inline, a few hundred KB, and it owns a mutex
 /// and a condition variable, so it is neither small nor movable.
 std::unique_ptr<OutputPipeline> Fresh() {
@@ -680,4 +694,96 @@ TEST_CASE("OutputPipeline resumes a warm-up across a pause without replaying",
     RequireFilled(run, run.FirstFilled(), run.FirstSilenced());
     RequireFilled(run, sync, run.callbacks.size());
     CheckTimeline(run, index, run.FirstFilled() + 2);
+}
+
+TEST_CASE("OutputPipeline low-passes the output above full speed", "[audio_core][speedup]") {
+    // The source is broadband, so a cutoff this far down takes most of its energy with it.
+    // 2000 Hz over the scripted 3x is a 667 Hz cutoff.
+    constexpr u16 kReference = 2000;
+
+    auto plain = Fresh();
+    const Run without = Simulate(*plain, 8.0, FastForward, [](double t, OutputPipeline& p) {
+        p.SetRequestedSpeed(FastForward(t));
+    });
+
+    auto filtered = Fresh();
+    filtered->SetSpeedupLowPass(kReference);
+    const Run with = Simulate(*filtered, 8.0, FastForward, [](double t, OutputPipeline& p) {
+        p.SetRequestedSpeed(FastForward(t));
+    });
+
+    // Sampled while fast-forward is still held, so the filter is at its deepest.
+    const std::size_t tail = kCallback * 32;
+    REQUIRE(without.out.size() > tail);
+    REQUIRE(with.out.size() > tail);
+    const double open = TailRms(without.out, tail);
+    const double shut = TailRms(with.out, tail);
+    REQUIRE(open > 0.0);
+    REQUIRE(shut < open * 0.5);
+}
+
+TEST_CASE("OutputPipeline leaves the output alone at full speed", "[audio_core][speedup]") {
+    // Same reference, but nothing asks for a speed change: the filter must not engage, and
+    // the output must be what it would have been without it at all.
+    constexpr u16 kReference = 2000;
+
+    auto plain = Fresh();
+    const Run without = Simulate(*plain, 6.0, Steady);
+
+    auto filtered = Fresh();
+    filtered->SetSpeedupLowPass(kReference);
+    const Run with = Simulate(*filtered, 6.0, Steady);
+
+    REQUIRE(with.out.size() == without.out.size());
+    REQUIRE(with.out == without.out);
+}
+
+TEST_CASE("OutputPipeline opens the low-pass on a ramp when fast-forward ends",
+          "[audio_core][speedup]") {
+    // FastForward releases at t = 8, which the tests above stop short of. The filter has been
+    // holding a 667 Hz cutoff; dropping it in one callback steps the signal by the whole band
+    // it was removing. It must slide back to wide open instead, which takes several smoothing
+    // time constants, so the filtered run has to keep differing from the unfiltered one well
+    // past the release. A step would make the two identical from the release callback on.
+    constexpr u16 kReference = 2000;
+
+    auto plain = Fresh();
+    const Run without = Simulate(*plain, 12.0, FastForward, [](double t, OutputPipeline& p) {
+        p.SetRequestedSpeed(FastForward(t));
+    });
+    auto filtered = Fresh();
+    filtered->SetSpeedupLowPass(kReference);
+    const Run with = Simulate(*filtered, 12.0, FastForward, [](double t, OutputPipeline& p) {
+        p.SetRequestedSpeed(FastForward(t));
+    });
+
+    REQUIRE(with.out.size() == without.out.size());
+
+    std::size_t last_diff = 0;
+    for (std::size_t i = 0; i < with.out.size(); i++) {
+        if (with.out[i] != without.out[i]) {
+            last_diff = i;
+        }
+    }
+
+    const std::size_t release = static_cast<std::size_t>(8.0 * kFs) * 2;
+    REQUIRE(last_diff > release);
+    // Reaching the bypass threshold from 667 Hz takes about 5 time constants, ~0.26 s.
+    REQUIRE(last_diff > release + (static_cast<std::size_t>(0.1 * kFs) * 2));
+}
+
+TEST_CASE("OutputPipeline treats both ends of the range as off", "[audio_core][speedup]") {
+    auto plain = Fresh();
+    const Run without = Simulate(*plain, 8.0, FastForward, [](double t, OutputPipeline& p) {
+        p.SetRequestedSpeed(FastForward(t));
+    });
+
+    for (const u16 off : {static_cast<u16>(0), AudioCore::kSpeedupLowPassOff}) {
+        auto pipeline = Fresh();
+        pipeline->SetSpeedupLowPass(off);
+        const Run run = Simulate(*pipeline, 8.0, FastForward, [](double t, OutputPipeline& p) {
+            p.SetRequestedSpeed(FastForward(t));
+        });
+        REQUIRE(run.out == without.out);
+    }
 }

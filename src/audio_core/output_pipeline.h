@@ -13,6 +13,7 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/frame_buffers.h"
 #include "audio_core/period_splicer.h"
+#include "audio_core/speedup_lowpass.h"
 #include "audio_core/stream_ramp.h"
 #include "audio_core/stretch_gate.h"
 #include "audio_core/time_stretch.h"
@@ -96,6 +97,10 @@ public:
     /// host may not reach what was asked. Any thread.
     void SetRequestedSpeed(double speed);
     void SetRamp(bool enable);
+    /// Reference cutoff in Hz for the fast-forward low-pass, from the setting. The applied
+    /// cutoff is this over the speed actually reached; kSpeedupLowPassOff and zero mean off.
+    /// Any thread.
+    void SetSpeedupLowPass(u16 reference);
     /// The core has stopped producing audio on purpose: end the stream on a ramp rather than
     /// wherever the waveform happens to be, and discard whatever it had already produced.
     /// Any thread.
@@ -160,6 +165,7 @@ private:
     /// Arms the fade to begin `offset` frames into the output that follows, from the level
     /// just before it; at 0, from the last frame handed on.
     void ArmSeamFade(std::size_t offset = 0);
+    void ApplySpeedupLowPass(s16* out, std::size_t num_frames);
     void ApplySeamFade(s16* buffer, std::size_t num_frames);
 
     static constexpr double kSpeedTimeConstant = 0.3; // seconds, the fast estimate
@@ -212,6 +218,7 @@ private:
     std::atomic<bool> enable_stretching{false};
     std::atomic<double> requested_speed{1.0};
     std::atomic<bool> enable_ramp{true};
+    std::atomic<u16> speedup_lowpass_reference{kSpeedupLowPassOff};
     std::atomic<bool> core_silenced{false};
 
     // Arrival over request: the speed the emulation actually runs at, as the audio thread
@@ -275,6 +282,9 @@ private:
     // Whether the ramp ran on the previous callback, so it can be dropped on the edge rather
     // than frozen mid-tail. Audio thread only.
     bool ramp_was_enabled = true;
+    SpeedupLowPass low_pass;
+    bool lowpass_was_active = false;
+    double sample_rate = native_sample_rate;
     // Whether the last callback found the stream settled: down, with its tail fully out. What
     // JumpBegin() waits on, since it cannot read the ramp from its own thread. A fresh stream
     // is settled, having nothing to take down. The audio thread signals the condition variable

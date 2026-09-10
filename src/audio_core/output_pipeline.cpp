@@ -45,6 +45,7 @@ OutputPipeline::OutputPipeline() {
 }
 
 void OutputPipeline::SetOutputSampleRate(unsigned rate) {
+    sample_rate = static_cast<double>(rate);
     time_stretcher.SetOutputSampleRate(rate);
     Reset();
 }
@@ -84,6 +85,8 @@ void OutputPipeline::Reset() {
     // A new stream: nothing of the old one to continue, and it opens on a ramp.
     ramp = StreamRamp{};
     ramp_was_enabled = true;
+    low_pass.Init(sample_rate);
+    lowpass_was_active = false;
     stream_settled.store(true, std::memory_order_release);
 }
 
@@ -105,6 +108,10 @@ double OutputPipeline::ServoSeed() const {
 
 void OutputPipeline::SetRamp(bool enable) {
     enable_ramp = enable;
+}
+
+void OutputPipeline::SetSpeedupLowPass(u16 reference) {
+    speedup_lowpass_reference.store(reference, std::memory_order_relaxed);
 }
 
 void OutputPipeline::StreamEnd() {
@@ -331,6 +338,11 @@ void OutputPipeline::RenderChunk(s16* out, std::size_t num_frames) {
     }
 
     ApplySeamFade(out, num_frames);
+
+    // Ahead of the ramp, so the history the ramp keeps is the filtered signal that was
+    // actually played and the tail it synthesizes continues that waveform rather than an
+    // unfiltered one.
+    ApplySpeedupLowPass(out, num_frames);
 
     // Last before the volume, so the history it keeps is what was played and the tail it
     // synthesizes from that history is scaled like everything else. Where the source stopped
@@ -612,6 +624,38 @@ void OutputPipeline::ArmSeamFade(std::size_t offset) {
     fade_out_frames = kSeamFadeFrames;
     fade_out_from = fade_last_out;
     fade_delay = offset;
+}
+
+void OutputPipeline::ApplySpeedupLowPass(s16* out, std::size_t num_frames) {
+    const u16 reference = speedup_lowpass_reference.load(std::memory_order_relaxed);
+    // Only a requested speed change opens this. A host that cannot hold full speed is the
+    // stretcher's problem, and dulling the output because it stumbled would be heard as the
+    // game going muffled on its own.
+    const bool active = (reference != 0) && (reference < kSpeedupLowPassOff) &&
+                        SpeedupIsOffSpeed(requested_speed.load(std::memory_order_relaxed));
+    if (active) {
+        if (!lowpass_was_active && low_pass.Bypassed()) {
+            // Newly able to engage from rest: start wide open rather than resume state from
+            // the last run. Not while it is still opening from a previous engage, where the
+            // state is already in step with the signal and resetting it would click.
+            low_pass.Init(sample_rate);
+        }
+        // The cutoff follows the speed actually reached, not the one asked for: with the
+        // limiter off the request pins at infinity while the host may only manage normal speed.
+        const double played = std::clamp(speed_fast, 1.0, kUnlimitedSpeed);
+        low_pass.Process(out, num_frames,
+                         SpeedupLowPassCutoff(played, reference, low_pass.WideOpenCutoff()),
+                         static_cast<double>(num_frames) / sample_rate);
+    } else if (!low_pass.Bypassed()) {
+        // Disengaging is a slide back to wide open, not a step. The filter has been removing
+        // the top of the band, so dropping it in one callback steps the signal by everything
+        // it was taking out - the click the coefficient interpolation exists to prevent on the
+        // way in. Process() keeps writing until the cutoff has risen far enough to count as
+        // bypassed, and stops on its own from there.
+        low_pass.Process(out, num_frames, low_pass.WideOpenCutoff(),
+                         static_cast<double>(num_frames) / sample_rate);
+    }
+    lowpass_was_active = active;
 }
 
 void OutputPipeline::ApplySeamFade(s16* buffer, std::size_t num_frames) {
