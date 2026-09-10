@@ -4,6 +4,7 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     codec.h
     dsp_interface.cpp
     dsp_interface.h
+    frame_buffers.h
     hle/aac_decoder.cpp
     hle/aac_decoder.h
     hle/common.h
@@ -28,6 +29,7 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     null_input.h
     null_sink.h
     period_finder.h
+    period_splicer.h
     precompiled_headers.h
     sink.h
     sink_details.cpp
@@ -35,6 +37,7 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     static_input.cpp
     static_input.h
     stream_ramp.h
+    stretch_gate.h
     time_stretch.cpp
     time_stretch.h
 
