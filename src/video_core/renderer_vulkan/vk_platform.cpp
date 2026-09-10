@@ -330,8 +330,7 @@ vk::UniqueInstance CreateInstance(const Common::DynamicLibrary& library,
     // Sanitize layers list
     const auto layer_properties = vk::enumerateInstanceLayerProperties();
     if (layer_properties.empty()) {
-        LOG_ERROR(Render_Vulkan, "Failed to query layer properties");
-        return {};
+        LOG_WARNING(Render_Vulkan, "Instance layer properties list is empty");
     }
 
     boost::container::erase_if(layers, [&](const char* layer) -> bool {
