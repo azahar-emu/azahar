@@ -21,7 +21,8 @@ namespace AudioCore {
 /// through this; PeriodSplicer (audio_core/period_splicer.h) searches a stash forward.
 template <typename SumAt>
 unsigned FindPeriod(SumAt sum_at, unsigned avail, unsigned min_period, unsigned max_period,
-                    unsigned corr_frames) {
+                    unsigned corr_frames, float* best_score = nullptr,
+                    float* ref_energy = nullptr) {
     if (avail < min_period + corr_frames) {
         return 0;
     }
@@ -54,6 +55,14 @@ unsigned FindPeriod(SumAt sum_at, unsigned avail, unsigned min_period, unsigned 
             best_diff = diff;
             best = p;
         }
+    }
+    // How well the period fits, for a caller that must know whether there is one at all:
+    // the mismatch at it against the reference's energy, near zero on periodic material.
+    if (best_score) {
+        *best_score = best_diff;
+    }
+    if (ref_energy) {
+        *ref_energy = e_ref;
     }
     return best;
 }

@@ -28,6 +28,8 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     interpolate.h
     null_input.h
     null_sink.h
+    output_pipeline.cpp
+    output_pipeline.h
     period_finder.h
     period_splicer.h
     precompiled_headers.h

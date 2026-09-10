@@ -30,6 +30,23 @@ public:
     const s16* Data() const {
         return &data[head * 2];
     }
+    s16* MutableData() {
+        return &data[head * 2];
+    }
+    /// Drops `num_frames` starting `offset` frames from the front, closing the gap.
+    void Erase(std::size_t offset, std::size_t num_frames) {
+        if (offset >= Size()) {
+            return;
+        }
+        const std::size_t n = std::min(num_frames, Size() - offset);
+        std::memmove(&data[(head + offset) * 2], &data[(head + offset + n) * 2],
+                     (Size() - offset - n) * 2 * sizeof(s16));
+        tail -= n;
+        if (head == tail) {
+            head = 0;
+            tail = 0;
+        }
+    }
     void Clear() {
         head = 0;
         tail = 0;

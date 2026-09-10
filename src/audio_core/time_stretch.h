@@ -9,6 +9,7 @@
 #include <limits>
 #include <memory>
 #include <vector>
+#include "audio_core/frame_buffers.h"
 #include "common/common_types.h"
 
 namespace soundtouch {
@@ -33,8 +34,6 @@ public:
 
     void Clear();
 
-    void Flush();
-
     /// The output backlog the servo in Process() steers toward, in seconds: half of what it
     /// tolerates before pushing back. 0.125 s by default, master's 50% of 0.25 s.
     void SetTargetBacklog(double seconds);
@@ -45,6 +44,12 @@ public:
     double Ratio() const {
         return stretch_ratio;
     }
+    /// Sets the servo state outright, within the bounds: a stretcher that starts from a
+    /// measured speed rather than 1.0 keeps its backlog from the first callback.
+    void SetRatio(double ratio);
+    /// Output frames one processing round produces at the current tempo: how much output the
+    /// stretcher must hold to ride out the wait for its next round.
+    std::size_t OutputBatchFrames() const;
 
     /// Starts a priming: tempo 1.0, servo state reset. Returns the frames to Feed() from audio
     /// already played so that a first round runs inside the priming: SoundTouch's initial
@@ -59,10 +64,25 @@ public:
     void Feed(const s16* in, std::size_t num_in);
     /// Reads and drops up to `max_frames` of output. Returns the frames dropped.
     std::size_t Discard(std::size_t max_frames);
-    /// Flushes: pads SoundTouch until everything it was fed has come out, reads it all into
-    /// `out`, then clears. Returns the frames read; anything past `max_frames` is dropped with
-    /// a warning.
+    /// Flushes: pads SoundTouch with silence until everything it holds has come out, reads
+    /// that into `out` and trims the padding back off, then clears. Ends on clean audio, or
+    /// on the audio's own silence, at most FlushShortfall() short of what was fed;
+    /// SoundTouch's own count is not used, since it goes wrong across tempo steps. Returns
+    /// the frames kept; anything past `max_frames` is dropped with a warning.
     std::size_t FlushInto(s16* out, std::size_t max_frames);
+    /// How much a flush can fall short of what is inside: one seek window, which the last
+    /// round starts anywhere within, plus one overlap, which it blends into the padding.
+    std::size_t FlushShortfall() const;
+    /// Copies the last kFedTailFrames frames fed, oldest first, into `out`: more than the
+    /// flush falls short of, so a handover's join can find where the raw stream continues
+    /// the flush exactly, on any material. Exactly the frames that entered the stretcher,
+    /// never the flush's padding, so the frame after the last is the caller's next.
+    /// Returns the frames copied, at most `max_frames`.
+    std::size_t CopyFedTail(s16* out, std::size_t max_frames) const;
+    static constexpr std::size_t kFedTailFrames = 2048;
+    /// One overlap, and one seek window, at the current settings, in frames.
+    std::size_t OverlapFrames() const;
+    std::size_t SeekFrames() const;
     /// Processed frames waiting to be read.
     std::size_t OutputBacklog() const;
     /// Frames fed but not yet processed.
@@ -80,7 +100,9 @@ private:
     double min_ratio = 0.05;
     double max_ratio = std::numeric_limits<double>::infinity();
     std::array<s16, kDiscardChunkFrames * 2> discard_scratch{};
-    std::vector<float> recv_scratch; // the float build's output, converted
+    std::vector<float> put_scratch;  // the float build's input, converted; grows once
+    std::vector<float> recv_scratch; // the float build's output, likewise
+    FrameHistory fed;                // the last frames fed, for CopyFedTail()
 };
 
 } // namespace AudioCore

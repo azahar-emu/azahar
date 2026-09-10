@@ -16,8 +16,13 @@ constexpr std::size_t kCallback = 512;
 StretchGate::Input In(double speed) {
     StretchGate::Input in{};
     in.speed = speed;
+    in.speed_settled = true;
+    in.speed_fast = speed;
     in.buffered = 4000;
-    in.backlog = 4000;
+    in.low_water = kCallback;
+    in.stretched = 4000;
+    in.handover_low = 2000;
+    in.handover_high = 2600;
     in.ratio = 1.0;
     in.enabled = true;
     in.prefilling = false;
@@ -73,6 +78,26 @@ TEST_CASE("StretchGate engages on slow, fast, or an empty buffer", "[audio_core]
         auto in = In(1.0);
         in.buffered = kCallback - 1;
         REQUIRE(gate.Update(in) == Edge::Engage);
+        REQUIRE(gate.CurrentMode() == Mode::Warming);
+    }
+    SECTION("fast estimate well below full, before the slow one moves") {
+        StretchGate gate;
+        auto in = In(1.0);
+        in.speed_fast = 0.89;
+        REQUIRE(gate.Update(in) == Edge::Engage);
+    }
+    SECTION("fast estimate well above full, as fast-forward reads within a tenth of a second") {
+        StretchGate gate;
+        auto in = In(1.0);
+        in.speed_fast = 1.11;
+        REQUIRE(gate.Update(in) == Edge::Engage);
+    }
+    SECTION("a burst gap's dip in the fast estimate is not a slowdown") {
+        StretchGate gate;
+        auto in = In(1.0);
+        in.speed_fast = 0.94;
+        REQUIRE(Repeat(gate, in, 100) == Edge::None);
+        REQUIRE(gate.CurrentMode() == Mode::Bypass);
     }
     SECTION("low water while prefilling is not an underrun") {
         StretchGate gate;
@@ -106,8 +131,8 @@ TEST_CASE("StretchGate syncs out of Warming when told, or on the timeout", "[aud
     SECTION("timeout") {
         StretchGate gate;
         REQUIRE(gate.Update(In(0.9)) == Edge::Engage);
-        // 16364 frames of warm-up at 512 per callback: the 32nd callback crosses it.
-        REQUIRE(Repeat(gate, In(0.9), 31) == Edge::None);
+        // 32728 frames of warm-up at 512 per callback: the 64th callback crosses it.
+        REQUIRE(Repeat(gate, In(0.9), 63) == Edge::None);
         REQUIRE(gate.CurrentMode() == Mode::Warming);
         REQUIRE(gate.Update(In(0.9)) == Edge::Sync);
         REQUIRE(gate.CurrentMode() == Mode::Stretch);
@@ -132,6 +157,22 @@ TEST_CASE("StretchGate drains after two seconds in band with the ratio near one"
         REQUIRE(gate.Update(In(1.0)) == Edge::None);
         REQUIRE(gate.CurrentMode() == Mode::Drain);
     }
+    SECTION("a slight deficit keeps it stretching, since Bypass cannot cover one") {
+        StretchGate gate = Stretching();
+        // The most the slow estimate can read at 99.5%, one burst over its window high.
+        REQUIRE(Repeat(gate, In(0.9967), 300) == Edge::None);
+        REQUIRE(gate.CurrentMode() == Mode::Stretch);
+        // The least it can read at true full speed, one burst low.
+        REQUIRE(Repeat(gate, In(0.9983), 128) == Edge::None);
+        REQUIRE(gate.CurrentMode() == Mode::Drain);
+    }
+    SECTION("an unsettled slow estimate does not count toward the dwell") {
+        StretchGate gate = Stretching();
+        auto in = In(1.0);
+        in.speed_settled = false;
+        REQUIRE(Repeat(gate, in, 300) == Edge::None);
+        REQUIRE(gate.CurrentMode() == Mode::Stretch);
+    }
     SECTION("ratio off keeps it stretching") {
         StretchGate gate = Stretching();
         auto in = In(1.0);
@@ -150,26 +191,33 @@ TEST_CASE("StretchGate drains after two seconds in band with the ratio near one"
     }
 }
 
-TEST_CASE("StretchGate hands over when the drained backlog fits a callback",
+TEST_CASE("StretchGate hands over when the flush would land within the band",
           "[audio_core][bypass]") {
     StretchGate gate = Stretching();
     Repeat(gate, In(1.0), 128);
     REQUIRE(gate.CurrentMode() == Mode::Drain);
 
-    SECTION("not while the backlog is large") {
+    SECTION("not while the stretcher holds more than Bypass wants") {
         REQUIRE(Repeat(gate, In(1.0), 50) == Edge::None);
+        REQUIRE(gate.CurrentMode() == Mode::Drain);
+    }
+    SECTION("not while it holds less than Bypass needs to start from") {
+        auto in = In(1.0);
+        in.stretched = 1500;
+        in.ratio = 1.0;
+        REQUIRE(Repeat(gate, in, 5) == Edge::None);
         REQUIRE(gate.CurrentMode() == Mode::Drain);
     }
     SECTION("not while the ratio is outside the drain bounds") {
         auto in = In(1.0);
-        in.backlog = 100;
+        in.stretched = 2200;
         in.ratio = 0.9;
         REQUIRE(Repeat(gate, in, 5) == Edge::None);
         REQUIRE(gate.CurrentMode() == Mode::Drain);
     }
-    SECTION("backlog small, ratio in bounds") {
+    SECTION("content in the band, ratio in bounds") {
         auto in = In(1.0);
-        in.backlog = kCallback;
+        in.stretched = 2200;
         in.ratio = 1.05;
         REQUIRE(gate.Update(in) == Edge::Handover);
         REQUIRE(gate.CurrentMode() == Mode::Bypass);
@@ -190,7 +238,8 @@ TEST_CASE("StretchGate drains and hands over when stretching is turned off, at a
     // Speed far outside the band does not revert a forced drain.
     REQUIRE(Repeat(gate, in, 20) == Edge::None);
     REQUIRE(gate.CurrentMode() == Mode::Drain);
-    in.backlog = 10;
+    // A forced drain hands over with whatever is left, however little.
+    in.stretched = 10;
     in.ratio = 1.0;
     REQUIRE(gate.Update(in) == Edge::Handover);
     REQUIRE(gate.CurrentMode() == Mode::Bypass);

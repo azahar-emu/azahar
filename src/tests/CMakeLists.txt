@@ -14,6 +14,7 @@ add_executable(tests
     audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
     audio_core/frame_buffers.cpp
+    audio_core/output_pipeline.cpp
     audio_core/period_finder.cpp
     audio_core/period_splicer.cpp
     audio_core/stream_ramp.cpp

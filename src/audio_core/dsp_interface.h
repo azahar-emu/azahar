@@ -4,16 +4,12 @@
 
 #pragma once
 
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <span>
 #include <boost/serialization/access.hpp>
 #include "audio_core/audio_types.h"
-#include "audio_core/stream_ramp.h"
-#include "audio_core/time_stretch.h"
+#include "audio_core/output_pipeline.h"
 #include "common/common_types.h"
-#include "common/ring_buffer.h"
 #include "core/memory.h"
 
 namespace Core {
@@ -103,7 +99,8 @@ public:
     void SetSink(SinkType sink_type, std::string_view audio_device);
     /// Get the current sink
     Sink& GetSink();
-    /// Enable/Disable audio stretching.
+    /// Enable/Disable audio stretching. On, the stretcher engages while emulation is off full
+    /// speed and stands aside otherwise; off, audio goes straight through at any speed.
     void EnableStretching(bool enable);
     /// Enable/Disable ending the stream on a ramp; off, its edges are hard cuts.
     void SetAudioRamp(bool enable);
@@ -113,7 +110,6 @@ public:
     void StreamEnd();
     /// The core is producing again: the next frames ramp back in. Any thread.
     void StreamBegin();
-
     /// Bracket a jump the frontend makes in the game's state, a load or a reset, so the splice
     /// lands in silence: takes the stream down and waits, bounded, for the tail to reach the
     /// sink. Returns false and does nothing if the stream is already down, so the ramp back up
@@ -126,34 +122,12 @@ protected:
     void OutputSample(std::array<s16, 2> sample);
 
 private:
-    void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
-    void DiscardPending();
 
     Core::System& system;
-
-    std::atomic<bool> enable_time_stretching = false;
-    std::atomic<bool> performing_time_stretching = false;
-    std::atomic<bool> flushing_time_stretcher = false;
-    Common::RingBuffer<s16, 0x2000, 2> fifo;
-    TimeStretcher time_stretcher;
-    static constexpr std::size_t kPopChunkFrames = 2048;
-    std::array<s16, kPopChunkFrames * 2> pop_scratch{};
-    // Ends the stream on a ramp and brings it back on one, on the last buffer before the sink.
-    // Audio thread only; core_silenced is how the other threads reach it.
-    StreamRamp ramp;
-    std::atomic<bool> enable_audio_ramp{true};
-    // Whether the ramp ran on the previous callback, so it can be dropped on the edge rather
-    // than frozen mid-tail. Audio thread only.
-    bool ramp_was_enabled = true;
-    std::atomic<bool> core_silenced{false};
-    // Whether the last callback found the stream settled: down, with its tail fully out. What
-    // JumpBegin() waits on, since it cannot read the ramp from its own thread. A fresh stream
-    // is settled, having nothing to take down. The audio thread signals the condition variable
-    // on the rising edge alone; the mutex is the waiter's, and the callback never takes it.
-    std::atomic<bool> stream_settled{true};
-    std::mutex settled_mutex;
-    std::condition_variable settled_cv;
+    // Everything between the DSP's frames and the sink's callback; see
+    // OutputPipeline::Render() (audio_core/output_pipeline.cpp).
+    OutputPipeline pipeline;
     std::unique_ptr<Sink> sink;
 
     template <class Archive>
