@@ -29,7 +29,11 @@ add_library(citra_libretro SHARED
         citra_libretro.h
         $<TARGET_OBJECTS:citra_libretro_common>)
 
-set_target_properties(citra_libretro PROPERTIES OUTPUT_NAME "azahar_libretro")
+if (ANDROID)
+  set_target_properties(citra_libretro PROPERTIES OUTPUT_NAME "azahar_libretro_android")
+else()
+  set_target_properties(citra_libretro PROPERTIES OUTPUT_NAME "azahar_libretro")
+endif()
 
 create_target_directory_groups(citra_libretro)
 
