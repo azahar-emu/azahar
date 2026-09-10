@@ -560,6 +560,11 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
         return true;
     }
 
+    const auto draw_rect = fb_helper.DrawRect();
+    if (draw_rect.GetHeight() * draw_rect.GetHeight() == 0) {
+        return true;
+    }
+
     pipeline_info.state.attachments.color = framebuffer->Format(SurfaceType::Color);
     pipeline_info.state.attachments.depth = framebuffer->Format(SurfaceType::Depth);
 
@@ -588,7 +593,6 @@ bool RasterizerVulkan::Draw(bool accelerate, bool is_indexed) {
     UploadUniforms(accelerate);
 
     // Begin rendering
-    const auto draw_rect = fb_helper.DrawRect();
     renderpass_cache.BeginRendering(framebuffer, draw_rect);
 
     // Configure viewport and scissor
