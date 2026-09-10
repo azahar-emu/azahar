@@ -187,9 +187,9 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
     } else if (src_format == PixelFormat::RGBA4 && dst_format == PixelFormat::RGB5A1) {
         blit_helper.ConvertRGBA4ToRGB5A1(source, dest, copy);
     } else {
-        LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {} -> {}",
-                    VideoCore::PixelFormatAsString(src_format),
-                    VideoCore::PixelFormatAsString(dst_format));
+        LOG_WARNING(Render_OpenGL, "Unimplemented reinterpretation {}({:#x}) -> {}({:#x})",
+                    VideoCore::PixelFormatAsString(src_format), source.Tuple().internal_format,
+                    VideoCore::PixelFormatAsString(dst_format), dest.Tuple().internal_format);
         return false;
     }
     return true;
