@@ -27,12 +27,14 @@ add_library(audio_core STATIC EXCLUDE_FROM_ALL
     interpolate.h
     null_input.h
     null_sink.h
+    period_finder.h
     precompiled_headers.h
     sink.h
     sink_details.cpp
     sink_details.h
     static_input.cpp
     static_input.h
+    stream_ramp.h
     time_stretch.cpp
     time_stretch.h
 

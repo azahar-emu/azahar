@@ -1,13 +1,16 @@
-// Copyright 2017-2025 Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <boost/serialization/access.hpp>
 #include "audio_core/audio_types.h"
+#include "audio_core/stream_ramp.h"
 #include "audio_core/time_stretch.h"
 #include "common/common_types.h"
 #include "common/ring_buffer.h"
@@ -102,6 +105,21 @@ public:
     Sink& GetSink();
     /// Enable/Disable audio stretching.
     void EnableStretching(bool enable);
+    /// Enable/Disable ending the stream on a ramp; off, its edges are hard cuts.
+    void SetAudioRamp(bool enable);
+    /// The core has stopped producing audio on purpose: end the stream on a ramp rather than
+    /// wherever the waveform happens to be, and discard whatever it had already produced.
+    /// Any thread.
+    void StreamEnd();
+    /// The core is producing again: the next frames ramp back in. Any thread.
+    void StreamBegin();
+
+    /// Bracket a jump the frontend makes in the game's state, a load or a reset, so the splice
+    /// lands in silence: takes the stream down and waits, bounded, for the tail to reach the
+    /// sink. Returns false and does nothing if the stream is already down, so the ramp back up
+    /// stays with whatever took it down. Emulation thread.
+    bool JumpBegin();
+    void JumpEnd(bool ramped);
 
 protected:
     void OutputFrame(StereoFrame16 frame);
@@ -110,6 +128,7 @@ protected:
 private:
     void FlushResidualStretcherAudio();
     void OutputCallback(s16* buffer, std::size_t num_frames);
+    void DiscardPending();
 
     Core::System& system;
 
@@ -117,8 +136,24 @@ private:
     std::atomic<bool> performing_time_stretching = false;
     std::atomic<bool> flushing_time_stretcher = false;
     Common::RingBuffer<s16, 0x2000, 2> fifo;
-    std::array<s16, 2> last_frame{};
     TimeStretcher time_stretcher;
+    static constexpr std::size_t kPopChunkFrames = 2048;
+    std::array<s16, kPopChunkFrames * 2> pop_scratch{};
+    // Ends the stream on a ramp and brings it back on one, on the last buffer before the sink.
+    // Audio thread only; core_silenced is how the other threads reach it.
+    StreamRamp ramp;
+    std::atomic<bool> enable_audio_ramp{true};
+    // Whether the ramp ran on the previous callback, so it can be dropped on the edge rather
+    // than frozen mid-tail. Audio thread only.
+    bool ramp_was_enabled = true;
+    std::atomic<bool> core_silenced{false};
+    // Whether the last callback found the stream settled: down, with its tail fully out. What
+    // JumpBegin() waits on, since it cannot read the ramp from its own thread. A fresh stream
+    // is settled, having nothing to take down. The audio thread signals the condition variable
+    // on the rising edge alone; the mutex is the waiter's, and the callback never takes it.
+    std::atomic<bool> stream_settled{true};
+    std::mutex settled_mutex;
+    std::condition_variable settled_cv;
     std::unique_ptr<Sink> sink;
 
     template <class Archive>

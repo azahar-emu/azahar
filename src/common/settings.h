@@ -639,6 +639,11 @@ struct Values {
     SwitchableSetting<AudioEmulation> audio_emulation{AudioEmulation::HLE, Keys::audio_emulation};
     SwitchableSetting<bool> enable_audio_stretching{true, Keys::enable_audio_stretching};
     SwitchableSetting<bool> enable_realtime_audio{false, Keys::enable_realtime_audio};
+    // On by default. AudioCore::StreamRamp (audio_core/stream_ramp.h) ends the output stream on
+    // a synthesized tail and brings it back on a fade, so a pause, a state load, a reset or an
+    // underrun lands in silence instead of cutting the waveform where it stands. Off, those
+    // edges are hard cuts.
+    SwitchableSetting<bool> enable_audio_ramp{true, Keys::enable_audio_ramp};
     SwitchableSetting<float, true> volume{1.f, 0.f, 1.f, Keys::volume};
     Setting<AudioCore::SinkType> output_type{AudioCore::SinkType::Auto, Keys::output_type};
     Setting<std::string> output_device{"Auto", Keys::output_device};

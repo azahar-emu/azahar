@@ -360,6 +360,8 @@
     <string name="audio_volume">Volume</string>
     <string name="audio_stretch">Audio Stretching</string>
     <string name="audio_stretch_description">Stretches audio to reduce stuttering. When enabled, increases audio latency and slightly reduces performance.</string>
+    <string name="audio_ramp">Fade Audio Instead Of Cutting It</string>
+    <string name="audio_ramp_description">Fades audio out and back in when emulation pauses, loads a state or resets, and conceals brief dropouts by repeating the last of the waveform rather than holding a single sample, which is heard as a thump. Turn this off for hard cuts at those points.</string>
     <string name="realtime_audio">Enable Realtime Audio</string>
     <string name="realtime_audio_description">Scales audio playback speed to account for drops in emulation framerate. This means that audio will play at full speed even while the game framerate is low. May cause audio desync issues.</string>
     <string name="simulate_headphones_plugged">Simulate Headphones Plugged In</string>

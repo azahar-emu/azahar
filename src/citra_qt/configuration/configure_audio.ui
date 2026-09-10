@@ -183,6 +183,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="toggle_audio_ramp">
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Fades audio out and back in when emulation pauses, loads a state or resets, and conceals brief dropouts by repeating the last of the waveform rather than holding a single sample, which is heard as a thump. Turn this off for hard cuts at those points.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Fade audio instead of cutting it</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="toggle_realtime_audio">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scales audio playback speed to account for drops in emulation framerate. This means that audio will play at full speed even while the application framerate is low. May cause audio desync issues.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -252,6 +262,7 @@
  <tabstops>
   <tabstop>emulation_combo_box</tabstop>
   <tabstop>toggle_audio_stretching</tabstop>
+  <tabstop>toggle_audio_ramp</tabstop>
   <tabstop>volume_slider</tabstop>
   <tabstop>output_type_combo_box</tabstop>
   <tabstop>output_device_combo_box</tabstop>

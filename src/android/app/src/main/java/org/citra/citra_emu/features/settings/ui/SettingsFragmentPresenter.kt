@@ -1837,6 +1837,15 @@ class SettingsFragmentPresenter(private val fragmentView: SettingsFragmentView) 
             )
             add(
                 SwitchSetting(
+                    BooleanSetting.ENABLE_AUDIO_RAMP,
+                    R.string.audio_ramp,
+                    R.string.audio_ramp_description,
+                    BooleanSetting.ENABLE_AUDIO_RAMP.key,
+                    BooleanSetting.ENABLE_AUDIO_RAMP.defaultValue
+                )
+            )
+            add(
+                SwitchSetting(
                     BooleanSetting.ENABLE_REALTIME_AUDIO,
                     R.string.realtime_audio,
                     R.string.realtime_audio_description,

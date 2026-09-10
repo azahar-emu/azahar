@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QPainter>
 #include <QWindow>
+#include "audio_core/dsp_interface.h"
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/citra_qt.h"
 #include "citra_qt/util/util.h"
@@ -48,6 +49,27 @@ EmuThread::EmuThread(Core::System& system_, Frontend::GraphicsContext& core_cont
     : system{system_}, core_context(core_context) {}
 
 EmuThread::~EmuThread() = default;
+
+void EmuThread::SetRunning(bool running) {
+    std::unique_lock lock{running_mutex};
+    const bool was_running = this->running;
+    this->running = running;
+    lock.unlock();
+    running_cv.notify_all();
+
+    // The debugger's pause, the run loop's error path and the stop on shutdown stop the thread
+    // through here, so the audio stream is taken down on a ramp and brought back on one at the
+    // edge. The pause action does not: it leaves the thread running, blocked in the frame
+    // limiter, and is bracketed by GMainWindow::OnPauseGame() and OnResumeGame()
+    // (citra_qt/citra_qt.cpp) instead.
+    if (was_running != running && system.IsPoweredOn()) {
+        if (running) {
+            system.DSP().StreamBegin();
+        } else {
+            system.DSP().StreamEnd();
+        }
+    }
+}
 
 static GMainWindow* GetMainWindow() {
     const auto widgets = qApp->topLevelWidgets();

@@ -67,6 +67,7 @@ void ConfigureAudio::SetConfiguration() {
 
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching.GetValue());
     ui->toggle_realtime_audio->setChecked(Settings::values.enable_realtime_audio.GetValue());
+    ui->toggle_audio_ramp->setChecked(Settings::values.enable_audio_ramp.GetValue());
     ui->simulate_headphones_plugged->setChecked(
         Settings::values.simulate_headphones_plugged.GetValue());
     SetHleFeaturesEnabled();
@@ -171,6 +172,8 @@ void ConfigureAudio::ApplyConfiguration() {
                                              ui->toggle_audio_stretching, audio_stretching);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_realtime_audio,
                                              ui->toggle_realtime_audio, realtime_audio);
+    ConfigurationShared::ApplyPerGameSetting(&Settings::values.enable_audio_ramp,
+                                             ui->toggle_audio_ramp, audio_ramp);
     ConfigurationShared::ApplyPerGameSetting(&Settings::values.audio_emulation,
                                              ui->emulation_combo_box);
     ConfigurationShared::ApplyPerGameSetting(
@@ -257,6 +260,8 @@ void ConfigureAudio::SetupPerGameUI() {
 
     ConfigurationShared::SetColoredTristate(ui->toggle_realtime_audio,
                                             Settings::values.enable_realtime_audio, realtime_audio);
+    ConfigurationShared::SetColoredTristate(ui->toggle_audio_ramp,
+                                            Settings::values.enable_audio_ramp, audio_ramp);
     ConfigurationShared::SetColoredTristate(ui->simulate_headphones_plugged,
                                             Settings::values.simulate_headphones_plugged,
                                             simulate_headphones_plugged);
