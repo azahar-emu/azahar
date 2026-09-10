@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -155,7 +155,7 @@ void ConfigureAudio::SetInputDeviceFromDeviceID() {
 }
 
 void ConfigureAudio::SetVolumeIndicatorText(int percentage) {
-    ui->volume_indicator->setText(tr("%1%", "Volume percentage (e.g. 50%)").arg(percentage));
+    ui->volume_indicator->setText(QStringLiteral("%1%").arg(percentage));
 }
 
 void ConfigureAudio::SetHleFeaturesEnabled() {

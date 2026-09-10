@@ -8,9 +8,8 @@ mkdir -p build/$BUILD_ARCH && cd build/$BUILD_ARCH
 cmake ../.. -GNinja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_OSX_ARCHITECTURES="$BUILD_ARCH" \
-    -DENABLE_QT_TRANSLATION=ON \
     -DENABLE_ROOM_STANDALONE=OFF \
-    -DUSE_DISCORD_PRESENCE=ON \
+    -DENABLE_DISCORD_RPC=ON \
 	"${EXTRA_CMAKE_FLAGS[@]}"
 ninja
 ninja bundle

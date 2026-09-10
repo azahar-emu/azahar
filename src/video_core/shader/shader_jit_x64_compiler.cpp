@@ -1,10 +1,11 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/arch.h"
 #if CITRA_ARCH(x86_64)
 
+#include <bit>
 #include <nihstro/shader_bytecode.h>
 #include <smmintrin.h>
 #include <xbyak/xbyak_util.h>
@@ -319,20 +320,45 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
         break;
     }
 
+    constexpr int OutputBankShift = std::countr_zero(ShaderUnit::OutputBankSize);
+
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
-        // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], src);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            lea(rax, ptr[STATE + dest_offset_disp]);
 
+            movzx(ecx, byte[STATE + ShaderUnit::OutputBankOffset()]);
+            shl(rcx, OutputBankShift);
+            add(rax, rcx);
+
+            movaps(xword[rax], src);
+        } else {
+            // Store dest back to memory
+            movaps(xword[STATE + dest_offset_disp], src);
+        }
     } else {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
-        movaps(SCRATCH, xword[STATE + dest_offset_disp]);
 
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            lea(rax, ptr[STATE + dest_offset_disp]);
+
+            movzx(ecx, byte[STATE + ShaderUnit::OutputBankOffset()]);
+            shl(rcx, OutputBankShift);
+            add(rax, rcx);
+
+            movaps(SCRATCH, xword[rax]);
+        } else {
+            movaps(SCRATCH, xword[STATE + dest_offset_disp]);
+        }
+
+#if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
+#endif
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
                       ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             blendps(SCRATCH, src, mask);
+#if !defined(CITRA_HAS_SSE42)
         } else {
             movaps(SCRATCH2, src);
             unpckhps(SCRATCH2, SCRATCH); // Unpack X/Y components of source and destination
@@ -346,9 +372,15 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
                      ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6);
             shufps(SCRATCH, SCRATCH2, sel);
         }
+#endif
 
         // Store dest back to memory
-        movaps(xword[STATE + dest_offset_disp], SCRATCH);
+        if (dest.GetRegisterType() == RegisterType::Output) {
+            movaps(xword[rax], SCRATCH);
+        } else {
+            // Store dest back to memory
+            movaps(xword[STATE + dest_offset_disp], SCRATCH);
+        }
     }
 }
 
@@ -491,15 +523,19 @@ void JitShader::Compile_DPH(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
+#if !defined(CITRA_HAS_SSE42)
     if (host_caps.has(Cpu::tSSE41)) {
+#endif
         // Set 4th component to 1.0
         blendps(SRC1, ONE, 0b1000);
+#if !defined(CITRA_HAS_SSE42)
     } else {
         // Set 4th component to 1.0
         movaps(SCRATCH, SRC1);
         unpckhps(SCRATCH, ONE);  // XYZW, 1111 -> Z1__
         unpcklpd(SRC1, SCRATCH); // XYZW, Z1__ -> XYZ1
     }
+#endif
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
@@ -563,12 +599,16 @@ void JitShader::Compile_SLT(Instruction instr) {
 void JitShader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
+#if !defined(CITRA_HAS_SSE42)
     if (host_caps.has(Cpu::tSSE41)) {
+#endif
         roundps(SRC1, SRC1, _MM_FROUND_FLOOR);
+#if !defined(CITRA_HAS_SSE42)
     } else {
         cvttps2dq(SRC1, SRC1);
         cvtdq2ps(SRC1, SRC1);
     }
+#endif
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -868,8 +908,9 @@ void JitShader::Compile_JMP(Instruction instr) {
     }
 }
 
-static void Emit(GeometryEmitter* emitter, Common::Vec4<f24> (*output)[16]) {
-    emitter->Emit(*output);
+static void Emit(GeometryEmitter* emitter, ShaderUnit* unit) {
+    emitter->Emit(unit->output[unit->output_bank]);
+    unit->output_bank = !unit->output_bank;
 }
 
 void JitShader::Compile_EMIT(Instruction instr) {
@@ -888,7 +929,6 @@ void JitShader::Compile_EMIT(Instruction instr) {
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     mov(ABI_PARAM1, rax);
     mov(ABI_PARAM2, STATE);
-    add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(ShaderUnit, output)));
     CallFarFunction(*this, Emit);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     L(end);
@@ -1227,13 +1267,17 @@ void JitShader::Compile_Exp2(Xbyak::Label subroutine) {
             subss(SCRATCH, xword[rip + half]);
         }
 
+#if !defined(CITRA_HAS_SSE42)
         if (host_caps.has(Cpu::tSSE41)) {
+#endif
             roundss(SCRATCH, SCRATCH, _MM_FROUND_TRUNC);
             cvtss2si(eax, SCRATCH);
+#if !defined(CITRA_HAS_SSE42)
         } else {
             cvtss2si(eax, SCRATCH);
             cvtsi2ss(SCRATCH, eax);
         }
+#endif
         // SCRATCH now contains input rounded to the nearest integer.
         add(eax, 0x7f);
         subss(SRC1, SCRATCH);

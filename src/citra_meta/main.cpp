@@ -1,9 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2024-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <iostream>
 
+#include "citra_cli/citra_cli.h"
 #include "common/detached_tasks.h"
 #include "common/scope_exit.h"
 
@@ -58,6 +59,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 #endif
+
+    if (CitraCLI::CheckForOptions(CitraCLI::cli_capture_optstring, argc, argv)) {
+        return CitraCLI::ParseCommand(argc, argv);
+    }
 
 #if ENABLE_ROOM
     bool launch_room = false;

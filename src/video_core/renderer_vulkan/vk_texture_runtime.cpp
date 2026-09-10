@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -167,6 +167,9 @@ void Handle::Create(u32 width, u32 height, u32 levels, TextureType type, vk::For
                     vk::ImageUsageFlags usage, vk::ImageCreateFlags flags,
                     vk::ImageAspectFlags aspect, bool need_format_list,
                     std::string_view debug_name) {
+
+    Destroy();
+
     const bool is_cube_map = type == TextureType::CubeMap && instance.IsLayeredRenderingSupported();
     if (!is_cube_map) {
         flags &= ~vk::ImageCreateFlagBits::eCubeCompatible;
@@ -303,12 +306,19 @@ VideoCore::StagingData TextureRuntime::FindStaging(u32 size, bool upload) {
     };
 }
 
-u32 TextureRuntime::RemoveThreshold() {
-    return num_swapchain_images;
+u64 TextureRuntime::GetResourceTick() {
+    return scheduler.GetMasterSemaphore()->CurrentTick();
+}
+
+u64 TextureRuntime::GetResourceFreeTick() {
+    // Ensure we are getting the latest GpuTick value to reduce garbage-collection latency and
+    // allows the deletion of resources immediately when they are done being used.
+    scheduler.GetMasterSemaphore()->Refresh();
+    return scheduler.GetMasterSemaphore()->KnownGpuTick();
 }
 
 void TextureRuntime::Finish() {
-    scheduler.Finish();
+    scheduler.Flush();
 }
 
 bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
@@ -326,9 +336,9 @@ bool TextureRuntime::Reinterpret(Surface& source, Surface& dest,
     if (src_format == PixelFormat::D24S8 && dst_format == PixelFormat::RGBA8) {
         blit_helper.ConvertDS24S8ToRGBA8(source, dest, copy);
     } else {
-        LOG_WARNING(Render_Vulkan, "Unimplemented reinterpretation {} -> {}",
-                    VideoCore::PixelFormatAsString(src_format),
-                    VideoCore::PixelFormatAsString(dst_format));
+        LOG_WARNING(Render_Vulkan, "Unimplemented reinterpretation {}({}) -> {}({})",
+                    VideoCore::PixelFormatAsString(src_format), vk::to_string(source.traits.native),
+                    VideoCore::PixelFormatAsString(dst_format), vk::to_string(dest.traits.native));
         return false;
     }
     return true;
@@ -350,8 +360,8 @@ bool TextureRuntime::ClearTexture(Surface& surface, const VideoCore::TextureClea
                 .aspectMask = params.aspect,
                 .baseMipLevel = clear.texture_level,
                 .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = VK_REMAINING_ARRAY_LAYERS,
+                .baseArrayLayer = clear.texture_layer,
+                .layerCount = 1,
             };
 
             const vk::ImageMemoryBarrier pre_barrier = {
@@ -436,7 +446,8 @@ void TextureRuntime::ClearTextureWithRenderpass(Surface& surface,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = params.src_image,
-            .subresourceRange = MakeSubresourceRange(params.aspect, clear.texture_level),
+            .subresourceRange =
+                MakeSubresourceRange(params.aspect, clear.texture_level, 1, clear.texture_layer),
         };
 
         const vk::ImageMemoryBarrier post_barrier = {
@@ -770,6 +781,11 @@ Surface::Surface(TextureRuntime& runtime_, const VideoCore::SurfaceParams& param
         (traits.aspect & vk::ImageAspectFlagBits::eColor) != vk::ImageAspectFlags{};
     if (is_color) {
         usage |= vk::ImageUsageFlagBits::eColorAttachment;
+    }
+    if (traits.native == vk::Format::eR8G8B8A8Unorm && traits.storage_support) {
+        // Add Storage-usage support when available in case it is found out later that this is a
+        // shadow-source texture that will get used in the utility descriptor-set
+        usage |= vk::ImageUsageFlagBits::eStorage;
     }
 
     const bool need_format_list = is_mutable && instance.IsImageFormatListSupported();
@@ -1117,6 +1133,8 @@ void Surface::ScaleUp(u32 new_scale) {
                                  traits.native, traits.usage, flags, traits.aspect, false,
                                  DebugName(true));
     current = Type::Scaled;
+
+    handles[Type::Copy].Destroy();
 
     runtime.renderpass_cache.EndRendering();
     scheduler.Record(
@@ -1530,6 +1548,14 @@ Sampler::Sampler(TextureRuntime& runtime, const VideoCore::SamplerParams& params
     const float lod_min = static_cast<float>(params.lod_min);
     const float lod_max = static_cast<float>(params.lod_max);
 
+    // Do not apply anisotropic filtering if nearest filtering is used at all, as drivers
+    // are only recommended (not enforced) to follow the mag/min filter in such cases.
+    // Adreno drivers are an example of this, as they force linear filtering when using
+    // anisotropic filtering.
+    const bool use_anisotropy = instance.IsAnisotropicFilteringSupported() &&
+                                mag_filter == vk::Filter::eLinear &&
+                                min_filter == vk::Filter::eLinear;
+
     const vk::SamplerCreateInfo sampler_info = {
         .pNext = use_border_color ? &border_color_info : nullptr,
         .magFilter = mag_filter,
@@ -1538,8 +1564,8 @@ Sampler::Sampler(TextureRuntime& runtime, const VideoCore::SamplerParams& params
         .addressModeU = wrap_u,
         .addressModeV = wrap_v,
         .mipLodBias = 0,
-        .anisotropyEnable = instance.IsAnisotropicFilteringSupported(),
-        .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
+        .anisotropyEnable = use_anisotropy,
+        .maxAnisotropy = use_anisotropy ? properties.limits.maxSamplerAnisotropy : 1.0f,
         .compareEnable = false,
         .compareOp = vk::CompareOp::eAlways,
         .minLod = lod_min,

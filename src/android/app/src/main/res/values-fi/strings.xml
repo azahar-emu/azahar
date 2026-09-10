@@ -47,9 +47,7 @@
     <string name="preferences_controls">Ohjain</string>
     <string name="preferences_graphics">Grafiikat</string>
     <string name="preferences_audio">Ääni</string>
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Pelitiedostosi on salattu.</string>
-    <string name="loader_error_invalid_format">Epäsopiva pelitiedoston formaatti</string>
     <string name="emulation_show_fps">Näytä FPS</string>
     <string name="emulation_done">Valmis</string>
     <string name="emulation_open_settings">Avaa asetukset</string>

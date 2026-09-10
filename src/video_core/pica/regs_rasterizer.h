@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -20,7 +20,7 @@ struct RasterizerRegs {
         KeepAll = 0,
         KeepClockWise = 1,
         KeepCounterClockWise = 2,
-        // TODO: What does the third value imply?
+        KeepAll2 = 3,
     };
 
     union {

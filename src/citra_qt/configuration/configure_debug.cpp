@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2016-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -82,8 +82,14 @@ ConfigureDebug::ConfigureDebug(bool is_powered_on_, QWidget* parent)
     });
 #endif
 
+    connect(ui->toggle_pica_debugging, &QCheckBox::clicked, this, [this](bool checked) {
+        QMessageBox::information(this, tr("Relaunch Required"),
+                                 tr("Please relaunch Azahar for this setting to take effect."));
+    });
+
     ui->toggle_cpu_jit->setEnabled(!is_powered_on);
     ui->toggle_renderer_debug->setEnabled(!is_powered_on);
+    ui->toggle_pica_debugging->setEnabled(!is_powered_on);
     ui->toggle_dump_command_buffers->setEnabled(!is_powered_on);
     ui->enable_rpc_server->setEnabled(!is_powered_on);
     ui->toggle_unique_data_console_type->setEnabled(!is_powered_on);
@@ -131,10 +137,10 @@ void ConfigureDebug::SetConfiguration() {
 #endif // !ENABLE_SCRIPTING
     ui->toggle_unique_data_console_type->setChecked(
         Settings::values.toggle_unique_data_console_type.GetValue());
-    ui->break_on_unmapped_memory_access->setChecked(
-        Settings::values.break_on_unmapped_memory_access.GetValue());
+    ui->enable_exception_handler->setChecked(Settings::values.enable_exception_handler.GetValue());
 
     ui->toggle_renderer_debug->setChecked(Settings::values.renderer_debug.GetValue());
+    ui->toggle_pica_debugging->setChecked(Settings::values.pica_debugging.GetValue());
     ui->toggle_dump_command_buffers->setChecked(Settings::values.dump_command_buffers.GetValue());
 
     if (!Settings::IsConfiguringGlobal()) {
@@ -178,9 +184,9 @@ void ConfigureDebug::ApplyConfiguration() {
     Settings::values.enable_rpc_server = ui->enable_rpc_server->isChecked();
     Settings::values.toggle_unique_data_console_type =
         ui->toggle_unique_data_console_type->isChecked();
-    Settings::values.break_on_unmapped_memory_access =
-        ui->break_on_unmapped_memory_access->isChecked();
+    Settings::values.enable_exception_handler = ui->enable_exception_handler->isChecked();
     Settings::values.renderer_debug = ui->toggle_renderer_debug->isChecked();
+    Settings::values.pica_debugging = ui->toggle_pica_debugging->isChecked();
     Settings::values.dump_command_buffers = ui->toggle_dump_command_buffers->isChecked();
     Settings::values.instant_debug_log = ui->instant_debug_log->isChecked();
 
@@ -205,7 +211,6 @@ void ConfigureDebug::SetupPerGameUI() {
     ui->groupBox_2->setVisible(false);
     ui->enable_rpc_server->setVisible(false);
     ui->toggle_unique_data_console_type->setVisible(false);
-    ui->break_on_unmapped_memory_access->setVisible(false);
     ui->toggle_cpu_jit->setVisible(false);
 }
 

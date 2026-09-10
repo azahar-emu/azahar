@@ -6,8 +6,7 @@ cmake .. -GNinja \
     -DCMAKE_SYSTEM_NAME=iOS \
     -DCMAKE_OSX_ARCHITECTURES=arm64 \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-    -DENABLE_QT_TRANSLATION=ON
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 ninja
 
 ccache -s -v

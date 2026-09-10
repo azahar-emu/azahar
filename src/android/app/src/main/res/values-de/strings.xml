@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_disclaimer">Diese Software führt Anwendungen für die Handheld-Spielkonsole Nintendo 3DS aus. Es sind keine Spieletitel enthalten.\n\nBevor Sie mit der Emulation beginnen können, wählen Sie bitte einen Ordner aus, in dem Azahars Benutzerdaten gespeichert werden sollen.\n\nWas ist das:\n<a href='https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage'>Wiki - Citra Android-Benutzerdaten und -Speicher</a></string>
     <string name="app_notification_channel_description">Azahar 3DS-Emulator-Benachrichtigungen</string>
     <string name="app_notification_running">Azahar läuft</string>
     <string name="app_game_install_description">Als Nächstes müssen Sie einen Anwendungsordner auswählen. Azahar zeigt alle 3DS-ROMs im ausgewählten Ordner in der App an.\n\nCIA-ROMs, Updates und DLC müssen separat installiert werden, indem Sie auf das Ordnersymbol klicken und CIA installieren auswählen</string>
@@ -82,14 +81,12 @@
     <string name="warning_skip">Überspringen</string>
     <string name="warning_cancel">Abbrechen</string>
     <string name="select_citra_user_folder">Wähle ein Nutzerverzeichnis aus</string>
-    <string name="select_citra_user_folder_description"><![CDATA[Wähle dein <a href=\"https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage\">Nutzerdaten</a>verzeichnis, mit dem unteren Knopf.]]></string>
     <string name="select_which_user_directory_to_use">Es hat den Anschein, dass du Nutzerverzeichnisse für Lime3DS und Azahar eingerichtet hast. Das kann daran liegen, dass du von Lime3DS auf Azahar upgegradet hast und dabei ein neues Verzeichnis ausgewählt hast.\n\nEs kann sein, dass du dadurch gedacht hast, dass deine Speicherstände verloren gegangen sind - Wir entschuldigen und, sollte dies der Fall sein.\n\nMöchtest du wieder dein ursprüngliches Lime3DS-Verzeichnis nutzen, wodurch deine Einstellungen und Speicherstände von Lime3DS wiederhergestellt werden, oder das aktuelle Azahar-Nutzerverzeichnis nutzen?\n\nKeine der Verzeinisse werden dadurch gelöscht und du kannst das Verzeichnis jederzeit wechseln, indem du die „Wähle ein Nutzerverzeichnis aus“-Option auswählst.</string>
     <string name="keep_current_azahar_directory">Aktuelles Azahar-Verzeichnis behalten</string>
     <string name="use_prior_lime3ds_directory">Vorheriges Lime3DS-Verzeichnis nutzen</string>
     <string name="select">Auswählen</string>
     <string name="cannot_skip">Der Nutzer Ordner muss gesetzt sein</string>
     <string name="cannot_skip_directory_description">Dieser Schritt ist nötig, damit Azahar funktionieren kann. Bitte wähle ein Verzeichnis aus, damit du fortfahren kannst.</string>
-    <string name="selecting_user_directory_without_write_permissions">Die Schreibrechte auf dein <a href="https://web.archive.org/web/20240304193549/https://github.com/citra-emu/citra/wiki/Citra-Android-user-data-and-storage">Nutzerdaten</a>-Verzeichnis, wo deine Speicherstände und andere Informationen gespeichert sind, fehlen. Dies kann durch ein Anwendungsupdate, oder ein Androidupdate passiert sein. Bitte wähle das Verzeichnis erneut aus, damit die Berechtigungen wiederhergestellt werden können.</string>
     <string name="invalid_selection">Ungültige Auswahl</string>
     <string name="set_up_theme_settings">Design-Einstellung</string>
     <string name="setup_theme_settings_description">Konfigurieren sie ihre Designeinstellungen für Azahar.</string>
@@ -129,7 +126,6 @@
     <string name="turbo_limit_hotkey">Turbogeschwindigkeit</string>
     <string name="turbo_enabled_toast">Turbogeschwindigkeit aktiviert</string>
     <string name="turbo_disabled_toast">Turbogeschwindigkeit deaktiviert</string>
-
     <!-- System files strings -->
     <string name="setup_system_files">Systemdateien</string>
     <string name="setup_system_files_description">Systemdateivorgänge wie die Installation von Systemdateien oder das Booten des HOME-Menüs durchführen</string>
@@ -193,7 +189,6 @@
     <string name="storage">Speicher</string>
     <string name="compress_cia_installs">Komprimiere installierten CIA Kontent</string>
     <string name="compress_cia_installs_description">Komprimiert den Inhalt von CIA-Dateien, wenn diese auf der emulierten SD-Karte installiert werden. Betrifft nur CIA-Inhalte, die installiert werden, während die Einstellung aktiviert ist.</string>
-
     <!-- Camera settings strings -->
     <string name="inner_camera">Innenkamera</string>
     <string name="outer_left_camera">Außenkamera Links</string>
@@ -348,14 +343,12 @@
     <string name="reset_setting_confirmation">Möchtest du diese Einstellung auf den Werkzustand zurücksetzen?</string>
     <string name="setting_not_editable">Du kannst das nicht bearbeiten</string>
     <string name="setting_disabled">Einstellungen deaktiviert</string>
-    <string name="setting_disabled_description">Diese Einstellung ist aktuell deaktiviert, da eine andere Einstellung nicht den geeigneten Wert hat. </string>
     <string name="setting_not_editable_description">Diese Einstellung kann nicht geändert werden, solange ein Spiel läuft.</string>
     <string name="auto_select">Automatisch auswählen</string>
     <string name="start">Start</string>
     <string name="cancelling">Wird abgebrochen...</string>
     <string name="visibility">Sichtbarkeit</string>
     <string name="information">Information</string>
-
     <!-- Add Directory Screen-->
     <string name="select_game_folder">Spieleordner auswählen</string>
 
@@ -375,12 +368,9 @@
     <string name="preferences_theme">Design und Farbe</string>
     <string name="preferences_layout">Anordnung</string>
 
-    <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Deine ROM ist verschlüsselt</string>
-    <string name="loader_error_invalid_format">Ungültiges ROM-Format</string>
     <string name="loader_error_file_not_found">ROM-Datei existiert nicht</string>
     <string name="no_game_present">Kein ausführbares Spiel vorhanden!</string>
-
     <!-- Emulation Menu -->
     <string name="emulation_menu_help">Drücke zurück, um auf das Menü zuzugreifen.</string>
     <string name="emulation_save_state">Spielstand speichern</string>
@@ -583,8 +573,6 @@
     <string name="cia_install_error_encrypted">„%s“ muss entschlüsselt werden, bevor es mit Azahar verwendet werden kann. Dazu ist ein echter 3DS erforderlich.</string>
     <string name="cia_install_error_unknown">Ein unbekannter Fehler ist während der Installation von „%s“ aufgetreten.\n Bitte schau im Protokoll für weitere Informationen nach</string>
 
-    <!-- Memory Sizes -->
-    <string name="memory_formatted">%1$s %2$s</string>
     <string name="memory_byte">Byte</string>
     <string name="memory_byte_shorthand">B</string>
     <string name="memory_kilobyte">KB</string>
@@ -611,15 +599,6 @@
     <!-- Black backgrounds theme -->
     <string name="use_black_backgrounds">Schwarzer Hintergrund</string>
     <string name="use_black_backgrounds_description">Wenn das dunkle Design aktiviert ist, wird der Hintergrund tiefschwarz dargestellt.</string>
-
-    <!-- Region names -->
-    <string name="system_region_jpn">JPN</string>
-    <string name="system_region_usa">USA</string>
-    <string name="system_region_eur">EUR</string>
-    <string name="system_region_aus">AUS</string>
-    <string name="system_region_chn">CHN</string>
-    <string name="system_region_kor">KOR</string>
-    <string name="system_region_twn">TWN</string>
 
     <!-- Language names -->
     <string name="language_japanese">Japanisch (日本語)</string>
@@ -659,17 +638,6 @@
     <string name="anaglyph">Anaglyphen</string>
     <string name="interlaced">Überlappend</string>
     <string name="reverse_interlaced">Invers überlappend</string>
-
-    <!-- Graphics API names -->
-    <string name="opengles">OpenGLES</string>
-    <string name="vulkan">Vulkan</string>
-
-    <!-- Texture filter names -->
-    <string name="anime4k">Anime4K</string>
-    <string name="bicubic">Bikubisch</string>
-    <string name="scaleforce">ScaleForce</string>
-    <string name="xbrz">xBRZ</string>
-    <string name="mmpx">MMPX</string>
 
     <!-- Texture Sampling names -->
     <string name="game_controlled">Spielgesteuert</string>

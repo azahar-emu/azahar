@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -31,9 +31,10 @@ import androidx.preference.PreferenceManager
 import org.citra.citra_emu.CitraApplication
 import org.citra.citra_emu.NativeLibrary
 import org.citra.citra_emu.R
-import org.citra.citra_emu.camera.StillImageCameraHelper.OnFilePickerResult
+import org.citra.citra_emu.camera.StillImageCameraHelper.onFilePickerResult
 import org.citra.citra_emu.contracts.OpenFileResultContract
 import org.citra.citra_emu.databinding.ActivityEmulationBinding
+import org.citra.citra_emu.dialogs.NetPlayDialog
 import org.citra.citra_emu.display.ScreenAdjustmentUtil
 import org.citra.citra_emu.display.SecondaryDisplay
 import org.citra.citra_emu.features.hotkeys.HotkeyUtility
@@ -44,12 +45,17 @@ import org.citra.citra_emu.features.settings.model.view.InputBindingSetting
 import org.citra.citra_emu.fragments.EmulationFragment
 import org.citra.citra_emu.fragments.MessageDialogFragment
 import org.citra.citra_emu.model.Game
+import org.citra.citra_emu.ui.main.MainActivity
 import org.citra.citra_emu.utils.BuildUtil
+import org.citra.citra_emu.utils.CitraDirectoryUtils
 import org.citra.citra_emu.utils.ControllerMappingHelper
-import org.citra.citra_emu.utils.FileBrowserHelper
+import org.citra.citra_emu.utils.DirectoryInitialization
 import org.citra.citra_emu.utils.EmulationLifecycleUtil
 import org.citra.citra_emu.utils.EmulationMenuSettings
+import org.citra.citra_emu.utils.FileBrowserHelper
 import org.citra.citra_emu.utils.Log
+import org.citra.citra_emu.utils.NetPlayManager
+import org.citra.citra_emu.utils.PermissionsHandler
 import org.citra.citra_emu.utils.RefreshRateUtil
 import org.citra.citra_emu.utils.ThemeUtil
 import org.citra.citra_emu.viewmodel.EmulationViewModel
@@ -64,7 +70,7 @@ class EmulationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmulationBinding
     private lateinit var screenAdjustmentUtil: ScreenAdjustmentUtil
     private lateinit var hotkeyUtility: HotkeyUtility
-    private lateinit var secondaryDisplay: SecondaryDisplay
+    lateinit var secondaryDisplayManager: SecondaryDisplay
 
     private val onShutdown = Runnable {
         if (intent.getBooleanExtra("launched_from_shortcut", false)) {
@@ -85,12 +91,34 @@ class EmulationActivity : AppCompatActivity() {
     private var isEmulationRunning: Boolean = false
     private var isEmulationReady: Boolean = false
 
+    private fun ensureUserDirectoryReady(): Boolean {
+        if (DirectoryInitialization.areCitraDirectoriesReady()) return true
+        CitraDirectoryUtils.attemptAutomaticUpdateDirectory() // Lime3DS -> Azahar
+        if (CitraDirectoryUtils.needToUpdateManually()) return false
+        if (!PermissionsHandler.hasWriteAccess(applicationContext)) return false
+        return DirectoryInitialization.start() ==
+            DirectoryInitialization.DirectoryInitializationState.CITRA_DIRECTORIES_INITIALIZED
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
 
         RefreshRateUtil.enforceRefreshRate(this, sixtyHz = true)
 
         ThemeUtil.setTheme(this)
+
+        if (!ensureUserDirectoryReady()) {
+            super.onCreate(null) // null: don't restore fragments into an activity we're killing
+            secondaryDisplayManager = SecondaryDisplay(this)
+            startActivity(
+                Intent(this, MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+            finish()
+            return
+        }
+
         settingsViewModel.settings.loadSettings()
 
         screenAdjustmentUtil = ScreenAdjustmentUtil(this, windowManager, settingsViewModel.settings)
@@ -102,8 +130,10 @@ class EmulationActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        secondaryDisplay = SecondaryDisplay(this)
-        secondaryDisplay.updateDisplay()
+        NativeLibrary.initMultiplayer()
+
+        secondaryDisplayManager = SecondaryDisplay(this)
+        secondaryDisplayManager.updateDisplay()
 
         binding = ActivityEmulationBinding.inflate(layoutInflater)
         hotkeyUtility = HotkeyUtility(screenAdjustmentUtil, this)
@@ -188,7 +218,7 @@ class EmulationActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        secondaryDisplay.releasePresentation()
+        secondaryDisplayManager.releasePresentation()
         super.onStop()
     }
 
@@ -199,7 +229,7 @@ class EmulationActivity : AppCompatActivity() {
 
     public override fun onRestart() {
         super.onRestart()
-        secondaryDisplay.updateDisplay()
+        secondaryDisplayManager.updateDisplay()
         NativeLibrary.reloadCameraDevices()
     }
 
@@ -222,8 +252,8 @@ class EmulationActivity : AppCompatActivity() {
         NativeLibrary.playTimeManagerStop()
         isEmulationRunning = false
         instance = null
-        secondaryDisplay.releasePresentation()
-        secondaryDisplay.releaseVD()
+        secondaryDisplayManager.releasePresentation()
+        secondaryDisplayManager.releaseVD()
 
         super.onDestroy()
     }
@@ -280,6 +310,15 @@ class EmulationActivity : AppCompatActivity() {
         ).show()
     }
 
+    fun displayMultiplayerDialog() {
+        val dialog = NetPlayDialog(this)
+        dialog.show()
+    }
+
+    fun addNetPlayMessages(type: Int, msg: String) {
+        NetPlayManager.addNetPlayMessage(type, msg)
+    }
+
     private fun enableFullscreenImmersive() {
         val attributes = window.attributes
 
@@ -334,11 +373,13 @@ class EmulationActivity : AppCompatActivity() {
                 }
                 return hotkeyUtility.handleKeyPress(event)
             }
+
             KeyEvent.ACTION_UP -> {
                 return hotkeyUtility.handleKeyRelease(event)
             }
+
             else -> {
-                return false;
+                return false
             }
         }
     }
@@ -358,7 +399,8 @@ class EmulationActivity : AppCompatActivity() {
         // TODO: Move this check into native code - prevents crash if input pressed before starting emulation
         if (!NativeLibrary.isRunning() ||
             (event.source and InputDevice.SOURCE_CLASS_JOYSTICK == 0) ||
-            emulationFragment.isDrawerOpen()) {
+            emulationFragment.isDrawerOpen()
+        ) {
             return super.dispatchGenericMotionEvent(event)
         }
 
@@ -387,16 +429,19 @@ class EmulationActivity : AppCompatActivity() {
                 preferences.getInt(InputBindingSetting.getInputAxisButtonKey(axis), -1)
             val guestOrientation =
                 preferences.getInt(InputBindingSetting.getInputAxisOrientationKey(axis), -1)
-            val inverted = preferences.getBoolean(InputBindingSetting.getInputAxisInvertedKey(axis),false);
+            val inverted = preferences.getBoolean(
+                InputBindingSetting.getInputAxisInvertedKey(axis),
+                false
+            )
             if (nextMapping == -1 || guestOrientation == -1) {
                 // Axis is unmapped
                 continue
             }
-            if (value > 0f && value < 0.1f || value < 0f && value > -0.1f) {
+            if ((value > 0f && value < 0.1f) || (value < 0f && value > -0.1f)) {
                 // Skip joystick wobble
                 value = 0f
             }
-            if (inverted) value = -value;
+            if (inverted) value = -value
 
             when (nextMapping) {
                 NativeLibrary.ButtonType.STICK_LEFT -> {
@@ -450,7 +495,7 @@ class EmulationActivity : AppCompatActivity() {
         // Triggers L/R and ZL/ZR
         if (isTriggerPressedLMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.TRIGGER_L,
                 if (isTriggerPressedL) {
                     NativeLibrary.ButtonState.PRESSED
@@ -461,7 +506,7 @@ class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedRMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.TRIGGER_R,
                 if (isTriggerPressedR) {
                     NativeLibrary.ButtonState.PRESSED
@@ -472,7 +517,7 @@ class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedZLMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.BUTTON_ZL,
                 if (isTriggerPressedZL) {
                     NativeLibrary.ButtonState.PRESSED
@@ -483,7 +528,7 @@ class EmulationActivity : AppCompatActivity() {
         }
         if (isTriggerPressedZRMapped) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.BUTTON_ZR,
                 if (isTriggerPressedZR) {
                     NativeLibrary.ButtonState.PRESSED
@@ -496,72 +541,72 @@ class EmulationActivity : AppCompatActivity() {
         // Work-around to allow D-pad axis to be bound to emulated buttons
         if (axisValuesDPad[0] == 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[0] < 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.PRESSED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[0] > 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_LEFT,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_RIGHT,
                 NativeLibrary.ButtonState.PRESSED
             )
         }
         if (axisValuesDPad[1] == 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[1] < 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.PRESSED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.RELEASED
             )
         }
         if (axisValuesDPad[1] > 0f) {
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_UP,
                 NativeLibrary.ButtonState.RELEASED
             )
             NativeLibrary.onGamePadEvent(
-                NativeLibrary.TouchScreenDevice,
+                NativeLibrary.TOUCHSCREEN_DEVICE,
                 NativeLibrary.ButtonType.DPAD_DOWN,
                 NativeLibrary.ButtonState.PRESSED
             )
@@ -573,7 +618,9 @@ class EmulationActivity : AppCompatActivity() {
         registerForActivityResult(OpenFileResultContract()) { result: Intent? ->
             if (result == null) return@registerForActivityResult
             val selectedFiles = FileBrowserHelper.getSelectedFiles(
-                result, applicationContext, listOf<String>("bin")
+                result,
+                applicationContext,
+                listOf<String>("bin")
             ) ?: return@registerForActivityResult
             if (BuildUtil.isGooglePlayBuild) {
                 onAmiiboSelected(selectedFiles[0])
@@ -590,14 +637,12 @@ class EmulationActivity : AppCompatActivity() {
                 return@registerForActivityResult
             }
 
-            OnFilePickerResult(result.toString())
+            onFilePickerResult(result.toString())
         }
 
     companion object {
         private var instance: EmulationActivity? = null
 
-        fun isRunning(): Boolean {
-            return instance?.isEmulationRunning ?: false
-        }
+        fun isRunning(): Boolean = instance?.isEmulationRunning ?: false
     }
 }

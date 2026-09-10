@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2017-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -36,6 +36,9 @@ std::string GenerateKeyboardParam(int key_code);
 /// Generates a serialized param package for creating an analog device taking input from keyboard
 std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
                                         int key_modifier, float modifier_scale);
+
+std::string AnalogToText(const Common::ParamPackage& param, const std::string& dir);
+std::string ButtonToText(const Common::ParamPackage& param);
 
 Common::ParamPackage GetControllerButtonBinds(const Common::ParamPackage& params, int button);
 Common::ParamPackage GetControllerAnalogBinds(const Common::ParamPackage& params, int analog);

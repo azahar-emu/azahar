@@ -1,11 +1,10 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2025-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 package org.citra.citra_emu.utils
 import android.app.Activity
 import android.os.Build
-import androidx.annotation.RequiresApi
 
 object RefreshRateUtil {
     // Since Android 15, the OS automatically runs apps categorized as games with a

@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2014-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -12,6 +12,7 @@
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "core/arm/arm_interface.h"
+#include "core/arm/exception_handler.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #ifdef ENABLE_GDBSTUB
@@ -1144,7 +1145,6 @@ Result SVC::ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s6
 }
 
 void SVC::Break(u8 break_reason) {
-    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution!");
     std::string reason_str;
     switch (break_reason) {
     case 0:
@@ -1160,8 +1160,8 @@ void SVC::Break(u8 break_reason) {
         reason_str = "UNKNOWN";
         break;
     }
-    LOG_CRITICAL(Debug_Emulated, "Break reason: {}", reason_str);
-    system.SetStatus(Core::System::ResultStatus::ErrorUnknown);
+    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution! Reason: {}", reason_str);
+    Core::LogException(system, Core::ExceptionType::Break);
 }
 
 /// Used to output a message on a debug hardware unit, or for the GDB file I/O
@@ -1701,7 +1701,7 @@ Result SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_per
     std::shared_ptr<SharedMemory> shared_memory = nullptr;
 
     auto VerifyPermissions = [](MemoryPermission permission) {
-        // SharedMemory blocks can not be created with Execute permissions
+        // SharedMemory blocks can not be created with execute permissions
         switch (permission) {
         case MemoryPermission::None:
         case MemoryPermission::Read:
@@ -2191,7 +2191,11 @@ Result SVC::ControlProcess(Handle process_handle, u32 process_OP, u32 varg2, u32
                     kernel.GetCurrentThreadManager().GetCurrentThread()->thread_id) {
                     continue;
                 }
-                thread.get()->can_schedule = !varg2;
+                if (varg2) {
+                    thread->SetUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                } else {
+                    thread->ClearUnscheduleMode(Kernel::UnscheduleMode::SVC);
+                }
             }
         }
         return ResultSuccess;

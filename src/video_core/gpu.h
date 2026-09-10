@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -83,9 +83,6 @@ public:
 
     /// Returns an immutable reference to the PICA GPU.
     [[nodiscard]] const Pica::PicaCore& PicaCore() const;
-
-    /// Returns a mutable reference to the pica debugging context.
-    [[nodiscard]] Pica::DebugContext& DebugContext();
 
     /// Returns a mutable reference to the GSP command debugger.
     [[nodiscard]] GraphicsDebugger& Debugger();

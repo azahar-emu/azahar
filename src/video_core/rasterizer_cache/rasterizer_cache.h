@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -71,12 +71,28 @@ RasterizerCache<T>::RasterizerCache(Memory::MemorySystem& memory_,
     auto& null_surface = slot_surfaces[NULL_SURFACE_ID];
     runtime.ClearTexture(null_surface, {
                                            .texture_level = 0,
+                                           .texture_layer = 0,
                                            .texture_rect = null_surface.GetScaledRect(),
                                            .value =
                                                {
                                                    .color = {0.f, 0.f, 0.f, 0.f},
                                                },
                                        });
+
+    auto& null_surface_cube = slot_surfaces[NULL_SURFACE_CUBE_ID];
+    // Clear all cubemap faces
+    for (u32 cube_layer_index = 0; cube_layer_index < 6; ++cube_layer_index) {
+        runtime.ClearTexture(null_surface_cube,
+                             {
+                                 .texture_level = 0,
+                                 .texture_layer = cube_layer_index,
+                                 .texture_rect = null_surface_cube.GetScaledRect(),
+                                 .value =
+                                     {
+                                         .color = {0.f, 0.f, 0.f, 0.f},
+                                     },
+                             });
+    }
 }
 
 template <class T>
@@ -112,10 +128,14 @@ void RasterizerCache<T>::TickFrame() {
 
 template <class T>
 void RasterizerCache<T>::RunGarbageCollector() {
-    frame_tick++;
+    const u64 resource_free_tick = runtime.GetResourceFreeTick();
     for (auto it = sentenced.begin(); it != sentenced.end();) {
-        const auto [surface_id, tick] = *it;
-        if (frame_tick - tick <= runtime.RemoveThreshold()) {
+        const auto [surface_id, resource_last_used_tick] = *it;
+        // Tick-values less than or equal to the current resource-tick are possibly still in-use.
+        // Tick-values larger than the current resource-tick are not being utilized anymore and can
+        // be safely deleted.
+        if (resource_free_tick <= resource_last_used_tick) {
+            // Resource is still in-use, skip deletion
             it++;
             continue;
         }
@@ -153,7 +173,7 @@ void RasterizerCache<T>::RemoveTextureCubeFace(SurfaceId surface_id) {
         }
         if (std::none_of(cube.face_ids.begin(), cube.face_ids.end(),
                          [](SurfaceId id) { return id; })) {
-            sentenced.emplace_back(cube.surface_id, frame_tick);
+            sentenced.emplace_back(cube.surface_id, runtime.GetResourceTick());
             it = texture_cube_cache.erase(it);
         } else {
             it++;
@@ -583,7 +603,7 @@ SurfaceId RasterizerCache<T>::GetTextureSurface(const Pica::Texture::TextureInfo
         params.res_scale = src_surface.res_scale;
         SurfaceId tmp_surface_id = CreateSurface(params, initial_flags);
         Surface& tmp_surface = slot_surfaces[tmp_surface_id];
-        sentenced.emplace_back(tmp_surface_id, frame_tick);
+        sentenced.emplace_back(tmp_surface_id, runtime.GetResourceTick());
 
         const TextureBlit blit = {
             .src_level = src_surface.LevelOf(params.addr),
@@ -1103,7 +1123,7 @@ bool RasterizerCache<T>::UploadCustomSurface(SurfaceId surface_id, SurfaceInterv
             const SurfaceId old_id =
                 slot_surfaces.swap_and_insert(surface_id, runtime, old_surface, material);
             slot_surfaces[old_id].flags &= ~SurfaceFlagBits::Registered;
-            sentenced.emplace_back(old_id, frame_tick);
+            sentenced.emplace_back(old_id, runtime.GetResourceTick());
         }
         Surface& surface = slot_surfaces[surface_id];
         surface.UploadCustom(material, level);
@@ -1151,14 +1171,14 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
     const u32 flush_end = boost::icl::last_next(interval);
     ASSERT(flush_start >= surface.addr && flush_end <= surface.end);
 
-    MemoryRef dest_ptr = memory.GetPhysicalRef(flush_start);
+    MemoryRef dest_ptr = memory.GetPhysicalRef(surface.addr);
     if (!dest_ptr) [[unlikely]] {
         return;
     }
 
     const u32 start_offset = flush_start - surface.addr;
-    const u32 download_size =
-        std::clamp(flush_end - flush_start, 0u, static_cast<u32>(dest_ptr.GetSize()));
+    const u32 end_offset =
+        std::clamp(flush_end - surface.addr, 0u, static_cast<u32>(dest_ptr.GetSize()));
     const u32 coarse_start_offset = start_offset - (start_offset % surface.fill_size);
     const u32 backup_bytes = start_offset % surface.fill_size;
 
@@ -1167,9 +1187,9 @@ void RasterizerCache<T>::DownloadFillSurface(Surface& surface, SurfaceInterval i
         std::memcpy(backup_data.data(), &dest_ptr[coarse_start_offset], backup_bytes);
     }
 
-    for (u32 offset = coarse_start_offset; offset < download_size; offset += surface.fill_size) {
+    for (u32 offset = coarse_start_offset; offset < end_offset; offset += surface.fill_size) {
         std::memcpy(&dest_ptr[offset], &surface.fill_data[0],
-                    std::min(surface.fill_size, download_size - offset));
+                    std::min(surface.fill_size, end_offset - offset));
     }
 
     if (backup_bytes) {
@@ -1346,18 +1366,28 @@ template <class T>
 SurfaceId RasterizerCache<T>::CreateSurface(const SurfaceParams& params,
                                             const SurfaceFlagBits& initial_flags) {
     const SurfaceId surface_id = [&] {
+        const u64 resource_free_tick = runtime.GetResourceFreeTick();
+        // Try to find a matching texture in the deletion queue
         const auto it = std::find_if(sentenced.begin(), sentenced.end(), [&](const auto& pair) {
-            return slot_surfaces[pair.first] == params;
+            return (slot_surfaces[pair.first] == params) &&
+                   // Only recycle the texture if its resolution scale is equal or less than the
+                   // incoming texture
+                   (slot_surfaces[pair.first].res_scale <= params.res_scale) &&
+                   // Only recycle the texture if the texture runtime is completely done with it
+                   (resource_free_tick > pair.second);
         });
-        if (it == sentenced.end()) {
-            return slot_surfaces.insert(runtime, params, initial_flags);
+        // If a matching texture was found in the deletion queue, recycle it.
+        if (it != sentenced.end()) {
+            const SurfaceId surface_id = it->first;
+            sentenced.erase(it);
+            return surface_id;
         }
-        const SurfaceId surface_id = it->first;
-        sentenced.erase(it);
-        return surface_id;
+        return slot_surfaces.insert(runtime, params, initial_flags);
     }();
     Surface& surface = slot_surfaces[surface_id];
     if (params.res_scale > surface.res_scale) {
+        // Texture is going to be upscaled, remove any previous framebuffer references
+        RemoveFramebuffers(surface_id);
         surface.ScaleUp(params.res_scale);
     }
     surface.MarkInvalid(surface.GetInterval());
@@ -1402,7 +1432,7 @@ void RasterizerCache<T>::UnregisterSurface(SurfaceId surface_id) {
 
     if (surface.type != SurfaceType::Fill) {
         RemoveTextureCubeFace(surface_id);
-        sentenced.emplace_back(surface_id, frame_tick);
+        sentenced.emplace_back(surface_id, runtime.GetResourceTick());
         return;
     }
 
@@ -1418,7 +1448,6 @@ void RasterizerCache<T>::UnregisterAll() {
         }
     }
     runtime.Finish();
-    frame_tick += runtime.RemoveThreshold();
     RunGarbageCollector();
 }
 

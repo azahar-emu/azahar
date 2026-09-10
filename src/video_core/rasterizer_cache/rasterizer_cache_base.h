@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2023-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -227,7 +227,6 @@ private:
     SurfaceMap dirty_regions;
     PageMap cached_pages;
     u32 resolution_scale_factor;
-    u64 frame_tick{};
     FramebufferParams fb_params;
     Settings::TextureFilter filter;
     bool dump_textures;

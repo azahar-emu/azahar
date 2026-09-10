@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2024-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -80,7 +80,7 @@ Apploader_Artic::~Apploader_Artic() {
     client->Stop();
 }
 
-FileType Apploader_Artic::IdentifyType(FileUtil::IOFile* file) {
+FileType Apploader_Artic::IdentifyType(FileUtil::IOFileBase* file) {
     return FileType::ARTIC;
 }
 

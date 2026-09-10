@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2015-2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -592,7 +592,7 @@ bool CheckBreakpoint(VAddr addr, u32 access_len, BreakpointType type) {
         bool hit = false;
 
         if (type == BreakpointType::Execute) {
-            // Execute breakpoints should only trigger on exact PC match.
+            // execute breakpoints should only trigger on exact PC match.
             hit = (addr == bp.addr);
         } else {
             // Range overlap test:
@@ -877,7 +877,7 @@ static void HandleGetStopReason() {
         for (const auto& process : process_list) {
             if (process->codeset->program_id == program_id) {
                 current_process = process.get();
-                current_process->SetDebugBreak(true);
+                current_process->SetUnscheduleMode(Kernel::UnscheduleMode::GDB);
                 is_running = false;
                 if (SetThread(0)) {
                     SendStopReply(current_thread, 0);
@@ -900,7 +900,7 @@ static void BreakImpl(int signal) {
                                    "and memory exceptions. Disable CPU JIT for more accuracy.");
     }
 
-    current_process->SetDebugBreak(true);
+    current_process->SetUnscheduleMode(Kernel::UnscheduleMode::GDB);
     is_running = false;
 
     latest_signal = signal;
@@ -1248,7 +1248,7 @@ static void Continue() {
         continue_list.push_back(thread_id);
     }
 
-    current_process->SetDebugBreak(false, continue_list);
+    current_process->ClearUnscheduleMode(Kernel::UnscheduleMode::GDB, continue_list);
     is_running = true;
 
     ClearAllInstructionCache();
@@ -1414,7 +1414,7 @@ void HandleVCommand() {
             SendReply("E02");
         } else {
             current_process = process.get();
-            current_process->SetDebugBreak(true);
+            current_process->SetUnscheduleMode(Kernel::UnscheduleMode::GDB);
             is_running = false;
             if (SetThread(0)) {
                 SendStopReply(current_thread, 0);
@@ -1456,7 +1456,7 @@ void HandleVCommand() {
                     HexToInt(reinterpret_cast<const u8*>(threads[i].c_str()), threads[i].size()));
             }
 
-            current_process->SetDebugBreak(false, thread_ids);
+            current_process->ClearUnscheduleMode(Kernel::UnscheduleMode::GDB, thread_ids);
             is_running = true;
         }
     } else {

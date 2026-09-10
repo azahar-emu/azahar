@@ -1,4 +1,4 @@
-// Copyright Citra Emulator Project / Azahar Emulator Project
+// Copyright 2026 Citra Emulator Project / Azahar Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -124,6 +124,10 @@ public:
 
     u32 ImageCount() const noexcept {
         return static_cast<u32>(frame_pool.size());
+    }
+
+    vk::Format GetSurfaceFormat() const noexcept {
+        return output_format;
     }
 
 private:
