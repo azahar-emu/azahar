@@ -1307,7 +1307,9 @@ vk::ImageView Surface::ImageView(ViewType view_type, Type type) noexcept {
     auto aspect = traits.aspect;
 
     if (view_type == ViewType::Storage) {
-        ASSERT(traits.native == vk::Format::eR8G8B8A8Unorm);
+        ASSERT_MSG(traits.storage_support,
+                   "Creating a storage-view for format({}) which doesn't have storage-support!",
+                   vk::to_string(traits.native));
         is_storage = true;
     }
     if (view_type == ViewType::Depth || view_type == ViewType::Stencil) {
