@@ -460,6 +460,11 @@ GMainWindow::GMainWindow(Core::System& system_)
 
     LOG_INFO(Frontend, "Azahar Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
+    std::string build_variant = Common::g_build_variant;
+    if (build_variant == "") {
+        build_variant = "N/A";
+    }
+    LOG_INFO(Frontend, "Build Variant: {}", build_variant);
 #if CITRA_ARCH(x86_64)
     const auto& caps = Common::GetCPUCaps();
     std::string cpu_string = caps.cpu_string;
